@@ -1,0 +1,43 @@
+
+OBJECTS= client.o packet.o dh.o crypt.o connect.o error.o buffer.o \
+	string.o kex.o channels.o options.o keys.o auth.o base64.o \
+        keyfiles.o misc.o gzip.o wrapper.o sftp.o server.o malloc.o
+SHELL = /bin/sh
+VPATH = @srcdir@
+
+subdirs = @subdirs@
+top_srcdir = @top_srcdir@
+srcdir = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = $(exec_prefix)/bin
+incldir= $(prefix)/include
+infodir = $(prefix)/info
+libdir = $(prefix)/lib/
+mandir = $(prefix)/man/man1
+
+CC = @CC@
+CFLAGS = @CFLAGS@ -Wall -g -I../include/ -fPIC
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+INSTALL = @INSTALL@
+DYLIB_EXTENSION = @DYLIB_EXTENSION@
+LIBSSH_LDFLAGS = @LIBSSH_LDFLAGS@
+
+all: libssh.so
+
+libssh.so: $(OBJECTS)
+	$(CC) -o libssh.$(DYLIB_EXTENSION) $(LIBSSH_LDFLAGS) $(OBJECTS) $(LIBS) $(LDFLAGS)
+libssh.a: $(OBJECTS)
+	rm -f libssh.a
+	ar q libssh.a $(OBJECTS)
+	@RANLIB@ libssh.a
+install: all
+	$(top_srcdir)/mkinstalldirs $(incldir)
+	$(top_srcdir)/mkinstalldirs $(libdir)
+	$(INSTALL) libssh.$(DYLIB_EXTENSION) $(libdir)
+clean:
+	rm -f *~ libssh.a libssh.so *.o
+distclean: clean
+	rm -f Makefile
+

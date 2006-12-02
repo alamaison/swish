@@ -1,0 +1,38 @@
+Swish (Secure WIndows SHell)
+
+Author: 
+    Alexander Lamaison <awl03 (at) doc.ic.ac.uk>
+
+What is Swish?
+    Swish is a project to integrate access to remote files via SFTP into the 
+    Microsoft Windows Explorer.
+    
+Status:
+    Swish is currently very experimental.  Most of the effort so far has gone 
+    into making the development tools/platform and the underlying SSH library 
+    (libssh) work together.  
+    
+    The current development environment is GCC under Cygwin/MinGW with the
+    wxWidgets widget tool-kit and libssh-0.11 with the unofficial Windows 
+    patch.
+    
+    In this version, Swish can connect to a remote server 
+    (hardcoded address) as a particular user (again, hardcoded) allowing the 
+    user to enter a password on the command-line.  *The password is not
+    obscured on the console so care must be taken when entering it*. Swish will
+    then retrieve a file-listing from the /tmp directory of the target machine
+    and display this in a list in the GUI.  Some of the fields, such as file 
+    permissions and parsed and displayed in a more friendly form.  Directories
+    are colour-coded yellow.  
+    
+    As of yet, NO attempt has been made to INTEGRATE WITH EXPLORER.  The work
+    so far is just proof-of-concept concerned with SFTP connectivity.
+
+Requirements:
+    GCC/G++ and associated build tools
+    wxWidgets (compiled in same cygwin-dependency mode as Swish, i.e. if Swish
+        is compiled with -mno-cygwin flag or with MingGW then wxWidgets must 
+        be as well)
+    libssh-0.11 with unofficial Windows patch
+
+$Id$

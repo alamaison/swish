@@ -1,0 +1,39 @@
+The libSSH and its client
+~~~~~~~~~~~~~~~~~~~~~~~~~
+   -Aris Adamantiadis
+
+1* Why ?
+-_-_-_-_-_
+
+Why not ? :) I've began to work on my own implementation of the ssh protocol
+because i didn't like the currently public ones.
+Not any allow you to import and use the functions as a library, and so i
+worked on a library-based SSH implementation.
+
+
+2* How/Who ?
+-_-_-_-_-_-_-_
+
+If you downloaded this file, you must know what it is : a library for
+accessing ssh client services through C libraries calls in a simple manner.
+The client is there as a programming example and isn't at all doing its job
+correctly (doesn't verify public key hashes with the ones in ~/.ssh/ 
+and doesn't handle TERM - yet)
+Everybody can use this software under the terms of the LGPL - see the COPYING
+file
+
+3* What ?
+-_-_-_-_-_
+
+The SSH library features :
+-Full C library functions for manipulating a client-side SSH connection
+-Fully configurable sessions
+-Support for AES-128,AES-192,AES-256,blowfish, in cbc mode
+-use multiple SSH connections in a same process, at same time.
+-usable SFTP implementation
+-Public key and password authentication
+
+4* Where ?
+-_-_-_-_-_-_
+
+http://0xbadc0de.be/?part=libssh

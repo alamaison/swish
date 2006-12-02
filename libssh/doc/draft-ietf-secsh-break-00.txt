@@ -1,0 +1,394 @@
+
+
+
+Secure Shell Working Group                                  J. Galbraith
+Internet-Draft                                          VanDyke Software
+Expires: September 17, 2003                                   P. Remaker
+                                                      Cisco Systems, Inc
+                                                          March 19, 2003
+
+
+                    Session Channel Break Extension
+                     draft-ietf-secsh-break-00.txt
+
+Status of this Memo
+
+   This document is an Internet-Draft and is in full conformance with
+   all provisions of Section 10 of RFC2026.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups. Note that other
+   groups may also distribute working documents as Internet-Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time. It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at http://
+   www.ietf.org/ietf/1id-abstracts.txt.
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+   This Internet-Draft will expire on September 17, 2003.
+
+Copyright Notice
+
+   Copyright (C) The Internet Society (2003). All Rights Reserved.
+
+Abstract
+
+   The Break Extension provides a way to send a break signal during a
+   SSH terminal session.
+
+
+
+
+
+
+
+
+
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 1]
+
+Internet-Draft      Session Channel Break Extension           March 2003
+
+
+Table of Contents
+
+   1. Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+   2. The Break Request  . . . . . . . . . . . . . . . . . . . . . . . 4
+      References . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+      Authors' Addresses . . . . . . . . . . . . . . . . . . . . . . . 5
+      Intellectual Property and Copyright Statements . . . . . . . . . 6
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 2]
+
+Internet-Draft      Session Channel Break Extension           March 2003
+
+
+1. Introduction
+
+   The SSH session channel provides a mechanism for the client-user to
+   interactively enter commands and receive output from a remote host
+   while taking advantage of the SSH transport's privacy and integrity
+   features.
+
+   A common application of the telnet protocol is the "Console Server"
+   whereby a telnet NVT can be connected to a physical RS-232/V.24
+   asynchronous port, allowing the telnet NVT to appear as a locally
+   attached terminal to that port, and allowing that port to appear as a
+   network addressable device.  A number of major computer equipment
+   vendors provide high level administrative functions through an
+   asynchronous serial port and generally expect the attached terminal
+   to be capable of send a BREAK signal, which is defined as the TxD
+   signal being held in a SPACE state for a time greater than a whole
+   character time, typically interpreted as 250 to 500 ms.
+
+   The telnet protocolprovides a means to send a "BREAK" signal, which
+   is defined as a "a signal outside the USASCII set which is currently
+   given local meaning within many systems." [1]  Console Server vendors
+   interpret the TELNET break signal as a physical break signal, which
+   can then allow access to the full range of administartive functions
+   available on an asynchronous serial console port.
+
+   The lack of a similar facility in the SSH session channel has forced
+   users to continue the use of telnet for the "Console Server"
+   function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 3]
+
+Internet-Draft      Session Channel Break Extension           March 2003
+
+
+2. The Break Request
+
+   The following following channel specific request can be sent to
+   request that the remote host perform a break operation.
+
+           byte               SSH_MSG_CHANNEL_REQUEST
+           uint32             recipient channel
+           string             "break"
+           boolean            want_reply
+           uint32             break-length in milliseconds
+
+   If the break length cannot be controlled by the application receiving
+   this request, the break length parameter SHOULD be ignored and the
+   default break signal length of the chipset or underlying chipset
+   driver SHOULD be sent.
+
+   If the application can control the break-length, the following
+   suggestions are made reagarding break duration. If a break duration
+   request of greater than 3000ms is received, it SHOULD be processed as
+   a 3000ms break, in order to an unreasonably long break request
+   causing the port to become unavailable for as long as 47 days while
+   executing the break.  Applications that require a longer break may
+   choose to ignore this requirement.  If  break duration request of
+   less than 500ms, is requested a break of 500ms SHOULD be sent since
+   most devices will recognize a break of that length.  In the event
+   that an application needs a shorter break, this can be ignored.  If
+   the break-length parameter is 0, the break SHOULD be sent as 500ms or
+   the default break signal length of the chipset or underlying chipset
+   driver .
+
+   If the want_reply boolean is set, the server MUST reply using
+   SSH_MSG_CHANNEL_SUCCESS or SSH_MSG_CHANNEL_FAILURE [4] messages.  If
+   a break of any kind was preformed, SSH_MSG_CHANNEL_SUCCESS MUST be
+   sent.  If no break was preformed, SSH_MSG_CHANNEL_FAILURE MUST be
+   sent.
+
+   This operation SHOULD be support by most general purpose SSH clients.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 4]
+
+Internet-Draft      Session Channel Break Extension           March 2003
+
+
+References
+
+   [1]  Postel, J. and J. Reynolds, "Telnet Protocol Specification", STD
+        8, RFC 854, May 1983.
+
+   [2]  Rinne, T., Ylonen, T., Kivinen, T. and S. Lehtinen, "SSH
+        Protocol Architecture", draft-ietf-secsh-architecture-13 (work
+        in progress), September 2002.
+
+   [3]  Rinne, T., Ylonen, T., Kivinen, T., Saarinen, M. and S.
+        Lehtinen, "SSH Transport Layer Protocol",
+        draft-ietf-secsh-transport-15 (work in progress), September
+        2002.
+
+   [4]  Rinne, T., Ylonen, T., Kivinen, T. and S. Lehtinen, "SSH
+        Connection Protocol", draft-ietf-secsh-connect-16 (work in
+        progress), September 2002.
+
+
+Authors' Addresses
+
+   Joseph Galbraith
+   VanDyke Software
+   4848 Tramway Ridge Blvd
+   Suite 101
+   Albuquerque, NM  87111
+   US
+
+   Phone: +1 505 332 5700
+   EMail: galb-list@vandyke.com
+
+
+   Phillip Remaker
+   Cisco Systems, Inc
+   170 West Tasman Drive
+   San Jose, CA  95120
+   US
+
+   EMail: remaker@cisco.com
+
+
+
+
+
+
+
+
+
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 5]
+
+Internet-Draft      Session Channel Break Extension           March 2003
+
+
+Intellectual Property Statement
+
+   The IETF takes no position regarding the validity or scope of any
+   intellectual property or other rights that might be claimed to
+   pertain to the implementation or use of the technology described in
+   this document or the extent to which any license under such rights
+   might or might not be available; neither does it represent that it
+   has made any effort to identify any such rights. Information on the
+   IETF's procedures with respect to rights in standards-track and
+   standards-related documentation can be found in BCP-11. Copies of
+   claims of rights made available for publication and any assurances of
+   licenses to be made available, or the result of an attempt made to
+   obtain a general license or permission for the use of such
+   proprietary rights by implementors or users of this specification can
+   be obtained from the IETF Secretariat.
+
+   The IETF invites any interested party to bring to its attention any
+   copyrights, patents or patent applications, or other proprietary
+   rights which may cover technology that may be required to practice
+   this standard. Please address the information to the IETF Executive
+   Director.
+
+
+Full Copyright Statement
+
+   Copyright (C) The Internet Society (2003). All Rights Reserved.
+
+   This document and translations of it may be copied and furnished to
+   others, and derivative works that comment on or otherwise explain it
+   or assist in its implementation may be prepared, copied, published
+   and distributed, in whole or in part, without restriction of any
+   kind, provided that the above copyright notice and this paragraph are
+   included on all such copies and derivative works. However, this
+   document itself may not be modified in any way, such as by removing
+   the copyright notice or references to the Internet Society or other
+   Internet organizations, except as needed for the purpose of
+   developing Internet standards in which case the procedures for
+   copyrights defined in the Internet Standards process must be
+   followed, or as required to translate it into languages other than
+   English.
+
+   The limited permissions granted above are perpetual and will not be
+   revoked by the Internet Society or its successors or assignees.
+
+   This document and the information contained herein is provided on an
+   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 6]
+
+Internet-Draft      Session Channel Break Extension           March 2003
+
+
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+
+Acknowledgement
+
+   Funding for the RFC Editor function is currently provided by the
+   Internet Society.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Galbraith & Remaker    Expires September 17, 2003               [Page 7]
+
+
