@@ -133,7 +133,7 @@ ftypelet (mode_t bits)
    is given as an argument.  */
 
 void
-mode_string (/* mode_t */ u32 mode, char *str)
+mode_string (mode_t mode, char *str)
 {
   str[0] = ftypelet (mode);
   str[1] = mode & S_IRUSR ? 'r' : '-';

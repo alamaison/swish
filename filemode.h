@@ -86,10 +86,8 @@
 #  define S_ISOFL(p) 0
 # endif
 
-# ifndef mode_t
-//typedef u32 mode_t;
-# endif
+typedef u32 mode_t;
 
-void mode_string (u32 mode, char *str);
+void mode_string (mode_t mode, char *str);
 
 #endif
