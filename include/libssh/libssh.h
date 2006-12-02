@@ -21,20 +21,21 @@ MA 02111-1307, USA. */
 #ifndef _LIBSSH_H
 #define _LIBSSH_H
 #include <libssh/config.h>
-#include <unistd.h>
+//#include <unistd.h>
 #ifdef HAVE_SYS_SELECT_H
 //#include <sys/select.h> /* for fd_set * */
+#include <winsock.h>
 #endif
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
+//#ifdef HAVE_WINDOWS_H
+//#include <windows.h>
+//#endif
 #ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
+//#include <inttypes.h>
 #endif
 #ifdef HAVE_STDINT_H
-#include <stdint.h>
+//#include <stdint.h>
 #endif
-#include <sys/types.h>
+//#include <sys/types.h>
 #define LIBSSH_VERSION "libssh-0.11"
 
 #ifdef __cplusplus
@@ -51,10 +52,10 @@ typedef struct ssh_session SSH_SESSION;
 typedef struct ssh_kbdint SSH_KBDINT;
 
 /* integer values */
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint64_t u64;
-typedef uint8_t u8;
+typedef __int32 u32;
+typedef __int16 u16;
+typedef __int64 u64;
+typedef __int8 u8;
 
 /* the offsets of methods */
 #define KEX_ALGO 0

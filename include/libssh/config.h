@@ -5,31 +5,31 @@
 /* #undef HAVE_DOPRNT */
 
 /* Define to 1 if you have the `endpwent' function. */
-/* #undef HAVE_ENDPWENT */
+#define HAVE_ENDPWENT 1
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the `gethostbyaddr' function. */
-/* #undef HAVE_GETHOSTBYADDR */
+#define HAVE_GETHOSTBYADDR 1
 
 /* Define to 1 if you have the `gethostbyname' function. */
-/* #undef HAVE_GETHOSTBYNAME */
+#define HAVE_GETHOSTBYNAME 1
 
 /* Define to 1 if you have the `getpass' function. */
-/* #undef HAVE_GETPASS */
+#define HAVE_GETPASS 1
 
 /* Define to 1 if you have the `getpwent' function. */
-/* #undef HAVE_GETPWENT */
+#define HAVE_GETPWENT 1
 
 /* Define to 1 if you have the `getuid' function. */
-/* #undef HAVE_GETUID */
+#define HAVE_GETUID 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
-#define HAVE_LIBCRYPTO 1
+/* #undef HAVE_LIBCRYPTO */
 
 /* Define to 1 if you have the `z' library (-lz). */
 #define HAVE_LIBZ 1
@@ -54,13 +54,13 @@
 #define HAVE_NETINET_IN_H 1
 
 /* Define to 1 if you have the <openssl/aes.h> header file. */
-#define HAVE_OPENSSL_AES_H 1
+/* #undef HAVE_OPENSSL_AES_H */
 
 /* Define to 1 if you have the <openssl/blowfish.h> header file. */
-#define HAVE_OPENSSL_BLOWFISH_H 1
+/* #undef HAVE_OPENSSL_BLOWFISH_H */
 
 /* Define to 1 if you have the `poll' function. */
-/* #undef HAVE_POLL */
+#define HAVE_POLL 1
 
 /* Define to 1 if you have the <pty.h> header file. */
 #define HAVE_PTY_H 1
@@ -69,7 +69,7 @@
 #define HAVE_PWD_H 1
 
 /* Define to 1 if you have the `select' function. */
-/* #undef HAVE_SELECT */
+#define HAVE_SELECT 1
 
 /* Define to 1 if you have the `signal' function. */
 #define HAVE_SIGNAL 1
@@ -78,7 +78,7 @@
 #define HAVE_SIGNAL_H 1
 
 /* Define to 1 if you have the `socket' function. */
-/* #undef HAVE_SOCKET */
+#define HAVE_SOCKET 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -123,10 +123,10 @@
 #define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the `tcgetattr' function. */
-/* #undef HAVE_TCGETATTR */
+#define HAVE_TCGETATTR 1
 
 /* Define to 1 if you have the `tcsetattr' function. */
-/* #undef HAVE_TCSETATTR */
+#define HAVE_TCSETATTR 1
 
 /* Define to 1 if you have the <termios.h> header file. */
 #define HAVE_TERMIOS_H 1
@@ -165,7 +165,7 @@
 #define SELECT_TYPE_ARG1 int
 
 /* Define to the type of args 2, 3 and 4 for `select'. */
-#define SELECT_TYPE_ARG234 (int *)
+#define SELECT_TYPE_ARG234 (fd_set *)
 
 /* Define to the type of arg 5 for `select'. */
 #define SELECT_TYPE_ARG5 (struct timeval *)

@@ -22,7 +22,7 @@
 #define SWISH_H_
 
 // NDEBUG for asserts
-#ifndef DEBUG
+#ifndef _DEBUG
 #define NDEBUG
 #else
 #undef NDEBUG
@@ -36,15 +36,20 @@ using std::cout;
 using std::cerr;
 using std::cin;
 
-#include <libssh/libssh.h>
-#include <libssh/sftp.h>
+#include <afxwin.h>
+
+#include "libssh/libssh.h"
+#include "libssh/sftp.h"
 
 #include "server.h"
 
 // Debug-only print macro
-#ifdef DEBUG
-#define DPRINT(x) cout << x
-#define DPRINTLN(x) DPRINT(x) << endl
+#ifdef _DEBUG
+#include <sstream>
+extern std::ostringstream traceStream;
+
+#define DPRINT(x) traceStream << x; TRACE(traceStream.str().c_str());
+#define DPRINTLN(x) DPRINT(x); DPRINT("\n")
 #else
 #define DPRINT(x)
 #define DPRINTLN(x)

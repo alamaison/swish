@@ -12,27 +12,22 @@ Status:
     into making the development tools/platform and the underlying SSH library 
     (libssh) work together.  
     
-    The current development environment is GCC under Cygwin/MinGW with the
-    wxWidgets widget tool-kit and libssh-0.11 with the unofficial Windows 
-    patch.
+    The development environment has been changed to Visual Studio 2005 
+    (Visual C++) in order to make use of MFC for constructing the GUI.  Efforts
+    have been made to continue using the libssh-0.11 with the unofficial 
+    Windows patch.  Although this combination is able to compile and link, it 
+    does not run.  Libssh-0.2 is due to be released soon and promises Windows 
+    compatibilty, therefore, it would seem sensible to wait for this before
+    continuing development.
     
-    In this version, Swish can connect to a remote server 
-    (hardcoded address) as a particular user (again, hardcoded) allowing the 
-    user to enter a password on the command-line.  *The password is not
-    obscured on the console so care must be taken when entering it*. Swish will
-    then retrieve a file-listing from the /tmp directory of the target machine
-    and display this in a list in the GUI.  Some of the fields, such as file 
-    permissions and parsed and displayed in a more friendly form.  Directories
-    are colour-coded yellow.  
+    In this version, Swish can do very little except compile
     
     As of yet, NO attempt has been made to INTEGRATE WITH EXPLORER.  The work
     so far is just proof-of-concept concerned with SFTP connectivity.
 
 Requirements:
-    GCC/G++ and associated build tools
-    wxWidgets (compiled in same cygwin-dependency mode as Swish, i.e. if Swish
-        is compiled with -mno-cygwin flag or with MingGW then wxWidgets must 
-        be as well)
-    libssh-0.11 with unofficial Windows patch
+    Visual C++ 2005 (not Express edition - MFC required)
+    libssh, a version able to compile under Windows and properly link and run 
+        with Visual C++ programs
 
 $Id$

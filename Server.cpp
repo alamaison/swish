@@ -34,9 +34,12 @@ Server::Server(SSH_OPTIONS *options)
 	DPRINTLN("Connecting to Server ...");
 	session = ssh_connect(options);
 	if(session == NULL)
-		cerr << "Error: " << ssh_get_error(NULL) << endl;
+	{
+		DPRINTLN("Error: " << ssh_get_error(NULL) << endl);
+//		cerr << "Error: " << ssh_get_error(NULL) << endl;
+	}
 	DPRINTLN("Connected to server");
-
+	
 	// Get hash and check known_hosts
 	ssh_get_pubkey_hash(session, hash);
 	known = ssh_is_server_known(session);
@@ -54,7 +57,7 @@ int Server::authenticatePassword()
 	cout << "Please enter your password:" << endl;
 	cin >> pword;
 	int ret = ssh_userauth_password(session, "swish", pword);
-
+	
 	switch(ret)
 	{
 	case SSH_AUTH_ERROR:
@@ -78,7 +81,7 @@ int Server::authenticatePassword()
 
 int Server::authenticatePubKey()
 {
-	int ret = ssh_userauth_autopubkey(session);
+	int ret = ssh_userauth_autopubkey(session);	
 	switch(ret)
 	{
 	case SSH_AUTH_ERROR:
@@ -101,59 +104,59 @@ int Server::authenticatePubKey()
 	}
 }
 
-void ErrorExit(char* lpszFunction)
-{
+void ErrorExit(char* lpszFunction) 
+{ 
     char* lpMsgBuf;
     char* lpDisplayBuf;
-    DWORD dw = GetLastError();
+    DWORD dw = GetLastError(); 
 
     FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
         FORMAT_MESSAGE_FROM_SYSTEM,
         NULL,
         dw,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR) &lpMsgBuf,
         0, NULL );
+    
 
-
-    lpDisplayBuf = (char*)LocalAlloc(LMEM_ZEROINIT,
-        (strlen(lpMsgBuf)+strlen(lpszFunction)+40)*sizeof(TCHAR));
-    wsprintf(lpDisplayBuf,
-        TEXT("%s failed with error %d: %s"),
-        lpszFunction, dw, lpMsgBuf);
-    MessageBox(NULL, lpDisplayBuf, TEXT("Error"), MB_OK);
+    lpDisplayBuf = (char*)LocalAlloc(LMEM_ZEROINIT, 
+        (strlen(lpMsgBuf)+strlen(lpszFunction)+40)*sizeof(TCHAR)); 
+    wsprintf(lpDisplayBuf, 
+        TEXT("%s failed with error %d: %s"), 
+        lpszFunction, dw, lpMsgBuf); 
+    MessageBox(NULL, lpDisplayBuf, TEXT("Error"), MB_OK); 
 
     LocalFree(lpMsgBuf);
     LocalFree(lpDisplayBuf);
-    ExitProcess(dw);
+    ExitProcess(dw); 
 }
 
 
 int Server::authenticateKeyboardInteractive()
 {
 	char echo, ch;
-
+	
 	stringstream answerBuffer;
 	string answer;
 	const char* c_answer;
-
+	
 	int ret = ssh_userauth_kbdint(session, NULL, NULL);
 	int promptCount;
-
+	
 	// Keep presenting messages and prompts to user as server sends them
 	do {
 		cout << ssh_userauth_kbdint_getname(session) << endl;
 		cout << ssh_userauth_kbdint_getinstruction(session) << endl;
-
+		
 		promptCount = ssh_userauth_kbdint_getnprompts(session);
 		for(int i=0; i<promptCount; i++)
 		{
 			// Output next prompt
-			cout
-				<< ssh_userauth_kbdint_getprompt(session, i, &echo)
+			cout 
+				<< ssh_userauth_kbdint_getprompt(session, i, &echo) 
 				<< endl;
-
+			
 			// Read in next answer
 /*			do {
 				cin.get(ch);
@@ -162,23 +165,23 @@ int Server::authenticateKeyboardInteractive()
 			answerBuffer << '\n' << '\n';
 			answer = answerBuffer.str();
 			c_answer = answer.c_str();*/
-
+			
 			// Read in next answer
 			cin >> answer;
 			c_answer = answer.c_str();
-
+			
 			// Send answer to server
 			ssh_userauth_kbdint_setanswer(
-				session,
-				i,
+				session, 
+				i, 
 				(char *)c_answer // Safe to cast as function copies string
 			);
 			cout << c_answer;
 		}
-
+		
 		ret = ssh_userauth_kbdint(session, NULL, NULL);
 	} while (ret == SSH_AUTH_INFO);
-
+	
 	// Server need no more input and has returned auth status
 	switch(ret)
 	{
