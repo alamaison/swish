@@ -3,9 +3,9 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="Swish"
-	ProjectGUID="{40350728-C4CD-48CE-B8EC-8247C005E905}"
+	ProjectGUID="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
 	RootNamespace="Swish"
-	Keyword="Win32Proj"
+	Keyword="AtlProj"
 	>
 	<Platforms>
 		<Platform
@@ -17,11 +17,12 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
-			ConfigurationType="1"
-			UseOfMFC="2"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
 			UseOfATL="2"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -37,41 +38,48 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+				TargetEnvironment="1"
+				GenerateStublessProxies="true"
+				TypeLibraryName="$(IntDir)/Swish.tlb"
+				HeaderFileName="Swish.h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="Swish_i.c"
+				ProxyFileName="Swish_p.c"
+				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
+				ExpandAttributedSource="true"
 				WarningLevel="3"
-				SuppressStartupBanner="false"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				CallingConvention="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="2057"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libssh.lib user32.lib"
+				RegisterOutput="true"
+				IgnoreImportLibrary="true"
 				LinkIncremental="2"
-				SuppressStartupBanner="false"
-				AdditionalLibraryDirectories="."
-				ModuleDefinitionFile=""
-				AddModuleNamesToAssembly=""
-				DelayLoadDLLs=""
-				AssemblyLinkResource=""
+				MergedIDLBaseFileName="_SwishAttr.idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -103,11 +111,12 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
-			ConfigurationType="1"
-			UseOfMFC="2"
-			UseOfATL="1"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfATL="2"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -123,32 +132,46 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="false"
+				TargetEnvironment="1"
+				GenerateStublessProxies="true"
+				TypeLibraryName="$(IntDir)/Swish.tlb"
+				HeaderFileName="Swish.h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="Swish_i.c"
+				ProxyFileName="Swish_p.c"
+				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
-				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;_ATL_ATTRIBUTES"
+				ExceptionHandling="0"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2057"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				LinkIncremental="2"
-				GenerateDebugInformation="true"
+				RegisterOutput="true"
+				IgnoreImportLibrary="true"
+				LinkIncremental="1"
+				MergedIDLBaseFileName="_SwishAttr.idl"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -181,119 +204,108 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\libssh\config.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\include\libssh\crypto.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\crypto.h"
-				>
-			</File>
-			<File
-				RelativePath=".\filemode.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\libssh.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\include\libssh\libssh.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Mode.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\priv.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\include\libssh\priv.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\include\libssh\server.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Server.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\server.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\sftp.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\include\libssh\sftp.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\ssh2.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libssh\include\libssh\ssh2.h"
-				>
-			</File>
-			<File
-				RelativePath=".\swish.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
-		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\filemode.c"
+				RelativePath=".\ConnCopyPolicy.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						CompileAs="2"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Mode.cpp"
+				RelativePath=".\Swish.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Server.cpp"
+				RelativePath=".\SwishFolder.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\swish.cpp"
+				RelativePath=".\SwishView.cpp"
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\libssh\libssh.h.orig"
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc"
 			>
-		</File>
+			<File
+				RelativePath=".\ConnCopyPolicy.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PidlManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\remotelimits.h"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SwishFolder.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="SwishFolder.rgs"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\SwishView.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Resource Files"
+			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest"
+			>
+			<File
+				RelativePath=".\Swish.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\Swish.rgs"
+				>
+			</File>
+			<File
+				RelativePath=".\SwishFolder.rgs"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

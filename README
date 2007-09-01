@@ -13,21 +13,24 @@ Status:
     (libssh) work together.  
     
     The development environment has been changed to Visual Studio 2005 
-    (Visual C++) in order to make use of MFC for constructing the GUI.  Efforts
-    have been made to continue using the libssh-0.11 with the unofficial 
-    Windows patch.  Although this combination is able to compile and link, it 
-    does not run.  Libssh-0.2 is due to be released soon and promises Windows 
-    compatibilty, therefore, it would seem sensible to wait for this before
-    continuing development.
-    
-    In this version, Swish can do very little except compile
-    
-    As of yet, NO attempt has been made to INTEGRATE WITH EXPLORER.  The work
-    so far is just proof-of-concept concerned with SFTP connectivity.
+    (Visual C++) in order to reduce the haslle and make use of GUI toolkits
+    such as ATL/WTL or MFC.  Currently development of the back-end SFTP
+    connection mechanism is not taking place and a dummy dataset will be
+    used while the front-end is developed.
+
+    All previous prototype code has been abandoned and development started
+    afresh as per the project plan
+
+    In this version, Swish consists purely of a window integrated into
+    Windows Explorer
 
 Requirements:
-    Visual C++ 2005 (not Express edition - MFC required)
-    libssh, a version able to compile under Windows and properly link and run 
-        with Visual C++ programs
+    Visual C++ 2005 (Express edition is unlikely to work as the code uses
+        ATL attributes which, I believe, require ATL 7)
+    WTL 8 which can be obtained from Microsoft of through SourceForge
+        Microsoft Permissive Licence: http://www.microsoft.com/downloads/
+        details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
+        Common Public Licence: http://sourceforge.net/projects/wtl/
+        
 
 $Id$

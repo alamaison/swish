@@ -1,0 +1,58 @@
+
+HKLM
+{
+    NoRemove Software
+    {
+        NoRemove Microsoft
+        {
+            NoRemove Windows
+            {
+                NoRemove CurrentVersion
+                {
+                    NoRemove Explorer
+                    {
+                        NoRemove MyComputer
+                        {
+                            NoRemove NameSpace
+                            {
+                                ForceRemove {[!uuid]}
+                                {
+                                    val 'Removal Message' = s 'Please don''t remove Swish this way - uninstall it.'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        NoRemove Classes
+        {
+		    NoRemove CLSID
+		    {
+		        ForceRemove {[!uuid]} = s 'Swish'
+		        {
+			        val AppID = s '%APPID%'
+                    
+                    InprocServer32 = s '%MODULE%'
+			        {
+			            val ThreadingModel = s '[!threading]'
+			        }
+			
+			        ProgID = s '[!progid]'
+			        VersionIndependentProgID = s '[!vi_progid]'
+			        
+			        TypeLib = s '%APPID%'
+			        
+		            val InfoTip = s 'Remote file-system access via SFTP'
+                    ShellFolder
+                    {
+                        val Attributes = d '671088688'
+                    }
+                    
+                    DefaultIcon = s 'shell32.dll,9'
+		        }
+		    }
+		}
+    }    
+}

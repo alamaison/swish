@@ -1,0 +1,12 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		'%APPID%' = s 'Swish'
+		'Swish.DLL'
+		{
+			val AppID = s '%APPID%'
+		}
+	}
+}
+
