@@ -41,14 +41,12 @@ __interface ISwishFolder : IUnknown
 class ATL_NO_VTABLE CSwishFolder :
 	public ISwishFolder,
 	public IShellFolder,
-    public IPersistFolder
+    public IPersistFolder,
+	public IExtractIcon
 {
 public:
 	CSwishFolder() : m_pidlRoot(NULL)
 	{
-		ATLTRACE("CSwishFolder constructor called\n");
-		HRESULT hr = SHGetMalloc ( &m_spMalloc );
-        ATLASSERT( SUCCEEDED(hr) );
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -92,21 +90,29 @@ public:
 
     STDMETHOD(BindToStorage)( LPCITEMIDLIST, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
-    STDMETHOD(GetDisplayNameOf)( LPCITEMIDLIST, DWORD, LPSTRRET )
-        { return E_NOTIMPL; }
+    STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, LPSTRRET );
     STDMETHOD(ParseDisplayName)
 		( HWND, LPBC, LPOLESTR, LPDWORD, LPITEMIDLIST*, LPDWORD )
         { return E_NOTIMPL; }
     STDMETHOD(SetNameOf)( HWND, LPCITEMIDLIST, LPCOLESTR, DWORD, LPITEMIDLIST* )
         { return E_NOTIMPL; }
 
+	// IExtractIcon
+	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
+						HICON *phiconSmall, UINT nIconSize );
+	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
+								int *piIndex, UINT *pwFlags );
+
 private:
     CPidlManager       m_PidlManager;
-    CComPtr<IMalloc>   m_spMalloc;
 	LPCITEMIDLIST      m_pidlRoot;
     CSwishFolder*      m_pParentFolder;
     LPITEMIDLIST       m_pidl;
-	std::vector<PIDLCONNDATA> m_vecConnData;
+	std::vector<HOSTPIDL> m_vecConnData;
+
+	CString GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
+	CString GetLabelFromPIDL( PCUITEMID_CHILD pidl );
+
 };
 
 #endif // SWISHFOLDER_H

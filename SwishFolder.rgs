@@ -47,7 +47,7 @@ HKLM
 		            val InfoTip = s 'Remote file-system access via SFTP'
                     ShellFolder
                     {
-                        val Attributes = d '671088688'
+                        val Attributes = d '2684354560'
                     }
                     
                     DefaultIcon = s 'shell32.dll,9'

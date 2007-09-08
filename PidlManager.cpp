@@ -1,19 +1,27 @@
-// PidlMgr.cpp: implementation of the CPidlManager class.
-//
-//////////////////////////////////////////////////////////////////////
+/*  Manage the creation and manipulatation of PIDLs representing connections
+
+    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 
 #include "stdafx.h"
 #include "PidlManager.h"
-#include "strsafe.h"
-
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
 
 CPidlManager::CPidlManager()
 {
-	HRESULT hr = SHGetMalloc ( &m_spMalloc );
-
-    ATLASSERT(SUCCEEDED(hr));
 }
 
 CPidlManager::~CPidlManager()
@@ -21,220 +29,219 @@ CPidlManager::~CPidlManager()
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::Create( LPCWSTR, LPCWSTR, LPCWSTR, USHORT )
+ * CPidlManager::Create
  * Create a new terminated PIDL using the passed-in connection information
  *----------------------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::Create(LPCWSTR pwszUser, LPCWSTR pwszHost, 
-								  LPCWSTR pwszPath, USHORT uPort)
+HRESULT CPidlManager::Create(__in LPCWSTR pwszLabel, __in LPCWSTR pwszUser, 
+							 __in LPCWSTR pwszHost, __in LPCWSTR pwszPath, 
+							 __in USHORT uPort, 
+							 __deref_out PITEMID_CHILD *ppidlOut )
 {
-	// Calculate the size of the PIDLDATA structure
-    USHORT uSize = sizeof(PIDLDATA);
-	ATLASSERT(uSize%sizeof(DWORD) == 0); // Must be DWORD-aligned
+	ATLASSERT(sizeof(HOSTPIDL) % sizeof(DWORD) == 0); // DWORD-aligned
 
-	// Allocate enough memory for the PIDL (ITEMIDLIST) to hold 
-	// a PIDLDATA structure plus the terminator
-    LPITEMIDLIST pidlOut = 
-		(LPITEMIDLIST)m_spMalloc->Alloc(uSize + sizeof(ITEMIDLIST));
+	PITEMID_CHILD pidl = NULL;
 
-    if(pidlOut)
+	// Allocate enough memory to hold a HOSTPIDL structure plus terminator
+    pidl = (PITEMID_CHILD)CoTaskMemAlloc(sizeof(HOSTPIDL) + sizeof(USHORT));
+    if(!pidl)
+		return E_OUTOFMEMORY;
+
+	// Use first PIDL member as a HOSTPIDL structure
+	LPHOSTPIDL pidlHost = (LPHOSTPIDL)pidl;
+
+	// Fill members of the PIDL with data
+	pidlHost->cb = sizeof HOSTPIDL;
+	pidlHost->dwFingerprint = HOSTPIDL_FINGERPRINT; // Sign with fingerprint
+	CopyWSZString(pidlHost->wszLabel, ARRAYSIZE(pidlHost->wszLabel), pwszLabel);
+	CopyWSZString(pidlHost->wszUser, ARRAYSIZE(pidlHost->wszUser), pwszUser);
+	CopyWSZString(pidlHost->wszHost, ARRAYSIZE(pidlHost->wszHost), pwszHost);
+	CopyWSZString(pidlHost->wszPath, ARRAYSIZE(pidlHost->wszPath), pwszPath);
+	pidlHost->uPort = uPort;
+
+	// Create the terminating null PIDL by setting cb field to 0.
+	LPITEMIDLIST pidlNext = GetNextItem(pidl);
+	ATLASSERT(pidlNext != NULL);
+	pidlNext->mkid.cb = 0;
+
+	*ppidlOut = pidl;
+	ATLASSERT(SUCCEEDED(IsValid(*ppidlOut)));
+	ATLASSERT(ILGetNext(ILGetNext(*ppidlOut)) == NULL); // PIDL is terminated
+	ATLASSERT(ILGetSize(*ppidlOut) == sizeof(HOSTPIDL) + sizeof(USHORT));
+
+    return S_OK;
+}
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::Delete
+ * Free the PIDL using the Shell PIDL allocator.
+ * Apparently, this function Validates that the memory being freed is
+ * a PIDL when in a Debug build.
+ *----------------------------------------------------------------------------*/
+void CPidlManager::Delete( LPITEMIDLIST pidl )
+{
+    ILFree(pidl);
+}
+
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::GetNextItem
+ * Returns a pointer to the next item ID in the list passed as pidl.
+ * If pidl points to the last *non-terminator* SHITEMID the terminator is 
+ * returned.  If pidl points to the terminator already or is NULL the function
+ * returns NULL.  This is not made clear in the MSDN ILGetNext documentation.
+ *----------------------------------------------------------------------------*/
+LPITEMIDLIST CPidlManager::GetNextItem( LPCITEMIDLIST pidl )
+{
+    return ILGetNext(pidl);
+}
+
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::GetLastItem
+ * Returns a pointer to the last *non-terminator* item ID in the list pidl.
+ * This is not made clear in the MSDN ILGetNext documentation.  It is also
+ * unclear what happens of the pidl were to be the terminator or NULL.
+ *----------------------------------------------------------------------------*/
+LPITEMIDLIST CPidlManager::GetLastItem( LPCITEMIDLIST pidl )
+{
+	ATLENSURE(pidl);
+	ATLENSURE(pidl->mkid.cb); // pidl is not the terminator
+
+    return ILFindLastID(pidl);
+}
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::Validate
+ * Validate the fingerprint stored in the PIDL.
+ * If fingerprint matches HOSTPIDL return true/PIDL else return false/NULL
+ *----------------------------------------------------------------------------*/
+LPHOSTPIDL CPidlManager::Validate( LPCITEMIDLIST pidl )
+{
+	LPHOSTPIDL pHostPidl = NULL;
+
+    if (pidl)
     {
-		// Use first PIDL member as a PIDLDATA structure
-		LPPIDLDATA pData = (LPPIDLDATA) pidlOut;
-
-		// Assign values to the members of the PIDL (first SHITEMID)
-		pData->cb = uSize;
-
-		HRESULT hr;
-		hr = StringCbCopyW(pData->wszUser, sizeof(pData->wszUser), pwszUser);
-		if (hr == STRSAFE_E_INSUFFICIENT_BUFFER) ATLTRACE("Username truncated");
-		ATLASSERT(hr == S_OK || hr == STRSAFE_E_INSUFFICIENT_BUFFER);
-
-		hr = StringCbCopyW(pData->wszHost, sizeof(pData->wszHost), pwszHost);
-		if (hr == STRSAFE_E_INSUFFICIENT_BUFFER) ATLTRACE("Hostname truncated");
-		ATLASSERT(hr == S_OK || hr == STRSAFE_E_INSUFFICIENT_BUFFER);
-
-		hr = StringCbCopyW(pData->wszPath, sizeof(pData->wszPath), pwszPath);
-		if (hr == STRSAFE_E_INSUFFICIENT_BUFFER) ATLTRACE("Path truncated");
-		ATLASSERT(hr == S_OK || hr == STRSAFE_E_INSUFFICIENT_BUFFER);
-
-		pData->uPort = uPort;
-
-		// Create the terminating null PIDL by setting fields to 0.
-		LPITEMIDLIST pidlNext = GetNextItem(pidlOut);
-		ATLASSERT(pidlNext != NULL);
-		pidlNext->mkid.cb = 0;
-		pidlNext->mkid.abID[0] = 0;
-    }
-
-    return pidlOut;
-}
-
-
-/*---------------------------------------------------------------*/
-// CPidlManager::Delete( LPITEMIDLIST )
-// Delete a PIDL
-/*---------------------------------------------------------------*/
-void CPidlManager::Delete(LPITEMIDLIST pidl)
-{
-    m_spMalloc->Free(pidl);
-}
-
-
-/*---------------------------------------------------------------*/
-// CPidlManager::GetNextItem( LPCITEMIDLIST )
-// Retrieves the next element in a ITEMIDLIST
-/*---------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::GetNextItem ( LPCITEMIDLIST pidl )
-{
-    ATLASSERT(pidl != NULL);
-
-    return LPITEMIDLIST(LPBYTE(pidl) + pidl->mkid.cb);
-}
-
-
-/*---------------------------------------------------------------*/
-// CPidlManager::GetLastItem( LPCITEMIDLIST )
-// Retrieves the last element in a ITEMIDLIST
-/*---------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::GetLastItem ( LPCITEMIDLIST pidl )
-{
-	LPITEMIDLIST pidlLast = NULL;
-
-    ATLASSERT(pidl != NULL);
-
-    while ( 0 != pidl->mkid.cb )
-	{
-        pidlLast = (LPITEMIDLIST) pidl;
-        pidl = GetNextItem ( pidl );
+        pHostPidl = (LPHOSTPIDL)pidl;
+		if (pHostPidl->cb && pHostPidl->dwFingerprint == HOSTPIDL_FINGERPRINT)
+			return pHostPidl; // equal to true
 	}
 
-    return pidlLast;
-}
-
-
-/*---------------------------------------------------------------*/
-// CPidlManager::GetSize( LPITEMIDLIST )
-// Retrieves the size of item list 
-/*---------------------------------------------------------------*/
-UINT CPidlManager::GetSize ( LPCITEMIDLIST pidl )
-{
-	UINT uSize = 0;
-	LPITEMIDLIST pidlTemp = (LPITEMIDLIST) pidl;
-
-    ATLASSERT(pidl != NULL);
-
-    while ( pidlTemp->mkid.cb != 0 )
-	{
-        uSize += pidlTemp->mkid.cb;
-        pidlTemp = GetNextItem ( pidlTemp );
-	}  
-    
-    // add the size of the NULL terminating ITEMIDLIST
-    uSize += sizeof(ITEMIDLIST);
-
-    return uSize;
+    return NULL; // equal to false
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetUser(LPCITEMIDLIST, LPWSTR, USHORT)
- * Retrieves the user name of a given PIDL (last element)
- * Length in BYTEs of return buffer is given as cBufLen
+ * CPidlManager::IsValid
+ * Check if the fingerprint stored in the PIDL corresponds to a HOSTPIDL.
  *----------------------------------------------------------------------------*/
-void CPidlManager::GetUser (LPCITEMIDLIST pidl, LPWSTR pwszUser, USHORT cBufLen)
+HRESULT CPidlManager::IsValid( LPCITEMIDLIST pidl )
 {
-	ATLENSURE(cBufLen > 0);
-	if ( pidl == NULL )	{ *pwszUser = '\0'; return;	}
-
-	CopyWSZField( GetData(pidl)->wszUser, pwszUser, cBufLen );
+    LPHOSTPIDL pHostPidl = Validate(pidl);
+    return pHostPidl ? S_OK : E_INVALIDARG;
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetHost(LPCITEMIDLIST, LPWSTR, USHORT)
- * Retrieves the host name of a given PIDL (last element)
- * Length in BYTEs of return buffer is given as cBufLen
+ * CPidlManager::GetSize
+ * The total size of the passed in pidl in bytes including the zero terminator.
  *----------------------------------------------------------------------------*/
-void CPidlManager::GetHost( LPCITEMIDLIST pidl, LPWSTR pwszHost, USHORT cBufLen )
+UINT CPidlManager::GetSize( LPCITEMIDLIST pidl )
 {
-	ATLENSURE(cBufLen > 0);
-	if ( pidl == NULL )	{ *pwszHost = '\0'; return;	}
-
-	CopyWSZField( GetData(pidl)->wszHost, pwszHost, cBufLen );
+	return ILGetSize(pidl);
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetPath(LPCITEMIDLIST, LPWSTR, USHORT)
- * Retrieves the path of a given PIDL (last element)
- * Length in BYTEs of return buffer is given as cBufLen
+ * CPidlManager::GetLabel
+ * Returns the friendly display name from the (possibly multilevel) PIDL.
  *----------------------------------------------------------------------------*/
-void CPidlManager::GetPath(LPCITEMIDLIST pidl, LPWSTR pwszPath, USHORT cBufLen)
+CString CPidlManager::GetLabel( LPCITEMIDLIST pidl )
 {
-	ATLENSURE(cBufLen > 0);
-	if ( pidl == NULL )	{ *pwszPath = '\0'; return;	}
+	if (pidl == NULL) return _T("");
 
-	CopyWSZField( GetData(pidl)->wszPath, pwszPath, cBufLen );
+	return GetData(pidl)->wszLabel;
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetPort(LPCITEMIDLIST)
- * Retrieves the port number of a given PIDL (last element)
+ * CPidlManager::GetUser
+ * Returns the username from the (possibly multilevel) PIDL.
+ *----------------------------------------------------------------------------*/
+CString CPidlManager::GetUser( LPCITEMIDLIST pidl )
+{
+	if (pidl == NULL) return _T("");
+
+	return GetData(pidl)->wszUser;
+}
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::GetHost
+ * Returns the hostname from the (possibly multilevel) PIDL.
+ *----------------------------------------------------------------------------*/
+CString CPidlManager::GetHost( LPCITEMIDLIST pidl )
+{
+	if (pidl == NULL) return _T("");
+
+	return GetData(pidl)->wszHost;
+}
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::GetPath
+ * Returns the remote directory path from the (possibly multilevel) PIDL.
+ *----------------------------------------------------------------------------*/
+CString CPidlManager::GetPath( LPCITEMIDLIST pidl )
+{
+	if (pidl == NULL) return _T("");
+
+	return GetData(pidl)->wszPath;
+}
+
+/*------------------------------------------------------------------------------
+ * CPidlManager::GetPort
+ * Returns the SFTP port number from the (possibly multilevel) PIDL.
  *----------------------------------------------------------------------------*/
 USHORT CPidlManager::GetPort( LPCITEMIDLIST pidl )
 {
-	if ( pidl == NULL )	{ return 0;	}
+	if (pidl == NULL) return 0;
+
 	return GetData(pidl)->uPort;
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::CopyWSZField(LPWSTR, LPWSTR, USHORT)
- * Copies a WString field into provided buffer and performs checking
- * Length in BYTEs of return buffer is given as cBufLen
+ * CPidlManager::CopyWSZString
+ * Copies a WString into provided buffer and performs checking.
+ * Length in BYTEs of return buffer is given as cchDest.
  *----------------------------------------------------------------------------*/
-inline void CPidlManager::CopyWSZField( LPWSTR pwszField, LPWSTR pwszBuffer, 
-									USHORT cBufLen )
+HRESULT CPidlManager::CopyWSZString( __out_ecount(cchDest) PWSTR pwszDest,
+									 __in USHORT cchDest,
+									 __in PCWSTR pwszSrc)
 {
-	// Copy field into buffer
 	// Neither source nor destination of StringCbCopyW can be NULL
-	ATLASSERT(pwszField != NULL && pwszBuffer != NULL);
-	HRESULT hr = StringCbCopyW(pwszBuffer, cBufLen, pwszField);
-	if (hr == STRSAFE_E_INSUFFICIENT_BUFFER) ATLTRACE("Field truncated");
-	ATLASSERT(hr == S_OK || hr == STRSAFE_E_INSUFFICIENT_BUFFER);
+	ATLASSERT(pwszSrc != NULL && pwszDest != NULL);
+
+	HRESULT hr = StringCchCopyW(pwszDest, cchDest, pwszSrc);
+
+	ATLASSERT(SUCCEEDED(hr));
+	return hr;
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetPath(LPCITEMIDLIST)
- * Returns the data structure of the PIDL required to retrieve stored fields
+ * CPidlManager::GetData
+ * Walk to last item in PIDL (if multilevel) and returns item as a HOSTPIDL.
  *----------------------------------------------------------------------------*/
-LPPIDLDATA CPidlManager::GetData ( LPCITEMIDLIST pidl )
+LPHOSTPIDL CPidlManager::GetData( LPCITEMIDLIST pidl )
 {
     // Get the last item of the PIDL to make sure we get the right value
     // in case of multiple nesting levels
-    LPITEMIDLIST pidlLast = GetLastItem ( pidl );
-    return (LPPIDLDATA)( pidlLast->mkid.abID );
+	return (LPHOSTPIDL)GetLastItem( pidl );
 }
 
-/*---------------------------------------------------------------*/
-// CPidlManager::Copy( LPITEMIDLIST )
-// Duplicates a PIDL
-/*---------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::Copy ( LPCITEMIDLIST pidlSrc )
+/*------------------------------------------------------------------------------
+ * CPidlManager::Copy
+ * Duplicate a PIDL.
+ *----------------------------------------------------------------------------*/
+LPITEMIDLIST CPidlManager::Copy( LPCITEMIDLIST pidlSrc )
 {
-	LPITEMIDLIST pidlTarget = NULL;
-	UINT cbSrc = 0;
-
-    if ( NULL == pidlSrc )
-        return NULL;
-
-	// Allocate memory for the new PIDL.
-
-	cbSrc = GetSize ( pidlSrc );
-	pidlTarget = (LPITEMIDLIST) m_spMalloc->Alloc ( cbSrc );
-
-	if ( NULL == pidlTarget )
-	   return NULL;
-
-	// Copy the source PIDL to the target PIDL.
-
-	CopyMemory ( pidlTarget, pidlSrc, cbSrc );
+	LPITEMIDLIST pidlTarget = ILClone( pidlSrc );
+	
+	ATLASSERT(GetSize(pidlSrc) == GetSize(pidlTarget));
+	ATLASSERT(!memcmp(pidlSrc, pidlTarget, GetSize(pidlSrc)));
 
 	return pidlTarget;
 }

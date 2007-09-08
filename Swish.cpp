@@ -30,8 +30,8 @@ WTL::CImageList g_ImglistSmall, g_ImglistLarge;
 [ module(dll,
 		 uuid = "{b816a838-5022-11dc-9153-0090f5284f85}", 
 		 name = "Swish",
-		 version = "0.3",
-		 helpstring = "Swish 0.3 Type Library",
+		 version = "0.2",
+		 helpstring = "Swish 0.2 Type Library",
 		 resource_name = "IDR_SWISH")
 ]
 class CSwish

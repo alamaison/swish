@@ -10,20 +10,20 @@
 
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Refer to MSDN for the latest info on corresponding values for different platforms.
-#ifndef WINVER				// Allow use of features specific to Windows XP or later.
-#define WINVER 0x0501		// Change this to the appropriate value to target other versions of Windows.
+#ifndef WINVER				// Allow use of features specific to Windows 2k or later.
+#define WINVER 0x0400		// Change this to the appropriate value to target other versions of Windows.
 #endif
 
-#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
-#define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
+#ifndef _WIN32_WINNT		// Allow use of features specific to Windows 2k or later.                   
+#define _WIN32_WINNT 0x0500	// Change this to the appropriate value to target other versions of Windows.
 #endif						
 
 #ifndef _WIN32_WINDOWS		// Allow use of features specific to Windows 98 or later.
-#define _WIN32_WINDOWS 0x0410 // Change this to the appropriate value to target Windows Me or later.
+#define _WIN32_WINDOWS 0x0400 // Change this to the appropriate value to target Windows Me or later.
 #endif
 
 #ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
+#define _WIN32_IE 0x0400	// Change this to the appropriate value to target other versions of IE.
 #endif
 
 /* ATL Setup **************************************************************** */
@@ -37,9 +37,9 @@
 #define _ATL_DEBUG_INTERFACES
 #endif
 
-#include <atlbase.h>       // base ATL classes
+#include <atlbase.h>          // base ATL classes
 #include <atlcom.h>
-#include <atlwin.h>        // ATL GUI classes
+#include <atlwin.h>           // ATL GUI classes
 #include <atltypes.h>
 #include <atlctl.h>
 #include <atlhost.h>
@@ -47,20 +47,21 @@
 using namespace ATL;
 
 /* WTL Setup **************************************************************** */
-#define _WTL_USE_CSTRING
+#define _WTL_NO_CSTRING
 
-#include <atlapp.h>	       // base WTL classes
-//extern CAppModule _Module; // WTL version of CComModule
-#define _Module (*_pModule)  // WTL alternate version that works with attributes
-#include <atlframe.h>      // WTL frame window classes
-#include <atlmisc.h>       // WTL utility classes like CString
-#include <atlcrack.h>      // WTL enhanced msg map macros
+#include <atlapp.h>	          // base WTL classes
+//extern CAppModule _Module;  // WTL version of CComModule
+#define _Module (*_pModule)   // WTL alternate version, works with attributes
+#include <atlframe.h>         // WTL frame window classes
+#include <atlmisc.h>          // WTL utility classes like CString
+#include <atlcrack.h>         // WTL enhanced msg map macros
 
 #include <atlctrls.h>
 
-#include <shlobj.h>
+#include <shlobj.h>           // Typical Shell header file
 
 #include <vector>
+#include <strsafe.h>
 
 #ifdef UNREACHABLE
 #undef UNREACHABLE
@@ -70,9 +71,6 @@ using namespace ATL;
 #else
 #define UNREACHABLE __assume(0);
 #endif
-
-// Globals
-extern WTL::CImageList g_ImglistSmall, g_ImglistLarge;
 
 // This is here only to tell VC7 Class Wizard this is an ATL project
 #ifdef ___VC7_CLWIZ_ONLY___

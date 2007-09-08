@@ -1,6 +1,9 @@
 swish-0.2
 -All previous prototype code discarded
 -Created Explorer namespace extension with empty window
+-Used SHCreateShellFolderView to create default shell view window giving
+ best possible Explorer integration
+-Created PIDL Manager to handle host (connection) folder item
 
 swish-0.1.1
 -Experimentation with Visual Studio and linking with gcc-compiled libssh

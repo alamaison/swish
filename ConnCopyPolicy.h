@@ -17,11 +17,10 @@ class CConnCopyPolicy
 public:
 	static void init( LPITEMIDLIST* p ) { /* No init needed */ }
     
-    static HRESULT copy( LPITEMIDLIST* pTo, const PIDLCONNDATA *pFrom )
+    static HRESULT copy( LPITEMIDLIST* pTo, const HOSTPIDL *pFrom )
     {
-		*pTo = m_PidlManager.Create( pFrom->wszUser, pFrom->wszHost,
-			pFrom->wszPath, pFrom->uPort );
-        return (*pTo != NULL) ? S_OK : E_OUTOFMEMORY;
+		return m_PidlManager.Create( pFrom->wszLabel, pFrom->wszUser, 
+			pFrom->wszHost, pFrom->wszPath, pFrom->uPort, pTo );
     }
 
     static void destroy( LPITEMIDLIST* p ) 
@@ -34,7 +33,7 @@ private:
 };
 
 typedef CComEnumOnSTL<IEnumIDList, &IID_IEnumIDList, LPITEMIDLIST,
-                      CConnCopyPolicy, std::vector<PIDLCONNDATA> >
+                      CConnCopyPolicy, std::vector<HOSTPIDL> >
 		CEnumIDListImpl;
 
 #endif // CONNCOPYPOLICY_H

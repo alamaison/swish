@@ -22,7 +22,7 @@ Status:
     afresh as per the project plan
 
     In this version, Swish consists purely of a window integrated into
-    Windows Explorer
+    Windows Explorer displaying a few dummy host connection items.
 
 Requirements:
     Visual C++ 2005 (Express edition is unlikely to work as the code uses
