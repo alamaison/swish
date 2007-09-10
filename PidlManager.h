@@ -71,6 +71,7 @@ public:
    CString GetHost( LPCITEMIDLIST pidl );
    CString GetPath( LPCITEMIDLIST pidl );
    USHORT GetPort( LPCITEMIDLIST pidl );
+   CString GetPortStr( LPCITEMIDLIST pidl );
 
 private:
 	LPHOSTPIDL GetData ( LPCITEMIDLIST pidl );

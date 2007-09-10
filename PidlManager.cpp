@@ -203,6 +203,15 @@ USHORT CPidlManager::GetPort( LPCITEMIDLIST pidl )
 	return GetData(pidl)->uPort;
 }
 
+CString CPidlManager::GetPortStr( LPCITEMIDLIST pidl )
+{
+	if (pidl == NULL) return _T("");
+
+	CString strPort;
+	strPort.Format(_T("%u"), GetData(pidl)->uPort);
+	return strPort;
+}
+
 /*------------------------------------------------------------------------------
  * CPidlManager::CopyWSZString
  * Copies a WString into provided buffer and performs checking.

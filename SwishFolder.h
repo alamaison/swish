@@ -40,9 +40,10 @@ __interface ISwishFolder : IUnknown
 ]
 class ATL_NO_VTABLE CSwishFolder :
 	public ISwishFolder,
-	public IShellFolder,
+	public IShellFolder2, // This is not compatible with Win 9x/NT
     public IPersistFolder,
-	public IExtractIcon
+	public IExtractIcon,
+	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
 	CSwishFolder() : m_pidlRoot(NULL)
@@ -86,8 +87,6 @@ public:
 		( HWND, UINT, LPCITEMIDLIST*, REFIID, LPUINT, void** );
 	STDMETHOD(CompareIDs)
 		( LPARAM, LPCITEMIDLIST, LPCITEMIDLIST );
-
-
     STDMETHOD(BindToStorage)( LPCITEMIDLIST, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
     STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, LPSTRRET );
@@ -97,11 +96,25 @@ public:
     STDMETHOD(SetNameOf)( HWND, LPCITEMIDLIST, LPCOLESTR, DWORD, LPITEMIDLIST* )
         { return E_NOTIMPL; }
 
+	// IShellFolder2
+	STDMETHOD(EnumSearches)( IEnumExtraSearch **ppEnum );
+	STDMETHOD(GetDefaultColumn)( DWORD, ULONG *pSort, ULONG *pDisplay );
+	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );		STDMETHOD(GetDefaultSearchGUID)( GUID *pguid )
+		{ return E_NOTIMPL; }
+	STDMETHOD(GetDetailsEx)( PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, 
+							 VARIANT *pv );
+	STDMETHOD(MapColumnToSCID)( UINT iColumn, SHCOLUMNID *pscid );
+
 	// IExtractIcon
 	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
 						HICON *phiconSmall, UINT nIconSize );
 	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
 								int *piIndex, UINT *pwFlags );
+
+	// IShellDetails
+	STDMETHOD(GetDetailsOf)( PCUITEMID_CHILD pidl, UINT iColumn, 
+							 LPSHELLDETAILS pDetails );
+	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
     CPidlManager       m_PidlManager;
@@ -113,6 +126,21 @@ private:
 	CString GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 
+	// PROPERTYKEY fields for GetDetailsEx and MapColumnToSCID
+
+	// Host column property IDs
+	enum {
+		PID_SWISH_HOST_LABEL = PID_FIRST_USABLE,
+		PID_SWISH_HOST_HOST,
+		PID_SWISH_HOST_USER,
+		PID_SWISH_HOST_PORT,
+		PID_SWISH_HOST_PATH
+	};
+
 };
+
+// Host PROPERTYKEY GUID {b816a850-5022-11dc-9153-0090f5284f85}
+static const GUID FMTID_SWISH_HOST = 
+	{0xb816a850, 0x5022, 0x11dc, {0x91,0x53,0x00,0x90,0xf5,0x28,0x4f,0x85}};
 
 #endif // SWISHFOLDER_H
