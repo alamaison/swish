@@ -15,7 +15,7 @@
 class CConnCopyPolicy  
 {
 public:
-	static void init( LPITEMIDLIST* p ) { /* No init needed */ }
+	static void init( LPITEMIDLIST* ) { /* No init needed */ }
     
     static HRESULT copy( LPITEMIDLIST* pTo, const HOSTPIDL *pFrom )
     {

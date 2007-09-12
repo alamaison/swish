@@ -88,7 +88,7 @@ public:
 	STDMETHOD(GetCurFolder)( LPITEMIDLIST *ppidl );
 
 	// IShellFolder
-    STDMETHOD(BindToObject)( LPCITEMIDLIST, LPBC, REFIID, void** );
+    STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC, REFIID, void** );
 	STDMETHOD(EnumObjects)( HWND, DWORD, LPENUMIDLIST* );
     STDMETHOD(CreateViewObject)( HWND, REFIID, void** );
     STDMETHOD(GetAttributesOf) ( UINT, LPCITEMIDLIST*, LPDWORD );
