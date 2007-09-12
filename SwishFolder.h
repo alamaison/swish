@@ -10,6 +10,9 @@
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
+#define INITGUID
+#include <propkey.h>
+
 #include "PidlManager.h"
 
 #define _ATL_DEBUG_QI
@@ -40,10 +43,13 @@ __interface ISwishFolder : IUnknown
 ]
 class ATL_NO_VTABLE CSwishFolder :
 	public ISwishFolder,
-	public IShellFolder2, // This is not compatible with Win 9x/NT
-    public IPersistFolder,
-	public IExtractIcon,
-	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
+	// The IShellFolder2-specific detail-handling methods are not compatible
+	// with Win 9x/NT but it supports all those of IShellDetails which are
+	public IShellFolder2, 
+	// IPersistFolder2 needed for Details expando
+    public IPersistFolder2, 
+	public IExtractIcon
+//	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
 	CSwishFolder() : m_pidlRoot(NULL)
@@ -76,7 +82,10 @@ public:
     STDMETHOD(GetClassID)( CLSID* );
 
 	// IPersistFolder
-    STDMETHOD(Initialize)( LPCITEMIDLIST );
+    STDMETHOD(Initialize)( LPCITEMIDLIST pidl );
+
+	// IPersistFolder2
+	STDMETHOD(GetCurFolder)( LPITEMIDLIST *ppidl );
 
 	// IShellFolder
     STDMETHOD(BindToObject)( LPCITEMIDLIST, LPBC, REFIID, void** );
@@ -123,24 +132,30 @@ private:
     LPITEMIDLIST       m_pidl;
 	std::vector<HOSTPIDL> m_vecConnData;
 
-	CString GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
-	CString GetLabelFromPIDL( PCUITEMID_CHILD pidl );
+	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
+	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
+	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
+
 
 	// PROPERTYKEY fields for GetDetailsEx and MapColumnToSCID
 
-	// Host column property IDs
-	enum {
-		PID_SWISH_HOST_LABEL = PID_FIRST_USABLE,
-		PID_SWISH_HOST_HOST,
-		PID_SWISH_HOST_USER,
-		PID_SWISH_HOST_PORT,
-		PID_SWISH_HOST_PATH
-	};
+
 
 };
 
-// Host PROPERTYKEY GUID {b816a850-5022-11dc-9153-0090f5284f85}
-static const GUID FMTID_SWISH_HOST = 
-	{0xb816a850, 0x5022, 0x11dc, {0x91,0x53,0x00,0x90,0xf5,0x28,0x4f,0x85}};
+// Host column property IDs
+enum PID_SWISH_HOST {
+	PID_SWISH_HOST_USER = PID_FIRST_USABLE,
+	PID_SWISH_HOST_PORT
+};
+
+// PKEYs for custom swish details/properties
+// Swish Host FMTID GUID {b816a850-5022-11dc-9153-0090f5284f85}
+DEFINE_PROPERTYKEY(PKEY_SwishHostUser, 0xb816a850, 0x5022, 0x11dc, \
+				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
+				   PID_SWISH_HOST_USER);
+DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
+				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
+				   PID_SWISH_HOST_PORT);
 
 #endif // SWISHFOLDER_H
