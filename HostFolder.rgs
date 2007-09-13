@@ -28,33 +28,44 @@ HKLM
         
         NoRemove Classes
         {
-		    NoRemove CLSID
-		    {
-		        ForceRemove {[!uuid]} = s 'Swish'
-		        {
-			        val AppID = s '%APPID%'
+            NoRemove CLSID
+            {
+                ForceRemove {[!uuid]} = s 'Swish'
+                {
+                    val AppID = s '%APPID%'
                     
                     InprocServer32 = s '%MODULE%'
-			        {
-			            val ThreadingModel = s '[!threading]'
-			        }
-			
-			        ProgID = s '[!progid]'
-			        VersionIndependentProgID = s '[!vi_progid]'
-			        
-			        TypeLib = s '%APPID%'
-			        
-		            val InfoTip = s 'Remote file-system access via SFTP'
-		            val TileInfo = s 'prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7'
-		            
+                    {
+                        val ThreadingModel = s '[!threading]'
+                    }
+            
+                    ProgID = s '[!progid]'
+                    VersionIndependentProgID = s '[!vi_progid]'
+                    
+                    TypeLib = s '%APPID%'
+                    
+                    val InfoTip = s 'Remote file-system access via SFTP'
+                    val TileInfo = s 'prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7'
+                    
                     ShellFolder
                     {
                         val Attributes = d '2684354560'
                     }
                     
                     DefaultIcon = s 'shell32.dll,9'
-		        }
-		    }
-		}
+                }
+            }
+                
+            ForceRemove [!vi_progid] = s 'CHostFolder Object'
+            {
+                CLSID = s '{[!uuid]}'
+                CurVer = s '[!progid]'
+            }
+            
+            ForceRemove [!progid] = s 'CHostFolder Object'
+            {
+                CLSID = s '{[!uuid]}'
+            }
+        }
     }    
 }
