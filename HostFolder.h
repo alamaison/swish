@@ -1,7 +1,7 @@
-// SwishFolder.h : Declaration of the CSwishFolder
+// HostFolder.h : Declaration of the CHostFolder
 
-#ifndef SWISHFOLDER_H
-#define SWISHFOLDER_H
+#ifndef HOSTFOLDER_H
+#define HOSTFOLDER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -17,32 +17,32 @@
 
 #define _ATL_DEBUG_QI
 
-// ISwishFolder
+// IHostFolder
 [
 	object,
 	uuid("b816a839-5022-11dc-9153-0090f5284f85"),
-	helpstring("ISwishFolder Interface"),
+	helpstring("IHostFolder Interface"),
 	pointer_default(unique)
 ]
-__interface ISwishFolder : IUnknown
+__interface IHostFolder : IUnknown
 {
 };
 
 
-// CSwishFolder
+// CHostFolder
 [
 	coclass,
-	default(ISwishFolder),
+	default(IHostFolder),
 	threading(apartment),
-	vi_progid("Swish.SwishFolder"),
-	progid("Swish.SwishFolder.1"),
+	vi_progid("Swish.HostFolder"),
+	progid("Swish.HostFolder.1"),
 	version(1.0),
-	registration_script("SwishFolder.rgs"),
+	registration_script("HostFolder.rgs"),
 	uuid("b816a83a-5022-11dc-9153-0090f5284f85"),
-	helpstring("SwishFolder Class")
+	helpstring("HostFolder Class")
 ]
-class ATL_NO_VTABLE CSwishFolder :
-	public ISwishFolder,
+class ATL_NO_VTABLE CHostFolder :
+	public IHostFolder,
 	// The IShellFolder2-specific detail-handling methods are not compatible
 	// with Win 9x/NT but it supports all those of IShellDetails which are
 	public IShellFolder2, 
@@ -52,7 +52,7 @@ class ATL_NO_VTABLE CSwishFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CSwishFolder() : m_pidlRoot(NULL)
+	CHostFolder() : m_pidlRoot(NULL)
 	{
 	}
 
@@ -65,8 +65,8 @@ public:
 	{
 	}
 
-	// Init function - call right after constructing a CSwishFolder object
-    HRESULT _init ( CSwishFolder* pParentFolder, LPCITEMIDLIST pidl )
+	// Init function - call right after constructing a CHostFolder object
+    HRESULT _init ( CHostFolder* pParentFolder, LPCITEMIDLIST pidl )
     {
         m_pParentFolder = pParentFolder;
 
@@ -128,19 +128,13 @@ public:
 private:
     CPidlManager       m_PidlManager;
 	LPCITEMIDLIST      m_pidlRoot;
-    CSwishFolder*      m_pParentFolder;
+    CHostFolder*      m_pParentFolder;
     LPITEMIDLIST       m_pidl;
 	std::vector<HOSTPIDL> m_vecConnData;
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
-
-
-	// PROPERTYKEY fields for GetDetailsEx and MapColumnToSCID
-
-
-
 };
 
 // Host column property IDs
@@ -158,4 +152,4 @@ DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
 				   PID_SWISH_HOST_PORT);
 
-#endif // SWISHFOLDER_H
+#endif // HOSTFOLDER_H

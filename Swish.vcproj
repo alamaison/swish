@@ -343,10 +343,6 @@
 				RelativePath=".\Swish.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\SwishFolder.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -355,6 +351,38 @@
 			<File
 				RelativePath=".\ConnCopyPolicy.h"
 				>
+			</File>
+			<File
+				RelativePath=".\HostFolder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HostFolder.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="HostFolder.rgs"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="HostFolder.rgs"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						AdditionalDependencies="HostFolder.rgs"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\PidlManager.h"
@@ -372,41 +400,21 @@
 				RelativePath=".\stdafx.h"
 				>
 			</File>
-			<File
-				RelativePath=".\SwishFolder.h"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						AdditionalDependencies="SwishFolder.rgs"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						AdditionalDependencies="SwishFolder.rgs"
-					/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest"
 			>
 			<File
+				RelativePath=".\HostFolder.rgs"
+				>
+			</File>
+			<File
 				RelativePath=".\Swish.rc"
 				>
 			</File>
 			<File
 				RelativePath=".\Swish.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\SwishFolder.rgs"
 				>
 			</File>
 		</Filter>
