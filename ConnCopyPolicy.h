@@ -10,7 +10,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "PidlManager.h"
+#include "HostPidlManager.h"
 
 class CConnCopyPolicy  
 {
@@ -29,7 +29,7 @@ public:
     }
 
 private:
-    static CPidlManager m_PidlManager;
+    static CHostPidlManager m_PidlManager;
 };
 
 typedef CComEnumOnSTL<IEnumIDList, &IID_IEnumIDList, LPITEMIDLIST,

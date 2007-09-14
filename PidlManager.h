@@ -1,4 +1,4 @@
-/*  Declaration of the PIDL types and PIDL manager class
+/*  Declaration of the PIDL manager superclass
 
     Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -27,54 +27,21 @@
 #include <string.h>
 #include "remotelimits.h"
 
-// PIDL for storing connection data object details
-#define HOSTPIDL_FINGERPRINT 0x496c1066
-#pragma pack(1)
-struct HOSTPIDL
-{
-	USHORT cb;
-	DWORD dwFingerprint;
-	WCHAR wszLabel[MAX_LABEL_LENZ];
-	WCHAR wszUser[MAX_USERNAME_LENZ];
-	WCHAR wszHost[MAX_HOSTNAME_LENZ];
-	WCHAR wszPath[MAX_PATH_LENZ];
-	USHORT uPort;
-};
-#pragma pack()
-typedef UNALIGNED HOSTPIDL *LPHOSTPIDL;
-typedef const UNALIGNED HOSTPIDL *LPCHOSTPIDL;
-
-// Class that creates/destroyes PIDLs and gets data from PIDLs.
 class CPidlManager  
 {
 public:
 	CPidlManager();
-	~CPidlManager();
+	virtual ~CPidlManager();
 
-	HRESULT Create( LPCWSTR pwszLabel, LPCWSTR pwszUser, LPCWSTR pwszHost,
-					LPCWSTR pwszPath, USHORT uPort, PITEMID_CHILD *ppidlOut );
-
-   LPITEMIDLIST Copy ( LPCITEMIDLIST );
-   void Delete ( LPITEMIDLIST );
-   UINT GetSize ( LPCITEMIDLIST );
+   LPITEMIDLIST Copy( LPCITEMIDLIST );
+   void Delete( LPITEMIDLIST );
+   UINT GetSize( LPCITEMIDLIST );
 
    LPITEMIDLIST GetNextItem( LPCITEMIDLIST );
    LPITEMIDLIST GetLastItem( LPCITEMIDLIST );
 
-   LPHOSTPIDL Validate ( LPCITEMIDLIST );
-   HRESULT IsValid ( LPCITEMIDLIST );
-
-   // All accessors take a LPCITEMIDLIST as they may be multilevel
-   // where only the last SHITEMID is of specific type
-   CString GetLabel( LPCITEMIDLIST pidl );
-   CString GetUser( LPCITEMIDLIST pidl );
-   CString GetHost( LPCITEMIDLIST pidl );
-   CString GetPath( LPCITEMIDLIST pidl );
-   USHORT GetPort( LPCITEMIDLIST pidl );
-   CString GetPortStr( LPCITEMIDLIST pidl );
-
-private:
-	LPHOSTPIDL GetData ( LPCITEMIDLIST pidl );
+protected:
+	PITEMID_CHILD GetDataSegment( LPCITEMIDLIST pidl );
 	HRESULT CopyWSZString( PWSTR pwszDest, USHORT cchDest, PCWSTR pwszSrc );
 };
 

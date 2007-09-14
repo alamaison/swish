@@ -6,4 +6,4 @@
 #include "stdafx.h"
 #include "ConnCopyPolicy.h"
 
-CPidlManager CConnCopyPolicy::m_PidlManager;
+CHostPidlManager CConnCopyPolicy::m_PidlManager;

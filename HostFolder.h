@@ -13,7 +13,7 @@
 #define INITGUID
 #include <propkey.h>
 
-#include "PidlManager.h"
+#include "HostPidlManager.h"
 
 #define _ATL_DEBUG_QI
 
@@ -126,7 +126,7 @@ public:
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
-    CPidlManager       m_PidlManager;
+    CHostPidlManager       m_PidlManager;
 	LPCITEMIDLIST      m_pidlRoot;
     CHostFolder*      m_pParentFolder;
     LPITEMIDLIST       m_pidl;

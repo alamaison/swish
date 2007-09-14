@@ -308,6 +308,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HostPidlManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PidlManager.cpp"
 				>
 			</File>
@@ -383,6 +387,10 @@
 						AdditionalDependencies="HostFolder.rgs"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\HostPidlManager.h"
+				>
 			</File>
 			<File
 				RelativePath=".\PidlManager.h"

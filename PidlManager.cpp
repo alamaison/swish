@@ -1,4 +1,4 @@
-/*  Manage the creation and manipulatation of PIDLs representing connections
+/*  Manage the creation and manipulation of PIDLs
 
     Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -29,49 +29,6 @@ CPidlManager::~CPidlManager()
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::Create
- * Create a new terminated PIDL using the passed-in connection information
- *----------------------------------------------------------------------------*/
-HRESULT CPidlManager::Create(__in LPCWSTR pwszLabel, __in LPCWSTR pwszUser, 
-							 __in LPCWSTR pwszHost, __in LPCWSTR pwszPath, 
-							 __in USHORT uPort, 
-							 __deref_out PITEMID_CHILD *ppidlOut )
-{
-	ATLASSERT(sizeof(HOSTPIDL) % sizeof(DWORD) == 0); // DWORD-aligned
-
-	PITEMID_CHILD pidl = NULL;
-
-	// Allocate enough memory to hold a HOSTPIDL structure plus terminator
-    pidl = (PITEMID_CHILD)CoTaskMemAlloc(sizeof(HOSTPIDL) + sizeof(USHORT));
-    if(!pidl)
-		return E_OUTOFMEMORY;
-
-	// Use first PIDL member as a HOSTPIDL structure
-	LPHOSTPIDL pidlHost = (LPHOSTPIDL)pidl;
-
-	// Fill members of the PIDL with data
-	pidlHost->cb = sizeof HOSTPIDL;
-	pidlHost->dwFingerprint = HOSTPIDL_FINGERPRINT; // Sign with fingerprint
-	CopyWSZString(pidlHost->wszLabel, ARRAYSIZE(pidlHost->wszLabel), pwszLabel);
-	CopyWSZString(pidlHost->wszUser, ARRAYSIZE(pidlHost->wszUser), pwszUser);
-	CopyWSZString(pidlHost->wszHost, ARRAYSIZE(pidlHost->wszHost), pwszHost);
-	CopyWSZString(pidlHost->wszPath, ARRAYSIZE(pidlHost->wszPath), pwszPath);
-	pidlHost->uPort = uPort;
-
-	// Create the terminating null PIDL by setting cb field to 0.
-	LPITEMIDLIST pidlNext = GetNextItem(pidl);
-	ATLASSERT(pidlNext != NULL);
-	pidlNext->mkid.cb = 0;
-
-	*ppidlOut = pidl;
-	ATLASSERT(SUCCEEDED(IsValid(*ppidlOut)));
-	ATLASSERT(ILGetNext(ILGetNext(*ppidlOut)) == NULL); // PIDL is terminated
-	ATLASSERT(ILGetSize(*ppidlOut) == sizeof(HOSTPIDL) + sizeof(USHORT));
-
-    return S_OK;
-}
-
-/*------------------------------------------------------------------------------
  * CPidlManager::Delete
  * Free the PIDL using the Shell PIDL allocator.
  * Apparently, this function Validates that the memory being freed is
@@ -81,7 +38,6 @@ void CPidlManager::Delete( LPITEMIDLIST pidl )
 {
     ILFree(pidl);
 }
-
 
 /*------------------------------------------------------------------------------
  * CPidlManager::GetNextItem
@@ -94,7 +50,6 @@ LPITEMIDLIST CPidlManager::GetNextItem( LPCITEMIDLIST pidl )
 {
     return ILGetNext(pidl);
 }
-
 
 /*------------------------------------------------------------------------------
  * CPidlManager::GetLastItem
@@ -111,105 +66,12 @@ LPITEMIDLIST CPidlManager::GetLastItem( LPCITEMIDLIST pidl )
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::Validate
- * Validate the fingerprint stored in the PIDL.
- * If fingerprint matches HOSTPIDL return true/PIDL else return false/NULL
- *----------------------------------------------------------------------------*/
-LPHOSTPIDL CPidlManager::Validate( LPCITEMIDLIST pidl )
-{
-	LPHOSTPIDL pHostPidl = NULL;
-
-    if (pidl)
-    {
-        pHostPidl = (LPHOSTPIDL)pidl;
-		if (pHostPidl->cb && pHostPidl->dwFingerprint == HOSTPIDL_FINGERPRINT)
-			return pHostPidl; // equal to true
-	}
-
-    return NULL; // equal to false
-}
-
-/*------------------------------------------------------------------------------
- * CPidlManager::IsValid
- * Check if the fingerprint stored in the PIDL corresponds to a HOSTPIDL.
- *----------------------------------------------------------------------------*/
-HRESULT CPidlManager::IsValid( LPCITEMIDLIST pidl )
-{
-    LPHOSTPIDL pHostPidl = Validate(pidl);
-    return pHostPidl ? S_OK : E_INVALIDARG;
-}
-
-/*------------------------------------------------------------------------------
  * CPidlManager::GetSize
  * The total size of the passed in pidl in bytes including the zero terminator.
  *----------------------------------------------------------------------------*/
 UINT CPidlManager::GetSize( LPCITEMIDLIST pidl )
 {
 	return ILGetSize(pidl);
-}
-
-/*------------------------------------------------------------------------------
- * CPidlManager::GetLabel
- * Returns the friendly display name from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CPidlManager::GetLabel( LPCITEMIDLIST pidl )
-{
-	if (pidl == NULL) return _T("");
-
-	return GetData(pidl)->wszLabel;
-}
-
-/*------------------------------------------------------------------------------
- * CPidlManager::GetUser
- * Returns the username from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CPidlManager::GetUser( LPCITEMIDLIST pidl )
-{
-	if (pidl == NULL) return _T("");
-
-	return GetData(pidl)->wszUser;
-}
-
-/*------------------------------------------------------------------------------
- * CPidlManager::GetHost
- * Returns the hostname from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CPidlManager::GetHost( LPCITEMIDLIST pidl )
-{
-	if (pidl == NULL) return _T("");
-
-	return GetData(pidl)->wszHost;
-}
-
-/*------------------------------------------------------------------------------
- * CPidlManager::GetPath
- * Returns the remote directory path from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CPidlManager::GetPath( LPCITEMIDLIST pidl )
-{
-	if (pidl == NULL) return _T("");
-
-	return GetData(pidl)->wszPath;
-}
-
-/*------------------------------------------------------------------------------
- * CPidlManager::GetPort
- * Returns the SFTP port number from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-USHORT CPidlManager::GetPort( LPCITEMIDLIST pidl )
-{
-	if (pidl == NULL) return 0;
-
-	return GetData(pidl)->uPort;
-}
-
-CString CPidlManager::GetPortStr( LPCITEMIDLIST pidl )
-{
-	if (pidl == NULL) return _T("");
-
-	CString strPort;
-	strPort.Format(_T("%u"), GetData(pidl)->uPort);
-	return strPort;
 }
 
 /*------------------------------------------------------------------------------
@@ -231,14 +93,14 @@ HRESULT CPidlManager::CopyWSZString( __out_ecount(cchDest) PWSTR pwszDest,
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetData
+ * CPidlManager::GetDataSegment
  * Walk to last item in PIDL (if multilevel) and returns item as a HOSTPIDL.
  *----------------------------------------------------------------------------*/
-LPHOSTPIDL CPidlManager::GetData( LPCITEMIDLIST pidl )
+PITEMID_CHILD CPidlManager::GetDataSegment( LPCITEMIDLIST pidl )
 {
     // Get the last item of the PIDL to make sure we get the right value
     // in case of multiple nesting levels
-	return (LPHOSTPIDL)GetLastItem( pidl );
+	return (PITEMID_CHILD)GetLastItem( pidl );
 }
 
 /*------------------------------------------------------------------------------
