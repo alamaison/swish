@@ -316,6 +316,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RemotePidlManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -398,6 +402,10 @@
 			</File>
 			<File
 				RelativePath=".\remotelimits.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RemotePidlManager.h"
 				>
 			</File>
 			<File
