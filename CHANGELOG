@@ -6,6 +6,8 @@ swish-0.2
  best possible Explorer integration
 -Created PIDL Manager to handle host (connection) folder item
 -Added conection item details to Details and Tiles view
+-Created Remote Folder displaying dummy file listing which is displayed by
+ double-clicking (or otherwise opening) host connection in initial folder
 
 swish-0.1.1
 -Experimentation with Visual Studio and linking with gcc-compiled libssh

@@ -47,6 +47,11 @@
 #define MAX_PATH_LEN_WIN         248 // 260 including filename
 #define MAX_PATH_LEN_LINUX      4096
 
+#define MAX_FILENAME_LEN         255 // Choosing lower val as Windows FAT is
+#define MAX_FILENAME_LENZ        256 // also limited to 255. Makes things easier
+#define MAX_FILENAME_LEN_WIN     256 
+#define MAX_FILENAME_LEN_LINUX   255
+
 #define MIN_PORT                   0
 #define MAX_PORT               65535
 #define MAX_PORT_STR_LEN           5 // length of '65535' as a string

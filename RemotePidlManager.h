@@ -40,8 +40,9 @@ struct REMOTEPIDL
 	WCHAR wszOwner[MAX_USERNAME_LENZ];
 	WCHAR wszGroup[MAX_USERNAME_LENZ];
 	DWORD dwPermissions;
-	ULONG uSize;
-	ULONG dtModified;
+	WORD wPadding;
+	ULONGLONG uSize;
+	time_t dtModified;
 };
 #pragma pack()
 typedef UNALIGNED REMOTEPIDL *PREMOTEPIDL;
@@ -51,7 +52,7 @@ class CRemotePidlManager : public CPidlManager
 {
 public:
 	HRESULT Create( LPCWSTR pwszPath, LPCWSTR pwszOwner, LPCWSTR pwszGroup,
-					DWORD dwPermissions, ULONG uSize, ULONG dtModified,
+					DWORD dwPermissions, ULONGLONG uSize, time_t dtModified,
 					BOOL fIsFolder, PITEMID_CHILD *ppidlOut );
 
 	PREMOTEPIDL Validate( LPCITEMIDLIST );
@@ -64,8 +65,8 @@ public:
 	CString GetGroup( LPCITEMIDLIST pidl );
 	DWORD GetPermissions( LPCITEMIDLIST pidl );
 	CString GetPermissionsStr( LPCITEMIDLIST pidl );
-	ULONG GetSize( LPCITEMIDLIST pidl );
-	ULONG GetLastModified( LPCITEMIDLIST pidl );
+	ULONGLONG GetSize( LPCITEMIDLIST pidl );
+	CTime GetLastModified( LPCITEMIDLIST pidl );
 	BOOL IsFolder( LPCITEMIDLIST pidl );
 private:
 	PREMOTEPIDL GetDataSegment( LPCITEMIDLIST pidl );

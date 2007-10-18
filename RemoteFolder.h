@@ -1,7 +1,7 @@
-// HostFolder.h : Declaration of the CHostFolder
+// RemoteFolder.h : Declaration of the CRemoteFolder
 
-#ifndef HOSTFOLDER_H
-#define HOSTFOLDER_H
+#ifndef REMOTEFOLDER_H
+#define REMOTEFOLDER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -13,46 +13,47 @@
 #define INITGUID
 #include <propkey.h>
 
-#include "HostPidlManager.h"
+#include "RemotePidlManager.h"
+#include "HostFolder.h"
 
 #define _ATL_DEBUG_QI
 
-// IHostFolder
+// IRemoteFolder
 [
 	object,
-	uuid("b816a839-5022-11dc-9153-0090f5284f85"),
-	helpstring("IHostFolder Interface"),
+	uuid("b816a83b-5022-11dc-9153-0090f5284f85"),
+	helpstring("IRemoteFolder Interface"),
 	pointer_default(unique)
 ]
-__interface IHostFolder : IUnknown
+__interface IRemoteFolder : IUnknown
 {
 };
 
 
-// CHostFolder
+// CRemoteFolder
 [
 	coclass,
-	default(IHostFolder),
+	default(IRemoteFolder),
 	threading(apartment),
-	vi_progid("Swish.HostFolder"),
-	progid("Swish.HostFolder.1"),
+	vi_progid("Swish.RemoteFolder"),
+	progid("Swish.RemoteFolder.1"),
 	version(1.0),
-	registration_script("HostFolder.rgs"),
-	uuid("b816a83a-5022-11dc-9153-0090f5284f85"),
-	helpstring("HostFolder Class")
+	registration_script("RemoteFolder.rgs"),
+	uuid("b816a83c-5022-11dc-9153-0090f5284f85"),
+	helpstring("RemoteFolder Class")
 ]
-class ATL_NO_VTABLE CHostFolder :
-	public IHostFolder,
+class ATL_NO_VTABLE CRemoteFolder :
+	public IRemoteFolder,
 	// The IShellFolder2-specific detail-handling methods are not compatible
 	// with Win 9x/NT but it supports all those of IShellDetails which are
 	public IShellFolder2, 
 	// IPersistFolder2 needed for Details expando
-	public IPersistFolder2, 
+    public IPersistFolder2, 
 	public IExtractIcon
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CHostFolder() : m_pidlRoot(NULL)
+	CRemoteFolder() : m_pidl(NULL), m_pidlRoot(NULL)
 	{
 	}
 
@@ -65,17 +66,43 @@ public:
 	{
 	}
 
+	// Init function - call right after constructing a CRemoteFolder object
+    HRESULT _init( CHostFolder* pParentFolder, LPCITEMIDLIST pidl )
+    {
+        m_pHostFolder = pParentFolder;
+
+		if (m_pHostFolder != NULL)
+            m_pHostFolder->AddRef();
+
+        m_pidl = m_PidlManager.Copy ( pidl );
+
+        return S_OK;
+    }
+
+	// Init function - call right after constructing a CRemoteFolder object
+    HRESULT _init( CRemoteFolder* pParentFolder, LPCITEMIDLIST pidl )
+    {
+        m_pParentFolder = pParentFolder;
+
+		if (m_pParentFolder != NULL)
+            m_pParentFolder->AddRef();
+
+        m_pidl = m_PidlManager.Copy ( pidl );
+
+        return S_OK;
+    }
+
     // IPersist
     STDMETHOD(GetClassID)( CLSID* );
 
 	// IPersistFolder
-    STDMETHOD(Initialize)( PCIDLIST_ABSOLUTE pidl );
+    STDMETHOD(Initialize)( LPCITEMIDLIST pidl );
 
 	// IPersistFolder2
-	STDMETHOD(GetCurFolder)( PIDLIST_ABSOLUTE *ppidl );
+	STDMETHOD(GetCurFolder)( LPITEMIDLIST *ppidl );
 
 	// IShellFolder
-    STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC, REFIID, void** );
+    STDMETHOD(BindToObject)( PCUIDLIST_RELATIVE pidl, LPBC, REFIID, void** );
 	STDMETHOD(EnumObjects)( HWND, DWORD, LPENUMIDLIST* );
     STDMETHOD(CreateViewObject)( HWND, REFIID, void** );
     STDMETHOD(GetAttributesOf) ( UINT, LPCITEMIDLIST*, LPDWORD );
@@ -113,28 +140,32 @@ public:
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
-    CHostPidlManager      m_PidlManager;
-	PIDLIST_ABSOLUTE      m_pidlRoot; // Absolute pidl of this folder object
-	std::vector<HOSTPIDL> m_vecConnData;
+    CRemotePidlManager m_PidlManager;
+	PIDLIST_ABSOLUTE   m_pidlRoot; // Absolute pidl of this folder object
+    CHostFolder*       m_pHostFolder;
+	CRemoteFolder*     m_pParentFolder;
+    PIDLIST_RELATIVE   m_pidl;
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
+	HRESULT _FillDateVariant( CTime dtDate, VARIANT *pv );
+	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 };
 
-// Host column property IDs
-enum PID_SWISH_HOST {
-	PID_SWISH_HOST_USER = PID_FIRST_USABLE,
-	PID_SWISH_HOST_PORT
+// Remote folder listing column property IDs
+enum PID_SWISH_REMOTE {
+	PID_SWISH_REMOTE_GROUP = PID_FIRST_USABLE,
+	PID_SWISH_REMOTE_PERMISSIONS
 };
 
 // PKEYs for custom swish details/properties
-// Swish Host FMTID GUID {b816a850-5022-11dc-9153-0090f5284f85}
-DEFINE_PROPERTYKEY(PKEY_SwishHostUser, 0xb816a850, 0x5022, 0x11dc, \
+// Swish remote folder FMTID GUID {b816a851-5022-11dc-9153-0090f5284f85}
+DEFINE_PROPERTYKEY(PKEY_SwishRemoteGroup, 0xb816a851, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-				   PID_SWISH_HOST_USER);
-DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
+				   PID_SWISH_REMOTE_GROUP);
+DEFINE_PROPERTYKEY(PKEY_SwishRemotePermissions, 0xb816a851, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-				   PID_SWISH_HOST_PORT);
+				   PID_SWISH_REMOTE_PERMISSIONS);
 
-#endif // HOSTFOLDER_H
+#endif // REMOTEFOLDER_H

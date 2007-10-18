@@ -26,7 +26,7 @@
  *----------------------------------------------------------------------------*/
 HRESULT CRemotePidlManager::Create(
 	__in LPCWSTR pwszPath, __in LPCWSTR pwszOwner, __in LPCWSTR pwszGroup,
-	__in DWORD dwPermissions, __in ULONG uSize, __in ULONG dtModified,
+	__in DWORD dwPermissions, __in ULONGLONG uSize, __in time_t dtModified,
 	__in BOOL fIsFolder, __deref_out PITEMID_CHILD *ppidlOut )
 {
 	ATLASSERT(sizeof(REMOTEPIDL) % sizeof(DWORD) == 0); // DWORD-aligned
@@ -158,7 +158,7 @@ CString CRemotePidlManager::GetPermissionsStr( LPCITEMIDLIST pidl )
  * CRemotePidlManager::GetSize
  * Returns the file's size in bytes.
  *----------------------------------------------------------------------------*/
-DWORD CRemotePidlManager::GetSize( LPCITEMIDLIST pidl )
+ULONGLONG CRemotePidlManager::GetSize( LPCITEMIDLIST pidl )
 {
 	if (pidl == NULL) return 0;
 
@@ -167,9 +167,9 @@ DWORD CRemotePidlManager::GetSize( LPCITEMIDLIST pidl )
 
 /*------------------------------------------------------------------------------
  * CRemotePidlManager::GetLastModified
- * Returns the file permissions as numeric value from the PIDL.
+ * Returns the time and date that the file was last changed as a CTime.
  *----------------------------------------------------------------------------*/
-ULONG CRemotePidlManager::GetLastModified( LPCITEMIDLIST pidl )
+CTime CRemotePidlManager::GetLastModified( LPCITEMIDLIST pidl )
 {
 	if (pidl == NULL) return 0;
 

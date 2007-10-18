@@ -34,9 +34,11 @@ HRESULT CHostPidlManager::Create(__in LPCWSTR pwszLabel, __in LPCWSTR pwszUser,
 	PITEMID_CHILD pidl = NULL;
 
 	// Allocate enough memory to hold a HOSTPIDL structure plus terminator
-    pidl = (PITEMID_CHILD)CoTaskMemAlloc(sizeof(HOSTPIDL) + sizeof(USHORT));
+	static SIZE_T uTerminatedSize = sizeof(HOSTPIDL) + sizeof(USHORT);
+    pidl = (PITEMID_CHILD)CoTaskMemAlloc( uTerminatedSize );
     if(!pidl)
 		return E_OUTOFMEMORY;
+	ZeroMemory(pidl, uTerminatedSize);
 
 	// Use first PIDL member as a HOSTPIDL structure
 	PHOSTPIDL pidlHost = (PHOSTPIDL)pidl;
@@ -58,7 +60,7 @@ HRESULT CHostPidlManager::Create(__in LPCWSTR pwszLabel, __in LPCWSTR pwszUser,
 	*ppidlOut = pidl;
 	ATLASSERT(SUCCEEDED(IsValid(*ppidlOut)));
 	ATLASSERT(ILGetNext(ILGetNext(*ppidlOut)) == NULL); // PIDL is terminated
-	ATLASSERT(ILGetSize(*ppidlOut) == sizeof(HOSTPIDL) + sizeof(USHORT));
+	ATLASSERT(ILGetSize(*ppidlOut) == uTerminatedSize);
 
     return S_OK;
 }

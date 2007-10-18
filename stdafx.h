@@ -43,6 +43,7 @@
 #include <atltypes.h>
 #include <atlctl.h>
 #include <atlhost.h>
+#include <atltime.h>          // CTime class
 
 using namespace ATL;
 

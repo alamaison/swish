@@ -308,11 +308,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HostContextMenu.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HostPidlManager.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\PidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoteEnumIDList.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoteFolder.cpp"
 				>
 			</File>
 			<File
@@ -361,6 +373,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HostContextMenu.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HostFolder.cpp"
 				>
 			</File>
@@ -401,6 +417,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RemoteEnumIDList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoteFolder.h"
+				>
+			</File>
+			<File
 				RelativePath=".\remotelimits.h"
 				>
 			</File>
@@ -423,6 +447,10 @@
 			>
 			<File
 				RelativePath=".\HostFolder.rgs"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoteFolder.rgs"
 				>
 			</File>
 			<File

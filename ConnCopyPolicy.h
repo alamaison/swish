@@ -19,6 +19,7 @@ public:
     
     static HRESULT copy( LPITEMIDLIST* pTo, const HOSTPIDL *pFrom )
     {
+		ATLASSERT(SUCCEEDED(m_PidlManager.IsValid((LPITEMIDLIST)pFrom)));
 		return m_PidlManager.Create( pFrom->wszLabel, pFrom->wszUser, 
 			pFrom->wszHost, pFrom->wszPath, pFrom->uPort, pTo );
     }
