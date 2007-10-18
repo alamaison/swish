@@ -52,14 +52,14 @@ class ATL_NO_VTABLE CRemoteFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CRemoteFolder() : m_pidlRoot(NULL)
+	CRemoteFolder() : m_pidl(NULL)
 	{
 	}
 
 	~CRemoteFolder()
 	{
-		if (m_pidlRoot)
-			m_PidlManager.Delete( m_pidlRoot );
+		if (m_pidl)
+			m_PidlManager.Delete( m_pidl );
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -120,7 +120,7 @@ public:
 
 private:
     CRemotePidlManager m_PidlManager;
-	PIDLIST_ABSOLUTE   m_pidlRoot; // Absolute pidl of this folder object
+	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );

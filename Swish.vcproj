@@ -312,6 +312,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HostFolder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HostPidlManager.cpp"
 				>
 			</File>
@@ -374,10 +378,6 @@
 			</File>
 			<File
 				RelativePath=".\HostContextMenu.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HostFolder.cpp"
 				>
 			</File>
 			<File

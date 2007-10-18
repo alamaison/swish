@@ -52,14 +52,14 @@ class ATL_NO_VTABLE CHostFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CHostFolder() : m_pidlRoot(NULL)
+	CHostFolder() : m_pidl(NULL)
 	{
 	}
 
 	~CHostFolder()
 	{
-		if (m_pidlRoot)
-			m_PidlManager.Delete( m_pidlRoot );
+		if (m_pidl)
+			m_PidlManager.Delete( m_pidl );
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -120,7 +120,7 @@ public:
 
 private:
     CHostPidlManager      m_PidlManager;
-	PIDLIST_ABSOLUTE      m_pidlRoot; // Absolute pidl of this folder object
+	PIDLIST_ABSOLUTE      m_pidl; // Absolute pidl of this folder object
 	std::vector<HOSTPIDL> m_vecConnData;
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
