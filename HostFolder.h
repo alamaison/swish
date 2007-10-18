@@ -56,6 +56,12 @@ public:
 	{
 	}
 
+	~CHostFolder()
+	{
+		if (m_pidlRoot)
+			m_PidlManager.Delete( m_pidlRoot );
+	}
+
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct()
 	{

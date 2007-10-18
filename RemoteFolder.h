@@ -14,7 +14,6 @@
 #include <propkey.h>
 
 #include "RemotePidlManager.h"
-#include "HostFolder.h"
 
 #define _ATL_DEBUG_QI
 
@@ -53,8 +52,14 @@ class ATL_NO_VTABLE CRemoteFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CRemoteFolder() : m_pidl(NULL), m_pidlRoot(NULL)
+	CRemoteFolder() : m_pidlRoot(NULL)
 	{
+	}
+
+	~CRemoteFolder()
+	{
+		if (m_pidlRoot)
+			m_PidlManager.Delete( m_pidlRoot );
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -66,40 +71,14 @@ public:
 	{
 	}
 
-	// Init function - call right after constructing a CRemoteFolder object
-    HRESULT _init( CHostFolder* pParentFolder, LPCITEMIDLIST pidl )
-    {
-        m_pHostFolder = pParentFolder;
-
-		if (m_pHostFolder != NULL)
-            m_pHostFolder->AddRef();
-
-        m_pidl = m_PidlManager.Copy ( pidl );
-
-        return S_OK;
-    }
-
-	// Init function - call right after constructing a CRemoteFolder object
-    HRESULT _init( CRemoteFolder* pParentFolder, LPCITEMIDLIST pidl )
-    {
-        m_pParentFolder = pParentFolder;
-
-		if (m_pParentFolder != NULL)
-            m_pParentFolder->AddRef();
-
-        m_pidl = m_PidlManager.Copy ( pidl );
-
-        return S_OK;
-    }
-
     // IPersist
     STDMETHOD(GetClassID)( CLSID* );
 
 	// IPersistFolder
-    STDMETHOD(Initialize)( LPCITEMIDLIST pidl );
+    STDMETHOD(Initialize)( PCIDLIST_ABSOLUTE pidl );
 
 	// IPersistFolder2
-	STDMETHOD(GetCurFolder)( LPITEMIDLIST *ppidl );
+	STDMETHOD(GetCurFolder)( PIDLIST_ABSOLUTE *ppidl );
 
 	// IShellFolder
     STDMETHOD(BindToObject)( PCUIDLIST_RELATIVE pidl, LPBC, REFIID, void** );
@@ -142,9 +121,6 @@ public:
 private:
     CRemotePidlManager m_PidlManager;
 	PIDLIST_ABSOLUTE   m_pidlRoot; // Absolute pidl of this folder object
-    CHostFolder*       m_pHostFolder;
-	CRemoteFolder*     m_pParentFolder;
-    PIDLIST_RELATIVE   m_pidl;
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
