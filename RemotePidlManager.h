@@ -55,8 +55,8 @@ public:
 					DWORD dwPermissions, ULONGLONG uSize, time_t dtModified,
 					BOOL fIsFolder, PITEMID_CHILD *ppidlOut );
 
-	PREMOTEPIDL Validate( LPCITEMIDLIST );
-	HRESULT IsValid( LPCITEMIDLIST );
+	PREMOTEPIDL Validate( PCIDLIST_RELATIVE );
+	HRESULT IsValid( PCIDLIST_RELATIVE );
 
 	// All accessors take a LPCITEMIDLIST as they may be multilevel
 	// where only the last SHITEMID is of specific type
@@ -65,7 +65,7 @@ public:
 	CString GetGroup( LPCITEMIDLIST pidl );
 	DWORD GetPermissions( LPCITEMIDLIST pidl );
 	CString GetPermissionsStr( LPCITEMIDLIST pidl );
-	ULONGLONG GetSize( LPCITEMIDLIST pidl );
+	ULONGLONG GetFileSize( LPCITEMIDLIST pidl );
 	CTime GetLastModified( LPCITEMIDLIST pidl );
 	BOOL IsFolder( LPCITEMIDLIST pidl );
 private:

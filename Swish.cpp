@@ -15,9 +15,6 @@
 BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
-// Globals
-WTL::CImageList g_ImglistSmall, g_ImglistLarge;
-
 /*
    The module attribute causes 
      DllMain
