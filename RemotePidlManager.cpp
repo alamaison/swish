@@ -118,7 +118,7 @@ PREMOTEPIDL CRemotePidlManager::Validate( PCIDLIST_RELATIVE pidl )
     if (pidl)
     {
         pRemotePidl = (PREMOTEPIDL)pidl;
-		if (pRemotePidl->cb == sizeof(REMOTEPIDL_FINGERPRINT) && 
+		if (pRemotePidl->cb == sizeof(REMOTEPIDL) && 
 			pRemotePidl->dwFingerprint == REMOTEPIDL_FINGERPRINT)
 			return pRemotePidl; // equivalent to true
 	}
