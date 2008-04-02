@@ -79,7 +79,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="unicows.lib"
 				LinkIncremental="2"
-				MergedIDLBaseFileName="_SwishAttr.idl"
+				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -107,6 +107,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copying psftp to destination directory..."
+				CommandLine="copy /Y &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -146,7 +148,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;_ATL_ATTRIBUTES"
-				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -171,7 +172,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="unicows.lib"
 				LinkIncremental="1"
-				MergedIDLBaseFileName="_SwishAttr.idl"
+				MergedIDLBaseFileName="_$(TargetName).idl"
 				SubSystem="2"
 				TargetMachine="1"
 			/>
@@ -198,6 +199,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copying psftp to destination directory..."
+				CommandLine="copy /Y &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -238,7 +241,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;_ATL_ATTRIBUTES"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_USRDLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -263,9 +266,9 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="libunicows.lib"
+				AdditionalDependencies="unicows.lib"
 				LinkIncremental="2"
-				MergedIDLBaseFileName="_SwishAttr.idl"
+				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -293,6 +296,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copying psftp to destination directory..."
+				CommandLine="copy /Y &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -316,11 +321,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HostInfoDialog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HostPidlManager.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\PidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PuttyProvider.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PuttyWrapper.cpp"
 				>
 			</File>
 			<File
@@ -409,11 +426,23 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\HostInfoDialog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HostPidlManager.h"
 				>
 			</File>
 			<File
 				RelativePath=".\PidlManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PuttyProvider.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PuttyWrapper.h"
 				>
 			</File>
 			<File
@@ -464,5 +493,9 @@
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="Swish.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

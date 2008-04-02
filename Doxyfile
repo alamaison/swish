@@ -122,7 +122,7 @@ EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           = 
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
-IMAGE_PATH             = 
+IMAGE_PATH             = .
 INPUT_FILTER           = 
 FILTER_PATTERNS        = 
 FILTER_SOURCE_FILES    = NO
@@ -223,16 +223,85 @@ EXPAND_ONLY_PREDEF     = YES
 SEARCH_INCLUDES        = YES
 INCLUDE_PATH           = 
 INCLUDE_FILE_PATTERNS  = 
+
+# Those after blank line come from Doxygen website 
+# https://www.stack.nl/~dimitri/doxygen/preprocessing.html
 PREDEFINED             = __in= \
                          __out= \
+                         __inout= \
+                         __in_opt= \
+                         __out_opt= \
+                         __inout_opt= \
                          __deref_out= \
                          __reserved= \
-                         __inout= \
                          "STDMETHOD(a)=HRESULT a" \
                          STDMETHODIMP=HRESULT \
                          IFACEMETHODIMP=HRESULT \
                          __out_awcount(a,count)= \
-                         __out_ecount(count)=
+                         __out_ecount(count)= \
+                         __out_bcount(count)= \
+                         __in_ecount(count)= \
+                         __in_bcount(count)= \
+                         "MESSAGE_HANDLER_PARAMS=UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled" \
+                         "COMMAND_HANDLER_PARAMS=WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled" \
+                         "NOTIFY_HANDLER_PARAMS=int idCtrl, LPNMHDR pnmh, BOOL& bHandled" \
+                         __interface=struct \
+                         \
+                         "DECLARE_INTERFACE(name)=class name" \
+                         "STDMETHOD(result,name)=virtual result name" \
+                         "PURE= = 0" \
+                         THIS_= \
+                         THIS= \
+                         DECLARE_REGISTRY_RESOURCEID=// \
+                         DECLARE_PROTECT_FINAL_CONSTRUCT=// \
+                         "DECLARE_AGGREGATABLE(Class)= " \
+                         "DECLARE_REGISTRY_RESOURCEID(Id)= " \
+                         DECLARE_MESSAGE_MAP= \
+                         BEGIN_MESSAGE_MAP=/* \
+                         END_MESSAGE_MAP=*/// \
+                         BEGIN_COM_MAP=/* \
+                         END_COM_MAP=*/// \
+                         BEGIN_PROP_MAP=/* \
+                         END_PROP_MAP=*/// \
+                         BEGIN_MSG_MAP=/* \
+                         END_MSG_MAP=*/// \
+                         BEGIN_PROPERTY_MAP=/* \
+                         END_PROPERTY_MAP=*/// \
+                         BEGIN_OBJECT_MAP=/* \
+                         END_OBJECT_MAP()=*/// \
+                         DECLARE_VIEW_STATUS=// \
+                         "STDMETHOD(a)=HRESULT a" \
+                         "ATL_NO_VTABLE= " \
+                         "__declspec(a)= " \
+                         BEGIN_CONNECTION_POINT_MAP=/* \
+                         END_CONNECTION_POINT_MAP=*/// \
+                         "DECLARE_DYNAMIC(class)= " \
+                         "IMPLEMENT_DYNAMIC(class1, class2)= " \
+                         "DECLARE_DYNCREATE(class)= " \
+                         "IMPLEMENT_DYNCREATE(class1, class2)= " \
+                         "IMPLEMENT_SERIAL(class1, class2, class3)= " \
+                         "DECLARE_MESSAGE_MAP()= " \
+                         TRY=try \
+                         "CATCH_ALL(e)= catch(...)" \
+                         END_CATCH_ALL= \
+                         "THROW_LAST()= throw"\
+                         "RUNTIME_CLASS(class)=class" \
+                         "MAKEINTRESOURCE(nId)=nId" \
+                         "IMPLEMENT_REGISTER(v, w, x, y, z)= " \
+                         "ASSERT(x)=assert(x)" \
+                         "ASSERT_VALID(x)=assert(x)" \
+                         "TRACE0(x)=printf(x)" \
+                         "OS_ERR(A,B)={ #A, B }" \
+                         __cplusplus \
+                         "DECLARE_OLECREATE(class)= " \
+                         "BEGIN_DISPATCH_MAP(class1, class2)= " \
+                         "BEGIN_INTERFACE_MAP(class1, class2)= " \
+                         "INTERFACE_PART(class, id, name)= " \
+                         "END_INTERFACE_MAP()=" \
+                         "DISP_FUNCTION(class, name, function, result, id)=" \
+                         "END_DISPATCH_MAP()=" \
+                         "IMPLEMENT_OLECREATE2(class, name, id1, id2, id3, id4,\
+                         id5, id6, id7, id8, id9, id10, id11)="
 EXPAND_AS_DEFINED      = 
 SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------

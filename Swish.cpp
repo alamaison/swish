@@ -2,14 +2,6 @@
 //
 
 #include "stdafx.h"
-
-#include <atlframe.h>
-#include <atlctrls.h>
-#include <atldlgs.h>
-#include <atlctrlw.h>
-#include <atlctrlx.h>
-#include <atlsplit.h>
-
 #include "resource.h"
 
 BEGIN_OBJECT_MAP(ObjectMap)

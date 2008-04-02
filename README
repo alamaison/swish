@@ -1,36 +1,57 @@
 Swish (Secure WIndows SHell)
 
 Author: 
-    Alexander Lamaison <awl03 (at) doc.ic.ac.uk>
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
 What is Swish?
     Swish is a project to integrate access to remote files via SFTP into the 
     Microsoft Windows Explorer.
     
 Status:
-    Swish is currently very experimental.  Most of the effort so far has gone 
-    into making the development tools/platform and the underlying SSH library 
-    (libssh) work together.  
+    ********************************************************************
+    In this version, Swish can only LIST the files in a remote directory
+    and their properties.
+    ********************************************************************
     
-    The development environment has been changed to Visual Studio 2005 
-    (Visual C++) in order to reduce the haslle and make use of GUI toolkits
-    such as ATL/WTL or MFC.  Currently development of the back-end SFTP
-    connection mechanism is not taking place and a dummy dataset will be
-    used while the front-end is developed.
-
-    All previous prototype code has been abandoned and development started
-    afresh as per the project plan
-
-    In this version, Swish consists purely of a window integrated into
-    Windows Explorer displaying a few dummy host connection items.
+    Swish is currently very experimental.  Most of the effort so far has gone 
+    into demonstrating a proof-of-concept rather than creating a finished,
+    usable application.  
+    
+    The architecture of Swish is divided into a back-end and a front-end.  The
+    former deals with the SFTP connection to remote hosts while the latter
+    is concerned with displaying the results to the user and handling 
+    interaction.
+    
+    While the eventual aim is to offer a choice of back-end implementations
+    with different capabilities, the only one currently available is a
+    wrapper around PuTTY which can connect to a remote host and list the
+    contents of a directory.  There are strict requirements in order
+    to successfully connect to the remote host.
+    - Authentication must either be disabled or work using the PuTTY key 
+      authentication method.
+    - You must first connect to the host in question using PuTTY so that 
+      a known_host entry for it is added to the registry.
+    - The username and host must exist.
+    If these conditions are not met, Swish will crash Explorer.
 
 Requirements:
     Visual C++ 2005 (Express edition is unlikely to work as the code uses
-        ATL attributes which, I believe, require ATL 7)
+        ATL attributes which, I believe, require ATL 7).
     WTL 8 which can be obtained from Microsoft of through SourceForge
         Microsoft Permissive Licence: http://www.microsoft.com/downloads/
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
-        Common Public Licence: http://sourceforge.net/projects/wtl/
-        
+        Common Public Licence: http://sourceforge.net/projects/wtl/.
+    
+Unit testing:
+    CppUnit (works with v1.12.0, may work with other versions) must be present
+    on the local machine.  Many tests also require a remote host available to
+    connect to over SSH.  Swish assumes this is unix-based.
+    
+    Environment variables for testing:
+    CPPUNITDIR: The location of the CppUnit files.
+    TEST_HOST_NAME: The name of the remote testing host.
+    TEST_USER_NAME: The user name of the SSH account on the remote host.
+    TEST_HOST_PORT: The port on the remote host that SSH is listening on 
+        (optional - defaults to 22 if not set).
 
 $Id$

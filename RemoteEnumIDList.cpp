@@ -20,6 +20,7 @@
 #include "stdafx.h"
 #include "RemoteEnumIDList.h"
 #include "RemotePidlManager.h"
+#include <ATLComTime.h> // For COleDateTime wrapper class
 
 /*------------------------------------------------------------------------------
  * CRemoteEnumIDList::BindToFolder
@@ -32,6 +33,8 @@ HRESULT CRemoteEnumIDList::BindToFolder( CRemoteFolder* pFolder )
 {
 	ATLTRACE("CRemoteEnumIDList::BindToFolder called\n");
 
+	if (m_fBoundToFolder) // Already called this function
+		return E_UNEXPECTED;
 	if (pFolder == NULL)
 		return E_POINTER;
 
@@ -40,6 +43,7 @@ HRESULT CRemoteEnumIDList::BindToFolder( CRemoteFolder* pFolder )
 	m_pFolder = pFolder;
 	m_pFolder->AddRef();
 
+	m_fBoundToFolder = true;
 	return S_OK;
 }
 
@@ -51,30 +55,60 @@ HRESULT CRemoteEnumIDList::BindToFolder( CRemoteFolder* pFolder )
  * TODO: Ideally, the final EnumIDList will deal with enumeration *only*.
  *       Connection and retrieval will be handled by other objects.
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteEnumIDList::Connect( PCWSTR szUser, PCWSTR szHost, 
-								    PCWSTR szPath, UINT uPort )
+HRESULT CRemoteEnumIDList::Connect( PCTSTR szUser, PCTSTR szHost, 
+								    PCTSTR szPath, USHORT uPort )
 {
-	ATLTRACE("CRemoteEnumIDList::BindToFolder called\n");
-	ATLASSERT( m_pFolder );
+	ATLTRACE("CRemoteEnumIDList::Connect called\n");
 
-	if (m_pFolder == NULL)
-		return E_FAIL;
+	// Must call BindToFolder() first
+	if (!m_fBoundToFolder) return E_UNEXPECTED;
+	if (!szUser || !szUser[0]) return E_INVALIDARG;
+	if (!szHost || !szHost[0]) return E_INVALIDARG;
+	if (!szPath || !szPath[0]) return E_INVALIDARG;
+	ATLENSURE( m_pFolder );
+	ATLENSURE( m_pProvider );
 
 	// Connect to server
 	// Server->Connect()
 
-	// Retrieve file listing
-	FILEDATA fdTemp;
-	fdTemp.strPath = _T("bob.jpg");
-	fdTemp.dtModified = 0x3DE43B0C; // November 26, 2002 at 7:25p PST
-	fdTemp.dwPermissions = 0x777;
-	fdTemp.fIsFolder = false;
-	fdTemp.strOwner = _T("awl03");
-	fdTemp.strGroup = _T("awl03");
-	fdTemp.strAuthor = _T("awl03");
-	fdTemp.uSize = 1481;
-	m_vListing.push_back(fdTemp);
+	HRESULT hr;
 
+	BSTR bstrUser = ::SysAllocString(szUser);
+	BSTR bstrHost = ::SysAllocString(szHost);
+		hr = m_pProvider->Initialize(bstrUser, bstrHost, uPort);
+	::SysFreeString(bstrHost);
+	::SysFreeString(bstrUser);
+	ASSERT( SUCCEEDED(hr) );
+	if (FAILED(hr))
+		return hr;
+
+	// Get listing enumerator
+	IEnumListing *pEnum;
+	BSTR bstrPath = ::SysAllocString(szPath);
+		hr = m_pProvider->GetListing(bstrPath, &pEnum);
+	::SysFreeString(bstrPath);
+	ASSERT( SUCCEEDED(hr) );
+	if (FAILED(hr))
+		return hr;
+
+	do {
+		Listing lt;
+		hr = pEnum->Next(1, &lt, NULL);
+		if (hr == S_OK)
+		{
+			FILEDATA fd;
+			fd.strPath = lt.bstrFilename;
+			fd.strOwner = lt.bstrOwner;
+			fd.strGroup = lt.bstrGroup;
+			fd.uSize = lt.cSize;
+			fd.dtModified = (time_t) COleDateTime(lt.dateModified);
+			// TODO:
+			fd.dwPermissions = 0x777;
+			m_vListing.push_back( fd );
+		}
+	} while (hr == S_OK);
+
+	pEnum->Release();
 	return S_OK;
 }
 
@@ -89,11 +123,12 @@ STDMETHODIMP CRemoteEnumIDList::Next(
 	__out_opt ULONG *pceltFetched )
 {
 	ATLTRACE("CRemoteEnumIDList::Next called\n");
-	ATLASSERT( m_pFolder );
-	if (m_pFolder == NULL)
-		return E_FAIL;
-	if (!(pceltFetched || celt <= 1))
-		return E_INVALIDARG;
+	
+	// Must call BindToFolder() first
+	if (!m_fBoundToFolder) return E_UNEXPECTED;
+	if (!(pceltFetched || celt <= 1)) return E_INVALIDARG;
+	ATLENSURE( m_pFolder );
+	ATLENSURE( m_pProvider );
 
 	HRESULT hr = S_OK;
 	ULONG cFetched = 0;
@@ -136,7 +171,11 @@ STDMETHODIMP CRemoteEnumIDList::Next(
 STDMETHODIMP CRemoteEnumIDList::Skip( DWORD celt )
 {
 	ATLTRACE("CRemoteEnumIDList::Skip called\n");
-	ATLASSERT( m_pFolder );
+
+	// Must call BindToFolder() first
+	if (!m_fBoundToFolder) return E_UNEXPECTED;
+	ATLENSURE( m_pFolder );
+	ATLENSURE( m_pProvider );
 
 	m_iPos += celt;
 
@@ -150,7 +189,11 @@ STDMETHODIMP CRemoteEnumIDList::Skip( DWORD celt )
 STDMETHODIMP CRemoteEnumIDList::Reset()
 {
 	ATLTRACE("CRemoteEnumIDList::Reset called\n");
-	ATLASSERT( m_pFolder );
+
+	// Must call BindToFolder() first
+	if (!m_fBoundToFolder) return E_UNEXPECTED;
+	ATLENSURE( m_pFolder );
+	ATLENSURE( m_pProvider );
 
 	m_iPos = 0;
 
@@ -162,10 +205,15 @@ STDMETHODIMP CRemoteEnumIDList::Reset()
  * Creates a new item enumeration object with the same contents and state 
  * as the current one.
  *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteEnumIDList::Clone( __deref_out IEnumIDList **ppenum )
+STDMETHODIMP CRemoteEnumIDList::Clone( __deref_out IEnumIDList **ppEnum )
 {
 	ATLTRACE("CRemoteEnumIDList::Clone called\n");
-	ATLASSERT( m_pFolder );
+	(void)ppEnum;
+
+	// Must call BindToFolder() first
+	if (!m_fBoundToFolder) return E_UNEXPECTED;
+	ATLENSURE( m_pFolder );
+	ATLENSURE( m_pProvider );
 
 	// TODO: Implement this
 

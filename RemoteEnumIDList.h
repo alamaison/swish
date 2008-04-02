@@ -28,6 +28,11 @@
 #include "resource.h"       // main symbols
 
 #include "RemoteFolder.h"   // For back-reference to parent folder
+#include "PuttyProvider.h"  // For putty-based data provider
+
+#define IPuttyProvider IPuttyProviderUnstable
+#define IID_IPuttyProvider __uuidof(IPuttyProviderUnstable)
+#define CLSID_CPuttyProvider __uuidof(CPuttyProvider)
 
 struct FILEDATA
 {
@@ -71,30 +76,40 @@ class ATL_NO_VTABLE CRemoteEnumIDList :
 	public IEnumIDList
 {
 public:
-	CRemoteEnumIDList() : m_pFolder(NULL), m_iPos(0)
+	CRemoteEnumIDList() :
+		m_pProvider(NULL), m_pFolder(NULL), m_fBoundToFolder(false), m_iPos(0)
 	{
-	}
-
-	~CRemoteEnumIDList()
-	{
-		ATLASSERT(m_pFolder);
-
-		// Release folder that should have been incremented in BindToFolder
-		if (m_pFolder)
-			m_pFolder->Release();
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct()
 	{
-		return S_OK;
+		// Create instance of CPuttyProvider using CLSID
+		HRESULT hr = ::CoCreateInstance(
+			CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
+			NULL,                     // Ignore this.
+			CLSCTX_INPROC_SERVER,     // Server.
+			IID_IPuttyProvider,       // Interface you want.
+			(LPVOID *)&m_pProvider);  // Place to store interface.
+
+		ASSERT( SUCCEEDED(hr) );
+		return hr;
 	}
+
 	void FinalRelease()
 	{
+		// Release folder that should have been incremented in BindToFolder
+		if (m_pFolder) // Possibly NULL if FinalConstruct() failed
+			m_pFolder->Release();
+
+		// Release data provider component (should destroy psftp process)
+		if (m_pProvider) // Possibly NULL if FinalConstruct() failed
+			m_pProvider->Release();
 	}
 
 	HRESULT BindToFolder( CRemoteFolder* pFolder );
-	HRESULT Connect( PCWSTR szUser, PCWSTR szHost, PCWSTR szPath, UINT uPort );
+	HRESULT Connect(
+		PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort );
 
     // IEnumIDList
     IFACEMETHODIMP Next(
@@ -106,6 +121,8 @@ public:
     IFACEMETHODIMP Clone( __deref_out IEnumIDList **ppenum );
 
 private:
+	BOOL m_fBoundToFolder;
+	IPuttyProvider *m_pProvider;
 	CRemoteFolder* m_pFolder;
 	std::vector<FILEDATA> m_vListing;
 	ULONG m_iPos; // Current position

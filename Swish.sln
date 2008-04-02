@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Swish", "Swish.vcproj", "{3
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{4AC841DB-FEDF-4624-BFBD-A494B1F8B188}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcproj", "{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -21,6 +23,12 @@ Global
 		{4AC841DB-FEDF-4624-BFBD-A494B1F8B188}.Debug|Win32.ActiveCfg = Debug
 		{4AC841DB-FEDF-4624-BFBD-A494B1F8B188}.PREfast|Win32.ActiveCfg = PREfast
 		{4AC841DB-FEDF-4624-BFBD-A494B1F8B188}.Release|Win32.ActiveCfg = Release
+		{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}.Debug|Win32.Build.0 = Debug|Win32
+		{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}.PREfast|Win32.ActiveCfg = PREFast|Win32
+		{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}.PREfast|Win32.Build.0 = PREFast|Win32
+		{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}.Release|Win32.ActiveCfg = Release|Win32
+		{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = TRUE

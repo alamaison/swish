@@ -48,6 +48,7 @@
 using namespace ATL;
 
 /* WTL Setup **************************************************************** */
+/*
 #define _WTL_NO_CSTRING
 
 #include <atlapp.h>	          // base WTL classes
@@ -58,11 +59,33 @@ using namespace ATL;
 #include <atlcrack.h>         // WTL enhanced msg map macros
 
 #include <atlctrls.h>
+*/
 
-#include <shlobj.h>           // Typical Shell header file
+/* Handler prototypes ******************************************************* */
 
-#include <vector>
-#include <strsafe.h>
+// LRESULT MessageHandler(
+//         UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+#define MESSAGE_HANDLER_PARAMS UINT, WPARAM, LPARAM, BOOL&
+// LRESULT CommandHandler(
+//         WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+#define COMMAND_HANDLER_PARAMS WORD, WORD, HWND, BOOL&
+// LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
+#define NOTIFY_HANDLER_PARAMS int, LPNMHDR, BOOL&
+
+/* Debug macros ************************************************************* */
+
+#define VERIFY(f)          ATLVERIFY(f)
+#define ASSERT(f)          ATLASSERT(f)
+#ifdef _DEBUG
+#define REPORT(expr)  { \
+    LPVOID lpMsgBuf; \
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
+		NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
+        (LPTSTR) &lpMsgBuf, 0, NULL ); \
+	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); }
+#else
+#define REPORT(expr) (expr)
+#endif
 
 #ifdef UNREACHABLE
 #undef UNREACHABLE
@@ -72,6 +95,13 @@ using namespace ATL;
 #else
 #define UNREACHABLE __assume(0);
 #endif
+
+
+/* Includes ***************************************************************** */
+
+#include <vector>
+#include <strsafe.h>
+#include <shlobj.h>           // Typical Shell header file
 
 // This is here only to tell VC7 Class Wizard this is an ATL project
 #ifdef ___VC7_CLWIZ_ONLY___
@@ -88,3 +118,7 @@ CExeModule
 #else
   #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #endif
+
+
+#undef __SPECSTRINGS_STRICT_LEVEL
+#define __SPECSTRINGS_STRICT_LEVEL 3 // see specstrings_strict.h

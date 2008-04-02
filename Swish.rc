@@ -109,15 +109,65 @@ IDR_SWISH               REGISTRY                "Swish.rgs"
 
 STRINGTABLE 
 BEGIN
-    IDR_MAINFRAME           "Swish"
-END
-
-STRINGTABLE 
-BEGIN
     IDS_PROJNAME            "Swish"
 END
 
 #endif    // Neutral (Sys. Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_HOSTINFO_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 127
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_HOSTINFO_DIALOG DIALOGEX 0, 0, 186, 134
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter host information"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+    GROUPBOX        "Host &information",IDC_HOST_GROUP,7,6,115,120,WS_TABSTOP
+    EDITTEXT        IDC_USER,13,26,103,13,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "&User name:",IDC_LABEL_USER,"Static",SS_SIMPLE | WS_GROUP,14,16,35,8
+    CONTROL         "&Host:",IDC_LABEL_HOST,"Static",SS_SIMPLE | WS_GROUP,14,43,35,8
+    CONTROL         "&Port:",IDC_LABEL_PORT,"Static",SS_SIMPLE | WS_GROUP,14,70,35,8
+    CONTROL         "P&ath:",IDC_LABEL_PATH,"Static",SS_SIMPLE | WS_GROUP,14,97,35,8
+    EDITTEXT        IDC_HOST,13,53,103,13,ES_LOWERCASE | ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_PORT,13,80,103,13,ES_AUTOHSCROLL | ES_NUMBER | WS_GROUP
+    EDITTEXT        IDC_PATH,13,107,103,13,ES_AUTOHSCROLL | WS_GROUP
+END
+
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
