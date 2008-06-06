@@ -67,20 +67,54 @@ __interface IEnumListing : IUnknown
 	HRESULT Clone ([out] IEnumListing **ppEnum);
 };
 
-// IPuttyProvider
+
+
+
+#define ISftpProvider ISftpProviderUnstable
+#define IID_ISftpProvider __uuidof(ISftpProviderUnstable)
+#define ISftpConsumer ISftpConsumerUnstable
+#define IID_ISftpConsumer __uuidof(ISftpConsumerUnstable)
+#define CLSID_CPuttyProvider __uuidof(CPuttyProvider)
+
+// ISftpConsumer
+[
+	object, oleautomation,
+	uuid("99293E0D-C3AB-4b50-8132-329E30216E14"),
+	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
+	helpstring("ISftpConsumer Interface"),
+	pointer_default(unique)
+]
+__interface ISftpConsumer
+{
+	HRESULT OnPasswordRequest(
+		[in]          BSTR bstrRequest,
+		[out, retval] BSTR *pbstrPassword
+	);
+	HRESULT OnYesNoCancel(
+		[in]          BSTR bstrMessage,
+		[in]          BSTR bstrYesInfo,
+		[in]          BSTR bstrNoInfo,
+		[in]          BSTR bstrCancelInfo,
+		[in]          BSTR bstrTitle,
+		[out, retval] int *piResult
+	);
+};
+
+// ISftpProvider
 [
 	object,
 	uuid("93874AB6-D2AE-47c0-AFB7-F59A7507FADA"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
-	helpstring("IPuttyProvider Interface"),
+	helpstring("ISftpProvider Interface"),
 	pointer_default(unique)
 ]
-__interface IPuttyProviderUnstable : IUnknown
+__interface ISftpProvider
 {
 	HRESULT Initialize(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrUser,
 		[in] BSTR bstrHost,
-		[in] USHORT uPort
+		[in] short uPort
 	);
 	HRESULT GetListing(
 		[in] BSTR bstrDirectory,
@@ -89,6 +123,8 @@ __interface IPuttyProviderUnstable : IUnknown
 	
 };
 
+
+
 /**
  * PuTTY-based SFTP data provider.
  *
@@ -96,7 +132,7 @@ __interface IPuttyProviderUnstable : IUnknown
  */
 [
 	coclass,
-	default(IPuttyProviderUnstable),
+	default(ISftpProvider),
 	threading(apartment),
 	vi_progid("Swish.PuttyProvider"),
 	progid("Swish.PuttyProvider.1"),
@@ -105,7 +141,7 @@ __interface IPuttyProviderUnstable : IUnknown
 	helpstring("PuttyProvider Class")
 ]
 class ATL_NO_VTABLE CPuttyProvider :
-	public IPuttyProviderUnstable
+	public ISftpProvider
 {
 public:
 	/**
@@ -122,9 +158,10 @@ public:
 	CPuttyProvider()
 	try
 		: m_fConstructException(false), m_fInitialized(false),
-		  m_Putty(_GetExePath()) {}
+		  m_pConsumer(NULL), m_Putty(_GetExePath()) {}
 	catch (CPuttyWrapper::ChildLaunchException e)
 	{
+		UNREFERENCED_PARAMETER( e );
 		m_fConstructException = true;
 		UNREACHABLE;
 	}
@@ -141,14 +178,21 @@ public:
 		if (m_fConstructException) return E_FAIL;
 		return S_OK;
 	}
+	void FinalRelease()
+	{
+		if (m_pConsumer)
+			m_pConsumer->Release();
+	}
 
 	// IPuttyProviderUnstable
 	IFACEMETHODIMP Initialize(
-		__in BSTR bstrUser, __in BSTR bstrHost, USHORT uPort );
+		__in ISftpConsumer *pConsumer,
+		__in BSTR bstrUser, __in BSTR bstrHost, short uPort );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 
 private:
+	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
 	CPuttyWrapper m_Putty;         ///< Wrapper round psftp command-line
 	std::list<Listing> m_lstFiles;
@@ -157,6 +201,10 @@ private:
 	UINT m_uPort;                  ///< Holds remote port to connect to
 	BOOL m_fConstructException;    ///< Was there an exception in constructor?
 
+	HRESULT _HandlePasswordRequests(CString& strCurrentChunk);
+	HRESULT _HandleKeyboardInteractive(CString& strCurrentChunk);
+	HRESULT _HandleUnknownKeyNotice(CString& strCurrentChunk);
+	CString _ExtractLastLine(CString strChunk);
 	static CString _GetExePath();
 	static DATE _BuildDate(
 		__in const CString szMonth, __in const CString szDate, 

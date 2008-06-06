@@ -5,17 +5,16 @@
 
 #include <ATLComTime.h>
 
-#define LISTING_PATH OLESTR("/tmp")
-
 CPPUNIT_TEST_SUITE_REGISTRATION( CPuttyProvider_test );
 
 void CPuttyProvider_test::setUp()
 {
 	HRESULT hr;
+	DebugBreak();
 
 	// Start up COM
 	hr = ::CoInitialize(NULL);
-	CPPUNIT_ASSERT(SUCCEEDED(hr));
+	CPPUNIT_ASSERT_OK(hr);
 
 	// Test registry structure (for psftp.exe path - TODO: more?)
 	testRegistryStructure();
@@ -25,10 +24,12 @@ void CPuttyProvider_test::setUp()
 		CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
         NULL,                     // Ignore this.
         CLSCTX_INPROC_SERVER,     // Server.
-        IID_IPuttyProvider,       // Interface you want.
+        IID_ISftpProvider,       // Interface you want.
         (LPVOID *)&m_pProvider);  // Place to store interface.
+	CPPUNIT_ASSERT_OK(hr);
 
-	CPPUNIT_ASSERT(SUCCEEDED(hr));
+	// Create mock SftpConsumer for use in Initialize()
+	CreateMockSftpConsumer( &m_pCoConsumer, &m_pConsumer );
 }
 
 /**
@@ -46,13 +47,13 @@ void CPuttyProvider_test::testQueryInterface()
 	// Supports IUnknown (valid COM object)?
 	IUnknown *pUnk;
 	hr = m_pProvider->QueryInterface(__uuidof(IUnknown), (void **)&pUnk);
-	CPPUNIT_ASSERT(SUCCEEDED(hr));
+	CPPUNIT_ASSERT_OK(hr);
 	pUnk->Release();
 
 	// Supports IPuttyProvider (valid self!)?
-	IPuttyProvider *pProv;
-	hr = m_pProvider->QueryInterface(__uuidof(IPuttyProvider), (void **)&pProv);
-	CPPUNIT_ASSERT(SUCCEEDED(hr));
+	ISftpProvider *pProv;
+	hr = m_pProvider->QueryInterface(__uuidof(ISftpProvider), (void **)&pProv);
+	CPPUNIT_ASSERT_OK(hr);
 	pProv->Release();
 
 	// Says no properly (must return NULL)
@@ -68,56 +69,125 @@ void CPuttyProvider_test::testQueryInterface()
 
 void CPuttyProvider_test::testInitialize()
 {
-	BSTR bstrUser = GetUserName().AllocSysString();
-	BSTR bstrHost = GetHostName().AllocSysString();
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
 
-	CPPUNIT_ASSERT( SUCCEEDED(
-		m_pProvider->Initialize( bstrUser, bstrHost, GetPort() )
-	));
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::WrongPassword);
 
-	::SysFreeString( bstrUser );
-	::SysFreeString( bstrHost );
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
 }
-
-struct testFILEDATA
-{
-	BOOL fIsFolder;
-	CString strPath;
-	CString strOwner;
-	CString strGroup;
-	CString strAuthor;
-
-	ULONGLONG uSize; // 64-bit allows files up to 16 Ebibytes (a lot)
-	time_t dtModified;
-	DWORD dwPermissions;
-};
 
 void CPuttyProvider_test::testGetListing()
 {
 	HRESULT hr;
 
-	BSTR bstrUser = GetUserName().AllocSysString();
-	BSTR bstrHost = GetHostName().AllocSysString();
-	CPPUNIT_ASSERT( SUCCEEDED(
-		m_pProvider->Initialize( bstrUser, bstrHost, GetPort() )
-	));
-	::SysFreeString( bstrUser );
-	::SysFreeString( bstrHost );
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+	m_pCoConsumer->SetCustomPassword(GetPassword());
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
 
 	// Fetch listing enumerator
 	IEnumListing *pEnum;
-	BSTR bstrDirectory = ::SysAllocString(LISTING_PATH);
+	CComBSTR bstrDirectory(_T("/tmp"));
 	hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
 	if (FAILED(hr))
 		pEnum = NULL;
-	::SysFreeString(bstrDirectory);
-	CPPUNIT_ASSERT( SUCCEEDED(hr) );
+	CPPUNIT_ASSERT_OK(hr);
 
 	// Check format of listing is sensible
-	CPPUNIT_ASSERT( SUCCEEDED(pEnum->Reset()) );
+	testListingFormat(pEnum);
+
+	ULONG cRefs = pEnum->Release();
+	CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+}
+
+void CPuttyProvider_test::testGetListing_WrongPassword()
+{
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::WrongPassword);
+	m_pCoConsumer->SetMaxPasswordAttempts(5); // Tries 5 times then gives up
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
+
+	// Fetch listing enumerator
+	IEnumListing *pEnum;
+	CComBSTR bstrDirectory(_T("/tmp"));
+	HRESULT hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
+	if (FAILED(hr))
+		pEnum = NULL;
+	CPPUNIT_ASSERT_FAILED(hr);
+}
+
+void CPuttyProvider_test::tearDown()
+{
+	if (m_pProvider) // Possible for test to fail before m_pProvider initialised
+	{
+		ULONG cRefs = m_pProvider->Release();
+		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+	}
+	m_pProvider = NULL;
+
+	if (m_pConsumer) // Same again for mock consumer
+	{
+		ULONG cRefs = m_pConsumer->Release();
+		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+	}
+	m_pConsumer = NULL;
+
+	// Shut down COM
+	::CoUninitialize();
+}
+
+/*----------------------------------------------------------------------------*
+ * Private functions
+ *----------------------------------------------------------------------------*/
+
+/**
+ * Creates a CMockSftpConsumer and returns pointers to its CComObject
+ * as well as its ISftpConsumer interface.
+ */
+void CPuttyProvider_test::CreateMockSftpConsumer(
+	CComObject<CMockSftpConsumer> **ppCoConsumer, ISftpConsumer **ppConsumer )
+	const
+{
+	// Create mock object coclass instance
+	*ppCoConsumer = NULL;
+	HRESULT hr = CComObject<CMockSftpConsumer>::CreateInstance(ppCoConsumer);
+	CPPUNIT_ASSERT_OK(hr);
+	CPPUNIT_ASSERT(*ppCoConsumer);
+
+	// Get ISftpConsumer interface
+	*ppConsumer = NULL;
+	(*ppCoConsumer)->QueryInterface(ppConsumer);
+	CPPUNIT_ASSERT(*ppConsumer);
+}
+
+/**
+ * Tests that the format of the enumeration of listings is correct.
+ *
+ * @param pEnum The Listing enumerator to be tested.
+ */
+void CPuttyProvider_test::testListingFormat(IEnumListing *pEnum) const
+{
+	// Check format of listing is sensible
+	CPPUNIT_ASSERT_OK( pEnum->Reset() );
 	Listing lt;
-	hr = pEnum->Next(1, &lt, NULL);
-	CPPUNIT_ASSERT_EQUAL( S_OK, hr );
+	HRESULT hr = pEnum->Next(1, &lt, NULL);
+	CPPUNIT_ASSERT_OK(hr);
 	while (hr == S_OK)
 	{
 		CString strFilename(lt.bstrFilename),
@@ -179,27 +249,7 @@ void CPuttyProvider_test::testGetListing()
 
 		hr = pEnum->Next(1, &lt, NULL);
 	}
-
-	ULONG cRefs = pEnum->Release();
-	CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
 }
-
-void CPuttyProvider_test::tearDown()
-{
-	if (m_pProvider) // Possible for test to fail before m_pProvider initialised
-	{
-		ULONG cRefs = m_pProvider->Release();
-		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
-	}
-	m_pProvider = NULL;
-
-	// Shut down COM
-	::CoUninitialize();
-}
-
-/*----------------------------------------------------------------------------*
- * Private functions
- *----------------------------------------------------------------------------*/
 
 /**
  * Test that the HKCR\CLSID\{Class ID of CPuttyProvider}\InprocServer32 registry
@@ -332,4 +382,30 @@ USHORT CPuttyProvider_test::GetPort() const
 	CPPUNIT_ASSERT(uPort <= 65535);
 
 	return (USHORT)uPort;
+}
+
+/**
+ * Get the password to use to connect to the SSH account on the remote machine.
+ *
+ * The password is retrieved from the TEST_PASSWORD environment variable.
+ * If this variable is not set, a CPPUNIT exception is thrown.
+ * 
+ * In order to be useful, the password should be valid fot the SSH
+ * account on the testing machine.
+ * 
+ * @return the password
+ */
+CString CPuttyProvider_test::GetPassword() const
+{
+	static CString strPassword;
+
+	if (strPassword.IsEmpty()) // Might be cached in static variable
+	{
+		if(!strPassword.GetEnvironmentVariable(_T("TEST_PASSWORD")))
+			CPPUNIT_FAIL("Please set TEST_PASSWORD environment variable");
+	}
+
+	CPPUNIT_ASSERT(!strPassword.IsEmpty());
+	
+	return strPassword;
 }

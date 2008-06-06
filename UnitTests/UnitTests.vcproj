@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;.."
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,6 +64,7 @@
 				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
+				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -122,7 +123,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;.."
-				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
@@ -143,6 +144,7 @@
 				AdditionalDependencies="cppunit_dll.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
+				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -204,7 +206,7 @@
 				AdditionalOptions="/analyze"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;.."
-				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -227,6 +229,7 @@
 				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
+				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -291,6 +294,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
+			<File
+				RelativePath=".\CppUnitExtensions.h"
+				>
+			</File>
 			<File
 				RelativePath=".\HostInfoDialog_test.h"
 				>

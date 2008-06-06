@@ -27,6 +27,10 @@
 #include <list>
 using std::list;
 
+#ifdef _DEBUG
+#define WITH_LOGGING
+#endif
+
 /**
  * Wrapper around @c psftp.exe.
  */
@@ -36,6 +40,7 @@ public:
 	CPuttyWrapper( PCTSTR pszPsftpPath );
 	~CPuttyWrapper();
 
+	CString ReadLine();
 	CString Read();
 	ULONG Write( PCTSTR pszIn );
 	ULONG Write( PCTSTR pszIn, ULONG cchIn );
@@ -68,13 +73,26 @@ public:
 
 private:
 
+	typedef enum tagLogDirection
+	{
+		READ,
+		WRITE
+	} LogDirection;
+	void _LogSetup();
+	void _LogStart(LogDirection enumDirection);
+	void _LogStop(LogDirection enumDirection);
+	void _LogEntry( __in_bcount(cbSize) const char* pBuffer, ULONG cbSize );
+	void _WriteToLogFile( PCSTR strText );
+
 	PCTSTR GetChildPath();
 
 	HANDLE GetStdin() { return m_hFromChildRead; }
 	HANDLE GetStdout() { return m_hToChildWrite; }
 
 	CString ReadOneBufferWorth();
+	CString ReadOneBufferWorth( ULONG cbBufferSize );
 	DWORD GetSizeOfDataInPipe();
+	long FindNewlineInPipe();
 
 	ULONG ReadOemCharsFromConsole(
 		__out_bcount(cbSize) char *pBuffer, ULONG cbSize
@@ -134,6 +152,10 @@ private:
 	HANDLE m_hChildMonitorThread; ///< Monitors the child process's lifecycle
 
 	HANDLE m_hChildExitEvent;     ///< Unnatural exit e.g. kill child requested
+
+#ifdef WITH_LOGGING
+	HANDLE m_hLog;                ///< Handle to the debug log
+#endif
 	// @}
 };
 

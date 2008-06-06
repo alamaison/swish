@@ -25,16 +25,19 @@ Status:
     While the eventual aim is to offer a choice of back-end implementations
     with different capabilities, the only one currently available is a
     wrapper around PuTTY which can connect to a remote host and list the
-    contents of a directory.  There are strict requirements in order
-    to successfully connect to the remote host.
-    - Authentication must either be disabled or work using the PuTTY key 
-      authentication method.
-    - You must first connect to the host in question using PuTTY so that 
-      a known_host entry for it is added to the registry.
-    - The username and host must exist.
-    If these conditions are not met, Swish will crash Explorer.
+    contents of a directory.  
+    Swish can only cope with very simple authentication interaction at this
+    point (e.g. simple password, unknown host).  If it encounters any
+    interaction that is is not anticipating IT WILL CRASH EXPLORER.  Due to
+    limitations in the backend, it is also very prone to timing issues.
 
-Requirements:
+Requirements to run:
+    Internet Explorer 5.01 or greater.
+    For Windows 9x, the Microsoft Layer for Unicode (MSLU, aka Unicows)
+        http://www.microsoft.com/downloads/details.aspx?FamilyId=73BA7BD7-ED06-
+        4F0D-80A4-2A7EEAEE17E2&displaylang=en.
+    
+Requirements to build:
     Visual C++ 2005 (Express edition is unlikely to work as the code uses
         ATL attributes which, I believe, require ATL 7).
     WTL 8 which can be obtained from Microsoft of through SourceForge
@@ -42,16 +45,18 @@ Requirements:
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
         Common Public Licence: http://sourceforge.net/projects/wtl/.
     
-Unit testing:
+Requirements for testing:
     CppUnit (works with v1.12.0, may work with other versions) must be present
     on the local machine.  Many tests also require a remote host available to
     connect to over SSH.  Swish assumes this is unix-based.
     
-    Environment variables for testing:
+    Environment variables:
     CPPUNITDIR: The location of the CppUnit files.
     TEST_HOST_NAME: The name of the remote testing host.
     TEST_USER_NAME: The user name of the SSH account on the remote host.
     TEST_HOST_PORT: The port on the remote host that SSH is listening on 
         (optional - defaults to 22 if not set).
+    TEST_PASSWORD:  The password to use to connect to the remote host if 
+                    required.
 
 $Id$

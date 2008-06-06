@@ -48,6 +48,7 @@ void CHostInfoDialog_test::testDoModal()
 	CPPUNIT_ASSERT_EQUAL( (INT_PTR)IDCANCEL, m_dlg.DoModal() );
 
 	// Check that thread terminated
+	::Sleep(700);
 	DWORD dwThreadStatus;
 	::GetExitCodeThread(hClickCancelThread, &dwThreadStatus);
 	CPPUNIT_ASSERT_ASSERTION_FAIL(
@@ -74,7 +75,7 @@ DWORD WINAPI CHostInfoDialog_test::ClickCancelThread(LPVOID lpThreadParam)
 // static
 {
 	CHostInfoDialog_test *pThis = ((CHostInfoDialog_test *)lpThreadParam);
-	::Sleep(100);
+	::Sleep(700);
 
 	// Send Cancel button click message to dialog box
 	//WPARAM wParam = MAKEWPARAM(IDCANCEL, BN_CLICKED);

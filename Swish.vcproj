@@ -40,6 +40,7 @@
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
 				MkTypLibCompatible="false"
+				WarningLevel="3"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
@@ -47,6 +48,7 @@
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="Swish_i.c"
 				ProxyFileName="Swish_p.c"
+				EnableErrorChecks="2"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -329,6 +331,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PasswordDialog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PidlManager.cpp"
 				>
 			</File>
@@ -431,6 +437,10 @@
 			</File>
 			<File
 				RelativePath=".\HostPidlManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PasswordDialog.h"
 				>
 			</File>
 			<File

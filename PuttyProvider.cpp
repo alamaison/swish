@@ -49,19 +49,23 @@ using std::list;
  *   @c E_INVALIDARG if either string parameter was empty, @c S_OK otherwise.
  */
 STDMETHODIMP CPuttyProvider::Initialize(
-	BSTR bstrUser, BSTR bstrHost, USHORT uPort )
+	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, short uPort )
 {
-	ASSERT( !m_fConstructException );
-	if (::SysStringLen(bstrUser) == 0 || ::SysStringLen(bstrHost) == 0)
-		return E_INVALIDARG;
+	ATLASSUME( !m_fConstructException );
+	ATLENSURE_RETURN_HR( pConsumer, E_POINTER );
+	ATLENSURE_RETURN_HR( 
+		::SysStringLen(bstrUser) > 0 && ::SysStringLen(bstrHost) > 0,
+		E_INVALIDARG );
 
+	m_pConsumer = pConsumer;
+	m_pConsumer->AddRef();
 	m_strUser = bstrUser;
 	m_strHost = bstrHost;
 	m_uPort = uPort;
 
-	ASSERT( !m_strUser.IsEmpty() );
-	ASSERT( !m_strHost.IsEmpty() );
-	ASSERT( m_uPort <= MAX_PORT );
+	ATLASSERT( !m_strUser.IsEmpty() );
+	ATLASSERT( !m_strHost.IsEmpty() );
+	ATLASSERT( m_uPort <= MAX_PORT );
 
 	m_fInitialized = true;
 	return S_OK;
@@ -117,9 +121,26 @@ STDMETHODIMP CPuttyProvider::GetListing(
 		// Should read: 
 		// "Remote working directory is /such-and-such-a-path
 		//  psftp> "
+		// but may be a password request or an unknown key notice.
 		strCommand.Format(OPEN_COMMAND, m_strUser, m_strHost, m_uPort);
 		m_Putty.Write( strCommand );
 		strActual = m_Putty.Read();
+
+		HRESULT hr;
+
+		// Handle any unknown host key notice
+		hr = _HandleUnknownKeyNotice(strActual);
+		if (FAILED(hr)) return hr;
+
+		// Handle password requests
+		hr = _HandlePasswordRequests(strActual);
+		if (FAILED(hr)) return hr;
+
+		// Handle keyboard-interactive authentication
+		hr = _HandleKeyboardInteractive(strActual);
+		if (FAILED(hr)) return hr;
+
+		// Verify connected
 		strExpected = OPEN_REPLY_HEAD;
 		VERIFY( strExpected == strActual.Left(strExpected.GetLength()) );
 		strExpected = OPEN_REPLY_TAIL;
@@ -192,6 +213,190 @@ STDMETHODIMP CPuttyProvider::GetListing(
 /*----------------------------------------------------------------------------*
  * Private functions
  *----------------------------------------------------------------------------*/
+
+/*
+user@full.domain.example.com's password: 
+*/
+HRESULT CPuttyProvider::_HandlePasswordRequests(CString& strCurrentChunk)
+{
+	if (strCurrentChunk.Right(11) == _T(" password: "))
+	{
+		// Current text chunk ends in a password request
+
+		CComBSTR bstrPrompt;
+		CComBSTR bstrPassword;
+
+		// Process password prompt string an extract last line only
+		bstrPrompt = _ExtractLastLine(strCurrentChunk);
+
+		// Get password from user
+		HRESULT hr;
+		hr = m_pConsumer->OnPasswordRequest(bstrPrompt, &bstrPassword);
+		if (SUCCEEDED(hr))
+		{
+			ATLENSURE_RETURN_HR( bstrPassword.Length() > 0, E_ABORT );
+
+			// Send password
+			bstrPassword += _T("\r\n");
+			m_Putty.Write( bstrPassword );
+
+			// Read next
+			strCurrentChunk = m_Putty.ReadLine(); // Discard first line-break
+			ATLASSERT( strCurrentChunk == _T("\r\n") );
+			strCurrentChunk = m_Putty.Read();
+
+			// Recurse to handle possible failure and reprompt
+			return _HandlePasswordRequests(strCurrentChunk);
+		}
+		else
+			return E_ABORT; // No password given (probably clicked Cancel)
+	}
+	else
+		return S_OK; // Not a password request: do nothing
+}
+
+/*
+Using keyboard-interactive authentication.
+Password:
+*/
+HRESULT CPuttyProvider::_HandleKeyboardInteractive(CString& strCurrentChunk)
+{
+	if (strCurrentChunk.Left(42) ==
+		_T("Using keyboard-interactive authentication."))
+	{
+		// Current text chunk begins keyboard-interactive prompts
+
+		CComBSTR bstrPrompt;
+		CComBSTR bstrResponse;
+
+		// Process password prompt string and extract last line only
+		bstrPrompt = _ExtractLastLine(strCurrentChunk);
+
+		// Get password from user
+		HRESULT hr;
+		hr = m_pConsumer->OnPasswordRequest(bstrPrompt, &bstrResponse);
+		if (SUCCEEDED(hr))
+		{
+			ATLENSURE_RETURN_HR( bstrResponse.Length() > 0, E_ABORT );
+
+			// Send password
+			bstrResponse += _T("\r\n");
+			m_Putty.Write( bstrResponse );
+
+			// Read next
+			strCurrentChunk = m_Putty.ReadLine(); // Discard first line-break
+			ATLASSERT( strCurrentChunk == _T("\r\n") );
+			strCurrentChunk = m_Putty.Read();
+
+			// Recurse to handle possible failure and reprompt
+			return _HandleKeyboardInteractive(strCurrentChunk);
+		}
+		else
+			return E_ABORT; // No password given (probably clicked Cancel)
+	}
+	else
+		return S_OK; // Not a password request: do nothing
+}
+
+/*
+The server's host key is not cached in the registry. You
+have no guarantee that the server is the computer you
+think it is.
+The server's rsa2 key fingerprint is:
+ssh-rsa 2048 7f:a1:63:0d:5a:a5:40:84:b6:75:0c:8d:f9:71:4f:02
+If you trust this host, enter "y" to add the key to
+PuTTY's cache and carry on connecting.
+If you want to carry on connecting just once, without
+adding the key to the cache, enter "n".
+If you do not trust this host, press Return to abandon the
+connection.
+Store key in cache? (y/n) 
+*/
+HRESULT CPuttyProvider::_HandleUnknownKeyNotice(CString& strCurrentChunk)
+{
+	if (strCurrentChunk.Left(127) == 
+		_T("The server's host key is not cached in the registry. You\r\nhave no guarantee that the server is the computer you\r\nthink it is.\r\n"))
+	{
+		// Current text chunk ends is an unknown host key notice
+		CComBSTR bstrMessage;
+		CComBSTR bstrYesInfo;
+		CComBSTR bstrNoInfo;
+		CComBSTR bstrCancelInfo;
+		CComBSTR bstrTitle;
+
+		// Take first 5 lines as the message to display to the user
+		int iPos = 0;
+		for (int iLine = 0; iLine < 5; iLine++)
+		{
+ 			iPos = strCurrentChunk.Find(_T('\n'), iPos)+1;
+			ATLASSERT(iPos >= 0); // Must have at least 5 lines
+		}
+		if (iPos >= 0)
+			bstrMessage = strCurrentChunk.Left(iPos);
+		else
+		{
+			UNREACHABLE;
+			bstrMessage = strCurrentChunk;
+		}
+
+		// Create other info strings
+		bstrYesInfo = _T("Click Yes to add the key to PuTTY's cache and carry on connecting.");
+		bstrNoInfo = _T("Click No to carry on connecting just once, without adding the key to the cache.");
+		bstrCancelInfo = _T("If you do not trust this host, click Cancel to abandon the connection.");
+		bstrTitle = _T("Unknown host key");
+
+		// Double-check that the last line is asking about adding a key
+		ATLENSURE_RETURN_HR( 
+			_ExtractLastLine(strCurrentChunk)==_T("Store key in cache? (y/n) "),
+			E_ABORT
+		);
+
+		// Ask user what to do
+		int iResult;
+		HRESULT hr = m_pConsumer->OnYesNoCancel(
+			bstrMessage, bstrYesInfo, bstrNoInfo, bstrCancelInfo, bstrTitle,
+			&iResult);
+		ATLENSURE_RETURN_HR( iResult >= -1 && iResult <= 1, E_ABORT );
+
+		// Send chosen reply
+		switch (iResult)
+		{
+		case 1:
+			m_Putty.Write( _T("y\r\n") ); break;
+		case 0:
+			m_Putty.Write( _T("n\r\n") ); break;
+		case -1:
+			m_Putty.Write( _T("\r\n") );
+			ATLASSERT( hr == E_ABORT );
+			return E_ABORT;
+		default:
+			m_Putty.Write( _T("\r\n") );
+			UNREACHABLE;
+			return E_ABORT;
+		}
+
+		// TODO: Solve this. We do not want it to be timing dependent
+		::Sleep(500);
+		strCurrentChunk = m_Putty.Read().TrimLeft();
+		return S_OK;
+	}
+	else
+		return S_OK; // Not an unknown key notice: do nothing
+}
+
+/**
+ * Returns the last line of a chunk of text.
+ *
+ * @pre Assumes that line breaks are in '\r\n' format.
+ */
+CString CPuttyProvider::_ExtractLastLine(CString strChunk)
+{
+	int iPos = strChunk.ReverseFind(_T('\n'));
+	if (iPos < 0)
+		return strChunk; // Single-line chunk
+	else
+		return strChunk.Right((strChunk.GetLength()-iPos)-1);
+}
 
 /**
  * Get the path to the PuTTY executable (@c psftp.exe).

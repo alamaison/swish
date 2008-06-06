@@ -29,7 +29,7 @@
  *
  * MUST BE CALLED BEFORE ALL OTHER FUNCTIONS
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteEnumIDList::BindToFolder( CRemoteFolder* pFolder )
+HRESULT CRemoteEnumIDList::BindToFolder( IRemoteFolder* pFolder )
 {
 	ATLTRACE("CRemoteEnumIDList::BindToFolder called\n");
 
@@ -48,17 +48,17 @@ HRESULT CRemoteEnumIDList::BindToFolder( CRemoteFolder* pFolder )
 }
 
 /*------------------------------------------------------------------------------
- * CRemoteEnumIDList::Connect
+ * CRemoteEnumIDList::ConnectAndFetch
  * Populates the enumerator by connecting to the remote server given in the
- * parameter and fetching the file listing (TODO: currently only simulated).
+ * parameter and fetching the file listing
  *
  * TODO: Ideally, the final EnumIDList will deal with enumeration *only*.
  *       Connection and retrieval will be handled by other objects.
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteEnumIDList::Connect( PCTSTR szUser, PCTSTR szHost, 
-								    PCTSTR szPath, USHORT uPort )
+HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost, 
+								            PCTSTR szPath, USHORT uPort )
 {
-	ATLTRACE("CRemoteEnumIDList::Connect called\n");
+	ATLTRACE("CRemoteEnumIDList::ConnectAndFetch called\n");
 
 	// Must call BindToFolder() first
 	if (!m_fBoundToFolder) return E_UNEXPECTED;
@@ -66,50 +66,59 @@ HRESULT CRemoteEnumIDList::Connect( PCTSTR szUser, PCTSTR szHost,
 	if (!szHost || !szHost[0]) return E_INVALIDARG;
 	if (!szPath || !szPath[0]) return E_INVALIDARG;
 	ATLENSURE( m_pFolder );
-	ATLENSURE( m_pProvider );
 
-	// Connect to server
-	// Server->Connect()
+	// Create SFTP Provider
+	ISftpProvider *pProvider;
+	HRESULT hr = ::CoCreateInstance(
+		CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
+		NULL,                     // Ignore this.
+		CLSCTX_INPROC_SERVER,     // Server.
+		IID_ISftpProvider,       // Interface you want.
+		(LPVOID *)&pProvider);    // Place to store interface.
+	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 
-	HRESULT hr;
+	// Get SftpConsumer to pass to PuttyProvider (used for password reqs etc.)
+	ISftpConsumer *pConsumer;
+	hr = this->QueryInterface(__uuidof(pConsumer), (void**)&pConsumer);
+	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 
-	BSTR bstrUser = ::SysAllocString(szUser);
-	BSTR bstrHost = ::SysAllocString(szHost);
-		hr = m_pProvider->Initialize(bstrUser, bstrHost, uPort);
-	::SysFreeString(bstrHost);
-	::SysFreeString(bstrUser);
-	ASSERT( SUCCEEDED(hr) );
-	if (FAILED(hr))
-		return hr;
+	// Set up Putty provider
+	CComBSTR bstrUser(szUser);
+	CComBSTR bstrHost(szHost);
+	hr = pProvider->Initialize(pConsumer, bstrUser, bstrHost, uPort);
+	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
+	pConsumer->Release();
+	pConsumer = NULL;
 
 	// Get listing enumerator
 	IEnumListing *pEnum;
-	BSTR bstrPath = ::SysAllocString(szPath);
-		hr = m_pProvider->GetListing(bstrPath, &pEnum);
-	::SysFreeString(bstrPath);
-	ASSERT( SUCCEEDED(hr) );
-	if (FAILED(hr))
-		return hr;
+	CComBSTR bstrPath = szPath;
+	hr = pProvider->GetListing(bstrPath, &pEnum);
+	if (SUCCEEDED(hr))
+	{
+		do {
+			Listing lt;
+			hr = pEnum->Next(1, &lt, NULL);
+			if (hr == S_OK)
+			{
+				FILEDATA fd;
+				fd.strPath = lt.bstrFilename;
+				fd.strOwner = lt.bstrOwner;
+				fd.strGroup = lt.bstrGroup;
+				fd.uSize = lt.cSize;
+				fd.dtModified = (time_t) COleDateTime(lt.dateModified);
+				// TODO:
+				fd.dwPermissions = 0x777;
+				m_vListing.push_back( fd );
+			}
+		} while (hr == S_OK);
+		pEnum->Release();
+	}
 
-	do {
-		Listing lt;
-		hr = pEnum->Next(1, &lt, NULL);
-		if (hr == S_OK)
-		{
-			FILEDATA fd;
-			fd.strPath = lt.bstrFilename;
-			fd.strOwner = lt.bstrOwner;
-			fd.strGroup = lt.bstrGroup;
-			fd.uSize = lt.cSize;
-			fd.dtModified = (time_t) COleDateTime(lt.dateModified);
-			// TODO:
-			fd.dwPermissions = 0x777;
-			m_vListing.push_back( fd );
-		}
-	} while (hr == S_OK);
+	// Release data provider component (should destroy psftp process)
+	pProvider->Release();
 
-	pEnum->Release();
-	return S_OK;
+	return hr;
 }
 
 /*------------------------------------------------------------------------------
@@ -128,7 +137,6 @@ STDMETHODIMP CRemoteEnumIDList::Next(
 	if (!m_fBoundToFolder) return E_UNEXPECTED;
 	if (!(pceltFetched || celt <= 1)) return E_INVALIDARG;
 	ATLENSURE( m_pFolder );
-	ATLENSURE( m_pProvider );
 
 	HRESULT hr = S_OK;
 	ULONG cFetched = 0;
@@ -175,7 +183,6 @@ STDMETHODIMP CRemoteEnumIDList::Skip( DWORD celt )
 	// Must call BindToFolder() first
 	if (!m_fBoundToFolder) return E_UNEXPECTED;
 	ATLENSURE( m_pFolder );
-	ATLENSURE( m_pProvider );
 
 	m_iPos += celt;
 
@@ -193,7 +200,6 @@ STDMETHODIMP CRemoteEnumIDList::Reset()
 	// Must call BindToFolder() first
 	if (!m_fBoundToFolder) return E_UNEXPECTED;
 	ATLENSURE( m_pFolder );
-	ATLENSURE( m_pProvider );
 
 	m_iPos = 0;
 
@@ -213,11 +219,96 @@ STDMETHODIMP CRemoteEnumIDList::Clone( __deref_out IEnumIDList **ppEnum )
 	// Must call BindToFolder() first
 	if (!m_fBoundToFolder) return E_UNEXPECTED;
 	ATLENSURE( m_pFolder );
-	ATLENSURE( m_pProvider );
 
 	// TODO: Implement this
 
 	return E_NOTIMPL;
+}
+
+/**
+ * Displays UI dialog to get password from user and returns it.
+ *
+ * @param [in]  bstrRequest    The prompt to display to the user.
+ * @param [out] pbstrPassword  The reply from the user - the password.
+ *
+ * @return E_ABORT if the user chooses Cancel, S_OK otherwise.
+ */
+STDMETHODIMP CRemoteEnumIDList::OnPasswordRequest(
+	BSTR bstrRequest, BSTR *pbstrPassword
+)
+{
+	CString strPrompt = bstrRequest;
+	ATLASSERT(strPrompt.GetLength() > 0);
+
+	CPasswordDialog dlgPassword;
+	dlgPassword.SetPrompt( strPrompt ); // Pass text through from backend
+	if (dlgPassword.DoModal() == IDOK)
+	{
+		CString strPassword;
+		strPassword = dlgPassword.GetPassword();
+		*pbstrPassword = strPassword.AllocSysString();
+		return S_OK;
+	}
+	else
+		return E_ABORT;
+}
+
+/**
+ * Display Yes/No/Cancel dialog to the user with given message.
+ *
+ * @param [in]  bstrMessage    The prompt to display to the user.
+ * @param [in]  bstrYesInfo    The explanation of the Yes option.
+ * @param [in]  bstrNoInfo     The explanation of the No option.
+ * @param [in]  bstrCancelInfo The explanation of the Cancel option.
+ * @param [in]  bstrTitle      The title of the dialog.
+ * @param [out] piResult       The user's choice.
+ *
+ * @return E_ABORT if the user chooses Cancel, S_OK otherwise.
+*/
+STDMETHODIMP CRemoteEnumIDList::OnYesNoCancel(
+	BSTR bstrMessage, BSTR bstrYesInfo, BSTR bstrNoInfo, BSTR bstrCancelInfo,
+	BSTR bstrTitle, int *piResult
+)
+{
+	// Construct unknown key information message
+	CString strMessage = bstrMessage;
+	CString strTitle = bstrTitle;
+	if (bstrYesInfo && ::SysStringLen(bstrYesInfo) > 0)
+	{
+		strMessage += _T("\r\n");
+		strMessage += bstrYesInfo;
+	}
+	if (bstrNoInfo && ::SysStringLen(bstrNoInfo) > 0)
+	{
+		strMessage += _T("\r\n");
+		strMessage += bstrNoInfo;
+	}
+	if (bstrCancelInfo && ::SysStringLen(bstrCancelInfo) > 0)
+	{
+		strMessage += _T("\r\n");
+		strMessage += bstrCancelInfo;
+	}
+
+	// Display message box
+	int msgboxID = ::MessageBox(
+		NULL, strMessage, strTitle, 
+		MB_ICONWARNING | MB_YESNOCANCEL | MB_DEFBUTTON3 );
+
+	// Process user choice
+	switch (msgboxID)
+	{
+	case IDYES:
+		*piResult = 1; return S_OK;
+	case IDNO:
+		*piResult = 0; return S_OK;
+	case IDCANCEL:
+		*piResult = -1; return E_ABORT;
+	default:
+		*piResult = -2;
+		UNREACHABLE;
+	}
+
+	return E_ABORT;
 }
 
 // CRemoteEnumIDList

@@ -33,32 +33,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_50666981DDF34A2F8B4BE06741B2D01A"
-        "OwnerKey" = "8:_654F3409D9CB4D1487DF3AB11DD4B8CC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_533F2D75F34D4B7D94E4E9BD09517D6A"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_61AE701D3B74486C8632E323CC91E6E8"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_654F3409D9CB4D1487DF3AB11DD4B8CC"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_689A14D6851641A0A67A13500C727190"
-        "OwnerKey" = "8:_533F2D75F34D4B7D94E4E9BD09517D6A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -368,14 +344,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Swish"
-        "ProductCode" = "8:{1A8CDD60-08F4-463C-AC6F-800EA6FDB3CB}"
-        "PackageCode" = "8:{E927746F-4FA9-49F8-A671-71BA697B1300}"
+        "ProductCode" = "8:{5560CAAF-1877-40B2-AFEE-098198212BC8}"
+        "PackageCode" = "8:{9CD9EF31-3794-401F-83C4-6AD79D778DE7}"
         "UpgradeCode" = "8:{97CF376F-FFDE-472A-946B-E3F5D45229DA}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:FALSE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.2.0"
+        "ProductVersion" = "8:0.2.1"
         "Manufacturer" = "8:Alexander Lamaison"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://sourceforge.net/projects/swish"
@@ -978,62 +954,6 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_50666981DDF34A2F8B4BE06741B2D01A"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_atl_x86.msm"
-                "Properties"
-                {
-                }
-            "LanguageId" = "3:0"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_533F2D75F34D4B7D94E4E9BD09517D6A"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_DebugCRT_x86.msm"
-                "Properties"
-                {
-                }
-            "LanguageId" = "3:0"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_654F3409D9CB4D1487DF3AB11DD4B8CC"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_ATL_x86.msm"
-                "Properties"
-                {
-                }
-            "LanguageId" = "3:0"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_689A14D6851641A0A67A13500C727190"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_debugcrt_x86.msm"
-                "Properties"
-                {
-                }
-            "LanguageId" = "3:0"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
         }
         "ProjectOutput"
         {

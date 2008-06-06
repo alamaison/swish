@@ -48,18 +48,17 @@
 using namespace ATL;
 
 /* WTL Setup **************************************************************** */
-/*
+
 #define _WTL_NO_CSTRING
 
 #include <atlapp.h>	          // base WTL classes
 //extern CAppModule _Module;  // WTL version of CComModule
 #define _Module (*_pModule)   // WTL alternate version, works with attributes
-#include <atlframe.h>         // WTL frame window classes
-#include <atlmisc.h>          // WTL utility classes like CString
+//#include <atlframe.h>         // WTL frame window classes
+//#include <atlmisc.h>          // WTL utility classes like CString
 #include <atlcrack.h>         // WTL enhanced msg map macros
+#include <atlctrls.h>         // WTL control wrappers
 
-#include <atlctrls.h>
-*/
 
 /* Handler prototypes ******************************************************* */
 

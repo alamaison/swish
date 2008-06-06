@@ -5,6 +5,7 @@
 using std::list;
 
 #define READ_STARTUP_MESSAGE _T("psftp: no hostname specified; use \"open host.name\" to connect\r\npsftp> ")
+#define READLINE_STARTUP_MESSAGE _T("psftp: no hostname specified; use \"open host.name\" to connect\r\n")
 #define READ_STARTUP_MESSAGE_LEN 70
 #define WRITE_OPEN_COMMAND _T("open %s@%s\r\n")
 #define READ_OPEN_REPLY_HEAD _T("Remote working directory is /")
@@ -21,7 +22,7 @@ CPuttyWrapper_test::CPuttyWrapper_test() : m_pPutty(NULL) {}
 void CPuttyWrapper_test::setUp()
 {
 	CPPUNIT_ASSERT_NO_THROW(
-		m_pPutty = new CPuttyWrapper( GetExePath() )
+		m_pPutty = new CPuttyWrapper( _GetExePath() )
 	);
 }
 
@@ -38,6 +39,19 @@ void CPuttyWrapper_test::testRead()
 	CPPUNIT_ASSERT_EQUAL( strExpected, strActual );
 }
 
+void CPuttyWrapper_test::testReadLine()
+{
+	CString strActual;
+	CString strExpected = READLINE_STARTUP_MESSAGE;
+	
+	CPPUNIT_ASSERT_NO_THROW( strActual = m_pPutty->ReadLine() );
+	CPPUNIT_ASSERT_EQUAL( // Ensure CString is accurately reporting its length
+		(int)::_tcslen(strActual),
+		strActual.GetLength()
+	);
+	CPPUNIT_ASSERT_EQUAL( strExpected, strActual );
+}
+
 /* In reality, this not only tests remote writing, it also tests remote reading
    unlike testRead above which only tests local reading (i.e. will pass even
    if remote host is unreachable */
@@ -46,7 +60,7 @@ void CPuttyWrapper_test::testWrite()
 	ULONG cBytesWritten;
 	CString strPrompt = PROMPT;
 	CString strWrite;
-	strWrite.Format( WRITE_OPEN_COMMAND, GetUserName(), GetHostName() );
+	strWrite.Format( WRITE_OPEN_COMMAND, _GetUserName(), _GetHostName() );
 	CString strActual;
 	CString strExpected;
 
@@ -78,6 +92,9 @@ void CPuttyWrapper_test::testWrite()
 	CPPUNIT_ASSERT_NO_THROW( strActual = m_pPutty->Read() );
 	CPPUNIT_ASSERT_EQUAL( (int)::_tcslen(strActual), strActual.GetLength() );
 
+	// The next reply might be a password request
+	_HandlePasswordRequest(strActual);
+
 	// Must be of format: Remote working directory is /....\r\npsftp>
 	strExpected = READ_OPEN_REPLY_HEAD;
 	CPPUNIT_ASSERT_EQUAL(
@@ -99,7 +116,7 @@ void CPuttyWrapper_test::testGetSizeOfDataInPipe()
 	// It is valid for the function to return 0 immediately as the child
 	// process may not have had time to print anything to StdOut.
 	// We force a sleep here to test for the output we eventually expect.
-	::Sleep(300);
+	::Sleep(700);
 	DWORD expected = READ_STARTUP_MESSAGE_LEN;
 	DWORD actual = m_pPutty->GetSizeOfDataInPipe();
 	CPPUNIT_ASSERT_EQUAL( expected, actual );
@@ -108,7 +125,7 @@ void CPuttyWrapper_test::testGetSizeOfDataInPipe()
 void CPuttyWrapper_test::testRunLS()
 {
 	CString strWrite;
-	strWrite.Format( WRITE_OPEN_COMMAND, GetUserName(), GetHostName() );
+	strWrite.Format( WRITE_OPEN_COMMAND, _GetUserName(), _GetHostName() );
 	CString strActual;
 	CString strExpected;
 
@@ -117,6 +134,10 @@ void CPuttyWrapper_test::testRunLS()
 	// Connect
 	CPPUNIT_ASSERT_NO_THROW( m_pPutty->Write(strWrite) );
 	CPPUNIT_ASSERT_NO_THROW( strActual = m_pPutty->Read() );
+
+	// The next reply might be a password request
+	_HandlePasswordRequest(strActual);
+
 	// Must be of format: Remote working directory is /....\r\npsftp>
 	strExpected = READ_OPEN_REPLY_HEAD;
 	CPPUNIT_ASSERT_EQUAL(
@@ -186,7 +207,7 @@ void CPuttyWrapper_test::tearDown()
  * @note Uses the raw CPuttyProvider CLSID directly.  If this were to change
  * this function would break.
  */
-CString CPuttyWrapper_test::GetExePath() const
+CString CPuttyWrapper_test::_GetExePath() const
 {
 	// Get path of Swish DLL e.g. C:\Program Files\Swish\Swish.dll
 	// using the CLSID of CPuttyProvider directly
@@ -221,7 +242,7 @@ CString CPuttyWrapper_test::GetExePath() const
  *
  * @return the host name
  */
-CString CPuttyWrapper_test::GetHostName() const
+CString CPuttyWrapper_test::_GetHostName() const
 {
 	static CString strHostName;
 
@@ -252,7 +273,7 @@ CString CPuttyWrapper_test::GetHostName() const
  *
  * @return the user name
  */
-CString CPuttyWrapper_test::GetUserName() const
+CString CPuttyWrapper_test::_GetUserName() const
 {
 	static CString strUser;
 
@@ -267,4 +288,51 @@ CString CPuttyWrapper_test::GetUserName() const
 	CPPUNIT_ASSERT(strUser.GetLength() < 64);
 	
 	return strUser;
+}
+
+/**
+ * Get the password to use to connect to the SSH account on the remote machine.
+ *
+ * The password is retrieved from the TEST_PASSWORD environment variable.
+ * If this variable is not set, a CPPUNIT exception is thrown.
+ * 
+ * In order to be useful, the password should be valid fot the SSH
+ * account on the testing machine.
+ * 
+ * @return the password
+ */
+CString CPuttyWrapper_test::_GetPassword() const
+{
+	static CString strPassword;
+
+	if (strPassword.IsEmpty()) // Might be cached in static variable
+	{
+		if(!strPassword.GetEnvironmentVariable(_T("TEST_PASSWORD")))
+			CPPUNIT_FAIL("Please set TEST_PASSWORD environment variable");
+	}
+
+	CPPUNIT_ASSERT(!strPassword.IsEmpty());
+	
+	return strPassword;
+}
+
+void CPuttyWrapper_test::_HandlePasswordRequest(CString &strChunk)
+{
+	if (strChunk.Right(11) == _T(" password: "))
+	{
+		CString strPassword = _GetPassword() + _T("\r\n");
+		ULONG cBytesWritten;
+		CPPUNIT_ASSERT_NO_THROW( cBytesWritten = m_pPutty->Write(
+			strPassword,
+			strPassword.GetLength()
+		));
+		CPPUNIT_ASSERT_EQUAL( (ULONG)strPassword.GetLength(), cBytesWritten );
+
+		// Read next
+		CPPUNIT_ASSERT_NO_THROW( 
+			strChunk = m_pPutty->ReadLine() // Discard first line-break
+		); 
+		CPPUNIT_ASSERT_EQUAL( (CString)_T("\r\n"), strChunk );
+		CPPUNIT_ASSERT_NO_THROW( strChunk = m_pPutty->Read() );
+	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include <cppunit/extensions/HelperMacros.h>
+#include "CppUnitExtensions.h"
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
 // test class directly into the target class's header
@@ -41,29 +41,3 @@ private:
 	/* Thread related functions and variables */
 	static DWORD WINAPI ClickCancelThread( __in LPVOID lpThreadParam );
 };
-
-CPPUNIT_NS_BEGIN
-/**
- * Provides CPPUNIT_ASSERT_EQUAL capability for CStrings.
- *
- * @example
- * CString x = "bob"
- * CString y = "sally"
- * CPPUNIT_ASSERT_EQUAL( x, y )
- */
-template <>
-struct assertion_traits<CString>
-{  
-    static bool equal( CString x, CString y )
-    {
-        return x == y;
-    }
-
-    static std::string toString( CString x )
-    {
-		CStringA y(x);
-		std::string s(y);
-		return s;
-    }
-};
-CPPUNIT_NS_END

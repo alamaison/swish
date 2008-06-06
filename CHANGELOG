@@ -1,5 +1,6 @@
 swish-0.2.1
 -Created a data provider component to wrap PuTTY's SFTP client (psftp.exe)
+ permitting listing of files in a directory
 -Linked data provider to front end using simple dialog box for requesting
  host information from the user
 

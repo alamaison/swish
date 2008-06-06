@@ -29,10 +29,7 @@
 
 #include "RemoteFolder.h"   // For back-reference to parent folder
 #include "PuttyProvider.h"  // For putty-based data provider
-
-#define IPuttyProvider IPuttyProviderUnstable
-#define IID_IPuttyProvider __uuidof(IPuttyProviderUnstable)
-#define CLSID_CPuttyProvider __uuidof(CPuttyProvider)
+#include "PasswordDialog.h" // For password dialog box
 
 struct FILEDATA
 {
@@ -73,27 +70,19 @@ __interface IRemoteEnumIDList : IUnknown
 ]
 class ATL_NO_VTABLE CRemoteEnumIDList :
 	public IRemoteEnumIDList,
-	public IEnumIDList
+	public IEnumIDList,
+	public ISftpConsumer
 {
 public:
 	CRemoteEnumIDList() :
-		m_pProvider(NULL), m_pFolder(NULL), m_fBoundToFolder(false), m_iPos(0)
+		m_pFolder(NULL), m_fBoundToFolder(false), m_iPos(0)
 	{
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct()
 	{
-		// Create instance of CPuttyProvider using CLSID
-		HRESULT hr = ::CoCreateInstance(
-			CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
-			NULL,                     // Ignore this.
-			CLSCTX_INPROC_SERVER,     // Server.
-			IID_IPuttyProvider,       // Interface you want.
-			(LPVOID *)&m_pProvider);  // Place to store interface.
-
-		ASSERT( SUCCEEDED(hr) );
-		return hr;
+		return S_OK;
 	}
 
 	void FinalRelease()
@@ -101,14 +90,10 @@ public:
 		// Release folder that should have been incremented in BindToFolder
 		if (m_pFolder) // Possibly NULL if FinalConstruct() failed
 			m_pFolder->Release();
-
-		// Release data provider component (should destroy psftp process)
-		if (m_pProvider) // Possibly NULL if FinalConstruct() failed
-			m_pProvider->Release();
 	}
 
-	HRESULT BindToFolder( CRemoteFolder* pFolder );
-	HRESULT Connect(
+	HRESULT BindToFolder( __in IRemoteFolder* pFolder );
+	HRESULT ConnectAndFetch(
 		PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort );
 
     // IEnumIDList
@@ -122,11 +107,28 @@ public:
 
 private:
 	BOOL m_fBoundToFolder;
-	IPuttyProvider *m_pProvider;
-	CRemoteFolder* m_pFolder;
+	IRemoteFolder *m_pFolder;
 	std::vector<FILEDATA> m_vListing;
 	ULONG m_iPos; // Current position
     CRemotePidlManager m_PidlManager;
+
+	/**
+	 * User interaction callbacks.
+	 * @{
+	 */
+	HRESULT OnPasswordRequest(
+		__in BSTR bstrRequest, __out BSTR *pbstrPassword
+	);
+	HRESULT OnYesNoCancel(
+		__in BSTR bstrMessage,
+		__in_opt BSTR bstrYesInfo,
+		__in_opt BSTR bstrNoInfo,
+		__in_opt BSTR bstrCancelInfo,
+		__in_opt BSTR bstrTitle,
+		__out int *piResult
+	);
+	/* @} */
+
 };
 
 #endif // REMOTEENUMIDLIST_H

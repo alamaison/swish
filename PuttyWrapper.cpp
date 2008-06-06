@@ -46,7 +46,10 @@ CPuttyWrapper::CPuttyWrapper( PCTSTR pszPsftpPath ) :
 
 	sa.nLength = sizeof(sa); 
 	sa.bInheritHandle = TRUE; 
-	sa.lpSecurityDescriptor = NULL; 
+	sa.lpSecurityDescriptor = NULL;
+
+	// Create log file
+	_LogSetup();
 
 	// Create STDIN/STDOUT pipes for child process
 
@@ -93,6 +96,10 @@ CPuttyWrapper::CPuttyWrapper( PCTSTR pszPsftpPath ) :
 CPuttyWrapper::~CPuttyWrapper(void)
 {
 	TerminateChildProcess();
+
+#ifdef _DEBUG
+	REPORT( ::CloseHandle(m_hLog) );
+#endif
 }
 
 /**
@@ -318,7 +325,7 @@ list<CString> CPuttyWrapper::RunLS( __in PCTSTR szPath )
 	{
 		strToken = strRawListing.Tokenize(_T("\r\n"), iPos);
 		lstResults.push_back( strToken );
-	} while (strToken != _T("psftp> "));
+	} while (strToken != _T("psftp> ") && iPos != -1);
 	// TODO: This might break if a files is named "psftp> "
 
 	// First line is not a file listing; it specifies the directory. Remove it.
@@ -333,6 +340,85 @@ list<CString> CPuttyWrapper::RunLS( __in PCTSTR szPath )
 }
 
 /**
+ * Reads a single line of text from the pipe.
+ *
+ * This method blocks if nothing is present in pipe.
+ *
+ * @pre The line must end with a newline character '\n'.
+ *
+ * @returns The line of text INCLUDING the newline characters.
+ */
+CString CPuttyWrapper::ReadLine()
+{
+	_LogStart(READ);
+
+	CString strLine;
+
+	// Force method to block until data present in pipe
+	DWORD cbRead;
+	::ReadFile(GetStdin(), NULL, 0, &cbRead, NULL);
+	ATLASSERT( cbRead == 0 );
+
+	// Search pipe for newline
+	DWORD iPos = FindNewlineInPipe();
+	if (iPos >= 0)
+		// Newline present in pipe.  Read upto and including it.
+		strLine = ReadOneBufferWorth( iPos+1 );
+	else
+		strLine = _T(""); // No newline waiting in pipe
+
+	_LogStop(READ);
+
+	return strLine;
+}
+
+/**
+ * Returns the position of the first newline character buffered in the pipe.
+ *
+ * @returns -1 if no newline character '\n' is present in the pipe or
+ *          its position otherwise.
+ * @warning If there is a very large amount of data buffered in the pipe
+ *          without a newline character anywhere within it, this function
+ *          may not work as expected due to overflow of the 'long' return type.
+ */
+long CPuttyWrapper::FindNewlineInPipe()
+{
+	ATLASSERT(GetStdin());
+
+	// Check size of data available and create buffer accordingly
+	DWORD cbBufferSize = GetSizeOfDataInPipe();
+	char *pBuffer = new char[ cbBufferSize ];
+	::ZeroMemory( pBuffer, cbBufferSize );
+
+	// Read this quantity of data into buffer
+	DWORD nTotalBytesAvailable = 0;
+	DWORD cbBytesRead = 0;
+	if(!::PeekNamedPipe(
+		GetStdin(),            // Handle to pipe
+		pBuffer,               // Buffer to put result of peek into
+		cbBufferSize,          // Size of buffer
+		&cbBytesRead,          // How many bytes were read?
+		&nTotalBytesAvailable, // How many bytes total in pipe?
+		NULL                   // Not needed
+	))
+	{
+		throw ChildTerminatedException();
+	}
+
+	// Find newline '\n'
+	// Return its 0-based index in buffer or -1 if not found
+	char *pPos = ::strchr(pBuffer, '\n');
+	long iPos;
+	if (pPos)
+		iPos = (long)(pPos - pBuffer);
+	else
+		iPos = -1;
+
+	delete [] pBuffer;
+	return iPos;
+}
+
+/**
  * Reads from the child process's stdout until it is empty.
  *
  * @returns a string containing all the text read
@@ -344,12 +430,14 @@ list<CString> CPuttyWrapper::RunLS( __in PCTSTR szPath )
  */
 CString CPuttyWrapper::Read()
 {
+	_LogStart(READ);
+
 	CString strBuffer;
-	while (!GetSizeOfDataInPipe()) {}; // TODO: replace this. busy wait?
-	while (GetSizeOfDataInPipe())
-	{
+	do {
 		strBuffer += ReadOneBufferWorth();
-	}
+	} while (GetSizeOfDataInPipe());
+
+	_LogStop(READ);
 
 	return strBuffer;
 }
@@ -396,6 +484,7 @@ ULONG CPuttyWrapper::Write( PCTSTR ptszIn )
 ULONG CPuttyWrapper::Write( PCTSTR ptszIn, ULONG cchIn )
 {
 	ATLASSERT(ptszIn); ATLASSERT(GetStdout());
+	_LogStart(WRITE);
 
 	const ULONG cOemBufSize = 2*cchIn; // Double to be sure we have enough space
 
@@ -410,6 +499,7 @@ ULONG CPuttyWrapper::Write( PCTSTR ptszIn, ULONG cchIn )
 	delete [] pBuffer;
 
 	ATLASSERT( cbConvertedLength == cBytesWritten );
+	_LogStop(WRITE);
 
 	return cBytesWritten;
 }
@@ -443,6 +533,8 @@ DWORD CPuttyWrapper::GetSizeOfDataInPipe()
 /**
  * Read a chunk of text from child process, enough to fill an internal buffer.
  *
+ * If there are no bytes available to read from the child, this function blocks.
+ *
  * The buffer is an internal CHAR array.  As this is not an appropriate 
  * format for further use, it is converted into a CString.
  *
@@ -460,16 +552,25 @@ CString CPuttyWrapper::ReadOneBufferWorth()
 #else
 	const ULONG SOURCE_BUFFER_SIZE = 1024;
 #endif
-	char aBuffer[ SOURCE_BUFFER_SIZE ]; // Holds raw input from console
 
-	ULONG cBytesRead = ReadOemCharsFromConsole(aBuffer, ARRAYSIZE(aBuffer));
+	return ReadOneBufferWorth( SOURCE_BUFFER_SIZE );
+}
+
+CString CPuttyWrapper::ReadOneBufferWorth( ULONG cbBufferSize )
+{
+	char *pBuffer = new char[ cbBufferSize ]; // Holds raw input from console
+
+	ULONG cBytesRead = ReadOemCharsFromConsole(pBuffer, cbBufferSize);
 	if (cBytesRead == 0) return _T(""); // Nothing to read
-	ATLASSERT( cBytesRead <= SOURCE_BUFFER_SIZE );
+	ATLASSERT( cBytesRead <= cbBufferSize );
 
 	// Child process returns text in OEM codepage character set.
 	// We need to convert this to Unicode or ANSI depending on the
 	// build settings.
-	return ConvertFromOemChars( aBuffer, ARRAYSIZE(aBuffer) );
+	CString strResult = ConvertFromOemChars( pBuffer, cBytesRead );
+
+	delete [] pBuffer;
+	return strResult;
 }
 
 /**
@@ -503,6 +604,8 @@ ULONG CPuttyWrapper::WriteOemCharsToConsole( const char* pBuffer, ULONG cbSize )
 			throw ChildCommunicationException();
 	}
 
+	_LogEntry(pBuffer, cbSize);
+
 	ATLASSERT(cBytesWritten == cbSize);
 
 	return cBytesWritten;
@@ -510,6 +613,8 @@ ULONG CPuttyWrapper::WriteOemCharsToConsole( const char* pBuffer, ULONG cbSize )
 
 /**
  * Reads as many characters as possible from the child's output into the buffer.
+ *
+ * If there are no bytes available to read from the child, this function blocks.
  *
  * The child is a console process, therefore the characters are in the
  * OEM codepage format.  This function may read few characters than the 
@@ -546,6 +651,8 @@ ULONG CPuttyWrapper::ReadOemCharsFromConsole(char *pBuffer, ULONG cbBufferSize)
 		else
 			throw ChildCommunicationException();
 	}
+
+	_LogEntry(pBuffer, cBytesRead);
 
 	ATLASSERT( cBytesRead <= cbBufferSize );
 	return cBytesRead;
@@ -688,6 +795,74 @@ ULONG CPuttyWrapper::ConvertToOemChars( const TCHAR *pBufferIn, ULONG cchInSize,
 PCTSTR CPuttyWrapper::GetChildPath()
 {
 	return m_strPsftpPath;
+}
+
+void CPuttyWrapper::_LogSetup()
+{
+#ifdef WITH_LOGGING
+	m_hLog = NULL;
+	m_hLog = ::CreateFile(
+		_T("swish-putty.log"),
+		GENERIC_WRITE,
+		FILE_SHARE_READ,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+	REPORT(m_hLog != INVALID_HANDLE_VALUE);
+	REPORT(::SetHandleInformation(m_hLog, HANDLE_FLAG_INHERIT, 0));
+
+	for (int i = 0; i < 80; i++) _WriteToLogFile("-");
+	_WriteToLogFile("\r\nInitialised log\r\n");
+	for (int i = 0; i < 80; i++) _WriteToLogFile("-");
+
+#endif
+}
+
+void CPuttyWrapper::_LogStart( CPuttyWrapper::LogDirection enumDirection )
+{
+#ifdef WITH_LOGGING
+	if (enumDirection == WRITE)
+		_WriteToLogFile(">>>\r\n");
+	else if (enumDirection == READ)
+		_WriteToLogFile("<<<\r\n");
+	else
+		UNREACHABLE;
+#endif
+}
+
+void CPuttyWrapper::_LogStop( CPuttyWrapper::LogDirection enumDirection )
+{
+#ifdef WITH_LOGGING
+	if (enumDirection == WRITE)
+		_WriteToLogFile("\r\n>>>\r\n\r\n");
+	else if (enumDirection == READ)
+		_WriteToLogFile("\r\n<<<\r\n\r\n");
+	else
+		UNREACHABLE;
+#endif
+}
+
+void CPuttyWrapper::_LogEntry( const char *pBuffer, ULONG cbSize )
+{
+#ifdef WITH_LOGGING
+	DWORD dwBytesWritten;
+	::WriteFile( m_hLog, (LPVOID)pBuffer, cbSize, &dwBytesWritten, NULL );
+	ATLASSERT( dwBytesWritten == cbSize );
+#endif
+}
+
+void CPuttyWrapper::_WriteToLogFile( PCSTR szText )
+{
+#ifdef WITH_LOGGING
+	DWORD dwBytesWritten;
+	DWORD cbLength = static_cast<DWORD>(::strlen(szText));
+	REPORT( ::WriteFile(
+		m_hLog, (LPVOID)szText, cbLength, &dwBytesWritten, NULL)
+	);
+	ATLASSERT( dwBytesWritten == cbLength );
+#endif
 }
 
 // CPuttyWrapper
