@@ -10,7 +10,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION( CPuttyProvider_test );
 void CPuttyProvider_test::setUp()
 {
 	HRESULT hr;
-	DebugBreak();
 
 	// Start up COM
 	hr = ::CoInitialize(NULL);
