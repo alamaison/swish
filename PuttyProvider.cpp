@@ -42,9 +42,11 @@ using std::list;
  * @pre The user name (@a bstrUser) and the host name (@a bstrHost) must not
  *      be empty strings.
  *
- * @param bstrUser The user name of the SSH account.
- * @param bstrHost The name of the machine to connect to.
- * @param uPort    The TCP/IP port on which the SSH server is running.
+ * @param pConsumer An ISftpConsumer to handle user-interaction callbacks. This
+ *                  is half of the bi-dir ISftpProvider/ISftpConsumer pair.
+ * @param bstrUser  The user name of the SSH account.
+ * @param bstrHost  The name of the machine to connect to.
+ * @param uPort     The TCP/IP port on which the SSH server is running.
  * @returns 
  *   @c E_INVALIDARG if either string parameter was empty, @c S_OK otherwise.
  */
@@ -387,7 +389,7 @@ HRESULT CPuttyProvider::_HandleUnknownKeyNotice(CString& strCurrentChunk)
 /**
  * Returns the last line of a chunk of text.
  *
- * @pre Assumes that line breaks are in '\r\n' format.
+ * @pre Assumes that line breaks are in '\\r\\n' format.
  */
 CString CPuttyProvider::_ExtractLastLine(CString strChunk)
 {
