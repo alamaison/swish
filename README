@@ -32,7 +32,8 @@ Status:
     limitations in the backend, it is also very prone to timing issues.
 
 Requirements to run:
-    Internet Explorer 5.01 or greater.
+    Internet Explorer 5.5 or greater
+        (may work with 5.01 but required SHRegGetPath() function seems broken).
     For Windows 9x, the Microsoft Layer for Unicode (MSLU, aka Unicows)
         http://www.microsoft.com/downloads/details.aspx?FamilyId=73BA7BD7-ED06-
         4F0D-80A4-2A7EEAEE17E2&displaylang=en.

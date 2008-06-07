@@ -429,6 +429,7 @@ CString CPuttyProvider::_GetExePath() // static
 	VERIFY(
 		::SHRegGetPath(HKEY_CLASSES_ROOT, strSubkey, 0, szPath, NULL) == 
 		ERROR_SUCCESS);
+	ASSERT( ::PathFileExists(szPath) );
 
 	// Use to contruct psftp path e.g. C:\Program Files\Swish\psftp.exe
 	VERIFY( ::PathRemoveFileSpec(szPath) );

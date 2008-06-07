@@ -56,12 +56,23 @@ CPuttyWrapper::CPuttyWrapper( PCTSTR pszPsftpPath ) :
 	// Create a pipe to send information to child's STDIN between
 	// m_hToChildWrite (this end) and m_hToChildRead (child's end).
 	// Ensure that this end the pipe is not inherited.
-	REPORT(::CreatePipe(&m_hToChildRead, &m_hToChildWrite, &sa, 0));
-	REPORT(::SetHandleInformation(m_hToChildWrite, HANDLE_FLAG_INHERIT, 0));
+	HANDLE hToChildWriteTemp = NULL;
+	REPORT(::CreatePipe(&m_hToChildRead, &hToChildWriteTemp, &sa, 0));
+	// Ideally we would use
+	//    SetHandleInformation(m_hToChildWrite, HANDLE_FLAG_INHERIT, 0));
+	// but this is not supported by Windows 9x so we use DuplicateHandle instead
+	REPORT(::DuplicateHandle(GetCurrentProcess(), hToChildWriteTemp,
+		GetCurrentProcess(), &m_hToChildWrite, 0, false, 
+		DUPLICATE_SAME_ACCESS));
+	REPORT(::CloseHandle(hToChildWriteTemp)); hToChildWriteTemp = NULL;
 
 	// Likewise for STDOUT
-	REPORT(::CreatePipe(&m_hFromChildRead, &m_hFromChildWrite, &sa, 0));
-	REPORT(::SetHandleInformation(m_hFromChildRead, HANDLE_FLAG_INHERIT, 0));
+	HANDLE hFromChildReadTemp = NULL;
+	REPORT(::CreatePipe(&hFromChildReadTemp, &m_hFromChildWrite, &sa, 0));
+	REPORT(::DuplicateHandle(GetCurrentProcess(), hFromChildReadTemp,
+		GetCurrentProcess(), &m_hFromChildRead, 0, false, 
+		DUPLICATE_SAME_ACCESS));
+	REPORT(::CloseHandle(hFromChildReadTemp)); hFromChildReadTemp = NULL;
 
 	// Start up the child process with redirected handles
 	m_hChildProcess = LaunchChildProcess(
@@ -800,8 +811,8 @@ PCTSTR CPuttyWrapper::GetChildPath()
 void CPuttyWrapper::_LogSetup()
 {
 #ifdef WITH_LOGGING
-	m_hLog = NULL;
-	m_hLog = ::CreateFile(
+	HANDLE hLog = NULL;
+	hLog = ::CreateFile(
 		_T("swish-putty.log"),
 		GENERIC_WRITE,
 		FILE_SHARE_READ,
@@ -810,8 +821,16 @@ void CPuttyWrapper::_LogSetup()
 		FILE_ATTRIBUTE_NORMAL,
 		NULL
 	);
-	REPORT(m_hLog != INVALID_HANDLE_VALUE);
-	REPORT(::SetHandleInformation(m_hLog, HANDLE_FLAG_INHERIT, 0));
+	REPORT(hLog != INVALID_HANDLE_VALUE);
+
+	// Prevent inheritance of long file handle by child
+	// Ideally we would use
+	//    SetHandleInformation(m_hLog, HANDLE_FLAG_INHERIT, 0));
+	// but this is not supported by Windows 9x so we use DuplicateHandle instead
+	REPORT(::DuplicateHandle(GetCurrentProcess(), hLog, GetCurrentProcess(),
+		&m_hLog, 0, false, DUPLICATE_SAME_ACCESS));
+	REPORT(::CloseHandle(hLog)); hLog = NULL;
+	ASSERT(hLog != INVALID_HANDLE_VALUE);
 
 	for (int i = 0; i < 80; i++) _WriteToLogFile("-");
 	_WriteToLogFile("\r\nInitialised log\r\n");
@@ -829,6 +848,8 @@ void CPuttyWrapper::_LogStart( CPuttyWrapper::LogDirection enumDirection )
 		_WriteToLogFile("<<<\r\n");
 	else
 		UNREACHABLE;
+#else
+	UNREFERENCED_PARAMETER(enumDirection);
 #endif
 }
 
@@ -841,6 +862,8 @@ void CPuttyWrapper::_LogStop( CPuttyWrapper::LogDirection enumDirection )
 		_WriteToLogFile("\r\n<<<\r\n\r\n");
 	else
 		UNREACHABLE;
+#else
+	UNREFERENCED_PARAMETER(enumDirection);
 #endif
 }
 
@@ -850,6 +873,9 @@ void CPuttyWrapper::_LogEntry( const char *pBuffer, ULONG cbSize )
 	DWORD dwBytesWritten;
 	::WriteFile( m_hLog, (LPVOID)pBuffer, cbSize, &dwBytesWritten, NULL );
 	ATLASSERT( dwBytesWritten == cbSize );
+#else
+	UNREFERENCED_PARAMETER(pBuffer);
+	UNREFERENCED_PARAMETER(cbSize);
 #endif
 }
 
@@ -862,6 +888,8 @@ void CPuttyWrapper::_WriteToLogFile( PCSTR szText )
 		m_hLog, (LPVOID)szText, cbLength, &dwBytesWritten, NULL)
 	);
 	ATLASSERT( dwBytesWritten == cbLength );
+#else
+	UNREFERENCED_PARAMETER(szText);
 #endif
 }
 
