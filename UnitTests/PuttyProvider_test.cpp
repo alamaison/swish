@@ -14,17 +14,32 @@ void CPuttyProvider_test::setUp()
 	// Start up COM
 	hr = ::CoInitialize(NULL);
 	CPPUNIT_ASSERT_OK(hr);
+/*
+	// Save PuttyProvider CLSID in member variable
+	hr = ::CLSIDFromProgID(
+		OLESTR("PuttyProvider.PuttyProvider"),
+		&CLSID_CPuttyProvider
+	);
+	CPPUNIT_ASSERT_OK(hr);
 
+	// Check that CLSID was correctly constructed from ProgID
+	LPOLESTR pszUuid = NULL;
+	hr = ::StringFromCLSID( CLSID_CPuttyProvider, &pszUuid );
+	CPPUNIT_ASSERT_OK(hr);
+	CString strExpectedUuid = _T("{b816a842-5022-11dc-9153-0090f5284f85}");
+	CString strActualUuid = pszUuid;
+	CPPUNIT_ASSERT_EQUAL(
+		strExpectedUuid.MakeLower(),
+		strActualUuid.MakeLower()
+	);
+*/
 	// Test registry structure (for psftp.exe path - TODO: more?)
 	testRegistryStructure();
 
-	// Create instance of CPuttyProvider using CLSID
+	// Create instance of SFTP Provider using CLSID
 	hr = ::CoCreateInstance(
-		CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
-        NULL,                     // Ignore this.
-        CLSCTX_INPROC_SERVER,     // Server.
-        IID_ISftpProvider,       // Interface you want.
-        (LPVOID *)&m_pProvider);  // Place to store interface.
+		__uuidof(PuttyProvider::CPuttyProvider), NULL, CLSCTX_INPROC_SERVER,
+		__uuidof(ISftpProvider), (LPVOID *)&m_pProvider);
 	CPPUNIT_ASSERT_OK(hr);
 
 	// Create mock SftpConsumer for use in Initialize()
@@ -260,7 +275,7 @@ void CPuttyProvider_test::testRegistryStructure() const
 	// Construct subkey using CLSID as a string
 	CString strSubkey;
 	LPOLESTR pszCLSID = NULL;
-	::StringFromCLSID( __uuidof(CPuttyProvider), &pszCLSID );
+	::StringFromCLSID( __uuidof(PuttyProvider::CPuttyProvider), &pszCLSID );
 	strSubkey += _T("CLSID\\");
 	strSubkey += pszCLSID;
 	strSubkey += _T("\\InprocServer32");

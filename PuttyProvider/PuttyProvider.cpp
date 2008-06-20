@@ -18,8 +18,8 @@
 */
 
 #include "stdafx.h"
+#include "../remotelimits.h"
 #include "PuttyProvider.h"
-#include "remotelimits.h"
 
 #include <ATLComTime.h>
 
@@ -44,9 +44,9 @@ using std::list;
  *
  * @param pConsumer An ISftpConsumer to handle user-interaction callbacks. This
  *                  is half of the bi-dir ISftpProvider/ISftpConsumer pair.
- * @param bstrUser  The user name of the SSH account.
- * @param bstrHost  The name of the machine to connect to.
- * @param uPort     The TCP/IP port on which the SSH server is running.
+ * @param bstrUser The user name of the SSH account.
+ * @param bstrHost The name of the machine to connect to.
+ * @param uPort    The TCP/IP port on which the SSH server is running.
  * @returns 
  *   @c E_INVALIDARG if either string parameter was empty, @c S_OK otherwise.
  */
@@ -126,6 +126,7 @@ STDMETHODIMP CPuttyProvider::GetListing(
 		// but may be a password request or an unknown key notice.
 		strCommand.Format(OPEN_COMMAND, m_strUser, m_strHost, m_uPort);
 		m_Putty.Write( strCommand );
+		::Sleep(2000);
 		strActual = m_Putty.Read();
 
 		HRESULT hr;
@@ -477,3 +478,27 @@ DATE CPuttyProvider::_BuildDate( // static
 }
 
 // CPuttyProvider
+
+
+/*
+   The module attribute causes 
+     DllMain
+     DllRegisterServer
+     DllUnregisterServer
+     DllCanUnloadNow
+     DllGetClassObject. 
+   to be automatically implemented
+ */
+[ module(dll, uuid = "{b816a845-5022-11dc-9153-0090f5284f85}", 
+		 name = "PuttyProvider", 
+		 helpstring = "PuttyProvider 0.1 Type Library",
+		 resource_name = "IDR_PUTTYPROVIDER")
+];
+/*
+class CPuttyProviderModule
+{
+public:
+// Override CAtlDllModuleT members
+};
+*/
+		 

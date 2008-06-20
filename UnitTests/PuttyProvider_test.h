@@ -5,12 +5,15 @@
 
 #include "stdafx.h"
 #include "CppUnitExtensions.h"
-#include "_Swish.h"
+
+// Swish type library
+#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, raw_native_types, auto_search, no_namespace, embedded_idl
+
+// PuttyProvider CPuttyProvider component
+#import "progid:PuttyProvider.PuttyProvider" raw_interfaces_only, raw_native_types, auto_search
 
 #define ISftpProvider ISftpProviderUnstable
-#define IID_ISftpProvider IID_ISftpProviderUnstable
 #define ISftpConsumer ISftpConsumerUnstable
-#define IID_ISftpConsumer IID_ISftpConsumerUnstable
 
 struct testFILEDATA
 {
@@ -172,7 +175,7 @@ class CPuttyProvider_test : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	CPuttyProvider_test() : m_pProvider(NULL) {}
+	CPuttyProvider_test() : m_pProvider(NULL), m_pConsumer(NULL) {}
 	void setUp();
 	void tearDown();
 

@@ -22,10 +22,12 @@ END_OBJECT_MAP()
 		 version = "0.2",
 		 helpstring = "Swish 0.2 Type Library",
 		 resource_name = "IDR_SWISH")
-]
+];
+/*
 class CSwish
 {
 public:
 // Override CAtlDllModuleT members here
 };
+*/
 		 

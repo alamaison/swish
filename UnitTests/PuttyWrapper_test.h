@@ -9,7 +9,7 @@ class CPuttyWrapper_test;
 #undef private
 #define private \
 	friend class CPuttyWrapper_test; private
-#include "PuttyWrapper.h"
+#include "../PuttyProvider/PuttyWrapper.h"
 #undef private
 
 class CPuttyWrapper_test : public CPPUNIT_NS::TestFixture

@@ -67,13 +67,19 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost,
 	if (!szPath || !szPath[0]) return E_INVALIDARG;
 	ATLENSURE( m_pFolder );
 
-	// Create SFTP Provider
+	// Create instance of SFTP Provider using ProgID
+	CLSID CLSID_CPuttyProvider;
+	HRESULT hr = ::CLSIDFromProgID(
+		OLESTR("PuttyProvider.PuttyProvider"),
+		&CLSID_CPuttyProvider
+	);
+	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 	ISftpProvider *pProvider;
-	HRESULT hr = ::CoCreateInstance(
+	hr = ::CoCreateInstance(
 		CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
 		NULL,                     // Ignore this.
 		CLSCTX_INPROC_SERVER,     // Server.
-		IID_ISftpProvider,       // Interface you want.
+		IID_ISftpProvider,        // Interface you want.
 		(LPVOID *)&pProvider);    // Place to store interface.
 	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 

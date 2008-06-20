@@ -9,7 +9,7 @@ class CHostInfoDialog_test;
 #undef private
 #define private \
 	friend class CHostInfoDialog_test; private
-#include "HostInfoDialog.h"
+#include "../HostInfoDialog.h"
 #undef private
 
 class CHostInfoDialog_test : public CPPUNIT_NS::TestFixture

@@ -28,7 +28,7 @@
 #include "resource.h"       // main symbols
 
 #include "RemoteFolder.h"   // For back-reference to parent folder
-#include "PuttyProvider.h"  // For putty-based data provider
+#include "SftpProvider.h"   // For interface to back-end data providers
 #include "PasswordDialog.h" // For password dialog box
 
 struct FILEDATA
@@ -96,21 +96,21 @@ public:
 	HRESULT ConnectAndFetch(
 		PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort );
 
-    // IEnumIDList
-    IFACEMETHODIMP Next(
+	// IEnumIDList
+	IFACEMETHODIMP Next(
 		ULONG celt,
 		__out_ecount_part(celt, *pceltFetched) PITEMID_CHILD *rgelt,
 		__out_opt ULONG *pceltFetched );
-    IFACEMETHODIMP Skip( DWORD celt );
-    IFACEMETHODIMP Reset();
-    IFACEMETHODIMP Clone( __deref_out IEnumIDList **ppenum );
+	IFACEMETHODIMP Skip( DWORD celt );
+	IFACEMETHODIMP Reset();
+	IFACEMETHODIMP Clone( __deref_out IEnumIDList **ppenum );
 
 private:
 	BOOL m_fBoundToFolder;
 	IRemoteFolder *m_pFolder;
 	std::vector<FILEDATA> m_vListing;
 	ULONG m_iPos; // Current position
-    CRemotePidlManager m_PidlManager;
+	CRemotePidlManager m_PidlManager;
 
 	/**
 	 * User interaction callbacks.
@@ -128,7 +128,6 @@ private:
 		__out int *piResult
 	);
 	/* @} */
-
 };
 
 #endif // REMOTEENUMIDLIST_H
