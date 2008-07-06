@@ -110,7 +110,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying psftp to destination directory..."
-				CommandLine="copy /Y &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot;"
+				CommandLine="xcopy &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 		<Configuration
@@ -202,7 +202,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying psftp to destination directory..."
-				CommandLine="copy /Y &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot;"
+				CommandLine="xcopy &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 		<Configuration
@@ -297,7 +297,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying psftp to destination directory..."
-				CommandLine="copy /Y &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot;"
+				CommandLine="xcopy &quot;$(InputDir)psftp.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 	</Configurations>

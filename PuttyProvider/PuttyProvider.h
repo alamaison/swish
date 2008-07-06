@@ -78,7 +78,8 @@ public:
 		m_fConstructException = true;
 		UNREACHABLE;
 	}
-
+	
+	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	/**
 	 * Returns constructor success or failure.
 	 *

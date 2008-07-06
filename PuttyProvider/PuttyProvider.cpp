@@ -58,6 +58,8 @@ STDMETHODIMP CPuttyProvider::Initialize(
 	ATLENSURE_RETURN_HR( 
 		::SysStringLen(bstrUser) > 0 && ::SysStringLen(bstrHost) > 0,
 		E_INVALIDARG );
+	ATLENSURE_RETURN_HR( uPort >= MIN_PORT, E_INVALIDARG );
+	ATLENSURE_RETURN_HR( uPort <= MAX_PORT, E_INVALIDARG );
 
 	m_pConsumer = pConsumer;
 	m_pConsumer->AddRef();
@@ -67,6 +69,7 @@ STDMETHODIMP CPuttyProvider::Initialize(
 
 	ATLASSERT( !m_strUser.IsEmpty() );
 	ATLASSERT( !m_strHost.IsEmpty() );
+	ATLASSERT( m_uPort >= MIN_PORT );
 	ATLASSERT( m_uPort <= MAX_PORT );
 
 	m_fInitialized = true;
