@@ -203,7 +203,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="PREFast|Win32"
+			Name="PREfast|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
