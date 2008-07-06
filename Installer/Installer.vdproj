@@ -15,8 +15,14 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_2B76FAE8C5FF4E99A1367DBEF64AF6CE"
-        "OwnerKey" = "8:_E0B65C7FE7CF4FAC9C101A8EF1D1A4EB"
+        "MsmKey" = "8:_36D53783E0F74DD37E1936A586D6ED37"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_441AFAEFB4F8433B89C85C8DA36A9C4E"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -33,6 +39,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_4D6A4B0F815F453B6D4DD8275132B729"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_502F184D6F8C43B592CB01C1410D5150"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -45,8 +57,32 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_AAEDCD3BE0CE41149C1268AFFF7FBEEF"
-        "OwnerKey" = "8:_E5762C293CA6459185260A0C78A41C30"
+        "MsmKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_99890727882F42A6B452E4ED0DDA47D7"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_99890727882F42A6B452E4ED0DDA47D7"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_99890727882F42A6B452E4ED0DDA47D7"
+        "OwnerKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -57,43 +93,31 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_CEBA774050A545818DEE0E952D94C7BA"
+        "MsmKey" = "8:_B322D5C941DE451D8E8DB1166C0D9A21"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_D5650C2993D841399D35C70FFC618984"
+        "MsmKey" = "8:_C239AC95818241C8BABD40660A176BC7"
+        "OwnerKey" = "8:_99890727882F42A6B452E4ED0DDA47D7"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D5BCA5075195446DB2CCDA3D7C881C7A"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E0B65C7FE7CF4FAC9C101A8EF1D1A4EB"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E0B65C7FE7CF4FAC9C101A8EF1D1A4EB"
-        "OwnerKey" = "8:_CEBA774050A545818DEE0E952D94C7BA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E5762C293CA6459185260A0C78A41C30"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E5762C293CA6459185260A0C78A41C30"
-        "OwnerKey" = "8:_CEBA774050A545818DEE0E952D94C7BA"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_E855C84F58774ED08DAD1E53554A1B17"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FB833527733D4807B6026A3EECFB7138"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -159,7 +183,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\swish-0.2.1.msi"
+        "OutputFilename" = "8:Release\\swish-0.2.1.2.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -211,6 +235,46 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_36D53783E0F74DD37E1936A586D6ED37"
+            {
+            "SourcePath" = "8:LIBEAY32.dll"
+            "TargetName" = "8:libeay32.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_441AFAEFB4F8433B89C85C8DA36A9C4E"
+            {
+            "SourcePath" = "8:..\\Libssh2Provider\\COPYING"
+            "TargetName" = "8:COPYING.libssh2"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4B39578D087A4ABCB09B86004A96A6DE"
             {
             "SourcePath" = "8:..\\README"
@@ -229,6 +293,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4D6A4B0F815F453B6D4DD8275132B729"
+            {
+            "SourcePath" = "8:zlib1.dll"
+            "TargetName" = "8:zlib1.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_502F184D6F8C43B592CB01C1410D5150"
@@ -291,10 +375,30 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D5650C2993D841399D35C70FFC618984"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B322D5C941DE451D8E8DB1166C0D9A21"
             {
-            "SourcePath" = "8:..\\PuttyProvider\\psftp.exe"
-            "TargetName" = "8:psftp.exe"
+            "SourcePath" = "8:..\\Libssh2Provider\\openssl\\out32dll\\ssleay32.dll"
+            "TargetName" = "8:ssleay32.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D5BCA5075195446DB2CCDA3D7C881C7A"
+            {
+            "SourcePath" = "8:..\\Libssh2Provider\\zlib\\zlib1.dll"
+            "TargetName" = "8:zlib1.dll"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
             "Condition" = "8:"
@@ -315,6 +419,26 @@
             {
             "SourcePath" = "8:..\\CHANGELOG"
             "TargetName" = "8:CHANGELOG"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FB833527733D4807B6026A3EECFB7138"
+            {
+            "SourcePath" = "8:..\\Libssh2Provider\\openssl\\out32dll\\libeay32.dll"
+            "TargetName" = "8:libeay32.dll"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
             "Condition" = "8:"
@@ -386,12 +510,12 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Swish"
-        "ProductCode" = "8:{5560CAAF-1877-40B2-AFEE-098198212BC8}"
-        "PackageCode" = "8:{0CE6B4EE-865B-46C2-B319-D3193D94EFC1}"
+        "ProductCode" = "8:{5CE4CB65-658C-4CCB-866B-AAF297EEAF4E}"
+        "PackageCode" = "8:{823798B7-15A4-4286-A13B-B2E1BC6B8A5C}"
         "UpgradeCode" = "8:{97CF376F-FFDE-472A-946B-E3F5D45229DA}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
-        "DetectNewerInstalledVersion" = "11:FALSE"
+        "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
         "ProductVersion" = "8:0.2.1"
         "Manufacturer" = "8:Alexander Lamaison"
@@ -996,11 +1120,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_2B76FAE8C5FF4E99A1367DBEF64AF6CE"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_99890727882F42A6B452E4ED0DDA47D7"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_debugcrt_x86.msm"
+            "SourcePath" = "8:Microsoft_VC80_CRT_x86.msm"
                 "Properties"
                 {
                 }
@@ -1010,39 +1134,11 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_AAEDCD3BE0CE41149C1268AFFF7FBEEF"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_C239AC95818241C8BABD40660A176BC7"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_atl_x86.msm"
-                "Properties"
-                {
-                }
-            "LanguageId" = "3:0"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E0B65C7FE7CF4FAC9C101A8EF1D1A4EB"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_DebugCRT_x86.msm"
-                "Properties"
-                {
-                }
-            "LanguageId" = "3:0"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E5762C293CA6459185260A0C78A41C30"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_ATL_x86.msm"
+            "SourcePath" = "8:policy_8_0_microsoft_vc80_crt_x86.msm"
                 "Properties"
                 {
                 }
@@ -1055,35 +1151,7 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-            {
-            "SourcePath" = "8:..\\Debug\\Swish.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:4"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_5412FECCA2BF417B97BEA3EFD73866B4"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_3A8F440D896A4D6C9F60387C6D98FB4B"
             {
             "SourcePath" = "8:"
             "TargetName" = "8:"
@@ -1105,7 +1173,35 @@
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:ContentFiles"
-            "OutputProjectGuid" = "8:{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
+            "OutputProjectGuid" = "8:{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+            {
+            "SourcePath" = "8:..\\Release\\Swish.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:4"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{3F48C01A-FE7D-4907-860B-B7F45926F277}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
@@ -1139,7 +1235,7 @@
                 {
                 }
             }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9AB316E2F6E942BAA88E88B576B47CDD"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_73FA3E2E69364E1BB33B4A145A4C2BC5"
             {
             "SourcePath" = "8:"
             "TargetName" = "8:"
@@ -1160,16 +1256,44 @@
             "IsolateTo" = "8:"
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Documentation"
-            "OutputProjectGuid" = "8:{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
+            "OutputGroupCanonicalName" = "8:LocalizedResourceDlls"
+            "OutputProjectGuid" = "8:{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
                 }
             }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_ACDA85DF5EA54C9887AA544CF3E15141"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_8AE030F171114ACF95FF33409DFA9B61"
             {
-            "SourcePath" = "8:"
+            "SourcePath" = "8:..\\Libssh2Provider\\Release\\Libssh2Provider.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:4"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{CFC0C998-B275-48AB-AAD3-C99272154656}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_983A937A8ABA42269182B9CED8AE4DBC"
+            {
+            "SourcePath" = "8:..\\Libssh2Provider\\Release_libssh2\\libssh2.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1188,8 +1312,8 @@
             "IsolateTo" = "8:"
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Documentation"
-            "OutputProjectGuid" = "8:{3F48C01A-FE7D-4907-860B-B7F45926F277}"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
@@ -1223,9 +1347,9 @@
                 {
                 }
             }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_CEBA774050A545818DEE0E952D94C7BA"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_BEDD53A118424F678AD89E824C6BC8FA"
             {
-            "SourcePath" = "8:..\\PuttyProvider\\Debug\\PuttyProvider.dll"
+            "SourcePath" = "8:"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1242,10 +1366,38 @@
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:4"
+            "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
+            "OutputGroupCanonicalName" = "8:LocalizedResourceDlls"
+            "OutputProjectGuid" = "8:{CFC0C998-B275-48AB-AAD3-C99272154656}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_D62BBA65D52F4026BA4720FC1AAFC0A4"
+            {
+            "SourcePath" = "8:"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:ContentFiles"
+            "OutputProjectGuid" = "8:{CFC0C998-B275-48AB-AAD3-C99272154656}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {

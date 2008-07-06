@@ -68,27 +68,27 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost,
 	ATLENSURE( m_pFolder );
 
 	// Create instance of SFTP Provider using ProgID
-	CLSID CLSID_CPuttyProvider;
+	CLSID CLSID_Provider;
 	HRESULT hr = ::CLSIDFromProgID(
-		OLESTR("PuttyProvider.PuttyProvider"),
-		&CLSID_CPuttyProvider
+		OLESTR("Libssh2Provider.Libssh2Provider"),
+		&CLSID_Provider
 	);
 	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 	ISftpProvider *pProvider;
 	hr = ::CoCreateInstance(
-		CLSID_CPuttyProvider,     // CLASSID for CPuttyProvider.
+		CLSID_Provider,           // CLASSID for chosen SftpProvider.
 		NULL,                     // Ignore this.
 		CLSCTX_INPROC_SERVER,     // Server.
 		IID_ISftpProvider,        // Interface you want.
 		(LPVOID *)&pProvider);    // Place to store interface.
 	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 
-	// Get SftpConsumer to pass to PuttyProvider (used for password reqs etc.)
+	// Get SftpConsumer to pass to SftpProvider (used for password reqs etc.)
 	ISftpConsumer *pConsumer;
 	hr = this->QueryInterface(__uuidof(pConsumer), (void**)&pConsumer);
 	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 
-	// Set up Putty provider
+	// Set up SFTP provider
 	CComBSTR bstrUser(szUser);
 	CComBSTR bstrHost(szHost);
 	hr = pProvider->Initialize(pConsumer, bstrUser, bstrHost, uPort);
