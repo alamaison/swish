@@ -112,6 +112,8 @@ private:
 	ULONG m_iPos; // Current position
 	CRemotePidlManager m_PidlManager;
 
+	time_t _ConvertDate( __in DATE dateValue ) const;
+
 	/**
 	 * User interaction callbacks.
 	 * @{

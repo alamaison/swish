@@ -112,7 +112,7 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost,
 				fd.strOwner = lt.bstrOwner;
 				fd.strGroup = lt.bstrGroup;
 				fd.uSize = lt.cSize;
-				fd.dtModified = (time_t) COleDateTime(lt.dateModified);
+				fd.dtModified = _ConvertDate(lt.dateModified);
 				// TODO:
 				fd.dwPermissions = 0x777;
 				m_vListing.push_back( fd );
@@ -316,6 +316,42 @@ STDMETHODIMP CRemoteEnumIDList::OnYesNoCancel(
 
 	return E_ABORT;
 }
+
+
+/*----------------------------------------------------------------------------*
+ * Private functions
+ *----------------------------------------------------------------------------*/
+
+/**
+ * Converts DATE to time_t (__time64_t).
+ * 
+ * A time_t represents number of seconds elapsed since 1970-01-01T00:00:00Z GMT.
+ * Valid range is [1970-01-01T00:00:00Z, 3000-12-31T23:59:59Z] GMT.
+ *
+ * @param dateValue The DATE to be converted.
+ * @returns The specified calendar time encoded as a value of type time_t or 
+ *          -1 if time is out of range.
+ */
+time_t CRemoteEnumIDList::_ConvertDate( DATE dateValue ) const
+{
+	tm tmResult;
+	SYSTEMTIME  stTemp;
+
+	if(!::VariantTimeToSystemTime(dateValue, &stTemp))
+		return -1;
+
+	tmResult.tm_sec   = stTemp.wSecond;     // seconds after the minute [0, 61]
+	tmResult.tm_min   = stTemp.wMinute;     // minutes after the hour   [0, 59]
+	tmResult.tm_hour  = stTemp.wHour;       // hours after 00:00:00     [0, 23]
+	tmResult.tm_mday  = stTemp.wDay;        // day of the month         [1, 31]
+	tmResult.tm_mon   = stTemp.wMonth - 1;  // month of the year        [0, 11]
+	tmResult.tm_year  = stTemp.wYear - 1900;// years since 1900
+	tmResult.tm_wday  = stTemp.wDayOfWeek;  // day of the week          [0,  6]
+	tmResult.tm_isdst = -1;                 // Daylight saving time is unknown
+	return _mktime64(&tmResult); // Convert the incomplete time to a normalised
+						         // calendar value.
+}
+
 
 // CRemoteEnumIDList
 
