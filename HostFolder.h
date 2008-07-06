@@ -17,22 +17,10 @@
 
 #define _ATL_DEBUG_QI
 
-// IHostFolder
-[
-	object,
-	uuid("b816a839-5022-11dc-9153-0090f5284f85"),
-	helpstring("IHostFolder Interface"),
-	pointer_default(unique)
-]
-__interface IHostFolder : IUnknown
-{
-};
-
-
 // CHostFolder
 [
 	coclass,
-	default(IHostFolder),
+	default(IShellFolder2),
 	threading(apartment),
 	vi_progid("Swish.HostFolder"),
 	progid("Swish.HostFolder.1"),
@@ -42,7 +30,6 @@ __interface IHostFolder : IUnknown
 	helpstring("HostFolder Class")
 ]
 class ATL_NO_VTABLE CHostFolder :
-	public IHostFolder,
 	// The IShellFolder2-specific detail-handling methods are not compatible
 	// with Win 9x/NT but it supports all those of IShellDetails which are
 	public IShellFolder2, 

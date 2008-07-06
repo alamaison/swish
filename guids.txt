@@ -1,11 +1,11 @@
 b816a838-5022-11dc-9153-0090f5284f85 Swish Type Library (DLL module UUID)
-b816a839-5022-11dc-9153-0090f5284f85 IHostFolder Interface
+b816a839-5022-11dc-9153-0090f5284f85   *REMOVED*  IHostFolder Interface
 b816a83a-5022-11dc-9153-0090f5284f85 CHostFolder Class
 b816a83b-5022-11dc-9153-0090f5284f85 IRemoteFolder Interface
 b816a83c-5022-11dc-9153-0090f5284f85 CRemoteFolder Class
-b816a83d-5022-11dc-9153-0090f5284f85 IRemoteEnumIDList Interface
+b816a83d-5022-11dc-9153-0090f5284f85   *REMOVED*  IRemoteEnumIDList Interface
 b816a83e-5022-11dc-9153-0090f5284f85 CRemoteEnumIDList Class
-b816a83f-5022-11dc-9153-0090f5284f85 IHostContextMenu Interface
+b816a83f-5022-11dc-9153-0090f5284f85   *REMOVED*  IHostContextMenu Interface
 b816a840-5022-11dc-9153-0090f5284f85 CHostContextMenu Class
 b816a841-5022-11dc-9153-0090f5284f85 ISftpProvider Interface
 b816a842-5022-11dc-9153-0090f5284f85 CPuttyProvider Class

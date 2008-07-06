@@ -44,23 +44,10 @@ struct FILEDATA
 	DWORD dwPermissions;
 };
 
-
-// IRemoteEnumIDList
-[
-	object,
-	uuid("b816a83d-5022-11dc-9153-0090f5284f85"),
-	helpstring("IRemoteEnumIDList Interface"),
-	pointer_default(unique)
-]
-__interface IRemoteEnumIDList : IUnknown
-{
-};
-
-
 // CRemoteEnumIDList
 [
 	coclass,
-	default(IRemoteEnumIDList),
+	default(IEnumIDList),
 	threading(apartment),
 	vi_progid("Swish.RemoteEnumIDList"),
 	progid("Swish.RemoteEnumIDList.1"),
@@ -69,7 +56,6 @@ __interface IRemoteEnumIDList : IUnknown
 	helpstring("RemoteEnumIDList Class")
 ]
 class ATL_NO_VTABLE CRemoteEnumIDList :
-	public IRemoteEnumIDList,
 	public IEnumIDList,
 	public ISftpConsumer
 {

@@ -18,6 +18,7 @@
 #define _ATL_DEBUG_QI
 
 // IRemoteFolder
+// This is being used as a type-safety marker interface - may be uneccessary
 [
 	object,
 	uuid("b816a83b-5022-11dc-9153-0090f5284f85"),
@@ -32,7 +33,7 @@ __interface IRemoteFolder : IUnknown
 // CRemoteFolder
 [
 	coclass,
-	default(IRemoteFolder),
+	default(IShellFolder2),
 	threading(apartment),
 	vi_progid("Swish.RemoteFolder"),
 	progid("Swish.RemoteFolder.1"),

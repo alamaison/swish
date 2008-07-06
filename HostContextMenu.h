@@ -27,22 +27,10 @@
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
-// IHostContextMenu
-[
-	object,
-	uuid("b816a83f-5022-11dc-9153-0090f5284f85"),
-	helpstring("IHostContextMenu Interface"),
-	pointer_default(unique)
-]
-__interface IHostContextMenu : IUnknown
-{
-};
-
-
 // CHostContextMenu
 [
 	coclass,
-	default(IHostContextMenu),
+	default(IContextMenu),
 	threading(apartment),
 	vi_progid("Swish.HostContextMenu"),
 	progid("Swish.HostContextMenu.1"),
@@ -51,7 +39,6 @@ __interface IHostContextMenu : IUnknown
 	helpstring("HostContextMenu Class")
 ]
 class ATL_NO_VTABLE CHostContextMenu :
-	public IHostContextMenu,
 	public IContextMenu
 {
 public:
