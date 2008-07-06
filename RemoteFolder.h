@@ -123,7 +123,7 @@ private:
 	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
-	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
+	CString _GetPathFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( CTime dtDate, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
