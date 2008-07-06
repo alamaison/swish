@@ -291,6 +291,10 @@
 			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
 			RelativePathToProject=".\Swish.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
+			RelativePathToProject=".\PuttyProvider\PuttyProvider.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -299,6 +303,10 @@
 			>
 			<File
 				RelativePath=".\HostInfoDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpConsumer.cpp"
 				>
 			</File>
 			<File
@@ -344,6 +352,10 @@
 			</File>
 			<File
 				RelativePath=".\HostInfoDialog_test.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpConsumer.h"
 				>
 			</File>
 			<File
