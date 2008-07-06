@@ -295,6 +295,10 @@
 			ReferencedProjectIdentifier="{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
 			RelativePathToProject=".\PuttyProvider\PuttyProvider.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
+			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -303,6 +307,10 @@
 			>
 			<File
 				RelativePath=".\HostInfoDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Libssh2Provider_test.cpp"
 				>
 			</File>
 			<File
@@ -352,6 +360,10 @@
 			</File>
 			<File
 				RelativePath=".\HostInfoDialog_test.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Libssh2Provider_test.h"
 				>
 			</File>
 			<File
