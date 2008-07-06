@@ -46,6 +46,32 @@ Requirements to build:
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
         Common Public Licence: http://sourceforge.net/projects/wtl/.
     
+    For the Libssh2Provider backend:
+     - libssh2
+     - OpenSSL
+     - zlib
+    The directories to put the sourcecode for these dependencies in should
+    already exist in the Libssh2Provider/ directory.
+    
+    libssh2 can be obtained from http://www.libssh2.org.  Either the latest
+    release (0.18) or the CVS head appear to work.  You can get OpenSSL from
+    http://www.openssl.org and compile it yourself but a much easier option
+    is to download my pre-packaged binary with just the stuff needed for Swish:
+    http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download.
+    zlib binaries are available at http://www.zlib.net/.
+    
+    Assuming you have the necessary tools available on your PATH (probably by 
+    installing cygwin), the easiest way to set everything up is to run the 
+    following commands in the Libssh2Provider/ directory:
+    
+      cvs -d :pserver:libssh2.cvs.sourceforge.net:/cvsroot/libssh2 co libssh2
+      wget "http://prdownloads.sourceforge.net/libpng/zlib123-dll.zip?download"
+      unzip -d zlib zlib123-dll.zip
+      rm zlib123-dll.zip
+      wget "http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download"
+      unzip -d openssl openssl-0.9.8g-swish.zip
+      rm openssl-0.9.8g-swish.zip
+      
 Requirements for testing:
     CppUnit (works with v1.12.0, may work with other versions) must be present
     on the local machine.  Many tests also require a remote host available to
