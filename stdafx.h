@@ -95,12 +95,35 @@ using namespace ATL;
 #define UNREACHABLE __assume(0);
 #endif
 
+#define ATLENSURE_REPORT_HR(expr, error, hr)                         \
+do {                                                                 \
+	int __atl_condVal=!!(expr);                                      \
+	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+	if(!(__atl_condVal)) return (hr);                                \
+} while (0)
+
+#define ATLASSERT_REPORT(expr, error)                                \
+do {                                                                 \
+	int __atl_condVal=!!(expr);                                      \
+	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+} while (0)
+
+#ifdef _DEBUG
+#define ATLVERIFY_REPORT(expr, error)                                \
+do {                                                                 \
+	int __atl_condVal=!!(expr);                                      \
+	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+} while (0)
+#else
+#define ATLVERIFY_REPORT(expr, error) (expr)
+#endif // DEBUG
 
 /* Includes ***************************************************************** */
 
 #include <vector>
 #include <strsafe.h>
 #include <shlobj.h>           // Typical Shell header file
+#include <comdef.h>           // For _com_error
 
 // This is here only to tell VC7 Class Wizard this is an ATL project
 #ifdef ___VC7_CLWIZ_ONLY___
