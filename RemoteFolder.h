@@ -15,9 +15,6 @@
 
 #include "RemotePidlManager.h"
 
-#define _ATL_DEBUG_QI
-
-// IRemoteFolder
 // This is being used as a type-safety marker interface - may be uneccessary
 [
 	object,

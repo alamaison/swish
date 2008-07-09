@@ -15,8 +15,6 @@
 
 #include "HostPidlManager.h"
 
-#define _ATL_DEBUG_QI
-
 // CHostFolder
 [
 	coclass,
