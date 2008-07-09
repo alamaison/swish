@@ -311,6 +311,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ExplorerCallback.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HostContextMenu.cpp"
 				>
 			</File>
@@ -385,6 +389,10 @@
 			>
 			<File
 				RelativePath=".\ConnCopyPolicy.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ExplorerCallback.h"
 				>
 			</File>
 			<File
