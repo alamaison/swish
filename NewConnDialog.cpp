@@ -18,7 +18,7 @@
 */
 
 #include "stdafx.h"
-#include "HostInfoDialog.h"
+#include "NewConnDialog.h"
 #include "remotelimits.h"
 
 #define FORBIDDEN_CHARS _T("@: \t\n\r\b\"'\\")
@@ -38,7 +38,7 @@
  * @see SetUser() SetHost() SetPath() SetPort()
  * @see _HandleValidity()
  */
-LRESULT CHostInfoDialog::OnInitDialog(MESSAGE_HANDLER_PARAMS)
+LRESULT CNewConnDialog::OnInitDialog(MESSAGE_HANDLER_PARAMS)
 {
 	// Copy member data to Win32 object fields
 	DoDataExchange(DDX_LOAD);
@@ -59,7 +59,7 @@ LRESULT CHostInfoDialog::OnInitDialog(MESSAGE_HANDLER_PARAMS)
  *
  * @see _HandleValidity()
  */
-LRESULT CHostInfoDialog::OnChange(COMMAND_HANDLER_PARAMS)
+LRESULT CNewConnDialog::OnChange(COMMAND_HANDLER_PARAMS)
 {
 	_HandleValidity();
 	return 0;
@@ -84,7 +84,7 @@ LRESULT CHostInfoDialog::OnChange(COMMAND_HANDLER_PARAMS)
  * @see GetUser() GetHost() GetPath() GetPort()
  * @see OnCancel()
  */
-LRESULT CHostInfoDialog::OnOK(WORD, WORD wID, HWND, BOOL&)
+LRESULT CNewConnDialog::OnOK(WORD, WORD wID, HWND, BOOL&)
 {
 	// Save data from Win32 objects into member fields
 	DoDataExchange(DDX_SAVE);
@@ -103,7 +103,7 @@ LRESULT CHostInfoDialog::OnOK(WORD, WORD wID, HWND, BOOL&)
  *
  * @see OnOK()
  */
-LRESULT CHostInfoDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
+LRESULT CNewConnDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
 {
 	EndDialog(wID);
 	return 0;
@@ -144,7 +144,7 @@ LRESULT CHostInfoDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
  *
  * @see _HandleValidity()
  */
-BOOL CHostInfoDialog::_IsValid() const
+BOOL CNewConnDialog::_IsValid() const
 {
 	ASSERT(m_hWnd); // Must call DoModal() or Create() first
 
@@ -189,7 +189,7 @@ BOOL CHostInfoDialog::_IsValid() const
  *
  * @see OnOK()
  */
-void CHostInfoDialog::_HandleValidity()
+void CNewConnDialog::_HandleValidity()
 {
 	ASSERT(m_hWnd); // Must call DoModal() or Create() first
 
@@ -205,7 +205,7 @@ void CHostInfoDialog::_HandleValidity()
  * @todo copy the data directly from the field or update the member variables
  *       as the field value changes.
  */
-CString CHostInfoDialog::GetName()
+CString CNewConnDialog::GetName()
 {
 	return m_strName;
 }
@@ -219,7 +219,7 @@ CString CHostInfoDialog::GetName()
  * @todo copy the data directly from the field or update the member variables
  *       as the field value changes.
  */
-CString CHostInfoDialog::GetUser()
+CString CNewConnDialog::GetUser()
 {
 	return m_strUser;
 }
@@ -233,7 +233,7 @@ CString CHostInfoDialog::GetUser()
  * @todo copy the data directly from the field or update the member variables
  *       as the field value changes.
  */
-CString CHostInfoDialog::GetHost()
+CString CNewConnDialog::GetHost()
 {
 	return m_strHost;
 }
@@ -247,7 +247,7 @@ CString CHostInfoDialog::GetHost()
  * @todo copy the data directly from the field or update the member variables
  *       as the field value changes.
  */
-CString CHostInfoDialog::GetPath()
+CString CNewConnDialog::GetPath()
 {
 	return m_strPath;
 }
@@ -261,7 +261,7 @@ CString CHostInfoDialog::GetPath()
  * @todo copy the data directly from the field or update the member variables
  *       as the field value changes.
  */
-UINT CHostInfoDialog::GetPort()
+UINT CNewConnDialog::GetPort()
 {
 	ATLASSERT(m_uPort >= MIN_PORT && m_uPort <= MAX_PORT);
 	return m_uPort;
@@ -276,7 +276,7 @@ UINT CHostInfoDialog::GetPort()
  *
  * @see OnInitDialog()
  */
-void CHostInfoDialog::SetName( LPCTSTR pszName )
+void CNewConnDialog::SetName( LPCTSTR pszName )
 {
 	m_strName = pszName;
 }
@@ -290,7 +290,7 @@ void CHostInfoDialog::SetName( LPCTSTR pszName )
  *
  * @see OnInitDialog()
  */
-void CHostInfoDialog::SetUser( LPCTSTR pszUser )
+void CNewConnDialog::SetUser( LPCTSTR pszUser )
 {
 	m_strUser = pszUser;
 }
@@ -304,7 +304,7 @@ void CHostInfoDialog::SetUser( LPCTSTR pszUser )
  *
  * @see OnInitDialog()
  */
-void CHostInfoDialog::SetHost( LPCTSTR pszHost )
+void CNewConnDialog::SetHost( LPCTSTR pszHost )
 {
 	m_strHost = pszHost;
 }
@@ -318,7 +318,7 @@ void CHostInfoDialog::SetHost( LPCTSTR pszHost )
  *
  * @see OnInitDialog()
  */
-void CHostInfoDialog::SetPath( LPCTSTR pszPath )
+void CNewConnDialog::SetPath( LPCTSTR pszPath )
 {
 	m_strPath = pszPath;
 }
@@ -333,9 +333,9 @@ void CHostInfoDialog::SetPath( LPCTSTR pszPath )
  *
  * @see OnInitDialog()
  */
-void CHostInfoDialog::SetPort( UINT uPort )
+void CNewConnDialog::SetPort( UINT uPort )
 {
 	m_uPort = min(uPort, MAX_PORT);
 }
 
-// CHostInfoDialog
+// CNewConnDialog

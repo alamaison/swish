@@ -323,11 +323,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostInfoDialog.cpp"
+				RelativePath=".\HostPidlManager.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\HostPidlManager.cpp"
+				RelativePath=".\NewConnDialog.cpp"
 				>
 			</File>
 			<File
@@ -428,11 +428,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\HostInfoDialog.h"
+				RelativePath=".\HostPidlManager.h"
 				>
 			</File>
 			<File
-				RelativePath=".\HostPidlManager.h"
+				RelativePath=".\NewConnDialog.h"
 				>
 			</File>
 			<File

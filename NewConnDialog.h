@@ -45,18 +45,18 @@
  * Numeric field:
  * - "Port:" TCP/IP port to connect over (IDC_PORT)
  *
- * @image html "HostInfoDialog.png" "Dialog box appearance"
+ * @image html "NewConnDialog.png" "Dialog box appearance"
  */
-class CHostInfoDialog : 
-	public CDialogImpl<CHostInfoDialog>,
-	public CWinDataExchange<CHostInfoDialog>
+class CNewConnDialog : 
+	public CDialogImpl<CNewConnDialog>,
+	public CWinDataExchange<CNewConnDialog>
 {
 public:
 
 	/** Dialog box resource identifier */
 	enum { IDD = IDD_HOSTINFO_DIALOG };
 
-	CHostInfoDialog() : m_uPort(22) {}
+	CNewConnDialog() : m_uPort(22) {}
 
 	/** @name Accessors
 	 * Dialog field setters and getters
@@ -74,7 +74,7 @@ public:
 	void SetPort( UINT uPort );
 	// @}
 
-	BEGIN_MSG_MAP(CHostInfoDialog)
+	BEGIN_MSG_MAP(CNewConnDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		COMMAND_HANDLER(IDOK, BN_CLICKED, OnOK)
 		COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnCancel)
@@ -82,7 +82,7 @@ public:
 		COMMAND_CODE_HANDLER(EN_CHANGE, OnChange)
 	END_MSG_MAP()
 
-	BEGIN_DDX_MAP(CHostInfoDialog)
+	BEGIN_DDX_MAP(CNewConnDialog)
 		DDX_TEXT(IDC_NAME, m_strName)
 		DDX_TEXT_LEN(IDC_HOST, m_strHost, MAX_HOSTNAME_LEN)
 		DDX_UINT_RANGE(IDC_PORT, m_uPort, (UINT)MIN_PORT, (UINT)MAX_PORT)

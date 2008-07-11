@@ -1,28 +1,28 @@
 #include "stdafx.h"
-#include "HostInfoDialog_test.h"
+#include "NewConnDialog_test.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CHostInfoDialog_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CNewConnDialog_test );
 
-void CHostInfoDialog_test::setUp()
+void CNewConnDialog_test::setUp()
 {
 }
 
-void CHostInfoDialog_test::testGetUser()
+void CNewConnDialog_test::testGetUser()
 {
 	CPPUNIT_ASSERT( m_dlg.GetUser().IsEmpty() );
 }
 
-void CHostInfoDialog_test::testGetHost()
+void CNewConnDialog_test::testGetHost()
 {
 	CPPUNIT_ASSERT( m_dlg.GetHost().IsEmpty() );
 }
 
-void CHostInfoDialog_test::testGetPath()
+void CNewConnDialog_test::testGetPath()
 {
 	CPPUNIT_ASSERT( m_dlg.GetPath().IsEmpty() );
 }
 
-void CHostInfoDialog_test::testGetPort()
+void CNewConnDialog_test::testGetPort()
 {
 	CPPUNIT_ASSERT_EQUAL( (UINT)22, m_dlg.GetPort() ); // Default should be 22
 
@@ -36,7 +36,7 @@ void CHostInfoDialog_test::testGetPort()
 	CPPUNIT_ASSERT_EQUAL( (UINT)22, m_dlg.GetPort() );
 }
 
-void CHostInfoDialog_test::testDoModal()
+void CNewConnDialog_test::testDoModal()
 {
 	DWORD dwThreadId;
 
@@ -62,7 +62,7 @@ void CHostInfoDialog_test::testDoModal()
 	hClickCancelThread = NULL;
 }
 
-void CHostInfoDialog_test::tearDown()
+void CNewConnDialog_test::tearDown()
 {
 }
 
@@ -73,10 +73,10 @@ void CHostInfoDialog_test::tearDown()
 /**
  * Sends a button click to the Cancel button of the dialog programmatically.
  */
-DWORD WINAPI CHostInfoDialog_test::ClickCancelThread(LPVOID lpThreadParam)
+DWORD WINAPI CNewConnDialog_test::ClickCancelThread(LPVOID lpThreadParam)
 // static
 {
-	CHostInfoDialog_test *pThis = ((CHostInfoDialog_test *)lpThreadParam);
+	CNewConnDialog_test *pThis = ((CNewConnDialog_test *)lpThreadParam);
 	::Sleep(700);
 
 	// Send Cancel button click message to dialog box

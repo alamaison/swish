@@ -5,16 +5,16 @@
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
 // test class directly into the target class's header
-class CHostInfoDialog_test;
+class CNewConnDialog_test;
 #undef private
 #define private \
-	friend class CHostInfoDialog_test; private
-#include "../HostInfoDialog.h"
+	friend class CNewConnDialog_test; private
+#include "../NewConnDialog.h"
 #undef private
 
-class CHostInfoDialog_test : public CPPUNIT_NS::TestFixture
+class CNewConnDialog_test : public CPPUNIT_NS::TestFixture
 {
-	CPPUNIT_TEST_SUITE( CHostInfoDialog_test );
+	CPPUNIT_TEST_SUITE( CNewConnDialog_test );
 		CPPUNIT_TEST( testGetUser );
 		CPPUNIT_TEST( testGetHost );
 		CPPUNIT_TEST( testGetPath );
@@ -23,8 +23,8 @@ class CHostInfoDialog_test : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	CHostInfoDialog_test() {}
-	~CHostInfoDialog_test() {}
+	CNewConnDialog_test() {}
+	~CNewConnDialog_test() {}
 	void setUp();
 	void tearDown();
 
@@ -36,7 +36,7 @@ protected:
 	void testDoModal();
 
 private:
-	CHostInfoDialog m_dlg;
+	CNewConnDialog m_dlg;
 
 	/* Thread related functions and variables */
 	static DWORD WINAPI ClickCancelThread( __in LPVOID lpThreadParam );
