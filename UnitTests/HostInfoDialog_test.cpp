@@ -24,14 +24,16 @@ void CHostInfoDialog_test::testGetPath()
 
 void CHostInfoDialog_test::testGetPort()
 {
-	CPPUNIT_ASSERT_EQUAL( (USHORT)22, m_dlg.GetPort() ); // Default should be 22
+	CPPUNIT_ASSERT_EQUAL( (UINT)22, m_dlg.GetPort() ); // Default should be 22
 
 	m_dlg.SetPort( 0 );
-	CPPUNIT_ASSERT_EQUAL( (USHORT)0, m_dlg.GetPort() );
+	CPPUNIT_ASSERT_EQUAL( (UINT)0, m_dlg.GetPort() );
 	m_dlg.SetPort( 65535 );
-	CPPUNIT_ASSERT_EQUAL( (USHORT)65535, m_dlg.GetPort() );
+	CPPUNIT_ASSERT_EQUAL( (UINT)65535, m_dlg.GetPort() );
+	m_dlg.SetPort( 65536 );
+	CPPUNIT_ASSERT_EQUAL( (UINT)65535, m_dlg.GetPort() );
 	m_dlg.SetPort( 22 );
-	CPPUNIT_ASSERT_EQUAL( (USHORT)22, m_dlg.GetPort() );
+	CPPUNIT_ASSERT_EQUAL( (UINT)22, m_dlg.GetPort() );
 }
 
 void CHostInfoDialog_test::testDoModal()

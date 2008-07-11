@@ -1,4 +1,4 @@
-/*  ATL dialog box implementation for host connection information.
+/*  WTL dialog box implementation for host connection information.
 
     Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -41,10 +41,7 @@
 LRESULT CHostInfoDialog::OnInitDialog(MESSAGE_HANDLER_PARAMS)
 {
 	// Copy member data to Win32 object fields
-	SetDlgItemText(IDC_USER, m_strUser);
-	SetDlgItemText(IDC_HOST, m_strHost);
-	SetDlgItemText(IDC_PATH, m_strPath);
-	SetDlgItemInt(IDC_PORT, m_uPort, FALSE);
+	DoDataExchange(DDX_LOAD);
 
 	// Check validity
 	_HandleValidity();
@@ -89,14 +86,8 @@ LRESULT CHostInfoDialog::OnChange(COMMAND_HANDLER_PARAMS)
  */
 LRESULT CHostInfoDialog::OnOK(WORD, WORD wID, HWND, BOOL&)
 {
-	// Get string fields
-	GetDlgItemText(IDC_USER, m_strUser);
-	GetDlgItemText(IDC_HOST, m_strHost);
-	GetDlgItemText(IDC_PATH, m_strPath);
-
-	// Get numeric field (port number)
-	m_uPort = (USHORT)GetDlgItemInt(IDC_PORT, NULL, false);
-
+	// Save data from Win32 objects into member fields
+	DoDataExchange(DDX_SAVE);
 	EndDialog(wID);
 	return 0;
 }
@@ -122,6 +113,7 @@ LRESULT CHostInfoDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
  * Checks if the values in the dialog box fields are valid.
  *
  * Criteria:
+ * - The name field must not be empty.
  * - The user name field must not be empty, must not contain more than 
  *   @ref MAX_USERNAME_LEN characters and must not contain any characters
  *   from @ref FORBIDDEN_CHARS.
@@ -152,16 +144,18 @@ LRESULT CHostInfoDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
  *
  * @see _HandleValidity()
  */
-BOOL CHostInfoDialog::_IsValid()
+BOOL CHostInfoDialog::_IsValid() const
 {
 	ASSERT(m_hWnd); // Must call DoModal() or Create() first
 
 	// Check string fields
-	CString strUser, strHost, strPath;
+	CString strName, strUser, strHost, strPath;
+	GetDlgItemText(IDC_NAME, strName);
 	GetDlgItemText(IDC_USER, strUser);
 	GetDlgItemText(IDC_HOST, strHost);
 	GetDlgItemText(IDC_PATH, strPath);
-	if (strUser.IsEmpty() || strHost.IsEmpty() || strPath.IsEmpty())
+	if (strName.IsEmpty() || strUser.IsEmpty() || strHost.IsEmpty()
+		|| strPath.IsEmpty())
 		return false;
 	if (strUser.FindOneOf(FORBIDDEN_CHARS) > -1 ||
 	    strHost.FindOneOf(FORBIDDEN_CHARS) > -1 ||
@@ -175,7 +169,6 @@ BOOL CHostInfoDialog::_IsValid()
 	// Check numeric field (port number)
 	BOOL fTranslated;
 	UINT uPort = GetDlgItemInt(IDC_PORT, &fTranslated, false);
-	ASSERT( fTranslated );
 	if (!fTranslated)
 		return false;
 	if (uPort > MAX_PORT)
@@ -201,6 +194,20 @@ void CHostInfoDialog::_HandleValidity()
 	ASSERT(m_hWnd); // Must call DoModal() or Create() first
 
 	::EnableWindow(GetDlgItem(IDOK), _IsValid());
+}
+
+/**
+ * Get value of the connection name field.
+ *
+ * @pre the OK button must be clicked first in order to copy the data out
+ *      of the Win32 field.
+ * @returns the friendly connection name (label).
+ * @todo copy the data directly from the field or update the member variables
+ *       as the field value changes.
+ */
+CString CHostInfoDialog::GetName()
+{
+	return m_strName;
 }
 
 /**
@@ -254,11 +261,25 @@ CString CHostInfoDialog::GetPath()
  * @todo copy the data directly from the field or update the member variables
  *       as the field value changes.
  */
-USHORT CHostInfoDialog::GetPort()
+UINT CHostInfoDialog::GetPort()
 {
+	ATLASSERT(m_uPort >= MIN_PORT && m_uPort <= MAX_PORT);
 	return m_uPort;
 }
 
+/**
+ * Set the value to be loaded into the name field when dialog is displayed.
+ *
+ * The value set using this function is copied into the Win32 dialog field
+ * when the dialog is initialised.  This is done by the OnInitDialog() 
+ * message handler which handle dialog initialisation.
+ *
+ * @see OnInitDialog()
+ */
+void CHostInfoDialog::SetName( LPCTSTR pszName )
+{
+	m_strName = pszName;
+}
 
 /**
  * Set the value to be loaded into the user name field when dialog is displayed.
@@ -307,13 +328,14 @@ void CHostInfoDialog::SetPath( LPCTSTR pszPath )
  *
  * The value set using this function is copied into the Win32 dialog field
  * when the dialog is initialised.  This is done by the OnInitDialog() 
- * message handler which handle dialog initialisation.
+ * message handler which handle dialog initialisation.  If the value set is
+ * greater than the maximum allowed port value, @c MAX_PORT is used instead.
  *
  * @see OnInitDialog()
  */
-void CHostInfoDialog::SetPort( USHORT uPort )
+void CHostInfoDialog::SetPort( UINT uPort )
 {
-	m_uPort = uPort;
+	m_uPort = min(uPort, MAX_PORT);
 }
 
 // CHostInfoDialog

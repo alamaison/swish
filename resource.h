@@ -18,8 +18,15 @@
 #define IDC_HOST                        1008
 #define IDC_PORT                        1009
 #define IDC_PATH                        1010
+#define IDC_LABEL_NAME                  1011
+#define IDC_NAME                        1012
 #define IDC_PASSWORD                    1013
 #define IDC_PASSWORD_LABEL              1014
+#define IDC_SEPARATOR                   1017
+#define IDC_BLURB_CONNECTION            1018
+#define IDC_BLURB_SERVER                1019
+#define IDC_BLURB_PATH                  1020
+#define IDC_PATH_EXAMPLE                1021
 
 // Next default values for new objects
 // 
@@ -28,7 +35,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        202
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1015
-#define _APS_NEXT_SYMED_VALUE           103
+#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
