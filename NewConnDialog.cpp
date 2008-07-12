@@ -276,7 +276,7 @@ UINT CNewConnDialog::GetPort()
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetName( LPCTSTR pszName )
+void CNewConnDialog::SetName( PCTSTR pszName )
 {
 	m_strName = pszName;
 }
@@ -290,7 +290,7 @@ void CNewConnDialog::SetName( LPCTSTR pszName )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetUser( LPCTSTR pszUser )
+void CNewConnDialog::SetUser( PCTSTR pszUser )
 {
 	m_strUser = pszUser;
 }
@@ -304,7 +304,7 @@ void CNewConnDialog::SetUser( LPCTSTR pszUser )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetHost( LPCTSTR pszHost )
+void CNewConnDialog::SetHost( PCTSTR pszHost )
 {
 	m_strHost = pszHost;
 }
@@ -318,7 +318,7 @@ void CNewConnDialog::SetHost( LPCTSTR pszHost )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetPath( LPCTSTR pszPath )
+void CNewConnDialog::SetPath( PCTSTR pszPath )
 {
 	m_strPath = pszPath;
 }

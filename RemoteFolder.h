@@ -74,23 +74,23 @@ public:
     STDMETHOD(GetClassID)( CLSID* );
 
 	// IPersistFolder
-    STDMETHOD(Initialize)( PCIDLIST_ABSOLUTE pidl );
+	IFACEMETHODIMP Initialize( PCIDLIST_ABSOLUTE pidl );
 
 	// IPersistFolder2
 	STDMETHOD(GetCurFolder)( PIDLIST_ABSOLUTE *ppidl );
 
 	// IShellFolder
-    STDMETHOD(BindToObject)( PCUIDLIST_RELATIVE pidl, LPBC, REFIID, void** );
-	STDMETHOD(EnumObjects)( HWND, DWORD, LPENUMIDLIST* );
+	STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, IBindCtx*, REFIID, void**);
+	STDMETHOD(EnumObjects)( HWND, SHCONTF, LPENUMIDLIST* );
     STDMETHOD(CreateViewObject)( HWND, REFIID, void** );
-    STDMETHOD(GetAttributesOf) ( UINT, LPCITEMIDLIST*, LPDWORD );
+	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
     STDMETHOD(GetUIObjectOf)
-		( HWND, UINT, LPCITEMIDLIST*, REFIID, LPUINT, void** );
+		( HWND, UINT, PCUITEMID_CHILD_ARRAY, REFIID, LPUINT, void** );
 	STDMETHOD(CompareIDs)
 		( LPARAM, LPCITEMIDLIST, LPCITEMIDLIST );
     STDMETHOD(BindToStorage)( LPCITEMIDLIST, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
-    STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, LPSTRRET );
+    STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
     STDMETHOD(ParseDisplayName)
 		( HWND, LPBC, LPOLESTR, LPDWORD, LPITEMIDLIST*, LPDWORD )
         { return E_NOTIMPL; }
@@ -104,7 +104,7 @@ public:
 		{ return E_NOTIMPL; }
 	STDMETHOD(GetDetailsEx)( PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, 
 							 VARIANT *pv );
-	STDMETHOD(MapColumnToSCID)( UINT iColumn, SHCOLUMNID *pscid );
+	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
 
 	// IExtractIcon
 	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
