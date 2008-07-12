@@ -41,14 +41,26 @@
 	helpstring("ExplorerCallback Class")
 ]
 class ATL_NO_VTABLE CExplorerCallback :
-	public IShellFolderViewCB
+	public IShellFolderViewCB,
+	public IObjectWithSiteImpl<CExplorerCallback>
 {
 public:
+	CExplorerCallback() : m_hwndView(NULL) {}
 
 	// IShellFolderViewCB
 	IFACEMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+	// IObjectWithSite - handled by IObjectWithSiteImpl
+	//IFACEMETHODIMP STDMETHODCALLTYPE SetSite( IUnknown *pUnkSite );
+	//IFACEMETHODIMP STDMETHODCALLTYPE GetSite( REFIID riid, void **ppvSite );
+
 private:
+
+	HRESULT _AddNewConnection();
+	HRESULT _AddConnectionToRegistry(
+		PCTSTR szName, PCTSTR szHost, UINT uPort, 
+		PCTSTR szUsername, PCTSTR szPath );
+	void _RefreshView();
 
 	// Menu command ID offsets for Explorer Tools menu
 	enum MENUOFFSET
@@ -58,6 +70,8 @@ private:
 		MENUIDOFFSET_REMOVE,
 		MENUIDOFFSET_LAST = MENUIDOFFSET_REMOVE
 	};
+
+	HWND m_hwndView;  ///< Handle to folder view window
 };
 
 #endif // EXPLORERCALLBACK_H

@@ -37,9 +37,7 @@ class ATL_NO_VTABLE CHostFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CHostFolder() : m_pidl(NULL)
-	{
-	}
+	CHostFolder() : m_pidl(NULL) {}
 
 	~CHostFolder()
 	{
@@ -111,6 +109,8 @@ private:
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
+	HRESULT _LoadConnectionsFromRegistry();
+	HRESULT _LoadConnectionDetailsFromRegistry( PCTSTR szLabel );
 };
 
 // Host column property IDs

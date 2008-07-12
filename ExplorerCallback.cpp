@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "ExplorerCallback.h"
+#include "NewConnDialog.h"
 
 /**
  * Callback method for shell DEFVIEW to inform HostFolder as things happen.
@@ -39,6 +40,9 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 {	
 	switch (uMsg)
 	{
+	case SFVM_WINDOWCREATED:
+		m_hwndView = (HWND)wParam;
+		return S_OK;
 	case SFVM_MERGEMENU:
 		{
 			// The DEFVIEW is asking us if we want to merge any items into
@@ -86,12 +90,14 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			UINT idCmd = (UINT)wParam;
 			if (idCmd == MENUIDOFFSET_ADD)
 			{
-				//::MessageBox(NULL, _T("Add invoked"), NULL, MB_OK);
-				return S_OK;
+				HRESULT hr = _AddNewConnection();
+				if (SUCCEEDED(hr))
+					_RefreshView();
+				return hr;
 			}
 			else if (idCmd == MENUIDOFFSET_REMOVE)
 			{
-				//::MessageBox(NULL, _T("Remove invoked"), NULL, MB_OK);
+				// TODO: Implement this
 				return S_OK;
 			}
 
@@ -121,6 +127,70 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 	}
 
 	return E_NOTIMPL;
+}
+
+
+/*----------------------------------------------------------------------------*
+ * Private functions
+ *----------------------------------------------------------------------------*/
+
+HRESULT CExplorerCallback::_AddNewConnection()
+{
+	ATLASSUME(m_hwndView);
+
+	// Display dialog to get connection info from user
+	CString strName, strUser, strHost, strPath;
+	UINT uPort;
+	CNewConnDialog dlgNewConnection;
+	dlgNewConnection.SetPort( 22 ); // Sensible default
+	if (dlgNewConnection.DoModal(m_hwndView) == IDOK)
+	{
+		strName = dlgNewConnection.GetName();
+		strUser = dlgNewConnection.GetUser();
+		strHost = dlgNewConnection.GetHost();
+		strPath = dlgNewConnection.GetPath();
+		uPort = dlgNewConnection.GetPort();
+	}
+	else
+		return E_FAIL;
+
+	return _AddConnectionToRegistry(strName, strHost, uPort, strUser, strPath);
+}
+
+HRESULT CExplorerCallback::_AddConnectionToRegistry(
+	PCTSTR szLabel, PCTSTR szHost, UINT uPort,
+	PCTSTR szUser, PCTSTR szPath )
+{
+	CRegKey regConnection;
+	LSTATUS rc = ERROR_SUCCESS;
+	CString strKey = CString("Software\\Swish\\Connections\\") + szLabel;
+
+	rc = regConnection.Create( HKEY_CURRENT_USER, strKey );
+	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
+
+	rc = regConnection.SetStringValue(_T("Host"), szHost);
+	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
+
+	rc = regConnection.SetDWORDValue(_T("Port"), uPort);
+	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
+
+	rc = regConnection.SetStringValue(_T("User"), szUser);
+	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
+
+	rc = regConnection.SetStringValue(_T("Path"), szPath);
+	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
+
+	rc = regConnection.Close();
+	ATLASSERT(rc == ERROR_SUCCESS);
+
+	return S_OK;
+}
+
+void CExplorerCallback::_RefreshView()
+{
+	CComQIPtr<IShellView> spView = m_spUnkSite;
+	if (spView)
+		spView->Refresh();
 }
 
 // CExplorerCallback

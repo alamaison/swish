@@ -14,6 +14,7 @@
 #include <propkey.h>
 
 #include "RemotePidlManager.h"
+#include "HostPidlManager.h"
 
 // This is being used as a type-safety marker interface - may be uneccessary
 [
@@ -118,6 +119,7 @@ public:
 
 private:
     CRemotePidlManager m_PidlManager;
+	CHostPidlManager m_HostPidlManager;
 	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
