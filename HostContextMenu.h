@@ -30,7 +30,7 @@
 // CHostContextMenu
 [
 	coclass,
-	default(IContextMenu),
+	default(IUnknown),
 	threading(apartment),
 	vi_progid("Swish.HostContextMenu"),
 	progid("Swish.HostContextMenu.1"),

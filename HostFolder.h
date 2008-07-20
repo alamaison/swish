@@ -18,7 +18,7 @@
 // CHostFolder
 [
 	coclass,
-	default(IShellFolder2),
+	default(IUnknown),
 	threading(apartment),
 	vi_progid("Swish.HostFolder"),
 	progid("Swish.HostFolder.1"),

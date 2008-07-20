@@ -47,7 +47,7 @@ struct FILEDATA
 // CRemoteEnumIDList
 [
 	coclass,
-	default(IEnumIDList),
+	default(IUnknown),
 	threading(apartment),
 	vi_progid("Swish.RemoteEnumIDList"),
 	progid("Swish.RemoteEnumIDList.1"),
