@@ -327,6 +327,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IconExtractor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NewConnDialog.cpp"
 				>
 			</File>
@@ -429,6 +433,10 @@
 			</File>
 			<File
 				RelativePath=".\HostPidlManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IconExtractor.h"
 				>
 			</File>
 			<File
