@@ -41,18 +41,20 @@
 	helpstring("ExplorerCallback Class")
 ]
 class ATL_NO_VTABLE CExplorerCallback :
-	public IShellFolderViewCB,
-	public IObjectWithSiteImpl<CExplorerCallback>
+	public IShellFolderViewCB
 {
 public:
-	CExplorerCallback() : m_hwndView(NULL) {}
+	CExplorerCallback() : m_hwndView(NULL), m_pidl(NULL) {}
+	~CExplorerCallback()
+	{
+		if (m_pidl)
+			::ILFree(m_pidl);
+	}
+
+	HRESULT Initialize( PCIDLIST_ABSOLUTE pidl );
 
 	// IShellFolderViewCB
 	IFACEMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	// IObjectWithSite - handled by IObjectWithSiteImpl
-	//IFACEMETHODIMP STDMETHODCALLTYPE SetSite( IUnknown *pUnkSite );
-	//IFACEMETHODIMP STDMETHODCALLTYPE GetSite( REFIID riid, void **ppvSite );
 
 private:
 
@@ -71,7 +73,8 @@ private:
 		MENUIDOFFSET_LAST = MENUIDOFFSET_REMOVE
 	};
 
-	HWND m_hwndView;  ///< Handle to folder view window
+	HWND m_hwndView;          ///< Handle to folder view window
+	PIDLIST_ABSOLUTE m_pidl;  ///< Our copy of pidl to owning folder
 };
 
 #endif // EXPLORERCALLBACK_H

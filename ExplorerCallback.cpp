@@ -21,6 +21,13 @@
 #include "ExplorerCallback.h"
 #include "NewConnDialog.h"
 
+HRESULT CExplorerCallback::Initialize( PCIDLIST_ABSOLUTE pidl )
+{
+	m_pidl = ::ILCloneFull(pidl);
+	return (m_pidl) ? S_OK : E_OUTOFMEMORY;
+}
+
+
 /**
  * Callback method for shell DEFVIEW to inform HostFolder as things happen.
  *
@@ -42,6 +49,12 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 	{
 	case SFVM_WINDOWCREATED:
 		m_hwndView = (HWND)wParam;
+		return S_OK;
+	case SFVM_GETNOTIFY:
+		// Tell the shell that we might notify it of update events that
+		// apply to this folder (specified using our absolute PIDL)
+		*reinterpret_cast<LONG*>(lParam) = SHCNE_UPDATEDIR;
+		*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam) = m_pidl; // Owned by us
 		return S_OK;
 	case SFVM_MERGEMENU:
 		{
@@ -186,11 +199,15 @@ HRESULT CExplorerCallback::_AddConnectionToRegistry(
 	return S_OK;
 }
 
+/**
+ * Cause Explorer to refresh any windows displaying the owning folder.
+ */
 void CExplorerCallback::_RefreshView()
 {
-	CComQIPtr<IShellView> spView = m_spUnkSite;
-	if (spView)
-		spView->Refresh();
+	// Inform shell that something in our folder changed (we don't know exactly
+	// what the new PIDL is until we reload from the registry, hence UPDATEDIR)
+	::SHChangeNotify( SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 
+		&m_pidl, NULL );
 }
 
 // CExplorerCallback
