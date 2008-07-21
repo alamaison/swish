@@ -29,7 +29,7 @@
 #include "resource.h"       // main symbols
 
 /**
- * The record structure returned by the GetListing() method of CPuttyProvider.
+ * The record structure returned by the GetListing() method of the SFTPProvider.
  *
  * This structure represents a single file contained in the directory 
  * specified to GetListing().
@@ -37,7 +37,7 @@
 [export, library_block]
 struct Listing {
 	BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
-	BSTR bstrPermissions; ///< Unix-style file permissions (e.g. drwxr--r--)
+	ULONG uPermissions;   ///< Unix file permissions
 	BSTR bstrOwner;       ///< The user name of the file's owner
 	BSTR bstrGroup;       ///< The name of the group to which the file belongs
 	ULONG cSize;          ///< The file's size in bytes

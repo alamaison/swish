@@ -204,7 +204,6 @@ void CLibssh2Provider_test::testListingFormat(IEnumListing *pEnum) const
 	while (hr == S_OK)
 	{
 		CString strFilename(lt.bstrFilename),
-		        strPermissions(lt.bstrPermissions),
 				strOwner(lt.bstrOwner),
 				strGroup(lt.bstrGroup);
 
@@ -213,13 +212,14 @@ void CLibssh2Provider_test::testListingFormat(IEnumListing *pEnum) const
 		fd.strPath = lt.bstrFilename;
 		fd.strOwner = lt.bstrOwner;
 		fd.strGroup = lt.bstrGroup;
+		fd.dwPermissions = lt.uPermissions;
 		fd.uSize = lt.cSize;
 		fd.dtModified = (time_t) COleDateTime(lt.dateModified);
 
 		CString strOwner2 = lt.bstrOwner;
-		CPPUNIT_ASSERT( !strPermissions.IsEmpty() );
 		CPPUNIT_ASSERT( !strFilename.IsEmpty() );
 
+		CPPUNIT_ASSERT( lt.uPermissions > 0 );
 		CPPUNIT_ASSERT( lt.cHardLinks > 0 );
 		CPPUNIT_ASSERT( lt.cSize >= 0 );
 		CPPUNIT_ASSERT( !strOwner.IsEmpty() );
@@ -250,15 +250,16 @@ void CLibssh2Provider_test::testListingFormat(IEnumListing *pEnum) const
 		// Check overall validity
 		CPPUNIT_ASSERT_EQUAL( COleDateTime::valid, dateModified.GetStatus() );
 
-		// TODO: use old swish C permissions functions here
-		CPPUNIT_ASSERT(
-			strPermissions[0] == _T('d') ||
-			strPermissions[0] == _T('b') ||
-			strPermissions[0] == _T('c') ||
-			strPermissions[0] == _T('l') ||
-			strPermissions[0] == _T('p') ||
-			strPermissions[0] == _T('s') ||
-			strPermissions[0] == _T('-'));
+		// TODO: test numerical permissions using old swish C 
+		//       permissions functions here
+		//CPPUNIT_ASSERT(
+		//	strPermissions[0] == _T('d') ||
+		//	strPermissions[0] == _T('b') ||
+		//	strPermissions[0] == _T('c') ||
+		//	strPermissions[0] == _T('l') ||
+		//	strPermissions[0] == _T('p') ||
+		//	strPermissions[0] == _T('s') ||
+		//	strPermissions[0] == _T('-'));
 
 		hr = pEnum->Next(1, &lt, NULL);
 	}

@@ -548,8 +548,7 @@ Listing CLibssh2Provider::_FillListingEntry(
 	// Permissions
     if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
 	{
-		// TODO: fill with real permissions and add octal field
-		lt.bstrPermissions = ::SysAllocString(OLESTR("--todo----"));
+		lt.uPermissions = attrs.permissions;
     }
 
 	// User & Group
