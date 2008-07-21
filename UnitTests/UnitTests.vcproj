@@ -293,7 +293,6 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
-			RelativePathToProject=".\PuttyProvider\PuttyProvider.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
@@ -315,14 +314,6 @@
 			</File>
 			<File
 				RelativePath=".\NewConnDialog_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PuttyProvider_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PuttyWrapper_test.cpp"
 				>
 			</File>
 			<File
@@ -371,24 +362,12 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PuttyProvider_test.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PuttyWrapper_test.h"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
 		</Filter>
 		<File
 			RelativePath="..\NewConnDialog.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\PuttyProvider\PuttyWrapper.cpp"
 			>
 		</File>
 		<File
