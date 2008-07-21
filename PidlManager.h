@@ -30,19 +30,23 @@
 class CPidlManager  
 {
 public:
-	CPidlManager();
-	virtual ~CPidlManager();
+	virtual ~CPidlManager() {}
 
-   LPITEMIDLIST Copy( LPCITEMIDLIST );
-   void Delete( LPITEMIDLIST );
-   UINT GetSize( LPCITEMIDLIST );
+	PIDLIST_RELATIVE Copy( PCUIDLIST_RELATIVE );
+	void Delete( PIDLIST_RELATIVE );
+	UINT GetSize( PCUIDLIST_RELATIVE );
 
-   LPITEMIDLIST GetNextItem( LPCITEMIDLIST );
-   LPITEMIDLIST GetLastItem( LPCITEMIDLIST );
+	PUIDLIST_RELATIVE GetNextItem( __in PCUIDLIST_RELATIVE pidl );
+	PCUITEMID_CHILD GetLastItem( __in PCUIDLIST_RELATIVE pidl );
 
 protected:
-	PITEMID_CHILD GetDataSegment( LPCITEMIDLIST pidl );
 	HRESULT CopyWSZString( PWSTR pwszDest, USHORT cchDest, PCWSTR pwszSrc );
+};
+
+enum PM_VALIDMODE
+{
+	PM_THIS_PIDL, ///< Validate pidl at exact address given
+	PM_LAST_PIDL  ///< Walk to last item in PIDL before validating
 };
 
 #endif // PIDLMANAGER_H

@@ -1,6 +1,6 @@
-/*  Manage creation/manipulation of PIDLs for files/folder in remote directory
+/*  Manage creation/manipulation of PIDLs for files/folder in remote directory.
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,9 +39,9 @@
  *   @retval E_OUTOFMEMORY otherwise
  */
 HRESULT CRemotePidlManager::Create(
-	__in LPCWSTR pwszPath, __in LPCWSTR pwszOwner, __in LPCWSTR pwszGroup,
+	__in LPCWSTR pwszFilename, __in LPCWSTR pwszOwner, __in LPCWSTR pwszGroup,
 	__in DWORD dwPermissions, __in ULONGLONG uSize, __in time_t dtModified,
-	__in BOOL fIsFolder, __deref_out PITEMID_CHILD *ppidlOut )
+	__in bool fIsFolder, __deref_out PITEMID_CHILD *ppidlOut )
 {
 	ATLASSERT(sizeof(REMOTEPIDL) % sizeof(DWORD) == 0); // DWORD-aligned
 
@@ -58,8 +58,8 @@ HRESULT CRemotePidlManager::Create(
 	// Fill members of the PIDL with data
 	pidlRemote->cb = sizeof REMOTEPIDL;
 	pidlRemote->dwFingerprint = REMOTEPIDL_FINGERPRINT; // Sign with fingerprint
-	CopyWSZString(pidlRemote->wszPath, 
-		ARRAYSIZE(pidlRemote->wszPath), pwszPath);
+	CopyWSZString(pidlRemote->wszFilename, 
+		ARRAYSIZE(pidlRemote->wszFilename), pwszFilename);
 	CopyWSZString(pidlRemote->wszOwner, 
 		ARRAYSIZE(pidlRemote->wszOwner), pwszOwner);
 	CopyWSZString(pidlRemote->wszGroup, 
@@ -106,12 +106,12 @@ HRESULT CRemotePidlManager::Create(
  * easy access to fields of REMOTEPIDL.
  *
  * @warning This is not a debug-only function. If the checking should only
- * be performed at runtime, it should be wrapped in another debug function:
+ * be performed in debug builds, it should be wrapped in another debug function:
  *     @code ATLASSERT(Validate(pidl)); @endcode
  * 
  * @see IsValid() | REMOTEPIDL
  */
-PREMOTEPIDL CRemotePidlManager::Validate( PCIDLIST_RELATIVE pidl )
+PREMOTEPIDL CRemotePidlManager::Validate( PCUIDLIST_RELATIVE pidl )
 {
 	PREMOTEPIDL pRemotePidl = NULL;
 
@@ -140,42 +140,48 @@ PREMOTEPIDL CRemotePidlManager::Validate( PCIDLIST_RELATIVE pidl )
  * 
  * @see Validate() | REMOTEPIDL
  */
-HRESULT CRemotePidlManager::IsValid( PCIDLIST_RELATIVE pidl )
+HRESULT CRemotePidlManager::IsValid(
+	PCUIDLIST_RELATIVE pidl, PM_VALIDMODE mode )
 {
-    PREMOTEPIDL pRemotePidl = Validate(pidl);
-    return pRemotePidl ? S_OK : E_INVALIDARG;
+	PREMOTEPIDL pRemotePidl;
+
+	if (mode == PM_LAST_PIDL)
+		pRemotePidl = Validate(GetLastItem(pidl));
+	else
+		pRemotePidl = Validate(pidl);
+
+    return pRemotePidl ? S_OK : E_FAIL;
 }
 
+
 /**
- * Get the path of the file from a (possibly multilevel) PIDL.
+ * Get the filename from a PIDL.
  * 
- * @param pidl The PIDL from which to retrieve the path
+ * @param pidl The PIDL from which to retrieve the filename
  * 
- * @returns The path of the file as a @c CString or an empty @c CString
- *          if the last item of @a pidl was not a valid REMOTEPIDL.
+ * @returns The filename as a @c CString or an empty @c CString
+ *          if @a pidl was not a valid REMOTEPIDL.
  * 
- * @pre Assumes that the REMOTEPIDL to retrieve the path from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-CString CRemotePidlManager::GetPath( LPCITEMIDLIST pidl )
+CString CRemotePidlManager::GetFilename( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
-	return GetDataSegment(pidl)->wszPath;
+	return GetDataSegment(pidl)->wszFilename;
 }
 
 /**
- * Get the name of the file's owner from a (possibly multilevel) PIDL.
+ * Get the name of the file's owner from a PIDL.
  * 
  * @param pidl The PIDL from which to retrieve the name
  * 
  * @returns The file owner's username as a @c CString or an empty @c CString
- *          if the last item of @a pidl was not a valid REMOTEPIDL.
+ *          if @a pidl was not a valid REMOTEPIDL.
  * 
- * @pre Assumes that the REMOTEPIDL to retrieve the name from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-CString CRemotePidlManager::GetOwner( LPCITEMIDLIST pidl )
+CString CRemotePidlManager::GetOwner( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
@@ -183,17 +189,16 @@ CString CRemotePidlManager::GetOwner( LPCITEMIDLIST pidl )
 }
 
 /**
- * Get the name of the file's group name from a (possibly multilevel) PIDL.
+ * Get the name of the file's group name from a PIDL.
  * 
  * @param pidl The PIDL from which to retrieve the name
  * 
  * @returns The file's group name as a @c CString or an empty @c CString
- *          if the last item of @a pidl was not a valid REMOTEPIDL.
+ *          if @a pidl was not a valid REMOTEPIDL.
  * 
- * @pre Assumes that the REMOTEPIDL to retrieve the name from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-CString CRemotePidlManager::GetGroup( LPCITEMIDLIST pidl )
+CString CRemotePidlManager::GetGroup( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
@@ -201,17 +206,16 @@ CString CRemotePidlManager::GetGroup( LPCITEMIDLIST pidl )
 }
 
 /**
- * Get the Unix file permissions from a (possibly multilevel) PIDL.
+ * Get the Unix file permissions from a PIDL.
  * 
  * @param pidl The PIDL from which to retrieve the permissions
  * 
  * @returns The file's Unix permissions as a numeric value or 0
- *          if the last item of @a pidl was not a valid REMOTEPIDL.
+ *          if @a pidl was not a valid REMOTEPIDL.
  * 
- * @pre Assumes that the REMOTEPIDL to retrieve the permissions from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-DWORD CRemotePidlManager::GetPermissions( LPCITEMIDLIST pidl )
+DWORD CRemotePidlManager::GetPermissions( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return 0;
 
@@ -224,16 +228,14 @@ DWORD CRemotePidlManager::GetPermissions( LPCITEMIDLIST pidl )
  * @param pidl The PIDL from which to retrieve the permissions
  * 
  * @returns The file's Unix permissions as a @c CString in @c drwxrwxrwx 
- *          form or an empty @c CString if the last item of @a pidl was not a 
- *          valid REMOTEPIDL.
+ *          form or an empty @c CString if @a pidl was not a valid REMOTEPIDL.
  *
- * @pre Assumes that the REMOTEPIDL to retrieve the permissions from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  *
  * @todo Implement this by calling function created for early Swish prototype.
  *       Currently, 'todo' is returned.
  */
-CString CRemotePidlManager::GetPermissionsStr( LPCITEMIDLIST pidl )
+CString CRemotePidlManager::GetPermissionsStr( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
@@ -242,17 +244,16 @@ CString CRemotePidlManager::GetPermissionsStr( LPCITEMIDLIST pidl )
 }
 
 /**
- * Get the file's size from a (possibly multilevel) PIDL.
+ * Get the file's size from a PIDL.
  * 
  * @param pidl The PIDL from which to retrieve the size
  * 
- * @returns The file's size in bytes or 0 if the last item of 
- *          @a pidl was not a valid REMOTEPIDL.
+ * @returns The file's size in bytes or 0 if the @a pidl was not a 
+ *          valid REMOTEPIDL.
  * 
- * @pre Assumes that the REMOTEPIDL to retrieve the size from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a valid REMOTEPIDL.
  */
-ULONGLONG CRemotePidlManager::GetFileSize( LPCITEMIDLIST pidl )
+ULONGLONG CRemotePidlManager::GetFileSize( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return 0;
 
@@ -264,13 +265,12 @@ ULONGLONG CRemotePidlManager::GetFileSize( LPCITEMIDLIST pidl )
  * 
  * @param pidl The PIDL from which to retrieve the date
  * 
- * @returns The date of last file modification as a @c CTime or 0 if the 
- *          last item of @a pidl was not a valid REMOTEPIDL.
+ * @returns The date of last file modification as a @c CTime or 0 if
+ *          @a pidl was not a valid REMOTEPIDL.
  * 
- * @pre Assumes that the REMOTEPIDL to retrieve the date from is the
- *      last item before the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-CTime CRemotePidlManager::GetLastModified( LPCITEMIDLIST pidl )
+CTime CRemotePidlManager::GetLastModified( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return 0;
 
@@ -285,10 +285,9 @@ CTime CRemotePidlManager::GetLastModified( LPCITEMIDLIST pidl )
  * @returns @c TRUE if the PIDL represents a folder (directory) rather than a
  *          file or other filesystem object and @c FALSE otherwise.
  * 
- * @pre Assumes that the REMOTEPIDL to be checked is the last item before 
- *      the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-BOOL CRemotePidlManager::IsFolder( LPCITEMIDLIST pidl )
+bool CRemotePidlManager::IsFolder( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return 0;
 
@@ -296,24 +295,19 @@ BOOL CRemotePidlManager::IsFolder( LPCITEMIDLIST pidl )
 }
 
 /**
- * Walk to last item in PIDL (if multilevel) and return item as a REMOTEPIDL.
+ * Returns the relative PIDL as a REMOTEPIDL.
  * 
- * @param pidl The PIDL to retrieve the last REMOTEPIDL data segment from
+ * @param pidl The PIDL to retrieve the REMOTEPIDL data segment from.
  * 
- * @returns The @b last item in @a pidl if it is a valid REMOTEPIDL or
+ * @returns The @a pidl (as a REMOTEPIDL) if it is a valid REMOTEPIDL or
  *          @c NULL otherwise.
  * 
- * @pre Assumes that the REMOTEPIDL to be retrieved is the last item before
- *      the terminator.
+ * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-PREMOTEPIDL CRemotePidlManager::GetDataSegment( LPCITEMIDLIST pidl )
+PREMOTEPIDL CRemotePidlManager::GetDataSegment( PCUIDLIST_RELATIVE pidl )
 {
-    // Get the last item of the PIDL to make sure we get the right value
-    // in case of multiple nesting levels
-	PITEMID_CHILD pidlRemote = CPidlManager::GetDataSegment( pidl );
-
-	ATLASSERT(SUCCEEDED(IsValid( pidlRemote )));
+	ATLASSERT(SUCCEEDED(IsValid( pidl )));
 	// If not, this is unexpected behviour. Why were we passed this PIDL?
 
-	return Validate( pidlRemote );
+	return Validate( pidl );
 }

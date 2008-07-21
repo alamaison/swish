@@ -1,6 +1,6 @@
-/*  Manage the creation and manipulation of PIDLs
+/*  Manage the creation and manipulation of PIDLs.
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,23 +20,15 @@
 #include "stdafx.h"
 #include "PidlManager.h"
 
-CPidlManager::CPidlManager()
-{
-}
-
-CPidlManager::~CPidlManager()
-{
-}
-
 /*------------------------------------------------------------------------------
  * CPidlManager::Delete
  * Free the PIDL using the Shell PIDL allocator.
  * Apparently, this function Validates that the memory being freed is
  * a PIDL when in a Debug build.
  *----------------------------------------------------------------------------*/
-void CPidlManager::Delete( LPITEMIDLIST pidl )
+void CPidlManager::Delete( PIDLIST_RELATIVE pidl )
 {
-    ILFree(pidl);
+	::ILFree(pidl);
 }
 
 /*------------------------------------------------------------------------------
@@ -46,32 +38,32 @@ void CPidlManager::Delete( LPITEMIDLIST pidl )
  * returned.  If pidl points to the terminator already or is NULL the function
  * returns NULL.  This is not made clear in the MSDN ILGetNext documentation.
  *----------------------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::GetNextItem( LPCITEMIDLIST pidl )
+PUIDLIST_RELATIVE CPidlManager::GetNextItem( PCUIDLIST_RELATIVE pidl )
 {
-    return ILGetNext(pidl);
+	return ::ILGetNext(pidl);
 }
 
 /*------------------------------------------------------------------------------
  * CPidlManager::GetLastItem
  * Returns a pointer to the last *non-terminator* item ID in the list pidl.
- * This is not made clear in the MSDN ILGetNext documentation.  It is also
+ * This is not made clear in the MSDN ILFindLastID documentation.  It is also
  * unclear what happens of the pidl were to be the terminator or NULL.
  *----------------------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::GetLastItem( LPCITEMIDLIST pidl )
+PCUITEMID_CHILD CPidlManager::GetLastItem( PCUIDLIST_RELATIVE pidl )
 {
-	ATLENSURE(pidl);
-	ATLENSURE(pidl->mkid.cb); // pidl is not the terminator
+	ATLASSERT(pidl);
+	ATLASSERT(pidl->mkid.cb); // pidl is not the terminator
 
-    return ILFindLastID(pidl);
+	return ::ILFindLastID(pidl);
 }
 
 /*------------------------------------------------------------------------------
  * CPidlManager::GetSize
  * The total size of the passed in pidl in bytes including the zero terminator.
  *----------------------------------------------------------------------------*/
-UINT CPidlManager::GetSize( LPCITEMIDLIST pidl )
+UINT CPidlManager::GetSize( PCUIDLIST_RELATIVE pidl )
 {
-	return ILGetSize(pidl);
+	return ::ILGetSize(pidl);
 }
 
 /*------------------------------------------------------------------------------
@@ -93,23 +85,12 @@ HRESULT CPidlManager::CopyWSZString( __out_ecount(cchDest) PWSTR pwszDest,
 }
 
 /*------------------------------------------------------------------------------
- * CPidlManager::GetDataSegment
- * Walk to last item in PIDL (if multilevel) and returns item as a HOSTPIDL.
- *----------------------------------------------------------------------------*/
-PITEMID_CHILD CPidlManager::GetDataSegment( LPCITEMIDLIST pidl )
-{
-    // Get the last item of the PIDL to make sure we get the right value
-    // in case of multiple nesting levels
-	return (PITEMID_CHILD)GetLastItem( pidl );
-}
-
-/*------------------------------------------------------------------------------
  * CPidlManager::Copy
  * Duplicate a PIDL.
  *----------------------------------------------------------------------------*/
-LPITEMIDLIST CPidlManager::Copy( LPCITEMIDLIST pidlSrc )
+PIDLIST_RELATIVE CPidlManager::Copy( PCUIDLIST_RELATIVE pidlSrc )
 {
-	LPITEMIDLIST pidlTarget = ILClone( pidlSrc );
+	PIDLIST_RELATIVE pidlTarget = ::ILClone( pidlSrc );
 	
 	ATLASSERT(GetSize(pidlSrc) == GetSize(pidlTarget));
 	ATLASSERT(!memcmp(pidlSrc, pidlTarget, GetSize(pidlSrc)));

@@ -1,6 +1,6 @@
-/*  Manage creation and manipulation of PIDLs representing sftp host connections
+/*  Manage creation and manipulation of PIDLs representing SFTP connections.
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,76 +84,115 @@ PHOSTPIDL CHostPidlManager::Validate( LPCITEMIDLIST pidl )
     return NULL; // equal to false
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::IsValid
+/**
  * Check if the fingerprint stored in the PIDL corresponds to a HOSTPIDL.
- *----------------------------------------------------------------------------*/
-HRESULT CHostPidlManager::IsValid( LPCITEMIDLIST pidl )
+ * 
+ * @param pidl PIDL to be validated
+ * 
+ * @returns Whether @a pidl is a valid HOSTPIDL
+ *     @retval S_OK if @a pidl is of type HOSTPIDL
+ *     @retval E_INVALIDARG otherwise
+ * 
+ * This function is very similar to Validate() except that a standard
+ * COM success code is returned rather than a PIDL or a boolean.
+ * 
+ * @see Validate() | HOSTPIDL
+ */
+HRESULT CHostPidlManager::IsValid(
+	PCUIDLIST_RELATIVE pidl, PM_VALIDMODE mode )
 {
-    PHOSTPIDL pHostPidl = Validate(pidl);
+	PHOSTPIDL pHostPidl;
+
+	if (mode == PM_LAST_PIDL)
+		pHostPidl = Validate(GetLastItem(pidl));
+	else
+		pHostPidl = Validate(pidl);
+
     return pHostPidl ? S_OK : E_INVALIDARG;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetLabel
- * Returns the friendly display name from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CHostPidlManager::GetLabel( LPCITEMIDLIST pidl )
+/**
+ * Search a multi-level PIDL to find the HOSTPIDL section.
+ *
+ * In any PIDL there should only be one HOSTPIDL as it doesn't make sense for
+ * a file to be under more than one host.
+ *
+ * @returns The address of the HOSTPIDL segment of the original PIDL, @p pidl.
+ */
+PCUIDLIST_RELATIVE CHostPidlManager::FindHostPidl( PCIDLIST_ABSOLUTE pidl )
+{
+	PCUIDLIST_RELATIVE pidlCurrent = pidl;
+	PHOSTPIDL pHostPidl = NULL;
+
+	// Search along pidl until we find one that matched our fingerprint or
+	// we run off the end
+	while (pidlCurrent != NULL)
+	{
+		pHostPidl = (PHOSTPIDL)pidlCurrent;
+		if (pHostPidl->cb && pHostPidl->dwFingerprint == HOSTPIDL_FINGERPRINT)
+			break;
+
+		pidlCurrent = ::ILGetNext(pidlCurrent);
+	}
+
+	return pidlCurrent;
+}
+
+
+/**
+ * Returns the connection's friendly display name from the HOSTPIDL.
+ */
+CString CHostPidlManager::GetLabel( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
 	return GetDataSegment(pidl)->wszLabel;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetUser
- * Returns the username from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CHostPidlManager::GetUser( LPCITEMIDLIST pidl )
+/**
+ * Returns the username from the HOSTPIDL.
+ */
+CString CHostPidlManager::GetUser( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
 	return GetDataSegment(pidl)->wszUser;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetHost
- * Returns the hostname from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CHostPidlManager::GetHost( LPCITEMIDLIST pidl )
+/**
+ * Returns the hostname from the HOSTPIDL.
+ */
+CString CHostPidlManager::GetHost( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
 	return GetDataSegment(pidl)->wszHost;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetPath
- * Returns the remote directory path from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-CString CHostPidlManager::GetPath( LPCITEMIDLIST pidl )
+/**
+ * Returns the remote directory path from the HOSTPIDL.
+ */
+CString CHostPidlManager::GetPath( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
 	return GetDataSegment(pidl)->wszPath;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetPort
- * Returns the SFTP port number from the (possibly multilevel) PIDL.
- *----------------------------------------------------------------------------*/
-USHORT CHostPidlManager::GetPort( LPCITEMIDLIST pidl )
+/**
+ * Returns the SFTP port number from the HOSTPIDL.
+ */
+USHORT CHostPidlManager::GetPort( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return 0;
 
 	return GetDataSegment(pidl)->uPort;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetPortStr
- * Returns the SFTP port number from the (possibly multilevel) PIDL as a CString
- *----------------------------------------------------------------------------*/
-CString CHostPidlManager::GetPortStr( LPCITEMIDLIST pidl )
+/**
+ * Returns the SFTP port number from the HOSTPIDL as a CString.
+ */
+CString CHostPidlManager::GetPortStr( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return _T("");
 
@@ -162,19 +201,20 @@ CString CHostPidlManager::GetPortStr( LPCITEMIDLIST pidl )
 	return strPort;
 }
 
-/*------------------------------------------------------------------------------
- * CHostPidlManager::GetDataSegment
- * Walk to last item in PIDL (if multilevel) and returns item as a HOSTPIDL.
- * If the item was not a valid HOSTPIDL then we return NULL.
- *----------------------------------------------------------------------------*/
-PHOSTPIDL CHostPidlManager::GetDataSegment( LPCITEMIDLIST pidl )
+/**
+ * Returns the relative PIDL as an HOSTPIDL.
+ * 
+ * @param pidl The PIDL to retrieve the HOSTPIDL data segment from.
+ * 
+ * @returns The @a pidl (as a HOSTPIDL) if it is a valid HOSTPIDL or
+ *          @c NULL otherwise.
+ * 
+ * @pre Assumes that the pidl is a HOSTPIDL.
+ */
+PHOSTPIDL CHostPidlManager::GetDataSegment( PCUIDLIST_RELATIVE pidl )
 {
-    // Get the last item of the PIDL to make sure we get the right value
-    // in case of multiple nesting levels
-	PITEMID_CHILD pidlHost = CPidlManager::GetDataSegment( pidl );
-
-	ATLASSERT(SUCCEEDED(IsValid( pidlHost )));
+	ATLASSERT(SUCCEEDED(IsValid( pidl )));
 	// If not, this is unexpected behviour. Why were we passed this PIDL?
 
-	return Validate( pidlHost );
+	return Validate( pidl );
 }

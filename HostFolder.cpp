@@ -1,4 +1,21 @@
-// HostFolder.cpp : Implementation of CHostFolder
+/*  SFTP connections Explorer folder implementation.
+
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 
 #include "stdafx.h"
 #include "remotelimits.h"
@@ -33,7 +50,7 @@ STDMETHODIMP CHostFolder::Initialize( PCIDLIST_ABSOLUTE pidl )
 	ATLTRACE("CHostFolder::Initialize called\n");
 
 	ATLASSERT( pidl != NULL );
-    m_pidl = m_PidlManager.Copy( pidl );
+    m_pidl = static_cast<PIDLIST_ABSOLUTE>( m_HostPidlManager.Copy(pidl) );
 	ATLASSERT( m_pidl );
 	return S_OK;
 }
@@ -52,7 +69,7 @@ STDMETHODIMP CHostFolder::GetCurFolder( __deref_out PIDLIST_ABSOLUTE *ppidl )
 		// TODO: Should ppidl be set to NULL?
 
 	// Make a copy of the PIDL that was passed to Swish in Initialize(pidl)
-	*ppidl = m_PidlManager.Copy( m_pidl );
+	*ppidl = static_cast<PIDLIST_ABSOLUTE>( m_HostPidlManager.Copy(m_pidl) );
 	ATLASSERT( *ppidl );
 	if (!*ppidl)
 		return E_OUTOFMEMORY;
@@ -71,39 +88,38 @@ STDMETHODIMP CHostFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 										__out void** ppvOut )
 {
 	ATLTRACE("CHostFolder::BindToObject called\n");
-	(void)pbc;
+	UNREFERENCED_PARAMETER( pbc );
 	*ppvOut = NULL;
+
 	HRESULT hr;
 
-	// We can assume all children of pidl are for RemoteFolder 
-	// objects (REMOTEPIDLs) as we have no junction points etc. 
-	// Check that the first item in the pidl is a HOSTPIDL as 
-	// this is represents the root folder that we are binding to.
-	hr = m_PidlManager.IsValid( pidl );
-	if (FAILED(hr))
-        return hr;
+	// We can assume that the PIDL we have been passed and asked to bind to
+	// contains one HOSTPIDL (containing the server's details) followed by 
+	// zero or more REMOTEPIDLs representing the file-system hierarchy of the 
+	// target file or folder:
+	// <Relative to My Computer>/HOSTPIDL[/REMOTEPIDL]*
 
-	// Create COM object to bind to PIDL
+	// Check that the first item in the pidl is a HOSTPIDL as 
+	// this is represents the SFTP server that we are connecting to.
+	hr = m_HostPidlManager.IsValid( pidl, PM_THIS_PIDL );
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+	// Create absolute PIDL by combining with m_pidl (Swish icon in My Computer)
+	PIDLIST_ABSOLUTE pidlBind = ::ILCombine( m_pidl, pidl );  
+	ATLENSURE_RETURN_HR(pidlBind, E_OUTOFMEMORY);
+
+	// Create RemoteFolder to bind to PIDL
 	CComObject<CRemoteFolder> *pRemoteFolder;
 	hr = CComObject<CRemoteFolder>::CreateInstance( &pRemoteFolder );
-	if (FAILED(hr))
-        return hr;
-
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
     pRemoteFolder->AddRef();
 
-    // Initialize COM object from PIDL
-    PIDLIST_ABSOLUTE pidlBind = ILCombine( m_pidl, pidl );  
-    hr = pidlBind ? S_OK : E_OUTOFMEMORY;
+	// Initialise RemoteFolder with the absolute PIDL
+    hr = pRemoteFolder->Initialize( pidlBind );
     if (SUCCEEDED(hr))
-    {
-		// Initialise and retrieve requested interface
-        hr = pRemoteFolder->Initialize( pidlBind );
-        if (SUCCEEDED(hr))
-            hr = pRemoteFolder->QueryInterface( riid, ppvOut );
-        
-        ILFree( pidlBind );
-    }
-
+        hr = pRemoteFolder->QueryInterface( riid, ppvOut );
+    
+	::ILFree( pidlBind );
     pRemoteFolder->Release();
 
 	/* TODO: Not sure if I have done this properly with QueryInterface
@@ -188,6 +204,7 @@ STDMETHODIMP CHostFolder::CreateViewObject( __in_opt HWND hwndOwner,
 		CComPtr<IShellFolderViewCB> spExplorerCB;
 		hr = spExplorerCB.CoCreateInstance( __uuidof(CExplorerCallback) );
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+		static_cast<CExplorerCallback *>(spExplorerCB.p)->Initialize(m_pidl);
 
 		// Create a pointer to this IShellFolder
 		CComPtr<IShellFolder> spFolder = this;
@@ -384,8 +401,8 @@ STDMETHODIMP CHostFolder::GetAttributesOf(
  *   Positive: pidl1 > pidl2
  *   Zero:     pidl1 == pidl2
  *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::CompareIDs( LPARAM lParam, LPCITEMIDLIST pidl1,
-									   LPCITEMIDLIST pidl2 )
+STDMETHODIMP CHostFolder::CompareIDs( LPARAM lParam, PCUIDLIST_RELATIVE pidl1,
+                                      PCUIDLIST_RELATIVE pidl2 )
 {
 	ATLTRACE("CHostFolder::CompareIDs called\n");
 	(void)lParam; // Use default sorting rule always
@@ -393,14 +410,14 @@ STDMETHODIMP CHostFolder::CompareIDs( LPARAM lParam, LPCITEMIDLIST pidl1,
 	ATLASSERT(pidl1 != NULL); ATLASSERT(pidl2 != NULL);
 
 	// Rough guestimate: country-code + .
-	ATLASSERT(m_PidlManager.GetHost(pidl1).GetLength() > 3 );
-	ATLASSERT(m_PidlManager.GetHost(pidl2).GetLength() > 3 );
+	ATLASSERT(m_HostPidlManager.GetHost(pidl1).GetLength() > 3 );
+	ATLASSERT(m_HostPidlManager.GetHost(pidl2).GetLength() > 3 );
 
 	// TODO: This is not enough. Must only return Zero (==) if ALL
 	//       fields are equal
 	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 
-		(unsigned short)wcscmp(m_PidlManager.GetHost(pidl1), 
-		                       m_PidlManager.GetHost(pidl2)));
+		(unsigned short)wcscmp(m_HostPidlManager.GetHost(pidl1), 
+		                       m_HostPidlManager.GetHost(pidl2)));
 }
 
 /*------------------------------------------------------------------------------
@@ -476,7 +493,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetLabel(pidl), pv ) :
+			_FillDetailsVariant( m_HostPidlManager.GetLabel(pidl), pv ) :
 			_FillDetailsVariant( _T("Name"), pv );
 	}
 	// Hostname
@@ -485,7 +502,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_ComputerName\n");
 
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetHost(pidl), pv ) :
+			_FillDetailsVariant( m_HostPidlManager.GetHost(pidl), pv ) :
 			_FillDetailsVariant( _T("Host"), pv );
 	}
 	// Username
@@ -494,7 +511,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_SwishHostUser\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetUser(pidl), pv ) :
+			_FillDetailsVariant( m_HostPidlManager.GetUser(pidl), pv ) :
 			_FillDetailsVariant( _T("Username"), pv );
 	}
 	// SFTP port
@@ -503,7 +520,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_SwishHostPort\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetPortStr(pidl), pv ) :
+			_FillDetailsVariant( m_HostPidlManager.GetPortStr(pidl), pv ) :
 			_FillDetailsVariant( _T("Port"), pv );
 	}
 	// Remote filesystem path
@@ -512,7 +529,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_ItemPathDisplay\n");
 
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetPath(pidl), pv ) :
+			_FillDetailsVariant( m_HostPidlManager.GetPath(pidl), pv ) :
 			_FillDetailsVariant( _T("Remote Path"), pv );
 	}
 	// Type: always 'Network Drive'
@@ -680,20 +697,20 @@ CString CHostFolder::_GetLongNameFromPIDL( PCUITEMID_CHILD pidl,
 	ATLTRACE("CHostFolder::_GetLongNameFromPIDL called\n");
 
 	CString strName;
-	ATLASSERT(SUCCEEDED(m_PidlManager.IsValid(pidl)));
+	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidl)));
 
 	// Construct string from info in PIDL
 	strName = _T("sftp://");
-	strName += m_PidlManager.GetUser(pidl);
+	strName += m_HostPidlManager.GetUser(pidl);
 	strName += _T("@");
-	strName += m_PidlManager.GetHost(pidl);
-	if (fCanonical || (m_PidlManager.GetPort(pidl) != SFTP_DEFAULT_PORT))
+	strName += m_HostPidlManager.GetHost(pidl);
+	if (fCanonical || (m_HostPidlManager.GetPort(pidl) != SFTP_DEFAULT_PORT))
 	{
 		strName += _T(":");
-		strName.AppendFormat( _T("%u"), m_PidlManager.GetPort(pidl) );
+		strName.AppendFormat( _T("%u"), m_HostPidlManager.GetPort(pidl) );
 	}
 	strName += _T("/");
-	strName += m_PidlManager.GetPath(pidl);
+	strName += m_HostPidlManager.GetPath(pidl);
 
 	ATLASSERT( strName.GetLength() <= MAX_CANONICAL_LEN );
 
@@ -709,10 +726,10 @@ CString CHostFolder::_GetLabelFromPIDL( PCUITEMID_CHILD pidl )
 	ATLTRACE("CHostFolder::_GetLabelFromPIDL called\n");
 
 	CString strName;
-	ATLASSERT(SUCCEEDED(m_PidlManager.IsValid(pidl)));
+	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidl)));
 
 	// Construct string from info in PIDL
-	strName = m_PidlManager.GetLabel(pidl);
+	strName = m_HostPidlManager.GetLabel(pidl);
 
 	ATLASSERT( strName.GetLength() <= MAX_LABEL_LEN );
 
@@ -828,11 +845,11 @@ HRESULT CHostFolder::_LoadConnectionDetailsFromRegistry( PCTSTR szLabel )
 	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
 
 	// Create new Listing and push onto end of vector
-	hr = m_PidlManager.Create(
+	hr = m_HostPidlManager.Create(
 		szLabel, szUser, szHost, szPath, uPort, &pDataTemp );
 	ATLASSERT(SUCCEEDED(hr));
-	m_vecConnData.push_back(*(m_PidlManager.Validate(pDataTemp)));
-	m_PidlManager.Delete(pDataTemp);
+	m_vecConnData.push_back(*(m_HostPidlManager.Validate(pDataTemp)));
+	m_HostPidlManager.Delete(pDataTemp);
 
 	ATLASSERT(regConnection.Close() == ERROR_SUCCESS);
 	return hr;

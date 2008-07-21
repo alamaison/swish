@@ -1,6 +1,6 @@
 /*  Declaration of the host folder PIDL type and specific PIDL manager class
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,20 +51,23 @@ public:
 	HRESULT Create( LPCWSTR pwszLabel, LPCWSTR pwszUser, LPCWSTR pwszHost,
 					LPCWSTR pwszPath, USHORT uPort, PITEMID_CHILD *ppidlOut );
 
-   PHOSTPIDL Validate( LPCITEMIDLIST );
-   HRESULT IsValid( LPCITEMIDLIST );
+	PHOSTPIDL Validate( LPCITEMIDLIST );
+	HRESULT IsValid(
+		PCUIDLIST_RELATIVE,
+		PM_VALIDMODE mode = PM_THIS_PIDL);
+	PCUIDLIST_RELATIVE FindHostPidl( __in PCIDLIST_ABSOLUTE pidl );
 
-   // All accessors take a LPCITEMIDLIST as they may be multilevel
-   // where only the last SHITEMID is of specific type
-   CString GetLabel( LPCITEMIDLIST pidl );
-   CString GetUser( LPCITEMIDLIST pidl );
-   CString GetHost( LPCITEMIDLIST pidl );
-   CString GetPath( LPCITEMIDLIST pidl );
-   USHORT GetPort( LPCITEMIDLIST pidl );
-   CString GetPortStr( LPCITEMIDLIST pidl );
+	// All accessors take a PCUIDLIST_RELATIVE as they may be multilevel
+	// where only the last SHITEMID is of specific type
+	CString GetLabel( PCUIDLIST_RELATIVE pidl );
+	CString GetUser( PCUIDLIST_RELATIVE pidl );
+	CString GetHost( PCUIDLIST_RELATIVE pidl );
+	CString GetPath( PCUIDLIST_RELATIVE pidl );
+	USHORT GetPort( PCUIDLIST_RELATIVE pidl );
+	CString GetPortStr( PCUIDLIST_RELATIVE pidl );
 
 private:
-	PHOSTPIDL GetDataSegment( LPCITEMIDLIST pidl );
+	PHOSTPIDL GetDataSegment( PCUIDLIST_RELATIVE pidl );
 };
 
 #endif // HOSTPIDLMANAGER_H

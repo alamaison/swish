@@ -1,6 +1,6 @@
-/*  Expose contents of remote folder as PIDLs via IEnumIDList interface
+/*  Expose contents of remote folder as PIDLs via IEnumIDList interface.
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,16 +22,20 @@
 #include "RemotePidlManager.h"
 #include <ATLComTime.h> // For COleDateTime wrapper class
 
-/*------------------------------------------------------------------------------
- * CRemoteEnumIDList::BindToFolder
- * Save back-reference to folder and increment its reference count to ensure
- * that folder remains alive for at least as long as the enumerator.
+/**
+ * Saves back-reference to folder and handle to window.
+ * This function increments the folder's reference count to ensure that
+ * the folder remains alive for at least as long as the enumerator.
+ * The window handle, @p hwndOwner, is used as the parent window for user
+ * interaction.  If this is NULL, no user-interaction is allowed and
+ * and methods that require it will fail silently
  *
- * MUST BE CALLED BEFORE ALL OTHER FUNCTIONS
- *----------------------------------------------------------------------------*/
-HRESULT CRemoteEnumIDList::BindToFolder( IRemoteFolder* pFolder )
+ * @param pFolder    The back-reference to the folder we are enumerating.
+ * @param hwndOwner  A handle to the window for user interaction.
+ */
+HRESULT CRemoteEnumIDList::Initialize( IRemoteFolder* pFolder, HWND hwndOwner )
 {
-	ATLTRACE("CRemoteEnumIDList::BindToFolder called\n");
+	ATLTRACE("CRemoteEnumIDList::Initialize called\n");
 
 	if (m_fBoundToFolder) // Already called this function
 		return E_UNEXPECTED;
@@ -43,9 +47,15 @@ HRESULT CRemoteEnumIDList::BindToFolder( IRemoteFolder* pFolder )
 	m_pFolder = pFolder;
 	m_pFolder->AddRef();
 
+	m_hwndOwner = hwndOwner;
+
 	m_fBoundToFolder = true;
 	return S_OK;
 }
+
+#define S_IFMT     0170000 /* type of file */
+#define S_IFDIR    0040000 /* directory 'd' */
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 
 /*------------------------------------------------------------------------------
  * CRemoteEnumIDList::ConnectAndFetch
@@ -55,8 +65,8 @@ HRESULT CRemoteEnumIDList::BindToFolder( IRemoteFolder* pFolder )
  * TODO: Ideally, the final EnumIDList will deal with enumeration *only*.
  *       Connection and retrieval will be handled by other objects.
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost, 
-								            PCTSTR szPath, USHORT uPort )
+HRESULT CRemoteEnumIDList::ConnectAndFetch(
+	PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort, SHCONTF dwFlags )
 {
 	ATLTRACE("CRemoteEnumIDList::ConnectAndFetch called\n");
 
@@ -65,7 +75,12 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost,
 	if (!szUser || !szUser[0]) return E_INVALIDARG;
 	if (!szHost || !szHost[0]) return E_INVALIDARG;
 	if (!szPath || !szPath[0]) return E_INVALIDARG;
-	ATLENSURE( m_pFolder );
+	ATLASSUME( m_pFolder );
+
+	// Interpret supported SHCONTF flags
+	bool fIncludeFolders = (dwFlags & SHCONTF_FOLDERS) != 0;
+	bool fIncludeNonFolders = (dwFlags & SHCONTF_NONFOLDERS) != 0;
+	bool fIncludeHidden = (dwFlags & SHCONTF_INCLUDEHIDDEN) != 0;
 
 	// Create instance of SFTP Provider using ProgID
 	CLSID CLSID_Provider;
@@ -107,14 +122,21 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch( PCTSTR szUser, PCTSTR szHost,
 			hr = pEnum->Next(1, &lt, NULL);
 			if (hr == S_OK)
 			{
+				if (!fIncludeFolders && S_ISDIR(lt.uPermissions))
+					continue;
+				if (!fIncludeNonFolders && !S_ISDIR(lt.uPermissions))
+					continue;
+				if (!fIncludeHidden && (lt.bstrFilename[0] == OLECHAR('.')))
+					continue;
+
 				FILEDATA fd;
-				fd.strPath = lt.bstrFilename;
+				fd.strFilename = lt.bstrFilename;
 				fd.strOwner = lt.bstrOwner;
 				fd.strGroup = lt.bstrGroup;
 				fd.uSize = lt.cSize;
 				fd.dtModified = _ConvertDate(lt.dateModified);
-				// TODO:
-				fd.dwPermissions = 0x777;
+				fd.dwPermissions = lt.uPermissions;
+				fd.fIsFolder = S_ISDIR(lt.uPermissions);
 				m_vListing.push_back( fd );
 			}
 		} while (hr == S_OK);
@@ -159,7 +181,7 @@ STDMETHODIMP CRemoteEnumIDList::Next(
 		// Fetch data and create new PIDL from it
 		ATLASSERT( index < m_vListing.size() );
 		hr = m_PidlManager.Create(
-			m_vListing[index].strPath,
+			m_vListing[index].strFilename,
 			m_vListing[index].strOwner,
 			m_vListing[index].strGroup,
 			m_vListing[index].dwPermissions,
@@ -237,12 +259,16 @@ STDMETHODIMP CRemoteEnumIDList::Clone( __deref_out IEnumIDList **ppEnum )
  * @param [in]  bstrRequest    The prompt to display to the user.
  * @param [out] pbstrPassword  The reply from the user - the password.
  *
- * @return E_ABORT if the user chooses Cancel, S_OK otherwise.
+ * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
+ *         forbidden and S_OK otherwise.
  */
 STDMETHODIMP CRemoteEnumIDList::OnPasswordRequest(
 	BSTR bstrRequest, BSTR *pbstrPassword
 )
 {
+	if (m_hwndOwner == NULL)
+		return E_FAIL;
+
 	CString strPrompt = bstrRequest;
 	ATLASSERT(strPrompt.GetLength() > 0);
 
@@ -269,13 +295,17 @@ STDMETHODIMP CRemoteEnumIDList::OnPasswordRequest(
  * @param [in]  bstrTitle      The title of the dialog.
  * @param [out] piResult       The user's choice.
  *
- * @return E_ABORT if the user chooses Cancel, S_OK otherwise.
+ * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
+ *         forbidden and S_OK otherwise.
 */
 STDMETHODIMP CRemoteEnumIDList::OnYesNoCancel(
 	BSTR bstrMessage, BSTR bstrYesInfo, BSTR bstrNoInfo, BSTR bstrCancelInfo,
 	BSTR bstrTitle, int *piResult
 )
 {
+	if (m_hwndOwner == NULL)
+		return E_FAIL;
+
 	// Construct unknown key information message
 	CString strMessage = bstrMessage;
 	CString strTitle = bstrTitle;
@@ -352,6 +382,4 @@ time_t CRemoteEnumIDList::_ConvertDate( DATE dateValue ) const
 						         // calendar value.
 }
 
-
 // CRemoteEnumIDList
-

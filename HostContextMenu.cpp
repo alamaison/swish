@@ -1,6 +1,6 @@
 /*  Helper to create context menu for host objects and execute user choice
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ STDMETHODIMP CHostContextMenu::Initialize( PCIDLIST_ABSOLUTE pidl )
 
 	// TODO: use a PidlManager to verify PIDLs?
 
-	m_pidl = ILClone( pidl );
+	m_pidl = static_cast<PIDLIST_ABSOLUTE>( ::ILClone(pidl) );
 	return S_OK;
 }
 
@@ -189,14 +189,14 @@ STDMETHODIMP CHostContextMenu::InvokeCommand(
 	// if (menuCmd == MENUOFFSET_CONNECT)
 	//     sei.lpVerb = _T("connect");
 	sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-	sei.lpIDList = ILClone(m_pidl);
+	sei.lpIDList = ::ILClone(m_pidl);
 	sei.lpClass = _T("folder");
 	sei.hwnd = pici->hwnd;
 	sei.nShow = SW_SHOWNORMAL;
 
 	HRESULT hr = (ShellExecuteEx(&sei)) ? S_OK : E_FAIL;
 
-	ILFree((LPITEMIDLIST) sei.lpIDList);
+	::ILFree(static_cast<PIDLIST_RELATIVE>( sei.lpIDList ));
 
 	return hr;
 }

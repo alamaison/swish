@@ -1,6 +1,6 @@
-/*  Declaration of remote folder contents enumerator via IEnumIDList interface
+/*  IEnumIDList-based enumerator for SFTP remote folder.
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@
 
 struct FILEDATA
 {
-	BOOL fIsFolder;
-	CString strPath;
+	bool fIsFolder;
+	CString strFilename;
 	CString strOwner;
 	CString strGroup;
 	CString strAuthor;
@@ -61,7 +61,7 @@ class ATL_NO_VTABLE CRemoteEnumIDList :
 {
 public:
 	CRemoteEnumIDList() :
-		m_pFolder(NULL), m_fBoundToFolder(false), m_iPos(0)
+		m_pFolder(NULL), m_hwndOwner(NULL), m_fBoundToFolder(false), m_iPos(0)
 	{
 	}
 
@@ -78,9 +78,10 @@ public:
 			m_pFolder->Release();
 	}
 
-	HRESULT BindToFolder( __in IRemoteFolder* pFolder );
+	HRESULT Initialize( __in IRemoteFolder* pFolder, __in_opt HWND hwndOwner );
 	HRESULT ConnectAndFetch(
-		PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort );
+		PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort,
+		SHCONTF dwFlags );
 
 	// IEnumIDList
 	IFACEMETHODIMP Next(
@@ -93,7 +94,8 @@ public:
 
 private:
 	BOOL m_fBoundToFolder;
-	IRemoteFolder *m_pFolder;
+	IRemoteFolder *m_pFolder; ///< Back-reference to folder we are enumerating.
+	HWND m_hwndOwner;         ///< Window to use as parent for user interaction.
 	std::vector<FILEDATA> m_vListing;
 	ULONG m_iPos; // Current position
 	CRemotePidlManager m_PidlManager;

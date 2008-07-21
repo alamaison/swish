@@ -1,27 +1,47 @@
-// RemoteFolder.cpp : Implementation of CRemoteFolder
+/*  Implementation of Explorer folder handling remote files and folders.
+
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 
 #include "stdafx.h"
 #include "remotelimits.h"
 #include "RemoteFolder.h"
 #include "RemoteEnumIDList.h"
 #include "NewConnDialog.h"
+#include "IconExtractor.h"
 
 #include <ATLComTime.h>
+#include <atlrx.h> // For regular expressions
+
+#include <vector>
+using std::vector;
+using std::iterator;
 
 /**
  * Retrieves the class identifier (CLSID) of the object.
  * 
  * @implementing IPersist
  *
- * @param pClsid The location to return the CLSID in.
+ * @param [in] pClsid  The location to return the CLSID in.
  */
 STDMETHODIMP CRemoteFolder::GetClassID( CLSID* pClsid )
 {
 	ATLTRACE("CRemoteFolder::GetClassID called\n");
-
-	ATLASSERT( pClsid );
-    if (pClsid == NULL)
-        return E_POINTER;
+	ATLENSURE_RETURN_HR( pClsid, E_POINTER );
 
 	*pClsid = __uuidof(CRemoteFolder);
     return S_OK;
@@ -37,84 +57,99 @@ STDMETHODIMP CRemoteFolder::GetClassID( CLSID* pClsid )
  * to elements that it contains, the PIDL passed to this method should be 
  * used to construct these.
  *
- * @param pidl The PIDL that specifies the absolute location of this folder.
+ * @param pidl  The PIDL that specifies the absolute location of this folder.
  */
 STDMETHODIMP CRemoteFolder::Initialize( PCIDLIST_ABSOLUTE pidl )
 {
 	ATLTRACE("CRemoteFolder::Initialize called\n");
 
 	ATLASSERT( pidl != NULL );
-    m_pidl = m_PidlManager.Copy( pidl );
-	ATLASSERT( m_pidl );
+	ATLASSERT( // Must be either identify a host or a remote file/folder
+		SUCCEEDED(m_HostPidlManager.IsValid(pidl, PM_LAST_PIDL)) ||
+		SUCCEEDED(m_RemotePidlManager.IsValid(pidl, PM_LAST_PIDL))
+	);
+    m_pidl = static_cast<PIDLIST_ABSOLUTE>( m_RemotePidlManager.Copy(pidl) );
+	ATLASSUME( m_pidl );
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetCurFolder() : IPersistFolder2
- * Retrieves the fully qualified PIDL of the folder.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetCurFolder( __deref_out PIDLIST_ABSOLUTE *ppidl )
+/**
+ * Retrieves the absolute PIDL of this folder relative to the desktop.
+ *
+ * @implementing IPersistFolder2
+ *
+ * @param [out] ppidl  The location to return the copied PIDL in (optional).
+ * @returns  @c S_OK if successful, @c S_FALSE if @ref Initialize() has not 
+ *           yet been called, an error otherwise.
+ */
+STDMETHODIMP CRemoteFolder::GetCurFolder( PIDLIST_ABSOLUTE *ppidl )
 {
 	ATLTRACE("CRemoteFolder::GetCurFolder called\n");
-	ATLASSERT( m_pidl );
 	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
 
 	*ppidl = NULL;
-	if (m_pidl == NULL)
+	if (m_pidl == NULL) // Legal to call this before Initialize()
 		return S_FALSE;
 
-	// Make a copy of the PIDL that was passed to Swish in Initialize(pidl)
-	*ppidl = m_PidlManager.Copy( m_pidl );
-	ATLASSERT( *ppidl );
-	if(!*ppidl)
-		return E_OUTOFMEMORY;
+	// Make a copy of the PIDL that was passed to us in Initialize()
+	*ppidl = static_cast<PIDLIST_ABSOLUTE>( m_RemotePidlManager.Copy(m_pidl) );
+	ATLENSURE_RETURN_HR(*ppidl, E_OUTOFMEMORY);
 	
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::BindToObject : IShellFolder
- * Subfolder of root folder opened: Create and initialize new CRemoteFolder 
- * COM object to represent subfolder and return its IShellFolder interface.
- *----------------------------------------------------------------------------*/
+/**
+ * Subobject of this folder has been requested (typically IShellFolder).
+ *
+ * @implementing IShellFolder
+ *
+ * Creates and initialises a new CRemoteFolder to represent subfolder and 
+ * returns its IShellFolder interface.
+ *
+ * @param [in]  pidl    PIDL to the requested object @b relative to this folder.
+ * @param [in]  pbc     The binding context (ignored).
+ * @param [in]  riid    The interface being requested.
+ * @param [out] ppvOut  Location to return requested interface.
+ */
 STDMETHODIMP CRemoteFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 										  __in_opt IBindCtx *pbc,
 										  __in REFIID riid,
 										  __out void** ppvOut )
 {
 	ATLTRACE("CRemoteFolder::BindToObject called\n");
-	(void)pbc;
+	UNREFERENCED_PARAMETER( pbc );
 	*ppvOut = NULL;
+
 	HRESULT hr;
 
-	// We can assume all children of pidl are for RemoteFolder 
-	// objects (REMOTEPIDLs) as we have no junction points etc. 
-	// Check that the first item in the pidl also a REMOTEPIDL as 
-	// this is the remote subfolder/file that we are binding to.
-	hr = m_PidlManager.IsValid( pidl );
+	// We can assume that the PIDL we have been passed and asked to bind to
+	// contains one or more REMOTEPIDLs representing the file-system 
+	// hierarchy of the target file or folder and may be a child of
+	// either a HOSTPIDL or another REMOTEPIDL:
+	// <Relative (HOST|REMOTE)PIDL>/REMOTEPIDL[/REMOTEPIDL]*
+
+	// Check that first and last are all REMOTEPIDLs (may be same PIDL)
+	hr = m_RemotePidlManager.IsValid( pidl, PM_THIS_PIDL );
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	hr = m_RemotePidlManager.IsValid( pidl, PM_LAST_PIDL );
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
-	// Create COM object to bind to PIDL
+	// Create absolute PIDL by combining with parent HOST or REMOTEPIDL (m_pidl)
+	PIDLIST_ABSOLUTE pidlBind = ::ILCombine( m_pidl, pidl );
+	ATLENSURE_RETURN_HR(pidlBind, E_OUTOFMEMORY);
+
+	// Create RemoteFolder to bind to PIDL
 	CComObject<CRemoteFolder> *pRemoteFolder;
 	hr = CComObject<CRemoteFolder>::CreateInstance( &pRemoteFolder );
-	if (FAILED(hr))
-        return hr;
-
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
     pRemoteFolder->AddRef();
 
-    // Initialize COM object from PIDL
-    PIDLIST_ABSOLUTE pidlBind = ILCombine( m_pidl, pidl );  
-    hr = pidlBind ? S_OK : E_OUTOFMEMORY;
+	// Initialise RemoteFolder with the absolute PIDL
+    hr = pRemoteFolder->Initialize( pidlBind );
     if (SUCCEEDED(hr))
-    {
-		// Initialise and retrieve requested interface
-        hr = pRemoteFolder->Initialize( pidlBind );
-        if (SUCCEEDED(hr))
-            hr = pRemoteFolder->QueryInterface( riid, ppvOut );
-        
-		m_PidlManager.Delete( pidlBind );
-    }
+        hr = pRemoteFolder->QueryInterface( riid, ppvOut );
 
+	::ILFree( pidlBind );
     pRemoteFolder->Release();
 
 	/* TODO: Not sure if I have done this properly with QueryInterface
@@ -131,7 +166,18 @@ STDMETHODIMP CRemoteFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 	return hr;
 }
 
-// EnumObjects() creates a COM object that implements IEnumIDList.
+/**
+ * Create an @c IEnumIDList to allow the objects in the folder to be enumerated.
+ *
+ * @implementing IShellFolder
+ *
+ * @param [in]  hwndOwner     An optional window handle to be used if 
+ *                            enumeration requires user input.
+ * @param [in]  dwFlags       Flags specifying which types of items to include 
+ *                            in the enumeration. Possible flags are from the 
+ *                            @c SHCONT enum.
+ * @param [out] ppEnumIDList  Location to return the @c IEnumIDList in.
+ */
 STDMETHODIMP CRemoteFolder::EnumObjects(
 	__in_opt HWND hwndOwner, 
 	__in SHCONTF dwFlags,
@@ -142,19 +188,24 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 
 	HRESULT hr;
 
-	ATLENSURE( hwndOwner ); // Must be able to display dialog box
     if (ppEnumIDList == NULL)
         return E_POINTER;
     *ppEnumIDList = NULL;
 
+	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
+	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl( m_pidl );
+	ATLASSERT(pidlHost);
+
 	// Extract connection info from PIDL
 	CString strUser, strHost, strPath;
 	USHORT uPort;
-	ATLASSERT(SUCCEEDED( m_HostPidlManager.IsValid( m_pidl ) ));
-	strHost = m_HostPidlManager.GetHost( m_pidl );
-	uPort = m_HostPidlManager.GetPort( m_pidl );
-	strUser = m_HostPidlManager.GetUser( m_pidl );
-	strPath = m_HostPidlManager.GetPath( m_pidl );
+	ATLASSERT(SUCCEEDED( m_HostPidlManager.IsValid(pidlHost) ));
+	strHost = m_HostPidlManager.GetHost( pidlHost );
+	uPort = m_HostPidlManager.GetPort( pidlHost );
+	strUser = m_HostPidlManager.GetUser( pidlHost );
+
+	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
+	strPath = _ExtractPathFromPIDL( m_pidl );
 
     // Create instance of our folder enumerator class
 	CComObject<CRemoteEnumIDList>* pEnum;
@@ -166,13 +217,14 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
     // AddRef() the RemoteEnumIDList while we use it
     pEnum->AddRef();
 
-	// Bind this folder to the enumerator.  This will AddRef() the folder
-	// to ensure it remains alive as long as the enumerator needs it
-	hr = pEnum->BindToFolder( this );
+	// Initialise enumerator with a back-reference to this folder. This will 
+	// AddRef() the folder to ensure it remains alive as long as the 
+	// enumerator needs it
+	hr = pEnum->Initialize( this, hwndOwner );
 
 	// Connect enumerator to folder and use connection to populate listing
     if (SUCCEEDED(hr))
-		hr = pEnum->ConnectAndFetch( strUser, strHost, strPath, uPort );
+		hr = pEnum->ConnectAndFetch(strUser, strHost, strPath, uPort, dwFlags);
     // Return an IEnumIDList interface to the caller.
     if (SUCCEEDED(hr))
         hr = pEnum->QueryInterface( IID_IEnumIDList, (void**)ppEnumIDList );
@@ -200,6 +252,15 @@ STDMETHODIMP CRemoteFolder::CreateViewObject( __in_opt HWND hwndOwner,
     *ppvOut = NULL;
 
 	HRESULT hr = E_NOINTERFACE;
+
+	/* Commonly requested interfaces:
+	    IShellView
+		IContextMenu
+		IExtractIcon
+		IQueryInfo
+		IShellDetails
+		IDropTarget
+	*/
 
 	if (riid == IID_IShellView)
 	{
@@ -241,6 +302,7 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	(void)puReserved;
 
 	*ppvReturn = NULL;
+	HRESULT hr = E_NOINTERFACE;
 	
 	/*
 	IContextMenu    The cidl parameter can be greater than or equal to one.
@@ -251,39 +313,86 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	IQueryInfo      The cidl parameter can only be one.
 	*/
 
-	if (riid == IID_IExtractIconW)
+	if (riid == __uuidof(IExtractIcon))
     {
-		ATLTRACE("\t\tRequest: IID_IExtractIconW\n");
-		ATLASSERT( cPidl == 1 ); // Only one file 'selected'
+		ATLTRACE("\t\tRequest: IExtractIcon\n");
+		ATLASSERT(cPidl == 1);
 
-		return QueryInterface(riid, ppvReturn);
-    }
-	else if (riid == IID_IQueryAssociations)
-	{
-		ATLTRACE("\t\tRequest: IID_IQueryAssociations\n");
-		ATLASSERT( cPidl == 1 ); // Only one file 'selected'
-
-		HRESULT hr = AssocCreate( CLSID_QueryAssociations, 
-			                      IID_IQueryAssociations,
-						          ppvReturn);
-		if (SUCCEEDED(hr)) 
+		CComObject<CIconExtractor> *pExtractor;
+		hr = CComObject<CIconExtractor>::CreateInstance(&pExtractor);
+		if(SUCCEEDED(hr))
 		{
-			// Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
-			LPOLESTR psz;
-			StringFromCLSID(__uuidof(CRemoteFolder), &psz);
+			pExtractor->AddRef();
 
-			// Initialise default assoc provider to use Swish CLSID key for data
-			reinterpret_cast<IQueryAssociations*>(*ppvReturn)->Init(
-				ASSOCF_INIT_DEFAULTTOSTAR, psz, NULL, NULL);
+			pExtractor->Initialize(
+				m_RemotePidlManager.GetFilename(aPidl[0]),
+				m_RemotePidlManager.IsFolder(aPidl[0])
+			);
+			hr = pExtractor->QueryInterface(riid, ppvReturn);
+			ATLASSERT(SUCCEEDED(hr));
 
-			CoTaskMemFree( psz );
+			pExtractor->Release();
 		}
-		return hr;
-	}
-	
-	ATLTRACE("\t\tRequest: <unknown>\n");
+    }
+	else if (riid == __uuidof(IQueryAssociations))
+	{
+		ATLTRACE("\t\tRequest: IQueryAssociations\n");
+		ATLASSERT(cPidl == 1);
 
-    return E_NOINTERFACE;
+		hr = ::AssocCreate(CLSID_QueryAssociations, riid, ppvReturn);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+		
+		if (m_RemotePidlManager.IsFolder(aPidl[0]))
+		{
+			// Initialise default assoc provider for Folders
+			hr = reinterpret_cast<IQueryAssociations*>(*ppvReturn)->Init(
+				ASSOCF_INIT_DEFAULTTOFOLDER, _T("Folder"), NULL, NULL);
+			ATLASSERT(SUCCEEDED(hr));
+		}
+		else
+		{
+			// Initialise default assoc provider for given file extension
+			CString strExt = _T(".") + _GetFileExtensionFromPIDL(aPidl[0]);
+			hr = reinterpret_cast<IQueryAssociations*>(*ppvReturn)->Init(
+				ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, NULL);
+			ATLASSERT(SUCCEEDED(hr));
+		}
+	}
+	else if (riid == __uuidof(IContextMenu))
+	{
+		ATLTRACE("\t\tRequest: IContextMenu\n");
+
+		// Get keys associated with filetype from registry
+		// We only take into account the item that was right-clicked on 
+		// (the first array element) even if this was a multi-selection
+		//
+		// This article says that we don't need to specify the key but we do:
+		// http://groups.google.com/group/microsoft.public.platformsdk.shell/
+		// browse_thread/thread/6f07525eaddea29d/
+		HKEY *aKeys; UINT cKeys;
+		ATLENSURE_RETURN_HR(SUCCEEDED(
+			_GetRegistryKeysForPidl(aPidl[0], &cKeys, &aKeys)),
+			E_UNEXPECTED  // Might fail if registry is corrupted
+		);
+
+		CComPtr<IShellFolder> spThisFolder = this;
+		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
+
+		hr = ::CDefFolderMenu_Create2(m_pidl, hwndOwner, cPidl, aPidl,
+			spThisFolder, MenuCallback, cKeys, aKeys,
+			(IContextMenu **)ppvReturn);
+	}
+	else if (riid == __uuidof(IDataObject))
+	{
+		ATLTRACE("\t\tRequest: IDataObject\n");
+		hr = ::CIDLData_CreateFromIDArray(
+			m_pidl, cPidl, reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl),
+			(IDataObject **)ppvReturn);
+	}
+	else	
+		ATLTRACE("\t\tRequest: <unknown>\n");
+
+    return hr;
 }
 
 /*------------------------------------------------------------------------------
@@ -304,10 +413,9 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		// desktop for the parsing name - always return canonical string:
 		//     sftp://username@hostname:port/path
 
-		// TODO:  if !SHGDN_INFOLDER the pidl may not be single-level
-		// so we should always seek to the last pidl before extracting info
-
-		strName = _GetLongNameFromPIDL(pidl, true);
+		PIDLIST_ABSOLUTE pidlAbsolute = ::ILCombine( m_pidl, pidl );
+		strName = _GetLongNameFromPIDL(pidlAbsolute, true);
+		::ILFree(pidlAbsolute);
 	}
 	else if(uFlags & SHGDN_FORADDRESSBAR)
 	{
@@ -317,16 +425,19 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		// unless the port is the default port in which case it is ommitted:
 		//     sftp://username@hostname/path
 
-		strName = _GetLongNameFromPIDL(pidl, false);
+
+		PIDLIST_ABSOLUTE pidlAbsolute = ::ILCombine( m_pidl, pidl );
+		strName = _GetLongNameFromPIDL(pidlAbsolute, false);
+		::ILFree(pidlAbsolute);
 	}
 	else
 	{
 		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return the label:
+		// desktop for the parsing name - always return the filename:
 		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER ||
 			(uFlags & SHGDN_FOREDITING));
 
-		strName = _GetPathFromPIDL(pidl);
+		strName = _GetFilenameFromPIDL(pidl);
 	}
 
 	// Store in a STRRET and return
@@ -345,12 +456,41 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	__inout SFGAOF *pdwAttribs )
 {
 	ATLTRACE("CRemoteFolder::GetAttributesOf called\n");
-	(void)aPidl; // All items are folders. No need to check PIDL.
-	(void)cIdl;
+
+	// Search through all PIDLs and check if they are all folders
+	bool fAllAreFolders = true;
+	for (UINT i = 0; i < cIdl; i++)
+	{
+		ATLASSERT(SUCCEEDED(m_RemotePidlManager.IsValid(aPidl[i])));
+		if (!m_RemotePidlManager.IsFolder(aPidl[i]))
+		{
+			fAllAreFolders = false;
+			break;
+		}
+	}
+
+	// Search through all PIDLs and check if they are all 'dot' files
+	bool fAllAreDotFiles = true;
+	for (UINT i = 0; i < cIdl; i++)
+	{
+		if (m_RemotePidlManager.GetFilename(aPidl[i])[0] != _T('.'))
+		{
+			fAllAreDotFiles = false;
+			break;
+		}
+	}
 
 	DWORD dwAttribs = 0;
-    dwAttribs |= SFGAO_FOLDER;
-    dwAttribs |= SFGAO_HASSUBFOLDER;
+	if (fAllAreFolders)
+	{
+		ATLTRACE("\tSetting SFGAO_FOLDER, SFGAO_HASSUBFOLDER, SFGAO_BROWSABLE\n");
+		dwAttribs |= SFGAO_FOLDER;
+		dwAttribs |= SFGAO_HASSUBFOLDER;
+		dwAttribs |= SFGAO_BROWSABLE;
+	}
+	if (fAllAreDotFiles)
+		dwAttribs |= SFGAO_GHOSTED;
+
     *pdwAttribs &= dwAttribs;
 
     return S_OK;
@@ -365,20 +505,20 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
  *   Positive: pidl1 > pidl2
  *   Zero:     pidl1 == pidl2
  *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::CompareIDs( LPARAM lParam, LPCITEMIDLIST pidl1,
-									   LPCITEMIDLIST pidl2 )
+STDMETHODIMP CRemoteFolder::CompareIDs( LPARAM lParam, PCUIDLIST_RELATIVE pidl1,
+                                        PCUIDLIST_RELATIVE pidl2 )
 {
 	ATLTRACE("CRemoteFolder::CompareIDs called\n");
 	(void)lParam; // Use default sorting rule always
 
 	ATLASSERT(pidl1 != NULL); ATLASSERT(pidl2 != NULL);
-	ATLASSERT(m_PidlManager.GetPath(pidl1).GetLength() > 0 );
-	ATLASSERT(m_PidlManager.GetPath(pidl2).GetLength() > 0 );
+	ATLASSERT(m_RemotePidlManager.GetFilename(pidl1).GetLength() > 0 );
+	ATLASSERT(m_RemotePidlManager.GetFilename(pidl2).GetLength() > 0 );
 
 	// Sort by filename
 	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 
-		(unsigned short)wcscmp(m_PidlManager.GetPath(pidl1), 
-		                       m_PidlManager.GetPath(pidl2)));
+		(unsigned short)wcscmp(m_RemotePidlManager.GetFilename(pidl1), 
+		                       m_RemotePidlManager.GetFilename(pidl2)));
 }
 
 /*------------------------------------------------------------------------------
@@ -454,7 +594,7 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetPath(pidl), pv ) :
+			_FillDetailsVariant( m_RemotePidlManager.GetFilename(pidl), pv ) :
 			_FillDetailsVariant( _T("Name"), pv );
 	}
 	// Owner
@@ -463,7 +603,7 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_FileOwner\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetOwner(pidl), pv ) :
+			_FillDetailsVariant( m_RemotePidlManager.GetOwner(pidl), pv ) :
 			_FillDetailsVariant( _T("Owner"), pv );
 	}
 	// Group
@@ -472,7 +612,7 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_SwishRemoteGroup\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetGroup(pidl), pv ) :
+			_FillDetailsVariant( m_RemotePidlManager.GetGroup(pidl), pv ) :
 			_FillDetailsVariant( _T("Group"), pv );
 	}
 	// File permissions: drwxr-xr-x form
@@ -481,7 +621,7 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_SwishRemotePermissions\n");
 		
 		return pidl ?
-			_FillDetailsVariant( m_PidlManager.GetPermissionsStr(pidl), pv ) :
+			_FillDetailsVariant( m_RemotePidlManager.GetPermissionsStr(pidl), pv ) :
 			_FillDetailsVariant( _T("Permissions"), pv );
 	}
 	// File size in bytes
@@ -490,7 +630,7 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_Size\n");
 		
 		return pidl ?
-			_FillUI8Variant( m_PidlManager.GetFileSize(pidl), pv ) :
+			_FillUI8Variant( m_RemotePidlManager.GetFileSize(pidl), pv ) :
 			_FillDetailsVariant( _T("Size"), pv );
 	}
 	// Last modified date
@@ -499,7 +639,7 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 		ATLTRACE("\t\tRequest: PKEY_DateModified\n");
 
 		return pidl ?
-			_FillDateVariant( m_PidlManager.GetLastModified(pidl), pv ) :
+			_FillDateVariant( m_RemotePidlManager.GetLastModified(pidl), pv ) :
 			_FillDetailsVariant( _T("Last Modified"), pv );
 	}
 	ATLTRACE("\t\tRequest: <unknown>\n");
@@ -540,37 +680,6 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID( __in UINT iColumn,
 	default:
 		return E_FAIL;
 	}
-
-	return S_OK;
-}
-
-/*------------------------------------------------------------------------------
- * CRemoteFolder::CompareIDs : IExtractIcon
- * Extract an icon bitmap given the information passed.
- * We return S_FALSE to tell the shell to extract the icons itself.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::Extract( LPCTSTR, UINT, HICON *, HICON *, UINT )
-{
-	ATLTRACE("CRemoteFolder::Extract called\n");
-	return S_FALSE;
-}
-
-/*------------------------------------------------------------------------------
- * CRemoteFolder::CompareIDs : IExtractIcon
- * Retrieve the location of the appropriate icon.
- * We set all SFTP hosts to have the icon from shell32.dll.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetIconLocation(
-	__in UINT uFlags, __out_ecount(cchMax) LPTSTR szIconFile, 
-	__in UINT cchMax, __out int *piIndex, __out UINT *pwFlags )
-{
-	ATLTRACE("CRemoteFolder::GetIconLocation called\n");
-	(void)uFlags; // type of use is ignored for host folder
-
-	// Set host to have the ICS host icon
-	StringCchCopy(szIconFile, cchMax, _T("C:\\WINDOWS\\system32\\shell32.dll"));
-	*piIndex = 17;
-	*pwFlags = GIL_DONTCACHE;
 
 	return S_OK;
 }
@@ -659,57 +768,141 @@ STDMETHODIMP CRemoteFolder::ColumnClick( UINT iColumn )
 	return S_FALSE;
 }
 
+/**
+ * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
+ */
+HRESULT CRemoteFolder::OnMenuCallback(
+	HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+	UNREFERENCED_PARAMETER(hwnd);
+
+	switch (uMsg)
+	{
+	case DFM_MERGECONTEXTMENU:
+		return this->OnMergeContextMenu(
+			pdtobj,
+			static_cast<UINT>(wParam),
+			*reinterpret_cast<QCMINFO *>(lParam)
+		);
+	case DFM_INVOKECOMMAND:
+		return this->OnInvokeCommand(
+			pdtobj,
+			static_cast<UINT>(wParam),
+			reinterpret_cast<PCTSTR>(lParam)
+		);
+	default:
+		return S_FALSE;
+	}
+}
+
+/**
+ * Handle @c DFM_MERGECONTEXTMENU callback.
+ */
+HRESULT CRemoteFolder::OnMergeContextMenu(
+	IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
+{
+	UNREFERENCED_PARAMETER(pDataObj);
+	UNREFERENCED_PARAMETER(uFlags);
+	UNREFERENCED_PARAMETER(info);
+
+	// It seems we have to return S_OK even if we do nothing else or Explorer
+	// won't put Open as the default item and in the right order
+	return S_OK;
+}
+
+/**
+ * Handle @c DFM_INVOKECOMMAND callback.
+ */
+HRESULT CRemoteFolder::OnInvokeCommand(
+		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs )
+{
+	UNREFERENCED_PARAMETER(pDataObj);
+	UNREFERENCED_PARAMETER(idCmd);
+	UNREFERENCED_PARAMETER(pszArgs);
+	return S_FALSE;
+}
+
 /*----------------------------------------------------------------------------*/
 /* --- Private functions -----------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------
  * CRemoteFolder::_GetLongNameFromPIDL
- * Retrieve the long name of the host connection from the given PIDL.
+ * Retrieve the long name of the file or folder from the given PIDL.
  * The long name is either the canonical form if fCanonical is set:
  *     sftp://username@hostname:port/path
  * or, if not set and if the port is the default port the reduced form:
  *     sftp://username@hostname/path
  *----------------------------------------------------------------------------*/
-CString CRemoteFolder::_GetLongNameFromPIDL( PCUITEMID_CHILD pidl, 
-										   BOOL fCanonical )
+CString CRemoteFolder::_GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, 
+                                             BOOL fCanonical )
 {
 	ATLTRACE("CRemoteFolder::_GetLongNameFromPIDL called\n");
+	ATLASSERT(SUCCEEDED(m_RemotePidlManager.IsValid(pidl, PM_LAST_PIDL)));
 
-	CString strName;
-	ATLASSERT(SUCCEEDED(m_PidlManager.IsValid(pidl)));
-/*
+	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl(pidl);
+	ATLASSERT(pidlHost);
+	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidlHost, PM_THIS_PIDL)));
+
 	// Construct string from info in PIDL
-	strName = _T("sftp://");
-	strName += m_PidlManager.GetUser(pidl);
+	CString strName = _T("sftp://");
+	strName += m_HostPidlManager.GetUser(pidlHost);
 	strName += _T("@");
-	strName += m_PidlManager.GetHost(pidl);
-	if (fCanonical || (m_PidlManager.GetPort(pidl) != SFTP_DEFAULT_PORT))
+	strName += m_HostPidlManager.GetHost(pidlHost);
+	if (fCanonical || 
+	   (m_HostPidlManager.GetPort(pidlHost) != SFTP_DEFAULT_PORT))
 	{
 		strName += _T(":");
-		strName.AppendFormat( _T("%u"), m_PidlManager.GetPort(pidl) );
+		strName.AppendFormat( _T("%u"), m_HostPidlManager.GetPort(pidlHost) );
 	}
 	strName += _T("/");
-	strName += m_PidlManager.GetPath(pidl);
+	strName += _ExtractPathFromPIDL(pidl);
 
 	ATLASSERT( strName.GetLength() <= MAX_CANONICAL_LEN );
-*/
+
 	return strName;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::_GetPathFromPIDL
- * Retrieve the file path from the given PIDL.
- *----------------------------------------------------------------------------*/
-CString CRemoteFolder::_GetPathFromPIDL( PCUITEMID_CHILD pidl )
+/**
+ * Retrieve the full path of the file on the remote system from the given PIDL.
+ */
+CString CRemoteFolder::_ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl )
 {
 	ATLTRACE("CRemoteFolder::_GetPathFromPIDL called\n");
+	CString strPath;
 
-	CString strName;
-	ATLASSERT(SUCCEEDED(m_PidlManager.IsValid(pidl)));
+	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
+	// (by root we mean the path specified by the user when they added the
+	// connection to Explorer, rather than the root of the server's filesystem)
+	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl(pidl);
+	ATLASSERT(pidlHost);
+	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidlHost, PM_THIS_PIDL)));
+	strPath = m_HostPidlManager.GetPath(pidlHost);
 
-	// Construct string from info in PIDL
-	strName = m_PidlManager.GetPath(pidl);
+	// Walk over REMOTEPIDLs and append each filename to form the path
+	PCUIDLIST_RELATIVE pidlRemote = m_HostPidlManager.GetNextItem(pidlHost);
+	while (pidlRemote != NULL)
+	{
+		if (SUCCEEDED(m_RemotePidlManager.IsValid(pidlRemote, PM_THIS_PIDL)))
+		{
+			strPath += _T("/");
+			strPath += m_RemotePidlManager.GetFilename(pidlRemote);
+		}
+		pidlRemote = m_RemotePidlManager.GetNextItem(pidlRemote);
+	}
+
+	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+
+	return strPath;
+}
+
+CString CRemoteFolder::_GetFilenameFromPIDL( PCUITEMID_CHILD pidl )
+{
+	ATLTRACE("CRemoteFolder::_GetFilenameFromPIDL called\n");
+	ATLASSERT(SUCCEEDED(m_RemotePidlManager.IsValid(pidl)));
+
+	// Extract filename from REMOTEPIDL
+	CString strName = m_RemotePidlManager.GetFilename(pidl);
 
 	ATLASSERT( strName.GetLength() <= MAX_PATH_LEN );
 
@@ -774,5 +967,196 @@ HRESULT CRemoteFolder::_FillUI8Variant( __in ULONGLONG ull, __out VARIANT *pv )
 	return S_OK; // TODO: return success of VariantInit
 }
 
-// CRemoteFolder
 
+/**
+ * Get a list names of registry keys for the types of the selected file.
+ * These keys hold information such as the context menu items and default
+ * actions.  (Ficticious) examples include:
+ *   HKCU\.ppt
+ *   HKCU\PowerPoint.Show
+ *   HKCU\PowerPoint.Show.12
+ *   HKCU\SystemFileAssociations\.ppt
+ *   HKCU\SystemFileAssociations\presentation
+ *   HKCU\*
+ *   HKCU\AllFileSystemObjects
+ * for a file and:
+ *   HKCU\Directory
+ *   HKCU\Directory\Background
+ *   HKCU\Folder
+ *   HKCU\*
+ *   HKCU\AllFileSystemObjects
+ * for a folder.
+ *
+ * Although we pass in an array of PIDLs, only the first one (the one that is
+ * right-clicked on in the case of a context menu
+ */
+HRESULT CRemoteFolder::_GetRegistryKeysForPidl(
+	PCUITEMID_CHILD pidl, UINT *pcKeys, HKEY **paKeys )
+{
+	LSTATUS rc = ERROR_SUCCESS;	
+	vector<CString> vecKeynames;
+
+	// If this is a directory, add directory-specific items
+	if (m_RemotePidlManager.IsFolder( pidl ))
+	{
+		vecKeynames.push_back(_T("Directory"));
+		vecKeynames.push_back(_T("Directory\\Background"));
+		vecKeynames.push_back(_T("Folder"));
+	}
+	else
+	{
+		// Get extension-specific keys
+		// We don't want to add the {.ext} key itself to the list of keys but 
+		// rather, we should use it's default value to look up its file class. 
+		// e.g:
+		//   HKCR\.txt => (Default) txtfile
+		// so we look up the following key
+		//   HKCR\txtfile
+		vector<CString> vecExt = _GetExtensionSpecificKeynames( 
+			_GetFileExtensionFromPIDL(pidl) );
+		vecKeynames.insert(vecKeynames.end(), vecExt.begin(), vecExt.end());
+	}
+
+	// Add names of keys that apply to items of all types
+	vecKeynames.push_back(_T("AllFilesystemObjects"));
+	vecKeynames.push_back(_T("*"));
+
+	// Create list of registry handles from list of keys
+	vector<HKEY> vecKeys;
+	for (UINT i = 0; i < vecKeynames.size(); i++)
+	{
+		CRegKey reg;
+		CString strKey = vecKeynames[i];
+		ATLASSERT(strKey.GetLength() > 0);
+		ATLTRACE(_T("Opening HKCR\\%s\n"), strKey);
+		rc = reg.Open(HKEY_CLASSES_ROOT, strKey, KEY_READ);
+		ATLASSERT(rc == ERROR_SUCCESS);
+		if (rc == ERROR_SUCCESS)
+			vecKeys.push_back(reg.Detach());
+	}
+	
+	ATLASSERT( vecKeys.size() >= 3 );  // The minimum we must have added here
+	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
+
+	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
+	for (UINT i = 0; i < vecKeys.size(); i++)
+		aKeys[i] = vecKeys[i];
+
+	*pcKeys = (UINT)vecKeys.size();
+	*paKeys = aKeys;
+
+	return S_OK;
+}
+
+/**
+ * Get the list of names of registry keys related to a specific file extension.
+ *
+ * @param szExtension  The extension whose keys will be returned.
+ */
+vector<CString> CRemoteFolder::_GetExtensionSpecificKeynames(
+	PCTSTR szExtension )
+{
+	ATLTRACE("CRemoteFolder::_GetExtensionSpecificKeynames called\n");
+	vector<CString> vecKeynames;
+	CString strExtension = CString(_T(".")) + szExtension;
+
+	// Start digging at HKCR\.{szExtension}
+	CRegKey reg;
+	if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)
+		== ERROR_SUCCESS)
+	{
+		vecKeynames.push_back(strExtension);
+
+		// Try to get registered file class key (extensions's default val)
+		TCHAR szClass[2048]; ULONG cchClass = 2048;
+		if (reg.QueryStringValue(_T(""), szClass, &cchClass) == ERROR_SUCCESS
+		 && cchClass > 1
+		 && reg.Open(HKEY_CLASSES_ROOT, szClass, KEY_READ) == ERROR_SUCCESS)
+		{
+			vecKeynames.push_back(szClass);
+
+			// Does this class contain a CurVer subkey pointing to another
+			// version of this file.
+			//   e.g.: PowerPoint.Show\CurVer => PowerPoint.Show.12
+			CString strCurVer = szClass;
+			strCurVer += _T("\\CurVer");
+			if (reg.Open(HKEY_CLASSES_ROOT, strCurVer, KEY_READ)
+				== ERROR_SUCCESS)
+			{
+				// Does this CurVer exist?
+				TCHAR szCurVer[2048]; ULONG cchCurVer = 2048;
+				if (reg.QueryStringValue(_T(""), szCurVer, &cchCurVer) ==
+					ERROR_SUCCESS && cchCurVer > 1
+				 && reg.Open(HKEY_CLASSES_ROOT, szCurVer, KEY_READ) == 
+					ERROR_SUCCESS)
+				{
+					vecKeynames.push_back(szCurVer);
+				}
+			}
+		}
+	}
+
+	// Dig again at HKCR\SystemFileAssociations\.{sxExtension}
+	CString strSysFileAssocExt = _T("SystemFileAssociations\\") + strExtension;
+	if (reg.Open(HKEY_CLASSES_ROOT, strSysFileAssocExt, KEY_READ)
+		== ERROR_SUCCESS)
+	{
+		vecKeynames.push_back(strSysFileAssocExt);
+	}
+
+	// Dig again at HKCR\.{szExtension}\PerceivedType
+	if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)
+		== ERROR_SUCCESS)
+	{
+		TCHAR szPerceivedType[2048]; ULONG cchPerceivedType = 2048;
+		if (reg.QueryStringValue(
+				_T("PerceivedType"), szPerceivedType, &cchPerceivedType)
+			== ERROR_SUCCESS && cchPerceivedType > 1)
+		{
+			CString strPerceivedType = 
+				CString(_T("SystemFileAssociations\\")) + szPerceivedType;
+
+			if (reg.Open(HKEY_CLASSES_ROOT, strPerceivedType, KEY_READ)
+				== ERROR_SUCCESS)
+				vecKeynames.push_back(strPerceivedType);
+		}
+	}
+
+	if (!vecKeynames.size())
+		vecKeynames.push_back(_T("Unknown"));
+
+	ATLASSERT( vecKeynames.size() <= 5 ); 
+	return vecKeynames;
+}
+
+/**
+ * Extracts the extension part of the filenam from the given PIDL.
+ * The extension does not include the dot.  If the filename has no extension
+ * an empty string is returned.
+ *
+ * @param  The PIDL to get the file extension of.
+ */
+CString CRemoteFolder::_GetFileExtensionFromPIDL( PCUITEMID_CHILD pidl )
+{
+	ATLASSERT(SUCCEEDED(m_RemotePidlManager.IsValid(pidl)));
+
+	CString strFilename = _GetFilenameFromPIDL(pidl);
+
+	// Build regex to grap
+	CAtlRegExp<> re;
+	ATLVERIFY( re.Parse(_T("\\.?{[^\\.]*}$")) == REPARSE_ERROR_OK );
+
+	// Run regex agains filename and extract matched section
+	CAtlREMatchContext<> match;
+	ATLVERIFY( re.Match(strFilename, &match) );
+	ATLASSERT( match.m_uNumGroups == 1 );
+	
+	const TCHAR *szStart; const TCHAR *szEnd;
+	match.GetMatch(0, &szStart, &szEnd);
+	ptrdiff_t cchLength = szEnd - szStart;
+
+	CString strExtension(szStart, (UINT)cchLength);
+	return strExtension;
+}
+
+// CRemoteFolder

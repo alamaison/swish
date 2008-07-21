@@ -1,4 +1,21 @@
-// RemoteFolder.h : Declaration of the CRemoteFolder
+/*  Explorer folder handling remote files and folders in a directory.
+
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 
 #ifndef REMOTEFOLDER_H
 #define REMOTEFOLDER_H
@@ -44,57 +61,47 @@ class ATL_NO_VTABLE CRemoteFolder :
 	public IRemoteFolder,
 	// The IShellFolder2-specific detail-handling methods are not compatible
 	// with Win 9x/NT but it supports all those of IShellDetails which are
-	public IShellFolder2, 
-	// IPersistFolder2 needed for Details expando
-    public IPersistFolder2, 
-	public IExtractIcon
-//	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
+	public IShellFolder2,
+	public IPersistFolder2, // IPersistFolder2 needed for Details expando
+	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CRemoteFolder() : m_pidl(NULL)
-	{
-	}
+	CRemoteFolder() : m_pidl(NULL) {}
 
 	~CRemoteFolder()
 	{
 		if (m_pidl)
-			m_PidlManager.Delete( m_pidl );
-	}
-
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	HRESULT FinalConstruct()
-	{
-		return S_OK;
-	}
-	void FinalRelease()
-	{
+			m_RemotePidlManager.Delete( m_pidl );
 	}
 
     // IPersist
-    STDMETHOD(GetClassID)( CLSID* );
+    IFACEMETHODIMP GetClassID( __out CLSID *pClsid );
 
 	// IPersistFolder
-	IFACEMETHODIMP Initialize( PCIDLIST_ABSOLUTE pidl );
+	IFACEMETHODIMP Initialize( __in PCIDLIST_ABSOLUTE pidl );
 
 	// IPersistFolder2
-	STDMETHOD(GetCurFolder)( PIDLIST_ABSOLUTE *ppidl );
+	IFACEMETHODIMP GetCurFolder( __deref_out_opt PIDLIST_ABSOLUTE *ppidl );
 
 	// IShellFolder
-	STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, IBindCtx*, REFIID, void**);
+	IFACEMETHODIMP BindToObject(
+		__in PCUIDLIST_RELATIVE pidl, __in_opt IBindCtx *pbc, __in REFIID riid,
+		__out void** ppvOut );
 	STDMETHOD(EnumObjects)( HWND, SHCONTF, LPENUMIDLIST* );
     STDMETHOD(CreateViewObject)( HWND, REFIID, void** );
 	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
     STDMETHOD(GetUIObjectOf)
 		( HWND, UINT, PCUITEMID_CHILD_ARRAY, REFIID, LPUINT, void** );
 	STDMETHOD(CompareIDs)
-		( LPARAM, LPCITEMIDLIST, LPCITEMIDLIST );
-    STDMETHOD(BindToStorage)( LPCITEMIDLIST, LPBC, REFIID, void** )
+		( LPARAM, PCUIDLIST_RELATIVE, PCUIDLIST_RELATIVE );
+    STDMETHOD(BindToStorage)( PCUIDLIST_RELATIVE, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
     STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
     STDMETHOD(ParseDisplayName)
-		( HWND, LPBC, LPOLESTR, LPDWORD, LPITEMIDLIST*, LPDWORD )
+		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
         { return E_NOTIMPL; }
-    STDMETHOD(SetNameOf)( HWND, LPCITEMIDLIST, LPCOLESTR, DWORD, LPITEMIDLIST* )
+    STDMETHOD(SetNameOf)
+		( HWND, PCUITEMID_CHILD, LPCOLESTR, DWORD, PITEMID_CHILD* )
         { return E_NOTIMPL; }
 
 	// IShellFolder2
@@ -106,27 +113,48 @@ public:
 							 VARIANT *pv );
 	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
 
-	// IExtractIcon
-	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
-						HICON *phiconSmall, UINT nIconSize );
-	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
-								int *piIndex, UINT *pwFlags );
-
 	// IShellDetails
 	STDMETHOD(GetDetailsOf)( PCUITEMID_CHILD pidl, UINT iColumn, 
 							 LPSHELLDETAILS pDetails );
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
-    CRemotePidlManager m_PidlManager;
-	CHostPidlManager m_HostPidlManager;
+    CRemotePidlManager m_RemotePidlManager;
+	CHostPidlManager   m_HostPidlManager;
 	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
-	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
-	CString _GetPathFromPIDL( PCUITEMID_CHILD pidl );
+	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
+	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
+	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );
+	HRESULT _GetRegistryKeysForPidl(
+		PCUITEMID_CHILD pidl, 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys );
+	std::vector<CString> _GetExtensionSpecificKeynames( PCTSTR szExtension );
+	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( CTime dtDate, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
+
+	/**
+	 * Static dispatcher for Default Context Menu callback
+	 */
+	static HRESULT __callback CALLBACK MenuCallback(
+		IShellFolder *psf, HWND hwnd, IDataObject *pdtobj, UINT uMsg, 
+		WPARAM wParam, LPARAM lParam )
+	{
+		return static_cast<CRemoteFolder *>(psf)->OnMenuCallback(
+			hwnd, pdtobj, uMsg, wParam, lParam );
+	}
+
+	/** @name Default context menu event handlers */
+	// @{
+	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
+		UINT uMsg, WPARAM wParam, LPARAM lParam );
+	HRESULT OnMergeContextMenu(
+		IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
+	HRESULT OnInvokeCommand(
+		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+	// @}
 };
 
 // Remote folder listing column property IDs

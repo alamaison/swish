@@ -1,7 +1,21 @@
-// ConnCopyPolicy.h: Copy-policy class for converting from connection
-// data structure to PIDL
-//
-//////////////////////////////////////////////////////////////////////
+/*  Copy-policy class for converting from connection data structure to PIDL
+
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 
 #ifndef CONNCOPYPOLICY_H
 #define CONNCOPYPOLICY_H
@@ -15,16 +29,16 @@
 class CConnCopyPolicy  
 {
 public:
-	static void init( LPITEMIDLIST* ) { /* No init needed */ }
+	static void init( PITEMID_CHILD* ) { /* No init needed */ }
     
-    static HRESULT copy( LPITEMIDLIST* pTo, const HOSTPIDL *pFrom )
+    static HRESULT copy( PITEMID_CHILD* pTo, const HOSTPIDL *pFrom )
     {
-		ATLASSERT(SUCCEEDED(m_PidlManager.IsValid((LPITEMIDLIST)pFrom)));
+		ATLASSERT(SUCCEEDED(m_PidlManager.IsValid((PCUIDLIST_RELATIVE)pFrom)));
 		return m_PidlManager.Create( pFrom->wszLabel, pFrom->wszUser, 
 			pFrom->wszHost, pFrom->wszPath, pFrom->uPort, pTo );
     }
 
-    static void destroy( LPITEMIDLIST* p ) 
+    static void destroy( PITEMID_CHILD* p ) 
     {
         m_PidlManager.Delete( *p ); 
     }
@@ -33,7 +47,7 @@ private:
     static CHostPidlManager m_PidlManager;
 };
 
-typedef CComEnumOnSTL<IEnumIDList, &IID_IEnumIDList, LPITEMIDLIST,
+typedef CComEnumOnSTL<IEnumIDList, &IID_IEnumIDList, PITEMID_CHILD,
                       CConnCopyPolicy, std::vector<HOSTPIDL> >
 		CEnumIDListImpl;
 

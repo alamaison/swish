@@ -1,6 +1,6 @@
 /*  Declaration of PIDL for remote system directory listing and manager class
 
-    Copyright (C) 2007  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,12 +35,13 @@ struct REMOTEPIDL
 {
 	USHORT cb;
 	DWORD dwFingerprint;
-	BOOL fIsFolder;
-	WCHAR wszPath[MAX_PATH_LENZ];
+	bool fIsFolder;
+	bool fIsLink;
+	WCHAR wszFilename[MAX_PATH_LENZ];
 	WCHAR wszOwner[MAX_USERNAME_LENZ];
 	WCHAR wszGroup[MAX_USERNAME_LENZ];
 	DWORD dwPermissions;
-	WORD wPadding;
+	//WORD wPadding;
 	ULONGLONG uSize;
 	time_t dtModified;
 };
@@ -53,23 +54,24 @@ class CRemotePidlManager : public CPidlManager
 public:
 	HRESULT Create( LPCWSTR pwszPath, LPCWSTR pwszOwner, LPCWSTR pwszGroup,
 					DWORD dwPermissions, ULONGLONG uSize, time_t dtModified,
-					BOOL fIsFolder, PITEMID_CHILD *ppidlOut );
+					bool fIsFolder, PITEMID_CHILD *ppidlOut );
 
-	PREMOTEPIDL Validate( PCIDLIST_RELATIVE );
-	HRESULT IsValid( PCIDLIST_RELATIVE );
+	PREMOTEPIDL Validate( PCUIDLIST_RELATIVE );
+	HRESULT IsValid(
+	   PCUIDLIST_RELATIVE, PM_VALIDMODE mode = PM_THIS_PIDL);
 
-	// All accessors take a LPCITEMIDLIST as they may be multilevel
+	// All accessors take a PCUIDLIST_RELATIVE as they may be multilevel
 	// where only the last SHITEMID is of specific type
-	CString GetPath( LPCITEMIDLIST pidl );
-	CString GetOwner( LPCITEMIDLIST pidl );
-	CString GetGroup( LPCITEMIDLIST pidl );
-	DWORD GetPermissions( LPCITEMIDLIST pidl );
-	CString GetPermissionsStr( LPCITEMIDLIST pidl );
-	ULONGLONG GetFileSize( LPCITEMIDLIST pidl );
-	CTime GetLastModified( LPCITEMIDLIST pidl );
-	BOOL IsFolder( LPCITEMIDLIST pidl );
+	CString GetFilename( PCUIDLIST_RELATIVE pidl );
+	CString GetOwner( PCUIDLIST_RELATIVE pidl );
+	CString GetGroup( PCUIDLIST_RELATIVE pidl );
+	DWORD GetPermissions( PCUIDLIST_RELATIVE pidl );
+	CString GetPermissionsStr( PCUIDLIST_RELATIVE pidl );
+	ULONGLONG GetFileSize( PCUIDLIST_RELATIVE pidl );
+	CTime GetLastModified( PCUIDLIST_RELATIVE pidl );
+	bool IsFolder( PCUIDLIST_RELATIVE pidl );
 private:
-	PREMOTEPIDL GetDataSegment( LPCITEMIDLIST pidl );
+	PREMOTEPIDL GetDataSegment( PCUIDLIST_RELATIVE pidl );
 };
 
 #endif // REMOTEPIDLMANAGER_H
