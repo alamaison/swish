@@ -10,7 +10,7 @@
 // Libssh2Provider CLibssh2Provider component
 #import "progid:Libssh2Provider.Libssh2Provider" raw_interfaces_only, raw_native_types, auto_search
 
-#define ISftpProvider ISftpProviderUnstable
+#define ISftpProvider ISftpProviderUnstable2
 #define ISftpConsumer ISftpConsumerUnstable
 
 struct testFILEDATA

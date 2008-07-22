@@ -88,6 +88,20 @@ void CLibssh2Provider_test::testInitialize()
 	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
 	m_pCoConsumer->SetCustomPassword(GetPassword());
 
+	// Test with invalid port values
+#pragma warning (push)
+#pragma warning (disable: 4245) // unsigned signed mismatch
+	CPPUNIT_ASSERT_EQUAL(
+		E_INVALIDARG,
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, -1 )
+	);
+	CPPUNIT_ASSERT_EQUAL(
+		E_INVALIDARG,
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, 65536 )
+	);
+#pragma warning (pop)
+
+	// Run real test
 	CPPUNIT_ASSERT_OK(
 		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
 	);

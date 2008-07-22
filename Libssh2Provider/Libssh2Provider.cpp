@@ -117,15 +117,14 @@ void CLibssh2Provider::FinalRelease()
  *   @c E_FAIL if other error encountered.
  */
 STDMETHODIMP CLibssh2Provider::Initialize(
-	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, short uPort )
+	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
 {
 
 	ATLENSURE_RETURN_HR( pConsumer, E_POINTER );
-	ATLENSURE_RETURN_HR( 
-		::SysStringLen(bstrUser) > 0 && ::SysStringLen(bstrHost) > 0,
-		E_INVALIDARG );
-	ATLENSURE_RETURN_HR( uPort >= MIN_PORT, E_INVALIDARG );
-	ATLENSURE_RETURN_HR( uPort <= MAX_PORT, E_INVALIDARG );
+	if (::SysStringLen(bstrUser) == 0 || ::SysStringLen(bstrHost) == 0)
+		return E_INVALIDARG;
+	if (uPort < MIN_PORT || uPort > MAX_PORT)
+		return E_INVALIDARG;
 
 	m_pConsumer = pConsumer;
 	m_pConsumer->AddRef();

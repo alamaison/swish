@@ -44,8 +44,8 @@ using std::list;
 // While interfaces are still in flux use these redefinitions to point
 // the identifiers to a temporary but unique version of the interface
 // for each release.
-#define ISftpProvider ISftpProviderUnstable
-#define IID_ISftpProvider __uuidof(ISftpProviderUnstable)
+#define ISftpProvider ISftpProviderUnstable2
+#define IID_ISftpProvider __uuidof(ISftpProviderUnstable2)
 #define ISftpConsumer ISftpConsumerUnstable
 #define IID_ISftpConsumer __uuidof(ISftpConsumerUnstable)
 
@@ -77,7 +77,7 @@ public:
 	// IPuttyProvider
 	IFACEMETHODIMP Initialize(
 		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrUser, __in BSTR bstrHost, short uPort );
+		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 

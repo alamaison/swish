@@ -68,8 +68,8 @@ __interface IEnumListing : IUnknown
 // While interfaces are still in flux use these redefinitions to point
 // the identifiers to a temporary but unique version of the interface
 // for each release.
-#define ISftpProvider ISftpProviderUnstable
-#define IID_ISftpProvider __uuidof(ISftpProviderUnstable)
+#define ISftpProvider ISftpProviderUnstable2
+#define IID_ISftpProvider __uuidof(ISftpProviderUnstable2)
 #define ISftpConsumer ISftpConsumerUnstable
 #define IID_ISftpConsumer __uuidof(ISftpConsumerUnstable)
 
@@ -100,7 +100,7 @@ __interface ISftpConsumer
 // ISftpProvider
 [
 	object, oleautomation, library_block,
-	uuid("93874AB6-D2AE-47c0-AFB7-F59A7507FADA"),
+	uuid("2964AECE-CB07-4f7c-848F-BF70B8F31321"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	helpstring("ISftpProvider Interface"),
 	pointer_default(unique)
@@ -111,8 +111,7 @@ __interface ISftpProvider
 		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrUser,
 		[in] BSTR bstrHost,
-		// TODO short is too small
-		[in] short uPort
+		[in] UINT uPort
 	);
 	HRESULT GetListing(
 		[in] BSTR bstrDirectory,
