@@ -25,11 +25,11 @@
 #endif // _MSC_VER > 1000
 
 #include "stdafx.h"
-#include "resource.h"       // main symbols
+#include "resource.h"        // main symbols
 
-#include "RemoteFolder.h"   // For back-reference to parent folder
-#include "SftpProvider.h"   // For interface to back-end data providers
-#include "PasswordDialog.h" // For password dialog box
+#include "RemoteFolder.h"    // For back-reference to parent folder
+#include "SftpProvider.h"    // For interface to back-end data providers
+#include "UserInteraction.h" // For implementation of ISftpConsumer
 
 struct FILEDATA
 {
@@ -56,12 +56,11 @@ struct FILEDATA
 	helpstring("RemoteEnumIDList Class")
 ]
 class ATL_NO_VTABLE CRemoteEnumIDList :
-	public IEnumIDList,
-	public ISftpConsumer
+	public IEnumIDList
 {
 public:
 	CRemoteEnumIDList() :
-		m_pFolder(NULL), m_hwndOwner(NULL), m_fBoundToFolder(false), m_iPos(0)
+		m_pFolder(NULL), m_pConsumer(NULL), m_fBoundToFolder(false), m_iPos(0)
 	{
 	}
 
@@ -75,7 +74,17 @@ public:
 	{
 		// Release folder that should have been incremented in BindToFolder
 		if (m_pFolder) // Possibly NULL if FinalConstruct() failed
+		{
 			m_pFolder->Release();
+			m_pFolder = NULL;
+		}
+
+		// Release user interaction handler that was created in Intialize()
+		if (m_pConsumer)
+		{
+			m_pConsumer->Release();
+			m_pConsumer = NULL;
+		}
 	}
 
 	HRESULT Initialize( __in IRemoteFolder* pFolder, __in_opt HWND hwndOwner );
@@ -94,30 +103,13 @@ public:
 
 private:
 	BOOL m_fBoundToFolder;
-	IRemoteFolder *m_pFolder; ///< Back-reference to folder we are enumerating.
-	HWND m_hwndOwner;         ///< Window to use as parent for user interaction.
+	IRemoteFolder *m_pFolder;   ///< Back-reference to folder we're enumerating.
+	ISftpConsumer *m_pConsumer; ///< User-interaction handler.
 	std::vector<FILEDATA> m_vListing;
 	ULONG m_iPos; // Current position
 	CRemotePidlManager m_PidlManager;
 
 	time_t _ConvertDate( __in DATE dateValue ) const;
-
-	/**
-	 * User interaction callbacks.
-	 * @{
-	 */
-	HRESULT OnPasswordRequest(
-		__in BSTR bstrRequest, __out BSTR *pbstrPassword
-	);
-	HRESULT OnYesNoCancel(
-		__in BSTR bstrMessage,
-		__in_opt BSTR bstrYesInfo,
-		__in_opt BSTR bstrNoInfo,
-		__in_opt BSTR bstrCancelInfo,
-		__in_opt BSTR bstrTitle,
-		__out int *piResult
-	);
-	/* @} */
 };
 
 #endif // REMOTEENUMIDLIST_H

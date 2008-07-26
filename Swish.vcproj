@@ -386,6 +386,10 @@
 				RelativePath=".\Swish.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\UserInteraction.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -477,6 +481,10 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UserInteraction.h"
 				>
 			</File>
 		</Filter>

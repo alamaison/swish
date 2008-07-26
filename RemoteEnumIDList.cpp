@@ -36,6 +36,7 @@
 HRESULT CRemoteEnumIDList::Initialize( IRemoteFolder* pFolder, HWND hwndOwner )
 {
 	ATLTRACE("CRemoteEnumIDList::Initialize called\n");
+	HRESULT hr;
 
 	if (m_fBoundToFolder) // Already called this function
 		return E_UNEXPECTED;
@@ -47,10 +48,12 @@ HRESULT CRemoteEnumIDList::Initialize( IRemoteFolder* pFolder, HWND hwndOwner )
 	m_pFolder = pFolder;
 	m_pFolder->AddRef();
 
-	m_hwndOwner = hwndOwner;
+	// Create SftpConsumer to pass to SftpProvider (used for password reqs etc.)
+	hr = CUserInteraction::MakeInstance(hwndOwner, &m_pConsumer);
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
 	m_fBoundToFolder = true;
-	return S_OK;
+	return hr;
 }
 
 #define S_IFMT     0170000 /* type of file */
@@ -98,18 +101,11 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch(
 		(LPVOID *)&pProvider);    // Place to store interface.
 	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 
-	// Get SftpConsumer to pass to SftpProvider (used for password reqs etc.)
-	ISftpConsumer *pConsumer;
-	hr = this->QueryInterface(__uuidof(pConsumer), (void**)&pConsumer);
-	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
-
 	// Set up SFTP provider
 	CComBSTR bstrUser(szUser);
 	CComBSTR bstrHost(szHost);
-	hr = pProvider->Initialize(pConsumer, bstrUser, bstrHost, uPort);
+	hr = pProvider->Initialize(m_pConsumer, bstrUser, bstrHost, uPort);
 	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
-	pConsumer->Release();
-	pConsumer = NULL;
 
 	// Get listing enumerator
 	IEnumListing *pEnum;
@@ -252,101 +248,6 @@ STDMETHODIMP CRemoteEnumIDList::Clone( __deref_out IEnumIDList **ppEnum )
 
 	return E_NOTIMPL;
 }
-
-/**
- * Displays UI dialog to get password from user and returns it.
- *
- * @param [in]  bstrRequest    The prompt to display to the user.
- * @param [out] pbstrPassword  The reply from the user - the password.
- *
- * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
- *         forbidden and S_OK otherwise.
- */
-STDMETHODIMP CRemoteEnumIDList::OnPasswordRequest(
-	BSTR bstrRequest, BSTR *pbstrPassword
-)
-{
-	if (m_hwndOwner == NULL)
-		return E_FAIL;
-
-	CString strPrompt = bstrRequest;
-	ATLASSERT(strPrompt.GetLength() > 0);
-
-	CPasswordDialog dlgPassword;
-	dlgPassword.SetPrompt( strPrompt ); // Pass text through from backend
-	if (dlgPassword.DoModal() == IDOK)
-	{
-		CString strPassword;
-		strPassword = dlgPassword.GetPassword();
-		*pbstrPassword = strPassword.AllocSysString();
-		return S_OK;
-	}
-	else
-		return E_ABORT;
-}
-
-/**
- * Display Yes/No/Cancel dialog to the user with given message.
- *
- * @param [in]  bstrMessage    The prompt to display to the user.
- * @param [in]  bstrYesInfo    The explanation of the Yes option.
- * @param [in]  bstrNoInfo     The explanation of the No option.
- * @param [in]  bstrCancelInfo The explanation of the Cancel option.
- * @param [in]  bstrTitle      The title of the dialog.
- * @param [out] piResult       The user's choice.
- *
- * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
- *         forbidden and S_OK otherwise.
-*/
-STDMETHODIMP CRemoteEnumIDList::OnYesNoCancel(
-	BSTR bstrMessage, BSTR bstrYesInfo, BSTR bstrNoInfo, BSTR bstrCancelInfo,
-	BSTR bstrTitle, int *piResult
-)
-{
-	if (m_hwndOwner == NULL)
-		return E_FAIL;
-
-	// Construct unknown key information message
-	CString strMessage = bstrMessage;
-	CString strTitle = bstrTitle;
-	if (bstrYesInfo && ::SysStringLen(bstrYesInfo) > 0)
-	{
-		strMessage += _T("\r\n");
-		strMessage += bstrYesInfo;
-	}
-	if (bstrNoInfo && ::SysStringLen(bstrNoInfo) > 0)
-	{
-		strMessage += _T("\r\n");
-		strMessage += bstrNoInfo;
-	}
-	if (bstrCancelInfo && ::SysStringLen(bstrCancelInfo) > 0)
-	{
-		strMessage += _T("\r\n");
-		strMessage += bstrCancelInfo;
-	}
-
-	// Display message box
-	int msgboxID = ::MessageBox(
-		NULL, strMessage, strTitle, 
-		MB_ICONWARNING | MB_YESNOCANCEL | MB_DEFBUTTON3 );
-
-	// Process user choice
-	switch (msgboxID)
-	{
-	case IDYES:
-		*piResult = 1; return S_OK;
-	case IDNO:
-		*piResult = 0; return S_OK;
-	case IDCANCEL:
-		*piResult = -1; return E_ABORT;
-	default:
-		*piResult = -2;
-		UNREACHABLE;
-	}
-
-	return E_ABORT;
-}
-
 
 /*----------------------------------------------------------------------------*
  * Private functions
