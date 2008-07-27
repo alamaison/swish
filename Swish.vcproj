@@ -311,6 +311,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Connection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ExplorerCallback.cpp"
 				>
 			</File>
@@ -397,6 +401,10 @@
 			>
 			<File
 				RelativePath=".\ConnCopyPolicy.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Connection.h"
 				>
 			</File>
 			<File

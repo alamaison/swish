@@ -23,6 +23,7 @@
 #include "RemoteEnumIDList.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
+#include "Connection.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -167,7 +168,7 @@ STDMETHODIMP CRemoteFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 }
 
 /**
- * Create an @c IEnumIDList to allow the objects in the folder to be enumerated.
+ * Create an @c IEnumIDList to allow objects in this folder to be enumerated.
  *
  * @implementing IShellFolder
  *
@@ -180,8 +181,8 @@ STDMETHODIMP CRemoteFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
  */
 STDMETHODIMP CRemoteFolder::EnumObjects(
 	__in_opt HWND hwndOwner, 
-	__in SHCONTF dwFlags,
-	__deref_out_opt LPENUMIDLIST* ppEnumIDList )
+	__in SHCONTF grfFlags,
+	__deref_out_opt IEnumIDList **ppEnumIDList )
 {
 	ATLTRACE("CRemoteFolder::EnumObjects called\n");
 	ATLASSERT(m_pidl);
@@ -207,29 +208,31 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
 	strPath = _ExtractPathFromPIDL( m_pidl );
 
+	ATLASSERT(!strUser.IsEmpty());
+	ATLASSERT(!strHost.IsEmpty());
+	ATLASSERT(!strPath.IsEmpty());
+
+	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
+	CComPtr<ISftpConsumer> spConsumer;
+	hr = CUserInteraction::MakeInstance( hwndOwner, &spConsumer );
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+	// Create SFTP Provider from ProgID and initialise
+	CComPtr<ISftpProvider> spProvider;
+	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	hr = spProvider->Initialize(
+		spConsumer, CComBSTR(strUser), CComBSTR(strHost), uPort );
+	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+	// Pack both ends of connection into object
+	CConnection conn;
+	conn.spProvider = spProvider.Detach();
+	conn.spConsumer = spConsumer.Detach();
+
     // Create instance of our folder enumerator class
-	CComObject<CRemoteEnumIDList>* pEnum;
-    hr = CComObject<CRemoteEnumIDList>::CreateInstance( &pEnum );
-	ASSERT( SUCCEEDED(hr) );
-    if (FAILED(hr))
-        return hr;
-
-    // AddRef() the RemoteEnumIDList while we use it
-    pEnum->AddRef();
-
-	// Initialise enumerator with a back-reference to this folder. This will 
-	// AddRef() the folder to ensure it remains alive as long as the 
-	// enumerator needs it
-	hr = pEnum->Initialize( this, hwndOwner );
-
-	// Connect enumerator to folder and use connection to populate listing
-    if (SUCCEEDED(hr))
-		hr = pEnum->ConnectAndFetch(strUser, strHost, strPath, uPort, dwFlags);
-    // Return an IEnumIDList interface to the caller.
-    if (SUCCEEDED(hr))
-        hr = pEnum->QueryInterface( IID_IEnumIDList, (void**)ppEnumIDList );
-
-    pEnum->Release();
+	hr = CRemoteEnumIDList::MakeInstance( 
+		conn, strPath, grfFlags, ppEnumIDList );
 
     return hr;
 }

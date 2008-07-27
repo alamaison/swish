@@ -33,27 +33,25 @@
  * @param pFolder    The back-reference to the folder we are enumerating.
  * @param hwndOwner  A handle to the window for user interaction.
  */
-HRESULT CRemoteEnumIDList::Initialize( IRemoteFolder* pFolder, HWND hwndOwner )
+HRESULT CRemoteEnumIDList::Initialize(
+	CConnection& conn, PCTSTR pszPath, SHCONTF grfFlags )
 {
 	ATLTRACE("CRemoteEnumIDList::Initialize called\n");
-	HRESULT hr;
 
-	if (m_fBoundToFolder) // Already called this function
+	if (m_fInitialised) // Already called this function
 		return E_UNEXPECTED;
-	if (pFolder == NULL)
-		return E_POINTER;
 
-	// Save back-reference to folder and increment its reference count to
-	// ensure that folder remains alive for at least as long as the enumerator
-	m_pFolder = pFolder;
-	m_pFolder->AddRef();
+	// Save references to both end of the SftpConsumer/Provider connection
+	m_pConsumer = conn.spConsumer;
+	m_pConsumer->AddRef();
+	m_pProvider = conn.spProvider;
+	m_pProvider->AddRef();
 
-	// Create SftpConsumer to pass to SftpProvider (used for password reqs etc.)
-	hr = CUserInteraction::MakeInstance(hwndOwner, &m_pConsumer);
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	m_grfFlags = grfFlags;
 
-	m_fBoundToFolder = true;
-	return hr;
+	m_fInitialised = true;
+	
+	return _Fetch( pszPath );
 }
 
 #define S_IFMT     0170000 /* type of file */
@@ -61,56 +59,29 @@ HRESULT CRemoteEnumIDList::Initialize( IRemoteFolder* pFolder, HWND hwndOwner )
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 
 /*------------------------------------------------------------------------------
- * CRemoteEnumIDList::ConnectAndFetch
- * Populates the enumerator by connecting to the remote server given in the
- * parameter and fetching the file listing
+ * CRemoteEnumIDList::_Fetch
+ * Populates the enumerator by connecting to the remote server and fetching 
+ * the file listing.
  *
  * TODO: Ideally, the final EnumIDList will deal with enumeration *only*.
  *       Connection and retrieval will be handled by other objects.
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteEnumIDList::ConnectAndFetch(
-	PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort, SHCONTF dwFlags )
+HRESULT CRemoteEnumIDList::_Fetch( PCTSTR pszPath )
 {
-	ATLTRACE("CRemoteEnumIDList::ConnectAndFetch called\n");
+	// Must call Initialize() first
+	if (!m_fInitialised) return E_UNEXPECTED;
 
-	// Must call BindToFolder() first
-	if (!m_fBoundToFolder) return E_UNEXPECTED;
-	if (!szUser || !szUser[0]) return E_INVALIDARG;
-	if (!szHost || !szHost[0]) return E_INVALIDARG;
-	if (!szPath || !szPath[0]) return E_INVALIDARG;
-	ATLASSUME( m_pFolder );
+	HRESULT hr;
 
 	// Interpret supported SHCONTF flags
-	bool fIncludeFolders = (dwFlags & SHCONTF_FOLDERS) != 0;
-	bool fIncludeNonFolders = (dwFlags & SHCONTF_NONFOLDERS) != 0;
-	bool fIncludeHidden = (dwFlags & SHCONTF_INCLUDEHIDDEN) != 0;
-
-	// Create instance of SFTP Provider using ProgID
-	CLSID CLSID_Provider;
-	HRESULT hr = ::CLSIDFromProgID(
-		OLESTR("Libssh2Provider.Libssh2Provider"),
-		&CLSID_Provider
-	);
-	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
-	ISftpProvider *pProvider;
-	hr = ::CoCreateInstance(
-		CLSID_Provider,           // CLASSID for chosen SftpProvider.
-		NULL,                     // Ignore this.
-		CLSCTX_INPROC_SERVER,     // Server.
-		IID_ISftpProvider,        // Interface you want.
-		(LPVOID *)&pProvider);    // Place to store interface.
-	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
-
-	// Set up SFTP provider
-	CComBSTR bstrUser(szUser);
-	CComBSTR bstrHost(szHost);
-	hr = pProvider->Initialize(m_pConsumer, bstrUser, bstrHost, uPort);
-	ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
+	bool fIncludeFolders = (m_grfFlags & SHCONTF_FOLDERS) != 0;
+	bool fIncludeNonFolders = (m_grfFlags & SHCONTF_NONFOLDERS) != 0;
+	bool fIncludeHidden = (m_grfFlags & SHCONTF_INCLUDEHIDDEN) != 0;
 
 	// Get listing enumerator
 	IEnumListing *pEnum;
-	CComBSTR bstrPath = szPath;
-	hr = pProvider->GetListing(bstrPath, &pEnum);
+	CComBSTR bstrPath = pszPath;
+	hr = m_pProvider->GetListing(bstrPath, &pEnum);
 	if (SUCCEEDED(hr))
 	{
 		do {
@@ -140,7 +111,7 @@ HRESULT CRemoteEnumIDList::ConnectAndFetch(
 	}
 
 	// Release data provider component (should destroy psftp process)
-	pProvider->Release();
+	//pProvider->Release();
 
 	return hr;
 }
@@ -157,10 +128,9 @@ STDMETHODIMP CRemoteEnumIDList::Next(
 {
 	ATLTRACE("CRemoteEnumIDList::Next called\n");
 	
-	// Must call BindToFolder() first
-	if (!m_fBoundToFolder) return E_UNEXPECTED;
+	// Must call Initialize() first
+	if (!m_fInitialised) return E_UNEXPECTED;
 	if (!(pceltFetched || celt <= 1)) return E_INVALIDARG;
-	ATLENSURE( m_pFolder );
 
 	HRESULT hr = S_OK;
 	ULONG cFetched = 0;
@@ -204,9 +174,8 @@ STDMETHODIMP CRemoteEnumIDList::Skip( DWORD celt )
 {
 	ATLTRACE("CRemoteEnumIDList::Skip called\n");
 
-	// Must call BindToFolder() first
-	if (!m_fBoundToFolder) return E_UNEXPECTED;
-	ATLENSURE( m_pFolder );
+	// Must call Initialize() first
+	if (!m_fInitialised) return E_UNEXPECTED;
 
 	m_iPos += celt;
 
@@ -221,9 +190,8 @@ STDMETHODIMP CRemoteEnumIDList::Reset()
 {
 	ATLTRACE("CRemoteEnumIDList::Reset called\n");
 
-	// Must call BindToFolder() first
-	if (!m_fBoundToFolder) return E_UNEXPECTED;
-	ATLENSURE( m_pFolder );
+	// Must call Initialize() first
+	if (!m_fInitialised) return E_UNEXPECTED;
 
 	m_iPos = 0;
 
@@ -240,9 +208,8 @@ STDMETHODIMP CRemoteEnumIDList::Clone( __deref_out IEnumIDList **ppEnum )
 	ATLTRACE("CRemoteEnumIDList::Clone called\n");
 	(void)ppEnum;
 
-	// Must call BindToFolder() first
-	if (!m_fBoundToFolder) return E_UNEXPECTED;
-	ATLENSURE( m_pFolder );
+	// Must call Initialize() first
+	if (!m_fInitialised) return E_UNEXPECTED;
 
 	// TODO: Implement this
 

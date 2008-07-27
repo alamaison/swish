@@ -30,6 +30,7 @@
 #include "RemoteFolder.h"    // For back-reference to parent folder
 #include "SftpProvider.h"    // For interface to back-end data providers
 #include "UserInteraction.h" // For implementation of ISftpConsumer
+#include "Connection.h"      // For SFTP Connection container
 
 struct FILEDATA
 {
@@ -60,7 +61,7 @@ class ATL_NO_VTABLE CRemoteEnumIDList :
 {
 public:
 	CRemoteEnumIDList() :
-		m_pFolder(NULL), m_pConsumer(NULL), m_fBoundToFolder(false), m_iPos(0)
+		m_pConsumer(NULL), m_fInitialised(false), m_iPos(0)
 	{
 	}
 
@@ -72,14 +73,14 @@ public:
 
 	void FinalRelease()
 	{
-		// Release folder that should have been incremented in BindToFolder
-		if (m_pFolder) // Possibly NULL if FinalConstruct() failed
+		// Release SFTP provider that was passed in Intialize()
+		if (m_pProvider)
 		{
-			m_pFolder->Release();
-			m_pFolder = NULL;
+			m_pProvider->Release();
+			m_pProvider = NULL;
 		}
 
-		// Release user interaction handler that was created in Intialize()
+		// Release SFTP user interaction handler that was passed in Intialize()
 		if (m_pConsumer)
 		{
 			m_pConsumer->Release();
@@ -87,10 +88,48 @@ public:
 		}
 	}
 
-	HRESULT Initialize( __in IRemoteFolder* pFolder, __in_opt HWND hwndOwner );
-	HRESULT ConnectAndFetch(
-		PCTSTR szUser, PCTSTR szHost, PCTSTR szPath, USHORT uPort,
-		SHCONTF dwFlags );
+	HRESULT Initialize(
+		__in CConnection& conn, __in PCTSTR pszPath, __in SHCONTF grfFlags );
+
+	/**
+	 * Creates enumerator instance and fetches directory listing from server. 
+	 *
+	 * This will AddRef() the folder to ensure it remains alive as long as 
+	 * the enumerator needs it.
+	 *
+	 * @param [in]  conn      SFTP connection container.
+	 * @param [in]  pszPath   Path of remote directory to be enumerated.
+	 * @param [in]  grfFlags  Flags specifying nature of enumeration.
+	 * @param [out] ppReturn  Location in which to return the IEnumIDList.
+	 */
+	static HRESULT MakeInstance(
+		__in CConnection& conn, __in PCTSTR pszPath, __in SHCONTF grfFlags,
+		__deref_out IEnumIDList **ppEnumIDList )
+	{
+		HRESULT hr;
+
+		// Create instance of our folder enumerator class
+		CComObject<CRemoteEnumIDList>* pEnum;
+		hr = CComObject<CRemoteEnumIDList>::CreateInstance( &pEnum );
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+		pEnum->AddRef();
+
+		hr = pEnum->Initialize( conn, pszPath, grfFlags );
+		ATLASSERT(SUCCEEDED(hr));
+
+		// Return an IEnumIDList interface to the caller.
+		if (SUCCEEDED(hr))
+		{
+			hr = pEnum->QueryInterface( ppEnumIDList );
+			ATLASSERT(SUCCEEDED(hr));
+		}
+
+		pEnum->Release();
+		pEnum = NULL;
+
+		return hr;
+	}
 
 	// IEnumIDList
 	IFACEMETHODIMP Next(
@@ -102,13 +141,15 @@ public:
 	IFACEMETHODIMP Clone( __deref_out IEnumIDList **ppenum );
 
 private:
-	BOOL m_fBoundToFolder;
-	IRemoteFolder *m_pFolder;   ///< Back-reference to folder we're enumerating.
-	ISftpConsumer *m_pConsumer; ///< User-interaction handler.
+	BOOL m_fInitialised;
+	ISftpProvider *m_pProvider; ///< Connection to SFTP backend.
+	ISftpConsumer *m_pConsumer; ///< User-interaction handler for backend.
+	SHCONTF m_grfFlags;         ///< Flags specifying type of file to enumerate
 	std::vector<FILEDATA> m_vListing;
 	ULONG m_iPos; // Current position
 	CRemotePidlManager m_PidlManager;
 
+	HRESULT _Fetch( PCTSTR pszPath );
 	time_t _ConvertDate( __in DATE dateValue ) const;
 };
 
