@@ -27,6 +27,7 @@
 #pragma once
 #include "stdafx.h"
 #include "resource.h"       // main symbols
+#include "SftpProvider.h"
 
 // CUserInteraction
 [
@@ -58,7 +59,7 @@ public:
 	 *                         ISftpConsumer interace pointer for this instance.
 	 */
 	static HRESULT MakeInstance(
-		__in HWND hwndOwner, __out ISftpConsumer **ppReturn )
+		__in HWND hwndOwner, __deref_out ISftpConsumer **ppReturn )
 	{
 		HRESULT hr;
 
@@ -70,10 +71,10 @@ public:
 
 		pConsumer->Initialize(hwndOwner);
 		hr = pConsumer->QueryInterface(ppReturn);
+		ATLASSERT(SUCCEEDED(hr));
 
 		pConsumer->Release();
 		pConsumer = NULL;
-		ATLENSURE_RETURN_HR( SUCCEEDED(hr), hr );
 
 		return hr;
 	}
