@@ -347,15 +347,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RemoteEnumIDList.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\RemoteFolder.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\RemotePidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpDirectory.cpp"
 				>
 			</File>
 			<File
@@ -464,10 +464,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RemoteEnumIDList.h"
-				>
-			</File>
-			<File
 				RelativePath=".\RemoteFolder.h"
 				>
 			</File>
@@ -481,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpDirectory.h"
 				>
 			</File>
 			<File

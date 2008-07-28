@@ -20,7 +20,7 @@
 #include "stdafx.h"
 #include "remotelimits.h"
 #include "RemoteFolder.h"
-#include "RemoteEnumIDList.h"
+#include "SftpDirectory.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
 #include "Connection.h"
@@ -231,8 +231,18 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	conn.spConsumer = spConsumer.Detach();
 
     // Create instance of our folder enumerator class
-	hr = CRemoteEnumIDList::MakeInstance( 
-		conn, strPath, grfFlags, ppEnumIDList );
+	//hr = CRemoteEnumIDList::MakeInstance( 
+	//	conn, strPath, grfFlags, ppEnumIDList );
+
+	CComObject<CSftpDirectory> *pDirectory;
+	hr = CSftpDirectory::MakeInstance( conn, grfFlags, &pDirectory );
+	if (SUCCEEDED(hr))
+	{
+		hr = pDirectory->Fetch(strPath);
+		if (SUCCEEDED(hr))
+			hr = pDirectory->GetEnum(ppEnumIDList);
+		pDirectory->Release();
+	}
 
     return hr;
 }
