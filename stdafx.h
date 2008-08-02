@@ -120,11 +120,15 @@ do {                                                                 \
 	if(!(__atl_condVal)) return (hr);                                \
 } while (0)
 
+#ifdef _DEBUG
 #define ATLASSERT_REPORT(expr, error)                                \
 do {                                                                 \
 	int __atl_condVal=!!(expr);                                      \
 	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
 } while (0)
+#else
+#define ATLASSERT_REPORT(expr, error) ((void)0)
+#endif // _DEBUG
 
 #ifdef _DEBUG
 #define ATLVERIFY_REPORT(expr, error)                                \

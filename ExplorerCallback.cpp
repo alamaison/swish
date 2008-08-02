@@ -71,14 +71,14 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			HMENU hSubMenu = ::GetSubMenu(pInfo->hmenu, 4);
 
 			// Insert add and remove connection menu items into it
-			ATLASSERT_REPORT(
+			ATLVERIFY_REPORT(
 				::InsertMenu(
 					hSubMenu, 2, MF_BYPOSITION, 
 					pInfo->idCmdFirst + MENUIDOFFSET_ADD,
 					_T("&Add SFTP Connection")),
 				::GetLastError()
 			);
-			ATLASSERT_REPORT(
+			ATLVERIFY_REPORT(
 				::InsertMenu(
 					hSubMenu, 3, MF_BYPOSITION, 
 					pInfo->idCmdFirst + MENUIDOFFSET_REMOVE,
@@ -207,7 +207,7 @@ void CExplorerCallback::_RefreshView()
 	// Inform shell that something in our folder changed (we don't know exactly
 	// what the new PIDL is until we reload from the registry, hence UPDATEDIR)
 	::SHChangeNotify( SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 
-		&m_pidl, NULL );
+		m_pidl, NULL );
 }
 
 // CExplorerCallback
