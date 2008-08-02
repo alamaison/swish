@@ -1,3 +1,17 @@
+swish-0.2.1.4
+-Replace the PuTTY-based dataprovider component with one based in libssh2. This
+ is vastly more stable. The new backend has all the abilities of the of the 
+ old one with a few exceptions, namely, host-verification (aka known_hosts),
+ key-interactive authentication and public-key authentication. Replacing these
+ is a priority.
+-The frontend has been integrate much more closely with Explorer.
+-Connections are added with a dialog invoked from the Tools menu and are stored 
+ in the registry.
+-Explorer displays the default icon for files based on their extension (this
+ doesn't work in Windows 98 yet).
+-Subfolder can be navigated.
+-The default explorer context menu is displayed when right-clicking a file.
+
 swish-0.2.1
 -Created a data provider component to wrap PuTTY's SFTP client (psftp.exe)
  permitting listing of files in a directory

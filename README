@@ -1,11 +1,11 @@
-Swish (Secure WIndows SHell)
+Swish
 
 Author: 
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
 What is Swish?
-    Swish is a project to integrate access to remote files via SFTP into the 
-    Microsoft Windows Explorer.
+    Swish is a plugin for Microsoft Windows Explorer that integrates access to 
+    remote files via SSH/SFTP.
     
 Status:
     ********************************************************************
@@ -22,15 +22,33 @@ Status:
     is concerned with displaying the results to the user and handling 
     interaction.
     
+    The current Swish backend is based on libssh2 (http://www.libssh2.org).
     While the eventual aim is to offer a choice of back-end implementations
-    with different capabilities, the only one currently available is a
-    wrapper around PuTTY which can connect to a remote host and list the
-    contents of a directory.  
-    Swish can only cope with very simple authentication interaction at this
-    point (e.g. simple password, unknown host).  If it encounters any
-    interaction that is is not anticipating IT WILL CRASH EXPLORER.  Due to
-    limitations in the backend, it is also very prone to timing issues.
+    with different capabilities, this is currently the only one.
+    
+    Currently, Swish can only perform password-based authentication. Also, as
+    it lacks the ability to authenticate a host's key it will BLINDLY CONNECT
+    TO ANY HOST YOU SPECIFY - *WATCH OUT*! Adding host-key authentication is
+    a priority.
 
+Supported Operating Systems:
+    Windows XP   (most tested)
+    Windows 2000 (occasionally tested)
+    Windows Me   (rarely tested)
+    Windows 98   (regularly tested)
+    
+    Unfortunately, Windows 95 and NT 4 are not immediately supported.  This is
+    because the C runtime used when compiling with Visual Studio 2005 is
+    no longer compatible with their API. There are a few ways you can work round
+    this if you wish:
+     - Compile Swish using Visual Studio 2005.  You may have to fix the code to
+       allow this; I've never tried it.
+     - Make *all* the projects statically link to the runtime library (/MT). 
+       In addition you will have to use a version of OpenSSL similarly linked
+       so you will have to compile your own. The instructions that come with
+       OpenSSL make it clear how to do this. Again, I haven't tried this myself
+       so it might not work.
+    
 Requirements to run:
     Internet Explorer 5.5 or greater
         (may work with 5.01 but required SHRegGetPath() function seems broken).
@@ -85,5 +103,12 @@ Requirements for testing:
         (optional - defaults to 22 if not set).
     TEST_PASSWORD:  The password to use to connect to the remote host if 
                     required.
+
+OpenSSL:
+    This product includes software developed by the OpenSSL Project for use in 
+    the OpenSSL Toolkit (http://www.openssl.org/)
+    
+    This product includes cryptographic software written by Eric Young 
+    (eay@cryptsoft.com)
 
 $Id$

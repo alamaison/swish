@@ -63,8 +63,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2,1,3
- PRODUCTVERSION 0,2,1,3
+ FILEVERSION 0,2,1,4
+ PRODUCTVERSION 0,2,1,4
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x3L
@@ -81,12 +81,12 @@ BEGIN
         BEGIN
             VALUE "Comments", "Secure access to remote directories from Windows Explorer via SSH/SFTP"
             VALUE "FileDescription", "Swish Module"
-            VALUE "FileVersion", "0.2.1.3"
+            VALUE "FileVersion", "0.2.1.4"
             VALUE "InternalName", "Swish"
             VALUE "LegalCopyright", "Copyright (C) 2008 Alexander Lamaison <awl03 (at) doc.ic.ac.uk>"
             VALUE "OriginalFilename", "Swish.dll"
             VALUE "ProductName", "Swish"
-            VALUE "ProductVersion", "0.2.1.3"
+            VALUE "ProductVersion", "0.2.1.4"
         END
     END
     BLOCK "VarFileInfo"
