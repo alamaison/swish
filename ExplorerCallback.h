@@ -53,6 +53,37 @@ public:
 
 	HRESULT Initialize( PCIDLIST_ABSOLUTE pidl );
 
+	/**
+	 * Create and initialise an instance of the CExplorerCallback class.
+	 *
+	 * @param [in]  pidl       An absolute PIDL to the folder whose callback
+	 *                         this object is to act as.
+	 * @param [out] ppReturn   The location in which to return the 
+	 *                         IShellFolderViewCB interace pointer for this
+	 *                         instance.
+	 */
+	static HRESULT MakeInstance(
+		__in PCIDLIST_ABSOLUTE pidl, __deref_out IShellFolderViewCB **ppReturn )
+	{
+		HRESULT hr;
+
+		CComObject<CExplorerCallback> *pCallback;
+		hr = CComObject<CExplorerCallback>::CreateInstance(&pCallback);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr );
+
+		pCallback->AddRef();
+
+		hr = pCallback->Initialize(pidl);
+		ATLASSERT(SUCCEEDED(hr));
+		hr = pCallback->QueryInterface(ppReturn);
+		ATLASSERT(SUCCEEDED(hr));
+
+		pCallback->Release();
+		pCallback = NULL;
+
+		return hr;
+	}
+
 	// IShellFolderViewCB
 	IFACEMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 

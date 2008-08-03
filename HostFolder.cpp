@@ -202,9 +202,7 @@ STDMETHODIMP CHostFolder::CreateViewObject( __in_opt HWND hwndOwner,
 
 		// Create an instance of our Shell Folder View callback handler
 		CComPtr<IShellFolderViewCB> spExplorerCB;
-		hr = spExplorerCB.CoCreateInstance( __uuidof(CExplorerCallback) );
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-		static_cast<CExplorerCallback *>(spExplorerCB.p)->Initialize(m_pidl);
+		CExplorerCallback::MakeInstance(m_pidl, &spExplorerCB);
 
 		// Create a pointer to this IShellFolder
 		CComPtr<IShellFolder> spFolder = this;
