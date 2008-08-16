@@ -253,7 +253,7 @@ HRESULT CLibssh2Provider::_VerifyHostKey()
  *
  * @returns S_OK if authentication succeeded or E_ABORT if all methods failed.
  */
-HRESULT CLibssh2Provider::_AunthenticateUser()
+HRESULT CLibssh2Provider::_AuthenticateUser()
 {
 #pragma warning (push)
 #pragma warning (disable: 4267) // ssize_t to unsigned int
@@ -398,7 +398,7 @@ HRESULT CLibssh2Provider::_Connect()
 		return hr; // Legal to fail here, e.g. user refused to accept host key
 
     // Authenticate the user with the remote server
-	hr = _AunthenticateUser();
+	hr = _AuthenticateUser();
 	if (FAILED(hr))
 		return hr; // Legal to fail here, e.g. wrong password/key
 
@@ -460,10 +460,6 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	ATLENSURE_RETURN_HR(ppEnum, E_POINTER); *ppEnum = NULL;
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrDirectory) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
-	ATLASSUME(m_pSession);
-	//ATLASSUME(m_pSftpSession);
-	ATLASSUME(!m_strUser.IsEmpty());
-	ATLASSUME(!m_strHost.IsEmpty());
 
 	typedef CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, _Copy<Listing>, list<Listing> > CComEnumListing;
 
@@ -568,7 +564,7 @@ Listing CLibssh2Provider::_FillListingEntry(
 	{
         // TODO: attrs.filesize is an uint64_t. The listings field is not big
 		// enough
-		lt.cSize = static_cast<unsigned long>(attrs.filesize);
+		lt.uSize = static_cast<unsigned long>(attrs.filesize);
     }
 
 	// Access & Modification time
@@ -582,6 +578,136 @@ Listing CLibssh2Provider::_FillListingEntry(
 	}
 
 	return lt;
+}
+
+
+STDMETHODIMP CLibssh2Provider::Rename(
+	__in BSTR bstrFromFilename, __in BSTR bstrToFilename )
+{
+	
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrFromFilename) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrToFilename) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	// NOP if filenames are equal
+	if (CComBSTR(bstrFromFilename) == CComBSTR(bstrToFilename))
+		return S_OK;
+
+	HRESULT hr;
+
+	// Connect to server
+	hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+	ATLASSUME(m_pSftpSession);
+
+	// Attempt to rename old path to new path
+	CW2A szFrom(bstrFromFilename), szTo(bstrToFilename);
+	int rc = libssh2_sftp_rename_ex(
+		m_pSftpSession, szFrom, strlen(szFrom), szTo, strlen(szTo),
+		LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE
+	);
+
+	if (rc) // Rename failed - this is OK, it might be an overwrite - check
+	{
+		CComBSTR bstrMessage;
+		PSTR pszMessage; int cchMessage;
+		ULONG uError = libssh2_session_last_error(
+			m_pSession, &pszMessage, &cchMessage, false
+		);
+		if (uError = LIBSSH2_ERROR_SFTP_PROTOCOL)
+		{
+			uError = libssh2_sftp_last_error(m_pSftpSession);
+			if (uError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
+			{
+				CComBSTR bstrPrompt = 
+					_T("A file of that name already exists. Do ") \
+					_T("you want to overwrite it?");
+				// TODO: use OnConfirmOverwriteEx for extra details.
+				// fill this here: Listing ltOldfile, Listing ltNewfile
+				hr = m_pConsumer->OnConfirmOverwrite(
+					bstrPrompt, bstrFromFilename, bstrToFilename);
+				if (SUCCEEDED(hr))
+				{
+					// Attempt rename again this time allowing overwrite
+					int rc = libssh2_sftp_rename_ex(
+						m_pSftpSession, szFrom, strlen(szFrom), 
+						szTo, strlen(szTo), LIBSSH2_SFTP_RENAME_OVERWRITE |
+						LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE
+					);
+					if (!rc) return S_OK;
+				}
+				else
+					return hr; // User disallowed overwrite
+			}
+			
+			// If an SFTP error still remains
+			bstrMessage = _GetSftpErrorMessage(uError);
+		}
+		else // A non-SFTP error occurred
+			bstrMessage = pszMessage;
+
+		// Report remaining errors to front-end
+		m_pConsumer->OnReportError(bstrMessage);
+
+		return E_FAIL;
+
+	}
+	else // Rename was successful without overwrite
+		return S_OK;
+}
+
+CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)
+{
+	switch (uError)
+	{
+	case LIBSSH2_FX_OK:
+		return _T("Successful");
+	case LIBSSH2_FX_EOF:
+		return _T("File ended unexpectedly");
+	case LIBSSH2_FX_NO_SUCH_FILE:
+		return _T("Required file or folder does not exist");
+	case LIBSSH2_FX_PERMISSION_DENIED:
+		return _T("Permission denied");
+	case LIBSSH2_FX_FAILURE:
+		return _T("Unknown failure");
+	case LIBSSH2_FX_BAD_MESSAGE:
+		return _T("Server returned an invalid message");
+	case LIBSSH2_FX_NO_CONNECTION:
+		return _T("No connection");
+	case LIBSSH2_FX_CONNECTION_LOST:
+		return _T("Connection lost");
+	case LIBSSH2_FX_OP_UNSUPPORTED:
+		return _T("Server does not support this operation");
+	case LIBSSH2_FX_INVALID_HANDLE:
+		return _T("Invalid handle");
+	case LIBSSH2_FX_NO_SUCH_PATH:
+		return _T("The path does not exist");
+	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+		return _T("A file or folder of that name already exists");
+	case LIBSSH2_FX_WRITE_PROTECT:
+		return _T("This file or folder has been write-protected");
+	case LIBSSH2_FX_NO_MEDIA:
+		return _T("No media was found");
+	case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
+		return _T("There is no space left on the server's filesystem");
+	case LIBSSH2_FX_QUOTA_EXCEEDED:
+		return _T("You have exceeded your disk quota on the server");
+	case LIBSSH2_FX_UNKNOWN_PRINCIPLE:
+		return _T("Unknown principle");
+	case LIBSSH2_FX_LOCK_CONFlICT:
+		return _T("Lock conflict");
+	case LIBSSH2_FX_DIR_NOT_EMPTY:
+		return _T("The folder is not empty");
+	case LIBSSH2_FX_NOT_A_DIRECTORY:
+		return _T("This file is not a folder");
+	case LIBSSH2_FX_INVALID_FILENAME:
+		return _T("The filename is not valid on the server's filesystem");
+	case LIBSSH2_FX_LINK_LOOP:
+		return _T("Operation would cause a link loop which is not permitted");
+	default:
+		return _T("Unexpected error code returned by server");
+	}
 }
 
 /*

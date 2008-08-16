@@ -30,4 +30,5 @@ public:
 // Override CAtlDllModuleT members here
 };
 */
+[ includelib("SftpProvider.idl") ];
 		 

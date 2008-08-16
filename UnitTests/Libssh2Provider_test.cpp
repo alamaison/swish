@@ -37,7 +37,7 @@ void CLibssh2Provider_test::setUp()
 	// Create instance of Libssh2 Provider using CLSID
 	hr = ::CoCreateInstance(
 		__uuidof(Libssh2Provider::CLibssh2Provider), NULL, CLSCTX_INPROC_SERVER,
-		__uuidof(ISftpProvider), (LPVOID *)&m_pProvider);
+		__uuidof(Swish::ISftpProvider), (LPVOID *)&m_pProvider);
 	CPPUNIT_ASSERT_OK(hr);
 
 	// Create mock SftpConsumer for use in Initialize()
@@ -63,8 +63,10 @@ void CLibssh2Provider_test::testQueryInterface()
 	pUnk->Release();
 
 	// Supports ILibssh2Provider (valid self!)?
-	ISftpProvider *pProv;
-	hr = m_pProvider->QueryInterface(__uuidof(ISftpProvider), (void **)&pProv);
+	Swish::ISftpProvider *pProv;
+	hr = m_pProvider->QueryInterface(
+		__uuidof(Swish::ISftpProvider), (void **)&pProv
+	);
 	CPPUNIT_ASSERT_OK(hr);
 	pProv->Release();
 
@@ -123,7 +125,7 @@ void CLibssh2Provider_test::testGetListing()
 	);
 
 	// Fetch listing enumerator
-	IEnumListing *pEnum;
+	Swish::IEnumListing *pEnum;
 	CComBSTR bstrDirectory(_T("/tmp"));
 	hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
 	if (FAILED(hr))
@@ -151,7 +153,7 @@ void CLibssh2Provider_test::testGetListing_WrongPassword()
 	);
 
 	// Fetch listing enumerator
-	IEnumListing *pEnum;
+	Swish::IEnumListing *pEnum;
 	CComBSTR bstrDirectory(_T("/tmp"));
 	HRESULT hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
 	if (FAILED(hr))
@@ -188,8 +190,8 @@ void CLibssh2Provider_test::tearDown()
  * as well as its ISftpConsumer interface.
  */
 void CLibssh2Provider_test::CreateMockSftpConsumer(
-	CComObject<CMockSftpConsumer> **ppCoConsumer, ISftpConsumer **ppConsumer )
-	const
+	CComObject<CMockSftpConsumer> **ppCoConsumer,
+	Swish::ISftpConsumer **ppConsumer ) const
 {
 	// Create mock object coclass instance
 	*ppCoConsumer = NULL;
@@ -208,11 +210,11 @@ void CLibssh2Provider_test::CreateMockSftpConsumer(
  *
  * @param pEnum The Listing enumerator to be tested.
  */
-void CLibssh2Provider_test::testListingFormat(IEnumListing *pEnum) const
+void CLibssh2Provider_test::testListingFormat(Swish::IEnumListing *pEnum) const
 {
 	// Check format of listing is sensible
 	CPPUNIT_ASSERT_OK( pEnum->Reset() );
-	Listing lt;
+	Swish::Listing lt;
 	HRESULT hr = pEnum->Next(1, &lt, NULL);
 	CPPUNIT_ASSERT_OK(hr);
 	while (hr == S_OK)
@@ -227,7 +229,7 @@ void CLibssh2Provider_test::testListingFormat(IEnumListing *pEnum) const
 		fd.strOwner = lt.bstrOwner;
 		fd.strGroup = lt.bstrGroup;
 		fd.dwPermissions = lt.uPermissions;
-		fd.uSize = lt.cSize;
+		fd.uSize = lt.uSize;
 		fd.dtModified = (time_t) COleDateTime(lt.dateModified);
 
 		CString strOwner2 = lt.bstrOwner;
@@ -235,7 +237,7 @@ void CLibssh2Provider_test::testListingFormat(IEnumListing *pEnum) const
 
 		CPPUNIT_ASSERT( lt.uPermissions > 0 );
 		CPPUNIT_ASSERT( lt.cHardLinks > 0 );
-		CPPUNIT_ASSERT( lt.cSize >= 0 );
+		CPPUNIT_ASSERT( lt.uSize >= 0 );
 		CPPUNIT_ASSERT( !strOwner.IsEmpty() );
 		CPPUNIT_ASSERT( !strGroup.IsEmpty() );
 

@@ -360,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SftpProvider.idl"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -461,6 +465,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Pidl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PidlManager.h"
 				>
 			</File>
@@ -482,10 +490,6 @@
 			</File>
 			<File
 				RelativePath=".\SftpDirectory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpProvider.h"
 				>
 			</File>
 			<File

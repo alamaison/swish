@@ -10,9 +10,6 @@
 // Libssh2Provider CLibssh2Provider component
 #import "progid:Libssh2Provider.Libssh2Provider" raw_interfaces_only, raw_native_types, auto_search
 
-#define ISftpProvider ISftpProviderUnstable2
-#define ISftpConsumer ISftpConsumerUnstable
-
 struct testFILEDATA
 {
 	BOOL fIsFolder;
@@ -47,14 +44,14 @@ protected:
 
 private:
 	CComObject<CMockSftpConsumer> *m_pCoConsumer;
-	ISftpConsumer *m_pConsumer;
-	ISftpProvider *m_pProvider;
+	Swish::ISftpConsumer *m_pConsumer;
+	Swish::ISftpProvider *m_pProvider;
 
 	void CreateMockSftpConsumer(
 		__out CComObject<CMockSftpConsumer> **ppCoConsumer,
-		__out ISftpConsumer **ppConsumer
+		__out Swish::ISftpConsumer **ppConsumer
 	) const;
-	void testListingFormat(__in IEnumListing *pEnum) const;
+	void testListingFormat(__in Swish::IEnumListing *pEnum) const;
 	void testRegistryStructure() const;
 	CString GetHostName() const;
 	CString GetUserName() const;

@@ -121,4 +121,25 @@ STDMETHODIMP CUserInteraction::OnYesNoCancel(
 	return E_ABORT;
 }
 
+
+STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
+	BSTR bstrPrompt, BSTR bstrOldFile, BSTR bstrExistingFile )
+{
+	// Add your function implementation here.
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CUserInteraction::OnConfirmOverwriteEx(
+	BSTR bstrPrompt, Listing ltOldFile, Listing ltExistingFile )
+{
+	// Add your function implementation here.
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
+{
+	// Add your function implementation here.
+	return E_NOTIMPL;
+}
+
 // CUserInteraction

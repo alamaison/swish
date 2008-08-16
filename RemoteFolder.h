@@ -32,23 +32,12 @@
 
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
-
-// This is being used as a type-safety marker interface - may be uneccessary
-[
-	object,
-	uuid("b816a83b-5022-11dc-9153-0090f5284f85"),
-	helpstring("IRemoteFolder Interface"),
-	pointer_default(unique)
-]
-__interface IRemoteFolder : IUnknown
-{
-};
-
+#include "Connection.h"     // For SFTP interactive connection objects
 
 // CRemoteFolder
 [
 	coclass,
-	default(IRemoteFolder),
+	default(IShellFolder2),
 	threading(apartment),
 	vi_progid("Swish.RemoteFolder"),
 	progid("Swish.RemoteFolder.1"),
@@ -58,7 +47,6 @@ __interface IRemoteFolder : IUnknown
 	helpstring("RemoteFolder Class")
 ]
 class ATL_NO_VTABLE CRemoteFolder :
-	public IRemoteFolder,
 	// The IShellFolder2-specific detail-handling methods are not compatible
 	// with Win 9x/NT but it supports all those of IShellDetails which are
 	public IShellFolder2,
@@ -97,12 +85,13 @@ public:
     STDMETHOD(BindToStorage)( PCUIDLIST_RELATIVE, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
     STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
-    STDMETHOD(ParseDisplayName)
-		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
-        { return E_NOTIMPL; }
-    STDMETHOD(SetNameOf)
-		( HWND, PCUITEMID_CHILD, LPCOLESTR, DWORD, PITEMID_CHILD* )
-        { return E_NOTIMPL; }
+	IFACEMETHODIMP ParseDisplayName(
+		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in LPWSTR pszDisplayName,
+		__reserved  ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl,
+		__inout_opt ULONG *pdwAttributes);
+	IFACEMETHODIMP SetNameOf(
+		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
+		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
 
 	// IShellFolder2
 	STDMETHOD(EnumSearches)( IEnumExtraSearch **ppEnum );
@@ -132,8 +121,10 @@ private:
 	std::vector<CString> _GetExtensionSpecificKeynames( PCTSTR szExtension );
 	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
-	HRESULT _FillDateVariant( CTime dtDate, VARIANT *pv );
+	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
+	CConnection _CreateConnectionForFolder(
+		__in HWND hwndUserInteraction ) throw();
 
 	/**
 	 * Static dispatcher for Default Context Menu callback

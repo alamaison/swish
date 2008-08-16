@@ -4,8 +4,22 @@
 
 #pragma once
 
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
+/* Strictness *************************************************************** */
+
 #ifndef STRICT
 #define STRICT
+#endif
+
+// Better type safety for PIDLs (must be before <shlobj.h>)
+#define STRICT_TYPED_ITEMIDS
+
+// Ensure strictly correct usage of SAL attributes
+#ifndef __SPECSTRINGS_STRICT_LEVEL
+#define __SPECSTRINGS_STRICT_LEVEL 1 //3 // see specstrings_strict.h
 #endif
 
 // Modify the following defines if you have to target a platform prior to the ones specified below.
@@ -103,7 +117,7 @@ using namespace ATL;
 #include <shlobj.h>           // Typical Shell header file
 
 // Swish type library
-#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, raw_native_types, auto_search, no_namespace, embedded_idl
+#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, raw_native_types, auto_search/*, no_namespace, embedded_idl*/
 
 /* Miscellanious ************************************************************ */
 
@@ -122,7 +136,3 @@ CExeModule
 #else
   #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #endif
-
-
-#undef __SPECSTRINGS_STRICT_LEVEL
-#define __SPECSTRINGS_STRICT_LEVEL 3 // see specstrings_strict.h

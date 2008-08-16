@@ -41,16 +41,7 @@
 #include <list>
 using std::list;
 
-// While interfaces are still in flux use these redefinitions to point
-// the identifiers to a temporary but unique version of the interface
-// for each release.
-#define ISftpProvider ISftpProviderUnstable2
-#define IID_ISftpProvider __uuidof(ISftpProviderUnstable2)
-#define ISftpConsumer ISftpConsumerUnstable
-#define IID_ISftpConsumer __uuidof(ISftpConsumerUnstable)
-
 // CLibssh2Provider
-
 [
 	coclass,
 	default(ISftpProvider),
@@ -74,12 +65,16 @@ public:
 	void FinalRelease();
 	// @}
 
-	// IPuttyProvider
+	/** @name ISftpProvider methods */
+	// @{
 	IFACEMETHODIMP Initialize(
 		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
+	IFACEMETHODIMP Rename(
+		__in BSTR bstrFromFilename, __in BSTR bstrToFilename );
+	// @}
 
 private:
 	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
@@ -96,12 +91,13 @@ private:
 	HRESULT _Disconnect();
 	HRESULT _OpenSocketToHost();
 	HRESULT _VerifyHostKey();
-	HRESULT _AunthenticateUser();
+	HRESULT _AuthenticateUser();
 	HRESULT _PasswordAuthentication( PCSTR szUsername );
 	HRESULT _KeyboardInteractiveAuthentication( PCSTR szUsername );
 	HRESULT _PublicKeyAuthentication( PCSTR szUsername );
 	Listing _FillListingEntry(
 		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
+	CString _GetSftpErrorMessage(ULONG uError);
 };
 
 #endif // LIBSSH2PROVIDER_H

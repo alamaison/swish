@@ -77,7 +77,6 @@
 				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
-				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -168,7 +167,6 @@
 				AdditionalDependencies="cppunit_dll.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
-				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -253,7 +251,6 @@
 				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
-				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -313,8 +310,35 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MockSftpProvider.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NewConnDialog_test.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\Pidl_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\PidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\RemotePidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpDirectory_test.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\SimplePlugIn.cpp"
@@ -340,6 +364,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\TestConfig.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -354,7 +382,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\limits.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MockSftpConsumer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpProvider.h"
 				>
 			</File>
 			<File
@@ -365,9 +401,21 @@
 				RelativePath=".\stdafx.h"
 				>
 			</File>
+			<File
+				RelativePath=".\TestConfig.h"
+				>
+			</File>
 		</Filter>
 		<File
+			RelativePath="..\Connection.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\NewConnDialog.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\SftpDirectory.cpp"
 			>
 		</File>
 		<File

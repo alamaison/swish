@@ -23,7 +23,8 @@
 #include "SftpDirectory.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
-#include "Connection.h"
+#include "ExplorerCallback.h" // For interaction with Explorer window
+#include "UserInteraction.h"  // For implementation of ISftpConsumer
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -187,64 +188,31 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	ATLTRACE("CRemoteFolder::EnumObjects called\n");
 	ATLASSERT(m_pidl);
 
-	HRESULT hr;
-
     if (ppEnumIDList == NULL)
         return E_POINTER;
     *ppEnumIDList = NULL;
 
-	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl( m_pidl );
-	ATLASSERT(pidlHost);
-
-	// Extract connection info from PIDL
-	CString strUser, strHost, strPath;
-	USHORT uPort;
-	ATLASSERT(SUCCEEDED( m_HostPidlManager.IsValid(pidlHost) ));
-	strHost = m_HostPidlManager.GetHost( pidlHost );
-	uPort = m_HostPidlManager.GetPort( pidlHost );
-	strUser = m_HostPidlManager.GetUser( pidlHost );
+	// Create SFTP connection object for this folder using hwndOwner for UI
+	CConnection conn;
+	try
+	{
+		conn = _CreateConnectionForFolder( hwndOwner );
+	}
+	catchCom()
 
 	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
-	strPath = _ExtractPathFromPIDL( m_pidl );
-
-	ATLASSERT(!strUser.IsEmpty());
-	ATLASSERT(!strHost.IsEmpty());
+	CString strPath = _ExtractPathFromPIDL( m_pidl );
 	ATLASSERT(!strPath.IsEmpty());
 
-	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
-	CComPtr<ISftpConsumer> spConsumer;
-	hr = CUserInteraction::MakeInstance( hwndOwner, &spConsumer );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Create SFTP Provider from ProgID and initialise
-	CComPtr<ISftpProvider> spProvider;
-	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-	hr = spProvider->Initialize(
-		spConsumer, CComBSTR(strUser), CComBSTR(strHost), uPort );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Pack both ends of connection into object
-	CConnection conn;
-	conn.spProvider = spProvider.Detach();
-	conn.spConsumer = spConsumer.Detach();
-
-    // Create instance of our folder enumerator class
-	//hr = CRemoteEnumIDList::MakeInstance( 
-	//	conn, strPath, grfFlags, ppEnumIDList );
-
-	CComObject<CSftpDirectory> *pDirectory;
-	hr = CSftpDirectory::MakeInstance( conn, grfFlags, &pDirectory );
-	if (SUCCEEDED(hr))
+    // Create directory handler and get listing as PIDL enumeration
+	try
 	{
-		hr = pDirectory->Fetch(strPath);
-		if (SUCCEEDED(hr))
-			hr = pDirectory->GetEnum(ppEnumIDList);
-		pDirectory->Release();
+ 		CSftpDirectory directory( conn, strPath );
+		directory.GetEnum( ppEnumIDList, grfFlags );
 	}
-
-    return hr;
+	catchCom()
+	
+	return S_OK;
 }
 
 /*------------------------------------------------------------------------------
@@ -280,14 +248,21 @@ STDMETHODIMP CRemoteFolder::CreateViewObject( __in_opt HWND hwndOwner,
 		ATLTRACE("\t\tRequest: IID_IShellView\n");
 		SFV_CREATE sfvData = { sizeof(sfvData), 0 };
 
-		hr = QueryInterface( IID_PPV_ARGS(&sfvData.pshf) );
-		if (SUCCEEDED(hr))
-		{
-			sfvData.psvOuter = NULL;
-			sfvData.psfvcb = NULL; 
-			hr = SHCreateShellFolderView( &sfvData, (IShellView**)ppvOut );
-			sfvData.pshf->Release();
-		}
+		// Create an instance of our Shell Folder View callback handler
+		CComPtr<IShellFolderViewCB> spExplorerCB;
+		CExplorerCallback::MakeInstance(m_pidl, &spExplorerCB);
+
+		// Create a pointer to this IShellFolder
+		CComPtr<IShellFolder> spFolder = this;
+		ATLENSURE_RETURN_HR(spFolder, E_NOINTERFACE);
+
+		// Pack pointers into SFV_CREATE
+		sfvData.psfvcb = spExplorerCB;
+		sfvData.pshf = spFolder;
+		sfvData.psvOuter = NULL;
+
+		// Create Default Shell Folder View object (aka DEFVIEW)
+		hr = SHCreateShellFolderView( &sfvData, (IShellView**)ppvOut );
 	}
 	else if (riid == IID_IShellDetails)
     {
@@ -459,6 +434,70 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 	return SHStrDupW( strName, &pName->pOleStr );
 }
 
+STDMETHODIMP CRemoteFolder::ParseDisplayName(
+	__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in LPWSTR pszDisplayName,
+	__reserved  ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl,
+	__inout_opt ULONG *pdwAttributes)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CRemoteFolder::SetNameOf(
+	__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
+	SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut)
+{
+	if (ppidlOut)
+		*ppidlOut = NULL;
+
+	try
+	{
+		// Create SFTP connection object for this folder using hwndOwner for UI
+		CConnection conn = _CreateConnectionForFolder( hwnd );
+
+		// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
+		CString strPath = _ExtractPathFromPIDL( m_pidl );
+		ATLASSERT(!strPath.IsEmpty());
+
+		// Create instance of our directory handler class
+		CSftpDirectory directory( conn, strPath );
+
+		// Rename file
+		directory.Rename( pidl, pszName );
+
+		// Create new PIDL from old one
+		PITEMID_CHILD pidlNewFile = ::ILCloneChild(pidl);
+		HRESULT hr = ::StringCchCopy(
+			reinterpret_cast<PREMOTEPIDL>(pidlNewFile)->wszFilename,
+			MAX_FILENAME_LENZ,
+			pszName
+		);
+		ATLENSURE_SUCCEEDED(hr);
+
+		// Make PIDLs absolute
+		PIDLIST_ABSOLUTE pidlOld =  ::ILCombine(m_pidl, pidl);
+		PIDLIST_ABSOLUTE pidlNew =  ::ILCombine(m_pidl, pidlNewFile);
+
+		// Return new child pidl if requested else dispose of it
+		if (ppidlOut)
+			*ppidlOut = pidlNewFile;
+		else
+			::ILFree(pidlNewFile);
+
+		// Update the shell by passing both PIDLs
+		bool fIsFolder = m_RemotePidlManager.IsFolder(pidl);
+		::SHChangeNotify(
+			(fIsFolder) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
+			SHCNF_IDLIST | SHCNF_FLUSH, pidlOld, pidlNew
+		);
+
+		::ILFree(pidlOld);
+		::ILFree(pidlNew);
+
+		return S_OK;
+	}
+	catchCom()
+}
+
 /*------------------------------------------------------------------------------
  * CRemoteFolder::GetAttributesOf : IShellFolder
  * Returns the attributes for the items whose PIDLs are passed in.
@@ -503,6 +542,8 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	}
 	if (fAllAreDotFiles)
 		dwAttribs |= SFGAO_GHOSTED;
+
+	dwAttribs |= SFGAO_CANRENAME;
 
     *pdwAttribs &= dwAttribs;
 
@@ -881,7 +922,6 @@ CString CRemoteFolder::_GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl,
  */
 CString CRemoteFolder::_ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl )
 {
-	ATLTRACE("CRemoteFolder::_GetPathFromPIDL called\n");
 	CString strPath;
 
 	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
@@ -943,26 +983,16 @@ HRESULT CRemoteFolder::_FillDetailsVariant( __in PCWSTR szDetail,
 /*------------------------------------------------------------------------------
  * CRemoteFolder::_FillDateVariant
  * Initialise the VARIANT whose pointer is passed and fill with date info.
- * The date is passed as a CTime.
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteFolder::_FillDateVariant( __in CTime dtDate, __out VARIANT *pv )
+HRESULT CRemoteFolder::_FillDateVariant( __in DATE date, __out VARIANT *pv )
 {
 	ATLTRACE("CRemoteFolder::_FillDateVariant called\n");
 
 	::VariantInit( pv );
 	pv->vt = VT_DATE;
+	pv->date = date;
 
-	// Convert to System Time
-	SYSTEMTIME stTemp;
-	ATLVERIFY(dtDate.GetAsSystemTime(stTemp));
-
-	// Convert to VARIANT time
-	::SystemTimeToVariantTime(&stTemp, &pv->date);
-	
-	// TODO: There may be a better way to do this than this long chain of
-	//       conversions but using COleDateTime is awkward
-
-	return pv->date ? S_OK : E_FAIL;
+	return S_OK;
 }
 
 /*------------------------------------------------------------------------------
@@ -1143,7 +1173,7 @@ vector<CString> CRemoteFolder::_GetExtensionSpecificKeynames(
 }
 
 /**
- * Extracts the extension part of the filenam from the given PIDL.
+ * Extracts the extension part of the filename from the given PIDL.
  * The extension does not include the dot.  If the filename has no extension
  * an empty string is returned.
  *
@@ -1170,6 +1200,64 @@ CString CRemoteFolder::_GetFileExtensionFromPIDL( PCUITEMID_CHILD pidl )
 
 	CString strExtension(szStart, (UINT)cchLength);
 	return strExtension;
+}
+
+/**
+ * Creates a CConnection object holding the two parts of an SFTP connection.
+ *
+ * The two parts are the provider (SFTP backend) and consumer (user interaction
+ * callback).  The connection is created from the information stored in this
+ * folder's PIDL, @c m_pidl, and the window handle to be used as the owner
+ * window for any user interaction. This window handle cannot be NULL (in order
+ * to enforce good UI etiquette - we should attempt to interact with the user
+ * if Explorer isn't expecting us to).  If it is, this function will throw
+ * an exception.
+ *
+ * @param hwndUserInteraction  A handle to the window which should be used
+ *                             as the parent window for any user interaction.
+ * @throws ATL exceptions on failure.
+ */
+CConnection CRemoteFolder::_CreateConnectionForFolder(
+	HWND hwndUserInteraction )
+{
+	ATLENSURE_THROW(hwndUserInteraction, E_INVALIDARG);
+	ATLASSERT(m_pidl);
+
+	HRESULT hr;
+
+	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
+	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl( m_pidl );
+	ATLASSERT(pidlHost);
+
+	// Extract connection info from PIDL
+	CString strUser, strHost, strPath;
+	USHORT uPort;
+	ATLASSERT(SUCCEEDED( m_HostPidlManager.IsValid(pidlHost) ));
+	strHost = m_HostPidlManager.GetHost( pidlHost );
+	uPort = m_HostPidlManager.GetPort( pidlHost );
+	strUser = m_HostPidlManager.GetUser( pidlHost );
+	ATLASSERT(!strUser.IsEmpty());
+	ATLASSERT(!strHost.IsEmpty());
+
+	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
+	CComPtr<ISftpConsumer> spConsumer;
+	hr = CUserInteraction::MakeInstance( hwndUserInteraction, &spConsumer );
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Create SFTP Provider from ProgID and initialise
+	CComPtr<ISftpProvider> spProvider;
+	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
+	ATLENSURE_SUCCEEDED(hr);
+	hr = spProvider->Initialize(
+		spConsumer, CComBSTR(strUser), CComBSTR(strHost), uPort );
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Pack both ends of connection into object
+	CConnection conn;
+	conn.spProvider = spProvider.Detach();
+	conn.spConsumer = spConsumer.Detach();
+
+	return conn;
 }
 
 // CRemoteFolder

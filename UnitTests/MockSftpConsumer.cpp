@@ -24,6 +24,12 @@ void CMockSftpConsumer::SetYesNoCancelBehaviour(
 	m_enumYesNoCancelBehaviour = enumBehaviour;
 }
 
+void CMockSftpConsumer::SetConfirmOverwriteBehaviour(
+	ConfirmOverwriteBehaviour enumBehaviour )
+{
+	m_enumConfirmOverwriteBehaviour = enumBehaviour;
+}
+
 // ISftpConsumer methods
 STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 	BSTR bstrRequest, BSTR *pbstrPassword )
@@ -31,19 +37,21 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 	m_cPasswordAttempts++;
 
 	CComBSTR bstrPrompt = bstrRequest;
-	ATLENSURE_RETURN_HR( bstrPrompt.Length() > 0, E_INVALIDARG );
-	ATLENSURE_RETURN_HR( pbstrPassword, E_POINTER );
-	ATLENSURE_RETURN_HR( *pbstrPassword == NULL, E_FAIL );
+	CPPUNIT_ASSERT( bstrPrompt.Length() > 0 );
+	CPPUNIT_ASSERT( pbstrPassword );
+	CPPUNIT_ASSERT_EQUAL( (OLECHAR)NULL, (OLECHAR)*pbstrPassword );
 
 	// Perform chosen test behaviour
+	// The three password cases which should never succeed will try to send
+	// their 'reply' up to m_nMaxPassword time to simulate a user repeatedly
+	// trying the wrong password and then giving up. The custom password case
+	// should never need a retry and will signal failure if there has been 
+	// more than one attempt.
 	CComBSTR bstrPassword;
 	switch (m_enumPasswordBehaviour)
 	{
 	case CustomPassword:
-		ATLENSURE_RETURN_HR(
-			m_cPasswordAttempts <= m_nMaxPasswordAttempts,
-			E_UNEXPECTED
-		);
+		CPPUNIT_ASSERT_EQUAL( (UINT)1, m_cPasswordAttempts );
 		bstrPassword = m_bstrCustomPassword;
 		break;
 	case WrongPassword:
@@ -72,15 +80,13 @@ STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 	BSTR bstrNoInfo, BSTR bstrCancelInfo,
 	BSTR bstrTitle, int *piResult )
 {
-	UNREFERENCED_PARAMETER( bstrMessage );
 	UNREFERENCED_PARAMETER( bstrYesInfo );
 	UNREFERENCED_PARAMETER( bstrNoInfo );
 	UNREFERENCED_PARAMETER( bstrCancelInfo );
 	UNREFERENCED_PARAMETER( bstrTitle );
 
-	CComBSTR bstrPrompt = bstrMessage;
-	ATLENSURE_RETURN_HR( bstrPrompt.Length() > 0, E_INVALIDARG );
-	ATLENSURE_RETURN_HR( piResult, E_POINTER );
+	CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
+	CPPUNIT_ASSERT( piResult );
 
 	// Perform chosen test behaviour
 	switch (m_enumYesNoCancelBehaviour)
@@ -97,4 +103,54 @@ STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 	default:
 		return E_FAIL;
 	}
+}
+
+STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
+	BSTR bstrPrompt, BSTR bstrOldFile, BSTR bstrNewFile )
+{
+	CPPUNIT_ASSERT( CComBSTR(bstrPrompt).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrOldFile).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrNewFile).Length() > 0 );
+
+	// Perform chosen test behaviour
+	switch (m_enumConfirmOverwriteBehaviour)
+	{
+	case AllowOverwrite:
+		return S_OK;
+	case PreventOverwrite:
+		return E_ABORT;
+	case PreventOverwriteSFalse:
+		return S_FALSE;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+}
+
+STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
+	BSTR bstrPrompt, Swish::Listing ltOldFile, Swish::Listing ltNewFile )
+{
+	CPPUNIT_ASSERT( CComBSTR(bstrPrompt).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(ltOldFile.bstrFilename).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(ltNewFile.bstrFilename).Length() > 0 );
+
+	// Perform chosen test behaviour
+	switch (m_enumConfirmOverwriteBehaviour)
+	{
+	case AllowOverwrite:
+		return S_OK;
+	case PreventOverwrite:
+		return E_ABORT;
+	case PreventOverwriteSFalse:
+		return S_FALSE;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+}
+
+STDMETHODIMP CMockSftpConsumer::OnReportError( BSTR bstrMessage )
+{
+	CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
+	return S_OK;
 }

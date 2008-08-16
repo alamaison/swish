@@ -40,7 +40,7 @@
  */
 HRESULT CRemotePidlManager::Create(
 	__in LPCWSTR pwszFilename, __in LPCWSTR pwszOwner, __in LPCWSTR pwszGroup,
-	__in DWORD dwPermissions, __in ULONGLONG uSize, __in time_t dtModified,
+	__in DWORD dwPermissions, __in ULONGLONG uSize, __in DATE dateModified,
 	__in bool fIsFolder, __deref_out PITEMID_CHILD *ppidlOut )
 {
 	ATLASSERT(sizeof(REMOTEPIDL) % sizeof(DWORD) == 0); // DWORD-aligned
@@ -66,7 +66,7 @@ HRESULT CRemotePidlManager::Create(
 		ARRAYSIZE(pidlRemote->wszGroup), pwszGroup);
 	pidlRemote->dwPermissions = dwPermissions;
 	pidlRemote->uSize = uSize;
-	pidlRemote->dtModified = dtModified;
+	pidlRemote->dateModified = dateModified;
 	pidlRemote->fIsFolder = fIsFolder;
 
 	// Create the terminating null PIDL by setting cb field to 0.
@@ -270,11 +270,11 @@ ULONGLONG CRemotePidlManager::GetFileSize( PCUIDLIST_RELATIVE pidl )
  * 
  * @pre Assumes that the pidl is a REMOTEPIDL.
  */
-CTime CRemotePidlManager::GetLastModified( PCUIDLIST_RELATIVE pidl )
+DATE CRemotePidlManager::GetLastModified( PCUIDLIST_RELATIVE pidl )
 {
 	if (pidl == NULL) return 0;
 
-	return GetDataSegment(pidl)->dtModified;
+	return GetDataSegment(pidl)->dateModified;
 }
 
 /**

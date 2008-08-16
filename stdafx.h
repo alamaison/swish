@@ -19,12 +19,21 @@
 
 #pragma once
 
+/* Strictness *************************************************************** */
+
 #ifndef STRICT
 #define STRICT
 #endif
 
 // Better type safety for PIDLs (must be before <shlobj.h>)
 #define STRICT_TYPED_ITEMIDS
+
+// Ensure strictly correct usage of SAL attributes
+#ifndef __SPECSTRINGS_STRICT_LEVEL
+#define __SPECSTRINGS_STRICT_LEVEL 1 //3 // see specstrings_strict.h
+#endif
+
+/* Platform ***************************************************************** */
 
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Refer to MSDN for the latest info on corresponding values for different platforms.
@@ -44,7 +53,14 @@
 #define _WIN32_IE 0x0400	// Change this to the appropriate value to target other versions of IE.
 #endif
 
+// This is here only to tell VC7 Class Wizard this is an ATL project
+#ifdef ___VC7_CLWIZ_ONLY___
+CComModule
+CExeModule
+#endif
+
 /* ATL Setup **************************************************************** */
+
 #define _ATL_APARTMENT_THREADED
 #define _ATL_NO_AUTOMATIC_NAMESPACE
 
@@ -76,7 +92,6 @@ using namespace ATL;
 //#include <atlmisc.h>          // WTL utility classes like CString
 #include <atlcrack.h>         // WTL enhanced msg map macros
 #include <atlctrls.h>         // WTL control wrappers
-
 
 /* Handler prototypes ******************************************************* */
 
@@ -140,18 +155,32 @@ do {                                                                 \
 #define ATLVERIFY_REPORT(expr, error) (expr)
 #endif // DEBUG
 
+/* COM Exception handler **************************************************** */
+
+#define catchCom()            \
+catch (const _com_error& e)   \
+{                             \
+	return e.Error();         \
+}                             \
+catch (const std::bad_alloc&) \
+{                             \
+	return E_OUTOFMEMORY;     \
+}                             \
+catch (const std::exception&) \
+{                             \
+	return E_UNEXPECTED;      \
+}
+
 /* Includes ***************************************************************** */
 
 #include <vector>
 #include <strsafe.h>
-#include <shlobj.h>           // Typical Shell header file
-#include <comdef.h>           // For _com_error
+#include <shlobj.h>   // Typical Shell header file
+#include <comdef.h>   // For _com_error
 
-// This is here only to tell VC7 Class Wizard this is an ATL project
-#ifdef ___VC7_CLWIZ_ONLY___
-CComModule
-CExeModule
-#endif
+#include "Swish.h"    // Header generated for our hand-written IDL file(s)
+
+/* Manifests **************************************************************** */
 
 #if defined _M_IX86
   #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -162,7 +191,3 @@ CExeModule
 #else
   #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #endif
-
-
-#undef __SPECSTRINGS_STRICT_LEVEL
-#define __SPECSTRINGS_STRICT_LEVEL 3 // see specstrings_strict.h

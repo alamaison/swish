@@ -1,0 +1,98 @@
+// Declaration of mock SftpProvider COM object
+
+#pragma once
+
+#include "stdafx.h"
+#include "CppUnitExtensions.h"
+#include "limits.h"
+#include <vector>
+using std::vector;
+
+// CMockSftpProvider
+/*
+[
+	coclass,
+	default(Swish::ISftpProvider),
+	threading(apartment),
+	vi_progid("SwishUnitTests.MockSftpProvider"),
+	progid("SwishUnitTests.MockSftpProvider.1"),
+	version(1.0),
+	uuid("FA3487BC-8774-4d9e-9B29-FD93E413BF01")
+]
+*/
+class ATL_NO_VTABLE CMockSftpProvider :
+	public CComObjectRootEx<CComObjectThreadModel>,
+	public Swish::ISftpProvider
+{
+public:
+	
+BEGIN_COM_MAP(CMockSftpProvider)
+	COM_INTERFACE_ENTRY(Swish::ISftpProvider)
+END_COM_MAP()
+
+public:
+	
+	/**
+	 * Possible behaviours of listing returned by mock GetListing() method.
+	 */
+	typedef enum tagListingBehaviour {
+		MockListing,     ///< Return a dummy list of files and S_OK.
+		EmptyListing,    ///< Return an empty list and S_OK.
+		SFalseNoListing, ///< Return a NULL listing and S_FALSE.
+		AbortListing,    ///< Return a NULL listing E_ABORT.
+		FailListing      ///< Return a NULL listing E_FAIL.
+	} ListingBehaviour;
+	
+	/**
+	 * Possible behaviours of mock Rename() method.
+	 */
+	typedef enum tagRenameBehaviour {
+		RenameOK,           ///< Return S_OK - rename unconditionally succeeded.
+		ConfirmOverwrite,   ///< Call ISftpConsumer's OnConfirmOverwrite and
+		                    ///< return its return value.
+		ConfirmOverwriteEx, ///< Call ISftpConsumer's OnConfirmOverwriteEx and
+		                    ///< return its return value.
+		ReportError,        ///< Call ISftpConsumer's OnReportError and return
+		                    ///< E_FAIL.
+		AbortRename,        ///< Return E_ABORT.
+		FailRename          ///< Return E_FAIL.
+	} RenameBehaviour;
+
+	// Set up default behaviours
+	CMockSftpProvider() :
+		m_enumListingBehaviour(MockListing),
+		m_enumRenameBehaviour(RenameOK) {}
+
+	void SetListingBehaviour( ListingBehaviour enumBehaviour );
+	void SetRenameBehaviour( RenameBehaviour enumBehaviour );
+
+private:
+	ListingBehaviour m_enumListingBehaviour;
+	RenameBehaviour m_enumRenameBehaviour;
+
+	CComPtr<Swish::ISftpConsumer> m_spConsumer;
+	vector<Swish::Listing> m_vecListing;
+
+	void _FillMockListing();
+
+public:
+
+	/** @name ISftpProvider methods */
+	// @{
+	IFACEMETHODIMP Initialize(
+		__in Swish::ISftpConsumer *pConsumer,
+		__in BSTR bstrUser,
+		__in BSTR bstrHost,
+		__in UINT uPort
+	);
+	IFACEMETHODIMP GetListing(
+		__in BSTR bstrDirectory,
+		__out Swish::IEnumListing **ppEnum
+	);
+	IFACEMETHODIMP Rename(
+		__in BSTR bstrFromFilename,
+		__in BSTR bstrToFilename
+	);
+	// @}
+
+};
