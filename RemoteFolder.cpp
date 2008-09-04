@@ -462,7 +462,7 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		CSftpDirectory directory( conn, strPath );
 
 		// Rename file
-		directory.Rename( pidl, pszName );
+		boolean fOverwritten = directory.Rename( pidl, pszName );
 
 		// Create new PIDL from old one
 		PITEMID_CHILD pidlNewFile = ::ILCloneChild(pidl);
@@ -485,6 +485,12 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 
 		// Update the shell by passing both PIDLs
 		bool fIsFolder = m_RemotePidlManager.IsFolder(pidl);
+		if (fOverwritten)
+		{
+			::SHChangeNotify(
+				SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, pidlNew, NULL
+			);
+		}
 		::SHChangeNotify(
 			(fIsFolder) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
 			SHCNF_IDLIST | SHCNF_FLUSH, pidlOld, pidlNew
@@ -1220,7 +1226,8 @@ CString CRemoteFolder::_GetFileExtensionFromPIDL( PCUITEMID_CHILD pidl )
 CConnection CRemoteFolder::_CreateConnectionForFolder(
 	HWND hwndUserInteraction )
 {
-	ATLENSURE_THROW(hwndUserInteraction, E_INVALIDARG);
+	if (hwndUserInteraction == NULL)
+		AtlThrow(E_FAIL);
 	ATLASSERT(m_pidl);
 
 	HRESULT hr;

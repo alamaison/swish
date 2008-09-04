@@ -51,7 +51,8 @@ CLibssh2Provider::CLibssh2Provider() :
 	m_pConsumer(NULL),
 	m_pSession(NULL),
 	m_pSftpSession(NULL),
-	m_socket(INVALID_SOCKET)
+	m_socket(INVALID_SOCKET),
+	m_fConnected(false)
 {
 }
 
@@ -380,6 +381,10 @@ HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)
 HRESULT CLibssh2Provider::_Connect()
 {
 	HRESULT hr;
+
+	// Are we already connected?
+	if (m_fConnected)
+		return S_OK;
 	
 	// Connect to host over TCP/IP
 	hr = _OpenSocketToHost();
@@ -414,6 +419,8 @@ HRESULT CLibssh2Provider::_Connect()
 	}
 #endif
 	ATLENSURE_RETURN_HR( m_pSftpSession, E_FAIL );
+
+	m_fConnected = true;
 	return S_OK;
 }
 
@@ -582,12 +589,15 @@ Listing CLibssh2Provider::_FillListingEntry(
 
 
 STDMETHODIMP CLibssh2Provider::Rename(
-	__in BSTR bstrFromFilename, __in BSTR bstrToFilename )
+	__in BSTR bstrFromFilename, __in BSTR bstrToFilename,
+	__deref_out VARIANT_BOOL *fWasTargetOverwritten  )
 {
 	
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrFromFilename) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrToFilename) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	*fWasTargetOverwritten = VARIANT_FALSE;
 
 	// NOP if filenames are equal
 	if (CComBSTR(bstrFromFilename) == CComBSTR(bstrToFilename))
@@ -603,58 +613,147 @@ STDMETHODIMP CLibssh2Provider::Rename(
 
 	// Attempt to rename old path to new path
 	CW2A szFrom(bstrFromFilename), szTo(bstrToFilename);
+	hr = _RenameSimple(szFrom, szTo);
+	if (SUCCEEDED(hr)) // Rename was successful without overwrite
+		return S_OK;
+
+	// Rename failed - this is OK, it might be an overwrite - check
+	CComBSTR bstrMessage;
+	ULONG uErr; PSTR pszErr; int cchErr;
+	uErr = libssh2_session_last_error(m_pSession, &pszErr, &cchErr, false);
+	if (uErr = LIBSSH2_ERROR_SFTP_PROTOCOL)
+	{
+		CString strError;
+		hr = _RenameRetryWithOverwrite(
+			libssh2_sftp_last_error(m_pSftpSession), szFrom, szTo, strError);
+		if (SUCCEEDED(hr))
+		{
+			*fWasTargetOverwritten = VARIANT_TRUE;
+			return S_OK;
+		}
+		if (hr == E_ABORT) // User denied overwrite
+			return hr;
+		else
+			bstrMessage = strError;
+	}
+	else // A non-SFTP error occurred
+		bstrMessage = pszErr;
+
+	// Report remaining errors to front-end
+	m_pConsumer->OnReportError(bstrMessage);
+
+	return E_FAIL;
+}
+
+HRESULT CLibssh2Provider::_RenameSimple(const char *szFrom, const char *szTo)
+{
 	int rc = libssh2_sftp_rename_ex(
 		m_pSftpSession, szFrom, strlen(szFrom), szTo, strlen(szTo),
-		LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE
+		LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
+
+	return (!rc) ? S_OK : E_FAIL;
+}
+
+HRESULT CLibssh2Provider::_RenameRetryWithOverwrite(
+	ULONG uPreviousError, const char *szFrom, const char *szTo, 
+	CString& strError)
+{
+	HRESULT hr;
+
+	if (uPreviousError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
+	{
+		// TODO: use OnConfirmOverwriteEx for extra details.
+		// fill this here: Listing ltOldfile, Listing ltNewfile
+		hr = m_pConsumer->OnConfirmOverwrite(CComBSTR(szFrom), CComBSTR(szTo));
+		if (FAILED(hr))
+			return E_ABORT; // User disallowed overwrite
+
+		// Attempt rename again this time allowing overwrite
+		return _RenameAtomicOverwrite(szFrom, szTo, strError);
+	}
+	else if (uPreviousError == LIBSSH2_FX_FAILURE)
+	{
+		// The failure is an unspecified one. This isn't the end of the world. 
+		// SFTP servers < v5 (i.e. most of them) return this error code if the
+		// file already exists as they don't explicitly support overwriting.
+		// We need to stat() the file to find out if this is the case and if 
+		// the user confirms the overwrite we will have to explicitly delete
+		// the target file first (via a temporary) and then repeat the rename.
+		//
+		// NOTE: this is not a perfect solution due to the possibility
+		// for race conditions.
+		LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
+		::ZeroMemory(&attrsTarget, sizeof attrsTarget);
+		if (!libssh2_sftp_stat(m_pSftpSession, szTo, &attrsTarget))
+		{
+			// File already exists
+
+			// TODO: use OnConfirmOverwriteEx for extra details.
+			// fill this here: Listing ltOldfile, Listing ltNewfile
+			hr = m_pConsumer->OnConfirmOverwrite(
+				CComBSTR(szFrom), CComBSTR(szTo));
+			if (FAILED(hr))
+				return E_ABORT; // User disallowed overwrite
+
+			return _RenameNonAtomicOverwrite(szFrom, szTo, strError);
+		}
+	}
+		
+	// File does not already exist, another error caused rename failure
+	strError = _GetSftpErrorMessage(uPreviousError);
+	return E_FAIL;
+}
+
+HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
+	const char *szFrom, const char *szTo, CString& strError)
+{
+	int rc = libssh2_sftp_rename_ex(
+		m_pSftpSession, szFrom, strlen(szFrom), szTo, strlen(szTo), 
+		LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
+		LIBSSH2_SFTP_RENAME_NATIVE
 	);
 
-	if (rc) // Rename failed - this is OK, it might be an overwrite - check
-	{
-		CComBSTR bstrMessage;
-		PSTR pszMessage; int cchMessage;
-		ULONG uError = libssh2_session_last_error(
-			m_pSession, &pszMessage, &cchMessage, false
-		);
-		if (uError = LIBSSH2_ERROR_SFTP_PROTOCOL)
-		{
-			uError = libssh2_sftp_last_error(m_pSftpSession);
-			if (uError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
-			{
-				CComBSTR bstrPrompt = 
-					_T("A file of that name already exists. Do ") \
-					_T("you want to overwrite it?");
-				// TODO: use OnConfirmOverwriteEx for extra details.
-				// fill this here: Listing ltOldfile, Listing ltNewfile
-				hr = m_pConsumer->OnConfirmOverwrite(
-					bstrPrompt, bstrFromFilename, bstrToFilename);
-				if (SUCCEEDED(hr))
-				{
-					// Attempt rename again this time allowing overwrite
-					int rc = libssh2_sftp_rename_ex(
-						m_pSftpSession, szFrom, strlen(szFrom), 
-						szTo, strlen(szTo), LIBSSH2_SFTP_RENAME_OVERWRITE |
-						LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE
-					);
-					if (!rc) return S_OK;
-				}
-				else
-					return hr; // User disallowed overwrite
-			}
-			
-			// If an SFTP error still remains
-			bstrMessage = _GetSftpErrorMessage(uError);
-		}
-		else // A non-SFTP error occurred
-			bstrMessage = pszMessage;
-
-		// Report remaining errors to front-end
-		m_pConsumer->OnReportError(bstrMessage);
-
-		return E_FAIL;
-
-	}
-	else // Rename was successful without overwrite
+	if (!rc)
 		return S_OK;
+	else
+	{
+		char *pszMessage; int cchMessage;
+		libssh2_session_last_error(m_pSession, &pszMessage, &cchMessage, false);
+		strError = pszMessage;
+		return E_FAIL;
+	}
+}
+
+HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
+	const char *szFrom, const char *szTo, CString& strError)
+{
+	// First, rename existing file to temporary
+	std::string strTemporary(szTo);
+	strTemporary += ".swish_rename_temp";
+	int rc = libssh2_sftp_rename( m_pSftpSession, szTo, strTemporary.c_str() );
+	if (!rc)
+	{
+		// Rename our subject
+		rc = libssh2_sftp_rename( m_pSftpSession, szFrom, szTo );
+		if (!rc)
+		{
+			// Delete temporary
+			rc = libssh2_sftp_unlink( m_pSftpSession, strTemporary.c_str() );
+			ATLASSERT(!rc);
+			return S_OK;
+		}
+
+		// Rename failed, rename our temporary back to its old name
+		rc = libssh2_sftp_rename( m_pSftpSession, szFrom, szTo );
+		ATLASSERT(!rc);
+
+		strError = _T("Cannot overwrite \"");
+		strError += CString(szFrom) + _T("\" with \"") + CString(szTo);
+		strError += _T("\": Please specify a different name or delete \"");
+		strError += CString(szTo) + _T("\" first.");
+	}
+
+	return E_FAIL;
 }
 
 CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)

@@ -5,21 +5,10 @@
 #include "stdafx.h"
 #include "CppUnitExtensions.h"
 #include "limits.h"
+
 #include <vector>
 using std::vector;
 
-// CMockSftpProvider
-/*
-[
-	coclass,
-	default(Swish::ISftpProvider),
-	threading(apartment),
-	vi_progid("SwishUnitTests.MockSftpProvider"),
-	progid("SwishUnitTests.MockSftpProvider.1"),
-	version(1.0),
-	uuid("FA3487BC-8774-4d9e-9B29-FD93E413BF01")
-]
-*/
 class ATL_NO_VTABLE CMockSftpProvider :
 	public CComObjectRootEx<CComObjectThreadModel>,
 	public Swish::ISftpProvider
@@ -91,7 +80,8 @@ public:
 	);
 	IFACEMETHODIMP Rename(
 		__in BSTR bstrFromFilename,
-		__in BSTR bstrToFilename
+		__in BSTR bstrToFilename,
+		__deref_out VARIANT_BOOL *fWasTargetOverwritten
 	);
 	// @}
 

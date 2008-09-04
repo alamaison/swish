@@ -37,7 +37,7 @@
 // CRemoteFolder
 [
 	coclass,
-	default(IShellFolder2),
+	default(IUnknown),
 	threading(apartment),
 	vi_progid("Swish.RemoteFolder"),
 	progid("Swish.RemoteFolder.1"),

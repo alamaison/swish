@@ -169,6 +169,10 @@ catch (const std::bad_alloc&) \
 catch (const std::exception&) \
 {                             \
 	return E_UNEXPECTED;      \
+}                             \
+catch (const CAtlException& e)\
+{                             \
+	return e;                 \
 }
 
 /* Includes ***************************************************************** */

@@ -123,14 +123,30 @@ STDMETHODIMP CUserInteraction::OnYesNoCancel(
 
 
 STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
-	BSTR bstrPrompt, BSTR bstrOldFile, BSTR bstrExistingFile )
+	BSTR bstrOldFile, BSTR bstrExistingFile )
 {
-	// Add your function implementation here.
-	return E_NOTIMPL;
+	if (m_hwndOwner == NULL)
+		return E_FAIL;
+
+	CString strMessage = _T("The folder already contains a file named '");
+	strMessage += bstrExistingFile;
+	strMessage += _T("'\r\n\r\nWould you like to replace the existing ");
+	strMessage += _T("file\r\n\r\n\t");
+	strMessage += bstrExistingFile;
+	strMessage += _T("\r\n\r\nwith this one?\r\n\r\n\t");
+	strMessage += bstrOldFile;
+
+	int ret = ::IsolationAwareMessageBox(m_hwndOwner, strMessage, NULL, 
+		MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2);
+
+	if (ret == IDYES)
+		return S_OK;
+	else
+		return E_ABORT;
 }
 
 STDMETHODIMP CUserInteraction::OnConfirmOverwriteEx(
-	BSTR bstrPrompt, Listing ltOldFile, Listing ltExistingFile )
+	Listing ltOldFile, Listing ltExistingFile )
 {
 	// Add your function implementation here.
 	return E_NOTIMPL;
@@ -138,8 +154,12 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwriteEx(
 
 STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 {
-	// Add your function implementation here.
-	return E_NOTIMPL;
+	if (m_hwndOwner == NULL)
+		return E_FAIL;
+
+	::IsolationAwareMessageBox(m_hwndOwner, CComBSTR(bstrMessage), NULL,
+		MB_OK | MB_ICONERROR);
+	return S_OK;
 }
 
 // CUserInteraction

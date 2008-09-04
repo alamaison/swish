@@ -145,15 +145,20 @@ HRESULT CSftpDirectory::GetEnum(
 	return hr;
 }
 
-void CSftpDirectory::Rename(
+bool CSftpDirectory::Rename(
 	__in PCUITEMID_CHILD pidlOldFile, PCTSTR pszNewFilename )
 {
 	CString strOldFilename = m_PidlManager.GetFilename(pidlOldFile);
+
+	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
 	HRESULT hr = m_connection.spProvider->Rename(
-		CComBSTR(strOldFilename), CComBSTR(pszNewFilename)
+		CComBSTR(strOldFilename), CComBSTR(pszNewFilename),
+		&fWasTargetOverwritten
 	);
-	if (FAILED(hr))
+	if (hr != S_OK)
 		AtlThrow(hr);
+
+	return (fWasTargetOverwritten == VARIANT_TRUE);
 }
 
 

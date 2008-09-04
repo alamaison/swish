@@ -81,12 +81,10 @@ interface ISftpConsumer : IUnknown
 		[out, retval] int *pnResult
 	);
 	HRESULT OnConfirmOverwrite(
-		[in]          BSTR bstrPrompt,
 		[in]          BSTR bstrOldFile,
 		[in]          BSTR bstrExistingFile
 	);
 	HRESULT OnConfirmOverwriteEx(
-		[in]          BSTR bstrPrompt,
 		[in]          struct Listing ltOldFile,
 		[in]          struct Listing ltExistingFile
 	);
@@ -97,7 +95,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("2964AECE-CB07-4f7c-848F-BF70B8F31321"),
+	object, uuid("356BE07D-6413-4290-96D1-4404AA1DC57E"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface"),
@@ -117,6 +115,7 @@ interface ISftpProvider : IUnknown
 	);
 	HRESULT Rename(
 		[in] BSTR bstrFromFilename,
-		[in] BSTR bstrToFilename
+		[in] BSTR bstrToFilename,
+		[out, retval] VARIANT_BOOL *fWasTargetOverwritten
 	);
 };

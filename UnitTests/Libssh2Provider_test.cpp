@@ -161,6 +161,216 @@ void CLibssh2Provider_test::testGetListing_WrongPassword()
 	CPPUNIT_ASSERT_FAILED(hr);
 }
 
+void CLibssh2Provider_test::testGetListingRepeatedly()
+{
+	HRESULT hr;
+
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+	m_pCoConsumer->SetCustomPassword(GetPassword());
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
+
+	// Fetch 5 listing enumerators
+	Swish::IEnumListing *apEnum[5];
+	CComBSTR bstrDirectory(_T("/tmp"));
+	for (int i = 0; i < 5; i++)
+	{
+		hr = m_pProvider->GetListing(bstrDirectory, &apEnum[i]);
+		if (FAILED(hr))
+			apEnum[i] = NULL;
+		CPPUNIT_ASSERT_OK(hr);
+	}
+
+	// Release 5 listing enumerators
+	for (int i = 4; i >= 0; i--)
+	{
+		ULONG cRefs = apEnum[i]->Release();
+		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+	}
+}
+
+void CLibssh2Provider_test::testRename()
+{
+	HRESULT hr;
+
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+	m_pCoConsumer->SetCustomPassword(GetPassword());
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
+
+	// Check that our required test subject file exists
+	_CheckFileExists("swishRenameTestFile");
+
+	// Test renaming file
+	VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+	hr = m_pProvider->Rename(
+		CComBSTR("swishRenameTestFile"), CComBSTR("swishRenameFilePassed"),
+		&fWasOverwritten);
+	CPPUNIT_ASSERT_OK(hr);
+	CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+	// Test renaming file back
+	hr = m_pProvider->Rename(
+		CComBSTR("swishRenameFilePassed"), CComBSTR("swishRenameTestFile"),
+		&fWasOverwritten);
+	CPPUNIT_ASSERT_OK(hr);
+	CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+}
+
+void CLibssh2Provider_test::testRenameFolder()
+{
+	HRESULT hr;
+
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+	m_pCoConsumer->SetCustomPassword(GetPassword());
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
+
+	// Check that our required test subject file exists
+	_CheckFileExists("swishRenameTestFolder");
+
+	// Test renaming directory
+	VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+	hr = m_pProvider->Rename(
+		CComBSTR("swishRenameTestFolder"),
+		CComBSTR("swishRenameTestFolderPassed"),
+		&fWasOverwritten);
+	CPPUNIT_ASSERT_OK(hr);
+	CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+	// Test renaming directory back
+	hr = m_pProvider->Rename(
+		CComBSTR("swishRenameTestFolderPassed"),
+		CComBSTR("swishRenameTestFolder"),
+		&fWasOverwritten);
+	CPPUNIT_ASSERT_OK(hr);
+	CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+}
+
+void CLibssh2Provider_test::testRenameWithRefusedConfirmation()
+{
+	HRESULT hr;
+
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+	m_pCoConsumer->SetCustomPassword(GetPassword());
+	m_pCoConsumer->SetConfirmOverwriteBehaviour(
+		CMockSftpConsumer::PreventOverwrite);
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
+
+	// Check that our required test subject file exists
+	_CheckFileExists("swishRenameTestFile");
+	_CheckFileExists("swishRenameTestFileObstruction");
+
+	// Test renaming file
+	VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+	hr = m_pProvider->Rename(
+		CComBSTR("swishRenameTestFile"),
+		CComBSTR("swishRenameTestFileObstruction"),
+		&fWasOverwritten);
+	CPPUNIT_ASSERT_FAILED(hr);
+	CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+	// Check that both files still exist
+	_CheckFileExists("swishRenameTestFile");
+	_CheckFileExists("swishRenameTestFileObstruction");
+}
+
+void CLibssh2Provider_test::testRenameFolderWithRefusedConfirmation()
+{
+	HRESULT hr;
+
+	CComBSTR bstrUser = GetUserName();
+	CComBSTR bstrHost = GetHostName();
+
+	// Choose mock behaviours
+	m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+	m_pCoConsumer->SetCustomPassword(GetPassword());
+	m_pCoConsumer->SetConfirmOverwriteBehaviour(
+		CMockSftpConsumer::PreventOverwrite);
+
+	CPPUNIT_ASSERT_OK(
+		m_pProvider->Initialize( m_pConsumer, bstrUser, bstrHost, GetPort() )
+	);
+
+	// Check that our required test subject file exists
+	_CheckFileExists("swishRenameTestFolder");
+	_CheckFileExists("swishRenameTestFolderObstruction");
+
+	// Test renaming directory
+	VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+	hr = m_pProvider->Rename(
+		CComBSTR("swishRenameTestFolder"),
+		CComBSTR("swishRenameTestFolderObstruction"),
+		&fWasOverwritten);
+	CPPUNIT_ASSERT_FAILED(hr);
+	CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+	// Check that both directories still exist
+	_CheckFileExists("swishRenameTestFolder");
+	_CheckFileExists("swishRenameTestFolderObstruction");
+}
+
+void CLibssh2Provider_test::_CheckFileExists(PCSTR szFilename)
+{
+	HRESULT hr;
+
+	// Fetch listing enumerator
+	Swish::IEnumListing *pEnum;
+	CComBSTR bstrDirectory("/home/");
+	bstrDirectory += GetUserName();
+	hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
+	if (FAILED(hr))
+		pEnum = NULL;
+	CPPUNIT_ASSERT_OK(hr);
+
+	// Search for file
+	Swish::Listing lt;
+	bool fFoundSubjectFile = false;
+	hr = pEnum->Next(1, &lt, NULL);
+	CPPUNIT_ASSERT_OK(hr);
+	while (hr == S_OK)
+	{
+		if (CComBSTR(lt.bstrFilename) == szFilename)
+		{
+			fFoundSubjectFile = true;
+			break;
+		}
+
+		hr = pEnum->Next(1, &lt, NULL);
+	}
+	ULONG cRefs = pEnum->Release();
+	CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+	char szMessage[300];
+	_snprintf_s(szMessage, 300, MAX_PATH,
+		"Rename test subject missing: %s", szFilename);
+	CPPUNIT_ASSERT_MESSAGE( szMessage, fFoundSubjectFile );
+}
+
 void CLibssh2Provider_test::tearDown()
 {
 	if (m_pProvider) // Possible for test to fail before m_pProvider initialised

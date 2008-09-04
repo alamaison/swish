@@ -43,6 +43,7 @@
 				WarningLevel="2"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
+				GenerateTypeLibrary="false"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""

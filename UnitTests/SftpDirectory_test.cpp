@@ -2,6 +2,8 @@
 #include "CppUnitExtensions.h"
 #include "MockSftpConsumer.h"
 #include "MockSftpProvider.h"
+typedef CMockSftpProvider MP;
+typedef CMockSftpConsumer MC;
 #include "TestConfig.h"
 
 #include <ATLComTime.h>
@@ -27,9 +29,13 @@ class CSftpDirectory_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testGetEnumNoHidden );
 		CPPUNIT_TEST( testGetEnumOnlyFilesNoHidden );
 		CPPUNIT_TEST( testGetEnumOnlyFoldersNoHidden );
+		CPPUNIT_TEST( testGetEnumEmpty );
 		CPPUNIT_TEST( testIEnumIDListSurvival );
-		CPPUNIT_TEST( testFetch );
 		CPPUNIT_TEST( testRename );
+		CPPUNIT_TEST( testRenameWithConfirmation );
+		CPPUNIT_TEST( testRenameWithConfirmationForbidden );
+		CPPUNIT_TEST( testRenameWithErrorReported );
+		CPPUNIT_TEST( testRenameFail );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -61,10 +67,16 @@ public:
 
 	void tearDown()
 	{
+		if (m_pDirectory)
+			delete m_pDirectory;
+		m_pDirectory = NULL;
+
 		if (m_pCoProvider)
 			m_pCoProvider->Release();
+		m_pCoProvider = NULL;
 		if (m_pCoConsumer)
 			m_pCoConsumer->Release();
+		m_pCoConsumer = NULL;
 
 		if (m_pProvider)
 		{ // Possible for test to fail before m_pProvider initialised
@@ -99,7 +111,6 @@ protected:
 
 		// Test heap creation
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
-		delete m_pDirectory;
 	}
 
 	void testGetEnumAll()
@@ -139,6 +150,46 @@ protected:
 		_testGetEnum( grfFlags );
 	}
 
+	void testGetEnumEmpty()
+	{
+		SHCONTF grfFlags = 
+			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		CSftpDirectory directory(conn, CComBSTR("/tmp"));
+
+		// Set mock behaviour
+		m_pCoProvider->SetListingBehaviour(MP::EmptyListing);
+
+		IEnumIDList *pEnum = NULL;
+		try
+		{
+			// Get listing
+			HRESULT hr = directory.GetEnum( &pEnum, grfFlags );
+			CPPUNIT_ASSERT_OK(hr);
+
+			// Test
+			PITEMID_CHILD pidl;
+			ULONG cFetched;
+			hr = pEnum->Next(1, &pidl, &cFetched);
+
+			CPPUNIT_ASSERT(hr == S_FALSE);
+			CPPUNIT_ASSERT_EQUAL((ULONG)0, cFetched);
+		}
+		catch(...)
+		{
+			if (pEnum)
+				pEnum->Release();
+			throw;
+		}
+
+		ULONG cRefs = pEnum->Release();
+		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+	}
+
 	/**
 	 * Tests that the IEnumIDList collection outlives the destruction of the
 	 * SftpDirectory
@@ -158,6 +209,7 @@ protected:
 		CPPUNIT_ASSERT_OK(hr);
 
 		delete m_pDirectory;
+		m_pDirectory = NULL;
 
 		_testEnumIDList( pEnum, grfFlags );
 
@@ -167,19 +219,164 @@ protected:
 
 	void testRename()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 
+		// Set mock behaviour
+		m_pCoProvider->SetRenameBehaviour(MP::RenameOK);
+
+		// Create
+		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+
+		// PIDL of old file.  Would normally come from GetEnum()
+		REMOTEPIDL item;
+		item.cb = sizeof REMOTEPIDL;
+		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+
+		// Test
+		m_pDirectory->Rename(pidl, _T("renamed"));
 	}
 
-	void testFetch()
+	void testRenameWithConfirmation()
 	{
-		//HRESULT hr;
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 
-		//hr = m_pDirectory->_Fetch(
-		//	CComBSTR("/tmp"),
-		//	SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN
-		//);
-		//CPPUNIT_ASSERT_OK(hr);
+		// Set mock behaviour
+		m_pCoProvider->SetRenameBehaviour(MP::ConfirmOverwrite);
+
+		// Create
+		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+
+		// PIDL of old file.  Would normally come from GetEnum()
+		REMOTEPIDL item;
+		item.cb = sizeof REMOTEPIDL;
+		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+
+		// Test that OnConfirmOverwrite is being called by forcing exception
+		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::ThrowOverwrite);
+		CPPUNIT_ASSERT_ASSERTION_FAIL_MESSAGE(
+			"Rename failed to confirm overwrite",
+			m_pDirectory->Rename(pidl, _T("renamed"))
+		);
+
+		// Test again but with proper behaviour
+		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::AllowOverwrite);
+		m_pDirectory->Rename(pidl, _T("renamed"));
 	}
+
+	void testRenameWithConfirmationForbidden()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		// Set mock behaviour
+		m_pCoProvider->SetRenameBehaviour(MP::ConfirmOverwrite);
+
+		// Create
+		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+
+		// PIDL of old file.  Would normally come from GetEnum()
+		REMOTEPIDL item;
+		item.cb = sizeof REMOTEPIDL;
+		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+
+		// Test
+		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::PreventOverwrite);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"Rename() failed to throw an exception despite overwrite "
+			"confirmation being rejected",
+			m_pDirectory->Rename(pidl, _T("renamed")),
+			CAtlException
+		);
+
+		// Change consumer behaviour and retest
+		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::PreventOverwriteSFalse);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"Rename() failed to throw an exception despite overwrite "
+			"confirmation being rejected with S_FALSE",
+			m_pDirectory->Rename(pidl, _T("renamed")),
+			CAtlException
+		);
+	}
+
+	void testRenameWithErrorReported()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		// Set mock behaviour
+		m_pCoProvider->SetRenameBehaviour(MP::ReportError);
+
+		// Create
+		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+
+		// PIDL of old file.  Would normally come from GetEnum()
+		REMOTEPIDL item;
+		item.cb = sizeof REMOTEPIDL;
+		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+
+		// Test that OnReportError is being called by forcing exception
+		m_pCoConsumer->SetReportErrorBehaviour(MC::ThrowReport);
+		CPPUNIT_ASSERT_ASSERTION_FAIL_MESSAGE(
+			"Rename failed to report error to mock user",
+			m_pDirectory->Rename(pidl, _T("renamed")) 
+		);
+
+		// Test properly
+		m_pCoConsumer->SetReportErrorBehaviour(MC::ErrorOK);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"Rename() failed to throw an exception despite forced error",
+			m_pDirectory->Rename(pidl, _T("renamed")),
+			CAtlException
+		);
+	}
+
+	void testRenameFail()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		// Create
+		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+
+		// PIDL of old file.  Would normally come from GetEnum()
+		REMOTEPIDL item;
+		item.cb = sizeof REMOTEPIDL;
+		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+
+		// Test E_ABORT failure
+		m_pCoProvider->SetRenameBehaviour(MP::AbortRename);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"Rename() failed to throw an exception despite forced E_ABORT",
+			m_pDirectory->Rename(pidl, _T("renamed")),
+			CAtlException
+		);
+
+		// Test E_FAIL failure
+		m_pCoProvider->SetRenameBehaviour(MP::FailRename);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"Rename() failed to throw an exception despite forced E_FAIL",
+			m_pDirectory->Rename(pidl, _T("renamed")),
+			CAtlException
+		);
+	}
+
 private:
 	CSftpDirectory *m_pDirectory;
 

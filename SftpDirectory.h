@@ -81,7 +81,7 @@ public:
 	 */
 	HRESULT GetEnum(
 		__deref_out IEnumIDList **ppEnumIDList,  __in SHCONTF grfFlags );
-	void Rename(
+	bool Rename(
 		__in PCUITEMID_CHILD pidlOldFile, __in PCTSTR pszNewFilename ) throw();
 
 

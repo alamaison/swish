@@ -29,6 +29,12 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testQueryInterface );
 		CPPUNIT_TEST( testInitialize );
 		CPPUNIT_TEST( testGetListing );
+		CPPUNIT_TEST( testGetListing_WrongPassword );
+		CPPUNIT_TEST( testGetListingRepeatedly );
+		CPPUNIT_TEST( testRename );
+		CPPUNIT_TEST( testRenameFolder );
+		CPPUNIT_TEST( testRenameWithRefusedConfirmation );
+		CPPUNIT_TEST( testRenameFolderWithRefusedConfirmation );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -41,6 +47,11 @@ protected:
 	void testInitialize();
 	void testGetListing();
 	void testGetListing_WrongPassword();
+	void testGetListingRepeatedly();
+	void testRename();
+	void testRenameFolder();
+	void testRenameWithRefusedConfirmation();
+	void testRenameFolderWithRefusedConfirmation();
 
 private:
 	CComObject<CMockSftpConsumer> *m_pCoConsumer;
@@ -53,6 +64,7 @@ private:
 	) const;
 	void testListingFormat(__in Swish::IEnumListing *pEnum) const;
 	void testRegistryStructure() const;
+	void _CheckFileExists( __in PCSTR szFilename );
 	CString GetHostName() const;
 	CString GetUserName() const;
 	USHORT GetPort() const;

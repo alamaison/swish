@@ -30,6 +30,12 @@ void CMockSftpConsumer::SetConfirmOverwriteBehaviour(
 	m_enumConfirmOverwriteBehaviour = enumBehaviour;
 }
 
+void CMockSftpConsumer::SetReportErrorBehaviour(
+	ReportErrorBehaviour enumBehaviour )
+{
+	m_enumReportErrorBehaviour = enumBehaviour;
+}	
+
 // ISftpConsumer methods
 STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 	BSTR bstrRequest, BSTR *pbstrPassword )
@@ -66,8 +72,13 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 		if (m_cPasswordAttempts > m_nMaxPasswordAttempts) return E_FAIL;
 		break;
 	case FailPassword:
-	default:
 		return E_FAIL;
+	case ThrowPassword:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
 	}
 
 	// Return password BSTR
@@ -100,15 +111,18 @@ STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 	case Cancel:
 		*piResult = -1;
 		return E_ABORT;
-	default:
+	case ThrowYNC:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
 	}
 }
 
 STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
-	BSTR bstrPrompt, BSTR bstrOldFile, BSTR bstrNewFile )
+	BSTR bstrOldFile, BSTR bstrNewFile )
 {
-	CPPUNIT_ASSERT( CComBSTR(bstrPrompt).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrOldFile).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrNewFile).Length() > 0 );
 
@@ -121,6 +135,9 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
 		return E_ABORT;
 	case PreventOverwriteSFalse:
 		return S_FALSE;
+	case ThrowOverwrite:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
 	default:
 		UNREACHABLE;
 		return E_UNEXPECTED;
@@ -128,9 +145,8 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
 }
 
 STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
-	BSTR bstrPrompt, Swish::Listing ltOldFile, Swish::Listing ltNewFile )
+	Swish::Listing ltOldFile, Swish::Listing ltNewFile )
 {
-	CPPUNIT_ASSERT( CComBSTR(bstrPrompt).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(ltOldFile.bstrFilename).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(ltNewFile.bstrFilename).Length() > 0 );
 
@@ -143,6 +159,9 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
 		return E_ABORT;
 	case PreventOverwriteSFalse:
 		return S_FALSE;
+	case ThrowOverwrite:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
 	default:
 		UNREACHABLE;
 		return E_UNEXPECTED;
@@ -151,6 +170,20 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
 
 STDMETHODIMP CMockSftpConsumer::OnReportError( BSTR bstrMessage )
 {
-	CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
-	return S_OK;
+	switch (m_enumReportErrorBehaviour)
+	{
+	case ErrorOK:
+		CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
+		return S_OK;
+	case ThrowReport:
+		{
+			std::string strMessage = "Unexpected call to " __FUNCTION__ ": ";
+			strMessage += CStringA(bstrMessage);
+			CPPUNIT_FAIL(strMessage);
+			return E_FAIL;
+		}
+	default:
+		UNREACHABLE;
+		return E_FAIL;
+	}
 }

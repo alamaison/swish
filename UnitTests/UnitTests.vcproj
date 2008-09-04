@@ -289,9 +289,6 @@
 			RelativePathToProject=".\Swish.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
@@ -332,13 +329,6 @@
 			<File
 				RelativePath=".\SftpDirectory_test.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\SimplePlugIn.cpp"

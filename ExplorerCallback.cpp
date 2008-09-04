@@ -56,7 +56,8 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 		// Tell the shell that we might notify it of update events that
 		// apply to this folder (specified using our absolute PIDL)
 		*reinterpret_cast<LONG*>(lParam) = 
-			SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER;
+			SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
+			SHCNE_DELETE;
 		*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam) = m_pidl; // Owned by us
 		return S_OK;
 	case SFVM_FSNOTIFY:

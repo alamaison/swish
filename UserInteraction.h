@@ -31,7 +31,7 @@
 // CUserInteraction
 [
 	coclass,
-	default(IUnknown),
+	default(ISftpConsumer),
 	threading(apartment),
 	vi_progid("Swish.UserInteraction"),
 	progid("Swish.UserInteraction.1"),
@@ -95,12 +95,10 @@ public:
 		__out int *piResult
 	);
 	IFACEMETHODIMP OnConfirmOverwrite(
-		__in BSTR bstrPrompt,
 		__in BSTR bstrOldFile,
 		__in BSTR bstrExistingFile
 	);
 	IFACEMETHODIMP OnConfirmOverwriteEx(
-		__in BSTR bstrPrompt,
 		__in Listing ltOldFile,
 		__in Listing ltExistingFile
 	);

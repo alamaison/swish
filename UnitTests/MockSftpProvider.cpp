@@ -102,13 +102,16 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 }
 
 STDMETHODIMP CMockSftpProvider::Rename(
-	BSTR bstrFromFilename, BSTR bstrToFilename )
+	BSTR bstrFromFilename, BSTR bstrToFilename,
+	VARIANT_BOOL *fWasTargetOverwritten )
 {
 	// Test filenames
 	CPPUNIT_ASSERT( CComBSTR(bstrFromFilename).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrFromFilename).Length() <= MAX_FILENAME_LEN );
 	CPPUNIT_ASSERT( CComBSTR(bstrToFilename).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrToFilename).Length() <= MAX_FILENAME_LEN );
+
+	*fWasTargetOverwritten = VARIANT_FALSE;
 
 	// Perform selected behaviour
 	HRESULT hr;
@@ -118,11 +121,9 @@ STDMETHODIMP CMockSftpProvider::Rename(
 		return S_OK;
 
 	case ConfirmOverwrite:
-		hr = m_spConsumer->OnConfirmOverwrite(
-			CComBSTR("Mock confirm overwrite \"CMockSftpProvider::Rename\""),
-			bstrFromFilename, bstrToFilename
-		);
-		CPPUNIT_ASSERT( hr == S_OK || hr == E_ABORT );
+		hr = m_spConsumer->OnConfirmOverwrite(bstrFromFilename, bstrToFilename);
+		if (SUCCEEDED(hr))
+			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
 
 	case ConfirmOverwriteEx:
@@ -137,11 +138,9 @@ STDMETHODIMP CMockSftpProvider::Rename(
 			CComBSTR("mockgroup"), 1024, 12, COleDateTime()
 		};
 
-		hr = m_spConsumer->OnConfirmOverwriteEx(
-			CComBSTR("Mock confirm overwrite \"CMockSftpProvider::Rename\""),
-			ltOld, ltExisting
-		);
-		CPPUNIT_ASSERT( hr == S_OK || hr == E_ABORT );
+		hr = m_spConsumer->OnConfirmOverwriteEx(ltOld, ltExisting);
+		if (SUCCEEDED(hr))
+			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
 		}
 
@@ -149,8 +148,7 @@ STDMETHODIMP CMockSftpProvider::Rename(
 		hr = m_spConsumer->OnReportError(
 			CComBSTR("Mock error message \"CMockSftpProvider::Rename\"")
 		);
-		CPPUNIT_ASSERT( hr == E_FAIL );
-		return hr;
+		return E_FAIL;
 
 	case AbortRename:
 		return E_ABORT;

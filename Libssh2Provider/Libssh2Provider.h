@@ -73,7 +73,8 @@ public:
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 	IFACEMETHODIMP Rename(
-		__in BSTR bstrFromFilename, __in BSTR bstrToFilename );
+		__in BSTR bstrFromFilename, __in BSTR bstrToFilename,
+		__deref_out VARIANT_BOOL *fWasTargetOverwritten );
 	// @}
 
 private:
@@ -82,6 +83,7 @@ private:
 	LIBSSH2_SESSION *m_pSession;   ///< SSH session
 	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
 	SOCKET m_socket;               ///< TCP/IP socket to the remote host
+	bool m_fConnected;             ///< Have we already connected to server?
 	list<Listing> m_lstFiles;
 	CString m_strUser;             ///< Holds username for remote connection
 	CString m_strHost;             ///< Hold name of remote host
@@ -97,7 +99,18 @@ private:
 	HRESULT _PublicKeyAuthentication( PCSTR szUsername );
 	Listing _FillListingEntry(
 		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
-	CString _GetSftpErrorMessage(ULONG uError);
+	CString _GetSftpErrorMessage( ULONG uError );
+
+	HRESULT _RenameSimple( __in_z const char* szFrom, __in_z const char* szTo );
+	HRESULT _RenameRetryWithOverwrite(
+		__in ULONG uPreviousError,
+		__in_z const char* szFrom, __in_z const char* szTo, 
+		__out CString& strError );
+	HRESULT _RenameAtomicOverwrite(
+		__in_z const char* szFrom, __in_z const char* szTo, 
+		__out CString& strError );
+	HRESULT _RenameNonAtomicOverwrite(
+		const char* szFrom, const char* szTo, CString& strError );
 };
 
 #endif // LIBSSH2PROVIDER_H
