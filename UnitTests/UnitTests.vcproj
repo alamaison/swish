@@ -368,10 +368,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider_test.h"
-				>
-			</File>
-			<File
 				RelativePath=".\limits.h"
 				>
 			</File>
