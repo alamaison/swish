@@ -35,6 +35,7 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testRenameFolder );
 		CPPUNIT_TEST( testRenameWithRefusedConfirmation );
 		CPPUNIT_TEST( testRenameFolderWithRefusedConfirmation );
+		CPPUNIT_TEST( testRenameInSubfolder );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -264,21 +265,20 @@ protected:
 			m_pProvider->Initialize(
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
+		CComBSTR bstrSubject("swishRenameTestFile");
+		CComBSTR bstrTarget("swishRenameTestFilePassed");
+
 		// Check that our required test subject file exists
-		_CheckFileExists("swishRenameTestFile");
+		_CheckFileExists(bstrSubject);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(
-			CComBSTR("swishRenameTestFile"), CComBSTR("swishRenameFilePassed"),
-			&fWasOverwritten);
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming file back
-		hr = m_pProvider->Rename(
-			CComBSTR("swishRenameFilePassed"), CComBSTR("swishRenameTestFile"),
-			&fWasOverwritten);
+		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 	}
@@ -298,23 +298,20 @@ protected:
 			m_pProvider->Initialize(
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
-		// Check that our required test subject file exists
-		_CheckFileExists("swishRenameTestFolder");
+		CComBSTR bstrSubject("swishRenameTestFolder");
+		CComBSTR bstrTarget("swishRenameTestFolderPassed");
+
+		// Check that our required test subject directory exists
+		_CheckFileExists(bstrSubject);
 
 		// Test renaming directory
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(
-			CComBSTR("swishRenameTestFolder"),
-			CComBSTR("swishRenameTestFolderPassed"),
-			&fWasOverwritten);
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming directory back
-		hr = m_pProvider->Rename(
-			CComBSTR("swishRenameTestFolderPassed"),
-			CComBSTR("swishRenameTestFolder"),
-			&fWasOverwritten);
+		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 	}
@@ -336,22 +333,22 @@ protected:
 			m_pProvider->Initialize(
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
-		// Check that our required test subject file exists
-		_CheckFileExists("swishRenameTestFile");
-		_CheckFileExists("swishRenameTestFileObstruction");
+		CComBSTR bstrSubject("swishRenameTestFile");
+		CComBSTR bstrTarget("swishRenameTestFileObstruction");
+
+		// Check that our required test subject files exist
+		_CheckFileExists(bstrSubject);
+		_CheckFileExists(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(
-			CComBSTR("swishRenameTestFile"),
-			CComBSTR("swishRenameTestFileObstruction"),
-			&fWasOverwritten);
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_FAILED(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Check that both files still exist
-		_CheckFileExists("swishRenameTestFile");
-		_CheckFileExists("swishRenameTestFileObstruction");
+		_CheckFileExists(bstrSubject);
+		_CheckFileExists(bstrTarget);
 	}
 
 	void testRenameFolderWithRefusedConfirmation()
@@ -371,22 +368,55 @@ protected:
 			m_pProvider->Initialize(
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
-		// Check that our required test subject file exists
-		_CheckFileExists("swishRenameTestFolder");
-		_CheckFileExists("swishRenameTestFolderObstruction");
+		CComBSTR bstrSubject("swishRenameTestFolder");
+		CComBSTR bstrTarget("swishRenameTestFolderObstruction");
+
+		// Check that our required test subject directories exist
+		_CheckFileExists(bstrSubject);
+		_CheckFileExists(bstrTarget);
 
 		// Test renaming directory
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(
-			CComBSTR("swishRenameTestFolder"),
-			CComBSTR("swishRenameTestFolderObstruction"),
-			&fWasOverwritten);
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_FAILED(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Check that both directories still exist
-		_CheckFileExists("swishRenameTestFolder");
-		_CheckFileExists("swishRenameTestFolderObstruction");
+		_CheckFileExists(bstrSubject);
+		_CheckFileExists(bstrTarget);
+	}
+
+	void testRenameInSubfolder()
+	{
+		HRESULT hr;
+
+		CComBSTR bstrUser = config.GetUser();
+		CComBSTR bstrHost = config.GetHost();
+
+		// Choose mock behaviours
+		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->Initialize(
+				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+
+		CComBSTR bstrSubject("swishSubfolder/subRenameTestFile");
+		CComBSTR bstrTarget("swishSubfolder/subRenameFilePassed");
+
+		// Check that our required test subject file exists
+		_CheckFileExists(bstrSubject);
+
+		// Test renaming file
+		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		CPPUNIT_ASSERT_OK(hr);
+		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+		// Test renaming file back
+		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
+		CPPUNIT_ASSERT_OK(hr);
+		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 	}
 
 private:
@@ -472,7 +502,7 @@ private:
 		}
 	}
 
-	void _CheckFileExists(__in PCSTR szFilename)
+	void _CheckFileExists(__in PCTSTR pszFilename)
 	{
 		HRESULT hr;
 
@@ -492,7 +522,7 @@ private:
 		CPPUNIT_ASSERT_OK(hr);
 		while (hr == S_OK)
 		{
-			if (CComBSTR(lt.bstrFilename) == szFilename)
+			if (CComBSTR(lt.bstrFilename) == pszFilename)
 			{
 				fFoundSubjectFile = true;
 				break;
@@ -504,7 +534,7 @@ private:
 		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
 		char szMessage[300];
 		_snprintf_s(szMessage, 300, MAX_PATH,
-			"Rename test subject missing: %s", szFilename);
+			"Rename test subject missing: %s", CW2A(pszFilename));
 		CPPUNIT_ASSERT_MESSAGE( szMessage, fFoundSubjectFile );
 	}
 
