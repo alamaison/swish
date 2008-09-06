@@ -74,7 +74,9 @@ public:
 	 * @param pszDirectory  Path of remote directory this object represents.
 	 */
 	CSftpDirectory( __in CConnection& conn, __in PCTSTR pszDirectory ) :
-		m_connection(conn), m_strDirectory(pszDirectory) {}
+		m_connection(conn), // Trim any trailing slashes and append single slash
+		m_strDirectory(CString(pszDirectory).TrimRight(_T('/'))+_T('/'))
+	{}
 
 	/**
 	 * @param grfFlags      Flags specifying nature of files to fetch.
