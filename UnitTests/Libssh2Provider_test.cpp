@@ -502,14 +502,22 @@ private:
 		}
 	}
 
-	void _CheckFileExists(__in PCTSTR pszFilename)
+	void _CheckFileExists(__in PCTSTR pszFilePath)
 	{
 		HRESULT hr;
+
+		// Find directory portion of path
+		CString strFilePath(pszFilePath);
+		int iLastSep = strFilePath.ReverseFind(_T('/'));
+		CString strDirectory = strFilePath.Left(iLastSep+1);
+		int cFilenameLen = strFilePath.GetLength() - (iLastSep+1);
+		CString strFilename = strFilePath.Right(cFilenameLen);
 
 		// Fetch listing enumerator
 		Swish::IEnumListing *pEnum;
 		CComBSTR bstrDirectory("/home/");
 		bstrDirectory += config.GetUser();
+		bstrDirectory += _T("/") + strDirectory;
 		hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
 		if (FAILED(hr))
 			pEnum = NULL;
@@ -522,7 +530,7 @@ private:
 		CPPUNIT_ASSERT_OK(hr);
 		while (hr == S_OK)
 		{
-			if (CComBSTR(lt.bstrFilename) == pszFilename)
+			if (strFilename == CComBSTR(lt.bstrFilename))
 			{
 				fFoundSubjectFile = true;
 				break;
@@ -534,7 +542,7 @@ private:
 		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
 		char szMessage[300];
 		_snprintf_s(szMessage, 300, MAX_PATH,
-			"Rename test subject missing: %s", CW2A(pszFilename));
+			"Rename test subject missing: %s", CW2A(strFilename));
 		CPPUNIT_ASSERT_MESSAGE( szMessage, fFoundSubjectFile );
 	}
 
