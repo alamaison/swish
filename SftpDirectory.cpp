@@ -148,11 +148,16 @@ HRESULT CSftpDirectory::GetEnum(
 bool CSftpDirectory::Rename(
 	__in PCUITEMID_CHILD pidlOldFile, PCTSTR pszNewFilename )
 {
+	// Trim any trailing slashes and append single slash
+	CString strDirectory = m_strDirectory.TrimRight(_T('/'));
+	strDirectory += _T('/');
+
 	CString strOldFilename = m_PidlManager.GetFilename(pidlOldFile);
 
 	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
 	HRESULT hr = m_connection.spProvider->Rename(
-		CComBSTR(strOldFilename), CComBSTR(pszNewFilename),
+		CComBSTR(strDirectory+strOldFilename),
+		CComBSTR(strDirectory+pszNewFilename),
 		&fWasTargetOverwritten
 	);
 	if (hr != S_OK)
