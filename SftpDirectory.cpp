@@ -166,25 +166,4 @@ bool CSftpDirectory::Rename(
 	return (fWasTargetOverwritten == VARIANT_TRUE);
 }
 
-
-/*----------------------------------------------------------------------------*
- * Private functions
- *----------------------------------------------------------------------------*/
-
-HRESULT CSftpDirectory::_CopyPidlsIntoHolder(CComPidlHolder **ppHolder)
-{
-	HRESULT hr;
-
-	CComPidlHolder *pHolder = NULL;
-	hr = pHolder->CreateInstance(&pHolder);
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	pHolder->AddRef();
-
-	hr = pHolder->Copy(m_vecPidls);
-	ATLASSERT(SUCCEEDED(hr));
-
-	return hr;
-}
-
 // CSftpDirectory

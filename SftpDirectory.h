@@ -93,7 +93,6 @@ private:
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );
-	HRESULT _CopyPidlsIntoHolder( __deref_out CComPidlHolder **ppHolder );
 };
 
 
