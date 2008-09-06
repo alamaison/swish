@@ -8,6 +8,8 @@
 
 #include <vector>
 using std::vector;
+#include <map>
+using std::map;
 
 class ATL_NO_VTABLE CMockSftpProvider :
 	public CComObjectRootEx<CComObjectThreadModel>,
@@ -47,11 +49,7 @@ public:
 		FailRename          ///< Return E_FAIL.
 	} RenameBehaviour;
 
-	// Set up default behaviours
-	CMockSftpProvider() :
-		m_enumListingBehaviour(MockListing),
-		m_enumRenameBehaviour(RenameOK) {}
-
+	CMockSftpProvider();
 	void SetListingBehaviour( ListingBehaviour enumBehaviour );
 	void SetRenameBehaviour( RenameBehaviour enumBehaviour );
 
@@ -60,9 +58,12 @@ private:
 	RenameBehaviour m_enumRenameBehaviour;
 
 	CComPtr<Swish::ISftpConsumer> m_spConsumer;
-	vector<Swish::Listing> m_vecListing;
+	map<CString, vector<Swish::Listing> > m_mapDirectories;
 
-	void _FillMockListing();
+	CComBSTR _TagFilename(__in PCTSTR pszFilename, __in PCTSTR pszTag);
+	void _FillMockListing(__in PCTSTR pszDirectory);
+	void _TestMockPathExists(__in PCTSTR strPath);
+	bool _IsInListing(__in PCTSTR strDirectory, __in PCTSTR strFilename);
 
 public:
 
@@ -79,8 +80,8 @@ public:
 		__out Swish::IEnumListing **ppEnum
 	);
 	IFACEMETHODIMP Rename(
-		__in BSTR bstrFromFilename,
-		__in BSTR bstrToFilename,
+		__in BSTR bstrFromPath,
+		__in BSTR bstrToPath,
 		__deref_out VARIANT_BOOL *fWasTargetOverwritten
 	);
 	// @}

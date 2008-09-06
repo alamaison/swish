@@ -32,6 +32,7 @@ class CSftpDirectory_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testGetEnumEmpty );
 		CPPUNIT_TEST( testIEnumIDListSurvival );
 		CPPUNIT_TEST( testRename );
+		CPPUNIT_TEST( testRenameInSubfolder );
 		CPPUNIT_TEST( testRenameWithConfirmation );
 		CPPUNIT_TEST( testRenameWithConfirmationForbidden );
 		CPPUNIT_TEST( testRenameWithErrorReported );
@@ -233,11 +234,34 @@ protected:
 		REMOTEPIDL item;
 		item.cb = sizeof REMOTEPIDL;
 		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
 		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
 
 		// Test
 		m_pDirectory->Rename(pidl, _T("renamed"));
+	}
+
+	void testRenameInSubfolder()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		// Set mock behaviour
+		m_pCoProvider->SetRenameBehaviour(MP::RenameOK);
+
+		// Create
+		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp/swish"));
+
+		// PIDL of old file.  Would normally come from GetEnum()
+		REMOTEPIDL item;
+		item.cb = sizeof REMOTEPIDL;
+		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, L"testswishfile");
+		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+
+		// Test
+		m_pDirectory->Rename(pidl, L"renamed");
 	}
 
 	void testRenameWithConfirmation()
@@ -256,7 +280,7 @@ protected:
 		REMOTEPIDL item;
 		item.cb = sizeof REMOTEPIDL;
 		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
 		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
 
 		// Test that OnConfirmOverwrite is being called by forcing exception
@@ -287,7 +311,7 @@ protected:
 		REMOTEPIDL item;
 		item.cb = sizeof REMOTEPIDL;
 		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
 		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
 
 		// Test
@@ -325,7 +349,7 @@ protected:
 		REMOTEPIDL item;
 		item.cb = sizeof REMOTEPIDL;
 		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
 		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
 
 		// Test that OnReportError is being called by forcing exception
@@ -357,7 +381,7 @@ protected:
 		REMOTEPIDL item;
 		item.cb = sizeof REMOTEPIDL;
 		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testfile"));
+		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
 		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
 
 		// Test E_ABORT failure
