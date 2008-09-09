@@ -619,9 +619,9 @@ STDMETHODIMP CLibssh2Provider::Rename(
 
 	// Rename failed - this is OK, it might be an overwrite - check
 	CComBSTR bstrMessage;
-	ULONG uErr; PSTR pszErr; int cchErr;
-	uErr = libssh2_session_last_error(m_pSession, &pszErr, &cchErr, false);
-	if (uErr = LIBSSH2_ERROR_SFTP_PROTOCOL)
+	int nErr; PSTR pszErr; int cchErr;
+	nErr = libssh2_session_last_error(m_pSession, &pszErr, &cchErr, false);
+	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
 		CString strError;
 		hr = _RenameRetryWithOverwrite(
@@ -754,6 +754,151 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 	}
 
 	return E_FAIL;
+}
+
+STDMETHODIMP CLibssh2Provider::Delete( __in BSTR bstrPath )
+{
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	HRESULT hr;
+
+	// Connect to server
+	hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+	ATLASSUME(m_pSftpSession);
+
+	// Delete file
+	CString strError;
+	CW2A szPath(bstrPath);
+	hr = _Delete(szPath, strError);
+	if (SUCCEEDED(hr))
+		return S_OK;
+
+	// Report errors to front-end
+	m_pConsumer->OnReportError(CComBSTR(strError));
+	return E_FAIL;
+}
+
+HRESULT CLibssh2Provider::_Delete( const char *szPath, CString& strError )
+{
+	if (libssh2_sftp_unlink(m_pSftpSession, szPath) == 0)
+		return S_OK;
+
+	// Delete failed
+	strError = _GetLastErrorMessage();
+	return E_FAIL;
+}
+
+STDMETHODIMP CLibssh2Provider::DeleteDirectory( __in BSTR bstrPath )
+{
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	HRESULT hr;
+
+	// Connect to server
+	hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+	ATLASSUME(m_pSftpSession);
+
+	// Delete directory recursively
+	CString strError;
+	CW2A szPath(bstrPath);
+	hr = _DeleteDirectory(szPath, strError);
+	if (SUCCEEDED(hr))
+		return S_OK;
+
+	// Report errors to front-end
+	m_pConsumer->OnReportError(CComBSTR(strError));
+	return E_FAIL;
+}
+
+HRESULT CLibssh2Provider::_DeleteDirectory(
+	const char *szPath, CString& strError )
+{
+	HRESULT hr;
+
+	// Open directory
+	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
+		m_pSftpSession, szPath
+	);
+	if (!pSftpHandle)
+	{
+		strError = _GetLastErrorMessage();
+		return E_FAIL;
+	}
+
+	// Delete content of directory
+	do {
+		// Read filename and attributes. Returns length of filename.
+		char szFilename[MAX_FILENAME_LENZ];
+		LIBSSH2_SFTP_ATTRIBUTES attrs;
+		::ZeroMemory(&attrs, sizeof(attrs));
+		int rc = libssh2_sftp_readdir(
+			pSftpHandle, szFilename, sizeof(szFilename), &attrs
+		);
+		if (rc <= 0)
+			break;
+
+		ATLENSURE(szFilename[0]); // TODO: can files have no filename?
+		if (szFilename[0] == '.' && !szFilename[1])
+			continue; // Skip .
+		if (szFilename[0] == '.' && szFilename[1] == '.' && !szFilename[2])
+			continue; // Skip ..
+
+		std::string strSubPath(szPath);
+		strSubPath += "/";
+		strSubPath += szFilename;
+		hr = _DeleteRecursive(strSubPath.c_str(), strError);
+		if (FAILED(hr))
+			return hr;
+
+	} while (true);
+
+	// Delete directory itself
+	if (libssh2_sftp_rmdir(m_pSftpSession, szPath) == 0)
+		return S_OK;
+
+	// Delete failed
+	strError = _GetLastErrorMessage();
+	return E_FAIL;
+}
+
+HRESULT CLibssh2Provider::_DeleteRecursive(
+	const char *szPath, CString& strError)
+{
+	LIBSSH2_SFTP_ATTRIBUTES attrs;
+	::ZeroMemory(&attrs, sizeof attrs);
+	if (libssh2_sftp_lstat(m_pSftpSession, szPath, &attrs) != 0)
+	{
+		strError = _GetLastErrorMessage();
+		return E_FAIL;
+	}
+
+	ATLASSERT( // Permissions field is valid
+		attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS);
+	if (attrs.permissions & LIBSSH2_SFTP_S_IFDIR)
+		return _DeleteDirectory(szPath, strError);
+	else
+		return _Delete(szPath, strError);
+}
+
+CString CLibssh2Provider::_GetLastErrorMessage()
+{
+	CString bstrMessage;
+	int nErr; PSTR pszErr; int cchErr;
+
+	nErr = libssh2_session_last_error(m_pSession, &pszErr, &cchErr, false);
+	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
+	{
+		ULONG uErr = libssh2_sftp_last_error(m_pSftpSession);
+		return _GetSftpErrorMessage(uErr);
+	}
+	else // A non-SFTP error occurred
+		return CString(pszErr);
 }
 
 CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)

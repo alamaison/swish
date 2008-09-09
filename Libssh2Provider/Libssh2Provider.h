@@ -75,6 +75,10 @@ public:
 	IFACEMETHODIMP Rename(
 		__in BSTR bstrFromFilename, __in BSTR bstrToFilename,
 		__deref_out VARIANT_BOOL *fWasTargetOverwritten );
+	IFACEMETHODIMP Delete(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP DeleteDirectory(
+		__in BSTR bstrPath );
 	// @}
 
 private:
@@ -99,6 +103,8 @@ private:
 	HRESULT _PublicKeyAuthentication( PCSTR szUsername );
 	Listing _FillListingEntry(
 		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
+
+	CString _GetLastErrorMessage();
 	CString _GetSftpErrorMessage( ULONG uError );
 
 	HRESULT _RenameSimple( __in_z const char* szFrom, __in_z const char* szTo );
@@ -111,6 +117,13 @@ private:
 		__out CString& strError );
 	HRESULT _RenameNonAtomicOverwrite(
 		const char* szFrom, const char* szTo, CString& strError );
+
+	HRESULT _Delete(
+		__in_z const char *szPath, __out CString& strError );
+	HRESULT _DeleteDirectory(
+		__in_z const char *szPath, __out CString& strError );
+	HRESULT _DeleteRecursive(
+		__in_z const char *szPath, __out CString& strError );
 };
 
 #endif // LIBSSH2PROVIDER_H

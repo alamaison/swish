@@ -182,6 +182,17 @@ STDMETHODIMP CMockSftpProvider::Rename(
 	}
 }
 
+STDMETHODIMP CMockSftpProvider::Delete( __in BSTR bstrPath )
+{
+	return S_OK;
+}
+
+STDMETHODIMP CMockSftpProvider::DeleteDirectory( __in BSTR bstrPath )
+{
+	return S_OK;
+}
+
+
 CComBSTR CMockSftpProvider::_TagFilename(PCWSTR pszFilename, PCWSTR pszTag)
 {
 	CString strName;
