@@ -88,6 +88,10 @@ public:
 		__in BSTR bstrPath );
 	IFACEMETHODIMP DeleteDirectory(
 		__in BSTR bstrPath );
+	IFACEMETHODIMP CreateNewFile(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP CreateNewDirectory(
+		__in BSTR bstrPath );
 	// @}
 
 };

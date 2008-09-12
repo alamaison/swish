@@ -135,4 +135,19 @@ interface ISftpProvider : IUnknown
 		[in] BSTR bstrPath
 	);
 	// @}
+
+	/**
+	 * @name Creation methods
+	 * These are the dual of the deletion methods.  The first one, CreateFile,
+	 * is mainly for the test-suite.  It just creates an empty file at the
+	 * given path (roughly equivalent to Unix @c touch).
+	 */
+	// @{
+	HRESULT CreateNewFile(
+		[in] BSTR bstrPath
+	);
+	HRESULT CreateNewDirectory(
+		[in] BSTR bstrPath
+	);
+	// @}
 };

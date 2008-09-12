@@ -38,6 +38,8 @@
 
 #include <ATLComTime.h>  // COleDateTime
 
+#pragma warning (push)
+#pragma warning (disable: 4267) // ssize_t to unsigned int
 
 /**
  * Create libssh2-based data provider component instance.
@@ -169,9 +171,6 @@ STDMETHODIMP CLibssh2Provider::Initialize(
  */
 HRESULT CLibssh2Provider::_OpenSocketToHost()
 {
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
-
 	ATLASSUME(!m_strHost.IsEmpty());
 	ATLASSUME(m_uPort >= MIN_PORT && m_uPort <= MAX_PORT);
 	ATLENSURE_RETURN_HR(
@@ -218,15 +217,10 @@ HRESULT CLibssh2Provider::_OpenSocketToHost()
 
 	::freeaddrinfo(paiList);
 	return hr;
-
-#pragma warning (pop)
 }
 
 HRESULT CLibssh2Provider::_VerifyHostKey()
 {
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
-
 	ATLASSUME(m_pSession);
 
     const char *fingerprint = 
@@ -241,7 +235,6 @@ HRESULT CLibssh2Provider::_VerifyHostKey()
 	//   }
 	//   fprintf(stderr, "\n");
 
-#pragma warning (pop)
 	return S_OK;
 }
 
@@ -256,9 +249,6 @@ HRESULT CLibssh2Provider::_VerifyHostKey()
  */
 HRESULT CLibssh2Provider::_AuthenticateUser()
 {
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
-
 	ATLASSUME(!m_strHost.IsEmpty());
 	CT2A szUsername(m_strUser);
 
@@ -293,7 +283,6 @@ HRESULT CLibssh2Provider::_AuthenticateUser()
     }
 
 	return hr;
-#pragma warning (pop)
 }
 
 /**
@@ -309,9 +298,6 @@ HRESULT CLibssh2Provider::_AuthenticateUser()
  */
 HRESULT CLibssh2Provider::_PasswordAuthentication(PCSTR szUsername)
 {
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
-
 	HRESULT hr;
 	CComBSTR bstrPrompt = _T("Please enter your password:");
 	CComBSTR bstrPassword;
@@ -332,8 +318,6 @@ HRESULT CLibssh2Provider::_PasswordAuthentication(PCSTR szUsername)
 
 	ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
 	return hr;
-
-#pragma warning (pop)
 }
 
 HRESULT CLibssh2Provider::_KeyboardInteractiveAuthentication(PCSTR szUsername)
@@ -351,9 +335,6 @@ HRESULT CLibssh2Provider::_KeyboardInteractiveAuthentication(PCSTR szUsername)
 
 HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)
 {
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
-
 	// TODO: use proper file paths
 	const char *keyfile1="~/.ssh/id_rsa.pub";
 	const char *keyfile2="~/.ssh/id_rsa";
@@ -364,8 +345,6 @@ HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)
 
 	ATLASSERT(libssh2_userauth_authenticated(m_pSession)); // Double-check
 	return S_OK;
-
-#pragma warning (pop)
 }
 
 /**
@@ -479,24 +458,21 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	ATLASSUME(m_pSftpSession);
 
 	// Open directory
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
 	CW2A szDirectory(bstrDirectory);
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
 		m_pSftpSession, szDirectory
 	);
 	if (!pSftpHandle)
 		return E_FAIL;
-#pragma warning (pop)
 
 	// Read entries from directory until we fail
-	int rc;
+	list<Listing> lstFiles;
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
         char szFilename[512];
         LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof(attrs));
-        rc = libssh2_sftp_readdir(
+        int rc = libssh2_sftp_readdir(
 			pSftpHandle, szFilename, sizeof(szFilename), &attrs
 		);
 		if(rc <= 0)
@@ -505,21 +481,42 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 			break;
 		}
 
-		m_lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
+		lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
     } while (1);
 
-    ATLASSERT(!libssh2_sftp_closedir(pSftpHandle));
+    ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);
 
-	// Create instance of Enum from ATL template class and get interface pointer
-	CComObject<CComEnumListing> *pEnum = NULL;
-	hr = CComObject<CComEnumListing>::CreateInstance(&pEnum);
+	// Create copy of our list of Listings and put into an AddReffed 'holder'
+	CComListingHolder *pHolder = NULL;
+	hr = pHolder->CreateInstance(&pHolder);
+	ATLASSERT(SUCCEEDED(hr));
 	if (SUCCEEDED(hr))
 	{
-		pEnum->AddRef();
-			hr = pEnum->Init(this->GetUnknown(), m_lstFiles);
+		pHolder->AddRef();
+
+		hr = pHolder->Copy(lstFiles);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+		// Create enumerator
+		CComObject<CComEnumListing> *pEnum;
+		hr = pEnum->CreateInstance(&pEnum);
+		ATLASSERT(SUCCEEDED(hr));
+		if (SUCCEEDED(hr))
+		{
+			pEnum->AddRef();
+
+			// Give enumerator back-reference to holder of our copied collection
+			hr = pEnum->Init( pHolder->GetUnknown(), pHolder->m_coll );
+			ATLASSERT(SUCCEEDED(hr));
 			if (SUCCEEDED(hr))
+			{
 				hr = pEnum->QueryInterface(ppEnum);
-		pEnum->Release();
+				ATLASSERT(SUCCEEDED(hr));
+			}
+
+			pEnum->Release();
+		}
+		pHolder->Release();
 	}
 
 	return hr;
@@ -854,9 +851,12 @@ HRESULT CLibssh2Provider::_DeleteDirectory(
 		strSubPath += szFilename;
 		hr = _DeleteRecursive(strSubPath.c_str(), strError);
 		if (FAILED(hr))
+		{
+			ATLVERIFY(libssh2_sftp_close_handle(pSftpHandle) == 0);
 			return hr;
-
+		}
 	} while (true);
+	ATLVERIFY(libssh2_sftp_close_handle(pSftpHandle) == 0);
 
 	// Delete directory itself
 	if (libssh2_sftp_rmdir(m_pSftpSession, szPath) == 0)
@@ -884,6 +884,53 @@ HRESULT CLibssh2Provider::_DeleteRecursive(
 		return _DeleteDirectory(szPath, strError);
 	else
 		return _Delete(szPath, strError);
+}
+
+STDMETHODIMP CLibssh2Provider::CreateNewFile( __in BSTR bstrPath )
+{
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	// Connect to server
+	HRESULT hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+	ATLASSUME(m_pSftpSession);
+
+	CW2A szPath(bstrPath);
+	LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
+		m_pSftpSession, szPath, LIBSSH2_FXF_CREAT, 0644);
+	if (pHandle == NULL)
+	{
+		// Report error to front-end
+		m_pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
+		return E_FAIL;
+	}
+
+	ATLVERIFY(libssh2_sftp_close_handle(pHandle) == 0);
+	return S_OK;
+}
+
+STDMETHODIMP CLibssh2Provider::CreateNewDirectory( __in BSTR bstrPath )
+{
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	// Connect to server
+	HRESULT hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+	ATLASSUME(m_pSftpSession);
+
+	CW2A szPath(bstrPath);
+	if (libssh2_sftp_mkdir(m_pSftpSession, szPath, 0755) != 0)
+	{
+		// Report error to front-end
+		m_pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
+		return E_FAIL;
+	}
+
+	return S_OK;
 }
 
 CString CLibssh2Provider::_GetLastErrorMessage()
@@ -953,6 +1000,8 @@ CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)
 		return _T("Unexpected error code returned by server");
 	}
 }
+
+#pragma warning (pop)
 
 /*
    The module attribute causes 
