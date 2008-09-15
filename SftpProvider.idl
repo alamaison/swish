@@ -95,7 +95,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("356BE07D-6413-4290-96D1-4404AA1DC57E"),
+	object, uuid("2D82BFD3-6930-4ff6-8F07-BFC0A509DF74"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface"),
@@ -114,8 +114,40 @@ interface ISftpProvider : IUnknown
 		[out, retval] IEnumListing **ppEnum
 	);
 	HRESULT Rename(
-		[in] BSTR bstrFromFilename,
-		[in] BSTR bstrToFilename,
+		[in] BSTR bstrFromPath,
+		[in] BSTR bstrToPath,
 		[out, retval] VARIANT_BOOL *fWasTargetOverwritten
 	);
+
+	/**
+	 * @name Deletion methods
+	 * We use two methods rather than one for safety.  This makes it explicit 
+	 * what the @b intended consequence was. It's possible for a user to ask
+	 * for a file to be deleted but, meanwhile, it has been changed to a 
+	 * directory by someone else.  We do not want to delete the directory 
+	 * without the user knowing.
+	 */
+	// @{
+	HRESULT Delete(
+		[in] BSTR bstrPath
+	);
+	HRESULT DeleteDirectory(
+		[in] BSTR bstrPath
+	);
+	// @}
+
+	/**
+	 * @name Creation methods
+	 * These are the dual of the deletion methods.  The first one, CreateFile,
+	 * is mainly for the test-suite.  It just creates an empty file at the
+	 * given path (roughly equivalent to Unix @c touch).
+	 */
+	// @{
+	HRESULT CreateNewFile(
+		[in] BSTR bstrPath
+	);
+	HRESULT CreateNewDirectory(
+		[in] BSTR bstrPath
+	);
+	// @}
 };

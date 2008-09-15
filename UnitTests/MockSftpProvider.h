@@ -84,6 +84,14 @@ public:
 		__in BSTR bstrToPath,
 		__deref_out VARIANT_BOOL *fWasTargetOverwritten
 	);
+	IFACEMETHODIMP Delete(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP DeleteDirectory(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP CreateNewFile(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP CreateNewDirectory(
+		__in BSTR bstrPath );
 	// @}
 
 };

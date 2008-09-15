@@ -23,6 +23,10 @@ struct testFILEDATA
 	DWORD dwPermissions;
 };
 
+#define CHECK_PATH_EXISTS(path) _CheckPathExists(path, CPPUNIT_SOURCELINE())
+#define CHECK_PATH_NOT_EXISTS(path) \
+	_CheckPathNotExists(path, CPPUNIT_SOURCELINE())
+
 class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 {
 	CPPUNIT_TEST_SUITE( CLibssh2Provider_test );
@@ -31,14 +35,17 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testGetListing );
 		CPPUNIT_TEST( testGetListing_WrongPassword );
 		CPPUNIT_TEST( testGetListingRepeatedly );
+		CPPUNIT_TEST( testGetListingIndependence );
 		CPPUNIT_TEST( testRename );
 		CPPUNIT_TEST( testRenameNoDirectory );
 		CPPUNIT_TEST( testRenameFolder );
 		CPPUNIT_TEST( testRenameWithRefusedConfirmation );
 		CPPUNIT_TEST( testRenameFolderWithRefusedConfirmation );
-		CPPUNIT_TEST( testRenameInSubfolder );
 		CPPUNIT_TEST( testRenameInNonHomeFolder );
 		CPPUNIT_TEST( testRenameInNonHomeSubfolder );
+		CPPUNIT_TEST( testCreateAndDelete );
+		CPPUNIT_TEST( testCreateAndDeleteEmptyDirectory );
+		CPPUNIT_TEST( testCreateAndDeleteDirectoryRecursive );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -184,18 +191,9 @@ protected:
 
 	void testGetListing()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
-
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
-
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
 		// Fetch listing enumerator
 		Swish::IEnumListing *pEnum;
@@ -236,18 +234,9 @@ protected:
 
 	void testGetListingRepeatedly()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
-
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
-
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
 		// Fetch 5 listing enumerators
 		Swish::IEnumListing *apEnum[5];
@@ -268,26 +257,72 @@ protected:
 		}
 	}
 
-	void testRename()
+	void testGetListingIndependence()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
+		// Put some files in the test area
+		CComBSTR bstrDirectory(_TestArea());
+		CComBSTR bstrOne(_TestArea(L"GetListingIndependence1"));
+		CComBSTR bstrTwo(_TestArea(L"GetListingIndependence2"));
+		CComBSTR bstrThree(_TestArea(L"GetListingIndependence3"));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrOne));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTwo));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrThree));
 
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+		// Fetch first listing enumerator
+		Swish::IEnumListing *pEnumBefore;
+		hr = m_pProvider->GetListing(bstrDirectory, &pEnumBefore);
+		CPPUNIT_ASSERT_OK(hr);
 
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+		// Delete one of the files
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTwo));
 
-		CComBSTR bstrSubject(_HomeDir(L"swishRenameTestFile"));
-		CComBSTR bstrTarget(_HomeDir(L"swishRenameTestFilePassed"));
+		// Fetch second listing enumerator
+		Swish::IEnumListing *pEnumAfter;
+		hr = m_pProvider->GetListing(bstrDirectory, &pEnumAfter);
+		CPPUNIT_ASSERT_OK(hr);
 
-		// Check that our required test subject file exists
-		_CheckFileExists(bstrSubject);
+		// The first listing should still show the file. The second should not.
+		CPPUNIT_ASSERT(_FileExistsInListing(
+			L"GetListingIndependence1", pEnumBefore));
+		CPPUNIT_ASSERT(_FileExistsInListing(
+			L"GetListingIndependence2", pEnumBefore));
+		CPPUNIT_ASSERT(_FileExistsInListing(
+			L"GetListingIndependence3", pEnumBefore));
+		CPPUNIT_ASSERT(_FileExistsInListing(
+			L"GetListingIndependence1", pEnumAfter));
+		CPPUNIT_ASSERT(!_FileExistsInListing(
+			L"GetListingIndependence2", pEnumAfter));
+		CPPUNIT_ASSERT(_FileExistsInListing(
+			L"GetListingIndependence3", pEnumAfter));
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrOne));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrThree));
+		
+		ULONG cRefs = pEnumBefore->Release();
+		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+
+		cRefs = pEnumAfter->Release();
+		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+	}
+
+	void testRename()
+	{
+		_StandardSetup();
+
+		HRESULT hr;
+
+		CComBSTR bstrSubject(_TestArea(L"Rename"));
+		CComBSTR bstrTarget(_TestArea(L"Rename_Passed"));
+
+		// Create our test subject and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -299,6 +334,12 @@ protected:
 		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+		// Check that the target does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
 	}
 
 	/**
@@ -308,21 +349,13 @@ protected:
 	 */
 	void testRenameNoDirectory()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
-
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
-
-		CComBSTR bstrSubject(_HomeDir(L"swishRenameTestFile"));
-		CComBSTR bstrTarget(_HomeDir(L"swishRenameTestFilePassed"));
+		CComBSTR bstrSubject(L"RenameNoDirectory");
+		CComBSTR bstrTarget(L"RenameNoDirectory_Passed");
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -334,29 +367,25 @@ protected:
 		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
 	}
 
 
 	void testRenameFolder()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
+		CComBSTR bstrSubject(_TestArea(L"RenameFolder/"));
+		CComBSTR bstrTarget(_TestArea(L"RenameFolder_Passed/"));
 
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
-
-		CComBSTR bstrSubject(_HomeDir(L"swishRenameTestFolder/"));
-		CComBSTR bstrTarget(_HomeDir(L"swishRenameTestFolderPassed/"));
-
-		// Check that our required test subject directory exists
-		_CheckFileExists(bstrSubject);
+		// Create our test subject and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrSubject));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming directory
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -368,31 +397,34 @@ protected:
 		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+		// Check that the target does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrSubject));
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
 	}
 
 	void testRenameWithRefusedConfirmation()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
-
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+		// Choose mock behaviour
 		m_pCoConsumer->SetConfirmOverwriteBehaviour(
 			CMockSftpConsumer::PreventOverwrite);
 
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+		CComBSTR bstrSubject(_TestArea(L"RenameWithRefusedConfirmation"));
+		CComBSTR bstrTarget(
+			_TestArea(L"RenameWithRefusedConfirmation_Obstruction"));
 
-		CComBSTR bstrSubject(_HomeDir(L"swishRenameTestFile"));
-		CComBSTR bstrTarget(_HomeDir(L"swishRenameTestFileObstruction"));
-
-		// Check that our required test subject files exist
-		_CheckFileExists(bstrSubject);
-		_CheckFileExists(bstrTarget);
+		// Create our test subjects and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTarget));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -401,33 +433,36 @@ protected:
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Check that both files still exist
-		_CheckFileExists(bstrSubject);
-		_CheckFileExists(bstrTarget);
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTarget));
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
 
 	void testRenameFolderWithRefusedConfirmation()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
-
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+		// Choose mock behaviour
 		m_pCoConsumer->SetConfirmOverwriteBehaviour(
 			CMockSftpConsumer::PreventOverwrite);
 
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+		CComBSTR bstrSubject(
+			_TestArea(L"RenameFolderWithRefusedConfirmation/"));
+		CComBSTR bstrTarget(
+			_TestArea(L"RenameFolderWithRefusedConfirmation_Obstruction/"));
 
-		CComBSTR bstrSubject(_HomeDir(L"swishRenameTestFolder/"));
-		CComBSTR bstrTarget(_HomeDir(L"swishRenameTestFolderObstruction/"));
-
-		// Check that our required test subject directories exist
-		_CheckFileExists(bstrSubject);
-		_CheckFileExists(bstrTarget);
+		// Create our test subjects and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrTarget));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Test renaming directory
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -436,63 +471,29 @@ protected:
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Check that both directories still exist
-		_CheckFileExists(bstrSubject);
-		_CheckFileExists(bstrTarget);
-	}
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
 
-	void testRenameInSubfolder()
-	{
-		HRESULT hr;
-
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
-
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
-
-		CComBSTR bstrSubject(_HomeDir(L"swishSubfolder/subRenameTestFile"));
-		CComBSTR bstrTarget(_HomeDir(L"swishSubfolder/subRenameFilePassed"));
-
-		// Check that our required test subject file exists
-		_CheckFileExists(bstrSubject);
-
-		// Test renaming file
-		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
-		CPPUNIT_ASSERT_OK(hr);
-		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
-
-		// Test renaming file back
-		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
-		CPPUNIT_ASSERT_OK(hr);
-		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrTarget));
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
 
 	void testRenameInNonHomeFolder()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
+		CComBSTR bstrSubject(L"/tmp/swishRenameInNonHomeFolder");
+		CComBSTR bstrTarget(L"/tmp/swishRenameInNonHomeFolder_Passed");
 
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
-
-		CComBSTR bstrSubject(L"/tmp/swishNonHomeTestFile");
-		CComBSTR bstrTarget(L"/tmp/swishNonHomeFilePassed");
-
-		// Check that our required test subject file exists
-		_CheckFileExists(bstrSubject);
+		// Create our test subjects and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -504,28 +505,33 @@ protected:
 		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+		// Check that the target does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
 
 	void testRenameInNonHomeSubfolder()
 	{
+		_StandardSetup();
+
 		HRESULT hr;
 
-		CComBSTR bstrUser = config.GetUser();
-		CComBSTR bstrHost = config.GetHost();
+		CComBSTR bstrFolder(L"/tmp/swishSubfolder/");
+		CComBSTR bstrSubject(
+			L"/tmp/swishSubfolder/RenameInNonHomeSubfolder");
+		CComBSTR bstrTarget(
+			L"/tmp/swishSubfolder/RenameInNonHomeSubfolder_Passed");
 
-		// Choose mock behaviours
-		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
-		m_pCoConsumer->SetCustomPassword(config.GetPassword());
-
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->Initialize(
-				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
-
-		CComBSTR bstrSubject(L"/tmp/swishNonHomeFolder/subNonHomeTestFile");
-		CComBSTR bstrTarget(L"/tmp/swishNonHomeFolder/subNonHomeFilePassed");
-
-		// Check that our required test subject file exists
-		_CheckFileExists(bstrSubject);
+		// Create our test subjects and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrFolder));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
@@ -537,7 +543,90 @@ protected:
 		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
+
+		// Check that the target does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
+		
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrFolder));
+		CHECK_PATH_NOT_EXISTS(bstrFolder);
 	}
+
+	void testCreateAndDelete()
+	{
+		_StandardSetup();
+
+		HRESULT hr;
+
+		CComBSTR bstrSubject(_TestArea(L"CreateAndDelete"));
+
+		// Check that the file does not already exist
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+
+		// Test creating file
+		hr = m_pProvider->CreateNewFile(bstrSubject);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Test deleting file
+		hr = m_pProvider->Delete(bstrSubject);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Check that the file does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+	}
+
+	void testCreateAndDeleteEmptyDirectory()
+	{
+		_StandardSetup();
+
+		HRESULT hr;
+
+		CComBSTR bstrSubject(_TestArea(L"CreateAndDeleteEmptyDirectory"));
+
+		// Check that the directory does not already exist
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+
+		// Test creating directory
+		hr = m_pProvider->CreateNewDirectory(bstrSubject);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Test deleting directory
+		hr = m_pProvider->DeleteDirectory(bstrSubject);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Check that the directory does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+	}
+
+	void testCreateAndDeleteDirectoryRecursive()
+	{
+		_StandardSetup();
+
+		HRESULT hr;
+
+		CComBSTR bstrDir(_TestArea(L"CreateAndDeleteDirectory"));
+		CComBSTR bstrFile(_TestArea(L"CreateAndDeleteDirectory/Recursive"));
+
+		// Check that subjects do not already exist
+		CHECK_PATH_NOT_EXISTS(bstrDir);
+		CHECK_PATH_NOT_EXISTS(bstrFile);
+
+		// Create directory
+		hr = m_pProvider->CreateNewDirectory(bstrDir);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Add file to directory
+		hr = m_pProvider->CreateNewFile(bstrFile);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Test deleting directory
+		hr = m_pProvider->DeleteDirectory(bstrDir);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Check that the directory does not still exist
+		CHECK_PATH_NOT_EXISTS(bstrDir);
+	}
+
 
 private:
 	CComObject<CMockSftpConsumer> *m_pCoConsumer;
@@ -545,6 +634,38 @@ private:
 	Swish::ISftpProvider *m_pProvider;
 	CTestConfig config;
 	const CComBSTR m_bstrHomeDir;
+
+	/**
+	 * Performs a typical test setup.
+	 *
+	 * The mock consumer is set to authenticate using the correct password
+	 * and throw an exception on all other callbacks to it.  This setup is 
+	 * suitable for any tests that simply to test functionality rather than
+	 * testing the process of authentication itself.  If the test expects
+	 * the provider to callback to the consumer, these behaviours can be added
+	 * after this method is called.
+	 */
+	void _StandardSetup()
+	{
+		HRESULT hr;
+
+		CComBSTR bstrUser = config.GetUser();
+		CComBSTR bstrHost = config.GetHost();
+
+		// Standard mock behaviours
+		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+
+		hr = m_pProvider->Initialize(
+				m_pConsumer, bstrUser, bstrHost, config.GetPort());
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Create test area (not used by all tests)
+		if (!_FileExists(CString(_TestArea())))
+		{
+			CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(_TestArea()));
+		}
+	}
 
 	/**
 	 * Tests that the format of the enumeration of listings is correct.
@@ -623,56 +744,90 @@ private:
 		}
 	}
 
-	void _CheckFileExists(__in PCTSTR pszFilePath)
+	bool _FileExistsInListing(
+		__in CComBSTR bstrFilename, __in CComPtr<Swish::IEnumListing> spEnum)
+	{
+		HRESULT hr;
+
+		// Search for file
+		Swish::Listing lt;
+		hr = spEnum->Reset();
+		CPPUNIT_ASSERT_OK(hr);
+		hr = spEnum->Next(1, &lt, NULL);
+		CPPUNIT_ASSERT_OK(hr);
+		while (hr == S_OK)
+		{
+			if (bstrFilename == lt.bstrFilename)
+				return true;
+
+			hr = spEnum->Next(1, &lt, NULL);
+		}
+
+		return false;
+	}
+
+	bool _FileExists(__in PCWSTR pszFilePath)
 	{
 		HRESULT hr;
 		CString strFilePath(pszFilePath);
 
 		// Strip trailing slash
-		strFilePath.TrimRight(_T('/'));
+		strFilePath.TrimRight(L'/');
 		
 		// Find directory portion of path
-		int iLastSep = strFilePath.ReverseFind(_T('/'));
+		int iLastSep = strFilePath.ReverseFind(L'/');
 		CString strDirectory = strFilePath.Left(iLastSep+1);
 		int cFilenameLen = strFilePath.GetLength() - (iLastSep+1);
 		CString strFilename = strFilePath.Right(cFilenameLen);
 
 		// Fetch listing enumerator
-		Swish::IEnumListing *pEnum;
-		hr = m_pProvider->GetListing(CComBSTR(strDirectory), &pEnum);
+		CComPtr<Swish::IEnumListing> spEnum;
+		hr = m_pProvider->GetListing(CComBSTR(strDirectory), &spEnum);
 		if (FAILED(hr))
-			pEnum = NULL;
-		CPPUNIT_ASSERT_OK(hr);
+			return false;
 
-		// Search for file
-		Swish::Listing lt;
-		bool fFoundSubjectFile = false;
-		hr = pEnum->Next(1, &lt, NULL);
-		CPPUNIT_ASSERT_OK(hr);
-		while (hr == S_OK)
-		{
-			if (strFilename == CComBSTR(lt.bstrFilename))
-			{
-				fFoundSubjectFile = true;
-				break;
-			}
+		return _FileExistsInListing(CComBSTR(strFilename), spEnum);
+	}
 
-			hr = pEnum->Next(1, &lt, NULL);
-		}
-		ULONG cRefs = pEnum->Release();
-		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
-		char szMessage[300];
-		_snprintf_s(szMessage, 300, MAX_PATH,
-			"Rename test subject missing: %s", CW2A(strFilePath));
-		CPPUNIT_ASSERT_MESSAGE( szMessage, fFoundSubjectFile );
+	void _CheckPathExists(
+		__in PCWSTR pszFilePath, __in CPPUNIT_NS::SourceLine sourceLine )
+	{
+		char szMessage[MAX_PATH + 30];
+		_snprintf_s(szMessage, sizeof szMessage, MAX_PATH,
+			"Expected file not found: %s", CW2A(pszFilePath));
+
+		CPPUNIT_NS::Asserter::failIf( !(_FileExists(pszFilePath)),
+			CPPUNIT_NS::Message( "assertion failed", szMessage), sourceLine);
+	}
+
+	void _CheckPathNotExists(
+		__in PCWSTR pszFilePath, __in CPPUNIT_NS::SourceLine sourceLine )
+	{
+		char szMessage[MAX_PATH + 30];
+		_snprintf_s(szMessage, sizeof szMessage, MAX_PATH,
+			"Unexpected file found: %s", CW2A(pszFilePath));
+
+		CPPUNIT_NS::Asserter::failIf( (_FileExists(pszFilePath)),
+			CPPUNIT_NS::Message( "assertion failed", szMessage), sourceLine);
 	}
 
 	/**
 	 * Returns path as subpath of home directory in a BSTR.
 	 */
-	CComBSTR _HomeDir(CString strPath) const
+	CComBSTR _HomeDir(CString strPath = L"") const
 	{
 		CComBSTR bstrFullPath(m_bstrHomeDir);
+		bstrFullPath += strPath;
+		return bstrFullPath;
+	}
+	
+	/**
+	 * Returns path as subpath of the test area directory in a BSTR.
+	 */
+	CComBSTR _TestArea(CString strPath = L"") const
+	{
+		CComBSTR bstrFullPath(_HomeDir(L"testArea"));
+		bstrFullPath += L"/";
 		bstrFullPath += strPath;
 		return bstrFullPath;
 	}
