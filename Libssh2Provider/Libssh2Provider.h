@@ -73,8 +73,8 @@ public:
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 	IFACEMETHODIMP Rename(
-		__in BSTR bstrFromFilename, __in BSTR bstrToFilename,
-		__deref_out VARIANT_BOOL *fWasTargetOverwritten );
+		__in BSTR bstrFromPath, __in BSTR bstrToPath,
+		__deref_out VARIANT_BOOL *pfWasTargetOverwritten );
 	IFACEMETHODIMP Delete(
 		__in BSTR bstrPath );
 	IFACEMETHODIMP DeleteDirectory(

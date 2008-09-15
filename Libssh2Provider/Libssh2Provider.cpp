@@ -586,18 +586,16 @@ Listing CLibssh2Provider::_FillListingEntry(
 
 
 STDMETHODIMP CLibssh2Provider::Rename(
-	__in BSTR bstrFromFilename, __in BSTR bstrToFilename,
-	__deref_out VARIANT_BOOL *fWasTargetOverwritten  )
+	BSTR bstrFromPath, BSTR bstrToPath, VARIANT_BOOL *pfWasTargetOverwritten  )
 {
-	
-	ATLENSURE_RETURN_HR(::SysStringLen(bstrFromFilename) > 0, E_INVALIDARG);
-	ATLENSURE_RETURN_HR(::SysStringLen(bstrToFilename) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrFromPath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrToPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
 
-	*fWasTargetOverwritten = VARIANT_FALSE;
+	*pfWasTargetOverwritten = VARIANT_FALSE;
 
 	// NOP if filenames are equal
-	if (CComBSTR(bstrFromFilename) == CComBSTR(bstrToFilename))
+	if (CComBSTR(bstrFromPath) == CComBSTR(bstrToPath))
 		return S_OK;
 
 	HRESULT hr;
@@ -609,7 +607,7 @@ STDMETHODIMP CLibssh2Provider::Rename(
 	ATLASSUME(m_pSftpSession);
 
 	// Attempt to rename old path to new path
-	CW2A szFrom(bstrFromFilename), szTo(bstrToFilename);
+	CW2A szFrom(bstrFromPath), szTo(bstrToPath);
 	hr = _RenameSimple(szFrom, szTo);
 	if (SUCCEEDED(hr)) // Rename was successful without overwrite
 		return S_OK;
@@ -625,7 +623,7 @@ STDMETHODIMP CLibssh2Provider::Rename(
 			libssh2_sftp_last_error(m_pSftpSession), szFrom, szTo, strError);
 		if (SUCCEEDED(hr))
 		{
-			*fWasTargetOverwritten = VARIANT_TRUE;
+			*pfWasTargetOverwritten = VARIANT_TRUE;
 			return S_OK;
 		}
 		if (hr == E_ABORT) // User denied overwrite
@@ -753,7 +751,7 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 	return E_FAIL;
 }
 
-STDMETHODIMP CLibssh2Provider::Delete( __in BSTR bstrPath )
+STDMETHODIMP CLibssh2Provider::Delete( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -788,7 +786,7 @@ HRESULT CLibssh2Provider::_Delete( const char *szPath, CString& strError )
 	return E_FAIL;
 }
 
-STDMETHODIMP CLibssh2Provider::DeleteDirectory( __in BSTR bstrPath )
+STDMETHODIMP CLibssh2Provider::DeleteDirectory( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -886,7 +884,7 @@ HRESULT CLibssh2Provider::_DeleteRecursive(
 		return _Delete(szPath, strError);
 }
 
-STDMETHODIMP CLibssh2Provider::CreateNewFile( __in BSTR bstrPath )
+STDMETHODIMP CLibssh2Provider::CreateNewFile( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -911,7 +909,7 @@ STDMETHODIMP CLibssh2Provider::CreateNewFile( __in BSTR bstrPath )
 	return S_OK;
 }
 
-STDMETHODIMP CLibssh2Provider::CreateNewDirectory( __in BSTR bstrPath )
+STDMETHODIMP CLibssh2Provider::CreateNewDirectory( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
