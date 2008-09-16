@@ -25,6 +25,7 @@
 #include "IconExtractor.h"
 #include "ExplorerCallback.h" // For interaction with Explorer window
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
+#include "RemotePidl.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -550,6 +551,7 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 		dwAttribs |= SFGAO_GHOSTED;
 
 	dwAttribs |= SFGAO_CANRENAME;
+	dwAttribs |= SFGAO_CANDELETE;
 
     *pdwAttribs &= dwAttribs;
 
@@ -834,21 +836,31 @@ STDMETHODIMP CRemoteFolder::ColumnClick( UINT iColumn )
 HRESULT CRemoteFolder::OnMenuCallback(
 	HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
+	ATLTRACE(__FUNCTION__" called (uMsg=%d)\n", uMsg);
 	UNREFERENCED_PARAMETER(hwnd);
 
 	switch (uMsg)
 	{
 	case DFM_MERGECONTEXTMENU:
 		return this->OnMergeContextMenu(
+			hwnd,
 			pdtobj,
 			static_cast<UINT>(wParam),
 			*reinterpret_cast<QCMINFO *>(lParam)
 		);
 	case DFM_INVOKECOMMAND:
 		return this->OnInvokeCommand(
+			hwnd,
 			pdtobj,
-			static_cast<UINT>(wParam),
-			reinterpret_cast<PCTSTR>(lParam)
+			static_cast<int>(wParam),
+			reinterpret_cast<PCWSTR>(lParam)
+		);
+	case DFM_INVOKECOMMANDEX:
+		return this->OnInvokeCommandEx(
+			hwnd,
+			pdtobj,
+			static_cast<int>(wParam),
+			reinterpret_cast<PDFMICS>(lParam)
 		);
 	default:
 		return S_FALSE;
@@ -859,8 +871,9 @@ HRESULT CRemoteFolder::OnMenuCallback(
  * Handle @c DFM_MERGECONTEXTMENU callback.
  */
 HRESULT CRemoteFolder::OnMergeContextMenu(
-	IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
+	HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
 {
+	UNREFERENCED_PARAMETER(hwnd);
 	UNREFERENCED_PARAMETER(pDataObj);
 	UNREFERENCED_PARAMETER(uFlags);
 	UNREFERENCED_PARAMETER(info);
@@ -874,12 +887,153 @@ HRESULT CRemoteFolder::OnMergeContextMenu(
  * Handle @c DFM_INVOKECOMMAND callback.
  */
 HRESULT CRemoteFolder::OnInvokeCommand(
-		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs )
+	HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pszArgs )
 {
-	UNREFERENCED_PARAMETER(pDataObj);
-	UNREFERENCED_PARAMETER(idCmd);
-	UNREFERENCED_PARAMETER(pszArgs);
+	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p, idCmd=%d, "
+		"pszArgs=%ls)\n", hwnd, pDataObj, idCmd, pszArgs);
+
 	return S_FALSE;
+}
+
+/**
+ * Handle @c DFM_INVOKECOMMANDEX callback.
+ */
+HRESULT CRemoteFolder::OnInvokeCommandEx(
+	HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics )
+{
+	ATLTRACE(__FUNCTION__" called (pDataObj=%p, idCmd=%d, pdfmics=%p)\n",
+		pDataObj, idCmd, pdfmics);
+
+	switch (idCmd)
+	{
+	case DFM_CMD_DELETE:
+		return this->OnCmdDelete(hwnd, pDataObj);
+	default:
+		return S_FALSE;
+	}
+}
+
+#define GetPIDLFolder(pida) \
+	(PCIDLIST_ABSOLUTE)(((LPBYTE)pida)+(pida)->aoffset[0])
+#define GetPIDLItem(pida, i) \
+	(PCIDLIST_RELATIVE)(((LPBYTE)pida)+(pida)->aoffset[i+1])
+
+HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
+{
+	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p)\n", hwnd, pDataObj);
+
+	HRESULT hr;
+
+	try
+	{
+		UINT nCFSTR_SHELLIDLIST = ::RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+		FORMATETC fetc = {
+			static_cast<CLIPFORMAT>(nCFSTR_SHELLIDLIST),
+			NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+		};
+		STGMEDIUM medium;
+
+		hr = pDataObj->GetData(&fetc, &medium);
+		if (SUCCEEDED(hr))
+		{
+			CIDA *pcida = static_cast<CIDA *>(::GlobalLock(medium.hGlobal));
+
+			if (pcida)
+			{
+				CAbsolutePidl pidlFolder(GetPIDLFolder(pcida));
+				CRemoteRelativePidl pidl(GetPIDLItem(pcida,0));
+				::GlobalUnlock(medium.hGlobal);
+				
+				ATLASSERT(::ILIsEqual(m_pidl, pidlFolder));
+				ATLTRACE("PIDL filename: %ls\n", pidl.GetFilename());
+
+				CAbsolutePidl pidlFilePath = pidlFolder.Join(pidl);
+				ATLTRACE(
+					"PIDL path: %ls\n", _ExtractPathFromPIDL(pidlFilePath));
+
+				if (::ILIsChild(pidl) && !::ILIsEmpty(pidl))
+				{
+					CRemoteChildPidl pidlChild = 
+						static_cast<PCITEMID_CHILD>(
+						static_cast<PCIDLIST_RELATIVE>(pidl));
+					if (_ConfirmDelete(hwnd,
+						CComBSTR(pidlChild.GetFilename()),
+						pidlChild.IsFolder()))
+					{
+						_DeleteFile(hwnd, pidlChild);
+					}
+				}
+			}
+			else
+			{
+				hr = E_UNEXPECTED;
+			}
+
+			::ReleaseStgMedium(&medium);
+		}
+	}
+	catchCom()
+
+	return hr;
+}
+
+void CRemoteFolder::_DeleteFile( HWND hwnd, PCUITEMID_CHILD pidl )
+{
+	if (hwnd == NULL)
+		AtlThrow(E_FAIL);
+
+	// Create SFTP connection object for this folder using hwndOwner for UI
+	CConnection conn = _CreateConnectionForFolder( hwnd );
+
+	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
+	CString strPath = _ExtractPathFromPIDL( m_pidl );
+	ATLASSERT(!strPath.IsEmpty());
+	bool fIsFolder = m_RemotePidlManager.IsFolder(pidl);
+
+	// Create instance of our directory handler class
+	CSftpDirectory directory( conn, strPath );
+
+	// Delete file
+	directory.Delete( pidl );
+
+	// Make PIDL absolute
+	PIDLIST_ABSOLUTE pidlFull = ::ILCombine(m_pidl, pidl);
+
+	// Notify the shell
+	::SHChangeNotify(
+		(fIsFolder) ? SHCNE_RMDIR : SHCNE_DELETE,
+		SHCNF_IDLIST | SHCNF_FLUSH, pidlFull, NULL
+	);
+
+	::ILFree(pidlFull);
+}
+
+bool CRemoteFolder::_ConfirmDelete( HWND hwnd, BSTR bstrPath, bool fIsFolder )
+{
+	if (hwnd == NULL)
+		return false;
+
+	CString strMessage;
+	if (!fIsFolder)
+	{
+		strMessage = L"Are you sure you want to permanently delete '";
+		strMessage += bstrPath;
+		strMessage += L"'?";
+	}
+	else
+	{
+		strMessage = L"Are you sure you want to permanently delete the "
+			L"folder '";
+		strMessage += bstrPath;
+		strMessage += L"' and all of its contents?";
+	}
+
+	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
+		(fIsFolder) ?
+			L"Confirm Folder Delete" : L"Confirm File Delete", 
+		MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON1);
+
+	return (ret == IDYES);
 }
 
 /*----------------------------------------------------------------------------*/

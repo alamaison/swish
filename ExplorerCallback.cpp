@@ -57,7 +57,7 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 		// apply to this folder (specified using our absolute PIDL)
 		*reinterpret_cast<LONG*>(lParam) = 
 			SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
-			SHCNE_DELETE;
+			SHCNE_DELETE | SHCNE_RMDIR;
 		*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam) = m_pidl; // Owned by us
 		return S_OK;
 	case SFVM_FSNOTIFY:

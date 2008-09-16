@@ -124,7 +124,13 @@ private:
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 	CConnection _CreateConnectionForFolder(
-		__in HWND hwndUserInteraction ) throw();
+		__in HWND hwndUserInteraction ) throw(...);
+	void _DeleteFile(
+		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl ) throw(...);
+	bool _ConfirmDelete(
+		__in_opt HWND hwnd, __in BSTR bstrPath, __in bool fIsFolder )
+		throw(...);
+
 
 	/**
 	 * Static dispatcher for Default Context Menu callback
@@ -142,10 +148,18 @@ private:
 	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
 		UINT uMsg, WPARAM wParam, LPARAM lParam );
 	HRESULT OnMergeContextMenu(
-		IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
+		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	HRESULT OnInvokeCommand(
-		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+	HRESULT OnInvokeCommandEx(
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
 	// @}
+
+	/** @name Invoked command handlers */
+	// @{
+	HRESULT OnCmdDelete( HWND hwnd, IDataObject *pDataObj );
+	// @}
+
 };
 
 // Remote folder listing column property IDs
