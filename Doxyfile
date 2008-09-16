@@ -38,7 +38,7 @@ TAB_SIZE               = 8
 ALIASES                = implementing="\par Implementing:\n\c"
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
-BUILTIN_STL_SUPPORT    = NO
+BUILTIN_STL_SUPPORT    = YES
 CPP_CLI_SUPPORT        = NO
 DISTRIBUTE_GROUP_DOC   = NO
 SUBGROUPING            = YES
@@ -85,7 +85,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = 
+INPUT                  = . Libssh2Provider
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \
                          *.cc \
@@ -227,6 +227,7 @@ INCLUDE_FILE_PATTERNS  =
 # Those after blank line come from Doxygen website 
 # https://www.stack.nl/~dimitri/doxygen/preprocessing.html
 PREDEFINED             = __in= \
+                         __in_z= \
                          __out= \
                          __inout= \
                          __in_opt= \

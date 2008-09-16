@@ -113,11 +113,13 @@ void CLibssh2Provider::FinalRelease()
  * @param bstrUser The user name of the SSH account.
  * @param bstrHost The name of the machine to connect to.
  * @param uPort    The TCP/IP port on which the SSH server is running.
- * @returns
- *   @c S_OK if successful,
- *   @c E_INVALIDARG if either string parameter was empty or port is invalid, 
- *   @c E_POINTER is pConsumer is invalid,
- *   @c E_FAIL if other error encountered.
+ *
+ * @returns Success or failure of the operation.
+ *   @retval S_OK if successful
+ *   @retval E_INVALIDARG if either string parameter was empty or port 
+ *           is invalid
+ *   @retval E_POINTER is pConsumer is invalid
+ *   @retval E_FAIL if other error encountered
  */
 STDMETHODIMP CLibssh2Provider::Initialize(
 	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
@@ -158,13 +160,14 @@ STDMETHODIMP CLibssh2Provider::Initialize(
  * and port used are the class members @c m_strHost and @c m_uPort.
  * If the socket has already been initialised, the function leaves it
  * unchanged (or asserts in a DEBUG build).  If any errors occur, the 
- * socket is set to @c INVALID_SOCKET and returns @c E_ABORT.
+ * socket is set to @c INVALID_SOCKET and returns E_ABORT.
  *
- * @returns
- *   @c S_OK if successful,
- *   @c E_FAIL if the hostname could not be resolved or connecting to it failed,
- *   @c E_ABORT if the socket was already intialised,
- *   @c E_UNEXPECTED if other error occurs.
+ * @returns Success or failure of the operation.
+ *   @retval S_OK if successful
+ *   @retval E_FAIL if the hostname could not be resolved or connecting to 
+ *           it failed
+ *   @c E_ABORT if the socket was already intialised
+ *   @c E_UNEXPECTED if other error occurs
  *
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c ::closesocket().
@@ -245,7 +248,9 @@ HRESULT CLibssh2Provider::_VerifyHostKey()
  * and these are tried one at time until one succeeds in the order:
  * public-key, keyboard-interactive, plain password.
  *
- * @returns S_OK if authentication succeeded or E_ABORT if all methods failed.
+ * @returns Success or failure of the operation.
+ *   @retval S_OK if authentication succeeded
+ *   @retval E_ABORT if all methods failed
  */
 HRESULT CLibssh2Provider::_AuthenticateUser()
 {
@@ -293,8 +298,9 @@ HRESULT CLibssh2Provider::_AuthenticateUser()
  * asked for the password again.  This repeats until the user supplies a 
  * correct password or cancel the request.
  *
- * @returns S_OK if authentication is successful or E_ABORT if user cancels
- *          authentication
+ * @returns  Success or failure of the operation.
+ *   @retval S_OK if authentication is successful
+ *   @retval E_ABORT if user cancels authentication
  */
 HRESULT CLibssh2Provider::_PasswordAuthentication(PCSTR szUsername)
 {
@@ -428,11 +434,13 @@ HRESULT CLibssh2Provider::_Disconnect()
 *
 * @pre The Initialize() method must have been called first
 *
-* @param [in]  bstrDirectory The absolute path of the directory to list
-* @param [out] ppEnum        A pointer to the IEnumListing interface pointer
-* @returns 
-*   @c S_OK and IEnumListing pointer if successful, @c E_UNEXPECTED if
-*   Initialize() was not previously called, @c E_FAIL if other error occurs.
+* @param [in]  bstrDirectory Absolute path of the directory to list.
+* @param [out] ppEnum        Pointer to the IEnumListing interface pointer.
+*
+* @returns  Success or failure of the operation.
+*   @retval S_OK and IEnumListing pointer if successful
+*   @retval E_UNEXPECTED if Initialize() was not previously called
+*   @retval E_FAIL if other error occurs
 *
 * @todo Handle the case where the directory does not exist
 * @todo Return a collection rather than an enumerator
@@ -525,8 +533,8 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 /**
  * Creates a Listing object for a file entry based on filename and attributes.
  *
- * @param pszFilename The filename as an ANSI char string.
- * @param attrs       A reference to the LIBSSH2_SFTP_ATTRIBUTES containing
+ * @param pszFilename Filename as an ANSI char string.
+ * @param attrs       Reference to the LIBSSH2_SFTP_ATTRIBUTES containing
  *                    the file's details.
  *
  * @returns A listing object representing the file.
@@ -584,7 +592,46 @@ Listing CLibssh2Provider::_FillListingEntry(
 	return lt;
 }
 
-
+/**
+ * Renames a file or directory.
+ *
+ * The source and target file or directory must be specified using absolute 
+ * paths for the remote filesytem.  The results of passing relative paths are 
+ * not guaranteed (though, libssh2 seems to default to operating in the home 
+ * directory) and may be dangerous.
+ *
+ * If a file or folder already exists at the target path, @a bstrToPath, 
+ * we inform the front-end consumer through a call to OnConfirmOverwrite or
+ * OnConfirmOverwriteEx.  If confirmation is given, we attempt to overwrite the
+ * obstruction with the source path, @a bstrFromPath, and if successful we
+ * @c VARIANT_TRUE in @a pfWasTargetOverwritten.  This can be used by the 
+ * caller to decide whether or not to update a directory view.
+ *
+ * @remarks
+ * Due to the limitations of SFTP versions 4 and below, most servers will not
+ * allow atomic overwrite.  We attempt to do this non-atomically by:
+ * -# appending @c ".swish_renaming_temp" to the obstructing target's filename
+ * -# renaming the source file to the old target name
+ * -# deleting the renamed target
+ * If step 2 fails, we try to rename the temporary file back to its old name.
+ * It is possible that this last step may fail, in which case the temporary file
+ * would remain in place.  It could be recovered by manually renaming it back.
+ *
+ * @warning
+ * If either of the paths are not absolute, this function may cause files
+ * in whichever directory libssh2 considers 'current' to be renamed or deleted 
+ * if they happen to have matching filenames.
+ *
+ * @param [in] bstrFromPath            Absolute path of the file or directory
+ *                                     to be renamed.
+ *
+ * @param [in] bstrToPath              Absolute path that @a bstrFromPath
+ *                                     should be renamed to.
+ *
+ * @param [out] pfWasTargetOverwritten Address in which to return whether or not
+ *                                     we needed to overwrite an existing file 
+ *                                     or directory at the target path. 
+ */
 STDMETHODIMP CLibssh2Provider::Rename(
 	BSTR bstrFromPath, BSTR bstrToPath, VARIANT_BOOL *pfWasTargetOverwritten  )
 {
@@ -640,6 +687,16 @@ STDMETHODIMP CLibssh2Provider::Rename(
 	return E_FAIL;
 }
 
+/**
+ * Renames a file or directory but prevents overwriting any existing item.
+ *
+ * @returns Success or failure of the operation.
+ *    @retval S_OK   if the file or directory was successfully renamed
+ *    @retval E_FAIL if there already is a file or directory at the target path
+ *
+ * @param szFrom  Absolute path of the file or directory to be renamed.
+ * @param szTo    Absolute path to rename @a szFrom to.
+ */
 HRESULT CLibssh2Provider::_RenameSimple(const char *szFrom, const char *szTo)
 {
 	int rc = libssh2_sftp_rename_ex(
@@ -649,6 +706,24 @@ HRESULT CLibssh2Provider::_RenameSimple(const char *szFrom, const char *szTo)
 	return (!rc) ? S_OK : E_FAIL;
 }
 
+/**
+ * Retry renaming file or directory if possible, after seeking permission to 
+ * overwrite the obstruction at the target.
+ *
+ * If this fails the file or directory really can't be renamed and the error
+ * message from libssh2 is returned in @a strError.
+ *
+ * @param [in]  uPreviousError Error code of the previous rename attempt in
+ *                             order to determine if an overwrite has any chance
+ *                             of being successful.
+ *
+ * @param [in]  szFrom         Absolute path of the file or directory to 
+ *                             be renamed.
+ *
+ * @param [in]  szTo           Absolute path to rename @a szFrom to.
+ *
+ * @param [out] strError       Error message if the operation fails.
+ */
 HRESULT CLibssh2Provider::_RenameRetryWithOverwrite(
 	ULONG uPreviousError, const char *szFrom, const char *szTo, 
 	CString& strError)
@@ -699,6 +774,16 @@ HRESULT CLibssh2Provider::_RenameRetryWithOverwrite(
 	return E_FAIL;
 }
 
+/**
+ * Rename file or directory and atomically overwrite any obstruction.
+ *
+ * @remarks
+ * This will only work on a server supporting SFTP version 5 or above.
+ *
+ * @param [in]  szFrom    Absolute path of the file or directory to be renamed.
+ * @param [in]  szTo      Absolute path to rename @a szFrom to.
+ * @param [out] strError  Error message if the operation fails.
+ */
 HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
@@ -719,6 +804,20 @@ HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
 	}
 }
 
+
+/**
+ * Rename file or directory and overwrite any obstruction non-atomically.
+ *
+ * This involves renaming the obstruction at the target to a temporary file, 
+ * renaming the source file to the target and then deleting the renamed 
+ * obstruction.  As this is not an atomic operation it is possible to fail 
+ * between any of these stages and is not a prefect solution.  It may, for 
+ * instance, leave the temporary file behind.
+ *
+ * @param [in]  szFrom    Absolute path of the file or directory to be renamed.
+ * @param [in]  szTo      Absolute path to rename @a szFrom to.
+ * @param [out] strError  Error message if the operation fails.
+ */
 HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
@@ -931,6 +1030,12 @@ STDMETHODIMP CLibssh2Provider::CreateNewDirectory( BSTR bstrPath )
 	return S_OK;
 }
 
+/**
+ * Retrieves a string description of the last error reported by libssh2.
+ *
+ * In the case that the last SSH error is an SFTP error it returns the SFTP
+ * error message in preference.
+ */
 CString CLibssh2Provider::_GetLastErrorMessage()
 {
 	CString bstrMessage;
@@ -946,6 +1051,11 @@ CString CLibssh2Provider::_GetLastErrorMessage()
 		return CString(pszErr);
 }
 
+/**
+ * Maps between libssh2 SFTP error codes and an appropriate error string.
+ *
+ * @param uError  SFTP error code as returned by libssh2_sftp_last_error().
+ */
 CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)
 {
 	switch (uError)
