@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "SftpDirectory.h"
+#include "RemotePidl.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
@@ -160,6 +161,20 @@ bool CSftpDirectory::Rename(
 		AtlThrow(hr);
 
 	return (fWasTargetOverwritten == VARIANT_TRUE);
+}
+
+void CSftpDirectory::Delete( __in PCUITEMID_CHILD pidlFile )
+{
+	CRemoteChildPidl pidl(pidlFile);
+	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
+	
+	HRESULT hr;
+	if (pidl.IsFolder())
+		hr = m_connection.spProvider->DeleteDirectory(strPath);
+	else
+		hr = m_connection.spProvider->Delete(strPath);
+	if (hr != S_OK)
+		AtlThrow(hr);
 }
 
 // CSftpDirectory
