@@ -22,33 +22,38 @@
 /**
  * Wrapper for an pointer to an ITEMIDLIST otherwise knowns as a PIDL.
  *
- * The template takes the type of the PIDL; either relative (PIDLIST_RELATIVE),
- * absolute (PIDLIST_ABSOLUTE) or child (PITEMID_CHILD). This enhances 
- * type-safety when using the PIDL with functions, etc.  The only state stored
- * by this wrapper is the PIDL itself and so can be used anywhere a PIDL can.
+ * The template takes the type of the ITEMIDLIST; either relative 
+ * (ITEMIDLIST_RELATIVE), absolute (ITEMIDLIST_ABSOLUTE) or child 
+ * (ITEMID_CHILD). This enhances type-safety when using the PIDL with 
+ * functions, etc.  The only state stored by this wrapper is the PIDL itself 
+ * and so can be used anywhere a PIDL can.
  *
  * Most methods that take a PIDL argument, including the constructors, make a
  * copy of the PIDL first, although the class can take ownership of an
  * exisiting PIDL with Attach().
  *
- * @param PidlType  The type of PIDL to be wrapped; either PIDLIST_RELATIVE,
- *                  PIDLIST_ABSOLUTE or PITEMID_CHILD.
+ * @param IdListType  The type of ITEMIDLIST whose pointer to be wrapped; 
+ *                    either ITEMIDLIST_RELATIVE, ITEMIDLIST_ABSOLUTE or 
+ *                    ITEMID_CHILD.
  *
  * @attention This class requires STRICT_TYPED_ITEMIDS to be defined in order
  *            to make the different types of PIDL distinct.  Whithout it, all
  *            three PIDL types appear to the compiler as LPITEMIDLIST.
  */
-template <typename PidlType>
+template <typename IdListType>
 class CPidl
 {
+	typedef IdListType *PidlType;
+	typedef const IdListType *ConstPidlType;
+
 public:
 	PidlType m_pidl;
 
 public:
 	CPidl() : m_pidl(NULL) {}
-	CPidl( __in_opt const PidlType pidl ) : m_pidl(Clone(pidl)) {}
-	CPidl( __in const CPidl& pidl ) : m_pidl(Clone(pidl)) {}
-	CPidl& operator=( __in const CPidl& pidl ) throw()
+	CPidl( __in_opt ConstPidlType pidl ) throw(...) : m_pidl(Clone(pidl)) {}
+	CPidl( __in const CPidl& pidl ) throw(...) : m_pidl(Clone(pidl)) {}
+	CPidl& operator=( __in const CPidl& pidl ) throw(...)
 	{
 		if (m_pidl != pidl.m_pidl)
 		{
@@ -57,40 +62,72 @@ public:
 		return *this;
 	}
 
-	~CPidl()
+	template<typename IdListSupertype>
+	operator CPidl<IdListSupertype>() const
 	{
-		::ILFree(m_pidl);
+		return CPidl<IdListSupertype>(m_pidl);
 	}
 
-	void Attach( __in_opt PidlType pidl )
+	~CPidl() throw()
 	{
-		::ILFree(m_pidl);
+		Delete();
+	}
+
+	void Attach( __in_opt PidlType pidl ) throw()
+	{
+		Delete();
 		m_pidl = pidl;
 	}
 
-	void CopyFrom( __in_opt const PidlType pidl ) throw()
+	void CopyFrom( __in_opt ConstPidlType pidl ) throw(...)
 	{
 		Attach(Clone(pidl));
 	}
 
-	PidlType Detach()
+	PidlType Detach() throw()
 	{
 		PidlType pidl = m_pidl;
 		m_pidl = NULL;
 		return pidl;
 	}
 
-	PidlType CopyTo() const throw()
+	void Delete()
+	{
+		::ILFree(m_pidl);
+		m_pidl = NULL;
+	}
+
+	PidlType CopyTo() const throw(...)
 	{
 		return Clone(m_pidl);
 	}
 
-	operator const PidlType() const
+	operator ConstPidlType() const throw()
 	{
 		return m_pidl;
 	}
 
-	static PidlType Clone( __in_opt const PidlType pidl ) throw()
+	/**
+	 * @todo Returning a child PIDL as the result of a join is not correct. It
+	 * should return a relative PIDL. How can we do this using templates?
+	 */
+	PidlType Join( __in_opt PCUIDLIST_RELATIVE pidl )
+	{
+		return reinterpret_cast<PidlType>(
+			::ILCombine(reinterpret_cast<PCIDLIST_ABSOLUTE>(m_pidl), pidl)
+		);
+	}
+
+	PCUIDLIST_RELATIVE GetNext()
+	{
+		if (m_pidl == NULL)
+			return NULL;
+
+		PCUIDLIST_RELATIVE pidl = ::ILNext(m_pidl);
+		return (::ILIsEmpty(pidl)) ? NULL : pidl;
+	}
+
+	static PidlType Clone( __in_opt ConstPidlType pidl ) throw(...)
 	{
 		if (pidl == NULL)
 			return NULL;
@@ -103,6 +140,6 @@ public:
 	}
 };
 
-typedef CPidl<PITEMID_CHILD> CChildPidl;
-typedef CPidl<PIDLIST_ABSOLUTE> CAbsolutePidl;
-typedef CPidl<PIDLIST_RELATIVE> CRelativePidl;
+typedef CPidl<ITEMID_CHILD> CChildPidl;
+typedef CPidl<ITEMIDLIST_ABSOLUTE> CAbsolutePidl;
+typedef CPidl<ITEMIDLIST_RELATIVE> CRelativePidl;

@@ -1,25 +1,23 @@
 #include "stdafx.h"
 #include "CppUnitExtensions.h"
 
-// Redefine the 'protected' keyword to inject a friend declaration for this 
-// test class directly into the target class's header
-//template<typename PidlType> class CPidl_test;
-//#undef protected
-//#define protected \
-//	friend class CPidl_test; protected
 #include "../Pidl.h"
-//#undef protected
 
-template<typename PidlType>
+template<typename IdListType>
 class CPidl_test : public CPPUNIT_NS::TestFixture
 {
-	CPPUNIT_TEST_SUITE( CPidl_test<PidlType> );
+	typedef IdListType *PidlType;
+	typedef const IdListType *ConstPidlType;
+
+	CPPUNIT_TEST_SUITE( CPidl_test<IdListType> );
 		CPPUNIT_TEST( testCPidlDefault );
 		CPPUNIT_TEST( testCPidlDefaultNULL );
 		CPPUNIT_TEST( testCPidlFromPidl );
 		CPPUNIT_TEST( testCPidlFromPidlNULL );
 		CPPUNIT_TEST( testCPidlCopyAssignment );
 		CPPUNIT_TEST( testCPidlCopyAssignmentNULL );
+		CPPUNIT_TEST( testCPidlCopyAssignment2 );
+		CPPUNIT_TEST( testCPidlCopyAssignment2NULL );
 		CPPUNIT_TEST( testCPidlCopyConstruction );
 		CPPUNIT_TEST( testCPidlCopyConstructionNULL );
 		CPPUNIT_TEST( testAttach1 );
@@ -31,6 +29,11 @@ class CPidl_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testDetachNULL );
 		CPPUNIT_TEST( testCopyTo );
 		CPPUNIT_TEST( testCopyToNULL );
+		CPPUNIT_TEST( testJoin );
+		CPPUNIT_TEST( testJoinNULL );
+		CPPUNIT_TEST( testGetNext );
+		CPPUNIT_TEST( testGetNextAtEnd );
+		CPPUNIT_TEST( testGetNextNULL );
 		CPPUNIT_TEST( testoperatorConstPidl );
 		CPPUNIT_TEST( testoperatorConstPidlNULL );
 		CPPUNIT_TEST( teststaticClone );
@@ -56,7 +59,7 @@ protected:
 
 	void testCPidlDefault()
 	{
-		m_pPidl = new CPidl<PidlType>();
+		m_pPidl = new CPidl<IdListType>();
 		CPPUNIT_ASSERT( m_pPidl );
 		CPPUNIT_ASSERT( m_pPidl->m_pidl == NULL );
 		delete m_pPidl;
@@ -65,7 +68,7 @@ protected:
 
 	void testCPidlDefaultNULL()
 	{
-		CPidl<PidlType> pidl;
+		CPidl<IdListType> pidl;
 		CPPUNIT_ASSERT( pidl.m_pidl == NULL );
 	}
 
@@ -76,7 +79,7 @@ protected:
 
 		// This constructor should make a copy of the PIDL and NOT 
 		// take ownership
-		m_pPidl = new CPidl<PidlType>(pidlTest);
+		m_pPidl = new CPidl<IdListType>(pidlTest);
 		CPPUNIT_ASSERT( m_pPidl->m_pidl );
 		CPPUNIT_ASSERT( m_pPidl->m_pidl != pidlTest );
 		// XXX: This is a bit dodgy.  Why does ILIsEqual need absolute PIDLs?
@@ -99,7 +102,7 @@ protected:
 	void testCPidlFromPidlNULL()
 	{
 		PidlType pidlNull = NULL;
-		m_pPidl = new CPidl<PidlType>(pidlNull);
+		m_pPidl = new CPidl<IdListType>(pidlNull);
 		CPPUNIT_ASSERT( m_pPidl->m_pidl == NULL );
 	}
 
@@ -108,13 +111,13 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidl<PidlType> pidl;
+			CPidl<IdListType> pidl;
 			pidl.Attach(pidlTest);
 			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
 
 			// Assigning to another CPidl should clone contents of the old
 			// CPidl leaving its m_pidl untouched
-			CPidl<PidlType> pidlCopy;
+			CPidl<IdListType> pidlCopy;
 			pidlCopy = pidl;
 			CPPUNIT_ASSERT( pidlCopy.m_pidl != pidlTest );
 			CPPUNIT_ASSERT( ::ILIsEqual(
@@ -129,10 +132,43 @@ protected:
 
 	void testCPidlCopyAssignmentNULL()
 	{
-		CPidl<PidlType> pidl;
-		CPidl<PidlType> pidlCopy;
+		CPidl<IdListType> pidl;
+		CPidl<IdListType> pidlCopy;
 		pidlCopy = pidl;
 		CPPUNIT_ASSERT( pidlCopy.m_pidl == NULL );
+	}
+
+	void testCPidlCopyAssignment2()
+	{
+		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
+
+		{
+			// Assigning to another CPidl should clone contents of the old
+			// CPidl leaving its m_pidl untouched
+			CPidl<IdListType> pidlCopy;
+			pidlCopy = pidlTest;
+			CPPUNIT_ASSERT( pidlCopy.m_pidl != pidlTest );
+			CPPUNIT_ASSERT( ::ILIsEqual(
+				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlCopy.m_pidl),
+				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlTest) 
+			));
+		}
+
+		::ILFree(pidlTest);
+	}
+
+	void testCPidlCopyAssignment2NULL()
+	{		
+		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
+
+		{
+			CPidl<IdListType> pidl;
+			pidl.Attach(pidlTest);
+			pidl = NULL; // Should destroy pidlTest
+			CPPUNIT_ASSERT( pidl.m_pidl == NULL );
+		}
+
+		// Don't ILFree pidlTest - it is destroyed when we assign NULL to pidl
 	}
 
 	void testCPidlCopyConstruction()
@@ -140,13 +176,13 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidl<PidlType> pidl;
+			CPidl<IdListType> pidl;
 			pidl.Attach(pidlTest);
 			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
 
 			// Initialising from another CPidl should clone contents of the old
 			// CPidl leaving its m_pidl untouched
-			CPidl<PidlType> pidlCopy = pidl;
+			CPidl<IdListType> pidlCopy = pidl;
 			CPPUNIT_ASSERT( pidlCopy.m_pidl != pidlTest );
 			CPPUNIT_ASSERT( ::ILIsEqual(
 				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlCopy.m_pidl),
@@ -160,8 +196,8 @@ protected:
 
 	void testCPidlCopyConstructionNULL()
 	{
-		CPidl<PidlType> pidl;
-		CPidl<PidlType> pidlCopy = pidl;
+		CPidl<IdListType> pidl;
+		CPidl<IdListType> pidlCopy = pidl;
 		CPPUNIT_ASSERT( pidlCopy.m_pidl == NULL );
 	}
 
@@ -170,7 +206,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		// Attach should take over ownership of the PIDL
-		m_pPidl = new CPidl<PidlType>();
+		m_pPidl = new CPidl<IdListType>();
 		m_pPidl->Attach(pidlTest);
 		CPPUNIT_ASSERT_EQUAL( pidlTest, m_pPidl->m_pidl );
 
@@ -188,7 +224,7 @@ protected:
 	{
 		// Create an instance by taking ownership of a PIDL
 		PidlType pidlFirst = static_cast<PidlType>(::ILClone(m_pidlOriginal));
-		m_pPidl = new CPidl<PidlType>();
+		m_pPidl = new CPidl<IdListType>();
 		m_pPidl->Attach(pidlFirst);
 
 		// Attach should take ownership of the second PIDL and should destroy
@@ -214,7 +250,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		// Create an instance by taking ownership of a PIDL
-		CPidl<PidlType> pidl;
+		CPidl<IdListType> pidl;
 		pidl.Attach(pidlTest);
 		CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
 
@@ -232,7 +268,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		// CopyFrom should copy the PIDL into ourselves but NOT take ownership
-		m_pPidl = new CPidl<PidlType>();
+		m_pPidl = new CPidl<IdListType>();
 		m_pPidl->CopyFrom(pidlTest);
 		CPPUNIT_ASSERT( m_pPidl->m_pidl != pidlTest );
 		CPPUNIT_ASSERT( ::ILIsEqual(
@@ -253,7 +289,7 @@ protected:
 	void testCopyFromNULL()
 	{
 		PidlType pidlNull = NULL;
-		m_pPidl = new CPidl<PidlType>();
+		m_pPidl = new CPidl<IdListType>();
 		m_pPidl->CopyFrom(pidlNull);
 		CPPUNIT_ASSERT( m_pPidl->m_pidl == NULL );
 	}
@@ -262,7 +298,7 @@ protected:
 	{
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
-		m_pPidl = new CPidl<PidlType>();
+		m_pPidl = new CPidl<IdListType>();
 		m_pPidl->Attach(pidlTest);
 		CPPUNIT_ASSERT_EQUAL( pidlTest, m_pPidl->m_pidl );
 
@@ -281,7 +317,7 @@ protected:
 	void testDetachNULL()
 	{
 		// Test that detaching a NULL PIDL should not fail
-		CPidl<PidlType> pidlNull;
+		CPidl<IdListType> pidlNull;
 		pidlNull.Detach();
 	}
 
@@ -290,7 +326,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidl<PidlType> pidl;
+			CPidl<IdListType> pidl;
 			pidl.Attach(pidlTest);
 			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
 
@@ -311,9 +347,118 @@ protected:
 
 	void testCopyToNULL()
 	{
-		CPidl<PidlType> pidlNull;
+		CPidl<IdListType> pidlNull;
 		PidlType pidlDest = NULL;
 		pidlDest = pidlNull.CopyTo();
+		CPPUNIT_ASSERT( pidlDest == NULL );
+	}
+
+	void testJoin()
+	{
+		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
+		PITEMID_CHILD pidlChild = 
+			::ILCloneChild(::ILFindLastID(m_pidlOriginal));
+		CPPUNIT_ASSERT(::ILRemoveLastID(pidlTest));
+		PIDLIST_ABSOLUTE pidlRecombined = ::ILCombine(
+			reinterpret_cast<PIDLIST_ABSOLUTE>(pidlTest), pidlChild);
+
+		{
+			CPidl<IdListType> pidl;
+			pidl.Attach(pidlTest);
+			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
+
+			// Join should return a copy of the CPidl's member with the second
+			// pidl appended, leaving the CPidl untouched
+			PIDLIST_RELATIVE pidlJoined = pidl.Join(pidlChild);
+			CPPUNIT_ASSERT( !::ILIsEqual(
+				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlJoined),
+				reinterpret_cast<PIDLIST_ABSOLUTE>(pidl.m_pidl) 
+			));
+			CPPUNIT_ASSERT( ::ILIsEqual(
+				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlJoined),
+				pidlRecombined 
+			));
+			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl ); // member unchanged
+			::ILFree(pidlChild);
+			::ILFree(pidlRecombined);
+			::ILFree(pidlJoined);
+		}
+
+		// Don't ILFree pidlTest - it is destroyed when the CPidl dies
+	}
+
+	void testJoinNULL()
+	{
+		CPidl<IdListType> pidlNull;
+		PidlType pidlDest = NULL;
+		PIDLIST_RELATIVE pidlJoined = pidlNull.Join(pidlDest);
+		CPPUNIT_ASSERT( pidlJoined == NULL );
+
+		PIDLIST_RELATIVE pidlRelative = 
+			::ILCloneChild(::ILFindLastID(m_pidlOriginal));
+		CPidl<IdListType> pidl;
+		pidl.Join(pidlRelative);
+		pidlJoined = pidl.Join(pidlRelative);
+		CPPUNIT_ASSERT( pidlJoined != pidlRelative );
+		CPPUNIT_ASSERT( ::ILIsEqual(
+			reinterpret_cast<PIDLIST_ABSOLUTE>(pidlJoined),
+			reinterpret_cast<PIDLIST_ABSOLUTE>(pidlRelative) 
+		));
+		::ILFree(pidlRelative);
+		::ILFree(pidlJoined);
+	}
+
+	void testGetNext()
+	{
+		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
+
+		{
+			CPidl<IdListType> pidl;
+			pidl.Attach(pidlTest);
+			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
+
+			// GetNext should give us back a const pointer to the next SHITEMID 
+			// leaving its member unchanged
+			PCUIDLIST_RELATIVE pidlNext = pidl.GetNext();
+			CPPUNIT_ASSERT( pidlNext != pidlTest );
+			CPPUNIT_ASSERT_EQUAL( 
+				(void *)((BYTE *)(pidlTest)+(pidlTest->mkid.cb)),
+				(void *)pidlNext);
+			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl ); // member unchanged
+			// Don't free pidlNext - it is still part of pidlTest
+		}
+
+		// Don't ILFree pidlTest - it is destroyed when the CPidl dies
+	}
+
+	void testGetNextNULL()
+	{
+		CPidl<IdListType> pidlNull;
+		PCUIDLIST_RELATIVE pidlDest = pidlNull.GetNext();
+		CPPUNIT_ASSERT( pidlDest == NULL );
+	}
+
+	void testGetNextAtEnd()
+	{
+		// Make sure we are at the end of a PIDL
+		// (this is not technically correct for an absolute PIDL)
+		PidlType pidlTest = static_cast<PidlType>(
+			::ILClone(::ILFindLastID(m_pidlOriginal)));
+		CPPUNIT_ASSERT( pidlTest != NULL );
+
+		{
+			CPidl<IdListType> pidl;
+			pidl.Attach(pidlTest);
+			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
+
+			// GetNext should give us back NULL leaving its member unchanged
+			PCUIDLIST_RELATIVE pidlNext = pidl.GetNext();
+			CPPUNIT_ASSERT( pidlNext == NULL );
+			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl ); // member unchanged
+			// Don't free pidlNext - it is still part of pidlTest
+		}
+
+		// Don't ILFree pidlTest - it is destroyed when the CPidl dies
 	}
 
 	void testoperatorConstPidl()
@@ -321,14 +466,14 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidl<PidlType> pidl;
+			CPidl<IdListType> pidl;
 			pidl.Attach(pidlTest);
 			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
 
 			// Assigning to const PIDL should just pass the contained PIDL as-is
-			PidlType pidlConst = pidl;
+			ConstPidlType pidlConst = pidl;
 			CPPUNIT_ASSERT_EQUAL(
-				const_cast<const PidlType>(pidlTest),
+				const_cast<ConstPidlType>(pidlTest),
 				pidlConst
 			);
 			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl ); // member unchanged
@@ -340,7 +485,7 @@ protected:
 	void testoperatorConstPidlNULL()
 	{
 		// Test that assigning a NULL CPidl to a constant PIDL should not fail
-		CPidl<PidlType> pidlNull;
+		CPidl<IdListType> pidlNull;
 		PidlType pidlDest = NULL;
 		CPPUNIT_ASSERT( pidlDest == NULL );
 	}
@@ -350,7 +495,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		// Test that cloning copies PIDL successfully
-		PidlType pidlClone = CPidl<PidlType>::Clone(pidlTest);
+		PidlType pidlClone = CPidl<IdListType>::Clone(pidlTest);
 
 		CPPUNIT_ASSERT( pidlClone != pidlTest );
 		CPPUNIT_ASSERT( ::ILIsEqual(
@@ -367,24 +512,44 @@ protected:
 	{
 		// Test cloning a NULL pidl
 		PidlType pidlNull = NULL;
-		PidlType pidl = CPidl<PidlType>::Clone(pidlNull);
+		PidlType pidl = CPidl<IdListType>::Clone(pidlNull);
 		CPPUNIT_ASSERT( pidl == NULL );
 	}
 
 
 private:
-	CPidl<PidlType> *m_pPidl;
+	CPidl<IdListType> *m_pPidl;
 
 	PidlType m_pidlOriginal;
 };
 
 template <>
-void CPidl_test<PITEMID_CHILD>::setUp()
+inline void CPidl_test<ITEMID_CHILD>::testGetNext()
 {
-	HRESULT hr;
-	PIDLIST_ABSOLUTE pidl;
-	hr = ::SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
-	CPPUNIT_ASSERT_OK(hr);
+	PITEMID_CHILD pidlTest = ::ILCloneChild(m_pidlOriginal);
+
+	{
+		CPidl<ITEMID_CHILD> pidl;
+		pidl.Attach(pidlTest);
+		CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
+
+		// GetNext on a child pidl should always return NULL
+		PCUIDLIST_RELATIVE pidlNext = pidl.GetNext();
+		CPPUNIT_ASSERT( pidlNext == NULL );
+		CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl ); // member unchanged
+	}
+
+	// Don't ILFree pidlTest - it is destroyed when the CPidl dies
+}
+
+
+#define PIDLPATH L"C:\\Windows\\System32\\notepad.exe"
+
+template <>
+inline void CPidl_test<ITEMID_CHILD>::setUp()
+{
+	PIDLIST_ABSOLUTE pidl = ::ILCreateFromPath(PIDLPATH);
+	CPPUNIT_ASSERT(!::ILIsEmpty(pidl));
 
 	m_pidlOriginal = ::ILCloneChild(::ILFindLastID(pidl));
 	::ILFree(pidl);
@@ -392,12 +557,10 @@ void CPidl_test<PITEMID_CHILD>::setUp()
 }
 
 template <>
-void CPidl_test<PIDLIST_RELATIVE>::setUp()
+inline void CPidl_test<ITEMIDLIST_RELATIVE>::setUp()
 {
-	HRESULT hr;
-	PIDLIST_ABSOLUTE pidl;
-	hr = ::SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pidl);
-	CPPUNIT_ASSERT_OK(hr);
+	PIDLIST_ABSOLUTE pidl = ::ILCreateFromPath(PIDLPATH);
+	CPPUNIT_ASSERT(!::ILIsEmpty(pidl));
 
 	m_pidlOriginal = ::ILClone(::ILGetNext(pidl));
 	::ILFree(pidl);
@@ -405,17 +568,64 @@ void CPidl_test<PIDLIST_RELATIVE>::setUp()
 }
 
 template <>
-void CPidl_test<PIDLIST_ABSOLUTE>::setUp()
+inline void CPidl_test<ITEMIDLIST_ABSOLUTE>::setUp()
 {
-	HRESULT hr;
-	hr = ::SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &m_pidlOriginal);
-	CPPUNIT_ASSERT_OK(hr);
+	PIDLIST_ABSOLUTE pidl = ::ILCreateFromPath(PIDLPATH);
+	CPPUNIT_ASSERT(!::ILIsEmpty(pidl));
+
+	m_pidlOriginal = ::ILCloneFull(pidl);
+	::ILFree(pidl);
+	CPPUNIT_ASSERT( m_pidlOriginal );
 }
 
-typedef CPidl_test<PIDLIST_RELATIVE> CRelativePidl_test;
-typedef CPidl_test<PIDLIST_ABSOLUTE> CAbsolutePidl_test;
-typedef CPidl_test<PITEMID_CHILD> CChildPidl_test;
+typedef CPidl_test<ITEMIDLIST_RELATIVE> CRelativePidl_test;
+typedef CPidl_test<ITEMIDLIST_ABSOLUTE> CAbsolutePidl_test;
+typedef CPidl_test<ITEMID_CHILD> CChildPidl_test;
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CRelativePidl_test );
 CPPUNIT_TEST_SUITE_REGISTRATION( CAbsolutePidl_test );
 CPPUNIT_TEST_SUITE_REGISTRATION( CChildPidl_test );
+
+class CPidl_assignment_test : public CPPUNIT_NS::TestFixture
+{
+	CPPUNIT_TEST_SUITE( CPidl_assignment_test );
+		CPPUNIT_TEST( testAssignment );
+	CPPUNIT_TEST_SUITE_END();
+
+public:
+	void setUp() {}
+
+	void tearDown() {}
+
+	void testAssignment()
+	{
+		CChildPidl pidlC;
+		CRelativePidl pidlR;
+		CAbsolutePidl pidlA;
+
+		PITEMID_CHILD pidlItemC = NULL;
+		PIDLIST_RELATIVE pidlItemR = NULL;
+		PIDLIST_ABSOLUTE pidlItemA = NULL;
+
+		// Upcast CPidls
+		pidlR = pidlC;
+		pidlR = pidlA;
+		pidlR = pidlItemC;
+		pidlR = pidlItemA;
+		pidlItemR = pidlC.CopyTo();
+		pidlItemR = pidlA.CopyTo();
+
+		// DownCast CPidls
+		pidlC = static_cast<PCITEMID_CHILD>((PCUIDLIST_RELATIVE)pidlR);
+		pidlC = static_cast<PCITEMID_CHILD>(
+		                    static_cast<PCUIDLIST_RELATIVE>(pidlR));
+
+		// CrossCast CPidls
+		pidlA = static_cast<PCIDLIST_ABSOLUTE>((PCUIDLIST_RELATIVE)pidlC);
+		pidlA = static_cast<PCIDLIST_ABSOLUTE>(
+		                    static_cast<PCUIDLIST_RELATIVE>(pidlC));
+	}
+
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( CPidl_assignment_test );
