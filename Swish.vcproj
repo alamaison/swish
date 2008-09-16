@@ -482,6 +482,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RemotePidl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RemotePidlManager.h"
 				>
 			</File>
