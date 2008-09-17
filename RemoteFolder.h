@@ -33,6 +33,7 @@
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
 #include "Connection.h"     // For SFTP interactive connection objects
+#include "RemotePidl.h"     // For RemoteItemId handling
 
 // CRemoteFolder
 [
@@ -112,6 +113,8 @@ private:
 	CHostPidlManager   m_HostPidlManager;
 	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
+	typedef std::vector<CRemoteChildPidl> RemotePidls;
+
 	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
 	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
 	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );
@@ -125,12 +128,13 @@ private:
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 	CConnection _CreateConnectionForFolder(
 		__in HWND hwndUserInteraction ) throw(...);
-	void _DeleteFile(
-		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl ) throw(...);
-	bool _ConfirmDelete(
-		__in_opt HWND hwnd, __in BSTR bstrPath, __in bool fIsFolder )
+	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
 		throw(...);
-
+	void _DoDelete(
+		__in_opt HWND hwnd, __in const RemotePidls& vecDeathRow ) throw(...);
+	bool _ConfirmDelete(
+		__in_opt HWND hwnd, __in BSTR bstrName, __in bool fIsFolder ) throw();
+	bool _ConfirmMultiDelete( __in_opt HWND hwnd, size_t cItems ) throw();
 
 	/**
 	 * Static dispatcher for Default Context Menu callback

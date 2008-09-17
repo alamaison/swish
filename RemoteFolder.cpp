@@ -914,6 +914,9 @@ HRESULT CRemoteFolder::OnInvokeCommandEx(
 	}
 }
 
+/**
+ * Handle @c DFM_CMD_DELETE verb.
+ */
 HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 {
 	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p)\n", hwnd, pDataObj);
@@ -924,6 +927,8 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 		CAbsolutePidl pidlFolder = shdo.GetParentFolder();
 		ATLASSERT(::ILIsEqual(m_pidl, pidlFolder));
 
+		// Build up a list of PIDLs for all the items to be deleted
+		RemotePidls vecDeathRow;
 		for (UINT i = 0; i < shdo.GetPidlCount(); i++)
 		{
 			ATLTRACE("PIDL path: %ls\n", _ExtractPathFromPIDL(shdo.GetFile(i)));
@@ -938,21 +943,74 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 				CRemoteChildPidl pidlChild = 
 					static_cast<PCITEMID_CHILD>(
 					static_cast<PCIDLIST_RELATIVE>(pidlFile));
-				if (_ConfirmDelete(hwnd,
-					CComBSTR(pidlChild.GetFilename()),
-					pidlChild.IsFolder()))
-				{
-					_DeleteFile(hwnd, pidlChild);
-				}
+				vecDeathRow.push_back(pidlChild);
 			}
 		}
+
+		// Delete
+		_Delete(hwnd, vecDeathRow);
 	}
 	catchCom()
 
 	return S_OK;
 }
 
-void CRemoteFolder::_DeleteFile( HWND hwnd, PCUITEMID_CHILD pidl )
+/*----------------------------------------------------------------------------*/
+/* --- Private functions -----------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
+
+/**
+ * Deletes one or more files or folders after seeking confirmation from user.
+ *
+ * The list of items to delete is supplied as a list of PIDLs and may contain
+ * a mix of files and folder.
+ *
+ * If just one item is chosen, a specific confirmation message for that item is
+ * shown.  If multiple items are to be deleted, a general confirmation message 
+ * is displayed asking if the number of items are to be deleted.
+ *
+ * @param hwnd         Handle to the window used for UI.
+ * @param vecDeathRow  Collection of items to be deleted as PIDLs.
+ *
+ * @throws AtlException if a failure occurs.
+ */
+void CRemoteFolder::_Delete( HWND hwnd, const RemotePidls& vecDeathRow )
+{
+	size_t cItems = vecDeathRow.size();
+
+	BOOL fGoAhead = false;
+	if (cItems == 1)
+	{
+		const CRemoteChildPidl& pidl = vecDeathRow[0];
+		fGoAhead = _ConfirmDelete(
+			hwnd, CComBSTR(pidl.GetFilename()), pidl.IsFolder());
+	}
+	else if (cItems > 1)
+	{
+		fGoAhead = _ConfirmMultiDelete(hwnd, cItems);
+	}
+	else
+	{
+		UNREACHABLE;
+		AtlThrow(E_UNEXPECTED);
+	}
+
+	if (fGoAhead)
+		_DoDelete(hwnd, vecDeathRow);
+}
+
+/**
+ * Deletes files or folders.
+ *
+ * The list of items to delete is supplied as a list of PIDLs and may contain
+ * a mix of files and folder.
+ *
+ * @param hwnd         Handle to the window used for UI.
+ * @param vecDeathRow  Collection of items to be deleted as PIDLs.
+ *
+ * @throws AtlException if a failure occurs.
+ */
+void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 {
 	if (hwnd == NULL)
 		AtlThrow(E_FAIL);
@@ -963,27 +1021,42 @@ void CRemoteFolder::_DeleteFile( HWND hwnd, PCUITEMID_CHILD pidl )
 	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
 	CString strPath = _ExtractPathFromPIDL( m_pidl );
 	ATLASSERT(!strPath.IsEmpty());
-	bool fIsFolder = m_RemotePidlManager.IsFolder(pidl);
 
 	// Create instance of our directory handler class
 	CSftpDirectory directory( conn, strPath );
 
-	// Delete file
-	directory.Delete( pidl );
+	// Delete each item and notify shell
+	RemotePidls::const_iterator it = vecDeathRow.begin();
+	while (it != vecDeathRow.end())
+	{
+		directory.Delete( *it );
 
-	// Make PIDL absolute
-	PIDLIST_ABSOLUTE pidlFull = ::ILCombine(m_pidl, pidl);
+		// Make PIDL absolute
+		CAbsolutePidl pidlFull(m_pidl);
+		pidlFull = pidlFull.Join(*it);
 
-	// Notify the shell
-	::SHChangeNotify(
-		(fIsFolder) ? SHCNE_RMDIR : SHCNE_DELETE,
-		SHCNF_IDLIST | SHCNF_FLUSH, pidlFull, NULL
-	);
+		// Notify the shell
+		::SHChangeNotify(
+			((*it).IsFolder()) ? SHCNE_RMDIR : SHCNE_DELETE,
+			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, pidlFull, NULL
+		);
 
-	::ILFree(pidlFull);
+		it++;
+	}
 }
 
-bool CRemoteFolder::_ConfirmDelete( HWND hwnd, BSTR bstrPath, bool fIsFolder )
+/**
+ * Displays dialog seeking confirmation from user to delete a single item.
+ *
+ * The dialog differs depending on whether the item is a file or a folder.
+ *
+ * @param hwnd       Handle to the window used for UI.
+ * @param bstrName   Name of the file or folder being deleted.
+ * @param fIsFolder  Is the item in question a file or a folder?
+ *
+ * @returns  Whether confirmation was given or denied.
+ */
+bool CRemoteFolder::_ConfirmDelete( HWND hwnd, BSTR bstrName, bool fIsFolder )
 {
 	if (hwnd == NULL)
 		return false;
@@ -992,28 +1065,48 @@ bool CRemoteFolder::_ConfirmDelete( HWND hwnd, BSTR bstrPath, bool fIsFolder )
 	if (!fIsFolder)
 	{
 		strMessage = L"Are you sure you want to permanently delete '";
-		strMessage += bstrPath;
+		strMessage += bstrName;
 		strMessage += L"'?";
 	}
 	else
 	{
 		strMessage = L"Are you sure you want to permanently delete the "
 			L"folder '";
-		strMessage += bstrPath;
+		strMessage += bstrName;
 		strMessage += L"' and all of its contents?";
 	}
 
 	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
 		(fIsFolder) ?
 			L"Confirm Folder Delete" : L"Confirm File Delete", 
-		MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON1);
+		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
 
 	return (ret == IDYES);
 }
 
-/*----------------------------------------------------------------------------*/
-/* --- Private functions -----------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
+/**
+ * Displays dialog seeking confirmation from user to delete multiple items.
+ *
+ * @param hwnd    Handle to the window used for UI.
+ * @param cItems  Number of items selected for deletion.
+ *
+ * @returns  Whether confirmation was given or denied.
+ */
+bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
+{
+	if (hwnd == NULL)
+		return false;
+
+	CString strMessage;
+	strMessage.Format(
+		L"Are you sure you want to permanently delete these %d items?", cItems);
+
+	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
+		L"Confirm Multiple Item Delete",
+		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
+
+	return (ret == IDYES);
+}
 
 /*------------------------------------------------------------------------------
  * CRemoteFolder::_GetLongNameFromPIDL
