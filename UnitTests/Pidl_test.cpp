@@ -143,14 +143,14 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			// Assigning to another CPidl should clone contents of the old
-			// CPidl leaving its m_pidl untouched
-			CPidl<IdListType> pidlCopy;
-			pidlCopy = pidlTest;
-			CPPUNIT_ASSERT( pidlCopy.m_pidl != pidlTest );
+			// Assigning a PIDL to a CPidl should clone contents of the
+			// old PIDL leaving it untouched
+			CPidl<IdListType> pidl;
+			pidl = pidlTest;
+			CPPUNIT_ASSERT( pidl.m_pidl != pidlTest );
 			CPPUNIT_ASSERT( ::ILIsEqual(
-				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlCopy.m_pidl),
-				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlTest) 
+				reinterpret_cast<PCIDLIST_ABSOLUTE>(pidl.m_pidl),
+				reinterpret_cast<PCIDLIST_ABSOLUTE>(pidlTest) 
 			));
 		}
 
