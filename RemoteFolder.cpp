@@ -26,6 +26,7 @@
 #include "ExplorerCallback.h" // For interaction with Explorer window
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
 #include "RemotePidl.h"
+#include "ShellDataObject.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -913,68 +914,42 @@ HRESULT CRemoteFolder::OnInvokeCommandEx(
 	}
 }
 
-#define GetPIDLFolder(pida) \
-	(PCIDLIST_ABSOLUTE)(((LPBYTE)pida)+(pida)->aoffset[0])
-#define GetPIDLItem(pida, i) \
-	(PCIDLIST_RELATIVE)(((LPBYTE)pida)+(pida)->aoffset[i+1])
-
 HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 {
 	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p)\n", hwnd, pDataObj);
 
-	HRESULT hr;
-
 	try
 	{
-		UINT nCFSTR_SHELLIDLIST = ::RegisterClipboardFormat(CFSTR_SHELLIDLIST);
-		FORMATETC fetc = {
-			static_cast<CLIPFORMAT>(nCFSTR_SHELLIDLIST),
-			NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
-		};
-		STGMEDIUM medium;
+		CShellDataObject shdo(pDataObj);
+		CAbsolutePidl pidlFolder = shdo.GetParentFolder();
+		ATLASSERT(::ILIsEqual(m_pidl, pidlFolder));
 
-		hr = pDataObj->GetData(&fetc, &medium);
-		if (SUCCEEDED(hr))
+		for (UINT i = 0; i < shdo.GetPidlCount(); i++)
 		{
-			CIDA *pcida = static_cast<CIDA *>(::GlobalLock(medium.hGlobal));
+			ATLTRACE("PIDL path: %ls\n", _ExtractPathFromPIDL(shdo.GetFile(i)));
 
-			if (pcida)
+			CRemoteRelativePidl pidlFile = shdo.GetRelativeFile(i);
+
+			// May be overkill (it should always be a child) but check anyway
+			// because we don't want to accidentally recursively delete the root
+			// of a folder tree
+			if (::ILIsChild(pidlFile) && !::ILIsEmpty(pidlFile))
 			{
-				CAbsolutePidl pidlFolder(GetPIDLFolder(pcida));
-				CRemoteRelativePidl pidl(GetPIDLItem(pcida,0));
-				::GlobalUnlock(medium.hGlobal);
-				
-				ATLASSERT(::ILIsEqual(m_pidl, pidlFolder));
-				ATLTRACE("PIDL filename: %ls\n", pidl.GetFilename());
-
-				CAbsolutePidl pidlFilePath = pidlFolder.Join(pidl);
-				ATLTRACE(
-					"PIDL path: %ls\n", _ExtractPathFromPIDL(pidlFilePath));
-
-				if (::ILIsChild(pidl) && !::ILIsEmpty(pidl))
+				CRemoteChildPidl pidlChild = 
+					static_cast<PCITEMID_CHILD>(
+					static_cast<PCIDLIST_RELATIVE>(pidlFile));
+				if (_ConfirmDelete(hwnd,
+					CComBSTR(pidlChild.GetFilename()),
+					pidlChild.IsFolder()))
 				{
-					CRemoteChildPidl pidlChild = 
-						static_cast<PCITEMID_CHILD>(
-						static_cast<PCIDLIST_RELATIVE>(pidl));
-					if (_ConfirmDelete(hwnd,
-						CComBSTR(pidlChild.GetFilename()),
-						pidlChild.IsFolder()))
-					{
-						_DeleteFile(hwnd, pidlChild);
-					}
+					_DeleteFile(hwnd, pidlChild);
 				}
 			}
-			else
-			{
-				hr = E_UNEXPECTED;
-			}
-
-			::ReleaseStgMedium(&medium);
 		}
 	}
 	catchCom()
 
-	return hr;
+	return S_OK;
 }
 
 void CRemoteFolder::_DeleteFile( HWND hwnd, PCUITEMID_CHILD pidl )

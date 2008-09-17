@@ -365,6 +365,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ShellDataObject.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -495,6 +499,10 @@
 			</File>
 			<File
 				RelativePath=".\SftpDirectory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ShellDataObject.h"
 				>
 			</File>
 			<File
