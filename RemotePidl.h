@@ -58,7 +58,10 @@ public:
 	CRemotePidl( __in const CRemotePidl& pidl ) throw(...) : CPidl(pidl) {}
 	CRemotePidl& operator=( __in const CRemotePidl& pidl ) throw(...)
 	{
-		return CPidl(pidl);
+		if (this != &pidl)
+			CPidl::operator=(pidl);
+
+		return *this;
 	}
 
 	class InvalidPidlException {};

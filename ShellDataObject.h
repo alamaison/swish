@@ -50,6 +50,7 @@ public:
 	 * be destroyed which unlocks the global memory but the new copy would
 	 * not be re-locked.
 	 */
+	CGlobalLock(const CGlobalLock& lock) throw();
 	CGlobalLock& operator=(const CGlobalLock&) throw();
 
 	void Attach(__in HGLOBAL hGlobal) throw()
