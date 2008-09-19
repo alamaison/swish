@@ -23,7 +23,6 @@
 #include "SftpDirectory.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
-#include "Connection.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -31,6 +30,22 @@
 #include <vector>
 using std::vector;
 using std::iterator;
+
+void CRemoteFolder::SetSessionPool( CComObject<CXPool> *pPool )
+{
+	ATLASSERT(pPool != m_pPool); // Could this lead to Release before AddRef?
+	ATLASSERT(m_pPool == NULL);  // What would have set it? This may be wrong.
+
+	if (m_pPool)
+	{
+		m_pPool->Release();
+		m_pPool = NULL;
+	}
+
+	m_pPool = pPool;	
+	if (m_pPool)
+		m_pPool->AddRef();
+}
 
 /**
  * Retrieves the class identifier (CLSID) of the object.
@@ -145,6 +160,9 @@ STDMETHODIMP CRemoteFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
     pRemoteFolder->AddRef();
 
+	// Pass pointer to our session pool
+	pRemoteFolder->SetSessionPool( m_pPool );
+
 	// Initialise RemoteFolder with the absolute PIDL
     hr = pRemoteFolder->Initialize( pidlBind );
     if (SUCCEEDED(hr))
@@ -212,28 +230,18 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	ATLASSERT(!strHost.IsEmpty());
 	ATLASSERT(!strPath.IsEmpty());
 
-	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
-	CComPtr<ISftpConsumer> spConsumer;
-	hr = CUserInteraction::MakeInstance( hwndOwner, &spConsumer );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Create SFTP Provider from ProgID and initialise
-	CComPtr<ISftpProvider> spProvider;
-	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-	hr = spProvider->Initialize(
-		spConsumer, CComBSTR(strUser), CComBSTR(strHost), uPort );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Pack both ends of connection into object
+	// Get connection from session pool
 	CConnection conn;
-	conn.spProvider = spProvider.Detach();
-	conn.spConsumer = spConsumer.Detach();
+	try
+	{
+		conn = _GetConnection(hwndOwner, strHost, strUser, uPort);
+	}
+	catch(...)
+	{
+		return E_FAIL;
+	}
 
-    // Create instance of our folder enumerator class
-	//hr = CRemoteEnumIDList::MakeInstance( 
-	//	conn, strPath, grfFlags, ppEnumIDList );
-
+	// Create remote directory handler class using connection
 	CComObject<CSftpDirectory> *pDirectory;
 	hr = CSftpDirectory::MakeInstance( conn, grfFlags, &pDirectory );
 	if (SUCCEEDED(hr))
@@ -245,6 +253,38 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	}
 
     return hr;
+}
+
+CConnection CRemoteFolder::_GetConnection(
+	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
+{
+	HRESULT hr;
+
+	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
+	CComPtr<ISftpConsumer> spConsumer;
+	hr = CUserInteraction::MakeInstance( hwnd, &spConsumer );
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Create pool if we don't already have one
+	if (m_pPool == NULL)
+	{
+		hr = CComObject<CXPool>::CreateInstance(&m_pPool);
+		ATLENSURE_SUCCEEDED(hr);
+		m_pPool->AddRef();
+	}
+
+	// Get SFTP Provider from session pool
+	CComPtr<ISftpProvider> spProvider;
+	hr = m_pPool->GetConnection(
+		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort, &spProvider);
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Pack both ends of connection into object
+	CConnection conn;
+	conn.spProvider = spProvider;
+	conn.spConsumer = spConsumer;
+
+	return conn;
 }
 
 /*------------------------------------------------------------------------------

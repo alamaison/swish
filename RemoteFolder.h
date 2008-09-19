@@ -32,6 +32,8 @@
 
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
+#include "XPool.h"
+#include "Connection.h"
 
 // This is being used as a type-safety marker interface - may be uneccessary
 [
@@ -66,13 +68,24 @@ class ATL_NO_VTABLE CRemoteFolder :
 	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CRemoteFolder() : m_pidl(NULL) {}
+	CRemoteFolder() : m_pidl(NULL), m_pPool(NULL) {}
 
 	~CRemoteFolder()
 	{
 		if (m_pidl)
 			m_RemotePidlManager.Delete( m_pidl );
 	}
+
+	void FinalRelease()
+	{
+		if (m_pPool)
+		{
+			m_pPool->Release();
+			m_pPool = NULL;
+		}
+	}
+
+	void SetSessionPool( __in CComObject<CXPool> *pPool );
 
     // IPersist
     IFACEMETHODIMP GetClassID( __out CLSID *pClsid );
@@ -97,9 +110,15 @@ public:
     STDMETHOD(BindToStorage)( PCUIDLIST_RELATIVE, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
     STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
-    STDMETHOD(ParseDisplayName)
-		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
-        { return E_NOTIMPL; }
+	IFACEMETHODIMP ParseDisplayName(
+		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in LPWSTR pszDisplayName, 
+		__reserved  ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
+		__inout_opt ULONG *pdwAttributes )
+	{
+			ATLTRACE(
+				__FUNCTION__" called with display name: %S", pszDisplayName);
+			return E_NOTIMPL; 
+	}
     STDMETHOD(SetNameOf)
 		( HWND, PCUITEMID_CHILD, LPCOLESTR, DWORD, PITEMID_CHILD* )
         { return E_NOTIMPL; }
@@ -119,10 +138,15 @@ public:
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
-    CRemotePidlManager m_RemotePidlManager;
-	CHostPidlManager   m_HostPidlManager;
 	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
+    CRemotePidlManager m_RemotePidlManager;
+	CHostPidlManager   m_HostPidlManager;
+	CComObject<CXPool> *m_pPool;
+
+	CConnection _GetConnection(
+		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
+		UINT uPort ) throw(...);
 	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
 	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
 	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );

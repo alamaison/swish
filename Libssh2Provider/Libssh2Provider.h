@@ -78,6 +78,8 @@ public:
 	IFACEMETHODIMP Initialize(
 		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
+	IFACEMETHODIMP SwitchConsumer(
+		__in ISftpConsumer *pConsumer );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 
@@ -91,6 +93,7 @@ private:
 	CString m_strUser;             ///< Holds username for remote connection
 	CString m_strHost;             ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
+	bool m_fIsConnected;
 
 	HRESULT _Connect();
 	HRESULT _Disconnect();

@@ -395,6 +395,10 @@
 				RelativePath=".\UserInteraction.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\XPool.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -494,6 +498,10 @@
 			</File>
 			<File
 				RelativePath=".\UserInteraction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\XPool.h"
 				>
 			</File>
 		</Filter>

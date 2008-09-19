@@ -32,6 +32,7 @@
 
 #include "HostPidlManager.h"
 #include "RemotePidlManager.h"
+#include "XPool.h"
 
 // CHostFolder
 [
@@ -55,7 +56,7 @@ class ATL_NO_VTABLE CHostFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CHostFolder() : m_pidl(NULL) {}
+	CHostFolder() : m_pidl(NULL), m_pPool(NULL) {}
 
 	~CHostFolder()
 	{
@@ -66,10 +67,19 @@ public:
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct()
 	{
-		return S_OK;
+		HRESULT hr = CComObject<CXPool>::CreateInstance(&m_pPool);
+		if (SUCCEEDED(hr));
+			m_pPool->AddRef();
+
+		return hr;
 	}
 	void FinalRelease()
 	{
+		if (m_pPool)
+		{
+			m_pPool->Release();
+			m_pPool = NULL;
+		}
 	}
 
     // IPersist
@@ -93,9 +103,15 @@ public:
     STDMETHOD(BindToStorage)( PCUIDLIST_RELATIVE, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
     STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
-    STDMETHOD(ParseDisplayName)
-		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
-        { return E_NOTIMPL; }
+	IFACEMETHODIMP ParseDisplayName(
+		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in LPWSTR pszDisplayName, 
+		__reserved  ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
+		__inout_opt ULONG *pdwAttributes )
+	{
+			ATLTRACE(
+				__FUNCTION__" called with display name: %S", pszDisplayName);
+			return E_NOTIMPL; 
+	}
     STDMETHOD(SetNameOf)
 		( HWND, PCUITEMID_CHILD, LPCOLESTR, DWORD, PITEMID_CHILD* )
         { return E_NOTIMPL; }
@@ -121,9 +137,10 @@ public:
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
+	PIDLIST_ABSOLUTE      m_pidl; // Absolute pidl of this folder object
+	CComObject<CXPool>    *m_pPool;
     CHostPidlManager      m_HostPidlManager;
 	CRemotePidlManager    m_RemotePidlManager;
-	PIDLIST_ABSOLUTE      m_pidl; // Absolute pidl of this folder object
 	std::vector<HOSTPIDL> m_vecConnData;
 
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );

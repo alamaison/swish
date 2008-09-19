@@ -51,7 +51,8 @@ CLibssh2Provider::CLibssh2Provider() :
 	m_pConsumer(NULL),
 	m_pSession(NULL),
 	m_pSftpSession(NULL),
-	m_socket(INVALID_SOCKET)
+	m_socket(INVALID_SOCKET),
+	m_fIsConnected(false)
 {
 }
 
@@ -145,6 +146,28 @@ STDMETHODIMP CLibssh2Provider::Initialize(
     libssh2_session_set_blocking(m_pSession, 1);
 
 	m_fInitialized = true;
+	return S_OK;
+}
+
+/**
+ * Rewire the SFTP provider to a new front-end consumer for interaction.
+ *
+ * @param pConsumer  New SftpConsumer to recieve interaction callbacks.
+ */
+STDMETHODIMP CLibssh2Provider::SwitchConsumer( ISftpConsumer *pConsumer )
+{
+	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
+	ATLASSERT(m_pConsumer);
+
+	if (m_pConsumer)
+	{
+		m_pConsumer->Release();
+		m_pConsumer = NULL;
+	}
+
+	m_pConsumer = pConsumer;
+	m_pConsumer->AddRef();
+
 	return S_OK;
 }
 
@@ -380,6 +403,9 @@ HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)
 HRESULT CLibssh2Provider::_Connect()
 {
 	HRESULT hr;
+
+	if (m_fIsConnected)
+		return S_OK;
 	
 	// Connect to host over TCP/IP
 	hr = _OpenSocketToHost();
@@ -414,6 +440,8 @@ HRESULT CLibssh2Provider::_Connect()
 	}
 #endif
 	ATLENSURE_RETURN_HR( m_pSftpSession, E_FAIL );
+
+	m_fIsConnected = true;
 	return S_OK;
 }
 
