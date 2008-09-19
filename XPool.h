@@ -18,67 +18,29 @@
 */
 
 #pragma once
-#pragma warning (disable: 4503) // Decorated name length exceeded, trunacted
 
 #include "resource.h"       // main symbols
-
 #include "SftpProvider.h"
-
-#include <string>
-using std::wstring;
-
-#include <hash_map>
-using stdext::hash_map;
-
-#include <map>
-using std::map;
-
-[
-	object,
-	uuid("b816a84c-5022-11dc-9153-0090f5284f85"),
-	oleautomation,	helpstring("IXPool Interface"),
-	pointer_default(unique)
-]
-__interface IXPool : IUnknown
-{
-};
-
 
 [
 	coclass,
-	default(IXPool),
+	default(IUnknown),
 	threading(apartment),
 	vi_progid("Swish.XPool"),
 	progid("Swish.XPool.1"),
 	version(1.0),
-	uuid("b816a84d-5022-11dc-9153-0090f5284f85"),
+	uuid("b816a84c-5022-11dc-9153-0090f5284f85"),
 	helpstring("XPool Class")
 ]
-class ATL_NO_VTABLE CXPool :
-	public IXPool
+class ATL_NO_VTABLE CXPool
 {
 public:
-	CXPool()
-	{
-	}
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	HRESULT FinalConstruct()
-	{
-		return S_OK;
-	}
-	void FinalRelease()
-	{
-	}
 
 	HRESULT GetConnection(
 		__in ISftpConsumer *pConsumer, __in BSTR bstrHost, __in BSTR bstrUser, UINT uPort,
 		__deref_out ISftpProvider **ppProvider );
 
 private:
-	typedef hash_map<UINT, CComPtr<ISftpProvider> > PortMap;
-	typedef hash_map<std::wstring, PortMap> UserPortMap;
-	typedef hash_map<std::wstring, UserPortMap> HostUserPortMap;
-	HostUserPortMap m_mapSessions;
 
 	CComPtr<IMoniker> _CreateMoniker(
 		__in BSTR bstrHost, __in BSTR bstrUser, UINT uPort) throw(...);

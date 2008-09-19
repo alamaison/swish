@@ -32,7 +32,6 @@
 
 #include "HostPidlManager.h"
 #include "RemotePidlManager.h"
-#include "XPool.h"
 
 // CHostFolder
 [
@@ -56,7 +55,7 @@ class ATL_NO_VTABLE CHostFolder :
 //	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CHostFolder() : m_pidl(NULL), m_pPool(NULL) {}
+	CHostFolder() : m_pidl(NULL) {}
 
 	~CHostFolder()
 	{
@@ -67,19 +66,10 @@ public:
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct()
 	{
-		HRESULT hr = CComObject<CXPool>::CreateInstance(&m_pPool);
-		if (SUCCEEDED(hr));
-			m_pPool->AddRef();
-
-		return hr;
+		return S_OK;
 	}
 	void FinalRelease()
 	{
-		if (m_pPool)
-		{
-			m_pPool->Release();
-			m_pPool = NULL;
-		}
 	}
 
     // IPersist
@@ -138,7 +128,6 @@ public:
 
 private:
 	PIDLIST_ABSOLUTE      m_pidl; // Absolute pidl of this folder object
-	CComObject<CXPool>    *m_pPool;
     CHostPidlManager      m_HostPidlManager;
 	CRemotePidlManager    m_RemotePidlManager;
 	std::vector<HOSTPIDL> m_vecConnData;

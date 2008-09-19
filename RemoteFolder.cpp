@@ -31,22 +31,6 @@
 using std::vector;
 using std::iterator;
 
-void CRemoteFolder::SetSessionPool( CComObject<CXPool> *pPool )
-{
-	ATLASSERT(pPool != m_pPool); // Could this lead to Release before AddRef?
-	ATLASSERT(m_pPool == NULL);  // What would have set it? This may be wrong.
-
-	if (m_pPool)
-	{
-		m_pPool->Release();
-		m_pPool = NULL;
-	}
-
-	m_pPool = pPool;	
-	if (m_pPool)
-		m_pPool->AddRef();
-}
-
 /**
  * Retrieves the class identifier (CLSID) of the object.
  * 
@@ -159,9 +143,6 @@ STDMETHODIMP CRemoteFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 	hr = CComObject<CRemoteFolder>::CreateInstance( &pRemoteFolder );
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
     pRemoteFolder->AddRef();
-
-	// Pass pointer to our session pool
-	pRemoteFolder->SetSessionPool( m_pPool );
 
 	// Initialise RemoteFolder with the absolute PIDL
     hr = pRemoteFolder->Initialize( pidlBind );

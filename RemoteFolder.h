@@ -85,8 +85,6 @@ public:
 		}
 	}
 
-	void SetSessionPool( __in CComObject<CXPool> *pPool );
-
     // IPersist
     IFACEMETHODIMP GetClassID( __out CLSID *pClsid );
 

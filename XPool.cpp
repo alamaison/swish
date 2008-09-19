@@ -21,47 +21,11 @@
 #include "remotelimits.h"
 #include "XPool.h"
 
-/*HRESULT CXPool::GetConnection(
-	ISftpConsumer *pConsumer, BSTR bstrHost, BSTR bstrUser, UINT uPort,
-	ISftpProvider **ppProvider )
-{
-	ATLENSURE_RETURN_HR(::SysStringLen(bstrHost) > 0, E_INVALIDARG);
-	ATLENSURE_RETURN_HR(::SysStringLen(bstrUser) > 0, E_INVALIDARG);
-	ATLENSURE_RETURN_HR(uPort < MAX_PORT, E_INVALIDARG);
-
-	HRESULT hr = S_OK;
-	std::wstring strHost(bstrHost), strUser(bstrUser);
-
-	CComPtr<ISftpProvider> spProvider = m_mapSessions[strHost][strUser][uPort];
-
-	if (spProvider == NULL)
-	{
-		// Create SFTP Provider from ProgID and initialise
-		hr = spProvider.CoCreateInstance(
-			OLESTR("Libssh2Provider.Libssh2Provider"));
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-		hr = spProvider->Initialize(pConsumer, bstrUser, bstrHost, uPort);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-		// Add to pool
-		m_mapSessions[strHost][strUser][uPort] = spProvider;
-	}
-	else
-	{
-		// Switch SFTP Provider's SFTP consumer
-		spProvider->SwitchConsumer(pConsumer);
-	}
-
-	// Return provider from pool
-	*ppProvider = spProvider.Detach();
-
-	return hr;
-}*/
-
 HRESULT CXPool::GetConnection(
 	ISftpConsumer *pConsumer, BSTR bstrHost, BSTR bstrUser, UINT uPort,
 	ISftpProvider **ppProvider )
 {
+	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrHost) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrUser) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(uPort < MAX_PORT, E_INVALIDARG);

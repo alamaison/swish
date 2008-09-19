@@ -114,9 +114,6 @@ STDMETHODIMP CHostFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
     pRemoteFolder->AddRef();
 
-	// Pass pointer to our session pool
-	pRemoteFolder->SetSessionPool( m_pPool );
-
 	// Initialise RemoteFolder with the absolute PIDL
     hr = pRemoteFolder->Initialize( pidlBind );
     if (SUCCEEDED(hr))
