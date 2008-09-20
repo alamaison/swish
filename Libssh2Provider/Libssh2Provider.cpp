@@ -515,13 +515,13 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 #pragma warning (pop)
 
 	// Read entries from directory until we fail
-	int rc;
+	list<Listing> lstFiles;
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
         char szFilename[512];
         LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof(attrs));
-        rc = libssh2_sftp_readdir(
+        int rc = libssh2_sftp_readdir(
 			pSftpHandle, szFilename, sizeof(szFilename), &attrs
 		);
 		if(rc <= 0)
@@ -530,21 +530,42 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 			break;
 		}
 
-		m_lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
-    } while (1);
+		lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
+	} while (1);
 
-    ATLASSERT(!libssh2_sftp_closedir(pSftpHandle));
+    ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);
 
-	// Create instance of Enum from ATL template class and get interface pointer
-	CComObject<CComEnumListing> *pEnum = NULL;
-	hr = CComObject<CComEnumListing>::CreateInstance(&pEnum);
+	// Create copy of our list of Listings and put into an AddReffed 'holder'
+	CComListingHolder *pHolder = NULL;
+	hr = pHolder->CreateInstance(&pHolder);
+	ATLASSERT(SUCCEEDED(hr));
 	if (SUCCEEDED(hr))
 	{
-		pEnum->AddRef();
-			hr = pEnum->Init(this->GetUnknown(), m_lstFiles);
+		pHolder->AddRef();
+
+		hr = pHolder->Copy(lstFiles);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+		// Create enumerator
+		CComObject<CComEnumListing> *pEnum;
+		hr = pEnum->CreateInstance(&pEnum);
+		ATLASSERT(SUCCEEDED(hr));
+		if (SUCCEEDED(hr))
+		{
+			pEnum->AddRef();
+
+			// Give enumerator back-reference to holder of our copied collection
+			hr = pEnum->Init( pHolder->GetUnknown(), pHolder->m_coll );
+			ATLASSERT(SUCCEEDED(hr));
 			if (SUCCEEDED(hr))
+			{
 				hr = pEnum->QueryInterface(ppEnum);
-		pEnum->Release();
+				ATLASSERT(SUCCEEDED(hr));
+			}
+
+			pEnum->Release();
+		}
+		pHolder->Release();
 	}
 
 	return hr;
