@@ -23,6 +23,10 @@
 #include "SftpDirectory.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
+#include "ExplorerCallback.h" // For interaction with Explorer window
+#include "UserInteraction.h"  // For implementation of ISftpConsumer
+#include "RemotePidl.h"
+#include "ShellDataObject.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -186,77 +190,31 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	ATLTRACE("CRemoteFolder::EnumObjects called\n");
 	ATLASSERT(m_pidl);
 
-	HRESULT hr;
-
     if (ppEnumIDList == NULL)
         return E_POINTER;
     *ppEnumIDList = NULL;
 
-	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl( m_pidl );
-	ATLASSERT(pidlHost);
-
-	// Extract connection info from PIDL
-	CString strUser, strHost, strPath;
-	USHORT uPort;
-	ATLASSERT(SUCCEEDED( m_HostPidlManager.IsValid(pidlHost) ));
-	strHost = m_HostPidlManager.GetHost( pidlHost );
-	uPort = m_HostPidlManager.GetPort( pidlHost );
-	strUser = m_HostPidlManager.GetUser( pidlHost );
-
-	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
-	strPath = _ExtractPathFromPIDL( m_pidl );
-
-	ATLASSERT(!strUser.IsEmpty());
-	ATLASSERT(!strHost.IsEmpty());
-	ATLASSERT(!strPath.IsEmpty());
-
-	// Get connection from session pool
+	// Create SFTP connection object for this folder using hwndOwner for UI
 	CConnection conn;
 	try
 	{
-		conn = _GetConnection(hwndOwner, strHost, strUser, uPort);
+		conn = _CreateConnectionForFolder( hwndOwner );
 	}
-	catch(...)
+	catchCom()
+
+	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
+	CString strPath = _ExtractPathFromPIDL( m_pidl );
+	ATLASSERT(!strPath.IsEmpty());
+
+    // Create directory handler and get listing as PIDL enumeration
+	try
 	{
-		return E_FAIL;
+ 		CSftpDirectory directory( conn, strPath );
+		directory.GetEnum( ppEnumIDList, grfFlags );
 	}
-
-	// Create remote directory handler class using connection
-	CComObject<CSftpDirectory> *pDirectory;
-	hr = CSftpDirectory::MakeInstance( conn, grfFlags, &pDirectory );
-	if (SUCCEEDED(hr))
-	{
-		hr = pDirectory->Fetch(strPath);
-		if (SUCCEEDED(hr))
-			hr = pDirectory->GetEnum(ppEnumIDList);
-		pDirectory->Release();
-	}
-
-    return hr;
-}
-
-CConnection CRemoteFolder::_GetConnection(
-	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
-{
-	HRESULT hr;
-
-	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
-	CComPtr<ISftpConsumer> spConsumer;
-	hr = CUserInteraction::MakeInstance( hwnd, &spConsumer );
-	ATLENSURE_SUCCEEDED(hr);
-
-	// Get SFTP Provider from session pool
-	CPool pool;
-	CComPtr<ISftpProvider> spProvider = pool.GetSession(
-		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
-
-	// Pack both ends of connection into object
-	CConnection conn;
-	conn.spProvider = spProvider;
-	conn.spConsumer = spConsumer;
-
-	return conn;
+	catchCom()
+	
+	return S_OK;
 }
 
 /*------------------------------------------------------------------------------
@@ -292,14 +250,21 @@ STDMETHODIMP CRemoteFolder::CreateViewObject( __in_opt HWND hwndOwner,
 		ATLTRACE("\t\tRequest: IID_IShellView\n");
 		SFV_CREATE sfvData = { sizeof(sfvData), 0 };
 
-		hr = QueryInterface( IID_PPV_ARGS(&sfvData.pshf) );
-		if (SUCCEEDED(hr))
-		{
-			sfvData.psvOuter = NULL;
-			sfvData.psfvcb = NULL; 
-			hr = SHCreateShellFolderView( &sfvData, (IShellView**)ppvOut );
-			sfvData.pshf->Release();
-		}
+		// Create an instance of our Shell Folder View callback handler
+		CComPtr<IShellFolderViewCB> spExplorerCB;
+		CExplorerCallback::MakeInstance(m_pidl, &spExplorerCB);
+
+		// Create a pointer to this IShellFolder
+		CComPtr<IShellFolder> spFolder = this;
+		ATLENSURE_RETURN_HR(spFolder, E_NOINTERFACE);
+
+		// Pack pointers into SFV_CREATE
+		sfvData.psfvcb = spExplorerCB;
+		sfvData.pshf = spFolder;
+		sfvData.psvOuter = NULL;
+
+		// Create Default Shell Folder View object (aka DEFVIEW)
+		hr = SHCreateShellFolderView( &sfvData, (IShellView**)ppvOut );
 	}
 	else if (riid == IID_IShellDetails)
     {
@@ -471,6 +436,68 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 	return SHStrDupW( strName, &pName->pOleStr );
 }
 
+STDMETHODIMP CRemoteFolder::SetNameOf(
+	__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
+	SHGDNF /*uFlags*/, __deref_out_opt PITEMID_CHILD *ppidlOut)
+{
+	if (ppidlOut)
+		*ppidlOut = NULL;
+
+	try
+	{
+		// Create SFTP connection object for this folder using hwndOwner for UI
+		CConnection conn = _CreateConnectionForFolder( hwnd );
+
+		// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
+		CString strPath = _ExtractPathFromPIDL( m_pidl );
+		ATLASSERT(!strPath.IsEmpty());
+
+		// Create instance of our directory handler class
+		CSftpDirectory directory( conn, strPath );
+
+		// Rename file
+		boolean fOverwritten = directory.Rename( pidl, pszName );
+
+		// Create new PIDL from old one
+		PITEMID_CHILD pidlNewFile = ::ILCloneChild(pidl);
+		HRESULT hr = ::StringCchCopy(
+			reinterpret_cast<PREMOTEPIDL>(pidlNewFile)->wszFilename,
+			MAX_FILENAME_LENZ,
+			pszName
+		);
+		ATLENSURE_SUCCEEDED(hr);
+
+		// Make PIDLs absolute
+		PIDLIST_ABSOLUTE pidlOld =  ::ILCombine(m_pidl, pidl);
+		PIDLIST_ABSOLUTE pidlNew =  ::ILCombine(m_pidl, pidlNewFile);
+
+		// Return new child pidl if requested else dispose of it
+		if (ppidlOut)
+			*ppidlOut = pidlNewFile;
+		else
+			::ILFree(pidlNewFile);
+
+		// Update the shell by passing both PIDLs
+		bool fIsFolder = m_RemotePidlManager.IsFolder(pidl);
+		if (fOverwritten)
+		{
+			::SHChangeNotify(
+				SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, pidlNew, NULL
+			);
+		}
+		::SHChangeNotify(
+			(fIsFolder) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
+			SHCNF_IDLIST | SHCNF_FLUSH, pidlOld, pidlNew
+		);
+
+		::ILFree(pidlOld);
+		::ILFree(pidlNew);
+
+		return S_OK;
+	}
+	catchCom()
+}
+
 /*------------------------------------------------------------------------------
  * CRemoteFolder::GetAttributesOf : IShellFolder
  * Returns the attributes for the items whose PIDLs are passed in.
@@ -515,6 +542,9 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	}
 	if (fAllAreDotFiles)
 		dwAttribs |= SFGAO_GHOSTED;
+
+	dwAttribs |= SFGAO_CANRENAME;
+	dwAttribs |= SFGAO_CANDELETE;
 
     *pdwAttribs &= dwAttribs;
 
@@ -799,21 +829,31 @@ STDMETHODIMP CRemoteFolder::ColumnClick( UINT iColumn )
 HRESULT CRemoteFolder::OnMenuCallback(
 	HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
+	ATLTRACE(__FUNCTION__" called (uMsg=%d)\n", uMsg);
 	UNREFERENCED_PARAMETER(hwnd);
 
 	switch (uMsg)
 	{
 	case DFM_MERGECONTEXTMENU:
 		return this->OnMergeContextMenu(
+			hwnd,
 			pdtobj,
 			static_cast<UINT>(wParam),
 			*reinterpret_cast<QCMINFO *>(lParam)
 		);
 	case DFM_INVOKECOMMAND:
 		return this->OnInvokeCommand(
+			hwnd,
 			pdtobj,
-			static_cast<UINT>(wParam),
-			reinterpret_cast<PCTSTR>(lParam)
+			static_cast<int>(wParam),
+			reinterpret_cast<PCWSTR>(lParam)
+		);
+	case DFM_INVOKECOMMANDEX:
+		return this->OnInvokeCommandEx(
+			hwnd,
+			pdtobj,
+			static_cast<int>(wParam),
+			reinterpret_cast<PDFMICS>(lParam)
 		);
 	default:
 		return S_FALSE;
@@ -824,8 +864,9 @@ HRESULT CRemoteFolder::OnMenuCallback(
  * Handle @c DFM_MERGECONTEXTMENU callback.
  */
 HRESULT CRemoteFolder::OnMergeContextMenu(
-	IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
+	HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
 {
+	UNREFERENCED_PARAMETER(hwnd);
 	UNREFERENCED_PARAMETER(pDataObj);
 	UNREFERENCED_PARAMETER(uFlags);
 	UNREFERENCED_PARAMETER(info);
@@ -839,17 +880,225 @@ HRESULT CRemoteFolder::OnMergeContextMenu(
  * Handle @c DFM_INVOKECOMMAND callback.
  */
 HRESULT CRemoteFolder::OnInvokeCommand(
-		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs )
+	HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pszArgs )
 {
-	UNREFERENCED_PARAMETER(pDataObj);
-	UNREFERENCED_PARAMETER(idCmd);
-	UNREFERENCED_PARAMETER(pszArgs);
+	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p, idCmd=%d, "
+		"pszArgs=%ls)\n", hwnd, pDataObj, idCmd, pszArgs);
+
 	return S_FALSE;
+}
+
+/**
+ * Handle @c DFM_INVOKECOMMANDEX callback.
+ */
+HRESULT CRemoteFolder::OnInvokeCommandEx(
+	HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics )
+{
+	ATLTRACE(__FUNCTION__" called (pDataObj=%p, idCmd=%d, pdfmics=%p)\n",
+		pDataObj, idCmd, pdfmics);
+
+	switch (idCmd)
+	{
+	case DFM_CMD_DELETE:
+		return this->OnCmdDelete(hwnd, pDataObj);
+	default:
+		return S_FALSE;
+	}
+}
+
+/**
+ * Handle @c DFM_CMD_DELETE verb.
+ */
+HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
+{
+	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p)\n", hwnd, pDataObj);
+
+	try
+	{
+		CShellDataObject shdo(pDataObj);
+		CAbsolutePidl pidlFolder = shdo.GetParentFolder();
+		ATLASSERT(::ILIsEqual(m_pidl, pidlFolder));
+
+		// Build up a list of PIDLs for all the items to be deleted
+		RemotePidls vecDeathRow;
+		for (UINT i = 0; i < shdo.GetPidlCount(); i++)
+		{
+			ATLTRACE("PIDL path: %ls\n", _ExtractPathFromPIDL(shdo.GetFile(i)));
+
+			CRemoteRelativePidl pidlFile = shdo.GetRelativeFile(i);
+
+			// May be overkill (it should always be a child) but check anyway
+			// because we don't want to accidentally recursively delete the root
+			// of a folder tree
+			if (::ILIsChild(pidlFile) && !::ILIsEmpty(pidlFile))
+			{
+				CRemoteChildPidl pidlChild = 
+					static_cast<PCITEMID_CHILD>(
+					static_cast<PCIDLIST_RELATIVE>(pidlFile));
+				vecDeathRow.push_back(pidlChild);
+			}
+		}
+
+		// Delete
+		_Delete(hwnd, vecDeathRow);
+	}
+	catchCom()
+
+	return S_OK;
 }
 
 /*----------------------------------------------------------------------------*/
 /* --- Private functions -----------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
+
+/**
+ * Deletes one or more files or folders after seeking confirmation from user.
+ *
+ * The list of items to delete is supplied as a list of PIDLs and may contain
+ * a mix of files and folders.
+ *
+ * If just one item is chosen, a specific confirmation message for that item is
+ * shown.  If multiple items are to be deleted, a general confirmation message 
+ * is displayed asking if the number of items are to be deleted.
+ *
+ * @param hwnd         Handle to the window used for UI.
+ * @param vecDeathRow  Collection of items to be deleted as PIDLs.
+ *
+ * @throws AtlException if a failure occurs.
+ */
+void CRemoteFolder::_Delete( HWND hwnd, const RemotePidls& vecDeathRow )
+{
+	size_t cItems = vecDeathRow.size();
+
+	BOOL fGoAhead = false;
+	if (cItems == 1)
+	{
+		const CRemoteChildPidl& pidl = vecDeathRow[0];
+		fGoAhead = _ConfirmDelete(
+			hwnd, CComBSTR(pidl.GetFilename()), pidl.IsFolder());
+	}
+	else if (cItems > 1)
+	{
+		fGoAhead = _ConfirmMultiDelete(hwnd, cItems);
+	}
+	else
+	{
+		UNREACHABLE;
+		AtlThrow(E_UNEXPECTED);
+	}
+
+	if (fGoAhead)
+		_DoDelete(hwnd, vecDeathRow);
+}
+
+/**
+ * Deletes files or folders.
+ *
+ * The list of items to delete is supplied as a list of PIDLs and may contain
+ * a mix of files and folder.
+ *
+ * @param hwnd         Handle to the window used for UI.
+ * @param vecDeathRow  Collection of items to be deleted as PIDLs.
+ *
+ * @throws AtlException if a failure occurs.
+ */
+void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
+{
+	if (hwnd == NULL)
+		AtlThrow(E_FAIL);
+
+	// Create SFTP connection object for this folder using hwndOwner for UI
+	CConnection conn = _CreateConnectionForFolder( hwnd );
+
+	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
+	CString strPath = _ExtractPathFromPIDL( m_pidl );
+	ATLASSERT(!strPath.IsEmpty());
+
+	// Create instance of our directory handler class
+	CSftpDirectory directory( conn, strPath );
+
+	// Delete each item and notify shell
+	RemotePidls::const_iterator it = vecDeathRow.begin();
+	while (it != vecDeathRow.end())
+	{
+		directory.Delete( *it );
+
+		// Make PIDL absolute
+		CAbsolutePidl pidlFull(m_pidl);
+		pidlFull = pidlFull.Join(*it);
+
+		// Notify the shell
+		::SHChangeNotify(
+			((*it).IsFolder()) ? SHCNE_RMDIR : SHCNE_DELETE,
+			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, pidlFull, NULL
+		);
+
+		it++;
+	}
+}
+
+/**
+ * Displays dialog seeking confirmation from user to delete a single item.
+ *
+ * The dialog differs depending on whether the item is a file or a folder.
+ *
+ * @param hwnd       Handle to the window used for UI.
+ * @param bstrName   Name of the file or folder being deleted.
+ * @param fIsFolder  Is the item in question a file or a folder?
+ *
+ * @returns  Whether confirmation was given or denied.
+ */
+bool CRemoteFolder::_ConfirmDelete( HWND hwnd, BSTR bstrName, bool fIsFolder )
+{
+	if (hwnd == NULL)
+		return false;
+
+	CString strMessage;
+	if (!fIsFolder)
+	{
+		strMessage = L"Are you sure you want to permanently delete '";
+		strMessage += bstrName;
+		strMessage += L"'?";
+	}
+	else
+	{
+		strMessage = L"Are you sure you want to permanently delete the "
+			L"folder '";
+		strMessage += bstrName;
+		strMessage += L"' and all of its contents?";
+	}
+
+	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
+		(fIsFolder) ?
+			L"Confirm Folder Delete" : L"Confirm File Delete", 
+		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
+
+	return (ret == IDYES);
+}
+
+/**
+ * Displays dialog seeking confirmation from user to delete multiple items.
+ *
+ * @param hwnd    Handle to the window used for UI.
+ * @param cItems  Number of items selected for deletion.
+ *
+ * @returns  Whether confirmation was given or denied.
+ */
+bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
+{
+	if (hwnd == NULL)
+		return false;
+
+	CString strMessage;
+	strMessage.Format(
+		L"Are you sure you want to permanently delete these %d items?", cItems);
+
+	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
+		L"Confirm Multiple Item Delete",
+		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
+
+	return (ret == IDYES);
+}
 
 /*------------------------------------------------------------------------------
  * CRemoteFolder::_GetLongNameFromPIDL
@@ -893,7 +1142,6 @@ CString CRemoteFolder::_GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl,
  */
 CString CRemoteFolder::_ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl )
 {
-	ATLTRACE("CRemoteFolder::_GetPathFromPIDL called\n");
 	CString strPath;
 
 	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
@@ -955,26 +1203,16 @@ HRESULT CRemoteFolder::_FillDetailsVariant( __in PCWSTR szDetail,
 /*------------------------------------------------------------------------------
  * CRemoteFolder::_FillDateVariant
  * Initialise the VARIANT whose pointer is passed and fill with date info.
- * The date is passed as a CTime.
  *----------------------------------------------------------------------------*/
-HRESULT CRemoteFolder::_FillDateVariant( __in CTime dtDate, __out VARIANT *pv )
+HRESULT CRemoteFolder::_FillDateVariant( __in DATE date, __out VARIANT *pv )
 {
 	ATLTRACE("CRemoteFolder::_FillDateVariant called\n");
 
 	::VariantInit( pv );
 	pv->vt = VT_DATE;
+	pv->date = date;
 
-	// Convert to System Time
-	SYSTEMTIME stTemp;
-	ATLVERIFY(dtDate.GetAsSystemTime(stTemp));
-
-	// Convert to VARIANT time
-	::SystemTimeToVariantTime(&stTemp, &pv->date);
-	
-	// TODO: There may be a better way to do this than this long chain of
-	//       conversions but using COleDateTime is awkward
-
-	return pv->date ? S_OK : E_FAIL;
+	return S_OK;
 }
 
 /*------------------------------------------------------------------------------
@@ -1155,7 +1393,7 @@ vector<CString> CRemoteFolder::_GetExtensionSpecificKeynames(
 }
 
 /**
- * Extracts the extension part of the filenam from the given PIDL.
+ * Extracts the extension part of the filename from the given PIDL.
  * The extension does not include the dot.  If the filename has no extension
  * an empty string is returned.
  *
@@ -1182,6 +1420,72 @@ CString CRemoteFolder::_GetFileExtensionFromPIDL( PCUITEMID_CHILD pidl )
 
 	CString strExtension(szStart, (UINT)cchLength);
 	return strExtension;
+}
+
+/**
+ * Gets connection for given SFTP session parameters.
+ */
+CConnection CRemoteFolder::_GetConnection(
+	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
+{
+	HRESULT hr;
+
+	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
+	CComPtr<ISftpConsumer> spConsumer;
+	hr = CUserInteraction::MakeInstance( hwnd, &spConsumer );
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Get SFTP Provider from session pool
+	CPool pool;
+	CComPtr<ISftpProvider> spProvider = pool.GetSession(
+		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
+
+	// Pack both ends of connection into object
+	CConnection conn;
+	conn.spProvider = spProvider;
+	conn.spConsumer = spConsumer;
+
+	return conn;
+}
+
+/**
+ * Creates a CConnection object holding the two parts of an SFTP connection.
+ *
+ * The two parts are the provider (SFTP backend) and consumer (user interaction
+ * callback).  The connection is created from the information stored in this
+ * folder's PIDL, @c m_pidl, and the window handle to be used as the owner
+ * window for any user interaction. This window handle cannot be NULL (in order
+ * to enforce good UI etiquette - we should attempt to interact with the user
+ * if Explorer isn't expecting us to).  If it is, this function will throw
+ * an exception.
+ *
+ * @param hwndUserInteraction  A handle to the window which should be used
+ *                             as the parent window for any user interaction.
+ * @throws ATL exceptions on failure.
+ */
+CConnection CRemoteFolder::_CreateConnectionForFolder(
+	HWND hwndUserInteraction )
+{
+	if (hwndUserInteraction == NULL)
+		AtlThrow(E_FAIL);
+	ATLASSERT(m_pidl);
+
+	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
+	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl( m_pidl );
+	ATLASSERT(pidlHost);
+
+	// Extract connection info from PIDL
+	CString strUser, strHost, strPath;
+	USHORT uPort;
+	ATLASSERT(SUCCEEDED( m_HostPidlManager.IsValid(pidlHost) ));
+	strHost = m_HostPidlManager.GetHost( pidlHost );
+	uPort = m_HostPidlManager.GetPort( pidlHost );
+	strUser = m_HostPidlManager.GetUser( pidlHost );
+	ATLASSERT(!strUser.IsEmpty());
+	ATLASSERT(!strHost.IsEmpty());
+
+	// Return connection from session pool
+	return _GetConnection(hwndUserInteraction, strHost, strUser, uPort);
 }
 
 // CRemoteFolder

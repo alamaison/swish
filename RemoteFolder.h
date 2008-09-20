@@ -32,25 +32,14 @@
 
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
-#include "Pool.h"
-#include "Connection.h"
-
-// This is being used as a type-safety marker interface - may be uneccessary
-[
-	object,
-	uuid("b816a83b-5022-11dc-9153-0090f5284f85"),
-	helpstring("IRemoteFolder Interface"),
-	pointer_default(unique)
-]
-__interface IRemoteFolder : IUnknown
-{
-};
-
+#include "Connection.h"     // For SFTP interactive connection objects
+#include "RemotePidl.h"     // For RemoteItemId handling
+#include "Pool.h"           // For access to SFTP global session pool
 
 // CRemoteFolder
 [
 	coclass,
-	default(IRemoteFolder),
+	default(IUnknown),
 	threading(apartment),
 	vi_progid("Swish.RemoteFolder"),
 	progid("Swish.RemoteFolder.1"),
@@ -60,7 +49,6 @@ __interface IRemoteFolder : IUnknown
 	helpstring("RemoteFolder Class")
 ]
 class ATL_NO_VTABLE CRemoteFolder :
-	public IRemoteFolder,
 	// The IShellFolder2-specific detail-handling methods are not compatible
 	// with Win 9x/NT but it supports all those of IShellDetails which are
 	public IShellFolder2,
@@ -102,9 +90,9 @@ public:
     STDMETHOD(ParseDisplayName)
 		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
         { return E_NOTIMPL; }
-    STDMETHOD(SetNameOf)
-		( HWND, PCUITEMID_CHILD, LPCOLESTR, DWORD, PITEMID_CHILD* )
-        { return E_NOTIMPL; }
+	IFACEMETHODIMP SetNameOf(
+		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
+		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
 
 	// IShellFolder2
 	STDMETHOD(EnumSearches)( IEnumExtraSearch **ppEnum );
@@ -125,6 +113,8 @@ private:
     CRemotePidlManager m_RemotePidlManager;
 	CHostPidlManager   m_HostPidlManager;
 
+	typedef std::vector<CRemoteChildPidl> RemotePidls;
+
 	CConnection _GetConnection(
 		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
@@ -137,8 +127,17 @@ private:
 	std::vector<CString> _GetExtensionSpecificKeynames( PCTSTR szExtension );
 	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
-	HRESULT _FillDateVariant( CTime dtDate, VARIANT *pv );
+	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
+	CConnection _CreateConnectionForFolder(
+		__in HWND hwndUserInteraction ) throw(...);
+	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
+		throw(...);
+	void _DoDelete(
+		__in_opt HWND hwnd, __in const RemotePidls& vecDeathRow ) throw(...);
+	bool _ConfirmDelete(
+		__in_opt HWND hwnd, __in BSTR bstrName, __in bool fIsFolder ) throw();
+	bool _ConfirmMultiDelete( __in_opt HWND hwnd, size_t cItems ) throw();
 
 	/**
 	 * Static dispatcher for Default Context Menu callback
@@ -156,10 +155,18 @@ private:
 	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
 		UINT uMsg, WPARAM wParam, LPARAM lParam );
 	HRESULT OnMergeContextMenu(
-		IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
+		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	HRESULT OnInvokeCommand(
-		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+	HRESULT OnInvokeCommandEx(
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
 	// @}
+
+	/** @name Invoked command handlers */
+	// @{
+	HRESULT OnCmdDelete( HWND hwnd, IDataObject *pDataObj );
+	// @}
+
 };
 
 // Remote folder listing column property IDs

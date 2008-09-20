@@ -19,57 +19,36 @@
 
 #include "stdafx.h"
 #include "SftpDirectory.h"
-
-/**
- * Initialises directory instance with Connection to be used and enum flags.
- *
- * @param conn      The connection to be used to communicate with server.
- * @param grfFlags  The type of files to include in the enumeration as well
- *                  as other enumeration properties.
- */
-HRESULT CSftpDirectory::Initialize( CConnection& conn, SHCONTF grfFlags )
-{
-	if (m_fInitialised) // Already called this function
-		return E_UNEXPECTED;
-
-	// Save references to both end of the SftpConsumer/Provider connection
-	m_spConsumer = conn.spConsumer;
-	m_spProvider = conn.spProvider;
-
-	m_grfFlags = grfFlags;
-
-	m_fInitialised = true;
-	
-	return S_OK;
-}
+#include "RemotePidl.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 
 /**
- * Fetches directory listing from the server.
+ * Fetches directory listing from the server as an enumeration.
  *
- * This listing is stored as a collection of PIDLs in the m_vecPidls member.
+ * This listing is cached as a collection of PIDLs in the m_vecPidls member.
  *
- * @param pszPath  The remote filesystem path whose listing is to be fetched.
+ * @param grfFlags  Flags specifying the types of files to include in the
+ *                  enumeration.
  */
-HRESULT CSftpDirectory::Fetch( PCTSTR pszPath )
+HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 {
-	if (!m_fInitialised) return E_UNEXPECTED; // Must call Initialize() first
-
 	HRESULT hr;
 
 	// Interpret supported SHCONTF flags
-	bool fIncludeFolders = (m_grfFlags & SHCONTF_FOLDERS) != 0;
-	bool fIncludeNonFolders = (m_grfFlags & SHCONTF_NONFOLDERS) != 0;
-	bool fIncludeHidden = (m_grfFlags & SHCONTF_INCLUDEHIDDEN) != 0;
+	bool fIncludeFolders = (grfFlags & SHCONTF_FOLDERS) != 0;
+	bool fIncludeNonFolders = (grfFlags & SHCONTF_NONFOLDERS) != 0;
+	bool fIncludeHidden = (grfFlags & SHCONTF_INCLUDEHIDDEN) != 0;
 
 	// Get listing enumerator
 	CComPtr<IEnumListing> spEnum;
-	hr = m_spProvider->GetListing(CComBSTR(pszPath), &spEnum);
+	hr = m_connection.spProvider->GetListing(CComBSTR(m_strDirectory), &spEnum);
 	if (SUCCEEDED(hr))
 	{
+		m_vecPidls.clear();
+
 		do {
 			Listing lt;
 			ULONG cElementsFetched = 0;
@@ -89,8 +68,8 @@ HRESULT CSftpDirectory::Fetch( PCTSTR pszPath )
 					CString(lt.bstrOwner),
 					CString(lt.bstrGroup),
 					lt.uPermissions,
-					lt.cSize,
-					_ConvertDate(lt.dateModified),
+					lt.uSize,
+					lt.dateModified,
 					S_ISDIR(lt.uPermissions),
 					&pidl
 				);
@@ -119,66 +98,84 @@ HRESULT CSftpDirectory::Fetch( PCTSTR pszPath )
  *
  * @param [out]  The location in which to return the IEnumIDList.
  */
-HRESULT CSftpDirectory::GetEnum( IEnumIDList **ppEnumIDList )
+HRESULT CSftpDirectory::GetEnum(
+	IEnumIDList **ppEnumIDList, __in SHCONTF grfFlags )
 {
 	typedef CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
-	                      _CopyChildPidl, vector<PITEMID_CHILD> >
+	                      _CopyChildPidl, vector<CChildPidl> >
 	        CComEnumIDList;
 
 	HRESULT hr;
 
-	CComObject<CComEnumIDList> *pEnumIDList;
-	hr = CComObject<CComEnumIDList>::CreateInstance(&pEnumIDList);
+	// Fetch listing and cache in m_vecPidls
+	hr = _Fetch(grfFlags);
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
-	pEnumIDList->AddRef();
-
-	hr = pEnumIDList->Init( this->GetUnknown(), m_vecPidls );
+	// Create copy of our vector of PIDL and put into an AddReffed 'holder'
+	CComPidlHolder *pHolder = NULL;
+	hr = pHolder->CreateInstance(&pHolder);
 	ATLASSERT(SUCCEEDED(hr));
 	if (SUCCEEDED(hr))
 	{
-		hr = pEnumIDList->QueryInterface(ppEnumIDList);
-		ATLASSERT(SUCCEEDED(hr));
-	}
+		pHolder->AddRef();
 
-	pEnumIDList->Release();
+		hr = pHolder->Copy(m_vecPidls);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+		// Create enumerator
+		CComObject<CComEnumIDList> *pEnumIDList;
+		hr = pEnumIDList->CreateInstance(&pEnumIDList);
+		ATLASSERT(SUCCEEDED(hr));
+		if (SUCCEEDED(hr))
+		{
+			pEnumIDList->AddRef();
+
+			// Give enumerator back-reference to holder of our copied collection
+			hr = pEnumIDList->Init( pHolder->GetUnknown(), pHolder->m_coll );
+			ATLASSERT(SUCCEEDED(hr));
+			if (SUCCEEDED(hr))
+			{
+				hr = pEnumIDList->QueryInterface(ppEnumIDList);
+				ATLASSERT(SUCCEEDED(hr));
+			}
+
+			pEnumIDList->Release();
+		}
+		pHolder->Release();
+	}
 
 	return hr;
 }
 
-/*----------------------------------------------------------------------------*
- * Private functions
- *----------------------------------------------------------------------------*/
-
-/**
- * Converts DATE to time_t (__time64_t).
- * 
- * A time_t represents number of seconds elapsed since 1970-01-01T00:00:00Z GMT.
- * Valid range is [1970-01-01T00:00:00Z, 3000-12-31T23:59:59Z] GMT.
- *
- * @param dateValue The DATE to be converted.
- * @returns The specified calendar time encoded as a value of type time_t or 
- *          -1 if time is out of range.
- */
-time_t CSftpDirectory::_ConvertDate( DATE dateValue ) const
+bool CSftpDirectory::Rename(
+	__in PCUITEMID_CHILD pidlOldFile, PCTSTR pszNewFilename )
 {
-	tm tmResult;
-	SYSTEMTIME  stTemp;
+	CString strOldFilename = m_PidlManager.GetFilename(pidlOldFile);
 
-	if(!::VariantTimeToSystemTime(dateValue, &stTemp))
-		return -1;
+	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
+	HRESULT hr = m_connection.spProvider->Rename(
+		CComBSTR(m_strDirectory+strOldFilename),
+		CComBSTR(m_strDirectory+pszNewFilename),
+		&fWasTargetOverwritten
+	);
+	if (hr != S_OK)
+		AtlThrow(hr);
 
-	tmResult.tm_sec   = stTemp.wSecond;     // seconds after the minute [0, 61]
-	tmResult.tm_min   = stTemp.wMinute;     // minutes after the hour   [0, 59]
-	tmResult.tm_hour  = stTemp.wHour;       // hours after 00:00:00     [0, 23]
-	tmResult.tm_mday  = stTemp.wDay;        // day of the month         [1, 31]
-	tmResult.tm_mon   = stTemp.wMonth - 1;  // month of the year        [0, 11]
-	tmResult.tm_year  = stTemp.wYear - 1900;// years since 1900
-	tmResult.tm_wday  = stTemp.wDayOfWeek;  // day of the week          [0,  6]
-	tmResult.tm_isdst = -1;                 // Daylight saving time is unknown
-	return _mktime64(&tmResult); // Convert the incomplete time to a normalised
-						         // calendar value.
+	return (fWasTargetOverwritten == VARIANT_TRUE);
+}
+
+void CSftpDirectory::Delete( __in PCUITEMID_CHILD pidlFile )
+{
+	CRemoteChildPidl pidl(pidlFile);
+	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
+	
+	HRESULT hr;
+	if (pidl.IsFolder())
+		hr = m_connection.spProvider->DeleteDirectory(strPath);
+	else
+		hr = m_connection.spProvider->Delete(strPath);
+	if (hr != S_OK)
+		AtlThrow(hr);
 }
 
 // CSftpDirectory
-

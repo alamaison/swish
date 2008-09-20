@@ -24,6 +24,18 @@ void CMockSftpConsumer::SetYesNoCancelBehaviour(
 	m_enumYesNoCancelBehaviour = enumBehaviour;
 }
 
+void CMockSftpConsumer::SetConfirmOverwriteBehaviour(
+	ConfirmOverwriteBehaviour enumBehaviour )
+{
+	m_enumConfirmOverwriteBehaviour = enumBehaviour;
+}
+
+void CMockSftpConsumer::SetReportErrorBehaviour(
+	ReportErrorBehaviour enumBehaviour )
+{
+	m_enumReportErrorBehaviour = enumBehaviour;
+}	
+
 // ISftpConsumer methods
 STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 	BSTR bstrRequest, BSTR *pbstrPassword )
@@ -31,19 +43,21 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 	m_cPasswordAttempts++;
 
 	CComBSTR bstrPrompt = bstrRequest;
-	ATLENSURE_RETURN_HR( bstrPrompt.Length() > 0, E_INVALIDARG );
-	ATLENSURE_RETURN_HR( pbstrPassword, E_POINTER );
-	ATLENSURE_RETURN_HR( *pbstrPassword == NULL, E_FAIL );
+	CPPUNIT_ASSERT( bstrPrompt.Length() > 0 );
+	CPPUNIT_ASSERT( pbstrPassword );
+	CPPUNIT_ASSERT_EQUAL( (OLECHAR)NULL, (OLECHAR)*pbstrPassword );
 
 	// Perform chosen test behaviour
+	// The three password cases which should never succeed will try to send
+	// their 'reply' up to m_nMaxPassword time to simulate a user repeatedly
+	// trying the wrong password and then giving up. The custom password case
+	// should never need a retry and will signal failure if there has been 
+	// more than one attempt.
 	CComBSTR bstrPassword;
 	switch (m_enumPasswordBehaviour)
 	{
 	case CustomPassword:
-		ATLENSURE_RETURN_HR(
-			m_cPasswordAttempts <= m_nMaxPasswordAttempts,
-			E_UNEXPECTED
-		);
+		CPPUNIT_ASSERT_EQUAL( (UINT)1, m_cPasswordAttempts );
 		bstrPassword = m_bstrCustomPassword;
 		break;
 	case WrongPassword:
@@ -58,8 +72,13 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 		if (m_cPasswordAttempts > m_nMaxPasswordAttempts) return E_FAIL;
 		break;
 	case FailPassword:
-	default:
 		return E_FAIL;
+	case ThrowPassword:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
 	}
 
 	// Return password BSTR
@@ -72,15 +91,13 @@ STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 	BSTR bstrNoInfo, BSTR bstrCancelInfo,
 	BSTR bstrTitle, int *piResult )
 {
-	UNREFERENCED_PARAMETER( bstrMessage );
 	UNREFERENCED_PARAMETER( bstrYesInfo );
 	UNREFERENCED_PARAMETER( bstrNoInfo );
 	UNREFERENCED_PARAMETER( bstrCancelInfo );
 	UNREFERENCED_PARAMETER( bstrTitle );
 
-	CComBSTR bstrPrompt = bstrMessage;
-	ATLENSURE_RETURN_HR( bstrPrompt.Length() > 0, E_INVALIDARG );
-	ATLENSURE_RETURN_HR( piResult, E_POINTER );
+	CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
+	CPPUNIT_ASSERT( piResult );
 
 	// Perform chosen test behaviour
 	switch (m_enumYesNoCancelBehaviour)
@@ -94,7 +111,79 @@ STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 	case Cancel:
 		*piResult = -1;
 		return E_ABORT;
+	case ThrowYNC:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
 	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+}
+
+STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
+	BSTR bstrOldFile, BSTR bstrNewFile )
+{
+	CPPUNIT_ASSERT( CComBSTR(bstrOldFile).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrNewFile).Length() > 0 );
+
+	// Perform chosen test behaviour
+	switch (m_enumConfirmOverwriteBehaviour)
+	{
+	case AllowOverwrite:
+		return S_OK;
+	case PreventOverwrite:
+		return E_ABORT;
+	case PreventOverwriteSFalse:
+		return S_FALSE;
+	case ThrowOverwrite:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+}
+
+STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
+	Swish::Listing ltOldFile, Swish::Listing ltNewFile )
+{
+	CPPUNIT_ASSERT( CComBSTR(ltOldFile.bstrFilename).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(ltNewFile.bstrFilename).Length() > 0 );
+
+	// Perform chosen test behaviour
+	switch (m_enumConfirmOverwriteBehaviour)
+	{
+	case AllowOverwrite:
+		return S_OK;
+	case PreventOverwrite:
+		return E_ABORT;
+	case PreventOverwriteSFalse:
+		return S_FALSE;
+	case ThrowOverwrite:
+		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
+		return E_FAIL;
+	default:
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+}
+
+STDMETHODIMP CMockSftpConsumer::OnReportError( BSTR bstrMessage )
+{
+	switch (m_enumReportErrorBehaviour)
+	{
+	case ErrorOK:
+		CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
+		return S_OK;
+	case ThrowReport:
+		{
+			std::string strMessage = "Unexpected call to " __FUNCTION__ ": ";
+			strMessage += CStringA(bstrMessage);
+			CPPUNIT_FAIL(strMessage);
+			return E_FAIL;
+		}
+	default:
+		UNREACHABLE;
 		return E_FAIL;
 	}
 }

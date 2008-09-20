@@ -27,7 +27,6 @@
 #pragma once
 #include "stdafx.h"
 #include "resource.h"       // main symbols
-#include "SftpProvider.h"
 
 // CUserInteraction
 [
@@ -94,6 +93,17 @@ public:
 		__in_opt BSTR bstrCancelInfo,
 		__in_opt BSTR bstrTitle,
 		__out int *piResult
+	);
+	IFACEMETHODIMP OnConfirmOverwrite(
+		__in BSTR bstrOldFile,
+		__in BSTR bstrExistingFile
+	);
+	IFACEMETHODIMP OnConfirmOverwriteEx(
+		__in Listing ltOldFile,
+		__in Listing ltExistingFile
+	);
+	IFACEMETHODIMP OnReportError(
+		__in BSTR bstrMessage
 	);
 	/* @} */
 

@@ -21,72 +21,82 @@
 #include "stdafx.h"
 #include "resource.h"          // main symbols
 
-#include "SftpProvider.h"      // For interface to back-end data providers
-#include "UserInteraction.h"   // For implementation of ISftpConsumer
+#include "Pidl.h"              // PIDL wrapper class
 #include "Connection.h"        // For SFTP Connection container
 #include "RemotePidlManager.h" // To create REMOTEPIDLs
 
 #include <vector>
 using std::vector;
 
-// CSftpDirectory
-[
-	coclass,
-	default(IUnknown),
-	threading(apartment),
-	vi_progid("Swish.SftpDirectory"),
-	progid("Swish.SftpDirectory.1"),
-	version(1.0),
-	uuid("b816a84b-5022-11dc-9153-0090f5284f85"),
-	helpstring("SftpDirectory Class")
-]
-class ATL_NO_VTABLE CSftpDirectory
+
+/**
+ * A COM holder for an STL collection that can be used in an enumeration.
+ * The enumerator (IEnumXXX) will take a pointer to this holder when it is
+ * created which ensures that the STL collection lives at least as long as
+ * the enumerator.
+ */
+template <typename CollType, typename ThreadingModel = CComObjectThreadModel>
+class CComSTLCopyContainer :
+	public CComObjectRootEx<ThreadingModel>,
+	public IUnknown
 {
 public:
-	CSftpDirectory() : m_fInitialised(false) {}
+	HRESULT Copy(const CollType& coll)
+	{
+		try
+		{
+			m_coll = coll;
+			return S_OK;
+		}
+		catch (...)
+		{
+			return E_OUTOFMEMORY;
+		}
+	}
 
+BEGIN_COM_MAP(CComSTLCopyContainer)
+	COM_INTERFACE_ENTRY(IUnknown)
+END_COM_MAP()
+
+	CollType m_coll;
+};
+
+typedef CComObject<CComSTLCopyContainer< vector<CChildPidl> > > CComPidlHolder;
+
+// CSftpDirectory
+class CSftpDirectory
+{
+public:
 	/**
 	 * Creates and initialises directory instance. 
 	 *
-	 * @param [in]  conn      SFTP connection container.
-	 * @param [in]  grfFlags  Flags specifying nature of enumeration.
-	 * @param [out] ppReturn  Location in which to return the IEnumIDList.
+	 * @param conn          SFTP connection container.
+	 * @param pszDirectory  Path of remote directory this object represents.
 	 */
-	static HRESULT MakeInstance(
-		__in CConnection& conn, __in SHCONTF grfFlags,
-		__deref_out CComObject<CSftpDirectory> **ppDirectory )
-	{
-		HRESULT hr;
+	CSftpDirectory( __in CConnection& conn, __in PCTSTR pszDirectory ) :
+		m_connection(conn), // Trim any trailing slashes and append single slash
+		m_strDirectory(CString(pszDirectory).TrimRight(_T('/'))+_T('/'))
+	{}
 
-		// Create instance of our folder enumerator class
-		CComObject<CSftpDirectory>* pSftpDirectory;
-		hr = CComObject<CSftpDirectory>::CreateInstance( &pSftpDirectory );
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-		pSftpDirectory->AddRef();
-
-		hr = pSftpDirectory->Initialize( conn, grfFlags );
-		ATLASSERT(SUCCEEDED(hr));
-
-		*ppDirectory = pSftpDirectory;
-
-		return hr;
-	}
-
-	HRESULT Initialize( __in CConnection& conn, __in SHCONTF grfFlags );
-	HRESULT Fetch( PCTSTR pszPath );
-	HRESULT GetEnum( __deref_out IEnumIDList **ppEnumIDList );
+	/**
+	 * @param grfFlags      Flags specifying nature of files to fetch.
+	 */
+	HRESULT GetEnum(
+		__deref_out IEnumIDList **ppEnumIDList,  __in SHCONTF grfFlags );
+	bool Rename(
+		__in PCUITEMID_CHILD pidlOldFile, __in PCTSTR pszNewFilename )
+		throw(...);
+	void Delete( __in PCUITEMID_CHILD pidlFile ) throw(...);
 
 
 private:
-	BOOL m_fInitialised;
-	CComPtr<ISftpProvider> m_spProvider; ///< Connection to SFTP backend.
-	CComPtr<ISftpConsumer> m_spConsumer; ///< User-interaction handler.
-	SHCONTF m_grfFlags; ///< Flags specifying type of file to enumerate.
-	CRemotePidlManager m_PidlManager;
-	vector<PITEMID_CHILD> m_vecPidls; ///< Directory contents as PIDLs.
+	CConnection m_connection;
+	CString m_strDirectory;
 
-	time_t _ConvertDate( __in DATE dateValue ) const;
+	CRemotePidlManager m_PidlManager;
+	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
+
+	HRESULT _Fetch( __in SHCONTF grfFlags );
 };
 
 
@@ -95,6 +105,17 @@ private:
  */
 struct _CopyChildPidl
 {
+	static HRESULT copy(PITEMID_CHILD *ppidlCopy, const CChildPidl *ppidl)
+	{
+		try
+		{
+			*ppidlCopy = ppidl->CopyTo();
+		}
+		catchCom();
+
+		return S_OK;
+	}
+
 	static HRESULT copy(PITEMID_CHILD *ppidlCopy, const PITEMID_CHILD *ppidl)
 	{
 		*ppidlCopy = ::ILCloneChild(*ppidl);

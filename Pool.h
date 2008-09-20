@@ -20,7 +20,6 @@
 #pragma once
 
 #include "resource.h"       // main symbols
-#include "SftpProvider.h"
 
 class CPool
 {

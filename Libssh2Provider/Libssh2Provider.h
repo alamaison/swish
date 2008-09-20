@@ -41,16 +41,7 @@
 #include <list>
 using std::list;
 
-// While interfaces are still in flux use these redefinitions to point
-// the identifiers to a temporary but unique version of the interface
-// for each release.
-#define ISftpProvider ISftpProviderUnstable2
-#define IID_ISftpProvider __uuidof(ISftpProviderUnstable2)
-#define ISftpConsumer ISftpConsumerUnstable
-#define IID_ISftpConsumer __uuidof(ISftpConsumerUnstable)
-
 // CLibssh2Provider
-
 [
 	coclass,
 	default(ISftpProvider),
@@ -74,7 +65,8 @@ public:
 	void FinalRelease();
 	// @}
 
-	// IPuttyProvider
+	/** @name ISftpProvider methods */
+	// @{
 	IFACEMETHODIMP Initialize(
 		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
@@ -82,6 +74,18 @@ public:
 		__in ISftpConsumer *pConsumer );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
+	IFACEMETHODIMP Rename(
+		__in BSTR bstrFromFilename, __in BSTR bstrToFilename,
+		__deref_out VARIANT_BOOL *fWasTargetOverwritten );
+	IFACEMETHODIMP Delete(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP DeleteDirectory(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP CreateNewFile(
+		__in BSTR bstrPath );
+	IFACEMETHODIMP CreateNewDirectory(
+		__in BSTR bstrPath );
+	// @}
 
 private:
 	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
@@ -89,21 +93,42 @@ private:
 	LIBSSH2_SESSION *m_pSession;   ///< SSH session
 	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
 	SOCKET m_socket;               ///< TCP/IP socket to the remote host
+	bool m_fConnected;             ///< Have we already connected to server?
 	CString m_strUser;             ///< Holds username for remote connection
 	CString m_strHost;             ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
-	bool m_fIsConnected;
 
 	HRESULT _Connect();
 	HRESULT _Disconnect();
 	HRESULT _OpenSocketToHost();
 	HRESULT _VerifyHostKey();
-	HRESULT _AunthenticateUser();
+	HRESULT _AuthenticateUser();
 	HRESULT _PasswordAuthentication( PCSTR szUsername );
 	HRESULT _KeyboardInteractiveAuthentication( PCSTR szUsername );
 	HRESULT _PublicKeyAuthentication( PCSTR szUsername );
 	Listing _FillListingEntry(
 		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
+
+	CString _GetLastErrorMessage();
+	CString _GetSftpErrorMessage( ULONG uError );
+
+	HRESULT _RenameSimple( __in_z const char* szFrom, __in_z const char* szTo );
+	HRESULT _RenameRetryWithOverwrite(
+		__in ULONG uPreviousError,
+		__in_z const char* szFrom, __in_z const char* szTo, 
+		__out CString& strError );
+	HRESULT _RenameAtomicOverwrite(
+		__in_z const char* szFrom, __in_z const char* szTo, 
+		__out CString& strError );
+	HRESULT _RenameNonAtomicOverwrite(
+		const char* szFrom, const char* szTo, CString& strError );
+
+	HRESULT _Delete(
+		__in_z const char *szPath, __out CString& strError );
+	HRESULT _DeleteDirectory(
+		__in_z const char *szPath, __out CString& strError );
+	HRESULT _DeleteRecursive(
+		__in_z const char *szPath, __out CString& strError );
 };
 
 /**

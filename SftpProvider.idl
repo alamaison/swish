@@ -17,16 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef SFTPPROVIDER_H
-#define SFTPPROVIDER_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#pragma once
-#include "stdafx.h"
-#include "resource.h"       // main symbols
+import "unknwn.idl";
 
 /**
  * The record structure returned by the GetListing() method of the SFTPProvider.
@@ -34,13 +25,12 @@
  * This structure represents a single file contained in the directory 
  * specified to GetListing().
  */
-[export, library_block]
 struct Listing {
 	BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
 	ULONG uPermissions;   ///< Unix file permissions
 	BSTR bstrOwner;       ///< The user name of the file's owner
 	BSTR bstrGroup;       ///< The name of the group to which the file belongs
-	ULONG cSize;          ///< The file's size in bytes
+	ULONG uSize;          ///< The file's size in bytes
 	ULONG cHardLinks;     ///< The number of hard links referencing this file
 	DATE dateModified;    ///< The date and time at which the file was 
 	                      ///< last modified in automation-compatible format
@@ -48,40 +38,32 @@ struct Listing {
 
 // IEnumListing
 [
-	object, oleautomation, library_block,
-	uuid("b816a843-5022-11dc-9153-0090f5284f85"),
+	object, uuid("b816a843-5022-11dc-9153-0090f5284f85"),
+	oleautomation,
 	helpstring("IEnumListing Interface"),
-	pointer_default(unique)
+	//pointer_default(unique)
 ]
-__interface IEnumListing : IUnknown
+interface IEnumListing : IUnknown
 {
 	/* Will need local/remote hack if used remotely */
 	HRESULT Next (
 		[in] ULONG celt,
-		[out] Listing *rgelt,
+		[out] struct Listing *rgelt,
 		[out] ULONG *pceltFetched);
 	HRESULT Skip ([in] ULONG celt);
 	HRESULT Reset ();
 	HRESULT Clone ([out] IEnumListing **ppEnum);
 };
 
-// While interfaces are still in flux use these redefinitions to point
-// the identifiers to a temporary but unique version of the interface
-// for each release.
-#define ISftpProvider ISftpProviderUnstable2
-#define IID_ISftpProvider __uuidof(ISftpProviderUnstable2)
-#define ISftpConsumer ISftpConsumerUnstable
-#define IID_ISftpConsumer __uuidof(ISftpConsumerUnstable)
-
 // ISftpConsumer
 [
-	object, oleautomation, library_block,
-	uuid("99293E0D-C3AB-4b50-8132-329E30216E14"),
+	object, uuid("DBEC732D-0B2A-4c52-ACED-89A2C2C27675"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
+	oleautomation, 
 	helpstring("ISftpConsumer Interface"),
-	pointer_default(unique)
+	//pointer_default(unique)
 ]
-__interface ISftpConsumer
+interface ISftpConsumer : IUnknown
 {
 	HRESULT OnPasswordRequest(
 		[in]          BSTR bstrRequest,
@@ -93,19 +75,30 @@ __interface ISftpConsumer
 		[in]          BSTR bstrNoInfo,
 		[in]          BSTR bstrCancelInfo,
 		[in]          BSTR bstrTitle,
-		[out, retval] int *piResult
+		[out, retval] int *pnResult
+	);
+	HRESULT OnConfirmOverwrite(
+		[in]          BSTR bstrOldFile,
+		[in]          BSTR bstrExistingFile
+	);
+	HRESULT OnConfirmOverwriteEx(
+		[in]          struct Listing ltOldFile,
+		[in]          struct Listing ltExistingFile
+	);
+	HRESULT OnReportError(
+		[in]          BSTR bstrMessage
 	);
 };
 
 // ISftpProvider
 [
-	object, oleautomation, library_block,
-	uuid("2964AECE-CB07-4f7c-848F-BF70B8F31321"),
+	object, uuid("8C724C21-95A9-4cac-915F-6107B7A43D94"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
+	oleautomation,
 	helpstring("ISftpProvider Interface"),
-	pointer_default(unique)
+	//pointer_default(unique)
 ]
-__interface ISftpProvider
+interface ISftpProvider : IUnknown
 {
 	HRESULT Initialize(
 		[in] ISftpConsumer *pConsumer,
@@ -120,7 +113,41 @@ __interface ISftpProvider
 		[in] BSTR bstrDirectory,
 		[out, retval] IEnumListing **ppEnum
 	);
-	
-};
+	HRESULT Rename(
+		[in] BSTR bstrFromPath,
+		[in] BSTR bstrToPath,
+		[out, retval] VARIANT_BOOL *fWasTargetOverwritten
+	);
 
-#endif // SFTPPROVIDER_H
+	/**
+	 * @name Deletion methods
+	 * We use two methods rather than one for safety.  This makes it explicit 
+	 * what the @b intended consequence was. It's possible for a user to ask
+	 * for a file to be deleted but, meanwhile, it has been changed to a 
+	 * directory by someone else.  We do not want to delete the directory 
+	 * without the user knowing.
+	 */
+	// @{
+	HRESULT Delete(
+		[in] BSTR bstrPath
+	);
+	HRESULT DeleteDirectory(
+		[in] BSTR bstrPath
+	);
+	// @}
+
+	/**
+	 * @name Creation methods
+	 * These are the dual of the deletion methods.  The first one, CreateFile,
+	 * is mainly for the test-suite.  It just creates an empty file at the
+	 * given path (roughly equivalent to Unix @c touch).
+	 */
+	// @{
+	HRESULT CreateNewFile(
+		[in] BSTR bstrPath
+	);
+	HRESULT CreateNewDirectory(
+		[in] BSTR bstrPath
+	);
+	// @}
+};

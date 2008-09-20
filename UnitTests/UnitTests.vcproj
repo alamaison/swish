@@ -77,7 +77,6 @@
 				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
-				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -168,7 +167,6 @@
 				AdditionalDependencies="cppunit_dll.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
-				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -253,7 +251,6 @@
 				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
-				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -292,9 +289,6 @@
 			RelativePathToProject=".\Swish.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{32D56E95-70FE-4FCF-ADA2-303CEDEB86A0}"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
@@ -313,7 +307,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MockSftpProvider.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NewConnDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Pidl_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\PidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\RemotePidlManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpDirectory_test.cpp"
 				>
 			</File>
 			<File
@@ -340,6 +354,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\TestConfig.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -350,11 +368,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider_test.h"
+				RelativePath=".\limits.h"
 				>
 			</File>
 			<File
 				RelativePath=".\MockSftpConsumer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpProvider.h"
 				>
 			</File>
 			<File
@@ -365,9 +387,21 @@
 				RelativePath=".\stdafx.h"
 				>
 			</File>
+			<File
+				RelativePath=".\TestConfig.h"
+				>
+			</File>
 		</Filter>
 		<File
+			RelativePath="..\Connection.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\NewConnDialog.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\SftpDirectory.cpp"
 			>
 		</File>
 		<File

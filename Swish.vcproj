@@ -43,6 +43,7 @@
 				WarningLevel="2"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
+				GenerateTypeLibrary="false"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -364,6 +365,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SftpProvider.idl"
+				>
+			</File>
+			<File
+				RelativePath=".\ShellDataObject.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -465,6 +474,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Pidl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PidlManager.h"
 				>
 			</File>
@@ -481,6 +494,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RemotePidl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RemotePidlManager.h"
 				>
 			</File>
@@ -493,7 +510,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SftpProvider.h"
+				RelativePath=".\ShellDataObject.h"
 				>
 			</File>
 			<File
