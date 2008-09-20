@@ -78,6 +78,8 @@ public:
 	IFACEMETHODIMP Initialize(
 		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
+	IFACEMETHODIMP SwitchConsumer(
+		__in ISftpConsumer *pConsumer );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 
@@ -87,10 +89,10 @@ private:
 	LIBSSH2_SESSION *m_pSession;   ///< SSH session
 	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
 	SOCKET m_socket;               ///< TCP/IP socket to the remote host
-	list<Listing> m_lstFiles;
 	CString m_strUser;             ///< Holds username for remote connection
 	CString m_strHost;             ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
+	bool m_fIsConnected;
 
 	HRESULT _Connect();
 	HRESULT _Disconnect();
@@ -103,5 +105,39 @@ private:
 	Listing _FillListingEntry(
 		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
 };
+
+/**
+ * A COM holder for an STL collection that can be used in an enumeration.
+ * The enumerator (IEnumXXX) will take a pointer to this holder when it is
+ * created which ensures that the STL collection lives at least as long as
+ * the enumerator.
+ */
+template <typename CollType, typename ThreadingModel = CComObjectThreadModel>
+class CComSTLCopyContainer :
+	public CComObjectRootEx<ThreadingModel>,
+	public IUnknown
+{
+public:
+	HRESULT Copy(const CollType& coll)
+	{
+		try
+		{
+			m_coll = coll;
+			return S_OK;
+		}
+		catch (...)
+		{
+			return E_OUTOFMEMORY;
+		}
+	}
+
+BEGIN_COM_MAP(CComSTLCopyContainer)
+	COM_INTERFACE_ENTRY(IUnknown)
+END_COM_MAP()
+
+	CollType m_coll;
+};
+
+typedef CComObject<CComSTLCopyContainer< list<Listing> > > CComListingHolder;
 
 #endif // LIBSSH2PROVIDER_H

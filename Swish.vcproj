@@ -348,6 +348,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Pool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RemoteFolder.cpp"
 				>
 			</File>
@@ -462,6 +466,10 @@
 			</File>
 			<File
 				RelativePath=".\PidlManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Pool.h"
 				>
 			</File>
 			<File

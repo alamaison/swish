@@ -113,6 +113,9 @@ __interface ISftpProvider
 		[in] BSTR bstrHost,
 		[in] UINT uPort
 	);
+	HRESULT SwitchConsumer(
+		[in]  ISftpConsumer *pConsumer
+	);
 	HRESULT GetListing(
 		[in] BSTR bstrDirectory,
 		[out, retval] IEnumListing **ppEnum

@@ -72,7 +72,8 @@ HRESULT CSftpDirectory::Fetch( PCTSTR pszPath )
 	{
 		do {
 			Listing lt;
-			hr = spEnum->Next(1, &lt, NULL);
+			ULONG cElementsFetched = 0;
+			hr = spEnum->Next(1, &lt, &cElementsFetched);
 			if (hr == S_OK)
 			{
 				if (!fIncludeFolders && S_ISDIR(lt.uPermissions))
@@ -99,9 +100,9 @@ HRESULT CSftpDirectory::Fetch( PCTSTR pszPath )
 					m_vecPidls.push_back(pidl);
 				}
 
-				::SysFreeString(lt.bstrFilename);
+				/*::SysFreeString(lt.bstrFilename);
 				::SysFreeString(lt.bstrGroup);
-				::SysFreeString(lt.bstrOwner);
+				::SysFreeString(lt.bstrOwner);*/
 			}
 		} while (hr == S_OK);
 	}

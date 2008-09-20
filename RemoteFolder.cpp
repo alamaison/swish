@@ -23,7 +23,6 @@
 #include "SftpDirectory.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
-#include "Connection.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -212,28 +211,18 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	ATLASSERT(!strHost.IsEmpty());
 	ATLASSERT(!strPath.IsEmpty());
 
-	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
-	CComPtr<ISftpConsumer> spConsumer;
-	hr = CUserInteraction::MakeInstance( hwndOwner, &spConsumer );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Create SFTP Provider from ProgID and initialise
-	CComPtr<ISftpProvider> spProvider;
-	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-	hr = spProvider->Initialize(
-		spConsumer, CComBSTR(strUser), CComBSTR(strHost), uPort );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Pack both ends of connection into object
+	// Get connection from session pool
 	CConnection conn;
-	conn.spProvider = spProvider.Detach();
-	conn.spConsumer = spConsumer.Detach();
+	try
+	{
+		conn = _GetConnection(hwndOwner, strHost, strUser, uPort);
+	}
+	catch(...)
+	{
+		return E_FAIL;
+	}
 
-    // Create instance of our folder enumerator class
-	//hr = CRemoteEnumIDList::MakeInstance( 
-	//	conn, strPath, grfFlags, ppEnumIDList );
-
+	// Create remote directory handler class using connection
 	CComObject<CSftpDirectory> *pDirectory;
 	hr = CSftpDirectory::MakeInstance( conn, grfFlags, &pDirectory );
 	if (SUCCEEDED(hr))
@@ -245,6 +234,29 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	}
 
     return hr;
+}
+
+CConnection CRemoteFolder::_GetConnection(
+	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
+{
+	HRESULT hr;
+
+	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
+	CComPtr<ISftpConsumer> spConsumer;
+	hr = CUserInteraction::MakeInstance( hwnd, &spConsumer );
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Get SFTP Provider from session pool
+	CPool pool;
+	CComPtr<ISftpProvider> spProvider = pool.GetSession(
+		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
+
+	// Pack both ends of connection into object
+	CConnection conn;
+	conn.spProvider = spProvider;
+	conn.spConsumer = spConsumer;
+
+	return conn;
 }
 
 /*------------------------------------------------------------------------------

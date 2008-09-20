@@ -32,6 +32,8 @@
 
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
+#include "Pool.h"
+#include "Connection.h"
 
 // This is being used as a type-safety marker interface - may be uneccessary
 [
@@ -119,10 +121,13 @@ public:
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
+	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
     CRemotePidlManager m_RemotePidlManager;
 	CHostPidlManager   m_HostPidlManager;
-	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
+	CConnection _GetConnection(
+		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
+		UINT uPort ) throw(...);
 	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
 	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
 	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );
