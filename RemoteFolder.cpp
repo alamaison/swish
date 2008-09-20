@@ -436,17 +436,9 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 	return SHStrDupW( strName, &pName->pOleStr );
 }
 
-STDMETHODIMP CRemoteFolder::ParseDisplayName(
-	__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in LPWSTR pszDisplayName,
-	__reserved  ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl,
-	__inout_opt ULONG *pdwAttributes)
-{
-	return E_NOTIMPL;
-}
-
 STDMETHODIMP CRemoteFolder::SetNameOf(
 	__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
-	SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut)
+	SHGDNF /*uFlags*/, __deref_out_opt PITEMID_CHILD *ppidlOut)
 {
 	if (ppidlOut)
 		*ppidlOut = NULL;
@@ -963,7 +955,7 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
  * Deletes one or more files or folders after seeking confirmation from user.
  *
  * The list of items to delete is supplied as a list of PIDLs and may contain
- * a mix of files and folder.
+ * a mix of files and folders.
  *
  * If just one item is chosen, a specific confirmation message for that item is
  * shown.  If multiple items are to be deleted, a general confirmation message 
@@ -1431,6 +1423,32 @@ CString CRemoteFolder::_GetFileExtensionFromPIDL( PCUITEMID_CHILD pidl )
 }
 
 /**
+ * Gets connection for given SFTP session parameters.
+ */
+CConnection CRemoteFolder::_GetConnection(
+	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
+{
+	HRESULT hr;
+
+	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
+	CComPtr<ISftpConsumer> spConsumer;
+	hr = CUserInteraction::MakeInstance( hwnd, &spConsumer );
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Get SFTP Provider from session pool
+	CPool pool;
+	CComPtr<ISftpProvider> spProvider = pool.GetSession(
+		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
+
+	// Pack both ends of connection into object
+	CConnection conn;
+	conn.spProvider = spProvider;
+	conn.spConsumer = spConsumer;
+
+	return conn;
+}
+
+/**
  * Creates a CConnection object holding the two parts of an SFTP connection.
  *
  * The two parts are the provider (SFTP backend) and consumer (user interaction
@@ -1452,8 +1470,6 @@ CConnection CRemoteFolder::_CreateConnectionForFolder(
 		AtlThrow(E_FAIL);
 	ATLASSERT(m_pidl);
 
-	HRESULT hr;
-
 	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
 	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl( m_pidl );
 	ATLASSERT(pidlHost);
@@ -1468,25 +1484,8 @@ CConnection CRemoteFolder::_CreateConnectionForFolder(
 	ATLASSERT(!strUser.IsEmpty());
 	ATLASSERT(!strHost.IsEmpty());
 
-	// Create SFTP Consumer to pass to SftpProvider (used for password reqs etc)
-	CComPtr<ISftpConsumer> spConsumer;
-	hr = CUserInteraction::MakeInstance( hwndUserInteraction, &spConsumer );
-	ATLENSURE_SUCCEEDED(hr);
-
-	// Create SFTP Provider from ProgID and initialise
-	CComPtr<ISftpProvider> spProvider;
-	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
-	ATLENSURE_SUCCEEDED(hr);
-	hr = spProvider->Initialize(
-		spConsumer, CComBSTR(strUser), CComBSTR(strHost), uPort );
-	ATLENSURE_SUCCEEDED(hr);
-
-	// Pack both ends of connection into object
-	CConnection conn;
-	conn.spProvider = spProvider.Detach();
-	conn.spConsumer = spConsumer.Detach();
-
-	return conn;
+	// Return connection from session pool
+	return _GetConnection(hwndUserInteraction, strHost, strUser, uPort);
 }
 
 // CRemoteFolder

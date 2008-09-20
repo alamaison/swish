@@ -152,6 +152,28 @@ STDMETHODIMP CLibssh2Provider::Initialize(
 }
 
 /**
+ * Rewire the SFTP provider to a new front-end consumer for interaction.
+ *
+ * @param pConsumer  New SftpConsumer to recieve interaction callbacks.
+ */
+STDMETHODIMP CLibssh2Provider::SwitchConsumer( ISftpConsumer *pConsumer )
+{
+	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
+	ATLASSERT(m_pConsumer);
+
+	if (m_pConsumer)
+	{
+		m_pConsumer->Release();
+		m_pConsumer = NULL;
+	}
+
+	m_pConsumer = pConsumer;
+	m_pConsumer->AddRef();
+
+	return S_OK;
+}
+
+/**
  * Creates a socket and connects it to the host.
  *
  * The socket is stored as the member variable @c m_socket. The hostname 
@@ -482,7 +504,7 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 		}
 
 		lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
-    } while (1);
+	} while (1);
 
     ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);
 

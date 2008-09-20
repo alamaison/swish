@@ -146,7 +146,7 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
 }
 
 STDMETHODIMP CUserInteraction::OnConfirmOverwriteEx(
-	Listing ltOldFile, Listing ltExistingFile )
+	Listing /*ltOldFile*/, Listing /*ltExistingFile*/ )
 {
 	// Add your function implementation here.
 	return E_NOTIMPL;

@@ -17,9 +17,6 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-//#include "stdafx.h"
-//#include "resource.h"       // main symbols
-
 import "unknwn.idl";
 
 /**
@@ -95,7 +92,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("2D82BFD3-6930-4ff6-8F07-BFC0A509DF74"),
+	object, uuid("8C724C21-95A9-4cac-915F-6107B7A43D94"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface"),
@@ -108,6 +105,9 @@ interface ISftpProvider : IUnknown
 		[in] BSTR bstrUser,
 		[in] BSTR bstrHost,
 		[in] UINT uPort
+	);
+	HRESULT SwitchConsumer(
+		[in]  ISftpConsumer *pConsumer
 	);
 	HRESULT GetListing(
 		[in] BSTR bstrDirectory,

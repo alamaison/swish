@@ -70,6 +70,8 @@ public:
 	IFACEMETHODIMP Initialize(
 		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
+	IFACEMETHODIMP SwitchConsumer(
+		__in ISftpConsumer *pConsumer );
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 	IFACEMETHODIMP Rename(
