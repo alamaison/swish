@@ -21,6 +21,23 @@
 #include "remotelimits.h"
 #include "Pool.h"
 
+/**
+ * Retrieves an SFTP session for a global pool or creates it if none exists.
+ *
+ * Pointers to the session objects are stored in the Running Object Table (ROT)
+ * making them available to any client that needs one under the same 
+ * Winstation (login).  They are identified by item monikers of the form 
+ * "!username@hostname:port".
+ *
+ * If an existing session can't be found in the ROT (as will happen the first
+ * a connection is made) this function creates a new (Libssh2Provider) 
+ * connection with the given parameters.  In the future this may be extended to
+ * give a choice of the type of connection to make.
+ *
+ * @throws AtlException if any error occurs.
+ *
+ * @returns pointer to the session (ISftpProvider).
+ */
 CComPtr<ISftpProvider> CPool::GetSession(
 	ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
 	throw(...)
