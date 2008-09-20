@@ -54,6 +54,13 @@ STDMETHODIMP CMockSftpProvider::Initialize(
 	return S_OK;
 }
 
+
+STDMETHODIMP CMockSftpProvider::SwitchConsumer( Swish::ISftpConsumer *pConsumer )
+{
+	m_spConsumer = pConsumer;
+	return S_OK;
+}
+
 STDMETHODIMP CMockSftpProvider::GetListing(
 	BSTR bstrDirectory, Swish::IEnumListing **ppEnum )
 {
@@ -182,26 +189,45 @@ STDMETHODIMP CMockSftpProvider::Rename(
 	}
 }
 
-STDMETHODIMP CMockSftpProvider::Delete( __in BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::Delete( BSTR bstrPath )
 {
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
+	// Temporary condtion - remove for Windows support
+	CPPUNIT_ASSERT( CComBSTR(bstrPath)[0] == OLECHAR('/') );
+
 	return S_OK;
 }
 
-STDMETHODIMP CMockSftpProvider::DeleteDirectory( __in BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::DeleteDirectory( BSTR bstrPath )
 {
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
+	// Temporary condtion - remove for Windows support
+	CPPUNIT_ASSERT( CComBSTR(bstrPath)[0] == OLECHAR('/') );
+
 	return S_OK;
 }
 
-STDMETHODIMP CMockSftpProvider::CreateNewFile( __in BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::CreateNewFile( BSTR bstrPath )
 {
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
+	// Temporary condtion - remove for Windows support
+	CPPUNIT_ASSERT( CComBSTR(bstrPath)[0] == OLECHAR('/') );
+
 	return S_OK;
 }
 
-STDMETHODIMP CMockSftpProvider::CreateNewDirectory( __in BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::CreateNewDirectory( BSTR bstrPath )
 {
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
+	// Temporary condtion - remove for Windows support
+	CPPUNIT_ASSERT( CComBSTR(bstrPath)[0] == OLECHAR('/') );
+
 	return S_OK;
 }
-
 
 CComBSTR CMockSftpProvider::_TagFilename(PCWSTR pszFilename, PCWSTR pszTag)
 {

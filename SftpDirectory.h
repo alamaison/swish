@@ -36,7 +36,7 @@ using std::vector;
  * the enumerator.
  */
 template <typename CollType, typename ThreadingModel = CComObjectThreadModel>
-class CComSTLContainerCopy :
+class CComSTLCopyContainer :
 	public CComObjectRootEx<ThreadingModel>,
 	public IUnknown
 {
@@ -54,14 +54,14 @@ public:
 		}
 	}
 
-BEGIN_COM_MAP(CComSTLContainerCopy)
+BEGIN_COM_MAP(CComSTLCopyContainer)
 	COM_INTERFACE_ENTRY(IUnknown)
 END_COM_MAP()
 
 	CollType m_coll;
 };
 
-typedef CComObject<CComSTLContainerCopy< vector<CChildPidl> > > CComPidlHolder;
+typedef CComObject<CComSTLCopyContainer< vector<CChildPidl> > > CComPidlHolder;
 
 // CSftpDirectory
 class CSftpDirectory
@@ -84,7 +84,9 @@ public:
 	HRESULT GetEnum(
 		__deref_out IEnumIDList **ppEnumIDList,  __in SHCONTF grfFlags );
 	bool Rename(
-		__in PCUITEMID_CHILD pidlOldFile, __in PCTSTR pszNewFilename ) throw();
+		__in PCUITEMID_CHILD pidlOldFile, __in PCTSTR pszNewFilename )
+		throw(...);
+	void Delete( __in PCUITEMID_CHILD pidlFile ) throw(...);
 
 
 private:

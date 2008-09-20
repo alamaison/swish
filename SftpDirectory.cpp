@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "SftpDirectory.h"
+#include "RemotePidl.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
@@ -50,7 +51,8 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 
 		do {
 			Listing lt;
-			hr = spEnum->Next(1, &lt, NULL);
+			ULONG cElementsFetched = 0;
+			hr = spEnum->Next(1, &lt, &cElementsFetched);
 			if (hr == S_OK)
 			{
 				if (!fIncludeFolders && S_ISDIR(lt.uPermissions))
@@ -77,9 +79,9 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 					m_vecPidls.push_back(pidl);
 				}
 
-				::SysFreeString(lt.bstrFilename);
+				/*::SysFreeString(lt.bstrFilename);
 				::SysFreeString(lt.bstrGroup);
-				::SysFreeString(lt.bstrOwner);
+				::SysFreeString(lt.bstrOwner);*/
 			}
 		} while (hr == S_OK);
 	}
@@ -160,6 +162,20 @@ bool CSftpDirectory::Rename(
 		AtlThrow(hr);
 
 	return (fWasTargetOverwritten == VARIANT_TRUE);
+}
+
+void CSftpDirectory::Delete( __in PCUITEMID_CHILD pidlFile )
+{
+	CRemoteChildPidl pidl(pidlFile);
+	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
+	
+	HRESULT hr;
+	if (pidl.IsFolder())
+		hr = m_connection.spProvider->DeleteDirectory(strPath);
+	else
+		hr = m_connection.spProvider->Delete(strPath);
+	if (hr != S_OK)
+		AtlThrow(hr);
 }
 
 // CSftpDirectory

@@ -75,6 +75,9 @@ public:
 		__in BSTR bstrHost,
 		__in UINT uPort
 	);
+	IFACEMETHODIMP SwitchConsumer (
+		__in Swish::ISftpConsumer *pConsumer
+	);
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory,
 		__out Swish::IEnumListing **ppEnum

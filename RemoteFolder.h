@@ -33,6 +33,8 @@
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
 #include "Connection.h"     // For SFTP interactive connection objects
+#include "RemotePidl.h"     // For RemoteItemId handling
+#include "Pool.h"           // For access to SFTP global session pool
 
 // CRemoteFolder
 [
@@ -85,10 +87,9 @@ public:
     STDMETHOD(BindToStorage)( PCUIDLIST_RELATIVE, LPBC, REFIID, void** )
         { return E_NOTIMPL; }
     STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
-	IFACEMETHODIMP ParseDisplayName(
-		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in LPWSTR pszDisplayName,
-		__reserved  ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl,
-		__inout_opt ULONG *pdwAttributes);
+    STDMETHOD(ParseDisplayName)
+		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
+        { return E_NOTIMPL; }
 	IFACEMETHODIMP SetNameOf(
 		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
 		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
@@ -108,10 +109,15 @@ public:
 	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
+	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
     CRemotePidlManager m_RemotePidlManager;
 	CHostPidlManager   m_HostPidlManager;
-	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
 
+	typedef std::vector<CRemoteChildPidl> RemotePidls;
+
+	CConnection _GetConnection(
+		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
+		UINT uPort ) throw(...);
 	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
 	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
 	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );
@@ -124,7 +130,14 @@ private:
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 	CConnection _CreateConnectionForFolder(
-		__in HWND hwndUserInteraction ) throw();
+		__in HWND hwndUserInteraction ) throw(...);
+	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
+		throw(...);
+	void _DoDelete(
+		__in_opt HWND hwnd, __in const RemotePidls& vecDeathRow ) throw(...);
+	bool _ConfirmDelete(
+		__in_opt HWND hwnd, __in BSTR bstrName, __in bool fIsFolder ) throw();
+	bool _ConfirmMultiDelete( __in_opt HWND hwnd, size_t cItems ) throw();
 
 	/**
 	 * Static dispatcher for Default Context Menu callback
@@ -142,10 +155,18 @@ private:
 	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
 		UINT uMsg, WPARAM wParam, LPARAM lParam );
 	HRESULT OnMergeContextMenu(
-		IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
+		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	HRESULT OnInvokeCommand(
-		IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+	HRESULT OnInvokeCommandEx(
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
 	// @}
+
+	/** @name Invoked command handlers */
+	// @{
+	HRESULT OnCmdDelete( HWND hwnd, IDataObject *pDataObj );
+	// @}
+
 };
 
 // Remote folder listing column property IDs
