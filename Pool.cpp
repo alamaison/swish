@@ -19,56 +19,42 @@
 
 #include "stdafx.h"
 #include "remotelimits.h"
-#include "XPool.h"
+#include "Pool.h"
 
-HRESULT CXPool::GetConnection(
-	ISftpConsumer *pConsumer, BSTR bstrHost, BSTR bstrUser, UINT uPort,
-	ISftpProvider **ppProvider )
+CComPtr<ISftpProvider> CPool::GetSession(
+	ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
+	throw(...)
 {
-	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
-	ATLENSURE_RETURN_HR(::SysStringLen(bstrHost) > 0, E_INVALIDARG);
-	ATLENSURE_RETURN_HR(::SysStringLen(bstrUser) > 0, E_INVALIDARG);
-	ATLENSURE_RETURN_HR(uPort < MAX_PORT, E_INVALIDARG);
+	ATLENSURE_THROW(pConsumer, E_POINTER);
+	ATLENSURE_THROW(pszHost[0] != '\0', E_INVALIDARG);
+	ATLENSURE_THROW(pszUser[0] != '\0', E_INVALIDARG);
+	ATLENSURE_THROW(uPort < MAX_PORT, E_INVALIDARG);
 
-	HRESULT hr = S_OK;
+	// Try to get the session from the global pol
+	CComPtr<ISftpProvider> spProvider = 
+		_GetSessionFromROT(pszHost, pszUser, uPort);
 
-	try
+	if (spProvider == NULL)
 	{
-		CComPtr<ISftpProvider> spProvider =
-			_GetConnectionFromROT(bstrHost, bstrUser, uPort);
-
-		if (spProvider == NULL)
-		{
-			spProvider = _CreateNewConnection(pConsumer, bstrHost, bstrUser, uPort);
-
-			// Add to pool
-			_StoreConnectionInROT(spProvider, bstrHost, bstrUser, uPort);
-		}
-		else
-		{
-			// Switch SFTP Provider's SFTP consumer
-			spProvider->SwitchConsumer(pConsumer);
-		}
-
-		// Return provider from pool
-		*ppProvider = spProvider.Detach();
+		// No existing session; create new one and add to the pool
+		spProvider = _CreateNewSession(pConsumer, pszHost, pszUser, uPort);
+		_StoreSessionInROT(spProvider, pszHost, pszUser, uPort);
 	}
-	catch (...)
+	else
 	{
-		return E_FAIL;
+		// Existing session found; switch it to use new SFTP consumer
+		spProvider->SwitchConsumer(pConsumer);
 	}
 
-	return hr;
+	ATLENSURE(spProvider);
+	return spProvider;
 }
 
-CComPtr<IMoniker> CXPool::_CreateMoniker(
-	BSTR bstrHost, BSTR bstrUser, UINT uPort ) throw(...)
+CComPtr<IMoniker> CPool::_CreateMoniker(
+	PCWSTR pszHost, PCWSTR pszUser, UINT uPort ) throw(...)
 {
 	CString strMonikerName;
-	strMonikerName += bstrUser;
-	strMonikerName += L"@";
-	strMonikerName += bstrHost;
-	strMonikerName.AppendFormat(L":%d", uPort);
+	strMonikerName.Format(L"%ls@%ls:%d", pszUser, pszHost, uPort);
 
 	CComPtr<IMoniker> spMoniker;
 	ATLENSURE_SUCCEEDED(
@@ -77,10 +63,10 @@ CComPtr<IMoniker> CXPool::_CreateMoniker(
 	return spMoniker;
 }
 
-CComPtr<ISftpProvider> CXPool::_GetConnectionFromROT(
-	BSTR bstrHost, BSTR bstrUser, UINT uPort ) throw(...)
+CComPtr<ISftpProvider> CPool::_GetSessionFromROT(
+	PCWSTR pszHost, PCWSTR pszUser, UINT uPort ) throw(...)
 {
-	CComPtr<IMoniker> spMoniker = _CreateMoniker(bstrHost, bstrUser, uPort);
+	CComPtr<IMoniker> spMoniker = _CreateMoniker(pszHost, pszUser, uPort);
 	CComPtr<IRunningObjectTable> spROT;
 	ATLENSURE_SUCCEEDED(::GetRunningObjectTable(NULL, &spROT));
 
@@ -96,13 +82,13 @@ CComPtr<ISftpProvider> CXPool::_GetConnectionFromROT(
 		return NULL;
 }
 
-void CXPool::_StoreConnectionInROT(
-	ISftpProvider *pProvider, BSTR bstrHost, BSTR bstrUser, UINT uPort )
+void CPool::_StoreSessionInROT(
+	ISftpProvider *pProvider, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
 	throw(...)
 {
 	HRESULT hr;
 
-	CComPtr<IMoniker> spMoniker = _CreateMoniker(bstrHost, bstrUser, uPort);
+	CComPtr<IMoniker> spMoniker = _CreateMoniker(pszHost, pszUser, uPort);
 	CComPtr<IRunningObjectTable> spROT;
 	ATLENSURE_SUCCEEDED(::GetRunningObjectTable(NULL, &spROT));
 
@@ -121,8 +107,8 @@ void CXPool::_StoreConnectionInROT(
 	// TODO: find way to revoke normal case when finished with them
 }
 
-CComPtr<ISftpProvider> CXPool::_CreateNewConnection(
-	ISftpConsumer *pConsumer, BSTR bstrHost, BSTR bstrUser, UINT uPort )
+CComPtr<ISftpProvider> CPool::_CreateNewSession(
+	ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
 	throw(...)
 {
 	HRESULT hr;
@@ -133,7 +119,8 @@ CComPtr<ISftpProvider> CXPool::_CreateNewConnection(
 	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
 	ATLENSURE_SUCCEEDED(hr);
 
-	hr = spProvider->Initialize(pConsumer, bstrUser, bstrHost, uPort);
+	hr = spProvider->Initialize(
+		pConsumer, CComBSTR(pszUser), CComBSTR(pszHost), uPort);
 	ATLENSURE_SUCCEEDED(hr);
 
 	return spProvider;

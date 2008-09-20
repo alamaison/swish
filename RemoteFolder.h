@@ -32,7 +32,7 @@
 
 #include "RemotePidlManager.h"
 #include "HostPidlManager.h"
-#include "XPool.h"
+#include "Pool.h"
 #include "Connection.h"
 
 // This is being used as a type-safety marker interface - may be uneccessary
@@ -68,21 +68,12 @@ class ATL_NO_VTABLE CRemoteFolder :
 	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
 {
 public:
-	CRemoteFolder() : m_pidl(NULL), m_pPool(NULL) {}
+	CRemoteFolder() : m_pidl(NULL) {}
 
 	~CRemoteFolder()
 	{
 		if (m_pidl)
 			m_RemotePidlManager.Delete( m_pidl );
-	}
-
-	void FinalRelease()
-	{
-		if (m_pPool)
-		{
-			m_pPool->Release();
-			m_pPool = NULL;
-		}
 	}
 
     // IPersist
@@ -137,10 +128,8 @@ public:
 
 private:
 	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
-
     CRemotePidlManager m_RemotePidlManager;
 	CHostPidlManager   m_HostPidlManager;
-	CComObject<CXPool> *m_pPool;
 
 	CConnection _GetConnection(
 		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 

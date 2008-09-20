@@ -22,35 +22,25 @@
 #include "resource.h"       // main symbols
 #include "SftpProvider.h"
 
-[
-	coclass,
-	default(IUnknown),
-	threading(apartment),
-	vi_progid("Swish.XPool"),
-	progid("Swish.XPool.1"),
-	version(1.0),
-	uuid("b816a84c-5022-11dc-9153-0090f5284f85"),
-	helpstring("XPool Class")
-]
-class ATL_NO_VTABLE CXPool
+class CPool
 {
 public:
 
-	HRESULT GetConnection(
-		__in ISftpConsumer *pConsumer, __in BSTR bstrHost, __in BSTR bstrUser, UINT uPort,
-		__deref_out ISftpProvider **ppProvider );
+	CComPtr<ISftpProvider> GetSession(
+		__in ISftpConsumer *pConsumer, __in PCWSTR pszHost, __in PCWSTR pszUser, 
+		UINT uPort) throw(...);
 
 private:
 
 	CComPtr<IMoniker> _CreateMoniker(
-		__in BSTR bstrHost, __in BSTR bstrUser, UINT uPort) throw(...);
-	__checkReturn CComPtr<ISftpProvider> _GetConnectionFromROT(
-		__in BSTR bstrHost, __in BSTR bstrUser, UINT uPort) throw(...);
-	void _StoreConnectionInROT(
-		__in ISftpProvider *pProvider, __in BSTR bstrHost, __in BSTR bstrUser, 
+		__in PCWSTR pszHost, __in PCWSTR pszUser, UINT uPort) throw(...);
+	__checkReturn CComPtr<ISftpProvider> _GetSessionFromROT(
+		__in PCWSTR pszHost, __in PCWSTR pszUser, UINT uPort) throw(...);
+	void _StoreSessionInROT(
+		__in ISftpProvider *pProvider, __in PCWSTR pszHost, __in PCWSTR pszUser, 
 		UINT uPort) throw(...);
-	CComPtr<ISftpProvider> _CreateNewConnection(
-		ISftpConsumer *pConsumer, BSTR bstrHost, BSTR bstrUser, UINT uPort)
+	CComPtr<ISftpProvider> _CreateNewSession(
+		ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort)
 		throw(...);
-};
 
+};

@@ -246,19 +246,10 @@ CConnection CRemoteFolder::_GetConnection(
 	hr = CUserInteraction::MakeInstance( hwnd, &spConsumer );
 	ATLENSURE_SUCCEEDED(hr);
 
-	// Create pool if we don't already have one
-	if (m_pPool == NULL)
-	{
-		hr = CComObject<CXPool>::CreateInstance(&m_pPool);
-		ATLENSURE_SUCCEEDED(hr);
-		m_pPool->AddRef();
-	}
-
 	// Get SFTP Provider from session pool
-	CComPtr<ISftpProvider> spProvider;
-	hr = m_pPool->GetConnection(
-		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort, &spProvider);
-	ATLENSURE_SUCCEEDED(hr);
+	CPool pool;
+	CComPtr<ISftpProvider> spProvider = pool.GetSession(
+		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
 
 	// Pack both ends of connection into object
 	CConnection conn;

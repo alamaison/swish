@@ -348,6 +348,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Pool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RemoteFolder.cpp"
 				>
 			</File>
@@ -393,10 +397,6 @@
 			</File>
 			<File
 				RelativePath=".\UserInteraction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\XPool.cpp"
 				>
 			</File>
 		</Filter>
@@ -469,6 +469,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Pool.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RemoteFolder.h"
 				>
 			</File>
@@ -498,10 +502,6 @@
 			</File>
 			<File
 				RelativePath=".\UserInteraction.h"
-				>
-			</File>
-			<File
-				RelativePath=".\XPool.h"
 				>
 			</File>
 		</Filter>
