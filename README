@@ -9,13 +9,9 @@ What is Swish?
     
 Status:
     ********************************************************************
-    In this version, Swish can only LIST the files in a remote directory
-    and their properties.
+    In this version, Swish can only perform simple tasks such as renaming
+    and deleting files on the remote server. It cannot access their contents.
     ********************************************************************
-    
-    Swish is currently very experimental.  Most of the effort so far has gone 
-    into demonstrating a proof-of-concept rather than creating a finished,
-    usable application.  
     
     The architecture of Swish is divided into a back-end and a front-end.  The
     former deals with the SFTP connection to remote hosts while the latter
@@ -33,7 +29,7 @@ Status:
 
 Supported Operating Systems:
     Windows XP   (most tested)
-    Windows 2000 (occasionally tested)
+    Windows 2000 (regularly tested)
     Windows Me   (rarely tested)
     Windows 98   (regularly tested)
     
@@ -93,7 +89,8 @@ Requirements to build:
 Requirements for testing:
     CppUnit (works with v1.12.0, may work with other versions) must be present
     on the local machine.  Many tests also require a remote host available to
-    connect to over SSH.  Swish assumes this is unix-based.
+    connect to over SSH.  Swish assumes this is unix-based and that the test
+    user account has a home directory named /home/username.
     
     Environment variables:
     CPPUNITDIR: The location of the CppUnit files.
@@ -103,6 +100,10 @@ Requirements for testing:
         (optional - defaults to 22 if not set).
     TEST_PASSWORD:  The password to use to connect to the remote host if 
                     required.
+    
+    If you are going to run the tests I **STRONGLY** recommend using a separate
+    user account for them as they create and delete files and, being tests, have
+    the potential to invoke disastrous code.  Protect yourself from them!
 
 OpenSSL:
     This product includes software developed by the OpenSSL Project for use in 

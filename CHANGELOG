@@ -1,3 +1,19 @@
+swish-0.2.1.7
+-Files and folders can be renamed.  If an item with the chosen name already 
+ exists, we offer to overwrite it.  Due to the limitations of SFTP versions 4
+ and below, we do this non-atomically which is not ideal.  Time will tell
+ whether this is more trouble than it's worth.
+
+swish-0.2.1.6
+-Files and folders can be deleted from the Explorer window.  If a directory
+ contains other items, we deleted these recursively using separate calls to the
+ server.  This is a bit clunky but we are limited by what SFTP supports.
+
+swish-0.2.1.5
+-SFTP sessions (connections) are now pooled in the COM ROT so that subsequent
+ requests can reuse them without prompting the user for a password or having to 
+ renegotiate with the server.
+
 swish-0.2.1.4
 -Replace the PuTTY-based dataprovider component with one based in libssh2. This
  is vastly more stable. The new backend has all the abilities of the of the 
