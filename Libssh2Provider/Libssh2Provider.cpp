@@ -854,8 +854,8 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 		if (!rc)
 		{
 			// Delete temporary
-			rc = libssh2_sftp_unlink( m_pSftpSession, strTemporary.c_str() );
-			ATLASSERT(!rc);
+			HRESULT hr = _DeleteRecursive( strTemporary.c_str(), CString() );
+			ATLASSERT(SUCCEEDED(hr));
 			return S_OK;
 		}
 

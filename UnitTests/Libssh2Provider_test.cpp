@@ -37,8 +37,10 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testGetListingRepeatedly );
 		CPPUNIT_TEST( testGetListingIndependence );
 		CPPUNIT_TEST( testRename );
+		CPPUNIT_TEST( testRenameWithObstruction );
 		CPPUNIT_TEST( testRenameNoDirectory );
 		CPPUNIT_TEST( testRenameFolder );
+		CPPUNIT_TEST( testRenameFolderWithObstruction );
 		CPPUNIT_TEST( testRenameWithRefusedConfirmation );
 		CPPUNIT_TEST( testRenameFolderWithRefusedConfirmation );
 		CPPUNIT_TEST( testRenameInNonHomeFolder );
@@ -342,6 +344,50 @@ protected:
 		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
 	}
 
+	void testRenameWithObstruction()
+	{
+		_StandardSetup();
+
+		HRESULT hr;
+
+		// Choose mock behaviour
+		m_pCoConsumer->SetConfirmOverwriteBehaviour(
+			CMockSftpConsumer::AllowOverwrite);
+
+		CComBSTR bstrSubject(_TestArea(L"RenameWithObstruction"));
+		CComBSTR bstrTarget(
+			_TestArea(L"RenameWithObstruction_Obstruction"));
+		CComBSTR bstrSwishTemp(
+			_TestArea(L"RenameWithObstruction_Obstruction.swish_rename_temp"));
+
+		// Create our test subjects and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTarget));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
+
+		// Check that the non-atomic overwrite temp does not already exists
+		CHECK_PATH_NOT_EXISTS(bstrSwishTemp);
+
+		// Test renaming file
+		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		CPPUNIT_ASSERT_OK(hr);
+		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_TRUE);
+
+		// Check that the old file no longer exists but the target does
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
+
+		// Check that the non-atomic overwrite temp has been removed
+		CHECK_PATH_NOT_EXISTS(bstrSwishTemp);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTarget));
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
+	}
+
 	/**
 	 * We are not checking that the file exists beforehand so the libssh2 has
 	 * no way to know which directory we intended.  If this passes then it is
@@ -371,7 +417,6 @@ protected:
 		// Cleanup
 		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
 	}
-
 
 	void testRenameFolder()
 	{
@@ -404,6 +449,56 @@ protected:
 		// Cleanup
 		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrSubject));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
+	}
+
+	void testRenameFolderWithObstruction()
+	{
+		_StandardSetup();
+
+		HRESULT hr;
+
+		// Choose mock behaviour
+		m_pCoConsumer->SetConfirmOverwriteBehaviour(
+			CMockSftpConsumer::AllowOverwrite);
+
+		CComBSTR bstrSubject(_TestArea(L"RenameFolderWithObstruction"));
+		CComBSTR bstrTarget(
+			_TestArea(L"RenameFolderWithObstruction_Obstruction"));
+		CComBSTR bstrTargetContents(
+			_TestArea(L"RenameFolderWithObstruction_Obstruction/file"));
+		CComBSTR bstrSwishTemp(_TestArea(
+			L"RenameFolderWithObstruction_Obstruction.swish_rename_temp"));
+
+		// Create our test subjects and check existence
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrTarget));
+		CHECK_PATH_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
+
+		// Add a file in the obstructing directory to make it harder to delete
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTargetContents));
+		CHECK_PATH_EXISTS(bstrTargetContents);
+
+		// Check that the non-atomic overwrite temp does not already exists
+		CHECK_PATH_NOT_EXISTS(bstrSwishTemp);
+
+		// Test renaming file
+		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
+		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		CPPUNIT_ASSERT_OK(hr);
+		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_TRUE);
+
+		// Check that the old file no longer exists but the target does
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_EXISTS(bstrTarget);
+
+		// Check that the non-atomic overwrite temp has been removed
+		CHECK_PATH_NOT_EXISTS(bstrSwishTemp);
+
+		// Cleanup
+		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrTarget));
+		CHECK_PATH_NOT_EXISTS(bstrSubject);
+		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
 
 	void testRenameWithRefusedConfirmation()
