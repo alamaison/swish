@@ -698,7 +698,6 @@ private:
 			CPPUNIT_ASSERT( !strFilename.IsEmpty() );
 
 			CPPUNIT_ASSERT( lt.uPermissions > 0 );
-			CPPUNIT_ASSERT( lt.cHardLinks > 0 );
 			CPPUNIT_ASSERT( lt.uSize >= 0 );
 			CPPUNIT_ASSERT( !strOwner.IsEmpty() );
 			CPPUNIT_ASSERT( !strGroup.IsEmpty() );

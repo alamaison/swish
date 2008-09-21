@@ -145,6 +145,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;.."
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				RuntimeLibrary="2"
