@@ -1,3 +1,6 @@
+swish-0.2.1.8
+-Fixed bug when overwriting existing directories.
+
 swish-0.2.1.7
 -Files and folders can be renamed.  If an item with the chosen name already 
  exists, we offer to overwrite it.  Due to the limitations of SFTP versions 4
