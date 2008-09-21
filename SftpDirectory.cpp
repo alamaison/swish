@@ -109,7 +109,8 @@ HRESULT CSftpDirectory::GetEnum(
 
 	// Fetch listing and cache in m_vecPidls
 	hr = _Fetch(grfFlags);
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	if (FAILED(hr))
+		return hr;
 
 	// Create copy of our vector of PIDL and put into an AddReffed 'holder'
 	CComPidlHolder *pHolder = NULL;
