@@ -300,6 +300,10 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
+				RelativePath=".\KbdInteractiveDialog_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Libssh2Provider_test.cpp"
 				>
 			</File>
@@ -395,6 +399,10 @@
 		</Filter>
 		<File
 			RelativePath="..\Connection.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\KbdInteractiveDialog.cpp"
 			>
 		</File>
 		<File

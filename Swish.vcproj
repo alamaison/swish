@@ -338,6 +338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\KbdInteractiveDialog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NewConnDialog.cpp"
 				>
 			</File>
@@ -464,6 +468,10 @@
 			</File>
 			<File
 				RelativePath=".\IconExtractor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\KbdInteractiveDialog.h"
 				>
 			</File>
 			<File
