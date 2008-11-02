@@ -20,7 +20,6 @@
 #pragma once
 
 #include "resource.h"       // main symbols
-#include <atlddx.h>
 
 #include <vector>
 using std::vector;
@@ -30,8 +29,7 @@ typedef vector<bool>    EchoList;
 typedef vector<CString> ResponseList;
 
 class CKbdInteractiveDialog : 
-	public CDialogImpl<CKbdInteractiveDialog>,
-	public CWinDataExchange<CKbdInteractiveDialog>	
+	public CDialogImpl<CKbdInteractiveDialog>
 {
 public:
 
@@ -43,14 +41,13 @@ public:
 		__in PromptList vecPrompts, __in EchoList vecEcho);
 	~CKbdInteractiveDialog();
 
+	ResponseList GetResponses();
+
     BEGIN_MSG_MAP(CKbdInteractiveDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_HANDLER(IDOK, BN_CLICKED, OnOK)
         COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnCancel)
     END_MSG_MAP()
-
-	BEGIN_DDX_MAP(CKbdInteractiveDialog)
-	END_DDX_MAP()
 
 private:
 	/** @name Message handlers */
@@ -74,6 +71,8 @@ private:
 	CRect _DrawOKCancel(__in CPoint point, __in CRect rectDialog);
 	// @}
 
+	void _ExchangeData();
+
 	// Input
 	CString      m_strName;
 	CString      m_strInstruction;
@@ -81,5 +80,6 @@ private:
 	EchoList     m_vecEcho;
 
 	// Output
+	vector<HWND> m_vecResponseWindows;
 	ResponseList m_vecResponses;
 };

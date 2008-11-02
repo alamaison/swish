@@ -22,17 +22,22 @@
 
 #define SEPARATION 10
 #define MINI_SEPARATION 3
+#define RESPONSE_BOX_HEIGHT 22
 
 CKbdInteractiveDialog::CKbdInteractiveDialog(
 	PCWSTR pszName, PCWSTR pszInstruction,
 	PromptList vecPrompts, EchoList vecEcho)
 	:
 	m_strName(pszName), m_strInstruction(pszInstruction),
-	m_vecPrompts(vecPrompts), m_vecEcho(vecEcho),
-	m_vecResponses(vecPrompts.size())
+	m_vecPrompts(vecPrompts), m_vecEcho(vecEcho)
 {}
 
 CKbdInteractiveDialog::~CKbdInteractiveDialog() {}
+
+ResponseList CKbdInteractiveDialog::GetResponses()
+{
+	return m_vecResponses;
+}
 
 /*----------------------------------------------------------------------------*
  * Event Handlers
@@ -40,13 +45,13 @@ CKbdInteractiveDialog::~CKbdInteractiveDialog() {}
 
 LRESULT CKbdInteractiveDialog::OnInitDialog(MESSAGE_HANDLER_PARAMS)
 {
-	// If server specifies a 'name' use it as the dialog title
+	// If server specifies a 'name' use it as the dialogue title
 	if (!m_strName.IsEmpty())
 		this->SetWindowText(m_strName);
 	else
 		this->SetWindowText(L"Keyboard-interactive request");
 
-	// Get size of this dialog box
+	// Get size of this dialogue box
 	CRect rectDialog;
 	this->GetClientRect(rectDialog);
 
@@ -74,18 +79,21 @@ LRESULT CKbdInteractiveDialog::OnInitDialog(MESSAGE_HANDLER_PARAMS)
 	// Move OK and Cancel below prompts
 	CRect rectOKCancel = _DrawOKCancel(point, rectDialog);
 
-	// Expand dialog downward to include all controls
+	// Expand dialogue downward to include all controls
 	rectDialog.bottom = rectOKCancel.bottom + SEPARATION;
 	ATLVERIFY( this->ResizeClient(rectDialog.Width(), rectDialog.Height()) );
 
-	DoDataExchange();
+	// Place dialogue and set focus
 	CenterWindow();
-	return 1;  // Let the system set the focus
+	if (m_vecResponseWindows.size() && m_vecResponseWindows[0])
+		::SetFocus(m_vecResponseWindows[0]);
+
+	return 0;
 }
 
 LRESULT CKbdInteractiveDialog::OnOK(WORD, WORD wID, HWND, BOOL&)
 {
-	DoDataExchange(TRUE);
+	_ExchangeData();
 	EndDialog(wID);
 	return 0;
 }
@@ -171,15 +179,17 @@ CRect CKbdInteractiveDialog::_DrawResponseBox(
 
 	// Response text box
 	CEdit edit;
-	DWORD dwWindowFlags = WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL;
+	DWORD dwWindowFlags = WS_VISIBLE | WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL;
 	if (fHideResponse)
 	{
 		dwWindowFlags |= ES_PASSWORD;
 	}
-	edit.Create(*this, NULL, NULL, dwWindowFlags);
+	DWORD dwWindowFlagsEx = WS_EX_CLIENTEDGE;
+	edit.Create(*this, NULL, NULL, dwWindowFlags, dwWindowFlagsEx);
+	m_vecResponseWindows.push_back(edit); // Push onto list of response boxes
 
 	// Fix response box's width to 20px fewer than the dialog
-	CRect rect(0, 0, rectDialog.Width()-20, 18);
+	CRect rect(0, 0, rectDialog.Width()-20, RESPONSE_BOX_HEIGHT);
 
 	// Set response size, position and font
 	rect.MoveToXY(point.x, point.y);
@@ -209,4 +219,26 @@ CRect CKbdInteractiveDialog::_DrawOKCancel(
 
 	// Return the union of the two buttons' rectangles
 	return rectOK | rectCancel;
+}
+
+/**
+ * Copy data from response Win32 edit boxes into member variable.
+ *
+ * This is necessary as the dialogue and its text boxed are destroyed when OK
+ * or Cancel is clicked.  Therefore, this function must be called in the
+ * OK button click event handler.  The responses can be retrieved from the
+ * member variable using the GetResonses() function after the
+ * dialogue window has been destroyed.
+ */
+void CKbdInteractiveDialog::_ExchangeData()
+{
+	m_vecResponses.clear();
+
+	for each (HWND hwnd in m_vecResponseWindows)
+	{
+		CEdit edit(hwnd);
+		CString strResponse;
+		edit.GetWindowText(strResponse);
+		m_vecResponses.push_back(strResponse);
+	}
 }

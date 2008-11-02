@@ -21,6 +21,8 @@ class CKbdInteractiveDialog_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testLongInstruction );
 		CPPUNIT_TEST( testMultiplePrompts );
 		CPPUNIT_TEST( testLongPrompt );
+		CPPUNIT_TEST( testEmptyResponsesOKClicked );
+		CPPUNIT_TEST( testEmptyResponsesCancelClicked );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -131,32 +133,79 @@ protected:
 		_testModalDisplay(dlg);
 	}
 
-
-private:
-#define CLICK_DELAY 1700
-
-	void _testModalDisplay(CKbdInteractiveDialog& dlg)
+	void testEmptyResponsesOKClicked()
 	{
-		DWORD dwThreadId;
+		PromptList vecPrompts;
+		vecPrompts.push_back(L"Test prompt 1:");
+		vecPrompts.push_back(L"Test prompt 2:");
+		vecPrompts.push_back(L"Test prompt 3:");
 
+		EchoList vecEcho;
+		vecEcho.push_back(true);
+		vecEcho.push_back(false);
+		vecEcho.push_back(true);
+
+		CKbdInteractiveDialog dlg(L"", L"", vecPrompts, vecEcho);
+
+		_testModalDisplay(dlg, false);
+
+		ResponseList vecResponses = dlg.GetResponses();
+
+		CPPUNIT_ASSERT_EQUAL((size_t)3, vecResponses.size());
+		CPPUNIT_ASSERT(vecResponses[0] == L"");
+		CPPUNIT_ASSERT(vecResponses[1] == L"");
+		CPPUNIT_ASSERT(vecResponses[2] == L"");
+	}
+
+	void testEmptyResponsesCancelClicked()
+	{
+		PromptList vecPrompts;
+		vecPrompts.push_back(L"Test prompt 1:");
+		vecPrompts.push_back(L"Test prompt 2:");
+		vecPrompts.push_back(L"Test prompt 3:");
+
+		EchoList vecEcho;
+		vecEcho.push_back(true);
+		vecEcho.push_back(false);
+		vecEcho.push_back(true);
+
+		CKbdInteractiveDialog dlg(L"", L"", vecPrompts, vecEcho);
+
+		_testModalDisplay(dlg, true);
+
+		ResponseList vecResponses = dlg.GetResponses();
+
+		CPPUNIT_ASSERT_EQUAL((size_t)0, vecResponses.size());
+	}
+private:
+#define CLICK_DELAY 700
+
+	void _testModalDisplay(CKbdInteractiveDialog& dlg, bool fClickCancel = true)
+	{
 		// Launch thread which will send button click to dialog
-		HANDLE hClickCancelThread = ::CreateThread(
-			NULL, 0, ClickCancelThread, &dlg, 0, &dwThreadId
+		DWORD dwThreadId;
+		HANDLE hClickThread = ::CreateThread(
+			NULL, 0,
+			(fClickCancel) ? ClickCancelThread : ClickOKThread,
+			&dlg, 0, &dwThreadId
 		);
-		CPPUNIT_ASSERT( hClickCancelThread );
+		CPPUNIT_ASSERT( hClickThread );
 
 		// Launch dialog (blocks until dialog ends) and check button ID
-		CPPUNIT_ASSERT_EQUAL( (INT_PTR)IDCANCEL, dlg.DoModal() );
+		CPPUNIT_ASSERT_EQUAL(
+			(INT_PTR) ((fClickCancel) ? IDCANCEL : IDOK),
+			dlg.DoModal()
+		);
 
 		// Check that thread terminated
 		::Sleep(CLICK_DELAY);
 		DWORD dwThreadStatus;
-		::GetExitCodeThread(hClickCancelThread, &dwThreadStatus);
+		::GetExitCodeThread(hClickThread, &dwThreadStatus);
 		CPPUNIT_ASSERT( STILL_ACTIVE != dwThreadStatus );
 
 		// Cleanup
-		CPPUNIT_ASSERT( ::CloseHandle(hClickCancelThread) );
-		hClickCancelThread = NULL;
+		CPPUNIT_ASSERT( ::CloseHandle(hClickThread) );
+		hClickThread = NULL;
 	}
 
 	/**
@@ -171,6 +220,21 @@ private:
 		::PostMessage(
 			pDlg->GetDlgItem(IDCANCEL), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
 		::PostMessage(pDlg->GetDlgItem(IDCANCEL), WM_LBUTTONUP, NULL, NULL);
+		return 0;
+	}
+
+	/**
+	 * Sends a button click to the OK button of the dialog programmatically.
+	 */
+	static DWORD WINAPI ClickOKThread( __in LPVOID lpThreadParam)
+	{
+		CKbdInteractiveDialog *pDlg = ((CKbdInteractiveDialog *)lpThreadParam);
+		::Sleep(CLICK_DELAY);
+
+		// Post left mouse button up/down directly to OK button
+		::PostMessage(
+			pDlg->GetDlgItem(IDOK), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
+		::PostMessage(pDlg->GetDlgItem(IDOK), WM_LBUTTONUP, NULL, NULL);
 		return 0;
 	}
 
