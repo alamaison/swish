@@ -29,12 +29,57 @@ struct assertion_traits<CString>
     }
 };
 
+#define STRMESSAGE_CASE(hr) case hr: strMessage = #hr; break;
+inline std::string GetErrorFromHResult(HRESULT hResult)
+{
+	std::string strMessage;
+	switch (hResult)
+	{
+		STRMESSAGE_CASE(S_OK);
+		STRMESSAGE_CASE(S_FALSE);
+		STRMESSAGE_CASE(E_ABORT);
+		STRMESSAGE_CASE(E_ACCESSDENIED);
+		STRMESSAGE_CASE(E_UNEXPECTED);
+		STRMESSAGE_CASE(E_NOTIMPL);
+		STRMESSAGE_CASE(E_OUTOFMEMORY);
+		STRMESSAGE_CASE(E_INVALIDARG);
+		STRMESSAGE_CASE(E_NOINTERFACE);
+		STRMESSAGE_CASE(E_POINTER);
+		STRMESSAGE_CASE(E_HANDLE);
+		STRMESSAGE_CASE(E_FAIL);
+		STRMESSAGE_CASE(E_PENDING);
+	default:
+		strMessage = "<unknown>";
+	}
+
+	char *pszMessage = NULL;
+	if (::FormatMessageA(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+		hResult, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+		reinterpret_cast<char*>(&pszMessage), 0, NULL) && (pszMessage != NULL))
+	{
+		strMessage += ": ";
+		strMessage += pszMessage;
+		::LocalFree(reinterpret_cast<HLOCAL>(pszMessage));
+	}
+
+	return strMessage;
+}
+
 /**
  * COM HRESULT-specific assertions
  * @{
  */
-#define CPPUNIT_ASSERT_OK(hresult) CPPUNIT_ASSERT_EQUAL((HRESULT)S_OK, hresult)
+#define CPPUNIT_ASSERT_OK(hresult) \
+	{ \
+		HRESULT hrCopy; \
+		hrCopy = hresult; \
+		std::string str("COM return code was "); \
+		str += CPPUNIT_NS::GetErrorFromHResult(hrCopy); \
+		CPPUNIT_ASSERT_MESSAGE(str, hrCopy == S_OK); \
+	}
 #define CPPUNIT_ASSERT_SUCCEEDED(hresult) CPPUNIT_ASSERT(SUCCEEDED(hresult))
 #define CPPUNIT_ASSERT_FAILED(hresult) CPPUNIT_ASSERT(FAILED(hresult))
 /* @} */
+  
 CPPUNIT_NS_END
