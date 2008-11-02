@@ -32,6 +32,7 @@
 #include "../remotelimits.h"
 
 #include "Libssh2Provider.h"
+#include "KeyboardInteractive.h"
 
 #include <ws2tcpip.h>    // Winsock
 #include <wspiapi.h>     // Winsock
@@ -302,6 +303,8 @@ HRESULT CLibssh2Provider::_AuthenticateUser()
 	{
 		ATLTRACE("Trying keyboard-interactive authentication");
 		hr = _KeyboardInteractiveAuthentication(szUsername);
+		if (hr == E_ABORT)
+			return hr; // User cancelled
     }
     if (FAILED(hr) && ::strstr(szUserauthlist, "password"))
 	{
@@ -350,15 +353,22 @@ HRESULT CLibssh2Provider::_PasswordAuthentication(PCSTR szUsername)
 
 HRESULT CLibssh2Provider::_KeyboardInteractiveAuthentication(PCSTR szUsername)
 {
-	// TODO: implement keyboard-interactive callback
-    //if (libssh2_userauth_keyboard_interactive(
-	//    session, username, &kbd_callback) ) {
-    //    ATLTRACE("keyboard-interactive authentication failed");
-    //} else {
-    //    ATLTRACE("keyboard-interactive authentication succeeded");
-    //}
-	(void) szUsername;
-	return E_ABORT;
+	// Create instance of keyboard-interactive authentication handler
+	CKeyboardInteractive handler(m_pConsumer);
+	
+	// Pass pointer to handler in session abstract and begin authentication.
+	// The static callback method (last parameter) will extract the 'this'
+	// pointer from the session and use it to invoke the handler instance.
+	// If the user cancels the operation, our callback should throw an
+	// E_ABORT exception which we catch here.
+	*libssh2_session_abstract(m_pSession) = &handler;
+	int rc = libssh2_userauth_keyboard_interactive(m_pSession,
+		szUsername, &(CKeyboardInteractive::OnKeyboardInteractive));
+	
+	// Check for two possible types of failure
+	if (FAILED(handler.GetErrorState()))
+		return handler.GetErrorState();
+	return (rc == 0) ? S_OK : E_FAIL;
 }
 
 HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)

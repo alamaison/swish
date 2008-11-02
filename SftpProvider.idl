@@ -18,6 +18,7 @@
 */
 
 import "unknwn.idl";
+import "oaidl.idl";
 
 /**
  * The record structure returned by the GetListing() method of the SFTPProvider.
@@ -40,8 +41,7 @@ struct Listing {
 [
 	object, uuid("b816a843-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
-	helpstring("IEnumListing Interface"),
-	//pointer_default(unique)
+	helpstring("IEnumListing Interface")
 ]
 interface IEnumListing : IUnknown
 {
@@ -57,17 +57,23 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("DBEC732D-0B2A-4c52-ACED-89A2C2C27675"),
+	object, uuid("58E53763-C954-4e3a-B31C-4CE90BB3FD3F"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
-	helpstring("ISftpConsumer Interface"),
-	//pointer_default(unique)
+	helpstring("ISftpConsumer Interface")
 ]
 interface ISftpConsumer : IUnknown
 {
 	HRESULT OnPasswordRequest(
 		[in]          BSTR bstrRequest,
 		[out, retval] BSTR *pbstrPassword
+	);
+	HRESULT OnKeyboardInteractiveRequest(
+		[in]          BSTR bstrName,
+		[in]          BSTR bstrInstruction,
+		[in]          SAFEARRAY(BSTR) saPrompts,
+		[in]          SAFEARRAY(VARIANT_BOOL) saShowResponses,
+		[out, retval] SAFEARRAY(BSTR) *psaResponses
 	);
 	HRESULT OnYesNoCancel(
 		[in]          BSTR bstrMessage,
@@ -95,8 +101,7 @@ interface ISftpConsumer : IUnknown
 	object, uuid("8C724C21-95A9-4cac-915F-6107B7A43D94"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
-	helpstring("ISftpProvider Interface"),
-	//pointer_default(unique)
+	helpstring("ISftpProvider Interface")
 ]
 interface ISftpProvider : IUnknown
 {
