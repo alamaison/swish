@@ -222,21 +222,27 @@ HRESULT CLibssh2Provider::_OpenSocketToHost()
 	addrinfo *paiList = NULL;
 	int rc = ::getaddrinfo(szAddress, szPort, &aiHints, &paiList);
 	// It is valid to fail here - e.g. unknown host
-	// ATLASSERT_REPORT(!rc, ::WSAGetLastError());
 	if (rc)
 		return E_FAIL;
 	ATLASSERT(paiList);
 	ATLASSERT(paiList->ai_addr);
 
 	// Create socket and establish connection
-	HRESULT hr = S_OK;
+	HRESULT hr;
 	m_socket = ::socket(AF_INET, SOCK_STREAM, 0);
 	ATLASSERT_REPORT(m_socket != INVALID_SOCKET, ::WSAGetLastError());
 	if (m_socket != INVALID_SOCKET)
-	{
-		rc = ::connect(m_socket, paiList->ai_addr, paiList->ai_addrlen);
-		// ATLASSERT_REPORT(!rc, ::WSAGetLastError());
-		hr = (!rc) ? S_OK : E_FAIL;
+	{	
+		if (::connect(m_socket, paiList->ai_addr, paiList->ai_addrlen) != 0)
+		{
+			hr = E_FAIL;
+
+			// Cleanup socket
+			ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
+			m_socket = INVALID_SOCKET;
+		}
+		else
+			hr = S_OK;
 	}
 	else
 		hr = E_UNEXPECTED;
