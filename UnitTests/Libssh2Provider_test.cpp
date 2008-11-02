@@ -48,6 +48,8 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testCreateAndDelete );
 		CPPUNIT_TEST( testCreateAndDeleteEmptyDirectory );
 		CPPUNIT_TEST( testCreateAndDeleteDirectoryRecursive );
+		CPPUNIT_TEST( testKeyboardInteractiveAuthentication );
+		CPPUNIT_TEST( testSimplePasswordAuthentication );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -720,6 +722,74 @@ protected:
 
 		// Check that the directory does not still exist
 		CHECK_PATH_NOT_EXISTS(bstrDir);
+	}
+
+	void testKeyboardInteractiveAuthentication()
+	{
+		CComBSTR bstrUser = config.GetUser();
+		CComBSTR bstrHost = config.GetHost();
+
+		// Choose mock behaviours to force only kbd-interactive authentication
+		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::FailPassword);
+		m_pCoConsumer->SetKeyboardInteractiveBehaviour(
+			CMockSftpConsumer::CustomResponse);
+		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->Initialize(
+				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+
+		// Fetch 5 listing enumerators
+		Swish::IEnumListing *apEnum[5];
+		CComBSTR bstrDirectory(_T("/tmp"));
+		for (int i = 0; i < 5; i++)
+		{
+			HRESULT hr = m_pProvider->GetListing(bstrDirectory, &apEnum[i]);
+			if (FAILED(hr))
+				apEnum[i] = NULL;
+			CPPUNIT_ASSERT_OK(hr);
+		}
+
+		// Release 5 listing enumerators
+		for (int i = 4; i >= 0; i--)
+		{
+			ULONG cRefs = apEnum[i]->Release();
+			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+		}
+	}
+
+	void testSimplePasswordAuthentication()
+	{
+		CComBSTR bstrUser = config.GetUser();
+		CComBSTR bstrHost = config.GetHost();
+
+		// Choose mock behaviours to force only simple password authentication
+		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+		m_pCoConsumer->SetKeyboardInteractiveBehaviour(
+			CMockSftpConsumer::FailResponse);
+		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->Initialize(
+				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+
+		// Fetch 5 listing enumerators
+		Swish::IEnumListing *apEnum[5];
+		CComBSTR bstrDirectory(_T("/tmp"));
+		for (int i = 0; i < 5; i++)
+		{
+			HRESULT hr = m_pProvider->GetListing(bstrDirectory, &apEnum[i]);
+			if (FAILED(hr))
+				apEnum[i] = NULL;
+			CPPUNIT_ASSERT_OK(hr);
+		}
+
+		// Release 5 listing enumerators
+		for (int i = 4; i >= 0; i--)
+		{
+			ULONG cRefs = apEnum[i]->Release();
+			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+		}
 	}
 
 
