@@ -28,6 +28,19 @@ END_COM_MAP()
 	} PasswordBehaviour;
 
 	/**
+	 * Possible behaviours of mock keyboard-interactive request handler 
+	 * OnKeyboardInteractiveRequest.
+	 */
+	typedef enum tagKeyboardInteractiveBehaviour {
+		EmptyResponse,    ///< Return an empty BSTR (not NULL, "")
+		CustomResponse,   ///< Return the string set with SetPassword
+		WrongResponse,    ///< Return a very unlikely sequence of characters
+		NullResponse,     ///< Return NULL and S_OK (catastrophic failure)
+		FailResponse,     ///< Return E_FAIL
+		ThrowResponse     ///< Throw exception if kb-interaction requested
+	} KeyboardInteractiveBehaviour;
+
+	/**
 	 * Possible behaviours of mock Yes/No/Cancel handler OnYesNoCancel.
 	 */
 	typedef enum tagYesNoCancelBehaviour {
@@ -62,6 +75,9 @@ private:
 	PasswordBehaviour m_enumPasswordBehaviour;
 	UINT m_cPasswordAttempts;    ///< Number of password requests so far
 	UINT m_nMaxPasswordAttempts; ///< Max password requests before auto-fail
+	UINT m_cKbdAttempts;    ///< Number of kbd-interactive requests so far
+	UINT m_nMaxKbdAttempts; ///< Max kbd-interactive requests before auto-fail
+	KeyboardInteractiveBehaviour m_enumKeyboardInteractiveBehaviour;
 	YesNoCancelBehaviour m_enumYesNoCancelBehaviour;
 	ConfirmOverwriteBehaviour m_enumConfirmOverwriteBehaviour;
 	ReportErrorBehaviour m_enumReportErrorBehaviour;
@@ -70,14 +86,19 @@ public:
 	// Set up default behaviours
 	CMockSftpConsumer() :
 		m_cPasswordAttempts(0), m_nMaxPasswordAttempts(1),
+		m_cKbdAttempts(0), m_nMaxKbdAttempts(1),
 		m_enumPasswordBehaviour(ThrowPassword),
+		m_enumKeyboardInteractiveBehaviour(ThrowResponse),
 		m_enumYesNoCancelBehaviour(ThrowYNC),
 		m_enumConfirmOverwriteBehaviour(ThrowOverwrite),
 		m_enumReportErrorBehaviour(ThrowReport) {}
 
 	void SetCustomPassword( PCTSTR pszPassword );
 	void SetPasswordBehaviour( PasswordBehaviour enumBehaviour );
+	void SetKeyboardInteractiveBehaviour( 
+		KeyboardInteractiveBehaviour enumBehaviour );
 	void SetMaxPasswordAttempts( UINT nAttempts );
+	void SetMaxKeyboardAttempts( UINT nAttempts );
 	void SetYesNoCancelBehaviour( YesNoCancelBehaviour enumBehaviour );
 	void SetConfirmOverwriteBehaviour( 
 		ConfirmOverwriteBehaviour enumBehaviour );
@@ -86,6 +107,12 @@ public:
 	// ISftpConsumer methods
 	IFACEMETHODIMP OnPasswordRequest(
 		__in BSTR bstrRequest, __out BSTR *pbstrPassword
+	);
+	IFACEMETHODIMP OnKeyboardInteractiveRequest(
+		__in BSTR bstrName, __in BSTR bstrInstruction,
+		__in SAFEARRAY *psaPrompts,
+		__in SAFEARRAY *psaShowResponses,
+		__deref_out SAFEARRAY **ppsaResponses
 	);
 	IFACEMETHODIMP OnYesNoCancel(
 		__in BSTR bstrMessage, __in_opt BSTR bstrYesInfo, 
