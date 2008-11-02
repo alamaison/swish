@@ -20,6 +20,9 @@
 #include "stdafx.h"
 #include "UserInteraction.h"
 #include "PasswordDialog.h"  // For password dialog box
+#include "KbdInteractiveDialog.h" // For keyboard-interactive auth dialog box
+
+#include <atlsafe.h>         // CComSafeArray
 
 HRESULT CUserInteraction::Initialize( HWND hwndOwner )
 {
@@ -57,6 +60,60 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 	}
 	else
 		return E_ABORT;
+}
+
+STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
+	BSTR bstrName, BSTR bstrInstruction, SAFEARRAY *psaPrompts, 
+	SAFEARRAY *psaShowResponses, SAFEARRAY **ppsaResponses
+)
+{
+	CComSafeArray<BSTR> saPrompts(psaPrompts);
+	CComSafeArray<VARIANT_BOOL> saShowPrompts(psaShowResponses);
+
+	// Prompt array and echo mask array should correspond
+	ATLASSERT(saPrompts.GetLowerBound() == saShowPrompts.GetLowerBound());
+	ATLASSERT(saPrompts.GetUpperBound() == saShowPrompts.GetUpperBound());
+
+	//CString strMessage;
+	//strMessage += CString(L"Name: ") + bstrName + L"\r\n";
+	//strMessage += CString(L"Instruction: ") + bstrInstruction + L"\r\n\r\n";
+	PromptList vecPrompts;
+	EchoList vecEcho;
+	for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
+	{
+		//strMessage += CString(L"Prompt: ") + saPrompts[i] + L"\r\n\r\n";
+		vecPrompts.push_back(CString(saPrompts[i]));
+		vecEcho.push_back((saShowPrompts[i] == VARIANT_TRUE) ? true : false);
+	}
+
+	// Show dialogue and fetch responses when user clicks OK
+	CKbdInteractiveDialog dlg(bstrName, bstrInstruction, vecPrompts, vecEcho);
+	if (dlg.DoModal() == IDCANCEL)
+		return E_ABORT;
+	ResponseList vecResponses = dlg.GetResponses();
+	//::MessageBox(NULL, strMessage, NULL, MB_OK);
+
+	// Create response array. Indices must correspond to prompts array!
+	CComSafeArray<BSTR> saResponses(
+		saPrompts.GetCount(), saPrompts.GetLowerBound());
+	ATLASSERT(vecResponses.size() == saPrompts.GetCount());
+	ATLASSERT(saPrompts.GetLowerBound() == saResponses.GetLowerBound());
+	ATLASSERT(saPrompts.GetUpperBound() == saResponses.GetUpperBound());
+
+	// SAFEARRAY may start at any index but vector will always start at 0.
+	// We need to keep an offset value to map between them
+	int nIndexOffset = saPrompts.GetLowerBound();
+
+	// Fill responses SAFEARRAY
+	for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
+	{
+		ATLASSERT(SUCCEEDED( saResponses.SetAt(
+			i, CComBSTR(vecResponses[i-nIndexOffset]).Detach(), FALSE) ));
+	}
+
+	*ppsaResponses = saResponses.Detach();
+
+	return S_OK;
 }
 
 /**
@@ -161,5 +218,3 @@ STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 		MB_OK | MB_ICONERROR);
 	return S_OK;
 }
-
-// CUserInteraction
