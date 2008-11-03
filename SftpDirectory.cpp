@@ -90,16 +90,22 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 }
 
 /**
- * Retrieve an IEnumIDList to enumerate directory contents.
+ * Retrieve an IEnumIDList to enumerate this directory's contents.
  *
  * This function returns an enumerator which can be used to iterate through
- * the contents of the directory as a series of PIDLs.  This contents
- * must have been previously obtaqined from the server by a call to Fetch().
+ * the contents of this directory as a series of PIDLs.  This listing
+ * is obtained from the server by a call to _Fetch() and a copy of it is made.
+ * The enumeration will no change as the content of the server change.  In order
+ * to obtain an up-to-date listing, this function must be called again to get
+ * a new enumerator.
  *
- * @param [out]  The location in which to return the IEnumIDList.
+ * @param grfFlags  Flags specifying nature of files to fetch.
+ *
+ * @returns  A pointer to the IEnumIDList.
+ *
+ * @throws A CAtlException if an error occurs.
  */
-HRESULT CSftpDirectory::GetEnum(
-	IEnumIDList **ppEnumIDList, __in SHCONTF grfFlags )
+IEnumIDList* CSftpDirectory::GetEnum(SHCONTF grfFlags)
 {
 	typedef CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
 	                      _CopyChildPidl, vector<CChildPidl> >
@@ -110,42 +116,29 @@ HRESULT CSftpDirectory::GetEnum(
 	// Fetch listing and cache in m_vecPidls
 	hr = _Fetch(grfFlags);
 	if (FAILED(hr))
-		return hr;
+		AtlThrow(hr);
 
-	// Create copy of our vector of PIDL and put into an AddReffed 'holder'
-	CComPidlHolder *pHolder = NULL;
+	// Create holder for the collection of PIDLs the enumerator will enumerate
+	CComPidlHolder *pHolder;
 	hr = pHolder->CreateInstance(&pHolder);
-	ATLASSERT(SUCCEEDED(hr));
-	if (SUCCEEDED(hr))
-	{
-		pHolder->AddRef();
+	ATLENSURE_SUCCEEDED(hr);
 
-		hr = pHolder->Copy(m_vecPidls);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	// Copy out vector of PIDLs into the holder
+	CComPtr<CComPidlHolder> spHolder = pHolder;
+	hr = spHolder->Copy(m_vecPidls);
+	ATLENSURE_SUCCEEDED(hr);
 
-		// Create enumerator
-		CComObject<CComEnumIDList> *pEnumIDList;
-		hr = pEnumIDList->CreateInstance(&pEnumIDList);
-		ATLASSERT(SUCCEEDED(hr));
-		if (SUCCEEDED(hr))
-		{
-			pEnumIDList->AddRef();
+	// Create enumerator
+	CComObject<CComEnumIDList> *pEnumIDList;
+	hr = pEnumIDList->CreateInstance(&pEnumIDList);
+	ATLENSURE_SUCCEEDED(hr);
+	CComPtr<CComObject<CComEnumIDList> > spEnumIDList = pEnumIDList;
 
-			// Give enumerator back-reference to holder of our copied collection
-			hr = pEnumIDList->Init( pHolder->GetUnknown(), pHolder->m_coll );
-			ATLASSERT(SUCCEEDED(hr));
-			if (SUCCEEDED(hr))
-			{
-				hr = pEnumIDList->QueryInterface(ppEnumIDList);
-				ATLASSERT(SUCCEEDED(hr));
-			}
+	// Give enumerator back-reference to holder of our copied collection
+	hr = spEnumIDList->Init( spHolder->GetUnknown(), spHolder->m_coll );
+	ATLENSURE_SUCCEEDED(hr);
 
-			pEnumIDList->Release();
-		}
-		pHolder->Release();
-	}
-
-	return hr;
+	return spEnumIDList.Detach();
 }
 
 bool CSftpDirectory::Rename(

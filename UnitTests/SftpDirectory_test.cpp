@@ -169,15 +169,13 @@ protected:
 		try
 		{
 			// Get listing
-			HRESULT hr = directory.GetEnum( &pEnum, grfFlags );
-			CPPUNIT_ASSERT_OK(hr);
+			pEnum = directory.GetEnum( grfFlags );
+			CPPUNIT_ASSERT(pEnum);
 
 			// Test
 			PITEMID_CHILD pidl;
 			ULONG cFetched;
-			hr = pEnum->Next(1, &pidl, &cFetched);
-
-			CPPUNIT_ASSERT(hr == S_FALSE);
+			CPPUNIT_ASSERT(pEnum->Next(1, &pidl, &cFetched) == S_FALSE);
 			CPPUNIT_ASSERT_EQUAL((ULONG)0, cFetched);
 		}
 		catch(...)
@@ -203,11 +201,10 @@ protected:
 
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
 
-		IEnumIDList *pEnum;
 		SHCONTF grfFlags = 
 			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
-		HRESULT hr = m_pDirectory->GetEnum( &pEnum, grfFlags );
-		CPPUNIT_ASSERT_OK(hr);
+		IEnumIDList *pEnum = m_pDirectory->GetEnum( grfFlags );
+		CPPUNIT_ASSERT(pEnum);
 
 		delete m_pDirectory;
 		m_pDirectory = NULL;
@@ -420,9 +417,8 @@ private:
 
 		CSftpDirectory directory(conn, CComBSTR("/tmp"));
 
-		IEnumIDList *pEnum;
-		HRESULT hr = directory.GetEnum( &pEnum, grfFlags );
-		CPPUNIT_ASSERT_OK(hr);
+		IEnumIDList *pEnum = directory.GetEnum( grfFlags );
+		CPPUNIT_ASSERT(pEnum);
 
 		_testEnumIDList( pEnum, grfFlags );
 

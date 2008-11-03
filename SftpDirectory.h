@@ -28,7 +28,6 @@
 #include <vector>
 using std::vector;
 
-
 /**
  * A COM holder for an STL collection that can be used in an enumeration.
  * The enumerator (IEnumXXX) will take a pointer to this holder when it is
@@ -63,7 +62,6 @@ END_COM_MAP()
 
 typedef CComObject<CComSTLCopyContainer< vector<CChildPidl> > > CComPidlHolder;
 
-// CSftpDirectory
 class CSftpDirectory
 {
 public:
@@ -78,11 +76,7 @@ public:
 		m_strDirectory(CString(pszDirectory).TrimRight(_T('/'))+_T('/'))
 	{}
 
-	/**
-	 * @param grfFlags      Flags specifying nature of files to fetch.
-	 */
-	HRESULT GetEnum(
-		__deref_out IEnumIDList **ppEnumIDList,  __in SHCONTF grfFlags );
+	IEnumIDList* GetEnum(__in SHCONTF grfFlags) throw(...);
 	bool Rename(
 		__in PCUITEMID_CHILD pidlOldFile, __in PCTSTR pszNewFilename )
 		throw(...);
