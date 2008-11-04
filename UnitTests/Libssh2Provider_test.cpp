@@ -50,6 +50,7 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testCreateAndDeleteDirectoryRecursive );
 		CPPUNIT_TEST( testKeyboardInteractiveAuthentication );
 		CPPUNIT_TEST( testSimplePasswordAuthentication );
+		CPPUNIT_TEST( testReconnectAfterAbort );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -790,6 +791,41 @@ protected:
 			ULONG cRefs = apEnum[i]->Release();
 			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
 		}
+	}
+
+	/**
+	 * Test to see that we can connect succesfully after an aborted attempt.
+	 */
+	void testReconnectAfterAbort()
+	{
+		CComBSTR bstrUser = config.GetUser();
+		CComBSTR bstrHost = config.GetHost();
+
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->Initialize(
+				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
+
+		// Choose mock behaviours to simulate a user cancelling authentication
+		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::AbortPassword);
+		m_pCoConsumer->SetKeyboardInteractiveBehaviour(
+			CMockSftpConsumer::AbortResponse);
+
+		// Try to fetch a listing enumerator - it should fail
+		CComPtr<Swish::IEnumListing> spEnum;
+		CComBSTR bstrDirectory(_T("/tmp"));
+		HRESULT hr = m_pProvider->GetListing(bstrDirectory, &spEnum);
+		CPPUNIT_ASSERT(FAILED(hr));
+
+		// Choose mock behaviours so that authentication succeeds
+		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::CustomPassword);
+		m_pCoConsumer->SetKeyboardInteractiveBehaviour(
+			CMockSftpConsumer::CustomResponse);
+		m_pCoConsumer->SetCustomPassword(config.GetPassword());
+
+		// Try to fetch a listing again - this time is should succeed
+		CPPUNIT_ASSERT( spEnum == NULL );
+		hr = m_pProvider->GetListing(bstrDirectory, &spEnum);
+		CPPUNIT_ASSERT_OK(hr);
 	}
 
 

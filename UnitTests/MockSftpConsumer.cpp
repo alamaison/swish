@@ -86,6 +86,8 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 		break;
 	case FailPassword:
 		return E_FAIL;
+	case AbortPassword:
+		return E_ABORT;
 	case ThrowPassword:
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
@@ -149,6 +151,8 @@ STDMETHODIMP CMockSftpConsumer::OnKeyboardInteractiveRequest(
 		break;
 	case FailResponse:
 		return E_FAIL;
+	case AbortResponse:
+		return E_ABORT;
 	case ThrowResponse:
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;

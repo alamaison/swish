@@ -24,6 +24,7 @@ END_COM_MAP()
 		WrongPassword,    ///< Return a very unlikely sequence of characters
 		NullPassword,     ///< Return NULL and S_OK (catastrophic failure)
 		FailPassword,     ///< Return E_FAIL
+		AbortPassword,    ///< Return E_ABORT (simulate user cancelled)
 		ThrowPassword     ///< Throw exception if password requested
 	} PasswordBehaviour;
 
@@ -37,6 +38,7 @@ END_COM_MAP()
 		WrongResponse,    ///< Return a very unlikely sequence of characters
 		NullResponse,     ///< Return NULL and S_OK (catastrophic failure)
 		FailResponse,     ///< Return E_FAIL
+		AbortResponse,    ///< Return E_ABORT (simulate user cancelled)
 		ThrowResponse     ///< Throw exception if kb-interaction requested
 	} KeyboardInteractiveBehaviour;
 

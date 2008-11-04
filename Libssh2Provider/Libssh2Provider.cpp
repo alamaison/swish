@@ -67,11 +67,6 @@ CLibssh2Provider::CLibssh2Provider() :
  */
 HRESULT CLibssh2Provider::FinalConstruct()
 {
-	// Initialise libssh2
-	ATLASSUME(!m_pSession);
-	m_pSession = libssh2_session_init();
-	ATLENSURE_RETURN_HR(m_pSession, E_UNEXPECTED);
-
 	// Start up Winsock
 	WSADATA wsadata;
 	int rc = ::WSAStartup(WINSOCK_VERSION, &wsadata);
@@ -88,9 +83,6 @@ HRESULT CLibssh2Provider::FinalConstruct()
 void CLibssh2Provider::FinalRelease()
 {
 	_Disconnect();
-
-	if (m_pSession)	// dual of libssh2_session_init()
-		libssh2_session_free(m_pSession);
 
 	ATLVERIFY( !::WSACleanup() );
 
@@ -143,15 +135,36 @@ STDMETHODIMP CLibssh2Provider::Initialize(
 	ATLASSUME( m_uPort >= MIN_PORT );
 	ATLASSUME( m_uPort <= MAX_PORT );
 
+	m_fInitialized = true;
+	return S_OK;
+}
+
+HRESULT CLibssh2Provider::_CreateSession()
+{
 	// Create a session instance
+	ATLASSUME(!m_pSession);
     m_pSession = libssh2_session_init();
     ATLENSURE_RETURN_HR( m_pSession, E_FAIL );
 
 	// Tell libssh2 we are blocking
     libssh2_session_set_blocking(m_pSession, 1);
 
-	m_fInitialized = true;
 	return S_OK;
+}
+
+void CLibssh2Provider::_DestroySession()
+{
+	if (m_pSession)	// dual of libssh2_session_init()
+	{
+		libssh2_session_free(m_pSession);
+		m_pSession = NULL;
+	}
+}
+
+HRESULT CLibssh2Provider::_RecreateSession()
+{
+	_DestroySession();
+	return _CreateSession();
 }
 
 /**
@@ -238,8 +251,7 @@ HRESULT CLibssh2Provider::_OpenSocketToHost()
 			hr = E_FAIL;
 
 			// Cleanup socket
-			ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
-			m_socket = INVALID_SOCKET;
+			_CloseSocketToHost();
 		}
 		else
 			hr = S_OK;
@@ -249,6 +261,12 @@ HRESULT CLibssh2Provider::_OpenSocketToHost()
 
 	::freeaddrinfo(paiList);
 	return hr;
+}
+
+void CLibssh2Provider::_CloseSocketToHost()
+{
+	ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
+	m_socket = INVALID_SOCKET;
 }
 
 HRESULT CLibssh2Provider::_VerifyHostKey()
@@ -410,37 +428,66 @@ HRESULT CLibssh2Provider::_Connect()
 		return S_OK;
 	
 	// Connect to host over TCP/IP
-	hr = _OpenSocketToHost();
-	if (FAILED(hr))
-		return hr; // Legal to fail here, e.g. if host can't be found
-
-    // Start up libssh2 and trade welcome banners, exchange keys,
-    // setup crypto, compression, and MAC layers
-    int rc = libssh2_session_startup(m_pSession, static_cast<int>(m_socket));
-	if (rc)
-		return E_FAIL; // Legal to fail here, e.g. server refuses banner/kex
-
-    // Check the hostkey against our known hosts
-	hr = _VerifyHostKey();
-	if (FAILED(hr))
-		return hr; // Legal to fail here, e.g. user refused to accept host key
-
-    // Authenticate the user with the remote server
-	hr = _AuthenticateUser();
-	if (FAILED(hr))
-		return hr; // Legal to fail here, e.g. wrong password/key
-
-	// Start up SFTP session
-    m_pSftpSession = libssh2_sftp_init(m_pSession);
-#ifdef _DEBUG
-	if (!m_pSftpSession)
+	if (m_socket == INVALID_SOCKET)
 	{
+		hr = _OpenSocketToHost();
+		if (FAILED(hr))
+			return hr; // Legal to fail here, e.g. if host can't be found
+	}
+
+	// Create session if not already (either first time here or failed after)
+	if (!m_pSession)
+	{
+		hr = _CreateSession();
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	}
+
+	// Start up libssh2 and trade welcome banners, exchange keys,
+    // setup crypto, compression, and MAC layers
+	ATLASSERT(m_pSession);
+	ATLASSERT(m_socket != INVALID_SOCKET);
+	int rc = libssh2_session_startup(m_pSession, static_cast<int>(m_socket));
+	if (rc)
+	{
+#ifdef _DEBUG
 		char *szError; int cchError;
 		int rc = ::libssh2_session_last_error(
 			m_pSession, &szError, &cchError, false);
 		ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
-	}
 #endif
+		_Disconnect();
+	
+		return E_FAIL; // Legal to fail here, e.g. server refuses banner/kex
+	}
+
+    // Check the hostkey against our known hosts
+	hr = _VerifyHostKey();
+	if (FAILED(hr))
+	{
+		_Disconnect();
+		return hr; // Legal to fail here, e.g. user refused to accept host key
+	}
+
+    // Authenticate the user with the remote server
+	hr = _AuthenticateUser();
+	if (FAILED(hr))
+	{
+		_Disconnect();
+		return hr; // Legal to fail here, e.g. wrong password/key
+	}
+
+	// Start up SFTP session
+    m_pSftpSession = libssh2_sftp_init(m_pSession);
+	if (!m_pSftpSession)
+	{
+#ifdef _DEBUG
+		char *szError; int cchError;
+		int rc = ::libssh2_session_last_error(
+			m_pSession, &szError, &cchError, false);
+		ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
+#endif
+		_Disconnect();
+	}
 	ATLENSURE_RETURN_HR( m_pSftpSession, E_FAIL );
 
 	m_fConnected = true;
@@ -450,19 +497,27 @@ HRESULT CLibssh2Provider::_Connect()
 /**
  * Cleans up any connections or resources that may have been created.
  */
-HRESULT CLibssh2Provider::_Disconnect()
+void CLibssh2Provider::_Disconnect()
 {
-	
-	if (m_pSftpSession)	// dual of libssh2_sftp_init()
+	if (m_pSftpSession) // dual of libssh2_sftp_init()
+	{
 		ATLVERIFY( !libssh2_sftp_shutdown(m_pSftpSession) );
+		m_pSftpSession = NULL;
+	}
 	
-	if (m_pSession)		// dual of libssh2_session_startup()
+	if (m_pSession)     // dual of libssh2_session_startup()
+	{
 		ATLVERIFY( !libssh2_session_disconnect(m_pSession, "Session over") );
+		_DestroySession();
+	}
 
-	if (m_socket != INVALID_SOCKET) // dual of ::socket()
+	if (m_socket != INVALID_SOCKET)
+	{                   // dual of ::socket()
 		ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
+		m_socket = INVALID_SOCKET;
+	}
 
-	return S_OK;
+	m_fConnected = false;
 }
 
 /**

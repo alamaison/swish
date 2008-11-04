@@ -99,8 +99,12 @@ private:
 	UINT m_uPort;                  ///< Holds remote port to connect to
 
 	HRESULT _Connect();
-	HRESULT _Disconnect();
+	void _Disconnect();
+	HRESULT _CreateSession();
+	void _DestroySession();
+	HRESULT _RecreateSession();
 	HRESULT _OpenSocketToHost();
+	void _CloseSocketToHost();
 	HRESULT _VerifyHostKey();
 	HRESULT _AuthenticateUser();
 	HRESULT _PasswordAuthentication( PCSTR szUsername );
