@@ -102,7 +102,6 @@ private:
 	void _Disconnect();
 	HRESULT _CreateSession();
 	void _DestroySession();
-	HRESULT _RecreateSession();
 	HRESULT _OpenSocketToHost();
 	void _CloseSocketToHost();
 	HRESULT _VerifyHostKey();

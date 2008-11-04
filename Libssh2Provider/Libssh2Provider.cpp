@@ -161,12 +161,6 @@ void CLibssh2Provider::_DestroySession()
 	}
 }
 
-HRESULT CLibssh2Provider::_RecreateSession()
-{
-	_DestroySession();
-	return _CreateSession();
-}
-
 /**
  * Rewire the SFTP provider to a new front-end consumer for interaction.
  *
