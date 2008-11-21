@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="UnitTests"
+	Name="testSwish"
 	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
-	RootNamespace="UnitTests"
+	RootNamespace="testSwish"
 	>
 	<Platforms>
 		<Platform
@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="swish\$(ConfigurationName)"
+			IntermediateDirectory="swish\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -110,8 +110,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="swish\$(ConfigurationName)"
+			IntermediateDirectory="swish\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -146,7 +146,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;.."
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -203,8 +203,8 @@
 		</Configuration>
 		<Configuration
 			Name="PREfast|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="swish\$(ConfigurationName)"
+			IntermediateDirectory="swish\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="2"
 			CharacterSet="1"
@@ -228,7 +228,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;.."
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -300,14 +300,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\KbdInteractiveDialog_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Libssh2Provider_test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\MockSftpConsumer.cpp"
 				>
 			</File>
@@ -316,31 +308,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog_test.cpp"
+				RelativePath=".\swish\SimplePlugIn.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Pidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\PidlManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\RemotePidlManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDirectory_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SimplePlugIn.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.cpp"
+				RelativePath=".\swish\stdafx.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -385,15 +357,39 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog_test.h"
+				RelativePath=".\swish\NewConnDialog_test.h"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h"
+				RelativePath=".\swish\stdafx.h"
 				>
 			</File>
 			<File
 				RelativePath=".\TestConfig.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Tests"
+			>
+			<File
+				RelativePath=".\swish\KbdInteractiveDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\Libssh2Provider_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\NewConnDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\Pidl_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\SftpDirectory_test.cpp"
 				>
 			</File>
 		</Filter>
@@ -407,6 +403,14 @@
 		</File>
 		<File
 			RelativePath="..\NewConnDialog.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\PidlManager.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\RemotePidlManager.cpp"
 			>
 		</File>
 		<File

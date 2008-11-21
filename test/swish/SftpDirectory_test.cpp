@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "CppUnitExtensions.h"
-#include "MockSftpConsumer.h"
-#include "MockSftpProvider.h"
+#include "../CppUnitExtensions.h"
+#include "../MockSftpConsumer.h"
+#include "../MockSftpProvider.h"
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
-#include "TestConfig.h"
+#include "../TestConfig.h"
 
 #include <ATLComTime.h>
 
@@ -14,10 +14,10 @@ class CSftpDirectory_test;
 #undef private
 #define private \
 	friend class CSftpDirectory_test; private
-#include "../SftpDirectory.h"
+#include <SftpDirectory.h>
 #undef private
 
-#include "../Connection.h"
+#include <Connection.h>
 
 class CSftpDirectory_test : public CPPUNIT_NS::TestFixture
 {

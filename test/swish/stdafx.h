@@ -87,19 +87,6 @@ using namespace ATL;
 
 /* Debug macros ************************************************************* */
 
-#define VERIFY(f)          ATLVERIFY(f)
-#define ASSERT(f)          ATLASSERT(f)
-#ifdef _DEBUG
-#define REPORT(expr)  { \
-    LPVOID lpMsgBuf; \
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
-		NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
-        (LPTSTR) &lpMsgBuf, 0, NULL ); \
-	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); }
-#else
-#define REPORT(expr) (expr)
-#endif
-
 #ifdef UNREACHABLE
 #undef UNREACHABLE
 #endif

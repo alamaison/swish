@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "CppUnitExtensions.h"
+#include "../CppUnitExtensions.h"
 
-#include "../Pidl.h"
+#include <Pidl.h>
 
 template<typename IdListType>
 class CPidl_test : public CPPUNIT_NS::TestFixture

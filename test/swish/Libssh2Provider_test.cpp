@@ -1,9 +1,9 @@
 //Libssh2Provider_Test.cpp  -   defines the class Libssh2Provider_Test
 
 #include "stdafx.h"
-#include "CppUnitExtensions.h"
-#include "MockSftpConsumer.h"
-#include "TestConfig.h"
+#include "../CppUnitExtensions.h"
+#include "../MockSftpConsumer.h"
+#include "../TestConfig.h"
 
 #include <ATLComTime.h>
 
@@ -1036,10 +1036,10 @@ private:
 	 * Creates a CMockSftpConsumer and returns pointers to its CComObject
 	 * as well as its ISftpConsumer interface.
 	 */
-	void _CreateMockSftpConsumer(
+	static void _CreateMockSftpConsumer(
 		__out CComObject<CMockSftpConsumer> **ppCoConsumer,
 		__out Swish::ISftpConsumer **ppConsumer
-	) const
+	)
 	{
 		HRESULT hr;
 

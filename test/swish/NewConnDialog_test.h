@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include "CppUnitExtensions.h"
+#include "../CppUnitExtensions.h"
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
 // test class directly into the target class's header
@@ -9,7 +9,7 @@ class CNewConnDialog_test;
 #undef private
 #define private \
 	friend class CNewConnDialog_test; private
-#include "../NewConnDialog.h"
+#include <NewConnDialog.h>
 #undef private
 
 class CNewConnDialog_test : public CPPUNIT_NS::TestFixture

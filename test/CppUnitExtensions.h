@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <atlstr.h>
 
 CPPUNIT_NS_BEGIN
 /**

@@ -97,7 +97,7 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 	}
 
 	// Return password BSTR
-	*pbstrPassword = bstrPassword;
+	*pbstrPassword = bstrPassword.Detach();
 	return S_OK;
 }
 
@@ -166,11 +166,10 @@ STDMETHODIMP CMockSftpConsumer::OnKeyboardInteractiveRequest(
 	CComSafeArray<BSTR> saResponses(
 		saPrompts.GetCount(), saPrompts.GetLowerBound());
 	int i = saResponses.GetLowerBound();
-	saResponses[i++] = bstrResponse;
+	saResponses.SetAt(i++, bstrResponse.Detach(), FALSE);
 	while (i <= saResponses.GetUpperBound())
 	{
-		saResponses[i] = ::SysAllocString(OLESTR(""));
-		i++;
+		saResponses.SetAt(i++, ::SysAllocString(OLESTR("")), FALSE);
 	}
 
 	*ppsaResponses = saResponses.Detach();
