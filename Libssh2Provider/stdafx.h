@@ -78,6 +78,8 @@ using namespace ATL;
 #define UNREACHABLE __assume(0);
 #endif
 
+#define TRACE(msg, ...) ATLTRACE(msg ## "\n", __VA_ARGS__)
+
 #define ATLENSURE_REPORT_HR(expr, error, hr)                         \
 do {                                                                 \
 	int __atl_condVal=!!(expr);                                      \

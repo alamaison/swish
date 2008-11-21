@@ -38,6 +38,8 @@
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
+#include "SessionFactory.h" // for CSession
+
 #include <list>
 using std::list;
 
@@ -90,25 +92,14 @@ public:
 private:
 	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
-	LIBSSH2_SESSION *m_pSession;   ///< SSH session
-	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
-	SOCKET m_socket;               ///< TCP/IP socket to the remote host
-	bool m_fConnected;             ///< Have we already connected to server?
+	auto_ptr<CSession> m_spSession;///< SSH/SFTP session
 	CString m_strUser;             ///< Holds username for remote connection
 	CString m_strHost;             ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
 
 	HRESULT _Connect();
 	void _Disconnect();
-	HRESULT _CreateSession();
-	void _DestroySession();
-	HRESULT _OpenSocketToHost();
-	void _CloseSocketToHost();
-	HRESULT _VerifyHostKey();
-	HRESULT _AuthenticateUser();
-	HRESULT _PasswordAuthentication( PCSTR szUsername );
-	HRESULT _KeyboardInteractiveAuthentication( PCSTR szUsername );
-	HRESULT _PublicKeyAuthentication( PCSTR szUsername );
+
 	Listing _FillListingEntry(
 		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
 

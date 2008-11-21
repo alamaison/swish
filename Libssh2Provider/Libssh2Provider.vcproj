@@ -269,7 +269,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -337,6 +336,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Session.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SessionFactory.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -380,6 +387,14 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Session.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SessionFactory.h"
 				>
 			</File>
 			<File

@@ -51,11 +51,7 @@
  */
 CLibssh2Provider::CLibssh2Provider() :
 	m_fInitialized(false),
-	m_pConsumer(NULL),
-	m_pSession(NULL),
-	m_pSftpSession(NULL),
-	m_socket(INVALID_SOCKET),
-	m_fConnected(false)
+	m_pConsumer(NULL)
 {
 }
 
@@ -82,7 +78,7 @@ HRESULT CLibssh2Provider::FinalConstruct()
  */
 void CLibssh2Provider::FinalRelease()
 {
-	_Disconnect();
+	_Disconnect(); // Destroy session before shutting down Winsock
 
 	ATLVERIFY( !::WSACleanup() );
 
@@ -139,28 +135,6 @@ STDMETHODIMP CLibssh2Provider::Initialize(
 	return S_OK;
 }
 
-HRESULT CLibssh2Provider::_CreateSession()
-{
-	// Create a session instance
-	ATLASSUME(!m_pSession);
-    m_pSession = libssh2_session_init();
-    ATLENSURE_RETURN_HR( m_pSession, E_FAIL );
-
-	// Tell libssh2 we are blocking
-    libssh2_session_set_blocking(m_pSession, 1);
-
-	return S_OK;
-}
-
-void CLibssh2Provider::_DestroySession()
-{
-	if (m_pSession)	// dual of libssh2_session_init()
-	{
-		libssh2_session_free(m_pSession);
-		m_pSession = NULL;
-	}
-}
-
 /**
  * Rewire the SFTP provider to a new front-end consumer for interaction.
  *
@@ -184,226 +158,6 @@ STDMETHODIMP CLibssh2Provider::SwitchConsumer( ISftpConsumer *pConsumer )
 }
 
 /**
- * Creates a socket and connects it to the host.
- *
- * The socket is stored as the member variable @c m_socket. The hostname 
- * and port used are the class members @c m_strHost and @c m_uPort.
- * If the socket has already been initialised, the function leaves it
- * unchanged (or asserts in a DEBUG build).  If any errors occur, the 
- * socket is set to @c INVALID_SOCKET and returns E_ABORT.
- *
- * @returns Success or failure of the operation.
- *   @retval S_OK if successful
- *   @retval E_FAIL if the hostname could not be resolved or connecting to 
- *           it failed
- *   @c E_ABORT if the socket was already intialised
- *   @c E_UNEXPECTED if other error occurs
- *
- * @remarks The socket should be cleaned up when no longer needed using
- *          @c ::closesocket().
- */
-HRESULT CLibssh2Provider::_OpenSocketToHost()
-{
-	ATLASSUME(!m_strHost.IsEmpty());
-	ATLASSUME(m_uPort >= MIN_PORT && m_uPort <= MAX_PORT);
-	ATLENSURE_RETURN_HR(
-		m_socket == INVALID_SOCKET, E_ABORT // Socket already set up!
-	);
-
-	// The hints address info struct which is passed to getaddrinfo()
-	addrinfo aiHints;
-	::ZeroMemory(&aiHints, sizeof(aiHints));
-	aiHints.ai_family = AF_INET;
-	aiHints.ai_socktype = SOCK_STREAM;
-	aiHints.ai_protocol = IPPROTO_TCP;
-
-	// Convert numeric port to an ANSI string
-	char szPort[6];
-	ATLENSURE_RETURN_HR(!::_itoa_s(m_uPort, szPort, 6, 10), E_UNEXPECTED);
-
-	// Convert host address to an ANSI string
-	CT2A szAddress(m_strHost);
-
-	// Call getaddrinfo(). If the call succeeds, paiList will hold a linked list
-	// of addrinfo structures containing response information about the host.
-	addrinfo *paiList = NULL;
-	int rc = ::getaddrinfo(szAddress, szPort, &aiHints, &paiList);
-	// It is valid to fail here - e.g. unknown host
-	if (rc)
-		return E_FAIL;
-	ATLASSERT(paiList);
-	ATLASSERT(paiList->ai_addr);
-
-	// Create socket and establish connection
-	HRESULT hr;
-	m_socket = ::socket(AF_INET, SOCK_STREAM, 0);
-	ATLASSERT_REPORT(m_socket != INVALID_SOCKET, ::WSAGetLastError());
-	if (m_socket != INVALID_SOCKET)
-	{	
-		if (::connect(m_socket, paiList->ai_addr, paiList->ai_addrlen) != 0)
-		{
-			hr = E_FAIL;
-
-			// Cleanup socket
-			_CloseSocketToHost();
-		}
-		else
-			hr = S_OK;
-	}
-	else
-		hr = E_UNEXPECTED;
-
-	::freeaddrinfo(paiList);
-	return hr;
-}
-
-void CLibssh2Provider::_CloseSocketToHost()
-{
-	ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
-	m_socket = INVALID_SOCKET;
-}
-
-HRESULT CLibssh2Provider::_VerifyHostKey()
-{
-	ATLASSUME(m_pSession);
-
-    const char *fingerprint = 
-		libssh2_hostkey_hash(m_pSession, LIBSSH2_HOSTKEY_HASH_MD5);
-	const char *key_type = 
-		libssh2_session_methods(m_pSession, LIBSSH2_METHOD_HOSTKEY);
-
-	// TODO: check the key is known here
-	//   fprintf(stderr, "Fingerprint: ");
-	//   for(i = 0; i < 16; i++) {
-	//       fprintf(stderr, "%02X ", (unsigned char)fingerprint[i]);
-	//   }
-	//   fprintf(stderr, "\n");
-
-	return S_OK;
-}
-
-/**
- * Tries to authenticate the user with the remote server.
- *
- * The remote server is queried for which authentication methods it supports
- * and these are tried one at time until one succeeds in the order:
- * public-key, keyboard-interactive, plain password.
- *
- * @returns Success or failure of the operation.
- *   @retval S_OK if authentication succeeded
- *   @retval E_ABORT if all methods failed
- */
-HRESULT CLibssh2Provider::_AuthenticateUser()
-{
-	ATLASSUME(!m_strHost.IsEmpty());
-	CT2A szUsername(m_strUser);
-
-    // Check which authentication methods are available
-    char *szUserauthlist = libssh2_userauth_list(
-		m_pSession, szUsername, ::strlen(szUsername)
-	);
-	if (!szUserauthlist)
-	{
-        ATLTRACE("No supported authentication methods found!");
-		return E_FAIL; // If empty, server refused to let user connect
-	}
-
-	ATLTRACE("Authentication methods: %s", szUserauthlist);
-
-	// Try each supported authentication method in turn until one succeeds
-	HRESULT hr = E_FAIL;
-	if (::strstr(szUserauthlist, "publickey"))
-	{
-		ATLTRACE("Trying public-key authentication");
-		hr = _PublicKeyAuthentication(szUsername);
-	}
-	if (FAILED(hr) && ::strstr(szUserauthlist, "keyboard-interactive"))
-	{
-		ATLTRACE("Trying keyboard-interactive authentication");
-		hr = _KeyboardInteractiveAuthentication(szUsername);
-		if (hr == E_ABORT)
-			return hr; // User cancelled
-    }
-    if (FAILED(hr) && ::strstr(szUserauthlist, "password"))
-	{
-		ATLTRACE("Trying simple password authentication");
-		hr = _PasswordAuthentication(szUsername);
-    }
-
-	return hr;
-}
-
-/**
- * Authenticates with remote host by asking the user to supply a password.
- *
- * This uses the callback to the SftpConsumer to obtain the password from
- * the user.  If the password is wrong or other error occurs, the user is
- * asked for the password again.  This repeats until the user supplies a 
- * correct password or cancel the request.
- *
- * @returns  Success or failure of the operation.
- *   @retval S_OK if authentication is successful
- *   @retval E_ABORT if user cancels authentication
- */
-HRESULT CLibssh2Provider::_PasswordAuthentication(PCSTR szUsername)
-{
-	HRESULT hr;
-	CComBSTR bstrPrompt = _T("Please enter your password:");
-	CComBSTR bstrPassword;
-
-	// Loop until successfully authenticated or request returns cancel
-	int ret = -1; // default to failure
-	do {
-		hr = m_pConsumer->OnPasswordRequest( bstrPrompt, &bstrPassword );
-		if FAILED(hr)
-			return hr;
-		CT2A szPassword(bstrPassword);
-		ret = libssh2_userauth_password(
-			m_pSession, szUsername, szPassword
-		);
-		// TODO: handle password change callback here
-		bstrPassword.Empty(); // Prevent memory leak on repeat
-	} while (ret != 0);
-
-	ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
-	return hr;
-}
-
-HRESULT CLibssh2Provider::_KeyboardInteractiveAuthentication(PCSTR szUsername)
-{
-	// Create instance of keyboard-interactive authentication handler
-	CKeyboardInteractive handler(m_pConsumer);
-	
-	// Pass pointer to handler in session abstract and begin authentication.
-	// The static callback method (last parameter) will extract the 'this'
-	// pointer from the session and use it to invoke the handler instance.
-	// If the user cancels the operation, our callback should throw an
-	// E_ABORT exception which we catch here.
-	*libssh2_session_abstract(m_pSession) = &handler;
-	int rc = libssh2_userauth_keyboard_interactive(m_pSession,
-		szUsername, &(CKeyboardInteractive::OnKeyboardInteractive));
-	
-	// Check for two possible types of failure
-	if (FAILED(handler.GetErrorState()))
-		return handler.GetErrorState();
-	return (rc == 0) ? S_OK : E_FAIL;
-}
-
-HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)
-{
-	// TODO: use proper file paths
-	const char *keyfile1="~/.ssh/id_rsa.pub";
-	const char *keyfile2="~/.ssh/id_rsa";
-	// TODO: unlock public key using passphrase
-	if (libssh2_userauth_publickey_fromfile(
-			m_pSession, szUsername, keyfile1, keyfile2, ""))
-		return E_ABORT;
-
-	ATLASSERT(libssh2_userauth_authenticated(m_pSession)); // Double-check
-	return S_OK;
-}
-
-/**
  * Sets up the SFTP session, prompting user for input if neccessary.
  *
  * The remote server must have its identity verified which may require user
@@ -411,107 +165,28 @@ HRESULT CLibssh2Provider::_PublicKeyAuthentication(PCSTR szUsername)
  * which might be done silently (i.e. with a public-key) or may require
  * user input.
  *
+ * If the session has already been created, this function does nothing.
+ *
  * @returns S_OK if session successfully created or an error otherwise.
  */
 HRESULT CLibssh2Provider::_Connect()
 {
-	HRESULT hr;
-
-	// Are we already connected?
-	if (m_fConnected)
-		return S_OK;
-	
-	// Connect to host over TCP/IP
-	if (m_socket == INVALID_SOCKET)
+	try
 	{
-		hr = _OpenSocketToHost();
-		if (FAILED(hr))
-			return hr; // Legal to fail here, e.g. if host can't be found
+		if (!m_spSession.get())
+		{
+			m_spSession = CSessionFactory::CreateSftpSession(
+				m_strHost, m_uPort, m_strUser, m_pConsumer);
+		}
 	}
+	catchCom()
 
-	// Create session if not already (either first time here or failed after)
-	if (!m_pSession)
-	{
-		hr = _CreateSession();
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-	}
-
-	// Start up libssh2 and trade welcome banners, exchange keys,
-    // setup crypto, compression, and MAC layers
-	ATLASSERT(m_pSession);
-	ATLASSERT(m_socket != INVALID_SOCKET);
-	int rc = libssh2_session_startup(m_pSession, static_cast<int>(m_socket));
-	if (rc)
-	{
-#ifdef _DEBUG
-		char *szError; int cchError;
-		int rc = ::libssh2_session_last_error(
-			m_pSession, &szError, &cchError, false);
-		ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
-#endif
-		_Disconnect();
-	
-		return E_FAIL; // Legal to fail here, e.g. server refuses banner/kex
-	}
-
-    // Check the hostkey against our known hosts
-	hr = _VerifyHostKey();
-	if (FAILED(hr))
-	{
-		_Disconnect();
-		return hr; // Legal to fail here, e.g. user refused to accept host key
-	}
-
-    // Authenticate the user with the remote server
-	hr = _AuthenticateUser();
-	if (FAILED(hr))
-	{
-		_Disconnect();
-		return hr; // Legal to fail here, e.g. wrong password/key
-	}
-
-	// Start up SFTP session
-    m_pSftpSession = libssh2_sftp_init(m_pSession);
-	if (!m_pSftpSession)
-	{
-#ifdef _DEBUG
-		char *szError; int cchError;
-		int rc = ::libssh2_session_last_error(
-			m_pSession, &szError, &cchError, false);
-		ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
-#endif
-		_Disconnect();
-	}
-	ATLENSURE_RETURN_HR( m_pSftpSession, E_FAIL );
-
-	m_fConnected = true;
 	return S_OK;
 }
 
-/**
- * Cleans up any connections or resources that may have been created.
- */
 void CLibssh2Provider::_Disconnect()
 {
-	if (m_pSftpSession) // dual of libssh2_sftp_init()
-	{
-		ATLVERIFY( !libssh2_sftp_shutdown(m_pSftpSession) );
-		m_pSftpSession = NULL;
-	}
-	
-	if (m_pSession)     // dual of libssh2_session_startup()
-	{
-		ATLVERIFY( !libssh2_session_disconnect(m_pSession, "Session over") );
-		_DestroySession();
-	}
-
-	if (m_socket != INVALID_SOCKET)
-	{                   // dual of ::socket()
-		ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
-		m_socket = INVALID_SOCKET;
-	}
-
-	m_fConnected = false;
+	m_spSession.reset();
 }
 
 /**
@@ -550,12 +225,11 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	hr = _Connect();
 	if (FAILED(hr))
 		return hr;
-	ATLASSUME(m_pSftpSession);
 
 	// Open directory
 	CW2A szDirectory(bstrDirectory);
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-		m_pSftpSession, szDirectory
+		*m_spSession, szDirectory
 	);
 	if (!pSftpHandle)
 		return E_FAIL;
@@ -738,7 +412,6 @@ STDMETHODIMP CLibssh2Provider::Rename(
 	hr = _Connect();
 	if (FAILED(hr))
 		return hr;
-	ATLASSUME(m_pSftpSession);
 
 	// Attempt to rename old path to new path
 	CW2A szFrom(bstrFromPath), szTo(bstrToPath);
@@ -749,12 +422,12 @@ STDMETHODIMP CLibssh2Provider::Rename(
 	// Rename failed - this is OK, it might be an overwrite - check
 	CComBSTR bstrMessage;
 	int nErr; PSTR pszErr; int cchErr;
-	nErr = libssh2_session_last_error(m_pSession, &pszErr, &cchErr, false);
+	nErr = libssh2_session_last_error(*m_spSession, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
 		CString strError;
 		hr = _RenameRetryWithOverwrite(
-			libssh2_sftp_last_error(m_pSftpSession), szFrom, szTo, strError);
+			libssh2_sftp_last_error(*m_spSession), szFrom, szTo, strError);
 		if (SUCCEEDED(hr))
 		{
 			*pfWasTargetOverwritten = VARIANT_TRUE;
@@ -787,7 +460,7 @@ STDMETHODIMP CLibssh2Provider::Rename(
 HRESULT CLibssh2Provider::_RenameSimple(const char *szFrom, const char *szTo)
 {
 	int rc = libssh2_sftp_rename_ex(
-		m_pSftpSession, szFrom, strlen(szFrom), szTo, strlen(szTo),
+		*m_spSession, szFrom, strlen(szFrom), szTo, strlen(szTo),
 		LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
 
 	return (!rc) ? S_OK : E_FAIL;
@@ -841,7 +514,7 @@ HRESULT CLibssh2Provider::_RenameRetryWithOverwrite(
 		// for race conditions.
 		LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
 		::ZeroMemory(&attrsTarget, sizeof attrsTarget);
-		if (!libssh2_sftp_stat(m_pSftpSession, szTo, &attrsTarget))
+		if (!libssh2_sftp_stat(*m_spSession, szTo, &attrsTarget))
 		{
 			// File already exists
 
@@ -875,7 +548,7 @@ HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
 	int rc = libssh2_sftp_rename_ex(
-		m_pSftpSession, szFrom, strlen(szFrom), szTo, strlen(szTo), 
+		*m_spSession, szFrom, strlen(szFrom), szTo, strlen(szTo), 
 		LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
 		LIBSSH2_SFTP_RENAME_NATIVE
 	);
@@ -885,7 +558,7 @@ HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
 	else
 	{
 		char *pszMessage; int cchMessage;
-		libssh2_session_last_error(m_pSession, &pszMessage, &cchMessage, false);
+		libssh2_session_last_error(*m_spSession, &pszMessage, &cchMessage, false);
 		strError = pszMessage;
 		return E_FAIL;
 	}
@@ -911,11 +584,11 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 	// First, rename existing file to temporary
 	std::string strTemporary(szTo);
 	strTemporary += ".swish_rename_temp";
-	int rc = libssh2_sftp_rename( m_pSftpSession, szTo, strTemporary.c_str() );
+	int rc = libssh2_sftp_rename( *m_spSession, szTo, strTemporary.c_str() );
 	if (!rc)
 	{
 		// Rename our subject
-		rc = libssh2_sftp_rename( m_pSftpSession, szFrom, szTo );
+		rc = libssh2_sftp_rename( *m_spSession, szFrom, szTo );
 		if (!rc)
 		{
 			// Delete temporary
@@ -925,7 +598,7 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 		}
 
 		// Rename failed, rename our temporary back to its old name
-		rc = libssh2_sftp_rename( m_pSftpSession, szFrom, szTo );
+		rc = libssh2_sftp_rename( *m_spSession, szFrom, szTo );
 		ATLASSERT(!rc);
 
 		strError = _T("Cannot overwrite \"");
@@ -948,7 +621,6 @@ STDMETHODIMP CLibssh2Provider::Delete( BSTR bstrPath )
 	hr = _Connect();
 	if (FAILED(hr))
 		return hr;
-	ATLASSUME(m_pSftpSession);
 
 	// Delete file
 	CString strError;
@@ -964,7 +636,7 @@ STDMETHODIMP CLibssh2Provider::Delete( BSTR bstrPath )
 
 HRESULT CLibssh2Provider::_Delete( const char *szPath, CString& strError )
 {
-	if (libssh2_sftp_unlink(m_pSftpSession, szPath) == 0)
+	if (libssh2_sftp_unlink(*m_spSession, szPath) == 0)
 		return S_OK;
 
 	// Delete failed
@@ -983,7 +655,6 @@ STDMETHODIMP CLibssh2Provider::DeleteDirectory( BSTR bstrPath )
 	hr = _Connect();
 	if (FAILED(hr))
 		return hr;
-	ATLASSUME(m_pSftpSession);
 
 	// Delete directory recursively
 	CString strError;
@@ -1004,7 +675,7 @@ HRESULT CLibssh2Provider::_DeleteDirectory(
 
 	// Open directory
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-		m_pSftpSession, szPath
+		*m_spSession, szPath
 	);
 	if (!pSftpHandle)
 	{
@@ -1043,7 +714,7 @@ HRESULT CLibssh2Provider::_DeleteDirectory(
 	ATLVERIFY(libssh2_sftp_close_handle(pSftpHandle) == 0);
 
 	// Delete directory itself
-	if (libssh2_sftp_rmdir(m_pSftpSession, szPath) == 0)
+	if (libssh2_sftp_rmdir(*m_spSession, szPath) == 0)
 		return S_OK;
 
 	// Delete failed
@@ -1056,7 +727,7 @@ HRESULT CLibssh2Provider::_DeleteRecursive(
 {
 	LIBSSH2_SFTP_ATTRIBUTES attrs;
 	::ZeroMemory(&attrs, sizeof attrs);
-	if (libssh2_sftp_lstat(m_pSftpSession, szPath, &attrs) != 0)
+	if (libssh2_sftp_lstat(*m_spSession, szPath, &attrs) != 0)
 	{
 		strError = _GetLastErrorMessage();
 		return E_FAIL;
@@ -1079,11 +750,10 @@ STDMETHODIMP CLibssh2Provider::CreateNewFile( BSTR bstrPath )
 	HRESULT hr = _Connect();
 	if (FAILED(hr))
 		return hr;
-	ATLASSUME(m_pSftpSession);
 
 	CW2A szPath(bstrPath);
 	LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
-		m_pSftpSession, szPath, LIBSSH2_FXF_CREAT, 0644);
+		*m_spSession, szPath, LIBSSH2_FXF_CREAT, 0644);
 	if (pHandle == NULL)
 	{
 		// Report error to front-end
@@ -1104,10 +774,9 @@ STDMETHODIMP CLibssh2Provider::CreateNewDirectory( BSTR bstrPath )
 	HRESULT hr = _Connect();
 	if (FAILED(hr))
 		return hr;
-	ATLASSUME(m_pSftpSession);
 
 	CW2A szPath(bstrPath);
-	if (libssh2_sftp_mkdir(m_pSftpSession, szPath, 0755) != 0)
+	if (libssh2_sftp_mkdir(*m_spSession, szPath, 0755) != 0)
 	{
 		// Report error to front-end
 		m_pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
@@ -1128,10 +797,10 @@ CString CLibssh2Provider::_GetLastErrorMessage()
 	CString bstrMessage;
 	int nErr; PSTR pszErr; int cchErr;
 
-	nErr = libssh2_session_last_error(m_pSession, &pszErr, &cchErr, false);
+	nErr = libssh2_session_last_error(*m_spSession, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
-		ULONG uErr = libssh2_sftp_last_error(m_pSftpSession);
+		ULONG uErr = libssh2_sftp_last_error(*m_spSession);
 		return _GetSftpErrorMessage(uErr);
 	}
 	else // A non-SFTP error occurred
