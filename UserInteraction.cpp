@@ -74,14 +74,10 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 	ATLASSERT(saPrompts.GetLowerBound() == saShowPrompts.GetLowerBound());
 	ATLASSERT(saPrompts.GetUpperBound() == saShowPrompts.GetUpperBound());
 
-	//CString strMessage;
-	//strMessage += CString(L"Name: ") + bstrName + L"\r\n";
-	//strMessage += CString(L"Instruction: ") + bstrInstruction + L"\r\n\r\n";
 	PromptList vecPrompts;
 	EchoList vecEcho;
 	for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
 	{
-		//strMessage += CString(L"Prompt: ") + saPrompts[i] + L"\r\n\r\n";
 		vecPrompts.push_back(CString(saPrompts[i]));
 		vecEcho.push_back((saShowPrompts[i] == VARIANT_TRUE) ? true : false);
 	}
@@ -91,7 +87,6 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 	if (dlg.DoModal() == IDCANCEL)
 		return E_ABORT;
 	ResponseList vecResponses = dlg.GetResponses();
-	//::MessageBox(NULL, strMessage, NULL, MB_OK);
 
 	// Create response array. Indices must correspond to prompts array!
 	CComSafeArray<BSTR> saResponses(
@@ -107,8 +102,8 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 	// Fill responses SAFEARRAY
 	for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
 	{
-		ATLASSERT(SUCCEEDED( saResponses.SetAt(
-			i, CComBSTR(vecResponses[i-nIndexOffset]).Detach(), FALSE) ));
+		ATLVERIFY(SUCCEEDED( saResponses.SetAt(
+			i, CComBSTR(vecResponses[i-nIndexOffset]).Detach(), false) ));
 	}
 
 	*ppsaResponses = saResponses.Detach();

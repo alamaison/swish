@@ -124,8 +124,8 @@ CKeyboardInteractive::ResponseArray CKeyboardInteractive::_SendRequest(
 	CComSafeArray<BSTR> saPrompts(cPrompts);
 	for (int i = 0; i < cPrompts; i++)
 	{
-		ATLASSERT(SUCCEEDED( saPrompts.SetAt(
-			i, CComBSTR(prompts[i].length, prompts[i].text).Detach(), false)) );
+		ATLVERIFY(SUCCEEDED( saPrompts.SetAt(
+			i, CComBSTR(prompts[i].length, prompts[i].text).Detach(), false) ));
 	}
 
 	return saPrompts;
