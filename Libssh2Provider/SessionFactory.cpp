@@ -179,8 +179,8 @@ HRESULT CSessionFactory::_PasswordAuthentication(
 		bstrPassword.Empty(); // Prevent memory leak on repeat
 	} while (ret != 0);
 
-	ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
 	ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
+	ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
 	return hr;
 }
 
@@ -213,7 +213,7 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
 	if (FAILED(handler.GetErrorState()))
 		return handler.GetErrorState();
 
-	ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+	ATLASSERT(rc || libssh2_userauth_authenticated(session)); // Double-check
 	return (rc == 0) ? S_OK : E_FAIL;
 }
 
