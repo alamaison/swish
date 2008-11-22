@@ -153,7 +153,7 @@ CKeyboardInteractive::ResponseArray CKeyboardInteractive::_SendRequest(
 	ResponseArray& saResponses,
 	int cPrompts, LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses) throw()
 {
-	ATLASSERT( saResponses.GetCount() == cPrompts );
+	ATLASSERT( saResponses.GetCount() == (ULONG)cPrompts );
 	for (int i = 0; i < cPrompts; i++)
 	{
 		// Calculate necessary length of UTF-8 response buffer
