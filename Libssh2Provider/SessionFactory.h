@@ -1,4 +1,4 @@
-/*  Includes for pre-compiled header.
+/*  Factory producing connected, authenticated CSession objects.
 
     Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -27,4 +27,40 @@
     carries forward this exception.
 */
 
-#include "stdafx.h"
+#pragma once
+
+#include "Session.h"
+
+#include <libssh2.h>
+#include <libssh2_sftp.h>
+
+#include <memory>
+using std::auto_ptr;
+
+class CSessionFactory
+{
+public:
+	static auto_ptr<CSession> CreateSftpSession(
+		PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
+		__in ISftpConsumer *pConsumer) throw(...);
+
+private:
+	static void _VerifyHostKey(
+		CSession& session, __in ISftpConsumer *pConsumer) throw(...);
+
+	static void _AuthenticateUser(
+		PCWSTR pwszUser, CSession& session, __in ISftpConsumer *pConsumer)
+		throw(...);
+
+	static HRESULT _PasswordAuthentication(
+		PCSTR szUsername, CSession& session, __in ISftpConsumer *pConsumer)
+		throw (...);
+
+	static HRESULT _KeyboardInteractiveAuthentication(
+		PCSTR szUsername, CSession& session, __in ISftpConsumer *pConsumer)
+		throw (...);
+
+	static HRESULT _PublicKeyAuthentication(
+		PCSTR szUsername, CSession& session, __in ISftpConsumer *pConsumer)
+		throw (...);
+};

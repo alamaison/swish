@@ -8,6 +8,7 @@
 #define IDR_SWISH                       100
 #define IDD_HOSTPASSWORD_DIALOG         102
 #define IDD_PASSWORD_DIALOG             102
+#define IDD_KBDINTERACTIVEDIALOG        105
 #define IDD_HOSTINFO_DIALOG             201
 #define IDC_HOST_GROUP                  1002
 #define IDC_USER                        1003
@@ -27,6 +28,7 @@
 #define IDC_BLURB_SERVER                1019
 #define IDC_BLURB_PATH                  1020
 #define IDC_PATH_EXAMPLE                1021
+#define IDC_INSTRUCTION                 1022
 
 // Next default values for new objects
 // 
@@ -35,7 +37,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        202
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1022
-#define _APS_NEXT_SYMED_VALUE           104
+#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

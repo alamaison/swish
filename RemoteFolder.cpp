@@ -210,7 +210,7 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	try
 	{
  		CSftpDirectory directory( conn, strPath );
-		directory.GetEnum( ppEnumIDList, grfFlags );
+		*ppEnumIDList = directory.GetEnum(grfFlags);
 	}
 	catchCom()
 	

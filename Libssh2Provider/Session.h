@@ -1,4 +1,4 @@
-/*  Includes for pre-compiled header.
+/*  C++ wrapper round Libssh2 SSH and SFTP session creation.
 
     Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -27,4 +27,38 @@
     carries forward this exception.
 */
 
-#include "stdafx.h"
+#pragma once
+
+#include <libssh2.h>
+#include <libssh2_sftp.h>
+
+class CSession
+{
+public:
+	CSession() throw(...);
+	~CSession();
+	operator LIBSSH2_SESSION*() const;
+	operator LIBSSH2_SFTP*() const;
+
+	void Connect(PCWSTR pwszHost, unsigned int uPort) throw(...);
+	void StartSftp() throw(...);
+
+private:
+	LIBSSH2_SESSION *m_pSession;   ///< SSH session
+	SOCKET m_socket;               ///< TCP/IP socket to the remote host
+	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
+	bool m_bConnected;             ///< Have we already connected to server?
+
+	CSession(const CSession& session); // Intentionally not implemented
+	CSession& operator=(const CSession& pidl); // Intentionally not impl
+	
+	void _OpenSocketToHost(PCWSTR pszHost, unsigned int uPort) throw(...);
+	void _CloseSocketToHost() throw();
+
+	void _CreateSession() throw(...);
+	void _DestroySession() throw();
+	void _ResetSession() throw(...);
+
+	void _CreateSftpChannel() throw(...);
+	void _DestroySftpChannel() throw();
+};

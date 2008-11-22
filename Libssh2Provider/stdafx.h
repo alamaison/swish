@@ -17,14 +17,14 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-	permission to combine this program with free software programs or the 
-	OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-	with unchanged license). You may copy and distribute such a system 
-	following the terms of the GNU GPL for this program and the licenses 
-	of the other code concerned. The GNU General Public License gives 
-	permission to release a modified version without this exception; this 
-	exception also makes it possible to release a modified version which 
-	carries forward this exception.
+    permission to combine this program with free software programs or the 
+    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
+    with unchanged license). You may copy and distribute such a system 
+    following the terms of the GNU GPL for this program and the licenses 
+    of the other code concerned. The GNU General Public License gives 
+    permission to release a modified version without this exception; this 
+    exception also makes it possible to release a modified version which 
+    carries forward this exception.
 */
 
 #pragma once
@@ -78,6 +78,8 @@ using namespace ATL;
 #define UNREACHABLE __assume(0);
 #endif
 
+#define TRACE(msg, ...) ATLTRACE(msg ## "\n", __VA_ARGS__)
+
 #define ATLENSURE_REPORT_HR(expr, error, hr)                         \
 do {                                                                 \
 	int __atl_condVal=!!(expr);                                      \
@@ -103,6 +105,43 @@ do {                                                                 \
 } while (0)
 #else
 #define ATLVERIFY_REPORT(expr, error) (expr)
+#endif // _DEBUG
+
+/* COM Exception handler **************************************************** */
+#ifdef _DEBUG
+#define catchCom()            \
+catch (const _com_error& e)   \
+{                             \
+	ATLTRACE("Caught _com_error exception: %w", e.ErrorMessage()); \
+	return e.Error();         \
+}                             \
+catch (const CAtlException& e)\
+{                             \
+	ATLTRACE("Caught CAtlException"); \
+	return e;                 \
+}
+#else
+#define catchCom()            \
+catch (const _com_error& e)   \
+{                             \
+	return e.Error();         \
+}                             \
+catch (const std::bad_alloc&) \
+{                             \
+	return E_OUTOFMEMORY;     \
+}                             \
+catch (const std::exception&) \
+{                             \
+	return E_UNEXPECTED;      \
+}                             \
+catch (const CAtlException& e)\
+{                             \
+	return e;                 \
+}                             \
+catch (...)                   \
+{                             \
+	return E_UNEXPECTED;      \
+}
 #endif // _DEBUG
 
 /* Includes ***************************************************************** */

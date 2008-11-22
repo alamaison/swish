@@ -86,6 +86,12 @@ public:
 	IFACEMETHODIMP OnPasswordRequest(
 		__in BSTR bstrRequest, __out BSTR *pbstrPassword
 	);
+	IFACEMETHODIMP OnKeyboardInteractiveRequest(
+		__in BSTR bstrName, __in BSTR bstrInstruction,
+		__in SAFEARRAY *psaPrompts,
+		__in SAFEARRAY *psaShowResponses,
+		__deref_out SAFEARRAY **ppsaResponses
+	);
 	IFACEMETHODIMP OnYesNoCancel(
 		__in BSTR bstrMessage,
 		__in_opt BSTR bstrYesInfo,
