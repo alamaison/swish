@@ -773,7 +773,6 @@ HRESULT CHostFolder::_LoadConnectionsFromRegistry()
 	rc = regConnections.Open(
 		HKEY_CURRENT_USER, _T("Software\\Swish\\Connections")
 	);
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, S_OK);
 	if (rc != ERROR_SUCCESS)
 		return S_OK; // Legal to fail here - may be first ever connection
 
