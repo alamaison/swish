@@ -15,6 +15,24 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_08EFA10130B94B9980C424914BF963EB"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_08EFA10130B94B9980C424914BF963EB"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_08EFA10130B94B9980C424914BF963EB"
+        "OwnerKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_36D53783E0F74DD37E1936A586D6ED37"
         "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
         "MsmSig" = "8:_UNDEFINED"
@@ -81,32 +99,14 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_B488DB7E4EB94DCEBE098B2BF73AD7D4"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B488DB7E4EB94DCEBE098B2BF73AD7D4"
-        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B488DB7E4EB94DCEBE098B2BF73AD7D4"
-        "OwnerKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_D5BCA5075195446DB2CCDA3D7C881C7A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E386D98026AB464BB8041B33C4664E5D"
-        "OwnerKey" = "8:_B488DB7E4EB94DCEBE098B2BF73AD7D4"
+        "MsmKey" = "8:_E758D4F178F24B47A1E6EEA691594EA1"
+        "OwnerKey" = "8:_08EFA10130B94B9980C424914BF963EB"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -129,7 +129,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\swish-0.2.1.8-debug.msi"
+        "OutputFilename" = "8:Debug\\swish-0.2.1.9-debug.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -183,7 +183,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\swish-0.2.1.8.msi"
+        "OutputFilename" = "8:Release\\swish-0.2.1.9.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -1120,7 +1120,7 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_B488DB7E4EB94DCEBE098B2BF73AD7D4"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_08EFA10130B94B9980C424914BF963EB"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
@@ -1134,7 +1134,7 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E386D98026AB464BB8041B33C4664E5D"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E758D4F178F24B47A1E6EEA691594EA1"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
