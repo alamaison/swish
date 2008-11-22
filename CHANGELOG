@@ -1,3 +1,9 @@
+swish-0.2.1.9
+-Added support for the keyboard-interactive authentication scheme:
+ (http://www.ietf.org/rfc/rfc4256.txt).
+-Improved robustness of the low-level backend session handling in the face
+ of errors.
+
 swish-0.2.1.8
 -Fixed bug when overwriting existing directories.
 
