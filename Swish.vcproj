@@ -322,6 +322,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DummyStream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ExplorerCallback.cpp"
 				>
 			</File>
@@ -432,6 +436,10 @@
 			</File>
 			<File
 				RelativePath=".\DataObjectFactory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DummyStream.h"
 				>
 			</File>
 			<File

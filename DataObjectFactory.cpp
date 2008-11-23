@@ -22,6 +22,7 @@
 
 #include "RemotePidl.h"
 #include "ShellDataObject.h"
+#include "DummyStream.h"
 
 /* static */ CComPtr<IDataObject> CDataObjectFactory::CreateDataObjectFromPIDLs(
 	HWND /*hwndOwner*/, PIDLIST_ABSOLUTE pidlCommonParent,
@@ -71,11 +72,19 @@
 		STGMEDIUM stg;
 		::ZeroMemory(&stg, sizeof stg);
 		stg.tymed = TYMED_ISTREAM;
-		stg.pstm = SHOpenRegStream(HKEY_LOCAL_MACHINE,
-			L"Hardware\\Description\\System\\CentralProcessor\\0",
-			L"Identifier", STGM_READ);
-		// TODO: this leaks memory if we fail after this point
+
+		CComObject<CDummyStream> *pDummy;
+		hr = CComObject<CDummyStream>::CreateInstance(&pDummy);
+		if (SUCCEEDED(hr))
+		{
+			pDummy->AddRef();
+			hr = pDummy->QueryInterface(&stg.pstm);
+			ATLASSERT(SUCCEEDED(hr));
+			pDummy->Release();
+		}
+		
 		vecStgMedia[i] = stg;
+		// TODO: this leaks memory if we fail after this point
 	}
 
 	// Let the shell create a fully-functional DataObject populated with our
