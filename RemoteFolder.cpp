@@ -27,6 +27,7 @@
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
 #include "RemotePidl.h"
 #include "ShellDataObject.h"
+#include "DataObjectFactory.h"
 
 #include <ATLComTime.h>
 #include <atlrx.h> // For regular expressions
@@ -375,9 +376,18 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	else if (riid == __uuidof(IDataObject))
 	{
 		ATLTRACE("\t\tRequest: IDataObject\n");
-		hr = ::CIDLData_CreateFromIDArray(
-			m_pidl, cPidl, reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl),
-			(IDataObject **)ppvReturn);
+
+		try
+		{
+			CComPtr<IDataObject> spDo(
+				CDataObjectFactory::CreateDataObjectFromPIDLs(
+					hwndOwner, m_pidl, cPidl, aPidl));
+			ATLASSERT(spDo);
+			*(IDataObject **)ppvReturn = spDo.Detach();
+		}
+		catchCom()
+
+		hr = S_OK;
 	}
 	else	
 		ATLTRACE("\t\tRequest: <unknown>\n");
@@ -535,16 +545,15 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	DWORD dwAttribs = 0;
 	if (fAllAreFolders)
 	{
-		ATLTRACE("\tSetting SFGAO_FOLDER, SFGAO_HASSUBFOLDER, SFGAO_BROWSABLE\n");
 		dwAttribs |= SFGAO_FOLDER;
 		dwAttribs |= SFGAO_HASSUBFOLDER;
-		dwAttribs |= SFGAO_BROWSABLE;
 	}
 	if (fAllAreDotFiles)
 		dwAttribs |= SFGAO_GHOSTED;
 
 	dwAttribs |= SFGAO_CANRENAME;
 	dwAttribs |= SFGAO_CANDELETE;
+	dwAttribs |= SFGAO_CANCOPY;
 
     *pdwAttribs &= dwAttribs;
 

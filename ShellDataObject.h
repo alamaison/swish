@@ -30,6 +30,51 @@ public:
 	}
 };
 
+class CFormatEtc : public FORMATETC
+{
+public:
+	CFormatEtc(
+		CLIPFORMAT cfFormat, DWORD tymed = TYMED_HGLOBAL, LONG lIndex = -1, 
+		DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
+		throw()
+	{
+		_Construct(cfFormat, tymed, lIndex, dwAspect, ptd);
+	}
+
+	CFormatEtc(
+		UINT nFormat, DWORD tymed = TYMED_HGLOBAL, LONG lIndex = -1, 
+		DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
+		throw()
+	{
+		_Construct(static_cast<CLIPFORMAT>(nFormat), 
+			tymed, lIndex, dwAspect, ptd);
+	}
+
+	CFormatEtc(
+		PCWSTR pszFormat, DWORD tymed = TYMED_HGLOBAL, LONG lIndex = -1, 
+		DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
+		throw(...)
+	{
+		UINT nFormat = ::RegisterClipboardFormat(pszFormat);
+		ATLENSURE_THROW(nFormat, E_INVALIDARG);
+
+		_Construct(static_cast<CLIPFORMAT>(nFormat), 
+			tymed, lIndex, dwAspect, ptd);
+	}
+
+private:
+	inline void _Construct(
+		CLIPFORMAT cfFormat, DWORD tymed, LONG lIndex, DWORD dwAspect, 
+		DVTARGETDEVICE *ptd) throw()
+	{
+		this->cfFormat = cfFormat;
+		this->tymed = tymed;
+		this->lindex = lIndex;
+		this->dwAspect = dwAspect;
+		this->ptd = ptd;
+	}
+};
+
 class CGlobalLock
 {
 public:
@@ -73,6 +118,11 @@ public:
 		return static_cast<CIDA *>(m_pMem);
 	}
 
+	FILEGROUPDESCRIPTOR& GetFileGroupDescriptor()
+	{
+		return *static_cast<FILEGROUPDESCRIPTOR*>(m_pMem);
+	}
+
 private:
 	HGLOBAL m_hGlobal;
 	PVOID m_pMem;
@@ -93,4 +143,54 @@ private:
 	CComPtr<IDataObject> m_spDataObj;
 	CStorageMedium m_medium;
 	CGlobalLock m_glock;
+};
+
+class CFileGroupDescriptor
+{
+public:
+	CFileGroupDescriptor(UINT cFiles)
+		: m_hGlobal(NULL)
+	{
+		ATLENSURE_THROW(cFiles > 0, E_INVALIDARG);
+
+		// Allocate global memory sufficient for group descriptor and as many
+		// file descriptors as specified
+		size_t cbData = sizeof FILEGROUPDESCRIPTOR + 
+		                sizeof FILEDESCRIPTOR * (cFiles - 1);
+		m_hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, cbData);
+		ATLENSURE_THROW(m_hGlobal, E_OUTOFMEMORY);
+
+		// Zero the entire block
+		CGlobalLock glock(m_hGlobal);
+		FILEGROUPDESCRIPTOR& fgd = glock.GetFileGroupDescriptor();
+		::ZeroMemory(&fgd, cbData);
+		fgd.cItems = cFiles;
+	}
+	
+	~CFileGroupDescriptor()
+	{
+		::GlobalFree(m_hGlobal);
+		m_hGlobal = NULL;
+	}
+
+	void SetDescriptor(UINT i, FILEDESCRIPTOR& fd)
+	{
+		CGlobalLock glock(m_hGlobal);
+
+		FILEGROUPDESCRIPTOR& fgd = glock.GetFileGroupDescriptor();
+		if (i >= fgd.cItems)
+			AtlThrow(E_INVALIDARG); // Out-of-range
+
+		::CopyMemory(&(fgd.fgd[i]), &fd, sizeof fd);
+	}
+
+	HGLOBAL Detach()
+	{
+		HGLOBAL hGlobal = m_hGlobal;
+		m_hGlobal = NULL;
+		return hGlobal;
+	}
+
+private:
+	HGLOBAL m_hGlobal;
 };
