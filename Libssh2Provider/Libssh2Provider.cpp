@@ -33,6 +33,7 @@
 
 #include "Libssh2Provider.h"
 #include "KeyboardInteractive.h"
+#include "SftpStream.h"
 
 #include <ws2tcpip.h>    // Winsock
 #include <wspiapi.h>     // Winsock
@@ -351,6 +352,40 @@ Listing CLibssh2Provider::_FillListingEntry(
 	}
 
 	return lt;
+}
+
+
+STDMETHODIMP CLibssh2Provider::GetFile(BSTR bstrFilePath, IStream **ppStream)
+{
+	ATLENSURE_RETURN_HR(ppStream, E_POINTER); *ppStream = NULL;
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrFilePath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	HRESULT hr;
+
+	// Connect to server
+	hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+
+	CComObject<CSftpStream> *pStream = NULL;
+	hr = pStream->CreateInstance(&pStream);
+	if (SUCCEEDED(hr))
+	{
+		pStream->AddRef();
+
+		// TODO: This session that we are passing should outlive the Stream.
+		//       How do we enforce this?
+		hr = pStream->Initialize(*m_spSession, CW2A(bstrFilePath));
+		if (SUCCEEDED(hr))
+		{
+			hr = pStream->QueryInterface(ppStream);
+		}
+
+		pStream->Release();
+	}
+
+	return hr;
 }
 
 /**

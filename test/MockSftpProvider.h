@@ -82,6 +82,10 @@ public:
 		__in BSTR bstrDirectory,
 		__out Swish::IEnumListing **ppEnum
 	);
+	IFACEMETHODIMP GetFile(
+		__in BSTR bstrFilePath,
+		__out IStream **ppStream
+	);
 	IFACEMETHODIMP Rename(
 		__in BSTR bstrFromPath,
 		__in BSTR bstrToPath,

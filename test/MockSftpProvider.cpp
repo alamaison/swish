@@ -124,6 +124,12 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 	}
 }
 
+
+STDMETHODIMP CMockSftpProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
+{
+	return E_NOTIMPL;
+}
+
 STDMETHODIMP CMockSftpProvider::Rename(
 	BSTR bstrFromPath, BSTR bstrToPath, VARIANT_BOOL *fWasTargetOverwritten )
 {
