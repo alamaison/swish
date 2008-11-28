@@ -102,9 +102,9 @@ STDMETHODIMP CSftpStream::Seek(
 {
 	try
 	{
-		size_t uNewPosition = _CalculateNewFilePosition(dlibMove, dwOrigin);
+		ULONGLONG uNewPosition = _CalculateNewFilePosition(dlibMove, dwOrigin);
 
-		libssh2_sftp_seek(m_pHandle, uNewPosition);
+		libssh2_sftp_seek2(m_pHandle, uNewPosition);
 		if (plibNewPosition)
 			plibNewPosition->QuadPart = uNewPosition;
 	}
@@ -113,7 +113,7 @@ STDMETHODIMP CSftpStream::Seek(
 	return S_OK;
 }
 
-size_t CSftpStream::_CalculateNewFilePosition(
+ULONGLONG CSftpStream::_CalculateNewFilePosition(
 	LARGE_INTEGER dlibMove, DWORD dwOrigin) throw(...)
 {
 	LONGLONG nNewPosition = 0;
@@ -150,7 +150,7 @@ size_t CSftpStream::_CalculateNewFilePosition(
 	if (nNewPosition < 0)
 		AtlThrow(STG_E_INVALIDFUNCTION);
 
-	return static_cast<size_t>(nNewPosition);
+	return static_cast<ULONGLONG>(nNewPosition);
 }
 
 STDMETHODIMP CSftpStream::SetSize( 

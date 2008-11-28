@@ -166,7 +166,7 @@ public:
 	);
 
 private:
-	size_t _CalculateNewFilePosition(
+	ULONGLONG _CalculateNewFilePosition(
 		__in LARGE_INTEGER dlibMove, __in DWORD dwOrigin) throw(...);
 	HRESULT _Read(
 		__out_bcount_part(cb, pcbRead) char *pbuf, ULONG cb, ULONG *pcbRead);
