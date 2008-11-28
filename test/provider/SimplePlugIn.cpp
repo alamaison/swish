@@ -3,14 +3,15 @@
 
 #include "stdafx.h"
 
+[ module( name="Libssh2ProviderUnitTests" ) ];
+//class CUnitTests
+//{};
+
 #include <cppunit/plugin/TestPlugIn.h>
-
-class CTestProviderModule : public CAtlModuleT<CTestProviderModule> {;};
-
-CTestProviderModule atlModule;
 
 // Implements all the plug-in stuffs, WinMain...
 #pragma warning(push)
 #pragma warning(disable:4100)
-CPPUNIT_PLUGIN_IMPLEMENT();
+//CPPUNIT_PLUGIN_IMPLEMENT();
+CPPUNIT_PLUGIN_EXPORTED_FUNCTION_IMPL( CPPUNIT_NS::TestPlugInDefaultImpl );
 #pragma warning(pop)
