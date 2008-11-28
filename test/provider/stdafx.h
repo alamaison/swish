@@ -121,6 +121,10 @@ catch (const CAtlException& e)\
 #include <libssh2_sftp.h>
 
 // Swish type library
-#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, raw_native_types, auto_search/*, no_namespace, embedded_idl*/
+#pragma warning (push)
+#pragma warning (disable: 4192) // automatically excluding while importing type
+#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, \
+	raw_native_types, auto_search/*, no_namespace, embedded_idl*/
+#pragma warning (pop)
 
 using namespace Swish;
