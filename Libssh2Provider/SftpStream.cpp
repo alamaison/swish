@@ -50,11 +50,33 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 	return _Read(static_cast<char *>(pv), cb, pcbRead);
 }
 
+#define THRESHOLD 39990
 HRESULT CSftpStream::_Read(char *pbuf, ULONG cb, ULONG *pcbRead)
+{
+	char *p = pbuf;
+
+	HRESULT hr;
+	ULONG cbChunk = 0;
+	ULONG cbRead = 0;
+	do {
+		cbChunk = min(static_cast<ULONG>(cb + pbuf - p), THRESHOLD);
+		hr = _ReadOne(p, cbChunk, &cbRead);
+		if (FAILED(hr))
+			return hr;
+
+		p += cbRead;
+	} while (cbRead == cbChunk /* not EOF */ && p - pbuf < cb /* wants more */);
+
+	*pcbRead = static_cast<ULONG>(p - pbuf);
+
+	return S_OK;
+}
+
+HRESULT CSftpStream::_ReadOne(char *pbuf, ULONG cb, ULONG *pcbRead)
 {
 	ssize_t cbRead = libssh2_sftp_read(m_pHandle, pbuf, cb);
 
-	if (cbRead < 0) // Error
+	if (cbRead < 0)
 	{
 		UNREACHABLE;
 		TRACE("libssh2_sftp_read() failed: %ws", _GetLastErrorMessage());
@@ -63,7 +85,7 @@ HRESULT CSftpStream::_Read(char *pbuf, ULONG cb, ULONG *pcbRead)
 
 	*pcbRead = cbRead;
 
-	return (cbRead < cb) ? S_FALSE : S_OK;
+	return S_OK;
 }
 
 STDMETHODIMP CSftpStream::Write( 

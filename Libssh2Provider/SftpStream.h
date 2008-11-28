@@ -170,6 +170,8 @@ private:
 		__in LARGE_INTEGER dlibMove, __in DWORD dwOrigin) throw(...);
 	HRESULT _Read(
 		__out_bcount_part(cb, pcbRead) char *pbuf, ULONG cb, ULONG *pcbRead);
+	HRESULT _ReadOne(
+		__out_bcount_part(cb, pcbRead) char *pbuf, ULONG cb, ULONG *pcbRead);
 
 	/**
 	 * Retrieves a string description of the last error reported by libssh2.
