@@ -229,11 +229,11 @@ STDMETHODIMP CSftpStream::Stat(STATSTG *pstatstg, DWORD grfStatFlag)
 
 	ll = Int32x32To64(attrs.mtime, 10000000) + 116444736000000000;
 	pstatstg->mtime.dwLowDateTime = static_cast<DWORD>(ll);
-	pstatstg->mtime.dwHighDateTime = static_cast<DWORD>(ll) >> 32;
+	pstatstg->mtime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
 
 	ll = Int32x32To64(attrs.atime, 10000000) + 116444736000000000;
 	pstatstg->atime.dwLowDateTime = static_cast<DWORD>(ll);
-	pstatstg->atime.dwHighDateTime = static_cast<DWORD>(ll) >> 32;
+	pstatstg->atime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
 
 	// Provide filename if requested
 	if (!(grfStatFlag & STATFLAG_NONAME))
