@@ -195,9 +195,14 @@ public:
 
 private:
 	ULONGLONG _CalculateNewFilePosition(
-		__in LARGE_INTEGER dlibMove, __in DWORD dwOrigin) throw(...);
+		__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
 	ULONG _Read(__out_bcount(cb) char *pbuf, ULONG cb) throw(...);
 	ULONG _ReadOne(__out_bcount(cb) char *pbuf, ULONG cb) throw(...);
+	void _CopyTo(
+		__in IStream *pstm, __in ULONGLONG cb, 
+		__out ULONGLONG *pcbRead, __out ULONGLONG *pcbWritten) throw(...);
+	ULONGLONG _Seek(__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
+	STATSTG _Stat(__in bool bWantName) throw(...);
 
 	/**
 	 * Retrieves a string description of the last error reported by libssh2.

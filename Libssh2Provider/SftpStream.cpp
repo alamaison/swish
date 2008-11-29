@@ -165,34 +165,14 @@ STDMETHODIMP CSftpStream::CopyTo(
 {
 	ATLENSURE_RETURN_HR(pstm, STG_E_INVALIDPOINTER);
 
-	// TODO: This buffer size must be limited, otherwise copying, say, a 4GB
-	// file would require 4GB of memory
-	void *pv = new byte[cb.QuadPart]; // Intermediate buffer
-
-	// Read data
-	ULONG cbRead = 0;
 	try
 	{
-		cbRead = _Read(static_cast<char *>(pv), cb.QuadPart);
+		_CopyTo(pstm, cb.QuadPart,
+			&(pcbRead->QuadPart), &(pcbWritten->QuadPart));
 	}
-	catch(...)
-	{
-		UNREACHABLE;
-		delete [] pv;
-		throw;
-	}
-	if (pcbRead)
-		pcbRead->QuadPart = cbRead;
+	catchCom()
 
-	// Write data
-	ULONG cbWritten = 0;
-	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
-	delete [] pv;
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-	if (pcbWritten)
-		pcbWritten->QuadPart = cbWritten;
-
-	return hr;
+	return S_OK;
 }
 
 /**
@@ -221,9 +201,7 @@ STDMETHODIMP CSftpStream::Seek(
 {
 	try
 	{
-		ULONGLONG uNewPosition = _CalculateNewFilePosition(dlibMove, dwOrigin);
-
-		libssh2_sftp_seek2(m_pHandle, uNewPosition);
+		ULONGLONG uNewPosition = _Seek(dlibMove.QuadPart, dwOrigin);
 		if (plibNewPosition)
 			plibNewPosition->QuadPart = uNewPosition;
 	}
@@ -261,50 +239,11 @@ STDMETHODIMP CSftpStream::Stat(STATSTG *pstatstg, DWORD grfStatFlag)
 {
 	ATLENSURE_RETURN_HR(pstatstg, STG_E_INVALIDPOINTER);
 
-	// Prepare STATSTG
-	::ZeroMemory(pstatstg, sizeof STATSTG);
-	pstatstg->type = STGTY_STREAM;
-	
-	// Get file size
-	LIBSSH2_SFTP_ATTRIBUTES attrs;
-	::ZeroMemory(&attrs, sizeof attrs);
-	attrs.flags = LIBSSH2_SFTP_ATTR_SIZE | LIBSSH2_SFTP_ATTR_ACMODTIME;
-
-	if (libssh2_sftp_fstat(m_pHandle, &attrs) != 0)
+	try
 	{
-		UNREACHABLE;
-		TRACE("libssh2_sftp_fstat() failed: %ws", _GetLastErrorMessage());
-		return STG_E_INVALIDFUNCTION;
+		*pstatstg = _Stat(!(grfStatFlag & STATFLAG_NONAME));
 	}
-
-	pstatstg->cbSize.QuadPart = attrs.filesize;
-
-	// Get file dates
-	LONGLONG ll;
-
-	ll = Int32x32To64(attrs.mtime, 10000000) + 116444736000000000;
-	pstatstg->mtime.dwLowDateTime = static_cast<DWORD>(ll);
-	pstatstg->mtime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
-
-	ll = Int32x32To64(attrs.atime, 10000000) + 116444736000000000;
-	pstatstg->atime.dwLowDateTime = static_cast<DWORD>(ll);
-	pstatstg->atime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
-
-	// Provide filename if requested
-	if (!(grfStatFlag & STATFLAG_NONAME))
-	{
-		// Convert filename to OLECHARs
-		CA2W szFilename(m_strFilename.c_str(), CP_UTF8);
-
-		// Allocate sufficient memory for OLECHAR version of filename
-		size_t cchData = ::wcslen(szFilename)+1;
-		size_t cbData = cchData * sizeof OLECHAR;
-		pstatstg->pwcsName = static_cast<LPOLESTR>(::CoTaskMemAlloc(cbData));
-
-		// Copy converted filename to STATSTG
-		errno_t rc = ::wcscpy_s(pstatstg->pwcsName, cchData, szFilename);
-		ATLENSURE_RETURN_HR(rc == 0, STG_E_INSUFFICIENTMEMORY);
-	}
+	catchCom()
 
 	return S_OK;
 }
@@ -383,7 +322,17 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  * Private functions
  *----------------------------------------------------------------------------*/
 
-#define THRESHOLD 39990
+#define THRESHOLD 39990 ///< Buffer size threshold after which calls to
+                        ///< libssh2_sftp_read() fail
+
+/**
+ * Read cb bytes into buffer pbuf.  Perform the read operation in chunks
+ * less than THRESHOLD to avoid libssh2_sftp_read() failure with buffers
+ * greater than 39992 bytes.
+ *
+ * @returns  Number of bytes actually read.
+ * @throws   CAtlException with STG_E_* code if an error occurs.
+ */
 ULONG CSftpStream::_Read(char *pbuf, ULONG cb) throw(...)
 {
 	char *p = pbuf;
@@ -399,6 +348,12 @@ ULONG CSftpStream::_Read(char *pbuf, ULONG cb) throw(...)
 	return static_cast<ULONG>(p - pbuf);
 }
 
+/**
+ * Read cb bytes into buffer pbuf.
+ *
+ * @returns  Number of bytes actually read.
+ * @throws   CAtlException with STG_E_* code if an error occurs.
+ */
 ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
 {
 	ssize_t cbRead = libssh2_sftp_read(m_pHandle, pbuf, cb);
@@ -413,25 +368,147 @@ ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
 	return cbRead;
 }
 
+/**
+ * Copy cb bytes into IStream pstm.
+ *
+ * @returns  Number of bytes actaully read and written in out-parameters
+ *           pcbRead and pcbWritten.  These should contain the correct values
+ *           even if the call fails (throws and exception).
+ * @throws   CAtlException with STG_E_* code if an error occurs.
+ */
+void CSftpStream::_CopyTo(
+	IStream *pstm, ULONGLONG cb, 
+	ULONGLONG *pcbRead, ULONGLONG *pcbWritten) throw(...)
+{
+	// TODO: This buffer size must be limited, otherwise copying, say, a 4GB
+	// file would require 4GB of memory
+	void *pv = new byte[cb]; // Intermediate buffer
+
+	// Read data
+	ULONG cbRead = 0;
+	try
+	{
+		cbRead = _Read(static_cast<char *>(pv), cb);
+	}
+	catch(...)
+	{
+		UNREACHABLE;
+		delete [] pv;
+		throw;
+	}
+	if (pcbRead)
+		*pcbRead = cbRead;
+
+	// Write data
+	ULONG cbWritten = 0;
+	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
+	delete [] pv;
+	if (pcbWritten)
+		*pcbWritten = cbWritten;
+	ATLENSURE_SUCCEEDED(hr);
+}
+
+/**
+ * Move the seek pointer by nMove bytes (may be negative).
+ *
+ * @returns  New location of seek pointer.
+ * @throws   CAtlException with STG_E_* code if an error occurs.
+ */
+ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
+{
+	ULONGLONG uNewPosition = _CalculateNewFilePosition(nMove, dwOrigin);
+
+	libssh2_sftp_seek2(m_pHandle, uNewPosition);
+
+	return uNewPosition;
+}
+
+/**
+ * Create STATSTG structure for the stream.
+ *
+ * @throws  CAtlException with STG_E_* code if an error occurs.
+ */
+STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
+{	
+	// Prepare STATSTG
+	STATSTG statstg;
+	::ZeroMemory(&statstg, sizeof STATSTG);
+	statstg.type = STGTY_STREAM;
+		
+	// Get file size
+	LIBSSH2_SFTP_ATTRIBUTES attrs;
+	::ZeroMemory(&attrs, sizeof attrs);
+	attrs.flags = LIBSSH2_SFTP_ATTR_SIZE | LIBSSH2_SFTP_ATTR_ACMODTIME;
+
+	if (libssh2_sftp_fstat(m_pHandle, &attrs) != 0)
+	{
+		UNREACHABLE;
+		TRACE("libssh2_sftp_fstat() failed: %ws", _GetLastErrorMessage());
+		AtlThrow(STG_E_INVALIDFUNCTION);
+	}
+
+	statstg.cbSize.QuadPart = attrs.filesize;
+
+	// Get file dates
+	LONGLONG ll;
+
+	ll = Int32x32To64(attrs.mtime, 10000000) + 116444736000000000;
+	statstg.mtime.dwLowDateTime = static_cast<DWORD>(ll);
+	statstg.mtime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
+
+	ll = Int32x32To64(attrs.atime, 10000000) + 116444736000000000;
+	statstg.atime.dwLowDateTime = static_cast<DWORD>(ll);
+	statstg.atime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
+
+	// Provide filename if requested
+	if (bWantName)
+	{
+		// Convert filename to OLECHARs
+		CA2W szFilename(m_strFilename.c_str(), CP_UTF8);
+
+		// Allocate sufficient memory for OLECHAR version of filename
+		size_t cchData = ::wcslen(szFilename)+1;
+		size_t cbData = cchData * sizeof OLECHAR;
+		statstg.pwcsName = static_cast<LPOLESTR>(::CoTaskMemAlloc(cbData));
+		ATLENSURE_THROW(statstg.pwcsName, STG_E_INSUFFICIENTMEMORY);
+
+		// Copy converted filename to STATSTG
+		errno_t rc = ::wcscpy_s(statstg.pwcsName, cchData, szFilename);
+		if (rc != 0)
+		{
+			UNREACHABLE;
+			::CoTaskMemFree(statstg.pwcsName);
+			AtlThrow(STG_E_INSUFFICIENTMEMORY);
+		}
+	}
+
+	return statstg;
+}
+
+/**
+ * Calculate new position of the seek pointer.
+ *
+ * @throws  CAtlException with STG_E_* code if an error occurs.
+ */
 ULONGLONG CSftpStream::_CalculateNewFilePosition(
-	LARGE_INTEGER dlibMove, DWORD dwOrigin) throw(...)
+	LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
 	LONGLONG nNewPosition = 0;
 
 	switch(dwOrigin)
 	{
 	case STREAM_SEEK_SET: // Relative to beginning of file
-		nNewPosition = dlibMove.QuadPart;
+		nNewPosition = nMove;
 		break;
 	case STREAM_SEEK_CUR: // Relative to current position
 	{
 		size_t nCurrentPos = libssh2_sftp_tell(m_pHandle);
-		nNewPosition = nCurrentPos + dlibMove.QuadPart;
+		nNewPosition = nCurrentPos + nMove;
 		break;
 	}
 	case STREAM_SEEK_END: // Relative to end (MUST ACCESS SERVER)
 	{
-		LONGLONG nOffset = dlibMove.QuadPart;
+		LONGLONG nOffset = nMove;
 
 		// Get size of file from server
 		LIBSSH2_SFTP_ATTRIBUTES attrs;
