@@ -114,7 +114,7 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 		ULONG cbRead = 0;
 		if (!pcbRead) // Either return count directly or into local temp
 			pcbRead = &cbRead;
-		_Read(static_cast<char *>(pv), cb, pcbRead);
+		_Read(static_cast<char *>(pv), cb, *pcbRead);
 	}
 	catchCom()
 
@@ -336,35 +336,25 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  * less than THRESHOLD to avoid libssh2_sftp_read() failure with buffers
  * greater than 39992 bytes.
  *
- * @returns  Number of bytes actually read in out-parameter pcbRead.  This
+ * @returns  Number of bytes actually read in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
  * @throws   CAtlException with STG_E_* code if an error occurs.
  */
-void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG *pcbRead) throw(...)
+void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG& cbRead) throw(...)
 {
-	ATLASSERT(pcbRead);
-	*pcbRead = 0;
+	cbRead = 0;
 	char *p = pbuf;
 
-	try 
-	{
-		ULONG cbChunk = 0;
-		ULONG cbRead = 0;
-		do {
-			cbChunk = min(static_cast<ULONG>(cb + pbuf - p), THRESHOLD);
-			cbRead = _ReadOne(p, cbChunk);
-			p += cbRead;
-		} while (cbRead == cbChunk /* not EOF */ &&
-			     p - pbuf < cb /* wants more */);
-	}
-	catch(...)
-	{
-		*pcbRead = static_cast<ULONG>(p - pbuf);
-		throw;
-	}
-
-	*pcbRead = static_cast<ULONG>(p - pbuf);
+	ULONG cbChunk = 0;
+	ULONG cbReadOne = 0;
+	do {
+		cbChunk = min(cb - cbRead, THRESHOLD);
+		cbReadOne = _ReadOne(p, cbChunk);
+		p += cbReadOne;
+		cbRead += cbReadOne;
+	} 
+	while (cbReadOne == cbChunk && cbRead < cb); // not EOF && wants more
 }
 
 /**
@@ -458,7 +448,7 @@ void CSftpStream::_CopyOne(
 		pcbRead = &cbRead;
 	try
 	{
-		_Read(static_cast<char *>(pv), cb, pcbRead);
+		_Read(static_cast<char *>(pv), cb, *pcbRead);
 	}
 	catch(...)
 	{

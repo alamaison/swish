@@ -198,7 +198,7 @@ private:
 		__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
 	void _Read(
 		__out_bcount_part(cb, pcbRead) char *pbuf, __in ULONG cb, 
-		__out ULONG *pcbRead) throw(...);
+		__out ULONG& cbRead) throw(...);
 	ULONG _ReadOne(__out_bcount(cb) char *pbuf, ULONG cb) throw(...);
 	void _CopyTo(
 		__in IStream *pstm, __in ULONGLONG cb, 
