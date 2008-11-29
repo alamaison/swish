@@ -99,7 +99,8 @@ HRESULT CSftpStream::Initialize(CSession& session, PCSTR pszFilePath)
  * @param[out] pv       Buffer to read the bytes into.
  * @param[in]  cb       Number of bytes to read.
  * @param[out] pcbRead  Location in which to return the number of bytes that were
- *                      actually read.  Optional.
+ *                      actually read.  This should be correct even if the call 
+ *                      results in a failure.  Optional.
  *
  * @return S_OK if successful or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pv is NULL.
@@ -110,9 +111,10 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 
 	try
 	{
-		ULONG cbRead = _Read(static_cast<char *>(pv), cb);
-		if (pcbRead)
-			*pcbRead = cbRead;
+		ULONG cbRead = 0;
+		if (!pcbRead) // Either return count directly or into local temp
+			pcbRead = &cbRead;
+		_Read(static_cast<char *>(pv), cb, pcbRead);
 	}
 	catchCom()
 
@@ -127,7 +129,8 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
  * @param[in]  pv          Buffer from which to copy the bytes.
  * @param[in]  cb          Number of bytes to write.
  * @param[out] pcbWritten  Location in which to return the number of bytes
- *                         actually written to the file.
+ *                         actually written to the file.  This should be correct 
+ *                         even if the call results in a failure.  Optional.
  *
  * @return S_OK if successful or an STG_E_* error code if an error occurs.
  *
@@ -152,9 +155,11 @@ STDMETHODIMP CSftpStream::Write(
  * @param[in] cb           Number of bytes of data to copy.
  * @param[out] pcbRead     Number of bytes that were actually read from this
  *                         stream.  This may differ from cb if the end-of-file
- *                         was reached.  Optional.
+ *                         was reached.  This should be correct even if the 
+ *                         call results in a failure.  Optional.
  * @param[out] pcbWritten  Number of byted that were actually written to the
- *                         target stream.  Optional.
+ *                         target stream.  This should be correct even if the 
+ *                         call results in a failure.  Optional.
  *
  * @return S_OK if successful or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pstm is NULL.
@@ -168,7 +173,8 @@ STDMETHODIMP CSftpStream::CopyTo(
 	try
 	{
 		_CopyTo(pstm, cb.QuadPart,
-			&(pcbRead->QuadPart), &(pcbWritten->QuadPart));
+			(pcbRead) ? &(pcbRead->QuadPart) : NULL,
+			(pcbWritten) ? &(pcbWritten->QuadPart) : NULL);
 	}
 	catchCom()
 
@@ -330,22 +336,35 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  * less than THRESHOLD to avoid libssh2_sftp_read() failure with buffers
  * greater than 39992 bytes.
  *
- * @returns  Number of bytes actually read.
+ * @returns  Number of bytes actually read in out-parameter pcbRead.  This
+ *           should contain the correct value even if the call fails (throws 
+ *           an exception).
  * @throws   CAtlException with STG_E_* code if an error occurs.
  */
-ULONG CSftpStream::_Read(char *pbuf, ULONG cb) throw(...)
+void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG *pcbRead) throw(...)
 {
+	ATLASSERT(pcbRead);
+	*pcbRead = 0;
 	char *p = pbuf;
 
-	ULONG cbChunk = 0;
-	ULONG cbRead = 0;
-	do {
-		cbChunk = min(static_cast<ULONG>(cb + pbuf - p), THRESHOLD);
-		cbRead = _ReadOne(p, cbChunk);
-		p += cbRead;
-	} while (cbRead == cbChunk /* not EOF */ && p - pbuf < cb /* wants more */);
+	try 
+	{
+		ULONG cbChunk = 0;
+		ULONG cbRead = 0;
+		do {
+			cbChunk = min(static_cast<ULONG>(cb + pbuf - p), THRESHOLD);
+			cbRead = _ReadOne(p, cbChunk);
+			p += cbRead;
+		} while (cbRead == cbChunk /* not EOF */ &&
+			     p - pbuf < cb /* wants more */);
+	}
+	catch(...)
+	{
+		*pcbRead = static_cast<ULONG>(p - pbuf);
+		throw;
+	}
 
-	return static_cast<ULONG>(p - pbuf);
+	*pcbRead = static_cast<ULONG>(p - pbuf);
 }
 
 /**
@@ -373,7 +392,7 @@ ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
  *
  * @returns  Number of bytes actaully read and written in out-parameters
  *           pcbRead and pcbWritten.  These should contain the correct values
- *           even if the call fails (throws and exception).
+ *           even if the call fails (throws an exception).
  * @throws   CAtlException with STG_E_* code if an error occurs.
  */
 void CSftpStream::_CopyTo(
@@ -385,10 +404,12 @@ void CSftpStream::_CopyTo(
 	void *pv = new byte[cb]; // Intermediate buffer
 
 	// Read data
-	ULONG cbRead = 0;
+	ULONGLONG cbRead = 0;
+	if (!pcbRead) // Either return count directly or into local variable
+		pcbRead = &cbRead;
 	try
 	{
-		cbRead = _Read(static_cast<char *>(pv), cb);
+		_Read(static_cast<char *>(pv), cb, (ULONG *)pcbRead);
 	}
 	catch(...)
 	{
@@ -396,12 +417,10 @@ void CSftpStream::_CopyTo(
 		delete [] pv;
 		throw;
 	}
-	if (pcbRead)
-		*pcbRead = cbRead;
 
 	// Write data
 	ULONG cbWritten = 0;
-	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
+	HRESULT hr = pstm->Write(pv, *pcbRead, &cbWritten);
 	delete [] pv;
 	if (pcbWritten)
 		*pcbWritten = cbWritten;
