@@ -203,6 +203,9 @@ private:
 	void _CopyTo(
 		__in IStream *pstm, __in ULONGLONG cb, 
 		__out ULONGLONG *pcbRead, __out ULONGLONG *pcbWritten) throw(...);
+	void _CopyOne(
+		__in IStream *pstm, __in ULONG cb,
+		__out ULONG *pcbRead, __out ULONG *pcbWritten) throw(...);
 	ULONGLONG _Seek(__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
 	STATSTG _Stat(__in bool bWantName) throw(...);
 

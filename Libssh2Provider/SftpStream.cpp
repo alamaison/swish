@@ -387,6 +387,8 @@ ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
 	return cbRead;
 }
 
+#define COPY_CHUNK ULONG_MAX ///< Maximum size of any single copy operation.
+
 /**
  * Copy cb bytes into IStream pstm.
  *
@@ -399,17 +401,64 @@ void CSftpStream::_CopyTo(
 	IStream *pstm, ULONGLONG cb, 
 	ULONGLONG *pcbRead, ULONGLONG *pcbWritten) throw(...)
 {
+	// Either return counts directly or redirect into local variable
+	ULONGLONG cbRead, cbWritten;
+	if (!pcbRead)
+		pcbRead = &cbRead;
+	if (!pcbWritten)
+		pcbWritten = &cbWritten;
+	*pcbRead = *pcbWritten = 0;
+
+	// Perform copy operation in chunks COPY_CHUNK bytes big
+	do {
+		ULONG cbReadOne = 0;
+		ULONG cbWrittenOne = 0;
+		ULONG cbChunk = static_cast<ULONG>(min(cb - *pcbRead, COPY_CHUNK));
+		try
+		{
+			_CopyOne(pstm, cbChunk, &cbReadOne, &cbWrittenOne);
+			*pcbRead += cbReadOne;
+			*pcbWritten += cbWrittenOne;
+		}
+		catch(...)
+		{
+			// The counts must be updated even in the failure case
+			*pcbRead += cbReadOne;
+			*pcbWritten += cbWrittenOne;
+			throw;
+		}
+	} while (*pcbRead < cb);
+}
+
+/**
+ * Copy one buffer's-worth of bytes into IStream pstm.
+ *
+ * The IStream Write() method can only operate on a ULONG quantity
+ * of bytes but CopyTo() can specify a ULONGLONG quantity.  _CopyTo() must call
+ * this function repeatedly with a buffer smaller than COPY_CHUNK.
+ *
+ * @returns  Number of bytes actaully read and written in out-parameters
+ *           pcbRead and pcbWritten.  These should contain the correct values
+ *           even if the call fails (throws an exception).
+ * @throws   CAtlException with STG_E_* code if an error occurs.
+ *
+ * @todo  Performance could be improved by continuing the _Read() operation
+ *        in the background while writing the buffer to the target stream.
+ */
+void CSftpStream::_CopyOne(
+	IStream *pstm, ULONG cb, ULONG *pcbRead, ULONG *pcbWritten) throw(...)
+{
 	// TODO: This buffer size must be limited, otherwise copying, say, a 4GB
-	// file would require 4GB of memory
+	// file could require 4GB of memory
 	void *pv = new byte[cb]; // Intermediate buffer
 
 	// Read data
-	ULONGLONG cbRead = 0;
+	ULONG cbRead = 0;
 	if (!pcbRead) // Either return count directly or into local variable
 		pcbRead = &cbRead;
 	try
 	{
-		_Read(static_cast<char *>(pv), cb, (ULONG *)pcbRead);
+		_Read(static_cast<char *>(pv), cb, pcbRead);
 	}
 	catch(...)
 	{
@@ -420,10 +469,10 @@ void CSftpStream::_CopyTo(
 
 	// Write data
 	ULONG cbWritten = 0;
-	HRESULT hr = pstm->Write(pv, *pcbRead, &cbWritten);
+	if (!pcbWritten) // Either return count directly or into local variable
+		pcbWritten = &cbWritten;
+	HRESULT hr = pstm->Write(pv, *pcbRead, pcbWritten);
 	delete [] pv;
-	if (pcbWritten)
-		*pcbWritten = cbWritten;
 	ATLENSURE_SUCCEEDED(hr);
 }
 
