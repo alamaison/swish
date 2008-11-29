@@ -168,10 +168,8 @@ public:
 private:
 	ULONGLONG _CalculateNewFilePosition(
 		__in LARGE_INTEGER dlibMove, __in DWORD dwOrigin) throw(...);
-	HRESULT _Read(
-		__out_bcount_part(cb, pcbRead) char *pbuf, ULONG cb, ULONG *pcbRead);
-	HRESULT _ReadOne(
-		__out_bcount_part(cb, pcbRead) char *pbuf, ULONG cb, ULONG *pcbRead);
+	ULONG _Read(__out_bcount(cb) char *pbuf, ULONG cb) throw(...);
+	ULONG _ReadOne(__out_bcount(cb) char *pbuf, ULONG cb) throw(...);
 
 	/**
 	 * Retrieves a string description of the last error reported by libssh2.

@@ -47,11 +47,17 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 	ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
 	ATLENSURE_RETURN_HR(pcbRead, STG_E_INVALIDPOINTER);
 
-	return _Read(static_cast<char *>(pv), cb, pcbRead);
+	try
+	{
+		*pcbRead = _Read(static_cast<char *>(pv), cb);
+	}
+	catchCom()
+
+	return S_OK;
 }
 
 #define THRESHOLD 39990
-HRESULT CSftpStream::_Read(char *pbuf, ULONG cb, ULONG *pcbRead)
+ULONG CSftpStream::_Read(char *pbuf, ULONG cb) throw(...)
 {
 	char *p = pbuf;
 
@@ -60,19 +66,14 @@ HRESULT CSftpStream::_Read(char *pbuf, ULONG cb, ULONG *pcbRead)
 	ULONG cbRead = 0;
 	do {
 		cbChunk = min(static_cast<ULONG>(cb + pbuf - p), THRESHOLD);
-		hr = _ReadOne(p, cbChunk, &cbRead);
-		if (FAILED(hr))
-			return hr;
-
+		cbRead = _ReadOne(p, cbChunk);
 		p += cbRead;
 	} while (cbRead == cbChunk /* not EOF */ && p - pbuf < cb /* wants more */);
 
-	*pcbRead = static_cast<ULONG>(p - pbuf);
-
-	return S_OK;
+	return static_cast<ULONG>(p - pbuf);
 }
 
-HRESULT CSftpStream::_ReadOne(char *pbuf, ULONG cb, ULONG *pcbRead)
+ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
 {
 	ssize_t cbRead = libssh2_sftp_read(m_pHandle, pbuf, cb);
 
@@ -80,12 +81,10 @@ HRESULT CSftpStream::_ReadOne(char *pbuf, ULONG cb, ULONG *pcbRead)
 	{
 		UNREACHABLE;
 		TRACE("libssh2_sftp_read() failed: %ws", _GetLastErrorMessage());
-		return STG_E_INVALIDFUNCTION;
+		AtlThrow(STG_E_INVALIDFUNCTION);
 	}
 
-	*pcbRead = cbRead;
-
-	return S_OK;
+	return cbRead;
 }
 
 STDMETHODIMP CSftpStream::Write( 
@@ -173,19 +172,22 @@ STDMETHODIMP CSftpStream::CopyTo(
 
 	// Read data
 	ULONG cbRead = 0;
-	HRESULT hr = _Read(static_cast<char *>(pv), cb.QuadPart, &cbRead);
-	if (FAILED(hr))
+	try
+	{
+		cbRead = _Read(static_cast<char *>(pv), cb.QuadPart);
+	}
+	catch(...)
 	{
 		UNREACHABLE;
 		delete [] pv;
-		return hr;
+		throw;
 	}
 	if (pcbRead)
 		pcbRead->QuadPart = cbRead;
 
 	// Write data
 	ULONG cbWritten = 0;
-	hr = pstm->Write(pv, cbRead, &cbWritten);
+	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
 	delete [] pv;
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 	if (pcbRead)
