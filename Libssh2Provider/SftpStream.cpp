@@ -133,7 +133,8 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
  *
  * @warning Not yet implemented.
  */
-STDMETHODIMP CSftpStream::Write(const void *pv, ULONG cb, ULONG *pcbWritten)
+STDMETHODIMP CSftpStream::Write(
+	const void * /*pv*/, ULONG /*cb*/, ULONG * /*pcbWritten*/)
 {
 	return E_NOTIMPL;
 }
@@ -188,8 +189,8 @@ STDMETHODIMP CSftpStream::CopyTo(
 	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
 	delete [] pv;
 	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-	if (pcbRead)
-		pcbRead->QuadPart = cbWritten;
+	if (pcbWritten)
+		pcbWritten->QuadPart = cbWritten;
 
 	return hr;
 }
@@ -330,7 +331,7 @@ STDMETHODIMP CSftpStream::SetSize(ULARGE_INTEGER /*libNewSize*/)
  *
  * @warning Not yet implemented.
  */
-STDMETHODIMP CSftpStream::Clone(IStream **/*ppstm*/)
+STDMETHODIMP CSftpStream::Clone(IStream ** /*ppstm*/)
 {
 	return E_NOTIMPL;
 }
