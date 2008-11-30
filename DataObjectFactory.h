@@ -19,11 +19,17 @@
 
 #pragma once
 
+#include "Connection.h"
+
 class CDataObjectFactory
 {
 public:
 	static CComPtr<IDataObject> CreateDataObjectFromPIDLs(
-		__in_opt HWND hwndOwner, __in PIDLIST_ABSOLUTE pidlCommonParent,
+		__in CConnection& conn, __in PIDLIST_ABSOLUTE pidlCommonParent,
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl)
 		throw(...);
+
+private:
+	static CString _ExtractPathFromPIDL( __in PCIDLIST_ABSOLUTE pidl );
+	static PCUIDLIST_RELATIVE _FindHostPidl( __in PCIDLIST_ABSOLUTE pidl );
 };

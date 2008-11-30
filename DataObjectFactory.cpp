@@ -20,13 +20,24 @@
 #include "StdAfx.h"
 #include "DataObjectFactory.h"
 
+#include "HostPidl.h"
 #include "RemotePidl.h"
 #include "ShellDataObject.h"
 #include "DummyStream.h"
 
+inline DWORD LODWORD(ULONGLONG qwSrc)
+{
+	return static_cast<DWORD>(qwSrc & 0xFFFFFFFF);
+}
+
+inline DWORD HIDWORD(ULONGLONG qwSrc)
+{
+	return static_cast<DWORD>((qwSrc >> 32) & 0xFFFFFFFF);
+}
+
 /* static */ CComPtr<IDataObject> CDataObjectFactory::CreateDataObjectFromPIDLs(
-	HWND /*hwndOwner*/, PIDLIST_ABSOLUTE pidlCommonParent,
-	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl	
+	CConnection& conn, PIDLIST_ABSOLUTE pidlCommonParent,
+	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl
 ) throw(...)
 {
 	ATLTRACE(__FUNCTION__" called\n");
@@ -47,8 +58,8 @@
 
 		fd.dwFlags = FD_WRITESTIME | FD_FILESIZE | FD_ATTRIBUTES;
 
-		fd.nFileSizeLow = LOWORD(pidl.GetFileSize());
-		fd.nFileSizeHigh = HIWORD(pidl.GetFileSize());
+		fd.nFileSizeLow = LODWORD(pidl.GetFileSize());
+		fd.nFileSizeHigh = HIDWORD(pidl.GetFileSize());
 
 		SYSTEMTIME st;
 		ATLVERIFY(pidl.GetDateModified().GetAsSystemTime(st));
@@ -73,16 +84,11 @@
 		::ZeroMemory(&stg, sizeof stg);
 		stg.tymed = TYMED_ISTREAM;
 
-		CComObject<CDummyStream> *pDummy;
-		hr = CComObject<CDummyStream>::CreateInstance(&pDummy);
-		if (SUCCEEDED(hr))
-		{
-			pDummy->AddRef();
-			hr = pDummy->QueryInterface(&stg.pstm);
-			ATLASSERT(SUCCEEDED(hr));
-			pDummy->Release();
-		}
-		
+		CAbsolutePidl pidl;
+		pidl.Attach(::ILCombine(pidlCommonParent, aPidl[i]));
+		CComBSTR bstrPath(_ExtractPathFromPIDL(pidl));
+
+		hr = conn.spProvider->GetFile(bstrPath, &stg.pstm);
 		vecStgMedia[i] = stg;
 		// TODO: this leaks memory if we fail after this point
 	}
@@ -123,3 +129,32 @@
 
 	return spDo;
 }
+
+/**
+ * Retrieve the full path of the file on the remote system from the given PIDL.
+ */
+/* static */ CString CDataObjectFactory::_ExtractPathFromPIDL(
+	PCIDLIST_ABSOLUTE pidl )
+{
+	CString strPath;
+
+	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
+	// (by root we mean the path specified by the user when they added the
+	// connection to Explorer, rather than the root of the server's filesystem)
+	CHostRelativePidl pidlAbsolute(pidl);
+	CHostRelativePidl pidlHost(pidlAbsolute.FindHostPidl());
+	ATLASSERT(pidlHost);
+	strPath = pidlHost.GetPath();
+
+	// Walk over REMOTEPIDLs and append each filename to form the path
+	CRemoteRelativePidl pidlRemote(pidlHost.GetNext());
+	do {
+		strPath += L"/";
+		strPath += pidlRemote.GetFilename();
+	} while (pidlRemote = pidlRemote.GetNext());
+
+	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+
+	return strPath;
+}
+

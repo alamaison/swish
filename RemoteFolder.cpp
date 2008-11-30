@@ -289,7 +289,6 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	__reserved LPUINT puReserved, __out void** ppvReturn )
 {
 	ATLTRACE("CRemoteFolder::GetUIObjectOf called\n");
-	(void)hwndOwner; // No user input required
 	(void)puReserved;
 
 	*ppvReturn = NULL;
@@ -379,9 +378,12 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 
 		try
 		{
+			// Create connection object for this folder with hwndOwner for UI
+			CConnection conn = _CreateConnectionForFolder(hwndOwner);
+
 			CComPtr<IDataObject> spDo(
 				CDataObjectFactory::CreateDataObjectFromPIDLs(
-					hwndOwner, m_pidl, cPidl, aPidl));
+					conn, m_pidl, cPidl, aPidl));
 			ATLASSERT(spDo);
 			*(IDataObject **)ppvReturn = spDo.Detach();
 		}
