@@ -170,11 +170,16 @@ STDMETHODIMP CSftpStream::CopyTo(
 {
 	ATLENSURE_RETURN_HR(pstm, STG_E_INVALIDPOINTER);
 
+	// If the count-output variables are not provided, redirect them to local
+	// temporaries so that the remainder of the algorithm doesn't have to
+	// repeatedly check their existence
+	ULONGLONG cbRead, cbWritten;
+
 	try
 	{
 		_CopyTo(pstm, cb.QuadPart,
-			(pcbRead) ? &(pcbRead->QuadPart) : NULL,
-			(pcbWritten) ? &(pcbWritten->QuadPart) : NULL);
+			(pcbRead) ? pcbRead->QuadPart : cbRead,
+			(pcbWritten) ? pcbWritten->QuadPart : cbWritten);
 	}
 	catchCom()
 
@@ -383,41 +388,35 @@ ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
  * Copy cb bytes into IStream pstm.
  *
  * @returns  Number of bytes actaully read and written in out-parameters
- *           pcbRead and pcbWritten.  These should contain the correct values
+ *           cbRead and cbWritten.  These should be set correctly
  *           even if the call fails (throws an exception).
  * @throws   CAtlException with STG_E_* code if an error occurs.
  */
 void CSftpStream::_CopyTo(
 	IStream *pstm, ULONGLONG cb, 
-	ULONGLONG *pcbRead, ULONGLONG *pcbWritten) throw(...)
+	ULONGLONG& cbRead, ULONGLONG& cbWritten) throw(...)
 {
-	// Either return counts directly or redirect into local variable
-	ULONGLONG cbRead, cbWritten;
-	if (!pcbRead)
-		pcbRead = &cbRead;
-	if (!pcbWritten)
-		pcbWritten = &cbWritten;
-	*pcbRead = *pcbWritten = 0;
+	cbRead = cbWritten = 0;
 
 	// Perform copy operation in chunks COPY_CHUNK bytes big
 	do {
-		ULONG cbReadOne = 0;
-		ULONG cbWrittenOne = 0;
-		ULONG cbChunk = static_cast<ULONG>(min(cb - *pcbRead, COPY_CHUNK));
+		ULONG cbReadOne;
+		ULONG cbWrittenOne;
+		ULONG cbChunk = static_cast<ULONG>(min(cb - cbRead, COPY_CHUNK));
 		try
 		{
-			_CopyOne(pstm, cbChunk, &cbReadOne, &cbWrittenOne);
-			*pcbRead += cbReadOne;
-			*pcbWritten += cbWrittenOne;
+			_CopyOne(pstm, cbChunk, cbReadOne, cbWrittenOne);
+			cbRead += cbReadOne;
+			cbWritten += cbWrittenOne;
 		}
 		catch(...)
 		{
 			// The counts must be updated even in the failure case
-			*pcbRead += cbReadOne;
-			*pcbWritten += cbWrittenOne;
+			cbRead += cbReadOne;
+			cbWritten += cbWrittenOne;
 			throw;
 		}
-	} while (*pcbRead < cb);
+	} while (cbRead < cb);
 }
 
 /**
@@ -428,7 +427,7 @@ void CSftpStream::_CopyTo(
  * this function repeatedly with a buffer smaller than COPY_CHUNK.
  *
  * @returns  Number of bytes actaully read and written in out-parameters
- *           pcbRead and pcbWritten.  These should contain the correct values
+ *           cbRead and cbWritten.  These should be set correctly 
  *           even if the call fails (throws an exception).
  * @throws   CAtlException with STG_E_* code if an error occurs.
  *
@@ -436,19 +435,16 @@ void CSftpStream::_CopyTo(
  *        in the background while writing the buffer to the target stream.
  */
 void CSftpStream::_CopyOne(
-	IStream *pstm, ULONG cb, ULONG *pcbRead, ULONG *pcbWritten) throw(...)
+	IStream *pstm, ULONG cb, ULONG& cbRead, ULONG& cbWritten) throw(...)
 {
 	// TODO: This buffer size must be limited, otherwise copying, say, a 4GB
 	// file could require 4GB of memory
 	void *pv = new byte[cb]; // Intermediate buffer
 
 	// Read data
-	ULONG cbRead = 0;
-	if (!pcbRead) // Either return count directly or into local variable
-		pcbRead = &cbRead;
 	try
 	{
-		_Read(static_cast<char *>(pv), cb, *pcbRead);
+		_Read(static_cast<char *>(pv), cb, cbRead);
 	}
 	catch(...)
 	{
@@ -458,10 +454,8 @@ void CSftpStream::_CopyOne(
 	}
 
 	// Write data
-	ULONG cbWritten = 0;
-	if (!pcbWritten) // Either return count directly or into local variable
-		pcbWritten = &cbWritten;
-	HRESULT hr = pstm->Write(pv, *pcbRead, pcbWritten);
+	cbWritten = 0; // Could remove this if we trust the stream to set it properly
+	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
 	delete [] pv;
 	ATLENSURE_SUCCEEDED(hr);
 }

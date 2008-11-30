@@ -202,10 +202,10 @@ private:
 	ULONG _ReadOne(__out_bcount(cb) char *pbuf, ULONG cb) throw(...);
 	void _CopyTo(
 		__in IStream *pstm, __in ULONGLONG cb, 
-		__out ULONGLONG *pcbRead, __out ULONGLONG *pcbWritten) throw(...);
+		__out ULONGLONG& cbRead, __out ULONGLONG& cbWritten) throw(...);
 	void _CopyOne(
 		__in IStream *pstm, __in ULONG cb,
-		__out ULONG *pcbRead, __out ULONG *pcbWritten) throw(...);
+		__out ULONG& cbRead, __out ULONG& cbWritten) throw(...);
 	ULONGLONG _Seek(__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
 	STATSTG _Stat(__in bool bWantName) throw(...);
 
