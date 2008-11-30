@@ -20,7 +20,6 @@
 #pragma once
 
 #include "Pidl.h"
-#include "RemotePidlManager.h"
 
 #include <ATLComTime.h>
 
