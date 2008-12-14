@@ -55,6 +55,8 @@ Requirements to run:
 Requirements to build:
     Visual C++ 2005 (Express edition is unlikely to work as the code uses
         ATL attributes which, I believe, require ATL 7).
+    A recent version of the Windows SDK 
+        (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
     WTL 8 which can be obtained from Microsoft of through SourceForge
         Microsoft Permissive Licence: http://www.microsoft.com/downloads/
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
@@ -85,7 +87,17 @@ Requirements to build:
       wget "http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download"
       unzip -d openssl openssl-0.9.8g-swish.zip
       rm openssl-0.9.8g-swish.zip
-      
+    
+    and, if you do not have WTL installed elsewhere, run the following in the
+    top-level Swish directory:
+    
+      mkdir wtl
+      cd wtl
+      wget "http://downloads.sourceforge.net/wtl/WTL80_7161_Final.zip?download"
+      unzip WTL80_7161_Final.zip
+      rm WTL80_7161_Final.zip
+      cd ..
+    
 Requirements for testing:
     CppUnit (works with v1.12.0, may work with other versions) must be present
     on the local machine.  Many tests also require a remote host available to
