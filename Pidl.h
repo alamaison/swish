@@ -138,6 +138,11 @@ public:
 
 		return pidlOut;
 	}
+
+	bool IsEmpty() const
+	{
+		return ((m_pidl == NULL) || (m_pidl->mkid.cb == 0));
+	}
 };
 
 typedef CPidl<ITEMID_CHILD> CChildPidl;
