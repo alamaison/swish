@@ -49,8 +49,8 @@
 #define _WIN32_WINDOWS 0x0400 // Change this to the appropriate value to target Windows Me or later.
 #endif
 
-#ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0400	// Change this to the appropriate value to target other versions of IE.
+#ifndef _WIN32_IE			// Allow use of features specific to IE 5.0 or later.
+#define _WIN32_IE 0x0500	// Change this to the appropriate value to target other versions of IE.
 #endif
 
 // This is here only to tell VC7 Class Wizard this is an ATL project
@@ -67,8 +67,8 @@ CExeModule
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
 #ifdef _DEBUG
-#define _ATL_DEBUG_QI
-#define _ATL_DEBUG_INTERFACES
+//#define _ATL_DEBUG_QI
+//#define _ATL_DEBUG_INTERFACES
 #endif
 
 #include <atlbase.h>          // base ATL classes
@@ -105,6 +105,8 @@ using namespace ATL;
 #define NOTIFY_HANDLER_PARAMS int, LPNMHDR, BOOL&
 
 /* Debug macros ************************************************************* */
+#define FUNCTION_TRACE ATLTRACE(__FUNCTION__" called\n");
+#define METHOD_TRACE ATLTRACE(__FUNCTION__" called (this=%p)\n", this);
 
 #define VERIFY(f)          ATLVERIFY(f)
 #define ASSERT(f)          ATLASSERT(f)

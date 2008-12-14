@@ -1,0 +1,68 @@
+HKCR
+{
+	Swish.DummyFolder.1 = s 'DummyFolder Class'
+	{
+		CLSID = s '{708F09A0-FED0-46E8-9C56-55B7AA6AD1B2}'
+	}
+	Swish.DummyFolder = s 'DummyFolder Class'
+	{
+		CLSID = s '{708F09A0-FED0-46E8-9C56-55B7AA6AD1B2}'
+		CurVer = s 'Swish.DummyFolder.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {708F09A0-FED0-46E8-9C56-55B7AA6AD1B2} = s 'DummyFolder Class'
+		{
+			ProgID = s 'Swish.DummyFolder.1'
+			VersionIndependentProgID = s 'Swish.DummyFolder'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			val AppID = s '%APPID%'
+			TypeLib = s '%APPID%'
+
+			ShellFolder
+			{
+				val Attributes = d '3087007744'
+			}
+		}
+	}
+}
+
+HKLM
+{
+	NoRemove Software
+	{
+		NoRemove Microsoft
+		{
+			NoRemove Windows
+			{
+				NoRemove CurrentVersion
+				{
+                    NoRemove Explorer
+                    {
+                        NoRemove MyComputer
+                        {
+                            NoRemove NameSpace
+                            {
+                                ForceRemove {[!uuid]}
+                                {
+                                    val 'Removal Message' = s 'Please don''t remove Swish this way - uninstall it.'
+                                }
+                            }
+                        }
+                    }
+                    
+					NoRemove 'Shell Extensions'
+					{
+						NoRemove Approved
+						{
+							val {708F09A0-FED0-46E8-9C56-55B7AA6AD1B2} = s 'Swish DummyFolder'
+						}
+					}
+				}
+			}
+		}
+	}
+}
