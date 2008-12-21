@@ -105,18 +105,21 @@ using namespace ATL;
 #define NOTIFY_HANDLER_PARAMS int, LPNMHDR, BOOL&
 
 /* Debug macros ************************************************************* */
-#define FUNCTION_TRACE ATLTRACE(__FUNCTION__" called\n");
-#define METHOD_TRACE ATLTRACE(__FUNCTION__" called (this=%p)\n", this);
+#define TRACE(msg, ...) ATLTRACE(msg ## "\n", __VA_ARGS__)
+#define FUNCTION_TRACE TRACE(__FUNCTION__" called");
+#define METHOD_TRACE TRACE(__FUNCTION__" called (this=%p)", this);
 
 #define VERIFY(f)          ATLVERIFY(f)
 #define ASSERT(f)          ATLASSERT(f)
 #ifdef _DEBUG
-#define REPORT(expr)  { \
+#define REPORT(expr) \
+do { \
     LPVOID lpMsgBuf; \
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
 		NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
         (LPTSTR) &lpMsgBuf, 0, NULL ); \
-	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); }
+	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); \
+} while(0)
 #else
 #define REPORT(expr) (expr)
 #endif
