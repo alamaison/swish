@@ -20,6 +20,8 @@
 #pragma once
 #include "shobjidl.h"
 
+#include "Pidl.h"
+
 #ifndef __IPersistIDList_INTERFACE_DEFINED__
 #define __IPersistIDList_INTERFACE_DEFINED__
 
@@ -77,11 +79,25 @@ inline HRESULT _BindToParentFolderOfPIDL(
 }
 
 class CFolder :
+	public CComObjectRoot,
 	public IPersistFolder3,
 	public IShellFolder2,
-	public IPersistIDList
+	public IPersistIDList,
+	public IShellDetails
 {
 public:
+
+	BEGIN_COM_MAP(CFolder)
+		COM_INTERFACE_ENTRY(IPersistFolder3)
+		COM_INTERFACE_ENTRY(IShellFolder2)
+		COM_INTERFACE_ENTRY(IShellDetails)
+		COM_INTERFACE_ENTRY(IPersistIDList)
+		COM_INTERFACE_ENTRY2(IPersist,        IPersistFolder3)
+		COM_INTERFACE_ENTRY2(IPersistFolder,  IPersistFolder3)
+		COM_INTERFACE_ENTRY2(IPersistFolder2, IPersistFolder3)
+		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)
+	END_COM_MAP()
+
 	CFolder();
 	virtual ~CFolder();
 
@@ -127,6 +143,20 @@ public: // IShellFolder methods
 		__in REFIID riid,
 		__deref_out_opt void **ppv);
 
+	IFACEMETHODIMP CompareIDs( 
+		LPARAM lParam,
+		__in PCUIDLIST_RELATIVE pidl1,
+		__in PCUIDLIST_RELATIVE pidl2);
+
+	IFACEMETHODIMP CreateViewObject( 
+		__in_opt HWND hwndOwner,
+		__in REFIID riid,
+		__deref_out_opt void **ppv);
+
+public: // IShellDetails methods
+
+	IFACEMETHODIMP ColumnClick(UINT iColumn);
+
 public: // IShellFolder2 methods
 	
 	IFACEMETHODIMP GetDefaultSearchGUID(__out GUID *pguid);
@@ -134,10 +164,25 @@ public: // IShellFolder2 methods
 	IFACEMETHODIMP EnumSearches(__deref_out_opt IEnumExtraSearch **ppenum);
 
 protected:
-	PIDLIST_ABSOLUTE m_pidlRoot;
 
-	virtual void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...) PURE;
-	virtual CLSID GetCLSID() const PURE;
-	virtual IShellFolder* CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot) const
-		throw(...) PURE;
+	CAbsolutePidl CloneRootPIDL() const;
+	PIDLIST_ABSOLUTE GetRootPIDL() const;
+
+	virtual void ValidatePidl(__in PCUIDLIST_RELATIVE pidl)
+		const throw(...) PURE;
+	virtual CLSID GetCLSID()
+		const PURE;
+	virtual CComPtr<IShellFolder> CreateSubfolder(
+		__in PCIDLIST_ABSOLUTE pidlRoot)
+		const throw(...) PURE;
+	virtual int ComparePIDLs(
+		__in PCUIDLIST_RELATIVE pidl1, __in PCUIDLIST_RELATIVE pidl2,
+		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
+		const throw(...) PURE;
+
+	virtual CComPtr<IShellFolderViewCB> GetFolderViewCallback()
+		const throw(...);
+
+private:
+	PIDLIST_ABSOLUTE m_pidlRoot;
 };

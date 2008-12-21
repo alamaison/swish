@@ -19,7 +19,6 @@
 
 #include "stdafx.h"
 #include "Folder.h"
-#include "Pidl.h"
 
 CFolder::CFolder() : m_pidlRoot(NULL)
 {
@@ -32,6 +31,24 @@ CFolder::~CFolder()
 		::ILFree(m_pidlRoot);
 		m_pidlRoot = NULL;
 	}
+}
+
+CAbsolutePidl CFolder::CloneRootPIDL()
+const throw(...)
+{
+	return GetRootPIDL();
+}
+
+PIDLIST_ABSOLUTE CFolder::GetRootPIDL()
+const
+{
+	return m_pidlRoot;
+}
+
+CComPtr<IShellFolderViewCB> CFolder::GetFolderViewCallback()
+const throw(...)
+{
+	return NULL;
 }
 
 /**
@@ -145,6 +162,20 @@ STDMETHODIMP CFolder::BindToStorage(
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
+
+/**
+ * Subobject of the folder has been requested (typically IShellFolder).
+ *
+ * @implementing IShellFolder
+ *
+ * Create and initialise an instance of the subfolder represented by @a pidl
+ * and return the interface asked for in @a riid.
+ *
+ * @param[in]  pidl  PIDL to the requested object @b relative to this folder.
+ * @param[in]  pbc   Binding context (ignored).
+ * @param[in]  riid  IID of the interface being requested.
+ * @param[out] ppv   Location in which to return the requested interface.
+ */
 STDMETHODIMP CFolder::BindToObject( 
 	PCUIDLIST_RELATIVE pidl, IBindCtx *pbc, REFIID riid, void **ppv)
 {
@@ -190,6 +221,133 @@ STDMETHODIMP CFolder::BindToObject(
 	catchCom()
 }
 
+/**
+ * Determine the relative order of two file objects or folders.
+ *
+ * @implementing IShellFolder
+ *
+ * Given their item identifier lists, compare the two objects and return a value
+ * in the HRESULT indicating the result of the comparison:
+ * - Negative: pidl1 < pidl2
+ * - Positive: pidl1 > pidl2
+ * - Zero:     pidl1 == pidl2
+ */
+STDMETHODIMP CFolder::CompareIDs( 
+	LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
+{
+	METHOD_TRACE;
+
+	USHORT uColumn = LOWORD(lParam);
+	bool fCompareAllFields = (HIWORD(lParam) == SHCIDS_ALLFIELDS);
+	bool fCanonical = (HIWORD(lParam) == SHCIDS_CANONICALONLY);
+	ATLASSERT(!fCompareAllFields || uColumn == 0);
+	ATLASSERT(!fCanonical || !fCompareAllFields);
+
+	try
+	{
+		// Handles empty PIDL cases
+		if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2))
+			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);  // Both empty - equal
+		else if (::ILIsEmpty(pidl1))
+			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, -1); // Only pidl1 empty <
+		else if (::ILIsEmpty(pidl2))
+			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);  // Only pidl2 empty >
+
+		// Neither PIDL is empty - perform comparison
+
+		int result = ComparePIDLs(
+			pidl1, pidl2, uColumn, fCompareAllFields, fCanonical);
+
+		if ((::ILIsChild(pidl1) && ::ILIsChild(pidl2)) || result != 0)
+		{
+			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, result);
+		}
+		else
+		{
+			// The first items are equal and there are more items to compare.
+			// Delegate the rest of the comparison to our child.
+
+			CComPtr<IShellFolder> spFolder;
+
+			PITEMID_CHILD pidlChild = ::ILCloneFirst(pidl1);		
+			HRESULT hr = BindToObject(
+				pidlChild, NULL, IID_PPV_ARGS(&spFolder));
+			::ILFree(pidlChild);
+			ATLENSURE_SUCCEEDED(hr);
+
+			return spFolder->CompareIDs(
+				lParam, ::ILNext(pidl1), ::ILNext(pidl2));
+		}
+	}
+	catchCom()
+}
+
+/**
+ * Create one of the objects associated with the @b current folder view.
+ *
+ * @implementing IShellFolder
+ *
+ * The types of object which can be requested include IShellView, IContextMenu, 
+ * IExtractIcon, IQueryInfo, IShellDetails or IDropTarget.  This method is in
+ * contrast to GetUIObjectOf() which performs the same task but for an item
+ * contained *within* the current folder rather than the folder itself.
+ */
+STDMETHODIMP CFolder::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)
+{
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(ppv, E_POINTER);
+	UNREFERENCED_PARAMETER(hwndOwner); // Not a custom folder, no parent needed
+
+	*ppv = NULL;
+
+	try
+	{
+		if (riid == __uuidof(IShellView))
+		{
+			TRACE("\tRequest: IShellView");
+
+			SFV_CREATE sfvData = { sizeof sfvData, 0 };
+
+			// Create a pointer to this IShellFolder to pass to view
+			CComPtr<IShellFolder> spFolder = this;
+			ATLENSURE_THROW(spFolder, E_NOINTERFACE);
+			sfvData.pshf = spFolder;
+
+			// Get the callback object for this folder view, if any
+			sfvData.psfvcb = GetFolderViewCallback();
+
+			// Create Default Shell Folder View object
+			return ::SHCreateShellFolderView(
+				&sfvData, reinterpret_cast<IShellView**>(ppv));
+		}
+		else if (riid == __uuidof(IShellDetails))
+		{
+			TRACE("\tRequest: IShellDetails");
+			return QueryInterface(riid, ppv);
+		}
+		else
+		{
+			TRACE("\tRequest: <unknown>");
+			return E_NOINTERFACE;
+		}
+	}
+	catchCom()
+}
+
+/**
+ * Sort by a given column of the folder view.
+ *
+ * @implementing IShellDetails
+ *
+ * @return S_FALSE to instruct the shell to perform the sort itself.
+ */
+STDMETHODIMP CFolder::ColumnClick(UINT iColumn)
+{
+	METHOD_TRACE;
+	UNREFERENCED_PARAMETER(iColumn);
+	return S_FALSE; // Tell the shell to sort the items itself
+}
+
 STDMETHODIMP CFolder::GetDefaultSearchGUID(GUID *pguid)
 {
 	ATLENSURE_RETURN_HR(pguid, E_POINTER);
@@ -199,6 +357,13 @@ STDMETHODIMP CFolder::GetDefaultSearchGUID(GUID *pguid)
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
+/**
+ * Return pointer to interface allowing client to enumerate search objects.
+ *
+ * @implementing IShellFolder2
+ *
+ * We do not support search objects so this method is not implemented.
+ */
 STDMETHODIMP CFolder::EnumSearches(IEnumExtraSearch **ppenum)
 {
 	ATLENSURE_RETURN_HR(ppenum, E_POINTER);
