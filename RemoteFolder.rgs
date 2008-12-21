@@ -3,6 +3,23 @@ HKLM
 {
     NoRemove Software
     {
+        NoRemove Microsoft
+        {
+            NoRemove Windows
+            {
+                NoRemove CurrentVersion
+                {                    
+                    NoRemove 'Shell Extensions'
+                    {
+                        NoRemove Approved
+                        {
+                            val {[!uuid]} = s 'Swish RemoteFolder'
+                        }
+                    }
+                }
+            }
+        }
+        
         NoRemove Classes
         {
             NoRemove CLSID

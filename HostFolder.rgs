@@ -22,6 +22,14 @@ HKLM
                             }
                         }
                     }
+                    
+                    NoRemove 'Shell Extensions'
+                    {
+                        NoRemove Approved
+                        {
+                            val {[!uuid]} = s 'Swish HostFolder'
+                        }
+                    }
                 }
             }
         }
