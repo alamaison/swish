@@ -33,7 +33,7 @@ public:
 	 * @returns  Smart pointer to the CComObject<T>-based COM object.
 	 * @throws   CAtlException if creation fails.
 	 */
-	static CComPtr<T> Create() throw(...)
+	static CComPtr<T> CreateCoObject() throw(...)
 	{
 		CComObject<T> *pObject = NULL;
 		HRESULT hr = CComObject<T>::CreateInstance(&pObject);
