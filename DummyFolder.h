@@ -78,15 +78,19 @@ struct _CopyPidl
 ]
 class ATL_NO_VTABLE CDummyFolder :
 	public CFolder,
-	public CCoFactory<CDummyFolder>,
-	public IObjectWithSiteImpl<CDummyFolder>
-{
+	public CCoFactory<CDummyFolder>
+ {
 protected:
 
 	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
 	__override CLSID GetCLSID() const;
-	__override IShellFolder* CreateSubfolder(
-		PCIDLIST_ABSOLUTE pidlRoot) const throw(...);
+	__override CComPtr<IShellFolder> CreateSubfolder(
+		PCIDLIST_ABSOLUTE pidlRoot)
+		const throw(...);
+	__override int ComparePIDLs(
+		__in PCUIDLIST_RELATIVE pidl1, __in PCUIDLIST_RELATIVE pidl2,
+		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
+		const throw(...);
 
 public:
 
@@ -113,16 +117,6 @@ public: // IShellFolder methods
 		__in_opt HWND hwnd,
 		SHCONTF grfFlags,
 		__deref_out_opt IEnumIDList **ppenumIDList);
-
-	IFACEMETHODIMP CompareIDs( 
-		LPARAM lParam,
-		__in PCUIDLIST_RELATIVE pidl1,
-		__in PCUIDLIST_RELATIVE pidl2);
-
-	IFACEMETHODIMP CreateViewObject( 
-		__in_opt HWND hwndOwner,
-		__in REFIID riid,
-		__deref_out_opt void **ppv);
 
 	IFACEMETHODIMP GetAttributesOf( 
 		UINT cidl,

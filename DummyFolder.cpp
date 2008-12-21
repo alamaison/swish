@@ -83,7 +83,8 @@ STDMETHODIMP CDummyFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 	return hr;
 }
 
-void CDummyFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...)
+void CDummyFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
+const throw(...)
 {
 	if (pidl == NULL)
 		AtlThrow(E_POINTER);
@@ -98,6 +99,26 @@ void CDummyFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...)
 CLSID CDummyFolder::GetCLSID() const
 {
 	return __uuidof(this);
+}
+
+
+/**
+ * Create and initialise new folder object for subfolder.
+ */
+CComPtr<IShellFolder> CDummyFolder::CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot)
+const throw(...)
+{
+	HRESULT hr;
+
+	// Create and initialise new folder object for subfolder
+	CComPtr<CDummyFolder> spDummyFolder = spDummyFolder->CreateCoObject();
+	hr = spDummyFolder->Initialize(pidlRoot);
+	ATLENSURE_THROW(SUCCEEDED(hr), hr);
+
+	CComQIPtr<IShellFolder> spFolder = spDummyFolder;
+	ATLENSURE_THROW(spFolder, E_NOINTERFACE);
+
+	return spFolder;
 }
 
 STDMETHODIMP CDummyFolder::ParseDisplayName(
@@ -147,26 +168,10 @@ STDMETHODIMP CDummyFolder::EnumObjects(
 	return hr;
 }
 
-IShellFolder* CDummyFolder::CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot) const
-throw(...)
-{
-	HRESULT hr;
-
-	// Create and initialise new folder object for subfolder
-	CComPtr<CDummyFolder> spDummyFolder = spDummyFolder->Create();
-	hr = spDummyFolder->Initialize(pidlRoot);
-	ATLENSURE_THROW(SUCCEEDED(hr), hr);
-
-	CComQIPtr<IShellFolder> spFolder = spDummyFolder;
-	ATLENSURE_THROW(spFolder, E_NOINTERFACE);
-
-	return spFolder.Detach();
-}
-
 /**
  * Determine the relative order of two file objects or folders.
  *
- * @implementing IShellFolder
+ * @implementing CFolder
  *
  * Given their item identifier lists, compare the two objects and return a value
  * in the HRESULT indicating the result of the comparison:
@@ -174,69 +179,14 @@ throw(...)
  * - Positive: pidl1 > pidl2
  * - Zero:     pidl1 == pidl2
  */
-STDMETHODIMP CDummyFolder::CompareIDs( 
-		LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
+int CDummyFolder::ComparePIDLs(
+	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
+	bool fCompareAllFields, bool fCanonical)
+const throw(...)
 {
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pidl1, E_POINTER);
-	ATLENSURE_RETURN_HR(pidl2, E_POINTER);
-
-	USHORT uColumn = LOWORD(lParam);
-	bool fCompareAllFields = (HIWORD(lParam) == SHCIDS_ALLFIELDS);
-	bool fCanonical = (HIWORD(lParam) == SHCIDS_CANONICALONLY);
-	ATLASSERT(!fCompareAllFields || uColumn == 0);
-	ATLASSERT(!fCanonical || !fCompareAllFields);
-
-	// TODO: Must recurse down PIDL, making the comparison at each stage.
-	if (ILIsChild(pidl1) && ILIsChild(pidl2))
-	{
-		const DummyItemId *pitemid1 = reinterpret_cast<const DummyItemId *>(pidl1);
-		const DummyItemId *pitemid2 = reinterpret_cast<const DummyItemId *>(pidl2);
-		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, pitemid1->level - pitemid2->level);
-	}
-	else
-	{
-		return MAKE_HRESULT(
-			SEVERITY_SUCCESS, 0, ::ILGetSize(pidl1) - ::ILGetSize(pidl2));
-	}
-}
-
-/**
- * Create one of the objects associated with the *current folder* view.
- *
- * @implementing IShellFolder
- *
- * The types of object which can be requested include IShellView, IContextMenu, 
- * IExtractIcon, IQueryInfo, IShellDetails or IDropTarget.  This method is in
- * contrast to GetUIObjectOf() which performs the same task but for an item
- * contained *within* the current folder rather than the folder itself.
- */
-STDMETHODIMP CDummyFolder::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)
-{
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(ppv, E_POINTER);
-
-	*ppv = NULL;
-
-	try
-	{
-		if (riid == __uuidof(IShellView))
-		{
-			// Create a pointer to this IShellFolder to pass to view
-			SFV_CREATE sfvData = { sizeof sfvData, 0 };
-			CComPtr<IShellFolder> spFolder = this;
-			ATLENSURE_THROW(spFolder, E_NOINTERFACE);
-			sfvData.pshf = spFolder;
-			sfvData.psfvcb = NULL;
-			sfvData.psvOuter = NULL;
-
-			// Create Default Shell Folder View object (aka DEFVIEW)
-			return SHCreateShellFolderView(&sfvData, (IShellView**)ppv);
-		}
-		else
-			return E_NOINTERFACE;
-	}
-	catchCom()
+	const DummyItemId *pitemid1 = reinterpret_cast<const DummyItemId *>(pidl1);
+	const DummyItemId *pitemid2 = reinterpret_cast<const DummyItemId *>(pidl2);
+	return pitemid1->level - pitemid2->level;
 }
 
 STDMETHODIMP CDummyFolder::GetAttributesOf( 
@@ -298,8 +248,8 @@ STDMETHODIMP CDummyFolder::GetUIObjectOf(
 
 		CComPtr<IContextMenu> spMenu;
 		hr = ::CDefFolderMenu_Create2(
-			m_pidlRoot, hwndOwner, cpidl, apidl, spThisFolder, MenuCallback, 0, NULL, 
-			&spMenu);
+			GetRootPIDL(), hwndOwner, cpidl, apidl, spThisFolder, 
+			MenuCallback, 0, NULL, &spMenu);
 		ATLASSERT(SUCCEEDED(hr));
 
 		hr = spMenu->QueryInterface(riid, ppv);
