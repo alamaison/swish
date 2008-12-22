@@ -6,7 +6,7 @@ b816a83c-5022-11dc-9153-0090f5284f85 CRemoteFolder Class
 b816a83d-5022-11dc-9153-0090f5284f85   *REMOVED*  IRemoteEnumIDList Interface
 b816a83e-5022-11dc-9153-0090f5284f85   *REMOVED*  CRemoteEnumIDList Class
 b816a83f-5022-11dc-9153-0090f5284f85   *REMOVED*  IHostContextMenu Interface
-b816a840-5022-11dc-9153-0090f5284f85 CHostContextMenu Class
+b816a840-5022-11dc-9153-0090f5284f85   *REMOVED*  CHostContextMenu Class
 b816a841-5022-11dc-9153-0090f5284f85 ISftpProvider Interface
 b816a842-5022-11dc-9153-0090f5284f85   *REMOVED*  CPuttyProvider Class
 b816a843-5022-11dc-9153-0090f5284f85 IEnumListing Interface

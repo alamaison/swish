@@ -333,10 +333,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostContextMenu.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\HostFolder.cpp"
 				>
 			</File>
@@ -451,10 +447,6 @@
 			</File>
 			<File
 				RelativePath=".\Folder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HostContextMenu.h"
 				>
 			</File>
 			<File

@@ -20,139 +20,136 @@
 #include "stdafx.h"
 #include "remotelimits.h"
 #include "HostFolder.h"
-#include "HostContextMenu.h"
 #include "RemoteFolder.h"
 #include "ConnCopyPolicy.h"
 #include "ExplorerCallback.h" // For interaction with Explorer window
+#include "HostPidl.h"
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetClassID() : IPersist
- * Retrieves the class identifier (CLSID) of the object
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::GetClassID( CLSID* pClsid )
+#include <string>
+using std::wstring;
+
+
+CHostFolder::CHostFolder() : CFolder()
 {
-	ATLTRACE("CHostFolder::GetClassID called\n");
-
-	ATLASSERT( pClsid );
-    if (pClsid == NULL)
-        return E_POINTER;
-
-	*pClsid = __uuidof(CHostFolder);
-    return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::Initialize() : IPersistFolder
- * Assigns a fully qualified PIDL to the new object which we store for later
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::Initialize( PCIDLIST_ABSOLUTE pidl )
+void CHostFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
+const throw(...)
 {
-	ATLTRACE("CHostFolder::Initialize called\n");
+	if (pidl == NULL)
+		AtlThrow(E_POINTER);
 
-	ATLASSERT( pidl != NULL );
-    m_pidl = static_cast<PIDLIST_ABSOLUTE>( m_HostPidlManager.Copy(pidl) );
-	ATLASSERT( m_pidl );
-	return S_OK;
+	if (!CHostItemList::IsValid(pidl))
+		AtlThrow(E_INVALIDARG);
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetCurFolder() : IPersistFolder2
- * Retrieves the fully qualified PIDL of the folder.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::GetCurFolder( __deref_out PIDLIST_ABSOLUTE *ppidl )
+CLSID CHostFolder::GetCLSID()
+const
 {
-	ATLTRACE("CHostFolder::GetCurFolder called\n");
-
-	ATLASSERT( m_pidl );
-	if (m_pidl == NULL)
-		return S_FALSE;
-		// TODO: Should ppidl be set to NULL?
-
-	// Make a copy of the PIDL that was passed to Swish in Initialize(pidl)
-	*ppidl = static_cast<PIDLIST_ABSOLUTE>( m_HostPidlManager.Copy(m_pidl) );
-	ATLASSERT( *ppidl );
-	if (!*ppidl)
-		return E_OUTOFMEMORY;
-	
-	return S_OK;
+	return __uuidof(this);
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::BindToObject : IShellFolder
- * Subfolder of root folder opened: Create and initialize new CRemoteFolder 
- * COM object to represent subfolder and return its IShellFolder interface.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::BindToObject( __in PCUIDLIST_RELATIVE pidl,
-										__in_opt IBindCtx *pbc,
-										__in REFIID riid,
-										__out void** ppvOut )
+/**
+ * Create and initialise new folder object for subfolder.
+ */
+CComPtr<IShellFolder> CHostFolder::CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot)
+const throw(...)
 {
-	ATLTRACE("CHostFolder::BindToObject called\n");
-	UNREFERENCED_PARAMETER( pbc );
-	*ppvOut = NULL;
+	// Create CRemoteFolder initialised with its root PIDL
+	CComPtr<IShellFolder> spFolder = CRemoteFolder::Create(pidlRoot);
+	ATLENSURE_THROW(spFolder, E_NOINTERFACE);
 
-	HRESULT hr;
-
-	// We can assume that the PIDL we have been passed and asked to bind to
-	// contains one HOSTPIDL (containing the server's details) followed by 
-	// zero or more REMOTEPIDLs representing the file-system hierarchy of the 
-	// target file or folder:
-	// <Relative to My Computer>/HOSTPIDL[/REMOTEPIDL]*
-
-	// Check that the first item in the pidl is a HOSTPIDL as 
-	// this is represents the SFTP server that we are connecting to.
-	hr = m_HostPidlManager.IsValid( pidl, PM_THIS_PIDL );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-	// Create absolute PIDL by combining with m_pidl (Swish icon in My Computer)
-	PIDLIST_ABSOLUTE pidlBind = ::ILCombine( m_pidl, pidl );  
-	ATLENSURE_RETURN_HR(pidlBind, E_OUTOFMEMORY);
-
-	// Create RemoteFolder to bind to PIDL
-	CComObject<CRemoteFolder> *pRemoteFolder;
-	hr = CComObject<CRemoteFolder>::CreateInstance( &pRemoteFolder );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-    pRemoteFolder->AddRef();
-
-	// Initialise RemoteFolder with the absolute PIDL
-    hr = pRemoteFolder->Initialize( pidlBind );
-    if (SUCCEEDED(hr))
-        hr = pRemoteFolder->QueryInterface( riid, ppvOut );
-    
-	::ILFree( pidlBind );
-    pRemoteFolder->Release();
-
-	/* TODO: Not sure if I have done this properly with QueryInterface
-	 * From MS: Implementations of BindToObject can optimize any call to 
-	 * it by  quickly failing for IID values that it does not support. For 
-	 * example, if the Shell folder object of the subitem does not support 
-	 * IRemoteComputer, the implementation should return E_NOINTERFACE 
-	 * immediately instead of needlessly creating the Shell folder object 
-	 * for the subitem and then finding that IRemoteComputer was not 
-	 * supported after all. 
-	 * http://msdn2.microsoft.com/en-us/library/ms632954.aspx
-	 */
-
-	return hr;
+	return spFolder;
 }
 
-// EnumObjects() creates a COM object that implements IEnumIDList.
+/**
+ * Create an instance of our Shell Folder View callback handler.
+ */
+CComPtr<IShellFolderViewCB> CHostFolder::GetFolderViewCallback()
+const throw(...)
+{
+	return CExplorerCallback::Create(GetRootPIDL());
+}
+
+/**
+ * Determine the relative order of two file objects or folders.
+ *
+ * @implementing CFolder
+ *
+ * Given their PIDLs, compare the two items and return a value
+ * indicating the result of the comparison:
+ * - Negative: pidl1 < pidl2
+ * - Positive: pidl1 > pidl2
+ * - Zero:     pidl1 == pidl2
+ *
+ * @todo  Take account of fCompareAllFields and fCanonical flags.
+ */
+int CHostFolder::ComparePIDLs(
+	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
+	bool fCompareAllFields, bool fCanonical)
+const throw(...)
+{
+	CHostItemListHandle item1(pidl1);
+	CHostItemListHandle item2(pidl2);
+
+	try
+	{
+		switch (uColumn)
+		{
+		case 0: // Display name (Label)
+				// - also default for fCompareAllFields and fCanonical
+			return wcscmp(item1.GetLabel(), item2.GetLabel());
+		case 1: // Hostname
+			return wcscmp(item1.GetHost(), item2.GetHost());
+		case 2: // Username
+			return wcscmp(item1.GetUser(), item2.GetUser());
+		case 4: // Remote filesystem path
+			return wcscmp(item1.GetPath(), item2.GetPath());
+		case 3: // SFTP port
+			return item1.GetPort() - item2.GetPort();
+		case 5: // Type
+			return 0;
+		default:
+			UNREACHABLE;
+			AtlThrow(E_UNEXPECTED);
+		}
+	}
+	catch (CHostItemListHandle::InvalidPidlException)
+	{
+		UNREACHABLE;
+		AtlThrow(E_INVALIDARG);
+	}
+}
+
+/**
+ * Create an IEnumIDList which enumerates the items in this folder.
+ *
+ * @implementing IShellFolder
+ *
+ * @param[in]  hwndOwner     An optional window handle to be used if 
+ *                           enumeration requires user input.
+ * @param[in]  grfFlags      Flags specifying which types of items to include 
+ *                           in the enumeration. Possible flags are from the 
+ *                           @c SHCONT enum.
+ * @param[out] ppEnumIDList  Location in which to return the IEnumIDList.
+ *
+ * @retval S_FALSE if the are no matching items to enumerate.
+ */
 STDMETHODIMP CHostFolder::EnumObjects(
-	__in_opt HWND hwndOwner, 
-	__in SHCONTF dwFlags,
-	__deref_out_opt LPENUMIDLIST* ppEnumIDList )
+	HWND hwndOwner, SHCONTF grfFlags, IEnumIDList **ppEnumIDList)
 {
-	ATLTRACE("CHostFolder::EnumObjects called\n");
-	ATLASSERT(m_pidl); // Check this object has been initialised
-	(void)hwndOwner; // No user input required to access registry
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(ppEnumIDList, E_POINTER);
+	UNREFERENCED_PARAMETER(hwndOwner); // No UI required to access registry
+
 	HRESULT hr;
 
     *ppEnumIDList = NULL;
 
-	// This folder only has folders
-	if (!(dwFlags & SHCONTF_FOLDERS))
+	// This folder only contains folders
+	if (!(grfFlags & SHCONTF_FOLDERS) ||
+		(grfFlags & (SHCONTF_NETPRINTERSRCH | SHCONTF_SHAREABLE)))
 		return S_FALSE;
-	ATLENSURE_RETURN_HR(ppEnumIDList, E_POINTER);
 
 	// Load connections from HKCU\Software\Swish\Connections
 	hr = _LoadConnectionsFromRegistry();
@@ -178,56 +175,6 @@ STDMETHODIMP CHostFolder::EnumObjects(
 }
 
 /*------------------------------------------------------------------------------
- * CHostFolder::CreateViewObject : IShellFolder
- * Returns the requested COM interface for aspects of the folder's 
- * functionality, primarily the ShellView object but also context menus etc.
- * Contrasted with GetUIObjectOf which performs a similar function but
- * for the objects containted *within* the folder.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::CreateViewObject( __in_opt HWND hwndOwner, 
-                                             __in REFIID riid, 
-											 __deref_out void **ppvOut )
-{
-	ATLTRACE("CHostFolder::CreateViewObject called\n");
-	(void)hwndOwner; // Not a custom folder view.  No parent window needed
-	
-    *ppvOut = NULL;
-
-	HRESULT hr = E_NOINTERFACE;
-
-	if (riid == IID_IShellView)
-	{
-		ATLTRACE("\t\tRequest: IID_IShellView\n");
-		SFV_CREATE sfvData = { sizeof(sfvData), 0 };
-
-		// Create an instance of our Shell Folder View callback handler
-		CComPtr<IShellFolderViewCB> spExplorerCB;
-		CExplorerCallback::MakeInstance(m_pidl, &spExplorerCB);
-
-		// Create a pointer to this IShellFolder
-		CComPtr<IShellFolder> spFolder = this;
-		ATLENSURE_RETURN_HR(spFolder, E_NOINTERFACE);
-
-		// Pack pointers into SFV_CREATE
-		sfvData.psfvcb = spExplorerCB;
-		sfvData.pshf = spFolder;
-		sfvData.psvOuter = NULL;
-
-		// Create Default Shell Folder View object (aka DEFVIEW)
-		hr = SHCreateShellFolderView( &sfvData, (IShellView**)ppvOut );
-	}
-	else if (riid == IID_IShellDetails)
-    {
-		ATLTRACE("\t\tRequest: IID_IShellDetails\n");
-		hr = QueryInterface(riid, ppvOut);
-    }
-	else	
-		ATLTRACE("\t\tRequest: <unknown>\n");
-
-    return hr;
-}
-
-/*------------------------------------------------------------------------------
  * CHostFolder::GetUIObjectOf : IShellFolder
  * Retrieve an optional interface supported by objects in the folder.
  * This method is called when the shell is requesting extra information
@@ -242,6 +189,8 @@ STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	(void)puReserved;
 
 	*ppvReturn = NULL;
+
+	HRESULT hr = E_NOINTERFACE;
 	
 	/*
 	IContextMenu    The cidl parameter can be greater than or equal to one.
@@ -257,67 +206,49 @@ STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		ATLTRACE("\t\tRequest: IID_IExtractIconW\n");
 		ATLASSERT( cPidl == 1 ); // Only one file 'selected'
 
-		return QueryInterface(riid, ppvReturn);
+		hr = QueryInterface(riid, ppvReturn);
     }
-	else if (riid == IID_IQueryAssociations)
+	else if (riid == __uuidof(IQueryAssociations))
 	{
-		ATLTRACE("\t\tRequest: IID_IQueryAssociations\n");
-		ATLASSERT( cPidl == 1 ); // Only one file 'selected'
+		ATLTRACE("\t\tRequest: IQueryAssociations\n");
+		ATLASSERT(cPidl == 1);
 
-		HRESULT hr = AssocCreate( CLSID_QueryAssociations, 
-			                      IID_IQueryAssociations,
-						          ppvReturn);
-		if (SUCCEEDED(hr)) 
-		{
-			// Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
-			LPOLESTR psz;
-			StringFromCLSID(__uuidof(CHostFolder), &psz);
+		CComPtr<IQueryAssociations> spAssoc;
+		hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+		
+		// Initialise default assoc provider for Folders
+		hr = spAssoc->Init(0, L"Folder", NULL, NULL);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
-			// Initialise default assoc provider to use Swish CLSID key for data
-			reinterpret_cast<IQueryAssociations*>(*ppvReturn)->Init(
-				ASSOCF_INIT_DEFAULTTOSTAR, psz, NULL, NULL);
-
-			CoTaskMemFree( psz );
-		}
-		return hr;
+		*ppvReturn = spAssoc.Detach();
 	}
-	else if (riid == IID_IContextMenu)
+	else if (riid == __uuidof(IContextMenu))
 	{
-		ATLTRACE("\t\tRequest: IID_IContextMenu\n");
-		ATLASSERT( cPidl ); // At least one item selected
+		ATLTRACE("\t\tRequest: IContextMenu\n");
 
-		HRESULT hr;
-		CComObject<CHostContextMenu> *pMenu;
+		CComPtr<IShellFolder> spThisFolder = this;
+		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
 
-		// Create IContextMenu interface for first RemoteFolder PIDL in array
-		hr = CComObject<CHostContextMenu>::CreateInstance( &pMenu );
-		if (FAILED(hr))
-			return hr;
+		// Create default context menu from list of PIDLs
+		hr = ::CDefFolderMenu_Create2(GetRootPIDL(), hwndOwner, cPidl, aPidl,
+			spThisFolder, MenuCallback, 0, NULL, (IContextMenu **)ppvReturn);
+		ATLASSERT(SUCCEEDED(hr));
 
-		pMenu->AddRef();
-
-		// Retrieve requested interface
-		hr = pMenu->QueryInterface( riid, ppvReturn );
-		if (FAILED(hr))
-		{
-			pMenu->Release();
-			return E_NOINTERFACE;
-		}
-
-		// Initialise the context menu object by passing it the absolute PIDL
-		// of the host connection object that it belongs to.  Using this
-		// the menu can invoke ShellExecuteEx on the remote folder if 'Connect'
-		// is chosen.
-		PIDLIST_ABSOLUTE pidlToHost = ILCombine(m_pidl, aPidl[0]);
-		hr = pMenu->Initialize( pidlToHost );
-		if (FAILED(hr))
-			pMenu->Release();
-		ILFree( pidlToHost );
-
-		return hr;
 	}
 
-    return E_NOINTERFACE;
+    return hr;
+}
+
+STDMETHODIMP CHostFolder::ParseDisplayName( 
+	__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pwszDisplayName,
+	__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
+	__inout_opt ULONG *pdwAttributes)
+{
+	ATLTRACE(__FUNCTION__" called (pwszDisplayName=%ws)\n", pwszDisplayName);
+	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
+
+	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
 /*------------------------------------------------------------------------------
@@ -388,46 +319,6 @@ STDMETHODIMP CHostFolder::GetAttributesOf(
     *pdwAttribs &= dwAttribs;
 
     return S_OK;
-}
-
-/*------------------------------------------------------------------------------
- * CHostFolder::CompareIDs : IShellFolder
- * Determines the relative order of two file objects or folders.
- * Given their item identifier lists, the two objects are compared and a
- * result code is returned.
- *   Negative: pidl1 < pidl2
- *   Positive: pidl1 > pidl2
- *   Zero:     pidl1 == pidl2
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::CompareIDs( LPARAM lParam, PCUIDLIST_RELATIVE pidl1,
-                                      PCUIDLIST_RELATIVE pidl2 )
-{
-	ATLTRACE("CHostFolder::CompareIDs called\n");
-	(void)lParam; // Use default sorting rule always
-
-	ATLASSERT(pidl1 != NULL); ATLASSERT(pidl2 != NULL);
-
-	// Rough guestimate: country-code + .
-	ATLASSERT(m_HostPidlManager.GetHost(pidl1).GetLength() > 3 );
-	ATLASSERT(m_HostPidlManager.GetHost(pidl2).GetLength() > 3 );
-
-	// TODO: This is not enough. Must only return Zero (==) if ALL
-	//       fields are equal
-	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 
-		(unsigned short)wcscmp(m_HostPidlManager.GetHost(pidl1), 
-		                       m_HostPidlManager.GetHost(pidl2)));
-}
-
-/*------------------------------------------------------------------------------
- * CHostFolder::EnumSearches : IShellFolder2
- * Returns pointer to interface allowing client to enumerate search objects.
- * We do not support search objects.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::EnumSearches( IEnumExtraSearch **ppEnum )
-{
-	ATLTRACE("CHostFolder::EnumSearches called\n");
-	(void)ppEnum;
-	return E_NOINTERFACE;
 }
 
 /*------------------------------------------------------------------------------
@@ -606,7 +497,7 @@ STDMETHODIMP CHostFolder::GetIconLocation(
 	(void)uFlags; // type of use is ignored for host folder
 
 	// Set host to have the ICS host icon
-	StringCchCopy(szIconFile, cchMax, _T("C:\\WINDOWS\\system32\\shell32.dll"));
+	StringCchCopy(szIconFile, cchMax, L"shell32.dll");
 	*piIndex = 17;
 	*pwFlags = GIL_DONTCACHE;
 
@@ -669,11 +560,43 @@ STDMETHODIMP CHostFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl,
 	return hr;
 }
 
-STDMETHODIMP CHostFolder::ColumnClick( UINT iColumn )
+/**
+ * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
+ */
+HRESULT CHostFolder::OnMenuCallback(
+	HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-	ATLTRACE("CHostFolder::ColumnClick called\n");
-	(void)iColumn;
-	return S_FALSE;
+	METHOD_TRACE("(uMsg=%d)\n", uMsg);
+	UNREFERENCED_PARAMETER(hwnd);
+
+	switch (uMsg)
+	{
+	case DFM_MERGECONTEXTMENU:
+		return this->OnMergeContextMenu(
+			hwnd,
+			pdtobj,
+			static_cast<UINT>(wParam),
+			*reinterpret_cast<QCMINFO *>(lParam)
+		);
+	default:
+		return E_NOTIMPL;
+	}
+}
+
+/**
+ * Handle @c DFM_MERGECONTEXTMENU callback.
+ */
+HRESULT CHostFolder::OnMergeContextMenu(
+	HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
+{
+	UNREFERENCED_PARAMETER(hwnd);
+	UNREFERENCED_PARAMETER(pDataObj);
+	UNREFERENCED_PARAMETER(uFlags);
+	UNREFERENCED_PARAMETER(info);
+
+	// It seems we have to return S_OK even if we do nothing else or Explorer
+	// won't put Open as the default item and in the right order
+	return S_OK;
 }
 
 
@@ -851,6 +774,3 @@ HRESULT CHostFolder::_LoadConnectionDetailsFromRegistry( PCTSTR szLabel )
 	ATLASSERT(regConnection.Close() == ERROR_SUCCESS);
 	return hr;
 }
-
-// CHostFolder
-
