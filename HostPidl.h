@@ -66,7 +66,7 @@ public:
 	CHostPidlBase& operator=( __in const CHostPidlBase& pidl ) throw(...)
 	{
 		if (this != &pidl)
-			CPidl::operator=(pidl);
+			PidlT::operator=(pidl);
 		return *this;
 	}
 
