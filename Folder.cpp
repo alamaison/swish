@@ -39,7 +39,7 @@ const throw(...)
 	return GetRootPIDL();
 }
 
-PIDLIST_ABSOLUTE CFolder::GetRootPIDL()
+PCIDLIST_ABSOLUTE CFolder::GetRootPIDL()
 const
 {
 	return m_pidlRoot;

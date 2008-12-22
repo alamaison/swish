@@ -166,7 +166,7 @@ public: // IShellFolder2 methods
 protected:
 
 	CAbsolutePidl CloneRootPIDL() const;
-	PIDLIST_ABSOLUTE GetRootPIDL() const;
+	PCIDLIST_ABSOLUTE GetRootPIDL() const;
 
 	virtual void ValidatePidl(__in PCUIDLIST_RELATIVE pidl)
 		const throw(...) PURE;
