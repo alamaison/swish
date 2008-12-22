@@ -160,7 +160,7 @@ bool CSftpDirectory::Rename(
 
 void CSftpDirectory::Delete( __in PCUITEMID_CHILD pidlFile )
 {
-	CRemoteChildPidl pidl(pidlFile);
+	CRemoteItem pidl(pidlFile);
 	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
 	
 	HRESULT hr;

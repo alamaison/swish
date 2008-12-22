@@ -10,6 +10,7 @@ class CPidl_test : public CPPUNIT_NS::TestFixture
 	typedef const IdListType *ConstPidlType;
 
 	CPPUNIT_TEST_SUITE( CPidl_test<IdListType> );
+		CPPUNIT_TEST( testSizeof );
 		CPPUNIT_TEST( testCPidlDefault );
 		CPPUNIT_TEST( testCPidlDefaultNULL );
 		CPPUNIT_TEST( testCPidlFromPidl );
@@ -29,8 +30,10 @@ class CPidl_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testDetachNULL );
 		CPPUNIT_TEST( testCopyTo );
 		CPPUNIT_TEST( testCopyToNULL );
-		CPPUNIT_TEST( testJoin );
-		CPPUNIT_TEST( testJoinNULL );
+		CPPUNIT_TEST( testAppend );
+		CPPUNIT_TEST( testAppendNULL );
+		CPPUNIT_TEST( testAppendNULL2 );
+		CPPUNIT_TEST( testAppendNULL3 );
 		CPPUNIT_TEST( testGetNext );
 		CPPUNIT_TEST( testGetNextAtEnd );
 		CPPUNIT_TEST( testGetNextNULL );
@@ -56,6 +59,11 @@ public:
 	}
 
 protected:
+
+	void testSizeof()
+	{
+		CPPUNIT_ASSERT_EQUAL( sizeof m_pidlOriginal, sizeof *m_pPidl );
+	}
 
 	void testCPidlDefault()
 	{
@@ -353,7 +361,7 @@ protected:
 		CPPUNIT_ASSERT( pidlDest == NULL );
 	}
 
-	void testJoin()
+	void testAppend()
 	{
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 		PITEMID_CHILD pidlChild = 
@@ -367,45 +375,69 @@ protected:
 			pidl.Attach(pidlTest);
 			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl );
 
-			// Join should return a copy of the CPidl's member with the second
-			// pidl appended, leaving the CPidl untouched
-			PIDLIST_RELATIVE pidlJoined = pidl.Join(pidlChild);
-			CPPUNIT_ASSERT( !::ILIsEqual(
-				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlJoined),
+			// Append should replace the CPidl's member with a PIDL consisting of
+			// the original and the second pidl appended
+			pidl.Append(pidlChild);
+
+			CPPUNIT_ASSERT( pidlTest != pidl.m_pidl ); // member changed
+			CPPUNIT_ASSERT( ::ILIsEqual(
+				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlRecombined),
 				reinterpret_cast<PIDLIST_ABSOLUTE>(pidl.m_pidl) 
 			));
-			CPPUNIT_ASSERT( ::ILIsEqual(
-				reinterpret_cast<PIDLIST_ABSOLUTE>(pidlJoined),
-				pidlRecombined 
-			));
-			CPPUNIT_ASSERT_EQUAL( pidlTest, pidl.m_pidl ); // member unchanged
 			::ILFree(pidlChild);
 			::ILFree(pidlRecombined);
-			::ILFree(pidlJoined);
 		}
 
 		// Don't ILFree pidlTest - it is destroyed when the CPidl dies
 	}
 
-	void testJoinNULL()
+	void testAppendNULL()
 	{
+		// Appending NULL pidl to NULL pidl
 		CPidl<IdListType> pidlNull;
 		PidlType pidlDest = NULL;
-		PIDLIST_RELATIVE pidlJoined = pidlNull.Join(pidlDest);
-		CPPUNIT_ASSERT( pidlJoined == NULL );
+		pidlNull.Append(pidlDest);
+		CPPUNIT_ASSERT( pidlNull.m_pidl == NULL );
 
-		PIDLIST_RELATIVE pidlRelative = 
-			::ILCloneChild(::ILFindLastID(m_pidlOriginal));
+		// Appending non-NULL pidl to NULL pidl
+		PidlType pidlRelative = reinterpret_cast<PidlType>(
+			::ILCloneChild(::ILFindLastID(m_pidlOriginal)));
 		CPidl<IdListType> pidl;
-		pidl.Join(pidlRelative);
-		pidlJoined = pidl.Join(pidlRelative);
-		CPPUNIT_ASSERT( pidlJoined != pidlRelative );
+		pidl.Append(pidlRelative);
 		CPPUNIT_ASSERT( ::ILIsEqual(
-			reinterpret_cast<PIDLIST_ABSOLUTE>(pidlJoined),
+			reinterpret_cast<PIDLIST_ABSOLUTE>(pidl.m_pidl),
 			reinterpret_cast<PIDLIST_ABSOLUTE>(pidlRelative) 
 		));
 		::ILFree(pidlRelative);
-		::ILFree(pidlJoined);
+	}
+
+	void testAppendNULL2()
+	{
+		PidlType pidlNULL = NULL;
+
+		// Appending NULL pidl to non-NULL pidl
+		PidlType pidlTest = reinterpret_cast<PidlType>(
+			::ILCloneChild(::ILFindLastID(m_pidlOriginal)));
+		CPidl<IdListType> pidl;
+		pidl.Attach(pidlTest);
+		pidl.Append(pidlNULL);
+		CPPUNIT_ASSERT_EQUAL(pidlTest, (PidlType)pidl.m_pidl);
+	}
+
+	void testAppendNULL3()
+	{
+		PITEMID_CHILD pidlTerm = reinterpret_cast<PITEMID_CHILD>(
+			::ILClone(::ILNext(::ILFindLastID(m_pidlOriginal))));
+		CPPUNIT_ASSERT_EQUAL((USHORT)0, pidlTerm->mkid.cb);
+
+		// Appending terminating pidl to non-NULL pidl
+		PidlType pidlTest = reinterpret_cast<PidlType>(
+			::ILCloneChild(::ILFindLastID(m_pidlOriginal)));
+		CPidl<IdListType> pidl;
+		pidl.Attach(pidlTest);
+		pidl.Append(pidlTerm);
+		::ILFree(pidlTerm);
+		CPPUNIT_ASSERT_EQUAL(pidlTest, (PidlType)pidl.m_pidl);
 	}
 
 	void testGetNext()

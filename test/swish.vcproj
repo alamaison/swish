@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,6 +68,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -146,7 +147,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -159,6 +160,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -228,7 +230,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
-				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -243,6 +245,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -389,12 +392,20 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\PidlHandle_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\SftpDirectory_test.cpp"
 				>
 			</File>
 		</Filter>
 		<File
 			RelativePath="..\Connection.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\HostPidlManager.cpp"
 			>
 		</File>
 		<File

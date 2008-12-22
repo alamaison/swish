@@ -486,6 +486,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\HostPidl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HostPidlManager.h"
 				>
 			</File>
