@@ -100,11 +100,17 @@ protected:
 	typedef typename DataT::PidlType PidlType;
 	typedef typename DataT::ConstPidlType ConstPidlType;
 
+public:
 	CPidlBase() {}
 	CPidlBase( __in_opt typename DataT::Type pidl ) throw() : DataT(pidl) {}
 	CPidlBase( __in const CPidlBase& pidl ) throw() : DataT(pidl) {}
+	
+	template<typename IdListSupertype>
+	operator CPidlBase<IdListSupertype>() const
+	{
+		return CPidlBase<IdListSupertype>(m_pidl);
+	}
 
-public:
 	PidlType CopyTo() const throw(...)
 	{
 		return Clone(m_pidl);

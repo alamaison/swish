@@ -8,6 +8,7 @@ class CPidlHandle_test : public CPPUNIT_NS::TestFixture
 {
 	typedef IdListType *PidlType;
 	typedef const IdListType *ConstPidlType;
+	typedef CPidlBase< CPidlConstData<IdListType> > CPidlHandle;
 
 	CPPUNIT_TEST_SUITE( CPidlHandle_test<IdListType> );
 		CPPUNIT_TEST( testSizeof );
@@ -56,7 +57,7 @@ protected:
 
 	void testCPidlHandleDefault()
 	{
-		m_pPidl = new CPidlHandle<IdListType>();
+		m_pPidl = new CPidlHandle();
 		CPPUNIT_ASSERT( m_pPidl );
 		CPPUNIT_ASSERT( m_pPidl->m_pidl == NULL );
 		delete m_pPidl;
@@ -65,7 +66,7 @@ protected:
 
 	void testCPidlHandleDefaultNULL()
 	{
-		CPidlHandle<IdListType> pidl;
+		CPidlHandle pidl;
 		CPPUNIT_ASSERT( pidl.m_pidl == NULL );
 	}
 
@@ -75,7 +76,7 @@ protected:
 		CPPUNIT_ASSERT( !ILIsEmpty(pidlTest) );
 
 		// This constructor should just create a handle to the original pidl
-		m_pPidl = new CPidlHandle<IdListType>(pidlTest);
+		m_pPidl = new CPidlHandle(pidlTest);
 		CPPUNIT_ASSERT( m_pPidl->m_pidl );
 		CPPUNIT_ASSERT_EQUAL(
 			const_cast<ConstPidlType>(pidlTest), m_pPidl->m_pidl );
@@ -93,7 +94,7 @@ protected:
 	void testCPidlHandleFromPidlNULL()
 	{
 		PidlType pidlNull = NULL;
-		m_pPidl = new CPidlHandle<IdListType>(pidlNull);
+		m_pPidl = new CPidlHandle(pidlNull);
 		CPPUNIT_ASSERT( m_pPidl->m_pidl == NULL );
 	}
 
@@ -102,12 +103,12 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			CPPUNIT_ASSERT_EQUAL( 
 				const_cast<ConstPidlType>(pidlTest), pidl.m_pidl );
 
 			// Assigning to another CPidlHandle should copy the PIDL pointer
-			CPidlHandle<IdListType> pidlCopy;
+			CPidlHandle pidlCopy;
 			pidlCopy = pidl;
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidlCopy.m_pidl );
@@ -121,8 +122,8 @@ protected:
 
 	void testCPidlHandleCopyAssignmentNULL()
 	{
-		CPidlHandle<IdListType> pidl;
-		CPidlHandle<IdListType> pidlCopy;
+		CPidlHandle pidl;
+		CPidlHandle pidlCopy;
 		pidlCopy = pidl;
 		CPPUNIT_ASSERT( pidl.m_pidl == NULL );
 		CPPUNIT_ASSERT( pidlCopy.m_pidl == NULL );
@@ -135,7 +136,7 @@ protected:
 		{
 			// Assigning a PIDL to a CPidlHandle should set the member to
 			// equal the original PIDL
-			CPidlHandle<IdListType> pidl;
+			CPidlHandle pidl;
 			pidl = pidlTest;
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidl.m_pidl );
@@ -149,7 +150,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			pidl = NULL;
 			CPPUNIT_ASSERT( pidl.m_pidl == NULL );
 		}
@@ -162,13 +163,13 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidl.m_pidl );
 
 			// Initialising from another CPidlHandle should clone contents of the old
 			// CPidlHandle leaving its m_pidl untouched
-			CPidlHandle<IdListType> pidlCopy = pidl;
+			CPidlHandle pidlCopy = pidl;
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidlCopy.m_pidl );
 			CPPUNIT_ASSERT_EQUAL(  
@@ -181,8 +182,8 @@ protected:
 
 	void testCPidlHandleCopyConstructionNULL()
 	{
-		CPidlHandle<IdListType> pidl;
-		CPidlHandle<IdListType> pidlCopy = pidl;
+		CPidlHandle pidl;
+		CPidlHandle pidlCopy = pidl;
 		CPPUNIT_ASSERT( pidlCopy.m_pidl == NULL );
 	}
 
@@ -191,7 +192,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidl.m_pidl );
 
@@ -214,7 +215,7 @@ protected:
 
 	void testCopyToNULL()
 	{
-		CPidlHandle<IdListType> pidlNull;
+		CPidlHandle pidlNull;
 		PidlType pidlDest = NULL;
 		pidlDest = pidlNull.CopyTo();
 		CPPUNIT_ASSERT( pidlDest == NULL );
@@ -225,7 +226,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidl.m_pidl );
 
@@ -247,7 +248,7 @@ protected:
 
 	void testGetNextNULL()
 	{
-		CPidlHandle<IdListType> pidlNull;
+		CPidlHandle pidlNull;
 		PCUIDLIST_RELATIVE pidlDest = pidlNull.GetNext();
 		CPPUNIT_ASSERT( pidlDest == NULL );
 	}
@@ -261,7 +262,7 @@ protected:
 		CPPUNIT_ASSERT( pidlTest != NULL );
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), pidl.m_pidl );
 
@@ -282,7 +283,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		{
-			CPidlHandle<IdListType> pidl(pidlTest);
+			CPidlHandle pidl(pidlTest);
 			CPPUNIT_ASSERT_EQUAL(  
 				const_cast<ConstPidlType>(pidlTest), 
 				pidl.m_pidl );
@@ -304,7 +305,7 @@ protected:
 	void testoperatorConstPidlNULL()
 	{
 		// Test that assigning a NULL CPidlHandle to a constant PIDL should not fail
-		CPidlHandle<IdListType> pidlNull;
+		CPidlHandle pidlNull;
 		PidlType pidlDest = NULL;
 		CPPUNIT_ASSERT( pidlDest == NULL );
 	}
@@ -314,7 +315,7 @@ protected:
 		PidlType pidlTest = static_cast<PidlType>(::ILClone(m_pidlOriginal));
 
 		// Test that cloning copies PIDL successfully
-		PidlType pidlClone = CPidlHandle<IdListType>::Clone(pidlTest);
+		PidlType pidlClone = CPidlHandle::Clone(pidlTest);
 
 		CPPUNIT_ASSERT( pidlClone != pidlTest );
 		CPPUNIT_ASSERT( ::ILIsEqual(
@@ -331,13 +332,13 @@ protected:
 	{
 		// Test cloning a NULL pidl
 		PidlType pidlNull = NULL;
-		PidlType pidl = CPidlHandle<IdListType>::Clone(pidlNull);
+		PidlType pidl = CPidlHandle::Clone(pidlNull);
 		CPPUNIT_ASSERT( pidl == NULL );
 	}
 
 
 private:
-	CPidlHandle<IdListType> *m_pPidl;
+	CPidlHandle *m_pPidl;
 
 	PidlType m_pidlOriginal;
 };
@@ -348,7 +349,7 @@ inline void CPidlHandle_test<ITEMID_CHILD>::testGetNext()
 	PITEMID_CHILD pidlTest = ::ILCloneChild(m_pidlOriginal);
 
 	{
-		CPidlHandle<ITEMID_CHILD> pidl(pidlTest);
+		CPidlBase< CPidlConstData<ITEMID_CHILD> > pidl(pidlTest);
 		CPPUNIT_ASSERT_EQUAL( const_cast<PCITEMID_CHILD>(pidlTest), pidl.m_pidl );
 
 		// GetNext on a child pidl should always return NULL
