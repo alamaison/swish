@@ -331,10 +331,7 @@ STDMETHODIMP CSftpStream::UnlockRegion(
 
 /*----------------------------------------------------------------------------*
  * Private functions
- *----------------------------------------------------------------------------*/
-
-#define THRESHOLD 39990 ///< Buffer size threshold after which calls to
-                        ///< libssh2_sftp_read() fail
+ *----------------------------------------------------------------------------*
 
 /**
  * Read cb bytes into buffer pbuf.  Perform the read operation in chunks
@@ -348,38 +345,15 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  */
 void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG& cbRead) throw(...)
 {
-	cbRead = 0;
-	char *p = pbuf;
-
-	ULONG cbChunk = 0;
-	ULONG cbReadOne = 0;
-	do {
-		cbChunk = min(cb - cbRead, THRESHOLD);
-		cbReadOne = _ReadOne(p, cbChunk);
-		p += cbReadOne;
-		cbRead += cbReadOne;
-	} 
-	while (cbReadOne == cbChunk && cbRead < cb); // not EOF && wants more
-}
-
-/**
- * Read cb bytes into buffer pbuf.
- *
- * @returns  Number of bytes actually read.
- * @throws   CAtlException with STG_E_* code if an error occurs.
- */
-ULONG CSftpStream::_ReadOne(char *pbuf, ULONG cb) throw(...)
-{
-	ssize_t cbRead = libssh2_sftp_read(m_pHandle, pbuf, cb);
+	cbRead = libssh2_sftp_read(m_pHandle, pbuf, cb);
 
 	if (cbRead < 0)
 	{
+		cbRead = 0;
 		UNREACHABLE;
 		TRACE("libssh2_sftp_read() failed: %ws", _GetLastErrorMessage());
 		AtlThrow(STG_E_INVALIDFUNCTION);
 	}
-
-	return cbRead;
 }
 
 #define COPY_CHUNK ULONG_MAX ///< Maximum size of any single copy operation.
