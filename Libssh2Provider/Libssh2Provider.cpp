@@ -239,16 +239,21 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	list<Listing> lstFiles;
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
-        char szFilename[512];
+		char szFilename[MAX_FILENAME_LENZ];
         LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof(attrs));
-        int rc = libssh2_sftp_readdir(
-			pSftpHandle, szFilename, sizeof(szFilename), &attrs
-		);
-		if(rc <= 0)
-		{
-			szFilename[0] = '\0';
+        int len = libssh2_sftp_readdir(
+			pSftpHandle, szFilename, ARRAYSIZE(szFilename)-1, &attrs);
+		if (len <= 0)
 			break;
+		else
+			szFilename[len] = '\0';
+
+		// Exclude . and ..
+		if (szFilename[0] == '.')
+		{
+			if (len == 1 || (len == 2 && szFilename[1] == '.'))
+				continue;
 		}
 
 		lstFiles.push_back( _FillListingEntry(szFilename, attrs) );

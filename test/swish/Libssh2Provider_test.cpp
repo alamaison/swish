@@ -8,7 +8,11 @@
 #include <ATLComTime.h>
 
 // Libssh2Provider CLibssh2Provider component
-#import "progid:Libssh2Provider.Libssh2Provider" raw_interfaces_only, raw_native_types, auto_search
+#pragma warning (push)
+#pragma warning (disable: 4192) // automatically excluding while importing type
+#import "progid:Libssh2Provider.Libssh2Provider" raw_interfaces_only, \
+	raw_native_types, auto_search
+#pragma warning (pop)
 
 struct testFILEDATA
 {
@@ -897,6 +901,8 @@ private:
 
 			CString strOwner2 = lt.bstrOwner;
 			CPPUNIT_ASSERT( !strFilename.IsEmpty() );
+			CPPUNIT_ASSERT( strFilename != L"." );
+			CPPUNIT_ASSERT( strFilename != L".." );
 
 			CPPUNIT_ASSERT( lt.uPermissions > 0 );
 			CPPUNIT_ASSERT( lt.uSize >= 0 );
@@ -942,6 +948,7 @@ private:
 
 			hr = pEnum->Next(1, &lt, NULL);
 		}
+		CPPUNIT_ASSERT(hr == S_FALSE);
 	}
 
 	bool _FileExistsInListing(
@@ -954,7 +961,7 @@ private:
 		hr = spEnum->Reset();
 		CPPUNIT_ASSERT_OK(hr);
 		hr = spEnum->Next(1, &lt, NULL);
-		CPPUNIT_ASSERT_OK(hr);
+		CPPUNIT_ASSERT(SUCCEEDED(hr));
 		while (hr == S_OK)
 		{
 			if (bstrFilename == lt.bstrFilename)
