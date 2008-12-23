@@ -55,10 +55,9 @@ inline HRESULT _BindToParentFolderOfPIDL(
 	if (ppidlChild)
 		*ppidlChild = NULL;
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-	return ::SHBindToFolderIDListParent(
-		psfRoot, pidl, riid, ppvParent, ppidlChild);
-#else
+	// Equivalent to 
+	//     ::SHBindToFolderIDListParent(
+	//         psfRoot, pidl, riid, ppvParent, ppidlChild);
 	
 	// Create PIDL to penultimate item (parent)
 	PIDLIST_RELATIVE pidlParent = ::ILClone(pidl);
@@ -74,8 +73,6 @@ inline HRESULT _BindToParentFolderOfPIDL(
 	}
 
 	return hr;
-
-#endif
 }
 
 class CFolder :
