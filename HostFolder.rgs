@@ -53,7 +53,7 @@ HKLM
                     TypeLib = s '%APPID%'
                     
                     val InfoTip = s 'Remote file-system access via SFTP'
-                    val TileInfo = s 'prop:System.ComputerName;{b816a850-5022-11dc-9153-0090f5284f85} 2;System.ItemPathDisplay'
+                    val TileInfo = s 'prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{b816a850-5022-11dc-9153-0090f5284f85} 2;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7'
                     
                     ShellFolder
                     {
