@@ -214,9 +214,15 @@ STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		CComPtr<IQueryAssociations> spAssoc;
 		hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-		
-		// Initialise default assoc provider for Folders
-		hr = spAssoc->Init(0, L"Folder", NULL, NULL);
+
+		// Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
+		LPOLESTR posz;
+		::StringFromCLSID(__uuidof(CHostFolder), &posz);
+
+		// Initialise default assoc provider to use Swish CLSID key for data.
+		// This is necessary to pick up properties and TileInfo etc.
+		hr = spAssoc->Init(0, posz, NULL, NULL);
+		::CoTaskMemFree(posz);
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
 		*ppvReturn = spAssoc.Detach();
