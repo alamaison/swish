@@ -614,15 +614,15 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID( __in UINT iColumn,
 	{
 	case 0: // Display name (Label)
 		*pscid = PKEY_ItemNameDisplay; break;
-	case 1: // Owner
+	case 4: // Owner
 		*pscid = PKEY_FileOwner; break;
-	case 2: // Group
+	case 5: // Group
 		*pscid = PKEY_SwishRemoteGroup; break;
-	case 3: // File Permissions: drwxr-xr-x form
+	case 2: // File Permissions: drwxr-xr-x form
 		*pscid= PKEY_SwishRemotePermissions; break;
-	case 4: // File size in bytes
+	case 1: // File size in bytes
 		*pscid = PKEY_Size; break;
-	case 5: // Last modified date
+	case 3: // Last modified date
 		*pscid = PKEY_DateModified; break;
 	default:
 		return E_FAIL;
