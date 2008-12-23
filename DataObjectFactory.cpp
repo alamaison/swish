@@ -35,6 +35,9 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
 	return static_cast<DWORD>((qwSrc >> 32) & 0xFFFFFFFF);
 }
 
+#define SHOW_PROGRESS_THRESHOLD 10000 ///< File size threshold after which we
+                                      ///< display a progress dialogue
+
 /* static */ CComPtr<IDataObject> CDataObjectFactory::CreateDataObjectFromPIDLs(
 	CConnection& conn, PIDLIST_ABSOLUTE pidlCommonParent,
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl
@@ -57,6 +60,8 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
 		);
 
 		fd.dwFlags = FD_WRITESTIME | FD_FILESIZE | FD_ATTRIBUTES;
+		if (pidl.GetFileSize() > SHOW_PROGRESS_THRESHOLD)
+			fd.dwFlags |= FD_PROGRESSUI;
 
 		fd.nFileSizeLow = LODWORD(pidl.GetFileSize());
 		fd.nFileSizeHigh = HIDWORD(pidl.GetFileSize());
@@ -70,7 +75,7 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
 			fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 			// TODO: recursively add contents of the directory to the DataObject
 		}
-		if (pidl.GetFilename()[0] == '.')
+		if (pidl.GetFilename()[0] == L'.')
 			fd.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 
 		fgd.SetDescriptor(i, fd);
