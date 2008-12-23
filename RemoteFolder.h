@@ -116,7 +116,7 @@ private:
 	typedef std::vector<CRemoteChildPidl> RemotePidls;
 
 	CConnection _GetConnection(
-		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
+		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
 	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
 	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
@@ -130,7 +130,7 @@ private:
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 	CConnection _CreateConnectionForFolder(
-		__in HWND hwndUserInteraction ) throw(...);
+		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
 		throw(...);
 	void _DoDelete(

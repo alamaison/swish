@@ -551,8 +551,10 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 		dwAttribs |= SFGAO_HASSUBFOLDER;
 	}
 	if (fAllAreDotFiles)
+	{
 		dwAttribs |= SFGAO_GHOSTED;
-
+		dwAttribs |= SFGAO_HIDDEN;
+	}
 	dwAttribs |= SFGAO_CANRENAME;
 	dwAttribs |= SFGAO_CANDELETE;
 	dwAttribs |= SFGAO_CANCOPY;
@@ -1465,10 +1467,10 @@ CConnection CRemoteFolder::_GetConnection(
  * The two parts are the provider (SFTP backend) and consumer (user interaction
  * callback).  The connection is created from the information stored in this
  * folder's PIDL, @c m_pidl, and the window handle to be used as the owner
- * window for any user interaction. This window handle cannot be NULL (in order
- * to enforce good UI etiquette - we should attempt to interact with the user
- * if Explorer isn't expecting us to).  If it is, this function will throw
- * an exception.
+ * window for any user interaction. This window handle can be NULL but (in order
+ * to enforce good UI etiquette - we shouldn't attempt to interact with the user
+ * if Explorer isn't expecting us to) any operation which requires user 
+ * interaction should quietly fail.  
  *
  * @param hwndUserInteraction  A handle to the window which should be used
  *                             as the parent window for any user interaction.
@@ -1477,8 +1479,6 @@ CConnection CRemoteFolder::_GetConnection(
 CConnection CRemoteFolder::_CreateConnectionForFolder(
 	HWND hwndUserInteraction )
 {
-	if (hwndUserInteraction == NULL)
-		AtlThrow(E_FAIL);
 	ATLASSERT(m_pidl);
 
 	// Find HOSTPIDL part of this folder's absolute pidl to extract server info

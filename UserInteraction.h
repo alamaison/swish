@@ -46,7 +46,7 @@ public:
 
 	CUserInteraction() : m_hwndOwner(NULL) {}
 
-	HRESULT Initialize( __in HWND hwndOwner );
+	HRESULT Initialize( __in_opt HWND hwndOwner );
 
 	/**
 	 * Create and initialise an instance of the CUserInteraction class.
@@ -58,7 +58,7 @@ public:
 	 *                         ISftpConsumer interace pointer for this instance.
 	 */
 	static HRESULT MakeInstance(
-		__in HWND hwndOwner, __deref_out ISftpConsumer **ppReturn )
+		__in_opt HWND hwndOwner, __deref_out ISftpConsumer **ppReturn )
 	{
 		HRESULT hr;
 

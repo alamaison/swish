@@ -67,6 +67,9 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 	SAFEARRAY *psaShowResponses, SAFEARRAY **ppsaResponses
 )
 {
+	if (m_hwndOwner == NULL)
+		return E_FAIL;
+
 	CComSafeArray<BSTR> saPrompts(psaPrompts);
 	CComSafeArray<VARIANT_BOOL> saShowPrompts(psaShowResponses);
 
