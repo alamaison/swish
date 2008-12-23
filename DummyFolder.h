@@ -192,4 +192,8 @@ private:
 	HRESULT OnInvokeCommandEx(
 		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
 	// @}
+
+	HRESULT _GetAssocRegistryKeys( 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
+
 };

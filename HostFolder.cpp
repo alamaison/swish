@@ -25,13 +25,11 @@
 #include "ExplorerCallback.h" // For interaction with Explorer window
 #include "HostPidl.h"
 
-#include <string>
-using std::wstring;
+#include <atlrx.h> // For regular expressions
 
-
-CHostFolder::CHostFolder() : CFolder()
-{
-}
+#include <vector>
+using std::vector;
+using std::iterator;
 
 void CHostFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
 const throw(...)
@@ -227,14 +225,42 @@ STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	{
 		ATLTRACE("\t\tRequest: IContextMenu\n");
 
+		// Get keys associated with filetype from registry.
+		//
+		// This article says that we don't need to specify the keys:
+		// http://groups.google.com/group/microsoft.public.platformsdk.shell/
+		// browse_thread/thread/6f07525eaddea29d/
+		// but we do for the context menu to appear in versions of Windows 
+		// earlier than Vista.
+		HKEY *aKeys; UINT cKeys;
+		ATLENSURE_RETURN_HR(SUCCEEDED(
+			_GetAssocRegistryKeys(&cKeys, &aKeys)),
+			E_UNEXPECTED  // Might fail if registry is corrupted
+		);
+
 		CComPtr<IShellFolder> spThisFolder = this;
 		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
 
 		// Create default context menu from list of PIDLs
-		hr = ::CDefFolderMenu_Create2(GetRootPIDL(), hwndOwner, cPidl, aPidl,
-			spThisFolder, MenuCallback, 0, NULL, (IContextMenu **)ppvReturn);
-		ATLASSERT(SUCCEEDED(hr));
+		hr = ::CDefFolderMenu_Create2(
+			GetRootPIDL(), hwndOwner, cPidl, aPidl, spThisFolder, 
+			MenuCallback, cKeys, aKeys, (IContextMenu **)ppvReturn);
 
+		ATLASSERT(SUCCEEDED(hr));
+	}
+	else if (riid == __uuidof(IDataObject))
+	{
+		ATLTRACE("\t\tRequest: IDataObject\n");
+
+		// A DataObject is required in order for the call to 
+		// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
+		// earlier than Vista
+
+		hr = ::CIDLData_CreateFromIDArray(
+			GetRootPIDL(), cPidl, 
+			reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl),
+			(IDataObject **)ppvReturn);
+		ATLASSERT(SUCCEEDED(hr));
 	}
 
     return hr;
@@ -579,7 +605,7 @@ HRESULT CHostFolder::OnMenuCallback(
 			*reinterpret_cast<QCMINFO *>(lParam)
 		);
 	default:
-		return E_NOTIMPL;
+		return S_FALSE;
 	}
 }
 
@@ -673,6 +699,58 @@ HRESULT CHostFolder::_FillDetailsVariant( __in PCWSTR szDetail,
 	pv->bstrVal = ::SysAllocString( szDetail );
 
 	return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
+}
+
+/**
+ * Get a list names of registry keys for the connection items.  This is not 
+ * required for Windows Vista but is necessary on any earlier version in
+ * order to display the default context menu.
+ * Host connection items are treated as folders so the list of keys is:  
+ *   HKCU\Directory
+ *   HKCU\Directory\Background
+ *   HKCU\Folder
+ *   HKCU\*
+ *   HKCU\AllFileSystemObjects
+ */
+HRESULT CHostFolder::_GetAssocRegistryKeys(UINT *pcKeys, HKEY **paKeys)
+{
+	LSTATUS rc = ERROR_SUCCESS;	
+	vector<CString> vecKeynames;
+
+	// Add directory-specific items
+	vecKeynames.push_back(_T("Directory"));
+	vecKeynames.push_back(_T("Directory\\Background"));
+	vecKeynames.push_back(_T("Folder"));
+
+	// Add names of keys that apply to items of all types
+	vecKeynames.push_back(_T("AllFilesystemObjects"));
+	vecKeynames.push_back(_T("*"));
+
+	// Create list of registry handles from list of keys
+	vector<HKEY> vecKeys;
+	for (UINT i = 0; i < vecKeynames.size(); i++)
+	{
+		CRegKey reg;
+		CString strKey = vecKeynames[i];
+		ATLASSERT(strKey.GetLength() > 0);
+		ATLTRACE(_T("Opening HKCR\\%s\n"), strKey);
+		rc = reg.Open(HKEY_CLASSES_ROOT, strKey, KEY_READ);
+		ATLASSERT(rc == ERROR_SUCCESS);
+		if (rc == ERROR_SUCCESS)
+			vecKeys.push_back(reg.Detach());
+	}
+	
+	ATLASSERT( vecKeys.size() >= 3 );  // The minimum we must have added here
+	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
+
+	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
+	for (UINT i = 0; i < vecKeys.size(); i++)
+		aKeys[i] = vecKeys[i];
+
+	*pcKeys = (UINT)vecKeys.size();
+	*paKeys = aKeys;
+
+	return S_OK;
 }
 
 /**

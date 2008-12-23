@@ -22,6 +22,12 @@
 #include "DummyFolder.h"
 #include "Pidl.h"
 
+#include <atlrx.h> // For regular expressions
+
+#include <vector>
+using std::vector;
+using std::iterator;
+
 CDummyFolder::CDummyFolder()
 {
 	::ZeroMemory(&m_apidl[0], sizeof m_apidl[0]);
@@ -243,16 +249,38 @@ STDMETHODIMP CDummyFolder::GetUIObjectOf(
 	{
 		ATLTRACE("\t\tRequest: IContextMenu\n");
 
+		// Get keys associated with filetype from registry.
+		HKEY *aKeys; UINT cKeys;
+		ATLENSURE_RETURN_HR(SUCCEEDED(
+			_GetAssocRegistryKeys(&cKeys, &aKeys)),
+			E_UNEXPECTED  // Might fail if registry is corrupted
+		);
+
 		CComPtr<IShellFolder> spThisFolder = this;
 		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
 
+		// Create default context menu from list of PIDLs
 		CComPtr<IContextMenu> spMenu;
 		hr = ::CDefFolderMenu_Create2(
 			GetRootPIDL(), hwndOwner, cpidl, apidl, spThisFolder, 
-			MenuCallback, 0, NULL, &spMenu);
+			MenuCallback, cKeys, aKeys, &spMenu);
 		ATLASSERT(SUCCEEDED(hr));
 
 		hr = spMenu->QueryInterface(riid, ppv);
+	}
+	else if (riid == __uuidof(IDataObject))
+	{
+		ATLTRACE("\t\tRequest: IDataObject\n");
+
+		// A DataObject is required in order for the call to 
+		// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
+		// earlier than Vista
+
+		hr = ::CIDLData_CreateFromIDArray(
+			GetRootPIDL(), cpidl, 
+			reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl),
+			(IDataObject **)ppv);
+		ATLASSERT(SUCCEEDED(hr));
 	}
 	else
 	{
@@ -461,3 +489,56 @@ HRESULT CDummyFolder::OnInvokeCommandEx(
 		return S_FALSE;
 	}
 }
+
+/**
+ * Get a list names of registry keys for the dummy folders.  This is not 
+ * required for Windows Vista but is necessary on any earlier version in
+ * order to display the default context menu.
+ * The list of keys is:  
+ *   HKCU\Directory
+ *   HKCU\Directory\Background
+ *   HKCU\Folder
+ *   HKCU\*
+ *   HKCU\AllFileSystemObjects
+ */
+HRESULT CDummyFolder::_GetAssocRegistryKeys(UINT *pcKeys, HKEY **paKeys)
+{
+	LSTATUS rc = ERROR_SUCCESS;	
+	vector<CString> vecKeynames;
+
+	// Add directory-specific items
+	vecKeynames.push_back(_T("Directory"));
+	vecKeynames.push_back(_T("Directory\\Background"));
+	vecKeynames.push_back(_T("Folder"));
+
+	// Add names of keys that apply to items of all types
+	vecKeynames.push_back(_T("AllFilesystemObjects"));
+	vecKeynames.push_back(_T("*"));
+
+	// Create list of registry handles from list of keys
+	vector<HKEY> vecKeys;
+	for (UINT i = 0; i < vecKeynames.size(); i++)
+	{
+		CRegKey reg;
+		CString strKey = vecKeynames[i];
+		ATLASSERT(strKey.GetLength() > 0);
+		ATLTRACE(_T("Opening HKCR\\%s\n"), strKey);
+		rc = reg.Open(HKEY_CLASSES_ROOT, strKey, KEY_READ);
+		ATLASSERT(rc == ERROR_SUCCESS);
+		if (rc == ERROR_SUCCESS)
+			vecKeys.push_back(reg.Detach());
+	}
+	
+	ATLASSERT( vecKeys.size() >= 3 );  // The minimum we must have added here
+	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
+
+	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
+	for (UINT i = 0; i < vecKeys.size(); i++)
+		aKeys[i] = vecKeys[i];
+
+	*pcKeys = (UINT)vecKeys.size();
+	*paKeys = aKeys;
+
+	return S_OK;
+}
+

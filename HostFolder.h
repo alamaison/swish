@@ -48,10 +48,6 @@ class ATL_NO_VTABLE CHostFolder :
 	public CCoFactory<CHostFolder>,
 	public IExtractIcon
 {
-public:
-
-	CHostFolder();
-
 protected:
 
 	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
@@ -132,6 +128,8 @@ private:
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
+	HRESULT _GetAssocRegistryKeys( 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 	HRESULT _LoadConnectionsFromRegistry();
 	HRESULT _LoadConnectionDetailsFromRegistry( PCTSTR szLabel );
 };
