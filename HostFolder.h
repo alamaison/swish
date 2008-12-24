@@ -24,6 +24,7 @@
 
 #include "CoFactory.h"
 #include "Folder.h"
+#include "HostPidl.h"
 
 #define INITGUID
 #include <propkey.h>
@@ -31,7 +32,9 @@
 #include "HostPidlManager.h"
 #include "RemotePidlManager.h"
 
-// CHostFolder
+#include <vector>
+using std::vector;
+
 [
 	coclass,
 	default(IUnknown),
@@ -101,9 +104,8 @@ public: // IShellFolder methods
 							 LPSHELLDETAILS pDetails );
 
 private:
-    CHostPidlManager      m_HostPidlManager;
-	CRemotePidlManager    m_RemotePidlManager;
-	std::vector<HOSTPIDL> m_vecConnData;
+    CHostPidlManager   m_HostPidlManager;
+	vector<CHostItem>  m_vecConnData;
 
 	/**
 	 * Static dispatcher for Default Context Menu callback
@@ -128,10 +130,6 @@ private:
 	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
-	HRESULT _GetAssocRegistryKeys( 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
-	HRESULT _LoadConnectionsFromRegistry();
-	HRESULT _LoadConnectionDetailsFromRegistry( PCTSTR szLabel );
 };
 
 // Host column property IDs

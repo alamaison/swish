@@ -1,6 +1,6 @@
-/*  Copy-policy class for copying CHostItem wrapped PIDL to PITEMID_CHILD.
+/*  Helper class for Swish registry access.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,30 +24,18 @@
 #include <vector>
 using std::vector;
 
-class CConnCopyPolicy  
+class CRegistry
 {
 public:
-	static void init(PITEMID_CHILD*) { /* No init needed */ }
-    
-    static HRESULT copy(
-		__deref_out PITEMID_CHILD *pTo, __in const CHostItem *pFrom)
-    {
-		try
-		{
-			ATLASSERT(pFrom->IsValid());
-			*pTo = pFrom->CopyTo();
-		}
-		catchCom()
+	static vector<CHostItem> LoadConnectionsFromRegistry() throw(...);
+	static HRESULT GetHostFolderAssocKeys(
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 
-		return S_OK;
-    }
-
-    static void destroy(__in PITEMID_CHILD *p) 
-    {
-		::ILFree(*p);
-    }
+private:
+	static CHostItem _GetConnectionDetailsFromRegistry(__in PCWSTR pwszLabel)
+		throw(...);
+	static vector<HKEY> _GetFolderAssocRegistryKeys() throw(...);
+	static HRESULT _GetHKEYArrayFromVector(
+		__in vector<HKEY> vecKeys, 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 };
-
-typedef CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
-                      CConnCopyPolicy, vector<CHostItem> >
-		CEnumIDListImpl;

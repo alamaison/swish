@@ -23,13 +23,10 @@
 #include "RemoteFolder.h"
 #include "ConnCopyPolicy.h"
 #include "ExplorerCallback.h" // For interaction with Explorer window
-#include "HostPidl.h"
+#include "Registry.h" // For saved connection details
 
 #include <atlrx.h> // For regular expressions
 
-#include <vector>
-using std::vector;
-using std::iterator;
 
 void CHostFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
 const throw(...)
@@ -149,9 +146,12 @@ STDMETHODIMP CHostFolder::EnumObjects(
 		(grfFlags & (SHCONTF_NETPRINTERSRCH | SHCONTF_SHAREABLE)))
 		return S_FALSE;
 
-	// Load connections from HKCU\Software\Swish\Connections
-	hr = _LoadConnectionsFromRegistry();
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	try
+	{
+		// Load connections from HKCU\Software\Swish\Connections
+		m_vecConnData = CRegistry::LoadConnectionsFromRegistry();
+	}
+	catchCom()
 
     // Create an enumerator with CComEnumOnSTL<> and our copy policy class.
 	CComObject<CEnumIDListImpl>* pEnum;
@@ -162,7 +162,7 @@ STDMETHODIMP CHostFolder::EnumObjects(
     // Init the enumerator.  Init() will AddRef() our IUnknown (obtained with
     // GetUnknown()) so this object will stay alive as long as the enumerator 
     // needs access to the vector m_vecConnData.
-    hr = pEnum->Init( GetUnknown(), m_vecConnData );
+    hr = pEnum->Init(GetUnknown(), m_vecConnData);
 
     // Return an IEnumIDList interface to the caller.
     if (SUCCEEDED(hr))
@@ -240,7 +240,7 @@ STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		// earlier than Vista.
 		HKEY *aKeys; UINT cKeys;
 		ATLENSURE_RETURN_HR(SUCCEEDED(
-			_GetAssocRegistryKeys(&cKeys, &aKeys)),
+			CRegistry::GetHostFolderAssocKeys(&cKeys, &aKeys)),
 			E_UNEXPECTED  // Might fail if registry is corrupted
 		);
 
@@ -705,156 +705,4 @@ HRESULT CHostFolder::_FillDetailsVariant( __in PCWSTR szDetail,
 	pv->bstrVal = ::SysAllocString( szDetail );
 
 	return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
-}
-
-/**
- * Get a list names of registry keys for the connection items.  This is not 
- * required for Windows Vista but is necessary on any earlier version in
- * order to display the default context menu.
- * Host connection items are treated as folders so the list of keys is:  
- *   HKCU\Directory
- *   HKCU\Directory\Background
- *   HKCU\Folder
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
- */
-HRESULT CHostFolder::_GetAssocRegistryKeys(UINT *pcKeys, HKEY **paKeys)
-{
-	LSTATUS rc = ERROR_SUCCESS;	
-	vector<CString> vecKeynames;
-
-	// Add directory-specific items
-	vecKeynames.push_back(_T("Directory"));
-	vecKeynames.push_back(_T("Directory\\Background"));
-	vecKeynames.push_back(_T("Folder"));
-
-	// Add names of keys that apply to items of all types
-	vecKeynames.push_back(_T("AllFilesystemObjects"));
-	vecKeynames.push_back(_T("*"));
-
-	// Create list of registry handles from list of keys
-	vector<HKEY> vecKeys;
-	for (UINT i = 0; i < vecKeynames.size(); i++)
-	{
-		CRegKey reg;
-		CString strKey = vecKeynames[i];
-		ATLASSERT(strKey.GetLength() > 0);
-		ATLTRACE(_T("Opening HKCR\\%s\n"), strKey);
-		rc = reg.Open(HKEY_CLASSES_ROOT, strKey, KEY_READ);
-		ATLASSERT(rc == ERROR_SUCCESS);
-		if (rc == ERROR_SUCCESS)
-			vecKeys.push_back(reg.Detach());
-	}
-	
-	ATLASSERT( vecKeys.size() >= 3 );  // The minimum we must have added here
-	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
-
-	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
-	for (UINT i = 0; i < vecKeys.size(); i++)
-		aKeys[i] = vecKeys[i];
-
-	*pcKeys = (UINT)vecKeys.size();
-	*paKeys = aKeys;
-
-	return S_OK;
-}
-
-/**
- * Load all the connections stored in the registry into the member vector.
- *
- * If the vector already contains items, these are cleared.  It's possible
- * that there aren't any connections in the @c Software\\Swish\\Connections 
- * key of the registry, in which case the vector is left empty.
- *
- * @returns S_OK if there were no connections in the registry or if there were
- *          and they were successfully loaded into @c m_vecConnData.  It
- *          returns an error if something unexpected happens such as corrupt
- *          registry structure.
- */
-HRESULT CHostFolder::_LoadConnectionsFromRegistry()
-{
-	CRegKey regConnections;
-	LSTATUS rc = ERROR_SUCCESS;
-	HRESULT hr = S_OK;
-
-	rc = regConnections.Open(
-		HKEY_CURRENT_USER, _T("Software\\Swish\\Connections")
-	);
-	if (rc != ERROR_SUCCESS)
-		return S_OK; // Legal to fail here - may be first ever connection
-
-	m_vecConnData.clear();
-
-	int iSubKey = 0;
-	TCHAR szLabel[2048]; 
-	do {
-		DWORD cchLabel = 2048;
-		rc = regConnections.EnumKey(iSubKey, szLabel, &cchLabel);
-		if (rc == ERROR_SUCCESS)
-		{
-			hr = _LoadConnectionDetailsFromRegistry(szLabel);
-			ATLASSERT(SUCCEEDED(hr));
-		}
-		iSubKey++;
-	} while (rc == ERROR_SUCCESS);
-
-	ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
-	ATLASSERT(regConnections.Close() == ERROR_SUCCESS);
-
-	return hr;
-}
-
-/**
- * Loads a single connection from the registry and adds it to the member vector.
- *
- * @pre The @c Software\\Swish\\Connections registry key exists
- * @pre The connection is present as a subkey of the 
- *      @c Software\\Swish\\Connections registry key whose name is given
- *      by @p szLabel.
- * @param szLabel The name of the connection to load.
- * @returns S_OK if successfull, E_FAIL if the registry key does not exist
- *          and E_UNEXPECTED if the registry is corrupted.
- */
-HRESULT CHostFolder::_LoadConnectionDetailsFromRegistry( PCTSTR szLabel )
-{
-	CRegKey regConnection;
-	LSTATUS rc = ERROR_SUCCESS;
-	HRESULT hr = S_OK;
-	PITEMID_CHILD pDataTemp; // Not simply HOSTPIDL, has terminator
-
-	// Target variables to load values into
-	TCHAR szHost[MAX_HOSTNAME_LENZ]; ULONG cchHost = MAX_HOSTNAME_LENZ;
-	DWORD dwPort;
-	TCHAR szUser[MAX_USERNAME_LENZ]; ULONG cchUser = MAX_USERNAME_LENZ;
-	TCHAR szPath[MAX_PATH_LENZ];     ULONG cchPath = MAX_PATH_LENZ;
-
-	// Open HKCU\Software\Swish\Connections\<szLabel> registry key
-	CString strKey = CString("Software\\Swish\\Connections\\") + szLabel;
-	rc = regConnection.Open(HKEY_CURRENT_USER, strKey);
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	// Load values
-	rc = regConnection.QueryStringValue(_T("Host"), szHost, &cchHost); // Host
-
-	rc = regConnection.QueryDWORDValue(_T("Port"), dwPort);            // Port
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-	ATLASSERT(dwPort >= MIN_PORT);
-	ATLASSERT(dwPort <= MAX_PORT);
-	USHORT uPort = static_cast<USHORT>(dwPort);
-
-	rc = regConnection.QueryStringValue(_T("User"), szUser, &cchUser); // User
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-
-	rc = regConnection.QueryStringValue(_T("Path"), szPath, &cchPath); // Path
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-
-	// Create new Listing and push onto end of vector
-	hr = m_HostPidlManager.Create(
-		szLabel, szUser, szHost, szPath, uPort, &pDataTemp );
-	ATLASSERT(SUCCEEDED(hr));
-	m_vecConnData.push_back(*(m_HostPidlManager.Validate(pDataTemp)));
-	m_HostPidlManager.Delete(pDataTemp);
-
-	ATLASSERT(regConnection.Close() == ERROR_SUCCESS);
-	return hr;
 }

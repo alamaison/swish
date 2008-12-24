@@ -313,10 +313,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\ConnCopyPolicy.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Connection.cpp"
 				>
 			</File>
@@ -362,6 +358,10 @@
 			</File>
 			<File
 				RelativePath=".\Pool.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Registry.cpp"
 				>
 			</File>
 			<File
@@ -511,6 +511,10 @@
 			</File>
 			<File
 				RelativePath=".\Pool.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Registry.h"
 				>
 			</File>
 			<File

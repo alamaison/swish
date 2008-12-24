@@ -140,6 +140,13 @@ do {                                                                 \
 	if(!(__atl_condVal)) return (hr);                                \
 } while (0)
 
+#define ATLENSURE_REPORT_THROW(expr, error, hr)                      \
+do {                                                                 \
+	int __atl_condVal=!!(expr);                                      \
+	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+	if(!(__atl_condVal)) AtlThrow(hr);                               \
+} while (0)
+
 #ifdef _DEBUG
 #define ATLASSERT_REPORT(expr, error)                                \
 do {                                                                 \
