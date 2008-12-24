@@ -135,11 +135,6 @@ private:
 	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
 	CString _GetFilenameFromPIDL(
 		CRemoteItemHandle pidl, bool fIncludeExtension=true );
-	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );
-	HRESULT _GetRegistryKeysForPidl(
-		PCUITEMID_CHILD pidl, 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys );
-	std::vector<CString> _GetExtensionSpecificKeynames( PCTSTR szExtension );
 	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );

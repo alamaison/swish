@@ -27,9 +27,9 @@
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
 #include "HostPidl.h"
 #include "ShellDataObject.h"
+#include "Registry.h"
 
 #include <ATLComTime.h>
-#include <atlrx.h> // For regular expressions
 
 #include <vector>
 using std::vector;
@@ -237,8 +237,10 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		CComPtr<IQueryAssociations> spAssoc;
 		hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+
+		CRemoteItemHandle pidl(aPidl[0]);
 		
-		if (m_RemotePidlManager.IsFolder(aPidl[0]))
+		if (pidl.IsFolder())
 		{
 			// Initialise default assoc provider for Folders
 			hr = spAssoc->Init(
@@ -248,7 +250,7 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		else
 		{
 			// Initialise default assoc provider for given file extension
-			CString strExt = L"." + _GetFileExtensionFromPIDL(aPidl[0]);
+			CString strExt = L"." + pidl.GetExtension();
 			hr = spAssoc->Init(
 				ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, NULL);
 			ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
@@ -271,7 +273,7 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		// earlier than Vista.
 		HKEY *aKeys; UINT cKeys;
 		ATLENSURE_RETURN_HR(SUCCEEDED(
-			_GetRegistryKeysForPidl(aPidl[0], &cKeys, &aKeys)),
+			CRegistry::GetRemoteFolderAssocKeys(aPidl[0], &cKeys, &aKeys)),
 			E_UNEXPECTED  // Might fail if registry is corrupted
 		);
 
@@ -1126,197 +1128,6 @@ HRESULT CRemoteFolder::_FillUI8Variant( __in ULONGLONG ull, __out VARIANT *pv )
 	pv->ullVal = ull;
 
 	return S_OK; // TODO: return success of VariantInit
-}
-
-/**
- * Get a list names of registry keys for the types of the selected file.
- * These keys hold information such as the context menu items and default
- * actions.  (Ficticious) examples include:
- *   HKCU\.ppt
- *   HKCU\PowerPoint.Show
- *   HKCU\PowerPoint.Show.12
- *   HKCU\SystemFileAssociations\.ppt
- *   HKCU\SystemFileAssociations\presentation
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
- * for a file and:
- *   HKCU\Directory
- *   HKCU\Directory\Background
- *   HKCU\Folder
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
- * for a folder.
- *
- * Although we pass in an array of PIDLs, only the first one (the one that is
- * right-clicked on in the case of a context menu
- */
-HRESULT CRemoteFolder::_GetRegistryKeysForPidl(
-	PCUITEMID_CHILD pidl, UINT *pcKeys, HKEY **paKeys )
-{
-	LSTATUS rc = ERROR_SUCCESS;	
-	vector<CString> vecKeynames;
-
-	// If this is a directory, add directory-specific items
-	if (m_RemotePidlManager.IsFolder( pidl ))
-	{
-		vecKeynames.push_back(_T("Directory"));
-		vecKeynames.push_back(_T("Directory\\Background"));
-		vecKeynames.push_back(_T("Folder"));
-	}
-	else
-	{
-		// Get extension-specific keys
-		// We don't want to add the {.ext} key itself to the list of keys but 
-		// rather, we should use it's default value to look up its file class. 
-		// e.g:
-		//   HKCR\.txt => (Default) txtfile
-		// so we look up the following key
-		//   HKCR\txtfile
-		vector<CString> vecExt = _GetExtensionSpecificKeynames( 
-			_GetFileExtensionFromPIDL(pidl) );
-		vecKeynames.insert(vecKeynames.end(), vecExt.begin(), vecExt.end());
-	}
-
-	// Add names of keys that apply to items of all types
-	vecKeynames.push_back(_T("AllFilesystemObjects"));
-	vecKeynames.push_back(_T("*"));
-
-	// Create list of registry handles from list of keys
-	vector<HKEY> vecKeys;
-	for (UINT i = 0; i < vecKeynames.size(); i++)
-	{
-		CRegKey reg;
-		CString strKey = vecKeynames[i];
-		ATLASSERT(strKey.GetLength() > 0);
-		ATLTRACE(_T("Opening HKCR\\%s\n"), strKey);
-		rc = reg.Open(HKEY_CLASSES_ROOT, strKey, KEY_READ);
-		ATLASSERT(rc == ERROR_SUCCESS);
-		if (rc == ERROR_SUCCESS)
-			vecKeys.push_back(reg.Detach());
-	}
-	
-	ATLASSERT( vecKeys.size() >= 3 );  // The minimum we must have added here
-	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
-
-	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
-	for (UINT i = 0; i < vecKeys.size(); i++)
-		aKeys[i] = vecKeys[i];
-
-	*pcKeys = (UINT)vecKeys.size();
-	*paKeys = aKeys;
-
-	return S_OK;
-}
-
-/**
- * Get the list of names of registry keys related to a specific file extension.
- *
- * @param szExtension  The extension whose keys will be returned.
- */
-vector<CString> CRemoteFolder::_GetExtensionSpecificKeynames(
-	PCTSTR szExtension )
-{
-	ATLTRACE("CRemoteFolder::_GetExtensionSpecificKeynames called\n");
-	vector<CString> vecKeynames;
-	CString strExtension = CString(_T(".")) + szExtension;
-
-	// Start digging at HKCR\.{szExtension}
-	CRegKey reg;
-	if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)
-		== ERROR_SUCCESS)
-	{
-		vecKeynames.push_back(strExtension);
-
-		// Try to get registered file class key (extensions's default val)
-		TCHAR szClass[2048]; ULONG cchClass = 2048;
-		if (reg.QueryStringValue(_T(""), szClass, &cchClass) == ERROR_SUCCESS
-		 && cchClass > 1
-		 && reg.Open(HKEY_CLASSES_ROOT, szClass, KEY_READ) == ERROR_SUCCESS)
-		{
-			vecKeynames.push_back(szClass);
-
-			// Does this class contain a CurVer subkey pointing to another
-			// version of this file.
-			//   e.g.: PowerPoint.Show\CurVer => PowerPoint.Show.12
-			CString strCurVer = szClass;
-			strCurVer += _T("\\CurVer");
-			if (reg.Open(HKEY_CLASSES_ROOT, strCurVer, KEY_READ)
-				== ERROR_SUCCESS)
-			{
-				// Does this CurVer exist?
-				TCHAR szCurVer[2048]; ULONG cchCurVer = 2048;
-				if (reg.QueryStringValue(_T(""), szCurVer, &cchCurVer) ==
-					ERROR_SUCCESS && cchCurVer > 1
-				 && reg.Open(HKEY_CLASSES_ROOT, szCurVer, KEY_READ) == 
-					ERROR_SUCCESS)
-				{
-					vecKeynames.push_back(szCurVer);
-				}
-			}
-		}
-	}
-
-	// Dig again at HKCR\SystemFileAssociations\.{sxExtension}
-	CString strSysFileAssocExt = _T("SystemFileAssociations\\") + strExtension;
-	if (reg.Open(HKEY_CLASSES_ROOT, strSysFileAssocExt, KEY_READ)
-		== ERROR_SUCCESS)
-	{
-		vecKeynames.push_back(strSysFileAssocExt);
-	}
-
-	// Dig again at HKCR\.{szExtension}\PerceivedType
-	if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)
-		== ERROR_SUCCESS)
-	{
-		TCHAR szPerceivedType[2048]; ULONG cchPerceivedType = 2048;
-		if (reg.QueryStringValue(
-				_T("PerceivedType"), szPerceivedType, &cchPerceivedType)
-			== ERROR_SUCCESS && cchPerceivedType > 1)
-		{
-			CString strPerceivedType = 
-				CString(_T("SystemFileAssociations\\")) + szPerceivedType;
-
-			if (reg.Open(HKEY_CLASSES_ROOT, strPerceivedType, KEY_READ)
-				== ERROR_SUCCESS)
-				vecKeynames.push_back(strPerceivedType);
-		}
-	}
-
-	if (!vecKeynames.size())
-		vecKeynames.push_back(_T("Unknown"));
-
-	ATLASSERT( vecKeynames.size() <= 5 ); 
-	return vecKeynames;
-}
-
-/**
- * Extracts the extension part of the filename from the given PIDL.
- * The extension does not include the dot.  If the filename has no extension
- * an empty string is returned.
- *
- * @param  The PIDL to get the file extension of.
- */
-CString CRemoteFolder::_GetFileExtensionFromPIDL( PCUITEMID_CHILD pidl )
-{
-	ATLASSERT(CRemoteItemHandle::IsValid(pidl));
-
-	CString strFilename = _GetFilenameFromPIDL(pidl);
-
-	// Build regex to grap
-	CAtlRegExp<> re;
-	ATLVERIFY( re.Parse(_T("\\.?{[^\\.]*}$")) == REPARSE_ERROR_OK );
-
-	// Run regex agains filename and extract matched section
-	CAtlREMatchContext<> match;
-	ATLVERIFY( re.Match(strFilename, &match) );
-	ATLASSERT( match.m_uNumGroups == 1 );
-	
-	const TCHAR *szStart; const TCHAR *szEnd;
-	match.GetMatch(0, &szStart, &szEnd);
-	ptrdiff_t cchLength = szEnd - szStart;
-
-	CString strExtension(szStart, (UINT)cchLength);
-	return strExtension;
 }
 
 /**

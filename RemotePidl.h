@@ -22,7 +22,8 @@
 #include "Pidl.h"
 #include "remotelimits.h"
 
-#include <ATLComTime.h>
+#include <ATLComTime.h> // For COleDateTime
+#include <atlrx.h>      // For regular expressions
 
 #include <pshpack1.h>
 /** 
@@ -123,6 +124,34 @@ public:
 		ATLASSERT(strName.GetLength() <= MAX_PATH_LEN);
 
 		return strName;
+	}
+
+	/**
+	 * Extract the extension part of the filename.
+	 * The extension does not include the dot.  If the filename has no extension
+	 * an empty string is returned.
+	 */
+	CString GetExtension()
+	{
+		if (m_pidl == NULL) return L"";
+		if (!IsValid())
+			throw InvalidPidlException();
+
+		// Build regex
+		CAtlRegExp<> re;
+		ATLVERIFY( re.Parse(L"\\.?{[^\\.]*}$") == REPARSE_ERROR_OK );
+
+		// Run regex against filename and extract matched section
+		CAtlREMatchContext<> match;
+		ATLVERIFY( re.Match(GetFilename(), &match) );
+		ATLASSERT( match.m_uNumGroups == 1 );
+		
+		const wchar_t *pwszStart; const wchar_t *pwszEnd;
+		match.GetMatch(0, &pwszStart, &pwszEnd);
+		ptrdiff_t cchLength = pwszEnd - pwszStart;
+
+		CString strExtension(pwszStart, static_cast<int>(cchLength));
+		return strExtension;
 	}
 
 	CString GetOwner() const throw(...)

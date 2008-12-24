@@ -20,6 +20,7 @@
 #pragma once
 
 #include "HostPidl.h"
+#include "RemotePidl.h"
 
 #include <vector>
 using std::vector;
@@ -28,14 +29,36 @@ class CRegistry
 {
 public:
 	static vector<CHostItem> LoadConnectionsFromRegistry() throw(...);
-	static HRESULT GetHostFolderAssocKeys(
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
-
+	
 private:
 	static CHostItem _GetConnectionDetailsFromRegistry(__in PCWSTR pwszLabel)
 		throw(...);
-	static vector<HKEY> _GetFolderAssocRegistryKeys() throw(...);
+
+public:
+	static HRESULT GetHostFolderAssocKeys(
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+	static HRESULT GetRemoteFolderAssocKeys(
+		__in CRemoteItemHandle pidl, 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+
+private:
+	static vector<CString> _GetHostFolderAssocKeynames() throw();
+	static vector<CString> _GetRemoteFolderAssocKeynames(
+		__in CRemoteItemHandle pidl) throw(...);
+
+	static vector<CString> _GetKeynamesForFolder() throw();
+	static vector<CString> _GetKeynamesCommonToAll() throw();
+	static vector<CString> _GetKeynamesForExtension(__in PCWSTR pwszExtension)
+		throw();
+
+	static HRESULT _GetHKEYArrayFromKeynames(
+		__in const vector<CString> vecKeynames, 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+
 	static HRESULT _GetHKEYArrayFromVector(
-		__in vector<HKEY> vecKeys, 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
+		__in const vector<HKEY> vecKeys, 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+
+	static vector<HKEY> _GetKeysFromKeynames(
+		__in const vector<CString> vecKeynames) throw();
 };
