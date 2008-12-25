@@ -360,7 +360,8 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER ||
 			(uFlags & SHGDN_FOREDITING));
 
-		strName = _GetFilenameFromPIDL(pidl);
+		CRemoteItemHandle rpidl(pidl);
+		strName = rpidl.GetFilename();
 	}
 
 	// Store in a STRRET and return
@@ -1053,33 +1054,6 @@ CString CRemoteFolder::_ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl )
 	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
 
 	return strPath;
-}
-
-CString CRemoteFolder::_GetFilenameFromPIDL(
-	CRemoteItemHandle pidl, bool fIncludeExtension)
-{
-	METHOD_TRACE;
-	ATLASSERT(pidl.IsValid());
-
-	// Extract filename from REMOTEPIDL
-	CString strName;
-	if (fIncludeExtension || pidl.GetFilename()[0] == L'.')
-	{
-		strName = pidl.GetFilename();
-	}
-	else
-	{
-		CString strFilename(pidl.GetFilename());
-		int nLimit = strFilename.ReverseFind(L'.');
-		if (nLimit < 0)
-			nLimit = strFilename.GetLength();
-
-		strName = CString(strFilename, nLimit);
-	}
-
-	ATLASSERT( strName.GetLength() <= MAX_PATH_LEN );
-
-	return strName;
 }
 
 /*------------------------------------------------------------------------------

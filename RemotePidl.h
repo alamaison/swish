@@ -23,7 +23,6 @@
 #include "remotelimits.h"
 
 #include <ATLComTime.h> // For COleDateTime
-#include <atlrx.h>      // For regular expressions
 
 #include <pshpack1.h>
 /** 
@@ -120,9 +119,27 @@ public:
 		if (!IsValid())
 			throw InvalidPidlException();
 
-		CString strName = Get()->wszFilename;
-		ATLASSERT(strName.GetLength() <= MAX_PATH_LEN);
+		return Get()->wszFilename;
+	}
 
+	CString GetFilename(bool fIncludeExtension) const throw(...)
+	{
+		if (m_pidl == NULL) return L"";
+		if (!IsValid())
+			throw InvalidPidlException();
+
+		CString strName = GetFilename();
+
+		if (!fIncludeExtension && strName[0] != L'.')
+		{
+			int nLimit = strName.ReverseFind(L'.');
+			if (nLimit < 0)
+				nLimit = strName.GetLength();
+
+			strName.Truncate(nLimit);
+		}
+
+		ATLASSERT(strName.GetLength() <= MAX_PATH_LEN);
 		return strName;
 	}
 
@@ -137,21 +154,16 @@ public:
 		if (!IsValid())
 			throw InvalidPidlException();
 
-		// Build regex
-		CAtlRegExp<> re;
-		ATLVERIFY( re.Parse(L"\\.?{[^\\.]*}$") == REPARSE_ERROR_OK );
+		const wchar_t *pwszExtStart = ::PathFindExtension(GetFilename());
+		ATLASSERT(pwszExtStart);
 
-		// Run regex against filename and extract matched section
-		CAtlREMatchContext<> match;
-		ATLVERIFY( re.Match(GetFilename(), &match) );
-		ATLASSERT( match.m_uNumGroups == 1 );
+		if (*pwszExtStart != L'\0')
+		{
+			ATLASSERT(*pwszExtStart == L'.');
+			pwszExtStart++; // Remove dot
+		}
 		
-		const wchar_t *pwszStart; const wchar_t *pwszEnd;
-		match.GetMatch(0, &pwszStart, &pwszEnd);
-		ptrdiff_t cchLength = pwszEnd - pwszStart;
-
-		CString strExtension(pwszStart, static_cast<int>(cchLength));
-		return strExtension;
+		return pwszExtStart;
 	}
 
 	CString GetOwner() const throw(...)
