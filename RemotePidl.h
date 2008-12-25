@@ -148,7 +148,7 @@ public:
 	 * The extension does not include the dot.  If the filename has no extension
 	 * an empty string is returned.
 	 */
-	CString GetExtension()
+	CString GetExtension() const throw(...)
 	{
 		if (m_pidl == NULL) return L"";
 		if (!IsValid())
