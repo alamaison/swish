@@ -294,6 +294,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 	ATLTRACE("CHostFolder::GetDisplayNameOf called\n");
 
 	CString strName;
+	CHostItemHandle hpidl(pidl);
 
 	if (uFlags & SHGDN_FORPARSING)
 	{
@@ -304,7 +305,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		// TODO:  if !SHGDN_INFOLDER the pidl may not be single-level
 		// so we should always seek to the last pidl before extracting info
 
-		strName = _GetLongNameFromPIDL(pidl, true);
+		strName = hpidl.GetLongName(true);
 	}
 	else if(uFlags & SHGDN_FORADDRESSBAR)
 	{
@@ -314,7 +315,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		// unless the port is the default port in which case it is ommitted:
 		//     sftp://username@hostname/path
 
-		strName = _GetLongNameFromPIDL(pidl, false);
+		strName = hpidl.GetLongName(false);
 	}
 	else
 	{
@@ -323,7 +324,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER ||
 			(uFlags & SHGDN_FOREDITING));
 
-		strName = _GetLabelFromPIDL(pidl);
+		strName = hpidl.GetLabel();
 	}
 
 	// Store in a STRRET and return
@@ -404,6 +405,10 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 {
 	ATLTRACE("CHostFolder::GetDetailsEx called\n");
 
+	bool fHeader = (pidl == NULL);
+
+	CHostItemHandle hpidl(pidl);
+
 	// If pidl: Request is for an item detail.  Retrieve from pidl and
 	//          return string
 	// Else:    Request is for a column heading.  Return heading as BSTR
@@ -411,59 +416,53 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	// Display name (Label)
 	if (IsEqualPropertyKey(*pscid, PKEY_ItemNameDisplay))
 	{
-		ATLTRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
-		
-		return pidl ?
-			_FillDetailsVariant( m_HostPidlManager.GetLabel(pidl), pv ) :
-			_FillDetailsVariant( _T("Name"), pv );
+		TRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
+
+		return _FillDetailsVariant(
+			(fHeader) ? L"Name" : hpidl.GetLabel(), pv);
 	}
 	// Hostname
 	else if (IsEqualPropertyKey(*pscid, PKEY_ComputerName))
 	{
-		ATLTRACE("\t\tRequest: PKEY_ComputerName\n");
+		TRACE("\t\tRequest: PKEY_ComputerName\n");
 
-		return pidl ?
-			_FillDetailsVariant( m_HostPidlManager.GetHost(pidl), pv ) :
-			_FillDetailsVariant( _T("Host"), pv );
+		return _FillDetailsVariant(
+			(fHeader) ? L"Host" : hpidl.GetHost(), pv);
 	}
 	// Username
 	else if (IsEqualPropertyKey(*pscid, PKEY_SwishHostUser))
 	{
-		ATLTRACE("\t\tRequest: PKEY_SwishHostUser\n");
-		
-		return pidl ?
-			_FillDetailsVariant( m_HostPidlManager.GetUser(pidl), pv ) :
-			_FillDetailsVariant( _T("Username"), pv );
+		TRACE("\t\tRequest: PKEY_SwishHostUser\n");
+
+		return _FillDetailsVariant(
+			(fHeader) ? L"Username" : hpidl.GetUser(), pv);
 	}
 	// SFTP port
 	else if (IsEqualPropertyKey(*pscid, PKEY_SwishHostPort))
 	{
-		ATLTRACE("\t\tRequest: PKEY_SwishHostPort\n");
-		
-		return pidl ?
-			_FillDetailsVariant( m_HostPidlManager.GetPortStr(pidl), pv ) :
-			_FillDetailsVariant( _T("Port"), pv );
+		TRACE("\t\tRequest: PKEY_SwishHostPort\n");
+
+		return _FillDetailsVariant(
+			(fHeader) ? L"Port" : hpidl.GetPortStr(), pv);
 	}
 	// Remote filesystem path
 	else if (IsEqualPropertyKey(*pscid, PKEY_ItemPathDisplay))
 	{
-		ATLTRACE("\t\tRequest: PKEY_ItemPathDisplay\n");
+		TRACE("\t\tRequest: PKEY_ItemPathDisplay\n");
 
-		return pidl ?
-			_FillDetailsVariant( m_HostPidlManager.GetPath(pidl), pv ) :
-			_FillDetailsVariant( _T("Remote Path"), pv );
+		return _FillDetailsVariant(
+			(fHeader) ? L"Remote Path" : hpidl.GetPath(), pv);
 	}
 	// Type: always 'Network Drive'
 	else if (IsEqualPropertyKey(*pscid, PKEY_ItemType))
 	{
-		ATLTRACE("\t\tRequest: PKEY_ItemType\n");
+		TRACE("\t\tRequest: PKEY_ItemType\n");
 
-		return pidl ?
-			_FillDetailsVariant( _T("Network Drive"), pv ) :
-			_FillDetailsVariant( _T("Type"), pv );
+		return _FillDetailsVariant(
+			(fHeader) ? L"Type" : L"Network Drive", pv);
 	}
 
-	ATLTRACE("\t\tRequest: <unknown>\n");
+	TRACE("\t\tRequest: <unknown>\n");
 
 	// Assert unless request is one of the supported properties
 	// TODO: System.FindData tiggers this
@@ -644,47 +643,25 @@ HRESULT CHostFolder::OnMergeContextMenu(
  * or, if not set and if the port is the default port the reduced form:
  *     sftp://username@hostname/path
  *----------------------------------------------------------------------------*/
-CString CHostFolder::_GetLongNameFromPIDL( PCUITEMID_CHILD pidl, 
-										   BOOL fCanonical )
+CString CHostFolder::_GetLongNameFromPIDL(
+	CHostItemHandle pidl, bool fCanonical)
 {
-	ATLTRACE("CHostFolder::_GetLongNameFromPIDL called\n");
+	METHOD_TRACE;
+	ATLASSERT(pidl.IsValid());
 
 	CString strName;
-	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidl)));
 
 	// Construct string from info in PIDL
-	strName = _T("sftp://");
-	strName += m_HostPidlManager.GetUser(pidl);
-	strName += _T("@");
-	strName += m_HostPidlManager.GetHost(pidl);
-	if (fCanonical || (m_HostPidlManager.GetPort(pidl) != SFTP_DEFAULT_PORT))
+	strName.AppendFormat(L"sftp://%ws@%ws", pidl.GetUser(), pidl.GetHost());
+
+	if (fCanonical || (pidl.GetPort() != SFTP_DEFAULT_PORT))
 	{
-		strName += _T(":");
-		strName.AppendFormat( _T("%u"), m_HostPidlManager.GetPort(pidl) );
+		strName.AppendFormat(L":%u", pidl.GetPort());
 	}
-	strName += _T("/");
-	strName += m_HostPidlManager.GetPath(pidl);
 
-	ATLASSERT( strName.GetLength() <= MAX_CANONICAL_LEN );
+	strName.AppendFormat(L"/%ws", pidl.GetPath());
 
-	return strName;
-}
-
-/*------------------------------------------------------------------------------
- * CHostFolder::_GetLabelFromPIDL
- * Retrieve the user-assigned label of the host connection from the given PIDL.
- *----------------------------------------------------------------------------*/
-CString CHostFolder::_GetLabelFromPIDL( PCUITEMID_CHILD pidl )
-{
-	ATLTRACE("CHostFolder::_GetLabelFromPIDL called\n");
-
-	CString strName;
-	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidl)));
-
-	// Construct string from info in PIDL
-	strName = m_HostPidlManager.GetLabel(pidl);
-
-	ATLASSERT( strName.GetLength() <= MAX_LABEL_LEN );
+	ATLASSERT(strName.GetLength() <= MAX_CANONICAL_LEN);
 
 	return strName;
 }

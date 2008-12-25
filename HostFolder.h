@@ -29,9 +29,6 @@
 #define INITGUID
 #include <propkey.h>
 
-#include "HostPidlManager.h"
-#include "RemotePidlManager.h"
-
 #include <vector>
 using std::vector;
 
@@ -104,7 +101,6 @@ public: // IShellFolder methods
 							 LPSHELLDETAILS pDetails );
 
 private:
-    CHostPidlManager   m_HostPidlManager;
 	vector<CHostItem>  m_vecConnData;
 
 	/**
@@ -127,7 +123,7 @@ private:
 		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	// @}
 
-	CString _GetLongNameFromPIDL( PCUITEMID_CHILD pidl, BOOL fCanonical );
+	CString _GetLongNameFromPIDL(__in CHostItemHandle pidl, bool fCanonical);
 	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 };

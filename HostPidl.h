@@ -129,6 +129,44 @@ public:
 		return Get()->uPort;
 	}
 
+	CString GetPortStr() const throw(...)
+	{
+		if (!IsValid())
+			throw InvalidPidlException();
+
+		CString strPort;
+		strPort.Format(L"%u", Get()->uPort);
+		return strPort;
+	}
+	
+	/**
+	 * Retrieve the long name of the host connection from the PIDL.
+	 *
+	 * The long name is either the canonical form if fCanonical is set:
+	 *     sftp://username@hostname:port/path
+	 * or, if not set and if the port is the default port, the reduced form:
+	 *     sftp://username@hostname/path
+	 */
+	CString GetLongName(bool fCanonical) const throw(...)
+	{
+		if (!IsValid())
+			throw InvalidPidlException();
+
+		CString strName;
+
+		// Construct string from info in PIDL
+		strName.Format(
+			L"sftp://%ws@%ws", Get()->wszUser, Get()->wszHost);
+
+		if (fCanonical || (Get()->uPort != SFTP_DEFAULT_PORT))
+			strName.AppendFormat(L":%u", Get()->uPort);
+
+		strName.AppendFormat(L"/%ws", Get()->wszPath);
+
+		ATLASSERT(strName.GetLength() <= MAX_CANONICAL_LEN);
+		return strName;
+	}
+
 	inline const HostItemId *Get() const
 	{
 		return reinterpret_cast<const HostItemId *>(m_pidl);
