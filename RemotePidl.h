@@ -78,15 +78,21 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Concatenation constructor only implemented for non-const PidlT.
+	 */
+	CRemotePidlBase(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...);
+
 	class InvalidPidlException {};
 
 	bool IsValid() const
 	{
-		const RemoteItemId *pRemoteId = Get();
-
 		return (
-			pRemoteId->cb == sizeof(RemoteItemId) && 
-			pRemoteId->dwFingerprint == RemoteItemId::FINGERPRINT
+			!IsEmpty() &&
+			Get()->cb == sizeof(RemoteItemId) && 
+			Get()->dwFingerprint == RemoteItemId::FINGERPRINT
 		);
 	}
 
@@ -213,6 +219,23 @@ public:
 };
 
 /**
+ * Concatenation constructor only implemented for non-const base type.
+ * Also, the only non-const bases that make sense for concatentation are
+ * those derived from absolute and relative PIDLs.
+ */
+template <>
+inline CRemotePidlBase< CPidl<ITEMIDLIST_ABSOLUTE> >::CRemotePidlBase(
+	__in_opt CPidl<ITEMIDLIST_ABSOLUTE>::ConstPidlType pidl1,
+	__in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...) : CPidl<ITEMIDLIST_ABSOLUTE>(pidl1, pidl2) {}
+
+template <>
+inline CRemotePidlBase< CPidl<ITEMIDLIST_RELATIVE> >::CRemotePidlBase(
+	__in_opt CPidl<ITEMIDLIST_RELATIVE>::ConstPidlType pidl1,
+	__in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...) : CPidl<ITEMIDLIST_RELATIVE>(pidl1, pidl2) {}
+
+/**
  * Unmanaged-lifetime child PIDL for read-only RemoteItemId operations.
  */
 typedef CRemotePidlBase<CChildPidlHandle> CRemoteItemHandle;
@@ -221,6 +244,11 @@ typedef CRemotePidlBase<CChildPidlHandle> CRemoteItemHandle;
  * Unmanaged-lifetime relative PIDL for read-only RemoteItemId operations.
  */
 typedef CRemotePidlBase<CRelativePidlHandle> CRemoteItemListHandle;
+
+/**
+ * Unmanaged-lifetime relative PIDL for read-only RemoteItemId operations.
+ */
+typedef CRemotePidlBase<CAbsolutePidlHandle> CRemoteItemAbsoluteHandle;
 
 /**
  * Managed-lifetime PIDL for RemoteItemId operations.
@@ -275,6 +303,13 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Concatenation constructor.
+	 */
+	CRemotePidl(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+		throw(...) : CRemotePidlBase(pidl1, pidl2) {}
+
 private:
 
 	/**
@@ -308,3 +343,8 @@ typedef CRemotePidl<ITEMID_CHILD> CRemoteItem;
  * Managed-lifetime relative PIDL for RemoteItemId operations.
  */
 typedef CRemotePidl<ITEMIDLIST_RELATIVE> CRemoteItemList;
+
+/**
+ * Managed-lifetime absolute PIDL for RemoteItemId operations.
+ */
+typedef CRemotePidl<ITEMIDLIST_ABSOLUTE> CRemoteItemAbsolute;

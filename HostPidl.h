@@ -59,6 +59,7 @@ class CHostPidlBase : public PidlT
 protected:
 	typedef typename PidlT::PidlType PidlType;
 	typedef typename PidlT::ConstPidlType ConstPidlType;
+
 public:
 	CHostPidlBase() throw() {}
 	CHostPidlBase( __in_opt ConstPidlType pidl ) throw(...) : PidlT(pidl) {}
@@ -70,15 +71,21 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Concatenation constructor only implemented for non-const PidlT.
+	 */
+	CHostPidlBase(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...);
+
 	class InvalidPidlException {};
 
 	bool IsValid() const
 	{
-		const HostItemId *pHostId = Get();
-
 		return (
-			pHostId->cb == sizeof(HostItemId) && 
-			pHostId->dwFingerprint == HostItemId::FINGERPRINT
+			!IsEmpty() &&
+			Get()->cb == sizeof(HostItemId) && 
+			Get()->dwFingerprint == HostItemId::FINGERPRINT
 		);
 	}
 
@@ -180,7 +187,7 @@ public:
 	 *
 	 * @returns The address of the HostItemId segment this wrapped PIDL.
 	 */
-	__checkReturn PCUIDLIST_RELATIVE FindHostPidl()
+	__checkReturn CHostPidlBase<CRelativePidlHandle> FindHostPidl()
 	{
 		CHostItemListHandle pidlCurrent(m_pidl);
 		
@@ -198,6 +205,22 @@ public:
 	}
 };
 
+/**
+ * Concatenation constructor only implemented for non-const base type.
+ * Also, the only non-const bases that make sense for concatentation are
+ * those derived from absolute and relative PIDLs.
+ */
+template <>
+inline CHostPidlBase< CPidl<ITEMIDLIST_ABSOLUTE> >::CHostPidlBase(
+	__in_opt CPidl<ITEMIDLIST_ABSOLUTE>::ConstPidlType pidl1,
+	__in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...) : CPidl<ITEMIDLIST_ABSOLUTE>(pidl1, pidl2) {}
+
+template <>
+inline CHostPidlBase< CPidl<ITEMIDLIST_RELATIVE> >::CHostPidlBase(
+	__in_opt CPidl<ITEMIDLIST_RELATIVE>::ConstPidlType pidl1,
+	__in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...) : CPidl<ITEMIDLIST_RELATIVE>(pidl1, pidl2) {}
 
 /**
  * Unmanaged-lifetime child PIDL for read-only HostItemId operations.
@@ -208,6 +231,11 @@ typedef CHostPidlBase<CChildPidlHandle> CHostItemHandle;
  * Unmanaged-lifetime relative PIDL for read-only HostItemId operations.
  */
 typedef CHostPidlBase<CRelativePidlHandle> CHostItemListHandle;
+
+/**
+ * Unmanaged-lifetime relative PIDL for read-only HostItemId operations.
+ */
+typedef CHostPidlBase<CAbsolutePidlHandle> CHostItemAbsoluteHandle;
 
 /**
  * Managed-lifetime PIDL for HostItemId operations.
@@ -255,6 +283,13 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Concatenation constructor.
+	 */
+	CHostPidl(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+		throw(...) : CHostPidlBase(pidl1, pidl2) {}
+
 private:
 
 	/**
@@ -288,3 +323,8 @@ typedef CHostPidl<ITEMID_CHILD> CHostItem;
  * Managed-lifetime relative PIDL for HostItemId operations.
  */
 typedef CHostPidl<ITEMIDLIST_RELATIVE> CHostItemList;
+
+/**
+ * Managed-lifetime absolute PIDL for HostItemId operations.
+ */
+typedef CHostPidl<ITEMIDLIST_ABSOLUTE> CHostItemAbsolute;

@@ -125,7 +125,7 @@ public:
 		return (::ILIsEmpty(pidl)) ? NULL : pidl;
 	}
 
-	bool IsEmpty() const throw()
+	inline bool IsEmpty() const throw()
 	{
 		return ((m_pidl == NULL) || (m_pidl->mkid.cb == 0));
 	}
