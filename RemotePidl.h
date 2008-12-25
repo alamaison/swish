@@ -121,7 +121,6 @@ public:
 
 	CString GetFilename() const throw(...)
 	{
-		if (m_pidl == NULL) return L"";
 		if (!IsValid())
 			throw InvalidPidlException();
 
@@ -130,7 +129,6 @@ public:
 
 	CString GetFilename(bool fIncludeExtension) const throw(...)
 	{
-		if (m_pidl == NULL) return L"";
 		if (!IsValid())
 			throw InvalidPidlException();
 
@@ -156,7 +154,6 @@ public:
 	 */
 	CString GetExtension() const throw(...)
 	{
-		if (m_pidl == NULL) return L"";
 		if (!IsValid())
 			throw InvalidPidlException();
 
@@ -202,6 +199,14 @@ public:
 			throw InvalidPidlException();
 
 		return Get()->dwPermissions;
+	}
+
+	CString GetPermissionsStr() const throw(...)
+	{
+		if (!IsValid())
+			throw InvalidPidlException();
+
+		return L"todo";
 	}
 
 	COleDateTime GetDateModified() const throw(...)
@@ -309,6 +314,26 @@ public:
 	CRemotePidl(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 		throw(...) : CRemotePidlBase(pidl1, pidl2) {}
+
+	CRemotePidl& SetFilename(__in PCWSTR pwszFilename) throw(...)
+	{
+		ATLENSURE_THROW(pwszFilename, E_POINTER);
+		ATLENSURE_THROW(*pwszFilename != L'\0', E_INVALIDARG);
+		if (!IsValid())
+			throw InvalidPidlException();
+
+		CopyWSZString(
+			Set()->wszFilename, ARRAYSIZE(Set()->wszFilename), pwszFilename);
+
+		return *this;
+	}
+
+protected:
+
+	inline RemoteItemId *Set() const
+	{
+		return reinterpret_cast<RemoteItemId *>(m_pidl);
+	}
 
 private:
 
