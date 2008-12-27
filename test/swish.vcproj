@@ -417,23 +417,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\HostPidlManager.cpp"
-			>
-		</File>
-		<File
 			RelativePath="..\KbdInteractiveDialog.cpp"
 			>
 		</File>
 		<File
 			RelativePath="..\NewConnDialog.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\PidlManager.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\RemotePidlManager.cpp"
 			>
 		</File>
 		<File

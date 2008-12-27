@@ -1056,4 +1056,4 @@ private:
 	}
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CLibssh2Provider_test );
+//CPPUNIT_TEST_SUITE_REGISTRATION( CLibssh2Provider_test );

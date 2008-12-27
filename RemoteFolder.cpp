@@ -218,11 +218,10 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		if(SUCCEEDED(hr))
 		{
 			pExtractor->AddRef();
+			
+			CRemoteItemHandle pidl(aPidl[0]);
 
-			pExtractor->Initialize(
-				m_RemotePidlManager.GetFilename(aPidl[0]),
-				m_RemotePidlManager.IsFolder(aPidl[0])
-			);
+			pExtractor->Initialize(pidl.GetFilename(), pidl.IsFolder());
 			hr = pExtractor->QueryInterface(riid, ppvReturn);
 			ATLASSERT(SUCCEEDED(hr));
 
@@ -336,9 +335,8 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		// desktop for the parsing name - always return canonical string:
 		//     sftp://username@hostname:port/path
 
-		PIDLIST_ABSOLUTE pidlAbsolute = ::ILCombine( GetRootPIDL(), pidl );
-		strName = _GetLongNameFromPIDL(pidlAbsolute, true);
-		::ILFree(pidlAbsolute);
+		CHostItemAbsolute hpidl(GetRootPIDL(), pidl);
+		strName = hpidl.FindHostPidl().GetLongName(true);
 	}
 	else if(uFlags & SHGDN_FORADDRESSBAR)
 	{
@@ -348,10 +346,8 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl,
 		// unless the port is the default port in which case it is ommitted:
 		//     sftp://username@hostname/path
 
-
-		PIDLIST_ABSOLUTE pidlAbsolute = ::ILCombine( GetRootPIDL(), pidl );
-		strName = _GetLongNameFromPIDL(pidlAbsolute, false);
-		::ILFree(pidlAbsolute);
+		CHostItemAbsolute hpidl(GetRootPIDL(), pidl);
+		strName = hpidl.FindHostPidl().GetLongName(false);
 	}
 	else
 	{
@@ -393,39 +389,30 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		boolean fOverwritten = directory.Rename( pidl, pszName );
 
 		// Create new PIDL from old one
-		PITEMID_CHILD pidlNewFile = ::ILCloneChild(pidl);
-		HRESULT hr = ::StringCchCopy(
-			reinterpret_cast<PREMOTEPIDL>(pidlNewFile)->wszFilename,
-			MAX_FILENAME_LENZ,
-			pszName
-		);
-		ATLENSURE_SUCCEEDED(hr);
+		CRemoteItem pidlNewFile;
+		pidlNewFile.Attach(::ILCloneChild(pidl));
+		pidlNewFile.SetFilename(pszName);
 
 		// Make PIDLs absolute
-		PIDLIST_ABSOLUTE pidlOld =  ::ILCombine(GetRootPIDL(), pidl);
-		PIDLIST_ABSOLUTE pidlNew =  ::ILCombine(GetRootPIDL(), pidlNewFile);
+		CAbsolutePidl pidlOld(GetRootPIDL(), pidl);
+		CAbsolutePidl pidlNew(GetRootPIDL(), pidlNewFile);
 
 		// Return new child pidl if requested else dispose of it
 		if (ppidlOut)
-			*ppidlOut = pidlNewFile;
-		else
-			::ILFree(pidlNewFile);
+			*ppidlOut = pidlNewFile.Detach();
 
 		// Update the shell by passing both PIDLs
-		bool fIsFolder = m_RemotePidlManager.IsFolder(pidl);
 		if (fOverwritten)
 		{
 			::SHChangeNotify(
 				SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, pidlNew, NULL
 			);
 		}
+		CRemoteItemHandle rpidl(pidl);
 		::SHChangeNotify(
-			(fIsFolder) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
+			(rpidl.IsFolder()) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
 			SHCNF_IDLIST | SHCNF_FLUSH, pidlOld, pidlNew
 		);
-
-		::ILFree(pidlOld);
-		::ILFree(pidlNew);
 
 		return S_OK;
 	}
@@ -447,8 +434,9 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	bool fAllAreFolders = true;
 	for (UINT i = 0; i < cIdl; i++)
 	{
-		ATLASSERT(SUCCEEDED(m_RemotePidlManager.IsValid(aPidl[i])));
-		if (!m_RemotePidlManager.IsFolder(aPidl[i]))
+		CRemoteItemHandle rpidl(aPidl[i]);
+		ATLASSERT(rpidl.IsValid());
+		if (!rpidl.IsFolder())
 		{
 			fAllAreFolders = false;
 			break;
@@ -459,7 +447,8 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	bool fAllAreDotFiles = true;
 	for (UINT i = 0; i < cIdl; i++)
 	{
-		if (m_RemotePidlManager.GetFilename(aPidl[i])[0] != _T('.'))
+		CRemoteItemHandle rpidl(aPidl[i]);
+		if (rpidl.GetFilename()[0] != L'.')
 		{
 			fAllAreDotFiles = false;
 			break;
@@ -534,6 +523,10 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 {
 	ATLTRACE("CRemoteFolder::GetDetailsEx called\n");
 
+	bool fHeader = (pidl == NULL);
+
+	CRemoteItemHandle rpidl(pidl);
+
 	// If pidl: Request is for an item detail.  Retrieve from pidl and
 	//          return string
 	// Else:    Request is for a column heading.  Return heading as BSTR
@@ -541,58 +534,54 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	// Display name (Label)
 	if (IsEqualPropertyKey(*pscid, PKEY_ItemNameDisplay))
 	{
-		ATLTRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
+		TRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
 		
-		return pidl ?
-			_FillDetailsVariant( m_RemotePidlManager.GetFilename(pidl), pv ) :
-			_FillDetailsVariant( _T("Name"), pv );
+		return _FillDetailsVariant(
+			fHeader ? L"Name" : rpidl.GetFilename(), pv);
 	}
 	// Owner
 	else if (IsEqualPropertyKey(*pscid, PKEY_FileOwner))
 	{
-		ATLTRACE("\t\tRequest: PKEY_FileOwner\n");
-		
-		return pidl ?
-			_FillDetailsVariant( m_RemotePidlManager.GetOwner(pidl), pv ) :
-			_FillDetailsVariant( _T("Owner"), pv );
+		TRACE("\t\tRequest: PKEY_FileOwner\n");
+
+		return _FillDetailsVariant(
+			fHeader ? L"Owner" : rpidl.GetOwner(), pv);
 	}
 	// Group
 	else if (IsEqualPropertyKey(*pscid, PKEY_SwishRemoteGroup))
 	{
-		ATLTRACE("\t\tRequest: PKEY_SwishRemoteGroup\n");
+		TRACE("\t\tRequest: PKEY_SwishRemoteGroup\n");
 		
-		return pidl ?
-			_FillDetailsVariant( m_RemotePidlManager.GetGroup(pidl), pv ) :
-			_FillDetailsVariant( _T("Group"), pv );
+		return _FillDetailsVariant(
+			fHeader ? L"Group" : rpidl.GetGroup(), pv);
 	}
 	// File permissions: drwxr-xr-x form
 	else if (IsEqualPropertyKey(*pscid, PKEY_SwishRemotePermissions))
 	{
-		ATLTRACE("\t\tRequest: PKEY_SwishRemotePermissions\n");
+		TRACE("\t\tRequest: PKEY_SwishRemotePermissions\n");
 		
-		return pidl ?
-			_FillDetailsVariant( m_RemotePidlManager.GetPermissionsStr(pidl), pv ) :
-			_FillDetailsVariant( _T("Permissions"), pv );
+		return _FillDetailsVariant(
+			fHeader ? L"Permissions" : rpidl.GetPermissionsStr(), pv);
 	}
 	// File size in bytes
 	else if (IsEqualPropertyKey(*pscid, PKEY_Size))
 	{
-		ATLTRACE("\t\tRequest: PKEY_Size\n");
-		
-		return pidl ?
-			_FillUI8Variant( m_RemotePidlManager.GetFileSize(pidl), pv ) :
-			_FillDetailsVariant( _T("Size"), pv );
+		TRACE("\t\tRequest: PKEY_Size\n");
+
+		return fHeader ?
+			_FillDetailsVariant(L"Size", pv) : 
+			_FillUI8Variant(rpidl.GetFileSize(), pv);
 	}
 	// Last modified date
 	else if (IsEqualPropertyKey(*pscid, PKEY_DateModified))
 	{
-		ATLTRACE("\t\tRequest: PKEY_DateModified\n");
+		TRACE("\t\tRequest: PKEY_DateModified\n");
 
-		return pidl ?
-			_FillDateVariant( m_RemotePidlManager.GetLastModified(pidl), pv ) :
-			_FillDetailsVariant( _T("Last Modified"), pv );
+		return fHeader ?
+			_FillDetailsVariant(L"Last Modified", pv) : 
+			_FillDateVariant(rpidl.GetDateModified(), pv);
 	}
-	ATLTRACE("\t\tRequest: <unknown>\n");
+	TRACE("\t\tRequest: <unknown>\n");
 
 	// Assert unless request is one of the supported properties
 	// TODO: System.FindData tiggers this
@@ -987,43 +976,6 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
 	return (ret == IDYES);
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::_GetLongNameFromPIDL
- * Retrieve the long name of the file or folder from the given PIDL.
- * The long name is either the canonical form if fCanonical is set:
- *     sftp://username@hostname:port/path
- * or, if not set and if the port is the default port the reduced form:
- *     sftp://username@hostname/path
- *----------------------------------------------------------------------------*/
-CString CRemoteFolder::_GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, 
-                                             BOOL fCanonical )
-{
-	ATLTRACE("CRemoteFolder::_GetLongNameFromPIDL called\n");
-	ATLASSERT(SUCCEEDED(m_RemotePidlManager.IsValid(pidl, PM_LAST_PIDL)));
-
-	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl(pidl);
-	ATLASSERT(pidlHost);
-	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidlHost, PM_THIS_PIDL)));
-
-	// Construct string from info in PIDL
-	CString strName = _T("sftp://");
-	strName += m_HostPidlManager.GetUser(pidlHost);
-	strName += _T("@");
-	strName += m_HostPidlManager.GetHost(pidlHost);
-	if (fCanonical || 
-	   (m_HostPidlManager.GetPort(pidlHost) != SFTP_DEFAULT_PORT))
-	{
-		strName += _T(":");
-		strName.AppendFormat( _T("%u"), m_HostPidlManager.GetPort(pidlHost) );
-	}
-	strName += _T("/");
-	strName += _ExtractPathFromPIDL(pidl);
-
-	ATLASSERT( strName.GetLength() <= MAX_CANONICAL_LEN );
-
-	return strName;
-}
-
 /**
  * Retrieve the full path of the file on the remote system from the given PIDL.
  */
@@ -1034,21 +986,19 @@ CString CRemoteFolder::_ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl )
 	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
 	// (by root we mean the path specified by the user when they added the
 	// connection to Explorer, rather than the root of the server's filesystem)
-	PCUIDLIST_RELATIVE pidlHost = m_HostPidlManager.FindHostPidl(pidl);
-	ATLASSERT(pidlHost);
-	ATLASSERT(SUCCEEDED(m_HostPidlManager.IsValid(pidlHost, PM_THIS_PIDL)));
-	strPath = m_HostPidlManager.GetPath(pidlHost);
+	CHostItemListHandle pidlHost = 
+		CHostItemAbsoluteHandle(pidl).FindHostPidl();
+	ATLASSERT(pidlHost.IsValid());
 
-	// Walk over REMOTEPIDLs and append each filename to form the path
-	PCUIDLIST_RELATIVE pidlRemote = m_HostPidlManager.GetNextItem(pidlHost);
-	while (pidlRemote != NULL)
+	strPath = pidlHost.GetPath();
+
+	// Walk over RemoteItemIds and append each filename to form the path
+	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
+	while (pidlRemote.IsValid())
 	{
-		if (SUCCEEDED(m_RemotePidlManager.IsValid(pidlRemote, PM_THIS_PIDL)))
-		{
-			strPath += _T("/");
-			strPath += m_RemotePidlManager.GetFilename(pidlRemote);
-		}
-		pidlRemote = m_RemotePidlManager.GetNextItem(pidlRemote);
+		strPath += L"/";
+		strPath += pidlRemote.GetFilename();
+		pidlRemote = pidlRemote.GetNext();
 	}
 
 	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );

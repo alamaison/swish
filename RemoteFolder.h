@@ -28,8 +28,6 @@
 #define INITGUID
 #include <propkey.h>
 
-#include "RemotePidlManager.h"
-#include "HostPidlManager.h"
 #include "Connection.h"     // For SFTP interactive connection objects
 #include "RemotePidl.h"     // For RemoteItemId handling
 #include "Pool.h"           // For access to SFTP global session pool
@@ -124,8 +122,6 @@ public:
 							 LPSHELLDETAILS pDetails );
 
 private:
-    CRemotePidlManager m_RemotePidlManager;
-	CHostPidlManager   m_HostPidlManager;
 
 	typedef std::vector<CRemoteItem> RemotePidls;
 

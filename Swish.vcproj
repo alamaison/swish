@@ -333,10 +333,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostPidlManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\IconExtractor.cpp"
 				>
 			</File>
@@ -353,10 +349,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PidlManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Pool.cpp"
 				>
 			</File>
@@ -366,10 +358,6 @@
 			</File>
 			<File
 				RelativePath=".\RemoteFolder.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RemotePidlManager.cpp"
 				>
 			</File>
 			<File
@@ -482,10 +470,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostPidlManager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\IconExtractor.h"
 				>
 			</File>
@@ -506,10 +490,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PidlManager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Pool.h"
 				>
 			</File>
@@ -527,10 +507,6 @@
 			</File>
 			<File
 				RelativePath=".\RemotePidl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RemotePidlManager.h"
 				>
 			</File>
 			<File

@@ -228,14 +228,10 @@ protected:
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
 
 		// PIDL of old file.  Would normally come from GetEnum()
-		REMOTEPIDL item;
-		item.cb = sizeof REMOTEPIDL;
-		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
-		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+		CRemoteItem pidl(L"testtmpfile");
 
 		// Test
-		m_pDirectory->Rename(pidl, _T("renamed"));
+		m_pDirectory->Rename(pidl, L"renamed");
 	}
 
 	void testRenameInSubfolder()
@@ -251,11 +247,7 @@ protected:
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp/swish"));
 
 		// PIDL of old file.  Would normally come from GetEnum()
-		REMOTEPIDL item;
-		item.cb = sizeof REMOTEPIDL;
-		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, L"testswishfile");
-		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+		CRemoteItem pidl(L"testswishfile");
 
 		// Test
 		m_pDirectory->Rename(pidl, L"renamed");
@@ -274,22 +266,18 @@ protected:
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
 
 		// PIDL of old file.  Would normally come from GetEnum()
-		REMOTEPIDL item;
-		item.cb = sizeof REMOTEPIDL;
-		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
-		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+		CRemoteItem pidl(L"testtmpfile");
 
 		// Test that OnConfirmOverwrite is being called by forcing exception
 		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::ThrowOverwrite);
 		CPPUNIT_ASSERT_ASSERTION_FAIL_MESSAGE(
 			"Rename failed to confirm overwrite",
-			m_pDirectory->Rename(pidl, _T("renamed"))
+			m_pDirectory->Rename(pidl, L"renamed")
 		);
 
 		// Test again but with proper behaviour
 		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::AllowOverwrite);
-		m_pDirectory->Rename(pidl, _T("renamed"));
+		m_pDirectory->Rename(pidl, L"renamed");
 	}
 
 	void testRenameWithConfirmationForbidden()
@@ -305,18 +293,14 @@ protected:
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
 
 		// PIDL of old file.  Would normally come from GetEnum()
-		REMOTEPIDL item;
-		item.cb = sizeof REMOTEPIDL;
-		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
-		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+		CRemoteItem pidl(L"testtmpfile");
 
 		// Test
 		m_pCoConsumer->SetConfirmOverwriteBehaviour(MC::PreventOverwrite);
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite overwrite "
 			"confirmation being rejected",
-			m_pDirectory->Rename(pidl, _T("renamed")),
+			m_pDirectory->Rename(pidl, L"renamed"),
 			CAtlException
 		);
 
@@ -325,7 +309,7 @@ protected:
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite overwrite "
 			"confirmation being rejected with S_FALSE",
-			m_pDirectory->Rename(pidl, _T("renamed")),
+			m_pDirectory->Rename(pidl, L"renamed"),
 			CAtlException
 		);
 	}
@@ -343,24 +327,20 @@ protected:
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
 
 		// PIDL of old file.  Would normally come from GetEnum()
-		REMOTEPIDL item;
-		item.cb = sizeof REMOTEPIDL;
-		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
-		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+		CRemoteItem pidl(L"testtmpfile");
 
 		// Test that OnReportError is being called by forcing exception
 		m_pCoConsumer->SetReportErrorBehaviour(MC::ThrowReport);
 		CPPUNIT_ASSERT_ASSERTION_FAIL_MESSAGE(
 			"Rename failed to report error to mock user",
-			m_pDirectory->Rename(pidl, _T("renamed")) 
+			m_pDirectory->Rename(pidl, L"renamed")
 		);
 
 		// Test properly
 		m_pCoConsumer->SetReportErrorBehaviour(MC::ErrorOK);
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite forced error",
-			m_pDirectory->Rename(pidl, _T("renamed")),
+			m_pDirectory->Rename(pidl, L"renamed"),
 			CAtlException
 		);
 	}
@@ -375,17 +355,13 @@ protected:
 		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
 
 		// PIDL of old file.  Would normally come from GetEnum()
-		REMOTEPIDL item;
-		item.cb = sizeof REMOTEPIDL;
-		item.dwFingerprint = REMOTEPIDL_FINGERPRINT;
-		::StringCchCopy(item.wszFilename, MAX_FILENAME_LENZ, _T("testtmpfile"));
-		PITEMID_CHILD pidl = reinterpret_cast<PITEMID_CHILD>(&item);
+		CRemoteItem pidl(L"testtmpfile");
 
 		// Test E_ABORT failure
 		m_pCoProvider->SetRenameBehaviour(MP::AbortRename);
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite forced E_ABORT",
-			m_pDirectory->Rename(pidl, _T("renamed")),
+			m_pDirectory->Rename(pidl, L"renamed"),
 			CAtlException
 		);
 
@@ -393,7 +369,7 @@ protected:
 		m_pCoProvider->SetRenameBehaviour(MP::FailRename);
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite forced E_FAIL",
-			m_pDirectory->Rename(pidl, _T("renamed")),
+			m_pDirectory->Rename(pidl, L"renamed"),
 			CAtlException
 		);
 	}
@@ -438,12 +414,12 @@ private:
 		CPPUNIT_ASSERT_EQUAL((ULONG)1, cFetched);
 
 		do {
-			PREMOTEPIDL pidlFile = reinterpret_cast<PREMOTEPIDL>(pidl);
+			RemoteItemId *pidlFile = reinterpret_cast<RemoteItemId *>(pidl);
 
 			// Check REMOTEPIDLness
-			CPPUNIT_ASSERT_EQUAL(sizeof REMOTEPIDL, (size_t)pidlFile->cb);
+			CPPUNIT_ASSERT_EQUAL(sizeof RemoteItemId, (size_t)pidlFile->cb);
 			CPPUNIT_ASSERT_EQUAL(
-				REMOTEPIDL_FINGERPRINT, pidlFile->dwFingerprint);
+				RemoteItemId::FINGERPRINT, pidlFile->dwFingerprint);
 
 			// Check filename
 			CPPUNIT_ASSERT( !CString(pidlFile->wszFilename).IsEmpty() );

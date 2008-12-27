@@ -240,4 +240,4 @@ private:
 
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CKbdInteractiveDialog_test );
+//CPPUNIT_TEST_SUITE_REGISTRATION( CKbdInteractiveDialog_test );

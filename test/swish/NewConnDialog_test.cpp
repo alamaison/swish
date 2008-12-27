@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "NewConnDialog_test.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CNewConnDialog_test );
+//CPPUNIT_TEST_SUITE_REGISTRATION( CNewConnDialog_test );
 
 void CNewConnDialog_test::setUp()
 {

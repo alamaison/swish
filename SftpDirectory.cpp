@@ -62,22 +62,21 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 				if (!fIncludeHidden && (lt.bstrFilename[0] == OLECHAR('.')))
 					continue;
 
-				PITEMID_CHILD pidl;
-				hr = m_PidlManager.Create(
-					CString(lt.bstrFilename),
-					CString(lt.bstrOwner),
-					CString(lt.bstrGroup),
-					lt.uPermissions,
-					lt.uSize,
-					lt.dateModified,
-					S_ISDIR(lt.uPermissions),
-					&pidl
-				);
-				ATLASSERT(SUCCEEDED(hr));
-				if (SUCCEEDED(hr))
+				try
 				{
+					CRemoteItem pidl(
+						CString(lt.bstrFilename), 
+						CString(lt.bstrOwner),
+						CString(lt.bstrGroup),
+						S_ISDIR(lt.uPermissions),
+						false,
+						lt.uPermissions,
+						lt.uSize,
+						lt.dateModified);
+
 					m_vecPidls.push_back(pidl);
 				}
+				catchCom()
 
 				/*::SysFreeString(lt.bstrFilename);
 				::SysFreeString(lt.bstrGroup);
@@ -142,14 +141,13 @@ IEnumIDList* CSftpDirectory::GetEnum(SHCONTF grfFlags)
 }
 
 bool CSftpDirectory::Rename(
-	__in PCUITEMID_CHILD pidlOldFile, PCTSTR pszNewFilename )
+	CRemoteItemHandle pidlOldFile, PCWSTR pwszNewFilename)
 {
-	CString strOldFilename = m_PidlManager.GetFilename(pidlOldFile);
-
 	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
+
 	HRESULT hr = m_connection.spProvider->Rename(
-		CComBSTR(m_strDirectory+strOldFilename),
-		CComBSTR(m_strDirectory+pszNewFilename),
+		CComBSTR(m_strDirectory+pidlOldFile.GetFilename()),
+		CComBSTR(m_strDirectory+pwszNewFilename),
 		&fWasTargetOverwritten
 	);
 	if (hr != S_OK)
@@ -158,9 +156,8 @@ bool CSftpDirectory::Rename(
 	return (fWasTargetOverwritten == VARIANT_TRUE);
 }
 
-void CSftpDirectory::Delete( __in PCUITEMID_CHILD pidlFile )
+void CSftpDirectory::Delete(CRemoteItemHandle pidl)
 {
-	CRemoteItem pidl(pidlFile);
 	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
 	
 	HRESULT hr;
