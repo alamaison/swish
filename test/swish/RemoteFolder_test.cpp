@@ -416,26 +416,26 @@ private:
 // where this RemoteFolder is rooted at:
 //     ComputerPIDL\SwishPIDL\HOSTPIDL
 
-static const wchar_t *DN2_FRIENDLY_RELATIVE = L"TestDirectory";
-static const wchar_t *DN2_FRIENDLY_ABSOLUTE = L"TestDirectory";
+static const wchar_t *DN2_FRIENDLY_RELATIVE = L"TestDirectory.ext";
+static const wchar_t *DN2_FRIENDLY_ABSOLUTE = L"TestDirectory.ext";
 
-static const wchar_t *DN2_PARSING_RELATIVE = L"TestDirectory";
+static const wchar_t *DN2_PARSING_RELATIVE = L"TestDirectory.ext";
 static const wchar_t *DN2_PARSING_ABSOLUTE = 
 	L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
 	L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\"
-	L"sftp://user@test.example.com:22//home/user/TestDirectory";
+	L"sftp://user@test.example.com:22//home/user/TestDirectory.ext";
 
-static const wchar_t *DN2_ADDRESSBAR_RELATIVE = L"TestDirectory";
+static const wchar_t *DN2_ADDRESSBAR_RELATIVE = L"TestDirectory.ext";
 static const wchar_t *DN2_ADDRESSBAR_ABSOLUTE = 
-	L"sftp://user@test.example.com//home/user/TestDirectory";
+	L"sftp://user@test.example.com//home/user/TestDirectory.ext";
 
-static const wchar_t *DN2_PARSINGADDRESSBAR_RELATIVE = L"TestDirectory";
+static const wchar_t *DN2_PARSINGADDRESSBAR_RELATIVE = L"TestDirectory.ext";
 static const wchar_t *DN2_PARSINGADDRESSBAR_ABSOLUTE = 
 	L"Computer\\Swish\\sftp://user@test.example.com:22/"
-	L"/home/user/TestDirectory";
+	L"/home/user/TestDirectory.ext";
 
-static const wchar_t *DN2_EDITING_RELATIVE = L"TestDirectory";
-static const wchar_t *DN2_EDITING_ABSOLUTE = L"TestDirectory";
+static const wchar_t *DN2_EDITING_RELATIVE = L"TestDirectory.ext";
+static const wchar_t *DN2_EDITING_ABSOLUTE = L"TestDirectory.ext";
 
 class CRemoteFolderDisplayName2_test : public CRemoteFolderDisplayName_test
 {
@@ -518,7 +518,7 @@ private:
 	{
 		// Create test REMOTEPIDL
 		CRemoteItem pidl(
-			L"TestDirectory", L"me", L"us", true, false, 0677, 511, NULL);
+			L"TestDirectory.ext", L"me", L"us", true, false, 0677, 511, NULL);
 		return pidl.Detach();
 	}
 
