@@ -81,6 +81,9 @@ public:
 
 	class InvalidPidlException {};
 
+	/**
+	 * Does fingerprint stored in this PIDL correspond to a HostItemId?
+	 */
 	inline bool IsValid() const
 	{
 		return (
@@ -90,6 +93,9 @@ public:
 		);
 	}
 
+	/**
+	 * Does fingerprint stored in @p pidl correspond to a HostItemId?
+	 */
 	static bool IsValid(ConstPidlType pidl)
 	{
 		CHostPidlBase<PidlT> hpidl(pidl);
@@ -245,6 +251,17 @@ template <typename IdListType>
 class CHostPidl : public CHostPidlBase< CPidl<IdListType> >
 {
 public:
+	/**
+	 * Create a new wrapped PIDL holding a HostItemId with given parameters.
+	 * 
+	 * @param[in] pwszUser   User to log in as.
+	 * @param[in] pwszHost   Host to connect to.
+	 * @param[in] uPort      Port to connect to on host (default 22)
+	 * @param[in] pwszPath   Path on host to use as starting directory.
+	 * @param[in] pwszLabel  Friendly name of connection.
+	 * 
+	 * @throws CAtlException if error.
+	 */
 	explicit CHostPidl(
 		PCWSTR pwszUser, PCWSTR pwszHost, USHORT uPort=SFTP_DEFAULT_PORT,
 		PCWSTR pwszPath=L"", PCWSTR pwszLabel=L"")

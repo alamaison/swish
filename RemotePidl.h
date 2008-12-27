@@ -88,6 +88,9 @@ public:
 
 	class InvalidPidlException {};
 
+	/**
+	 * Does fingerprint stored in this PIDL correspond to a RemoteItemId?
+	 */
 	inline bool IsValid() const
 	{
 		return (
@@ -97,6 +100,9 @@ public:
 		);
 	}
 
+	/**
+	 * Does fingerprint stored in @p pidl correspond to a RemoteItemId?
+	 */
 	static bool IsValid(ConstPidlType pidl)
 	{
 		CRemotePidlBase<PidlT> rpidl(pidl);
@@ -263,6 +269,20 @@ template <typename IdListType>
 class CRemotePidl : public CRemotePidlBase< CPidl<IdListType> >
 {
 public:
+	/**
+	 * Create a new wrapped PIDL holding a RemoteItemId with given parameters.
+	 * 
+	 * @param[in] pwszFilename   Name of file or directory on the remote 
+	 *                           file-system.
+	 * @param[in] pwszOwner      Name of file owner on remote system.
+	 * @param[in] pwszGroup      Name of file group on remote system.
+	 * @param[in] dwPermissions  Value of the file's Unix permissions bits.
+	 * @param[in] uSize          Size of file in bytes.
+	 * @param[in] dtModified     Date that file was last modified.
+	 * @param[in] fIsFolder      Is file a folder?
+	 * 
+	 * @throws CAtlException if error.
+	 */
 	explicit CRemotePidl(
 		PCWSTR pwszFilename, PCWSTR pwszOwner=L"", PCWSTR pwszGroup=L"",
 		bool fIsFolder=false, bool fIsLink=false, DWORD dwPermissions=0,
