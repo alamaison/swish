@@ -364,6 +364,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\Pidl_test.h"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\stdafx.h"
 				>
 			</File>
@@ -375,6 +379,10 @@
 		<Filter
 			Name="Tests"
 			>
+			<File
+				RelativePath=".\swish\HostPidl_test.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\swish\KbdInteractiveDialog_test.cpp"
 				>
@@ -393,6 +401,10 @@
 			</File>
 			<File
 				RelativePath=".\swish\PidlHandle_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\RemotePidl_test.cpp"
 				>
 			</File>
 			<File
