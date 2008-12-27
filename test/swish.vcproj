@@ -303,23 +303,11 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\swish\DummyFolder_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\swish\HostFolder_test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\MockSftpConsumer.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\MockSftpProvider.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\swish\RemoteFolder_test.cpp"
 				>
 			</File>
 			<File
@@ -392,6 +380,14 @@
 			Name="Tests"
 			>
 			<File
+				RelativePath=".\swish\DummyFolder_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\HostFolder_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\HostPidl_test.cpp"
 				>
 			</File>
@@ -413,6 +409,10 @@
 			</File>
 			<File
 				RelativePath=".\swish\PidlHandle_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\RemoteFolder_test.cpp"
 				>
 			</File>
 			<File
