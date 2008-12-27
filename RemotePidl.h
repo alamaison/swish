@@ -136,12 +136,9 @@ public:
 
 	CString GetFilename(bool fIncludeExtension) const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
 		CString strName = GetFilename();
 
-		if (!fIncludeExtension && strName[0] != L'.')
+		if (!fIncludeExtension && !Get()->fIsFolder && strName[0] != L'.')
 		{
 			int nLimit = strName.ReverseFind(L'.');
 			if (nLimit < 0)
