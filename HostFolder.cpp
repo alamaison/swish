@@ -283,48 +283,56 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetDisplayNameOf : IShellFolder
- * Retrieves the display name for the specified file object or subfolder.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl, 
-											 __in SHGDNF uFlags, 
-											 __out STRRET *pName )
+/**
+ * Retrieve the display name for the specified file object or subfolder.
+ */
+STDMETHODIMP CHostFolder::GetDisplayNameOf(
+	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
 {
-	ATLTRACE("CHostFolder::GetDisplayNameOf called\n");
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
+	ATLENSURE_RETURN_HR(pName, E_POINTER);
+
+	::ZeroMemory(pName, sizeof STRRET);
 
 	CString strName;
-	CHostItemHandle hpidl(pidl);
+	CHostItem hpidl(pidl);
 
 	if (uFlags & SHGDN_FORPARSING)
 	{
-		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return canonical string:
-		//     sftp://username@hostname:port/path
+		if (!(uFlags & SHGDN_INFOLDER))
+		{
+			// Bind to parent
+			CComPtr<IShellFolder> spParent;
+			PCUITEMID_CHILD pidlThisFolder;
+			HRESULT hr = ::SHBindToParent(
+				GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+			ATLASSERT(SUCCEEDED(hr));
 
-		// TODO:  if !SHGDN_INFOLDER the pidl may not be single-level
-		// so we should always seek to the last pidl before extracting info
+			STRRET strret;
+			::ZeroMemory(&strret, sizeof strret);
+			hr = spParent->GetDisplayNameOf(pidlThisFolder, uFlags, &strret);
+			ATLASSERT(SUCCEEDED(hr));
+			ATLASSERT(strret.uType == STRRET_WSTR);
 
-		strName = hpidl.GetLongName(true);
+			strName += strret.pOleStr;
+			strName += L'\\';
+		}
+
+		strName += hpidl.GetLongName(true);
 	}
-	else if(uFlags & SHGDN_FORADDRESSBAR)
+	else if (uFlags == SHGDN_NORMAL || uFlags & SHGDN_FORADDRESSBAR)
 	{
-		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return canonical string:
-		//     sftp://username@hostname:port/path
-		// unless the port is the default port in which case it is ommitted:
-		//     sftp://username@hostname/path
-
 		strName = hpidl.GetLongName(false);
+	}
+	else if (uFlags == SHGDN_INFOLDER || uFlags & SHGDN_FOREDITING)
+	{
+		strName = hpidl.GetLabel();
 	}
 	else
 	{
-		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return the label:
-		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER ||
-			(uFlags & SHGDN_FOREDITING));
-
-		strName = hpidl.GetLabel();
+		UNREACHABLE;
+		return E_INVALIDARG;
 	}
 
 	// Store in a STRRET and return
@@ -634,37 +642,6 @@ HRESULT CHostFolder::OnMergeContextMenu(
 /*----------------------------------------------------------------------------*/
 /* --- Private functions -----------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-
-/*------------------------------------------------------------------------------
- * CHostFolder::_GetLongNameFromPIDL
- * Retrieve the long name of the host connection from the given PIDL.
- * The long name is either the canonical form if fCanonical is set:
- *     sftp://username@hostname:port/path
- * or, if not set and if the port is the default port the reduced form:
- *     sftp://username@hostname/path
- *----------------------------------------------------------------------------*/
-CString CHostFolder::_GetLongNameFromPIDL(
-	CHostItemHandle pidl, bool fCanonical)
-{
-	METHOD_TRACE;
-	ATLASSERT(pidl.IsValid());
-
-	CString strName;
-
-	// Construct string from info in PIDL
-	strName.AppendFormat(L"sftp://%ws@%ws", pidl.GetUser(), pidl.GetHost());
-
-	if (fCanonical || (pidl.GetPort() != SFTP_DEFAULT_PORT))
-	{
-		strName.AppendFormat(L":%u", pidl.GetPort());
-	}
-
-	strName.AppendFormat(L"/%ws", pidl.GetPath());
-
-	ATLASSERT(strName.GetLength() <= MAX_CANONICAL_LEN);
-
-	return strName;
-}
 
 /*------------------------------------------------------------------------------
  * CHostFolder::_FillDetailsVariant

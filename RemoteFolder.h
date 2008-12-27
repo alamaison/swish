@@ -128,9 +128,6 @@ private:
 	CConnection _GetConnection(
 		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
-	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
-	CString _GetFilenameFromPIDL(
-		CRemoteItemHandle pidl, bool fIncludeExtension=true );
 	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );

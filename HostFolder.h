@@ -123,8 +123,6 @@ private:
 		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	// @}
 
-	CString _GetLongNameFromPIDL(__in CHostItemHandle pidl, bool fCanonical);
-	CString _GetLabelFromPIDL( PCUITEMID_CHILD pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 };
 

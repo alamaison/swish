@@ -518,7 +518,7 @@ private:
 	{
 		// Create test REMOTEPIDL
 		CRemoteItem pidl(
-			L"TestFile.bmp", L"me", L"us", false, false, 0677, 511, NULL);
+			L"TestDirectory", L"me", L"us", true, false, 0677, 511, NULL);
 		return pidl.Detach();
 	}
 

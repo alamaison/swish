@@ -317,47 +317,54 @@ STDMETHODIMP CRemoteFolder::ParseDisplayName(
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetDisplayNameOf : IShellFolder
- * Retrieves the display name for the specified file object or subfolder.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetDisplayNameOf( __in PCUITEMID_CHILD pidl, 
-											 __in SHGDNF uFlags, 
-											 __out STRRET *pName )
+/**
+ * Retrieve the display name for the specified file object or subfolder.
+ */
+STDMETHODIMP CRemoteFolder::GetDisplayNameOf( 
+	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
 {
-	ATLTRACE("CRemoteFolder::GetDisplayNameOf called\n");
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
+	ATLENSURE_RETURN_HR(pName, E_POINTER);
+
+	::ZeroMemory(pName, sizeof STRRET);
 
 	CString strName;
+	CRemoteItem rpidl(pidl);
 
-	if (uFlags & SHGDN_FORPARSING)
+	if ((uFlags & SHGDN_FORPARSING) || (uFlags & SHGDN_FORADDRESSBAR))
 	{
-		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return canonical string:
-		//     sftp://username@hostname:port/path
+		if (!(uFlags & SHGDN_INFOLDER))
+		{
+			// Bind to parent
+			CComPtr<IShellFolder> spParent;
+			PCUITEMID_CHILD pidlThisFolder = NULL;
+			HRESULT hr = ::SHBindToParent(
+				GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+			ATLASSERT(SUCCEEDED(hr));
 
-		CHostItemAbsolute hpidl(GetRootPIDL(), pidl);
-		strName = hpidl.FindHostPidl().GetLongName(true);
+			STRRET strret;
+			::ZeroMemory(&strret, sizeof strret);
+			hr = spParent->GetDisplayNameOf(pidlThisFolder, uFlags, &strret);
+			ATLASSERT(SUCCEEDED(hr));
+			ATLASSERT(strret.uType == STRRET_WSTR);
+
+			strName += strret.pOleStr;
+			strName += L'/';
+		}
+
+		// Add child path - include extension if FORPARSING
+		strName += rpidl.GetFilename(uFlags & SHGDN_FORPARSING);
 	}
-	else if(uFlags & SHGDN_FORADDRESSBAR)
+	else if (uFlags & SHGDN_FOREDITING)
 	{
-		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return canonical string:
-		//     sftp://username@hostname:port/path
-		// unless the port is the default port in which case it is ommitted:
-		//     sftp://username@hostname/path
-
-		CHostItemAbsolute hpidl(GetRootPIDL(), pidl);
-		strName = hpidl.FindHostPidl().GetLongName(false);
+		strName = rpidl.GetFilename();
 	}
 	else
 	{
-		// We do not care if the name is relative to the folder or the
-		// desktop for the parsing name - always return the filename:
-		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER ||
-			(uFlags & SHGDN_FOREDITING));
+		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER);
 
-		CRemoteItemHandle rpidl(pidl);
-		strName = rpidl.GetFilename();
+		strName = rpidl.GetFilename(false);
 	}
 
 	// Store in a STRRET and return
