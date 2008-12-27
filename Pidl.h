@@ -26,7 +26,6 @@ template <typename IdListType>
 class CPidlData
 {
 protected:
-
 	/** @name PIDL Types */
 	// @{
 	typedef IdListType *PidlType;            ///< @b Non-const PIDL type
@@ -35,11 +34,28 @@ protected:
 	// @}
 
 	CPidlData() : m_pidl(NULL) {}
-	CPidlData( __in_opt Type pidl ) throw() : m_pidl(pidl) {}
-	CPidlData( __in const CPidlData& pidl ) throw() : m_pidl(pidl) {}
+	explicit CPidlData( __in_opt Type pidl ) throw() : m_pidl(pidl) {}
+	explicit CPidlData( __in const CPidlData& pidl ) throw() : m_pidl(pidl) {}
 
 public:
-	operator ConstPidlType() const throw()
+	inline bool operator!() const throw()
+	{
+		return m_pidl == NULL;
+	}
+
+	/**
+	 * Implicitly convert wrapped PIDL to another type.
+	 *
+	 * This template delegates to Type (the type of the raw PIDL) decisions 
+	 * about which types this PIDL can be converted to.  The code will not 
+	 * compile if @p IdListSupertype is not compatible with Type.  Used in:
+	 *    @code const IdListSupertype p = Type m_pidl @endcode
+	 *
+	 * @param IdListSupertype  Target type of conversion. Does not have to be
+	 *                         supertype of raw PIDL type.  May be same type.
+	 */
+	template<typename IdListSupertype>
+	operator const IdListSupertype() const throw()
 	{
 		return m_pidl;
 	}
@@ -54,7 +70,6 @@ template <typename IdListType>
 class CPidlConstData
 {
 protected:
-
 	/** @name PIDL Types */
 	// @{
 	typedef IdListType *PidlType;            ///< @b Non-const PIDL type
@@ -67,7 +82,24 @@ protected:
 	CPidlConstData( __in const CPidlConstData& pidl ) throw() : m_pidl(pidl) {}
 
 public:
-	operator ConstPidlType() const throw()
+	inline bool operator!() const throw()
+	{
+		return m_pidl == NULL;
+	}
+
+	/**
+	 * Implicitly convert wrapped PIDL to another type.
+	 *
+	 * This template delegates to Type (the type of the raw PIDL) decisions 
+	 * about which types this PIDL can be converted to.  The code will not 
+	 * compile if @p IdListSupertype is not compatible with Type.  Used in:
+	 *    @code const IdListSupertype p = Type m_pidl @endcode
+	 *
+	 * @param IdListSupertype  Target type of conversion. Does not have to be
+	 *                         supertype of raw PIDL type.  May be same type.
+	 */
+	template<typename IdListSupertype>
+	operator const IdListSupertype() const throw()
 	{
 		return m_pidl;
 	}
@@ -104,12 +136,6 @@ public:
 	CPidlBase() {}
 	CPidlBase( __in_opt typename DataT::Type pidl ) throw() : DataT(pidl) {}
 	CPidlBase( __in const CPidlBase& pidl ) throw() : DataT(pidl) {}
-	
-	template<typename IdListSupertype>
-	operator CPidlBase<IdListSupertype>() const
-	{
-		return CPidlBase<IdListSupertype>(m_pidl);
-	}
 
 	PidlType CopyTo() const throw(...)
 	{
@@ -192,6 +218,7 @@ public:
 	CPidl() {}
 	CPidl( __in_opt ConstPidlType pidl ) throw(...) : CPidlBase(Clone(pidl)) {}
 	CPidl( __in const CPidl& pidl ) throw(...) : CPidlBase(Clone(pidl)) {}
+
 	CPidl& operator=( __in const CPidl& pidl ) throw(...)
 	{
 		if (m_pidl != pidl.m_pidl)
@@ -204,7 +231,8 @@ public:
 	/**
 	 * Concatenation constructor.
 	 */
-	CPidl( __in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+	explicit CPidl(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 	throw(...)
 	{
 		if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2))
@@ -226,12 +254,6 @@ public:
 	{
 		ATLASSERT(m_pidl == NULL);
 		return &m_pidl;
-	}
-	
-	template<typename IdListSupertype>
-	operator CPidl<IdListSupertype>() const
-	{
-		return CPidl<IdListSupertype>(m_pidl);
 	}
 
 	~CPidl() throw()
@@ -285,25 +307,5 @@ typedef CPidl<ITEMIDLIST_ABSOLUTE> CAbsolutePidl;
 
 /**
  * Wrapper around a @b child PIDL with a @b managed lifetime.
- *
- * This class augments the lifetime management and PIDL modification methods
- * provided by CPidl with those that are specific to a child PIDL.  Currently
- * this only includes disabling the concatenation constructor but may be
- * added to in the future.
  */
-class CChildPidl : public CPidl<ITEMID_CHILD>
-{
-public:
-
-	CChildPidl() {}
-	CChildPidl( __in_opt ConstPidlType pidl ) throw(...) : CPidl(pidl) {}
-	CChildPidl( __in const CChildPidl& pidl ) throw(...) : CPidl(pidl) {}
-	CChildPidl& operator=( __in const CChildPidl& pidl ) throw(...)
-	{
-		if (this != &pidl)
-			CPidl::operator=(pidl);
-		return *this;
-	}
-
-	// No concatenation constructor
-};
+typedef CPidl<ITEMID_CHILD> CChildPidl;

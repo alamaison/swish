@@ -71,6 +71,7 @@ public:
 	CRemotePidlBase( __in_opt ConstPidlType pidl ) throw(...) : PidlT(pidl) {}
 	CRemotePidlBase( __in const CRemotePidlBase& pidl ) throw(...) : 
 		PidlT(pidl) {}
+
 	CRemotePidlBase& operator=( __in const CRemotePidlBase& pidl ) throw(...)
 	{
 		if (this != &pidl)
@@ -81,13 +82,13 @@ public:
 	/**
 	 * Concatenation constructor only implemented for non-const PidlT.
 	 */
-	CRemotePidlBase(
+	explicit CRemotePidlBase(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 	throw(...);
 
 	class InvalidPidlException {};
 
-	bool IsValid() const
+	inline bool IsValid() const
 	{
 		return (
 			!IsEmpty() &&
@@ -217,7 +218,7 @@ public:
 		return Get()->dateModified;
 	}
 
-	inline const RemoteItemId *Get() const
+	inline const RemoteItemId *Get() const throw()
 	{
 		return reinterpret_cast<const RemoteItemId *>(m_pidl);
 	}
@@ -262,7 +263,7 @@ template <typename IdListType>
 class CRemotePidl : public CRemotePidlBase< CPidl<IdListType> >
 {
 public:
-	CRemotePidl(
+	explicit CRemotePidl(
 		PCWSTR pwszFilename, PCWSTR pwszOwner=L"", PCWSTR pwszGroup=L"",
 		bool fIsFolder=false, bool fIsLink=false, DWORD dwPermissions=0,
 		ULONGLONG uSize=0, DATE dateModified=0)
@@ -301,6 +302,7 @@ public:
 		CRemotePidlBase(pidl) {}
 	CRemotePidl( __in const CRemotePidl& pidl ) throw(...) :
 		CRemotePidlBase(pidl) {}
+
 	CRemotePidl& operator=( __in const CRemotePidl& pidl ) throw(...)
 	{
 		if (this != &pidl)
@@ -311,7 +313,7 @@ public:
 	/**
 	 * Concatenation constructor.
 	 */
-	CRemotePidl(
+	explicit CRemotePidl(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 		throw(...) : CRemotePidlBase(pidl1, pidl2) {}
 
@@ -329,14 +331,12 @@ public:
 	}
 
 protected:
-
-	inline RemoteItemId *Set() const
+	inline RemoteItemId *Set() const throw()
 	{
 		return reinterpret_cast<RemoteItemId *>(m_pidl);
 	}
 
 private:
-
 	/**
 	 * Copy a wide string into provided buffer.
 	 *

@@ -64,6 +64,7 @@ public:
 	CHostPidlBase() throw() {}
 	CHostPidlBase( __in_opt ConstPidlType pidl ) throw(...) : PidlT(pidl) {}
 	CHostPidlBase( __in const CHostPidlBase& pidl ) throw(...) : PidlT(pidl) {}
+
 	CHostPidlBase& operator=( __in const CHostPidlBase& pidl ) throw(...)
 	{
 		if (this != &pidl)
@@ -74,13 +75,13 @@ public:
 	/**
 	 * Concatenation constructor only implemented for non-const PidlT.
 	 */
-	CHostPidlBase(
+	explicit CHostPidlBase(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 	throw(...);
 
 	class InvalidPidlException {};
 
-	bool IsValid() const
+	inline bool IsValid() const
 	{
 		return (
 			!IsEmpty() &&
@@ -174,7 +175,7 @@ public:
 		return strName;
 	}
 
-	inline const HostItemId *Get() const
+	inline const HostItemId *Get() const throw()
 	{
 		return reinterpret_cast<const HostItemId *>(m_pidl);
 	}
@@ -244,7 +245,7 @@ template <typename IdListType>
 class CHostPidl : public CHostPidlBase< CPidl<IdListType> >
 {
 public:
-	CHostPidl(
+	explicit CHostPidl(
 		PCWSTR pwszUser, PCWSTR pwszHost, USHORT uPort=SFTP_DEFAULT_PORT,
 		PCWSTR pwszPath=L"", PCWSTR pwszLabel=L"")
 	throw(...)
@@ -276,22 +277,22 @@ public:
 	CHostPidl( __in_opt ConstPidlType pidl ) throw(...) :
 		CHostPidlBase(pidl) {}
 	CHostPidl( __in const CHostPidl& pidl ) throw(...) : CHostPidlBase(pidl) {}
+
 	CHostPidl& operator=( __in const CHostPidl& pidl ) throw(...)
 	{
 		if (this != &pidl)
-			CHostPidl::operator=(pidl);
+			CHostPidlBase::operator=(pidl);
 		return *this;
 	}
 
 	/**
 	 * Concatenation constructor.
 	 */
-	CHostPidl(
+	explicit CHostPidl(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 		throw(...) : CHostPidlBase(pidl1, pidl2) {}
 
 private:
-
 	/**
 	 * Copy a wide string into provided buffer.
 	 *
