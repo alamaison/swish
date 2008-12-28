@@ -91,7 +91,7 @@ const throw(...)
  */
 int CRemoteFolder::ComparePIDLs(
 	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
-	bool fCompareAllFields, bool fCanonical)
+	bool /*fCompareAllFields*/, bool /*fCanonical*/)
 const throw(...)
 {
 	CRemoteItemListHandle item1(pidl1);
@@ -384,7 +384,9 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 	CString strName;
 	CRemoteItem rpidl(pidl);
 
-	if ((uFlags & SHGDN_FORPARSING) || (uFlags & SHGDN_FORADDRESSBAR))
+	bool fForParsing = (uFlags & SHGDN_FORPARSING) != 0;
+
+	if (fForParsing || (uFlags & SHGDN_FORADDRESSBAR))
 	{
 		if (!(uFlags & SHGDN_INFOLDER))
 		{
@@ -406,7 +408,7 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 		}
 
 		// Add child path - include extension if FORPARSING
-		strName += rpidl.GetFilename(uFlags & SHGDN_FORPARSING);
+		strName += rpidl.GetFilename(fForParsing);
 	}
 	else if (uFlags & SHGDN_FOREDITING)
 	{

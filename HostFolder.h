@@ -32,6 +32,9 @@
 #include <vector>
 using std::vector;
 
+#pragma warning (push)
+#pragma warning (disable: 4199) // Not injecting base class
+
 [
 	coclass,
 	default(IUnknown),
@@ -140,3 +143,5 @@ DEFINE_PROPERTYKEY(PKEY_SwishHostUser, 0xb816a850, 0x5022, 0x11dc, \
 DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
 				   PID_SWISH_HOST_PORT);
+
+#pragma warning (pop)

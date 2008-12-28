@@ -65,6 +65,9 @@ struct _CopyPidl
 };
 
 
+#pragma warning (push)
+#pragma warning (disable: 4199) // Not injecting base class
+
 [
 	coclass,
 	default(IUnknown),
@@ -197,3 +200,5 @@ private:
 		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 
 };
+
+#pragma warning (pop)

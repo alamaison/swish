@@ -128,7 +128,7 @@ const throw(...)
 }
 
 STDMETHODIMP CDummyFolder::ParseDisplayName(
-	HWND hwnd, IBindCtx *pbc, PWSTR pwszDisplayName, ULONG *pchEaten, 
+	HWND /*hwnd*/, IBindCtx * /*pbc*/, PWSTR pwszDisplayName, ULONG *pchEaten, 
 	PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
 {
 	FUNCTION_TRACE;
@@ -146,12 +146,15 @@ STDMETHODIMP CDummyFolder::ParseDisplayName(
 }
 
 STDMETHODIMP CDummyFolder::EnumObjects(
-	HWND hwnd, SHCONTF grfFlags, IEnumIDList **ppenumIDList)
+	HWND /*hwnd*/, SHCONTF grfFlags, IEnumIDList **ppenumIDList)
 {
 	FUNCTION_TRACE;
 	ATLENSURE_RETURN_HR(ppenumIDList, E_POINTER);
 
 	*ppenumIDList = NULL;
+
+	if (!(grfFlags & SHCONTF_FOLDERS))
+		return S_FALSE;
 
 	typedef CComEnum<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD, _CopyPidl>
 	        CComEnumIDList;
@@ -186,8 +189,8 @@ STDMETHODIMP CDummyFolder::EnumObjects(
  * - Zero:     pidl1 == pidl2
  */
 int CDummyFolder::ComparePIDLs(
-	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
-	bool fCompareAllFields, bool fCanonical)
+	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT /*uColumn*/,
+	bool /*fCompareAllFields*/, bool /*fCanonical*/)
 const throw(...)
 {
 	const DummyItemId *pitemid1 = reinterpret_cast<const DummyItemId *>(pidl1);
@@ -196,7 +199,7 @@ const throw(...)
 }
 
 STDMETHODIMP CDummyFolder::GetAttributesOf( 
-	UINT cpidl, PCUITEMID_CHILD_ARRAY apidl, SFGAOF *rgfInOut)
+	UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY apidl, SFGAOF *rgfInOut)
 {
 	FUNCTION_TRACE;
 	ATLENSURE_RETURN_HR(apidl, E_POINTER);
@@ -219,7 +222,7 @@ STDMETHODIMP CDummyFolder::GetAttributesOf(
 
 STDMETHODIMP CDummyFolder::GetUIObjectOf(
 	HWND hwndOwner, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
-	UINT *rgfReserved, void **ppv)
+	UINT * /*rgfReserved*/, void **ppv)
 {
 	FUNCTION_TRACE;
 	ATLENSURE_RETURN_HR(apidl, E_POINTER);
@@ -292,7 +295,7 @@ STDMETHODIMP CDummyFolder::GetUIObjectOf(
 }
 
 STDMETHODIMP CDummyFolder::GetDisplayNameOf( 
-	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
+	PCUITEMID_CHILD pidl, SHGDNF /*uFlags*/, STRRET *pName)
 {
 	FUNCTION_TRACE;
 	ATLENSURE_RETURN_HR(pidl, E_POINTER);
@@ -311,7 +314,7 @@ STDMETHODIMP CDummyFolder::GetDisplayNameOf(
 }
 
 STDMETHODIMP CDummyFolder::SetNameOf( 
-	HWND hwnd, PCUITEMID_CHILD pidl, PCWSTR pwszName, SHGDNF uFlags, 
+	HWND /*hwnd*/, PCUITEMID_CHILD pidl, PCWSTR pwszName, SHGDNF /*uFlags*/, 
 	PITEMID_CHILD *ppidlOut)
 {
 	FUNCTION_TRACE;
@@ -326,7 +329,7 @@ STDMETHODIMP CDummyFolder::SetNameOf(
 }
 
 STDMETHODIMP CDummyFolder::GetDefaultColumn(
-	DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
+	DWORD /*dwRes*/, ULONG *pSort, ULONG *pDisplay)
 {
 	FUNCTION_TRACE;
 	ATLENSURE_RETURN_HR(pSort, E_POINTER);
@@ -397,7 +400,7 @@ STDMETHODIMP CDummyFolder::GetDetailsEx(
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
-STDMETHODIMP CDummyFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
+STDMETHODIMP CDummyFolder::MapColumnToSCID(UINT /*iColumn*/, SHCOLUMNID *pscid)
 {
 	FUNCTION_TRACE;
 	ATLENSURE_RETURN_HR(pscid, E_POINTER);
@@ -478,16 +481,12 @@ HRESULT CDummyFolder::OnInvokeCommand(
  * Handle @c DFM_INVOKECOMMANDEX callback.
  */
 HRESULT CDummyFolder::OnInvokeCommandEx(
-	HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics )
+	HWND /*hwnd*/, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics )
 {
 	ATLTRACE(__FUNCTION__" called (pDataObj=%p, idCmd=%d, pdfmics=%p)\n",
 		pDataObj, idCmd, pdfmics);
 
-	switch (idCmd)
-	{
-	default:
-		return S_FALSE;
-	}
+	return S_FALSE;
 }
 
 /**

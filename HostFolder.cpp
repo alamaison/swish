@@ -81,7 +81,7 @@ const throw(...)
  */
 int CHostFolder::ComparePIDLs(
 	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
-	bool fCompareAllFields, bool fCanonical)
+	bool /*fCompareAllFields*/, bool /*fCanonical*/)
 const throw(...)
 {
 	CHostItemListHandle item1(pidl1);

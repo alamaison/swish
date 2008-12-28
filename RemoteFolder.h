@@ -32,7 +32,9 @@
 #include "RemotePidl.h"     // For RemoteItemId handling
 #include "Pool.h"           // For access to SFTP global session pool
 
-// CRemoteFolder
+#pragma warning (push)
+#pragma warning (disable: 4199) // Not injecting base class
+
 [
 	coclass,
 	default(IUnknown),
@@ -187,3 +189,5 @@ DEFINE_PROPERTYKEY(PKEY_SwishRemoteGroup, 0xb816a851, 0x5022, 0x11dc, \
 DEFINE_PROPERTYKEY(PKEY_SwishRemotePermissions, 0xb816a851, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
 				   PID_SWISH_REMOTE_PERMISSIONS);
+
+#pragma warning (pop)
