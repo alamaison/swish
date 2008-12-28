@@ -1,3 +1,6 @@
+swish-0.2.1.10
+-Now supports Windows Vista.
+
 swish-0.2.1.9
 -Added support for the keyboard-interactive authentication scheme:
  (http://www.ietf.org/rfc/rfc4256.txt).
