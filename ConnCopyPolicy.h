@@ -1,4 +1,4 @@
-/*  Copy-policy class for converting from connection data structure to PIDL
+/*  Copy-policy class for copying CHostItem wrapped PIDL to PITEMID_CHILD.
 
     Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -17,38 +17,37 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef CONNCOPYPOLICY_H
-#define CONNCOPYPOLICY_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif // _MSC_VER > 1000
 
-#include "HostPidlManager.h"
+#include "HostPidl.h"
+
+#include <vector>
+using std::vector;
 
 class CConnCopyPolicy  
 {
 public:
-	static void init( PITEMID_CHILD* ) { /* No init needed */ }
+	static void init(PITEMID_CHILD*) { /* No init needed */ }
     
-    static HRESULT copy( PITEMID_CHILD* pTo, const HOSTPIDL *pFrom )
+    static HRESULT copy(
+		__deref_out PITEMID_CHILD *pTo, __in const CHostItem *pFrom)
     {
-		ATLASSERT(SUCCEEDED(m_PidlManager.IsValid((PCUIDLIST_RELATIVE)pFrom)));
-		return m_PidlManager.Create( pFrom->wszLabel, pFrom->wszUser, 
-			pFrom->wszHost, pFrom->wszPath, pFrom->uPort, pTo );
+		try
+		{
+			ATLASSERT(pFrom->IsValid());
+			*pTo = pFrom->CopyTo();
+		}
+		catchCom()
+
+		return S_OK;
     }
 
-    static void destroy( PITEMID_CHILD* p ) 
+    static void destroy(__in PITEMID_CHILD *p) 
     {
-        m_PidlManager.Delete( *p ); 
+		::ILFree(*p);
     }
-
-private:
-    static CHostPidlManager m_PidlManager;
 };
 
-typedef CComEnumOnSTL<IEnumIDList, &IID_IEnumIDList, PITEMID_CHILD,
-                      CConnCopyPolicy, std::vector<HOSTPIDL> >
+typedef CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
+                      CConnCopyPolicy, vector<CHostItem> >
 		CEnumIDListImpl;
-
-#endif // CONNCOPYPOLICY_H

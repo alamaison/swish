@@ -20,7 +20,7 @@
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfATL="2"
+			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
@@ -55,6 +55,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="wtl/include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;ISOLATION_AWARE_ENABLED;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -71,7 +72,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
 				Culture="2057"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(IntDir);wtl/include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -150,6 +151,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="wtl/include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;ISOLATION_AWARE_ENABLED"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -164,7 +166,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
 				Culture="2057"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(IntDir);wtl/include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -244,6 +246,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
+				AdditionalIncludeDirectories="wtl/include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;ISOLATION_AWARE_ENABLED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -260,7 +263,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
 				Culture="2057"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(IntDir);wtl/include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -310,10 +313,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\ConnCopyPolicy.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Connection.cpp"
 				>
 			</File>
@@ -322,15 +321,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostContextMenu.cpp"
+				RelativePath=".\Folder.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\HostFolder.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HostPidlManager.cpp"
 				>
 			</File>
 			<File
@@ -350,19 +345,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PidlManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Pool.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\RemoteFolder.cpp"
+				RelativePath=".\Registry.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\RemotePidlManager.cpp"
+				RelativePath=".\RemoteFolder.cpp"
 				>
 			</File>
 			<File
@@ -419,6 +410,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
+				RelativePath=".\CoFactory.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConnCopyPolicy.h"
 				>
 			</File>
@@ -431,7 +426,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostContextMenu.h"
+				RelativePath=".\Folder.h"
 				>
 			</File>
 			<File
@@ -463,7 +458,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\HostPidlManager.h"
+				RelativePath=".\HostPidl.h"
 				>
 			</File>
 			<File
@@ -487,11 +482,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PidlManager.h"
+				RelativePath=".\Pool.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Pool.h"
+				RelativePath=".\Registry.h"
 				>
 			</File>
 			<File
@@ -504,10 +499,6 @@
 			</File>
 			<File
 				RelativePath=".\RemotePidl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RemotePidlManager.h"
 				>
 			</File>
 			<File

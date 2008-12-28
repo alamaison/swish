@@ -1,12 +1,12 @@
 #include "stdafx.h"
 #include "Pidl_test.h"
 
-#include <Pidl.h>
+#include <HostPidl.h>
 
-/** Standard PIDL-wrapper tests for CPidl family */
+/** Standard PIDL-wrapper tests for CHostPidl family */
 
 template <>
-void CPidl_test<CChildPidl, ITEMID_CHILD>::_testGetNext(
+void CPidl_test<CHostItem, ITEMID_CHILD>::_testGetNext(
 	PidlType /*pidlTest*/, PCUIDLIST_RELATIVE pidlNext) throw(...)
 {
 	// GetNext on a child pidl should always return NULL
@@ -14,37 +14,39 @@ void CPidl_test<CChildPidl, ITEMID_CHILD>::_testGetNext(
 }
 
 template <>
-ITEMID_CHILD* CPidl_test<CChildPidl, ITEMID_CHILD>::_setUp(
+ITEMID_CHILD* CPidl_test<CHostItem, ITEMID_CHILD>::_setUp(
 	PIDLIST_ABSOLUTE pidl)
 {
 	return ::ILCloneChild(::ILFindLastID(pidl));
 }
 
 template <>
-ITEMIDLIST_RELATIVE* CPidl_test<CRelativePidl, ITEMIDLIST_RELATIVE>::_setUp(
+ITEMIDLIST_RELATIVE* CPidl_test<CHostItemList, ITEMIDLIST_RELATIVE>::_setUp(
 	PIDLIST_ABSOLUTE pidl)
 {
 	return ::ILClone(::ILGetNext(pidl));
 }
 
 template <>
-ITEMIDLIST_ABSOLUTE* CPidl_test<CAbsolutePidl, ITEMIDLIST_ABSOLUTE>::_setUp(
+ITEMIDLIST_ABSOLUTE* 
+CPidl_test<CHostItemAbsolute, ITEMIDLIST_ABSOLUTE>::_setUp(
 	PIDLIST_ABSOLUTE pidl)
 {
 	return ::ILCloneFull(pidl);
 }
 
-typedef CPidl_test<CRelativePidl, ITEMIDLIST_RELATIVE> CRelativePidl_test;
-typedef CPidl_test<CAbsolutePidl, ITEMIDLIST_ABSOLUTE> CAbsolutePidl_test;
-typedef CPidl_test<CChildPidl, ITEMID_CHILD> CChildPidl_test;
+typedef CPidl_test<CHostItemList, ITEMIDLIST_RELATIVE> CHostItemList_test;
+typedef CPidl_test<CHostItemAbsolute, ITEMIDLIST_ABSOLUTE> 
+	CHostItemAbsolute_test;
+typedef CPidl_test<CHostItem, ITEMID_CHILD> CHostItem_test;
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CRelativePidl_test );
-CPPUNIT_TEST_SUITE_REGISTRATION( CAbsolutePidl_test );
-CPPUNIT_TEST_SUITE_REGISTRATION( CChildPidl_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CHostItemList_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CHostItemAbsolute_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CHostItem_test );
 
-class CPidl_assignment_test : public CPPUNIT_NS::TestFixture
+class CHostPidl_assignment_test : public CPPUNIT_NS::TestFixture
 {
-	CPPUNIT_TEST_SUITE( CPidl_assignment_test );
+	CPPUNIT_TEST_SUITE( CHostPidl_assignment_test );
 		CPPUNIT_TEST( testAssignment );
 		CPPUNIT_TEST( testAssignment2 );
 	CPPUNIT_TEST_SUITE_END();
@@ -56,15 +58,15 @@ public:
 
 	void testAssignment()
 	{
-		CChildPidl pidlC;
-		CRelativePidl pidlR;
-		CAbsolutePidl pidlA;
+		CHostItem pidlC;
+		CHostItemList pidlR;
+		CHostItemAbsolute pidlA;
 
 		PITEMID_CHILD pidlItemC = NULL;
 		PIDLIST_RELATIVE pidlItemR = NULL;
 		PIDLIST_ABSOLUTE pidlItemA = NULL;
 
-		// Upcast CPidls
+		// Upcast CHostPidls
 		pidlR = pidlC;
 		pidlR = pidlA;
 		pidlR = pidlItemC;
@@ -72,12 +74,12 @@ public:
 		pidlItemR = pidlC.CopyTo();
 		pidlItemR = pidlA.CopyTo();
 
-		// DownCast CPidls
+		// DownCast CHostPidls
 		pidlC = static_cast<PCITEMID_CHILD>((PCUIDLIST_RELATIVE)pidlR);
 		pidlC = static_cast<PCITEMID_CHILD>(
 		                    static_cast<PCUIDLIST_RELATIVE>(pidlR));
 
-		// CrossCast CPidls
+		// CrossCast CHostPidls
 		pidlA = static_cast<PCIDLIST_ABSOLUTE>((PCUIDLIST_RELATIVE)pidlC);
 		pidlA = static_cast<PCIDLIST_ABSOLUTE>(
 		                    static_cast<PCUIDLIST_RELATIVE>(pidlC));
@@ -85,15 +87,15 @@ public:
 
 	void testAssignment2()
 	{
-		CChildPidl pidlC;
-		CRelativePidl pidlR;
-		CAbsolutePidl pidlA;
+		CHostItem pidlC;
+		CHostItemList pidlR;
+		CHostItemAbsolute pidlA;
 
-		CChildPidlHandle pidlHandC = NULL;
-		CRelativePidlHandle pidlHandR = NULL;
-		CAbsolutePidlHandle pidlHandA = NULL;
+		CHostItemHandle pidlHandC = NULL;
+		CHostItemListHandle pidlHandR = NULL;
+		CHostItemAbsoluteHandle pidlHandA = NULL;
 
-		// Cast CPidls to CPidlHandles
+		// Cast CHostPidls to CHostPidlHandles
 		pidlR = pidlHandR;
 		pidlR = pidlHandC;
 		pidlR = pidlHandA;
@@ -121,6 +123,7 @@ public:
 		pidlHandC = static_cast<PCITEMID_CHILD>((PCUIDLIST_RELATIVE)pidlR);
 		pidlHandC = static_cast<PCITEMID_CHILD>((PCUIDLIST_RELATIVE)pidlA);
 	}
+
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CPidl_assignment_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CHostPidl_assignment_test );

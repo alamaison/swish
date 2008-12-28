@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
+#include "CoFactory.h"
+
 // CExplorerCallback
 [
 	coclass,
@@ -41,7 +43,8 @@
 	helpstring("ExplorerCallback Class")
 ]
 class ATL_NO_VTABLE CExplorerCallback :
-	public IShellFolderViewCB
+	public IShellFolderViewCB,
+	public CCoFactory<CExplorerCallback>
 {
 public:
 	CExplorerCallback() : m_hwndView(NULL), m_pidl(NULL) {}
@@ -56,35 +59,24 @@ public:
 	/**
 	 * Create and initialise an instance of the CExplorerCallback class.
 	 *
-	 * @param [in]  pidl       An absolute PIDL to the folder whose callback
-	 *                         this object is to act as.
-	 * @param [out] ppReturn   The location in which to return the 
-	 *                         IShellFolderViewCB interace pointer for this
-	 *                         instance.
+	 * @param[in] pidl  An absolute PIDL to the folder for whom we are
+	 *                  creating this callback object.
+	 *
+	 * @returns  Pointer to the object's IShellFolderViewCB interface.
+	 * @throws   CAtlException if creation fails.
 	 */
-	static HRESULT MakeInstance(
-		__in PCIDLIST_ABSOLUTE pidl, __deref_out IShellFolderViewCB **ppReturn )
+	static CComPtr<IShellFolderViewCB> Create(__in PCIDLIST_ABSOLUTE pidl)
+	throw(...)
 	{
-		HRESULT hr;
+		CComPtr<CExplorerCallback> spCB = spCB->CreateCoObject();
+		HRESULT hr = spCB->Initialize(pidl);
+		ATLENSURE_SUCCEEDED(hr);
 
-		CComObject<CExplorerCallback> *pCallback;
-		hr = CComObject<CExplorerCallback>::CreateInstance(&pCallback);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr );
-
-		pCallback->AddRef();
-
-		hr = pCallback->Initialize(pidl);
-		ATLASSERT(SUCCEEDED(hr));
-		hr = pCallback->QueryInterface(ppReturn);
-		ATLASSERT(SUCCEEDED(hr));
-
-		pCallback->Release();
-		pCallback = NULL;
-
-		return hr;
+		return spCB;
 	}
 
-	// IShellFolderViewCB
+public: // IShellFolderViewCB
+
 	IFACEMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:

@@ -49,8 +49,8 @@
 #define _WIN32_WINDOWS 0x0400 // Change this to the appropriate value to target Windows Me or later.
 #endif
 
-#ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0400	// Change this to the appropriate value to target other versions of IE.
+#ifndef _WIN32_IE			// Allow use of features specific to IE 5.0 or later.
+#define _WIN32_IE 0x0500	// Change this to the appropriate value to target other versions of IE.
 #endif
 
 // This is here only to tell VC7 Class Wizard this is an ATL project
@@ -67,8 +67,8 @@ CExeModule
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
 #ifdef _DEBUG
-#define _ATL_DEBUG_QI
-#define _ATL_DEBUG_INTERFACES
+//#define _ATL_DEBUG_QI
+//#define _ATL_DEBUG_INTERFACES
 #endif
 
 #include <atlbase.h>          // base ATL classes
@@ -105,16 +105,21 @@ using namespace ATL;
 #define NOTIFY_HANDLER_PARAMS int, LPNMHDR, BOOL&
 
 /* Debug macros ************************************************************* */
+#define TRACE(msg, ...) ATLTRACE(msg ## "\n", __VA_ARGS__)
+#define FUNCTION_TRACE TRACE(__FUNCTION__" called");
+#define METHOD_TRACE TRACE(__FUNCTION__" called (this=%p)", this);
 
 #define VERIFY(f)          ATLVERIFY(f)
 #define ASSERT(f)          ATLASSERT(f)
 #ifdef _DEBUG
-#define REPORT(expr)  { \
+#define REPORT(expr) \
+do { \
     LPVOID lpMsgBuf; \
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
 		NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
         (LPTSTR) &lpMsgBuf, 0, NULL ); \
-	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); }
+	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); \
+} while(0)
 #else
 #define REPORT(expr) (expr)
 #endif
@@ -133,6 +138,13 @@ do {                                                                 \
 	int __atl_condVal=!!(expr);                                      \
 	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
 	if(!(__atl_condVal)) return (hr);                                \
+} while (0)
+
+#define ATLENSURE_REPORT_THROW(expr, error, hr)                      \
+do {                                                                 \
+	int __atl_condVal=!!(expr);                                      \
+	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+	if(!(__atl_condVal)) AtlThrow(hr);                               \
 } while (0)
 
 #ifdef _DEBUG

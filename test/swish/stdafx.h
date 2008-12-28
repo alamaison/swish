@@ -37,7 +37,7 @@
 #endif
 
 #ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0400	// Change this to the appropriate value to target other versions of IE.
+#define _WIN32_IE 0x0500	// Change this to the appropriate value to target other versions of IE.
 #endif
 
 /* ATL Setup **************************************************************** */
@@ -86,6 +86,9 @@ using namespace ATL;
 #define NOTIFY_HANDLER_PARAMS int, LPNMHDR, BOOL&
 
 /* Debug macros ************************************************************* */
+#define TRACE(msg, ...) ATLTRACE(msg ## "\n", __VA_ARGS__)
+#define FUNCTION_TRACE TRACE(__FUNCTION__" called");
+#define METHOD_TRACE TRACE(__FUNCTION__" called (this=%p)", this);
 
 #ifdef UNREACHABLE
 #undef UNREACHABLE
@@ -96,6 +99,25 @@ using namespace ATL;
 #define UNREACHABLE __assume(0);
 #endif
 
+/* COM Exception handler **************************************************** */
+
+#define catchCom()            \
+catch (const _com_error& e)   \
+{                             \
+	return e.Error();         \
+}                             \
+catch (const std::bad_alloc&) \
+{                             \
+	return E_OUTOFMEMORY;     \
+}                             \
+catch (const std::exception&) \
+{                             \
+	return E_UNEXPECTED;      \
+}                             \
+catch (const CAtlException& e)\
+{                             \
+	return e;                 \
+}
 
 /* Includes ***************************************************************** */
 
