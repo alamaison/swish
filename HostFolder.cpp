@@ -87,32 +87,24 @@ const throw(...)
 	CHostItemListHandle item1(pidl1);
 	CHostItemListHandle item2(pidl2);
 
-	try
+	switch (uColumn)
 	{
-		switch (uColumn)
-		{
-		case 0: // Display name (Label)
-				// - also default for fCompareAllFields and fCanonical
-			return wcscmp(item1.GetLabel(), item2.GetLabel());
-		case 1: // Hostname
-			return wcscmp(item1.GetHost(), item2.GetHost());
-		case 2: // Username
-			return wcscmp(item1.GetUser(), item2.GetUser());
-		case 4: // Remote filesystem path
-			return wcscmp(item1.GetPath(), item2.GetPath());
-		case 3: // SFTP port
-			return item1.GetPort() - item2.GetPort();
-		case 5: // Type
-			return 0;
-		default:
-			UNREACHABLE;
-			AtlThrow(E_UNEXPECTED);
-		}
-	}
-	catch (CHostItemListHandle::InvalidPidlException)
-	{
+	case 0: // Display name (Label)
+			// - also default for fCompareAllFields and fCanonical
+		return wcscmp(item1.GetLabel(), item2.GetLabel());
+	case 1: // Hostname
+		return wcscmp(item1.GetHost(), item2.GetHost());
+	case 2: // Username
+		return wcscmp(item1.GetUser(), item2.GetUser());
+	case 4: // Remote filesystem path
+		return wcscmp(item1.GetPath(), item2.GetPath());
+	case 3: // SFTP port
+		return item1.GetPort() - item2.GetPort();
+	case 5: // Type
+		return 0;
+	default:
 		UNREACHABLE;
-		AtlThrow(E_INVALIDARG);
+		AtlThrow(E_UNEXPECTED);
 	}
 }
 
@@ -349,11 +341,6 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 		ATLENSURE_SUCCEEDED(hr);
 
 		*ppidl = CRelativePidl(GetRootPIDL(), pidlPath).Detach();
-	}
-	catch(CHostItem::InvalidPidlException)
-	{
-		UNREACHABLE;
-		return E_UNEXPECTED;
 	}
 	catchCom()
 

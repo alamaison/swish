@@ -97,46 +97,38 @@ const throw(...)
 	CRemoteItemListHandle item1(pidl1);
 	CRemoteItemListHandle item2(pidl2);
 
-	try
+	switch (uColumn)
 	{
-		switch (uColumn)
-		{
-		case 0: // Filename
-				// - also default for fCompareAllFields and fCanonical
-			return wcscmp(item1.GetFilename(), item2.GetFilename());
-		case 1: // Owner
-			return wcscmp(item1.GetOwner(), item2.GetOwner());
-		case 2: // Group
-			return wcscmp(item1.GetGroup(), item2.GetGroup());
-		case 3: // File Permissions: drwxr-xr-x form
-			return item1.GetPermissions() - item2.GetPermissions();
-		case 4: // File size in bytes
-			// We have to do this with a series of if-statements as the 
-			// file sizes are ULONGLONGs and a subtraction may overflow
-			if (item1.GetFileSize() == item2.GetFileSize())
-				return 0;
-			else if (item1.GetFileSize() < item2.GetFileSize())
-				return -1;
-			else
-				return 1;
-		case 5: // Last modified date
-			// We have to do this with a series of if-statements as the 
-			// COleDateTime object wraps a floating-point number (double)
-			if (item1.GetDateModified() == item2.GetDateModified())
-				return 0;
-			else if (item1.GetDateModified() < item2.GetDateModified())
-				return -1;
-			else
-				return 1;
-		default:
-			UNREACHABLE;
-			AtlThrow(E_UNEXPECTED);
-		}
-	}
-	catch (CRemoteItemListHandle::InvalidPidlException)
-	{
+	case 0: // Filename
+			// - also default for fCompareAllFields and fCanonical
+		return wcscmp(item1.GetFilename(), item2.GetFilename());
+	case 1: // Owner
+		return wcscmp(item1.GetOwner(), item2.GetOwner());
+	case 2: // Group
+		return wcscmp(item1.GetGroup(), item2.GetGroup());
+	case 3: // File Permissions: drwxr-xr-x form
+		return item1.GetPermissions() - item2.GetPermissions();
+	case 4: // File size in bytes
+		// We have to do this with a series of if-statements as the 
+		// file sizes are ULONGLONGs and a subtraction may overflow
+		if (item1.GetFileSize() == item2.GetFileSize())
+			return 0;
+		else if (item1.GetFileSize() < item2.GetFileSize())
+			return -1;
+		else
+			return 1;
+	case 5: // Last modified date
+		// We have to do this with a series of if-statements as the 
+		// COleDateTime object wraps a floating-point number (double)
+		if (item1.GetDateModified() == item2.GetDateModified())
+			return 0;
+		else if (item1.GetDateModified() < item2.GetDateModified())
+			return -1;
+		else
+			return 1;
+	default:
 		UNREACHABLE;
-		AtlThrow(E_INVALIDARG);
+		AtlThrow(E_UNEXPECTED);
 	}
 }
 
@@ -371,11 +363,6 @@ STDMETHODIMP CRemoteFolder::ParseDisplayName(
 		{
 			*ppidl = pidl.Detach();
 		}
-	}
-	catch(CRemoteItem::InvalidPidlException)
-	{
-		UNREACHABLE;
-		return E_UNEXPECTED;
 	}
 	catchCom()
 

@@ -86,8 +86,6 @@ public:
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 	throw(...);
 
-	class InvalidPidlException {};
-
 	/**
 	 * Does fingerprint stored in this PIDL correspond to a RemoteItemId?
 	 */
@@ -112,25 +110,19 @@ public:
 
 	bool IsFolder() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->fIsFolder;
 	}
 
 	bool IsLink() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->fIsLink;
 	}
 
 	CString GetFilename() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszFilename;
 	}
 
@@ -158,8 +150,7 @@ public:
 	 */
 	CString GetExtension() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 
 		const wchar_t *pwszExtStart = ::PathFindExtension(GetFilename());
 		ATLASSERT(pwszExtStart);
@@ -175,49 +166,37 @@ public:
 
 	CString GetOwner() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszOwner;
 	}
 
 	CString GetGroup() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszGroup;
 	}
 
 	ULONGLONG GetFileSize() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->uSize;
 	}
 
 	DWORD GetPermissions() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->dwPermissions;
 	}
 
 	CString GetPermissionsStr() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return L"todo";
 	}
 
 	COleDateTime GetDateModified() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->dateModified;
 	}
 
@@ -338,8 +317,7 @@ public:
 	{
 		ATLENSURE_THROW(pwszFilename, E_POINTER);
 		ATLENSURE_THROW(*pwszFilename != L'\0', E_INVALIDARG);
-		if (!IsValid())
-			throw InvalidPidlException();
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 
 		CopyWSZString(
 			Set()->wszFilename, ARRAYSIZE(Set()->wszFilename), pwszFilename);

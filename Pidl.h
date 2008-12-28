@@ -142,7 +142,7 @@ public:
 		return Clone(m_pidl);
 	}
 
-	PCUIDLIST_RELATIVE GetNext() throw()
+	PCUIDLIST_RELATIVE GetNext() const throw()
 	{
 		if (m_pidl == NULL)
 			return NULL;

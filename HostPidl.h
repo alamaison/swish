@@ -79,8 +79,6 @@ public:
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 	throw(...);
 
-	class InvalidPidlException {};
-
 	/**
 	 * Does fingerprint stored in this PIDL correspond to a HostItemId?
 	 */
@@ -105,48 +103,37 @@ public:
 
 	CString GetLabel() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszLabel;
 	}
 
 	CString GetUser() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszUser;
 	}
 
 	CString GetHost() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszHost;
 	}
 
 	CString GetPath() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszPath;
 	}
 
 	USHORT GetPort() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->uPort;
 	}
 
 	CString GetPortStr() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 
 		CString strPort;
 		strPort.Format(L"%u", Get()->uPort);
@@ -163,8 +150,7 @@ public:
 	 */
 	CString GetLongName(bool fCanonical) const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 
 		CString strName;
 
@@ -195,6 +181,7 @@ public:
 	 * @returns The address of the HostItemId segment this wrapped PIDL.
 	 */
 	__checkReturn CHostPidlBase<CRelativePidlHandle> FindHostPidl()
+	const throw()
 	{
 		CHostItemListHandle pidlCurrent(m_pidl);
 		
