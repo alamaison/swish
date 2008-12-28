@@ -25,8 +25,8 @@
 #include "ExplorerCallback.h" // For interaction with Explorer window
 #include "Registry.h" // For saved connection details
 
-#include <atlrx.h> // For regular expressions
-
+#include <string>
+using std::wstring;
 
 void CHostFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
 const throw(...)
@@ -272,15 +272,92 @@ STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
     return hr;
 }
 
-STDMETHODIMP CHostFolder::ParseDisplayName( 
-	__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pwszDisplayName,
-	__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
-	__inout_opt ULONG *pdwAttributes)
+/**
+ * Convert path string relative to this folder into a PIDL to the item.
+ *
+ * @todo  Handle the attributes parameter.  Should just return
+ * GetAttributesOf() the PIDL we create but it is a bit hazy where the
+ * host PIDL's responsibilities end and the remote PIDL's start because
+ * of the path embedded in the host PIDL.
+ */
+STDMETHODIMP CHostFolder::ParseDisplayName(
+	HWND hwnd, IBindCtx *pbc, PWSTR pwszDisplayName, ULONG *pchEaten,
+	PIDLIST_RELATIVE *ppidl, __inout_opt ULONG *pdwAttributes)
 {
 	ATLTRACE(__FUNCTION__" called (pwszDisplayName=%ws)\n", pwszDisplayName);
+	ATLENSURE_RETURN_HR(pwszDisplayName, E_POINTER);
+	ATLENSURE_RETURN_HR(*pwszDisplayName != L'\0', E_INVALIDARG);
 	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
 
-	ATLTRACENOTIMPL(__FUNCTION__);
+	// The string we are trying to parse should be of the form:
+	//    sftp://username@hostname:port/path
+
+	wstring strDisplayName(pwszDisplayName);
+	if (strDisplayName.empty())
+	{
+		*ppidl = CloneRootPIDL().Detach();
+		return S_OK;
+	}
+
+	// Must start with sftp://
+	ATLENSURE_RETURN(strDisplayName.substr(0, 7) == L"sftp://");
+
+	// Must have @ to separate username from hostname
+	wstring::size_type nAt = strDisplayName.find_first_of(L'@', 7);
+	ATLENSURE_RETURN(nAt != wstring::npos);
+
+	// Must have : to separate hostname from port number
+	wstring::size_type nColon = strDisplayName.find_first_of(L':', 7);
+	ATLENSURE_RETURN(nColon != wstring::npos);
+	ATLENSURE_RETURN(nColon > nAt);
+
+	// Must have / to separate port number from path
+	wstring::size_type nSlash = strDisplayName.find_first_of(L'/', 7);
+	ATLENSURE_RETURN(nSlash != wstring::npos);
+	ATLENSURE_RETURN(nSlash > nColon);
+
+	wstring strUser = strDisplayName.substr(7, nAt - 7);
+	wstring strHost = strDisplayName.substr(nAt+1, nColon - (nAt+1));
+	wstring strPort = strDisplayName.substr(nColon+1, nAt - (nSlash+1));
+	wstring strPath = strDisplayName.substr(nSlash+1);
+	ATLENSURE_RETURN(!strUser.empty());
+	ATLENSURE_RETURN(!strHost.empty());
+	ATLENSURE_RETURN(!strPort.empty());
+	ATLENSURE_RETURN(!strPath.empty());
+
+	int nPort = _wtoi(strPort.c_str());
+	ATLENSURE_RETURN(nPort >= MIN_PORT && nPort <= MAX_PORT);
+
+	// Create child PIDL for this path segment
+	HRESULT hr = S_OK;
+	try
+	{
+		CHostItem pidl(
+			strUser.c_str(), strHost.c_str(), static_cast<USHORT>(nPort),
+			strPath.c_str());
+
+		CComPtr<IShellFolder> spSubfolder;
+		hr = BindToObject(pidl, pbc, IID_PPV_ARGS(&spSubfolder));
+		ATLENSURE_SUCCEEDED(hr);
+
+		wchar_t wszPath[MAX_PATH];
+		::StringCchCopyW(wszPath, ARRAYSIZE(wszPath), strPath.c_str());
+
+		CRelativePidl pidlPath;
+		hr = spSubfolder->ParseDisplayName(
+			hwnd, pbc, wszPath, pchEaten, &pidlPath, pdwAttributes);
+		ATLENSURE_SUCCEEDED(hr);
+
+		*ppidl = CRelativePidl(GetRootPIDL(), pidlPath).Detach();
+	}
+	catch(CHostItem::InvalidPidlException)
+	{
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+	catchCom()
+
+	return hr;
 }
 
 /**

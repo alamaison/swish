@@ -35,6 +35,9 @@
 using std::vector;
 using std::iterator;
 
+#include <string>
+using std::wstring;
+
 void CRemoteFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
 const throw(...)
 {
@@ -306,15 +309,77 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
     return hr;
 }
 
-STDMETHODIMP CRemoteFolder::ParseDisplayName( 
-	__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pwszDisplayName,
-	__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
-	__inout_opt ULONG *pdwAttributes)
+/**
+ * Convert path string relative to this folder into a PIDL to the item.
+ *
+ * @todo  Handle the attributes parameter.  Will need to contact server
+ * as the PIDL we create is fake and will not have correct folderness, etc.
+ */
+STDMETHODIMP CRemoteFolder::ParseDisplayName(
+	HWND hwnd, IBindCtx *pbc, PWSTR pwszDisplayName, ULONG *pchEaten,
+	PIDLIST_RELATIVE *ppidl, __inout_opt ULONG *pdwAttributes)
 {
 	ATLTRACE(__FUNCTION__" called (pwszDisplayName=%ws)\n", pwszDisplayName);
+	ATLENSURE_RETURN_HR(pwszDisplayName, E_POINTER);
+	ATLENSURE_RETURN_HR(*pwszDisplayName != L'\0', E_INVALIDARG);
 	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
 
-	ATLTRACENOTIMPL(__FUNCTION__);
+	// The string we are trying to parse should be of the form:
+	//    directory/directory/filename
+	// or 
+    //    filename
+	wstring strDisplayName(pwszDisplayName);
+
+	// May have / to separate path segments
+	wstring::size_type nSlash = strDisplayName.find_first_of(L'/');
+	wstring strSegment;
+	if (nSlash == 0) // Unix machine - starts with folder called /
+	{
+		strSegment = strDisplayName.substr(0, 1);
+	}
+	else
+	{
+		strSegment = strDisplayName.substr(0, nSlash);
+	}
+
+	// Create child PIDL for this path segment
+	HRESULT hr = S_OK;
+	try
+	{
+		CRemoteItem pidl(strSegment.c_str());
+
+		// Bind to subfolder and recurse if there were other path segments
+		if (nSlash != wstring::npos)
+		{
+			wstring strRest = strDisplayName.substr(nSlash+1);
+
+			CComPtr<IShellFolder> spSubfolder;
+			hr = BindToObject(pidl, pbc, IID_PPV_ARGS(&spSubfolder));
+			ATLENSURE_SUCCEEDED(hr);
+
+			wchar_t wszRest[MAX_PATH];
+			::wcscpy_s(wszRest, ARRAYSIZE(wszRest), strRest.c_str());
+
+			CRelativePidl pidlRest;
+			hr = spSubfolder->ParseDisplayName(
+				hwnd, pbc, wszRest, pchEaten, &pidlRest, pdwAttributes);
+			ATLENSURE_SUCCEEDED(hr);
+
+			*ppidl = CRelativePidl(pidl, pidlRest).Detach();
+		}
+		else
+		{
+			*ppidl = pidl.Detach();
+		}
+	}
+	catch(CRemoteItem::InvalidPidlException)
+	{
+		UNREACHABLE;
+		return E_UNEXPECTED;
+	}
+	catchCom()
+
+	return hr;
 }
 
 /**

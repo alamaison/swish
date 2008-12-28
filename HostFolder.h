@@ -76,7 +76,7 @@ public: // IShellFolder methods
 	IFACEMETHODIMP GetDisplayNameOf( 
 		__in PCUITEMID_CHILD pidl, __in SHGDNF uFlags, __out STRRET *pName);
 	IFACEMETHODIMP ParseDisplayName( 
-		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pszDisplayName,
+		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pwszDisplayName,
 		__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
 		__inout_opt ULONG *pdwAttributes);
     STDMETHOD(SetNameOf)
