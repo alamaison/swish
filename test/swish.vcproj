@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,6 +68,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -146,7 +147,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -159,6 +160,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -228,7 +230,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
-				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -243,6 +245,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -300,6 +303,10 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
+				RelativePath=".\swish\DummyFolder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MockSftpConsumer.cpp"
 				>
 			</File>
@@ -345,6 +352,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\DummyFolder.h"
+				>
+			</File>
+			<File
 				RelativePath=".\limits.h"
 				>
 			</File>
@@ -361,6 +372,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\Pidl_test.h"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\stdafx.h"
 				>
 			</File>
@@ -372,6 +387,18 @@
 		<Filter
 			Name="Tests"
 			>
+			<File
+				RelativePath=".\swish\DummyFolder_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\HostFolder_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\HostPidl_test.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\swish\KbdInteractiveDialog_test.cpp"
 				>
@@ -389,6 +416,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\PidlHandle_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\RemoteFolder_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\RemotePidl_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\SftpDirectory_test.cpp"
 				>
 			</File>
@@ -398,19 +437,15 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Folder.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\KbdInteractiveDialog.cpp"
 			>
 		</File>
 		<File
 			RelativePath="..\NewConnDialog.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\PidlManager.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\RemotePidlManager.cpp"
 			>
 		</File>
 		<File

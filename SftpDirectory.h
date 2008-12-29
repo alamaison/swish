@@ -21,9 +21,8 @@
 #include "stdafx.h"
 #include "resource.h"          // main symbols
 
-#include "Pidl.h"              // PIDL wrapper class
+#include "RemotePidl.h"        // PIDL wrapper class
 #include "Connection.h"        // For SFTP Connection container
-#include "RemotePidlManager.h" // To create REMOTEPIDLs
 
 #include <vector>
 using std::vector;
@@ -71,23 +70,22 @@ public:
 	 * @param conn          SFTP connection container.
 	 * @param pszDirectory  Path of remote directory this object represents.
 	 */
-	CSftpDirectory( __in CConnection& conn, __in PCTSTR pszDirectory ) :
-		m_connection(conn), // Trim any trailing slashes and append single slash
-		m_strDirectory(CString(pszDirectory).TrimRight(_T('/'))+_T('/'))
+	CSftpDirectory(__in CConnection& conn, __in PCWSTR pwszDirectory) :
+		m_connection(conn), // Trim trailing slashes and append single slash
+		m_strDirectory(CString(pwszDirectory).TrimRight(L'/')+L'/')
 	{}
 
 	IEnumIDList* GetEnum(__in SHCONTF grfFlags) throw(...);
 	bool Rename(
-		__in PCUITEMID_CHILD pidlOldFile, __in PCTSTR pszNewFilename )
+		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)
 		throw(...);
-	void Delete( __in PCUITEMID_CHILD pidlFile ) throw(...);
+	void Delete(__in CRemoteItemHandle pidl) throw(...);
 
 
 private:
 	CConnection m_connection;
 	CString m_strDirectory;
 
-	CRemotePidlManager m_PidlManager;
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );

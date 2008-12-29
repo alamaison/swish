@@ -20,8 +20,9 @@
 #pragma once
 
 #include "Pidl.h"
+#include "remotelimits.h"
 
-#include <ATLComTime.h>
+#include <ATLComTime.h> // For COleDateTime
 
 #include <pshpack1.h>
 /** 
@@ -43,102 +44,327 @@ struct RemoteItemId
 	ULONGLONG uSize;
 	DATE dateModified;
 
-	static const DWORD REMOTEITEMID_FINGERPRINT = 0x533aaf69;
+	static const DWORD FINGERPRINT = 0x533aaf69;
 };
 #include <poppack.h>
 
-
-template <typename IdListType>
-class CRemotePidl : public CPidl<IdListType>
+/**
+ * PIDL class augmenting CPidl with methods specific to RemoteItemIds.
+ *
+ * The methods added by this class are common to both const PIDLs (PIDL 
+ * handles) and non-const PIDLs.  This class derives from an implementation
+ * of either type of PIDL (provided by CPidl<> or CXPidlHandle) passed as
+ * the template argument.
+ *
+ * @param PidlT  Type (const on non-const) of PIDL to use as base.  Either
+ *               CPidl or one of the CXPidlHandle types.
+ */
+template <typename PidlT>
+class CRemotePidlBase : public PidlT
 {
+protected:
+	typedef typename PidlT::PidlType PidlType;
+	typedef typename PidlT::ConstPidlType ConstPidlType;
+
 public:
-	CRemotePidl() : CPidl() {}
-	CRemotePidl( __in_opt const IdListType *pidl ) throw(...) : CPidl(pidl) {}
-	CRemotePidl( __in const CRemotePidl& pidl ) throw(...) : CPidl(pidl) {}
-	CRemotePidl& operator=( __in const CRemotePidl& pidl ) throw(...)
+	CRemotePidlBase() throw() {}
+	CRemotePidlBase( __in_opt ConstPidlType pidl ) throw(...) : PidlT(pidl) {}
+	CRemotePidlBase( __in const CRemotePidlBase& pidl ) throw(...) : 
+		PidlT(pidl) {}
+
+	CRemotePidlBase& operator=( __in const CRemotePidlBase& pidl ) throw(...)
 	{
 		if (this != &pidl)
-			CPidl::operator=(pidl);
-
+			PidlT::operator=(pidl);
 		return *this;
 	}
 
-	class InvalidPidlException {};
+	/**
+	 * Concatenation constructor only implemented for non-const PidlT.
+	 */
+	explicit CRemotePidlBase(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...);
 
-	bool IsValid() const
+	/**
+	 * Does fingerprint stored in this PIDL correspond to a RemoteItemId?
+	 */
+	inline bool IsValid() const
 	{
-		const RemoteItemId *pRemoteId = Get();
-
 		return (
-			pRemoteId->cb == sizeof(RemoteItemId) && 
-			pRemoteId->dwFingerprint == RemoteItemId::REMOTEITEMID_FINGERPRINT
+			!IsEmpty() &&
+			Get()->cb == sizeof(RemoteItemId) && 
+			Get()->dwFingerprint == RemoteItemId::FINGERPRINT
 		);
+	}
+
+	/**
+	 * Does fingerprint stored in @p pidl correspond to a RemoteItemId?
+	 */
+	static bool IsValid(ConstPidlType pidl)
+	{
+		CRemotePidlBase<PidlT> rpidl(pidl);
+
+		return rpidl.IsValid();
 	}
 
 	bool IsFolder() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->fIsFolder;
 	}
 
 	bool IsLink() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->fIsLink;
 	}
 
 	CString GetFilename() const throw(...)
 	{
-		if (m_pidl == NULL) return L"";
-		if (!IsValid()) throw InvalidPidlException();
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return Get()->wszFilename;
+	}
 
-		CString strName = Get()->wszFilename;
+	CString GetFilename(bool fIncludeExtension) const throw(...)
+	{
+		CString strName = GetFilename();
+
+		if (!fIncludeExtension && !Get()->fIsFolder && strName[0] != L'.')
+		{
+			int nLimit = strName.ReverseFind(L'.');
+			if (nLimit < 0)
+				nLimit = strName.GetLength();
+
+			strName.Truncate(nLimit);
+		}
+
 		ATLASSERT(strName.GetLength() <= MAX_PATH_LEN);
-
 		return strName;
+	}
+
+	/**
+	 * Extract the extension part of the filename.
+	 * The extension does not include the dot.  If the filename has no extension
+	 * an empty string is returned.
+	 */
+	CString GetExtension() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+
+		const wchar_t *pwszExtStart = ::PathFindExtension(GetFilename());
+		ATLASSERT(pwszExtStart);
+
+		if (*pwszExtStart != L'\0')
+		{
+			ATLASSERT(*pwszExtStart == L'.');
+			pwszExtStart++; // Remove dot
+		}
+		
+		return pwszExtStart;
 	}
 
 	CString GetOwner() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszOwner;
 	}
 
 	CString GetGroup() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->wszGroup;
 	}
 
 	ULONGLONG GetFileSize() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->uSize;
+	}
+
+	DWORD GetPermissions() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return Get()->dwPermissions;
+	}
+
+	CString GetPermissionsStr() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return L"todo";
 	}
 
 	COleDateTime GetDateModified() const throw(...)
 	{
-		if (!IsValid())
-			throw InvalidPidlException();
-
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->dateModified;
 	}
 
-	const RemoteItemId *Get() const
+	inline const RemoteItemId *Get() const throw()
 	{
-		return reinterpret_cast<RemoteItemId *>(m_pidl);
+		return reinterpret_cast<const RemoteItemId *>(m_pidl);
 	}
 };
 
-typedef CRemotePidl<ITEMID_CHILD> CRemoteChildPidl;
-typedef CRemotePidl<ITEMIDLIST_RELATIVE> CRemoteRelativePidl;
+/**
+ * Concatenation constructor only implemented for non-const base type.
+ * Also, the only non-const bases that make sense for concatentation are
+ * those derived from absolute and relative PIDLs.
+ */
+template <>
+inline CRemotePidlBase< CPidl<ITEMIDLIST_ABSOLUTE> >::CRemotePidlBase(
+	__in_opt CPidl<ITEMIDLIST_ABSOLUTE>::ConstPidlType pidl1,
+	__in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...) : CPidl<ITEMIDLIST_ABSOLUTE>(pidl1, pidl2) {}
+
+template <>
+inline CRemotePidlBase< CPidl<ITEMIDLIST_RELATIVE> >::CRemotePidlBase(
+	__in_opt CPidl<ITEMIDLIST_RELATIVE>::ConstPidlType pidl1,
+	__in_opt PCUIDLIST_RELATIVE pidl2 )
+	throw(...) : CPidl<ITEMIDLIST_RELATIVE>(pidl1, pidl2) {}
+
+/**
+ * Unmanaged-lifetime child PIDL for read-only RemoteItemId operations.
+ */
+typedef CRemotePidlBase<CChildPidlHandle> CRemoteItemHandle;
+
+/**
+ * Unmanaged-lifetime relative PIDL for read-only RemoteItemId operations.
+ */
+typedef CRemotePidlBase<CRelativePidlHandle> CRemoteItemListHandle;
+
+/**
+ * Unmanaged-lifetime relative PIDL for read-only RemoteItemId operations.
+ */
+typedef CRemotePidlBase<CAbsolutePidlHandle> CRemoteItemAbsoluteHandle;
+
+/**
+ * Managed-lifetime PIDL for RemoteItemId operations.
+ */
+template <typename IdListType>
+class CRemotePidl : public CRemotePidlBase< CPidl<IdListType> >
+{
+public:
+	/**
+	 * Create a new wrapped PIDL holding a RemoteItemId with given parameters.
+	 * 
+	 * @param[in] pwszFilename   Name of file or directory on the remote 
+	 *                           file-system.
+	 * @param[in] pwszOwner      Name of file owner on remote system.
+	 * @param[in] pwszGroup      Name of file group on remote system.
+	 * @param[in] dwPermissions  Value of the file's Unix permissions bits.
+	 * @param[in] uSize          Size of file in bytes.
+	 * @param[in] dtModified     Date that file was last modified.
+	 * @param[in] fIsFolder      Is file a folder?
+	 * 
+	 * @throws CAtlException if error.
+	 */
+	explicit CRemotePidl(
+		PCWSTR pwszFilename, PCWSTR pwszOwner=L"", PCWSTR pwszGroup=L"",
+		bool fIsFolder=false, bool fIsLink=false, DWORD dwPermissions=0,
+		ULONGLONG uSize=0, DATE dateModified=0)
+	throw(...)
+	{
+		ATLASSERT(sizeof(RemoteItemId) % sizeof(DWORD) == 0); // DWORD-aligned
+
+		// Allocate enough memory to hold RemoteItemId structure & terminator
+		static size_t cbItem = sizeof RemoteItemId + sizeof USHORT;
+		RemoteItemId *item = static_cast<RemoteItemId *>(
+			::CoTaskMemAlloc(cbItem));
+		if(item == NULL)
+			AtlThrow(E_OUTOFMEMORY);
+		::ZeroMemory(item, cbItem);
+
+		// Fill members of the PIDL with data
+		item->cb = sizeof RemoteItemId;
+		item->dwFingerprint = RemoteItemId::FINGERPRINT; // Sign with fprint
+		CopyWSZString(item->wszFilename, 
+			ARRAYSIZE(item->wszFilename), pwszFilename);
+		CopyWSZString(item->wszOwner, ARRAYSIZE(item->wszOwner), pwszOwner);
+		CopyWSZString(item->wszGroup, ARRAYSIZE(item->wszGroup), pwszGroup);
+		item->dwPermissions = dwPermissions;
+		item->uSize = uSize;
+		item->dateModified = dateModified;
+		item->fIsFolder = fIsFolder;
+		item->fIsLink = fIsLink;
+
+		m_pidl = reinterpret_cast<PidlType>(item);
+		ATLASSERT(IsValid());
+		ATLASSERT(GetNext() == NULL); // PIDL is terminated
+	}
+
+	CRemotePidl() throw() {}
+	CRemotePidl( __in_opt ConstPidlType pidl ) throw(...) :
+		CRemotePidlBase(pidl) {}
+	CRemotePidl( __in const CRemotePidl& pidl ) throw(...) :
+		CRemotePidlBase(pidl) {}
+
+	CRemotePidl& operator=( __in const CRemotePidl& pidl ) throw(...)
+	{
+		if (this != &pidl)
+			CRemotePidlBase::operator=(pidl);
+		return *this;
+	}
+
+	/**
+	 * Concatenation constructor.
+	 */
+	explicit CRemotePidl(
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+		throw(...) : CRemotePidlBase(pidl1, pidl2) {}
+
+	CRemotePidl& SetFilename(__in PCWSTR pwszFilename) throw(...)
+	{
+		ATLENSURE_THROW(pwszFilename, E_POINTER);
+		ATLENSURE_THROW(*pwszFilename != L'\0', E_INVALIDARG);
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+
+		CopyWSZString(
+			Set()->wszFilename, ARRAYSIZE(Set()->wszFilename), pwszFilename);
+
+		return *this;
+	}
+
+protected:
+	inline RemoteItemId *Set() const throw()
+	{
+		return reinterpret_cast<RemoteItemId *>(m_pidl);
+	}
+
+private:
+	/**
+	 * Copy a wide string into provided buffer.
+	 *
+	 * @param[out] pwszDest  Destination wide-char string buffer.
+	 * @param[in]  cchDest   Length of destination buffer in @b wide-chars.
+	 * @param[in]  pwszSrc   Source string.  Must be NULL-terminated.
+	 *
+	 * @throws CAtlException if an error occurs while copying.
+	 */
+	static void CopyWSZString(
+		__out_ecount(cchDest) PWSTR pwszDest, __in size_t cchDest,
+		__in PCWSTR pwszSrc)
+	throw(...)
+	{
+		// Neither source nor destination of StringCbCopyW can be NULL
+		ATLASSERT(pwszSrc && pwszDest);
+
+		HRESULT hr = StringCchCopyW(pwszDest, cchDest, pwszSrc);
+		ATLENSURE_SUCCEEDED(hr);
+	}
+};
+
+/**
+ * Managed-lifetime child PIDL for RemoteItemId operations.
+ */
+typedef CRemotePidl<ITEMID_CHILD> CRemoteItem;
+
+/**
+ * Managed-lifetime relative PIDL for RemoteItemId operations.
+ */
+typedef CRemotePidl<ITEMIDLIST_RELATIVE> CRemoteItemList;
+
+/**
+ * Managed-lifetime absolute PIDL for RemoteItemId operations.
+ */
+typedef CRemotePidl<ITEMIDLIST_ABSOLUTE> CRemoteItemAbsolute;

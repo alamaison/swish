@@ -17,26 +17,24 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef REMOTEFOLDER_H
-#define REMOTEFOLDER_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif // _MSC_VER > 1000
 
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
+#include "CoFactory.h"
+#include "Folder.h"
+
 #define INITGUID
 #include <propkey.h>
 
-#include "RemotePidlManager.h"
-#include "HostPidlManager.h"
 #include "Connection.h"     // For SFTP interactive connection objects
 #include "RemotePidl.h"     // For RemoteItemId handling
 #include "Pool.h"           // For access to SFTP global session pool
 
-// CRemoteFolder
+#pragma warning (push)
+#pragma warning (disable: 4199) // Not injecting base class
+
 [
 	coclass,
 	default(IUnknown),
@@ -49,56 +47,74 @@
 	helpstring("RemoteFolder Class")
 ]
 class ATL_NO_VTABLE CRemoteFolder :
-	// The IShellFolder2-specific detail-handling methods are not compatible
-	// with Win 9x/NT but it supports all those of IShellDetails which are
-	public IShellFolder2,
-	public IPersistFolder2, // IPersistFolder2 needed for Details expando
-	public IShellDetails // This is compatible with 9x/NT unlike IShellFolder2
+	public CFolder,
+	public CCoFactory<CRemoteFolder>
 {
 public:
-	CRemoteFolder() : m_pidl(NULL) {}
 
-	~CRemoteFolder()
+	/*
+	We can assume that the PIDLs contained in this folder (i.e. any PIDL
+	relative to it) contain one or more REMOTEPIDLs representing the 
+	file-system hierarchy of the target file or folder and may be a child of
+	either a HOSTPIDL or another REMOTEPIDL:
+
+	    <Relative (HOST|REMOTE)PIDL>/REMOTEPIDL[/REMOTEPIDL]*
+	*/
+
+	/**
+	 * Create initialized instance of the CRemoteFolder class.
+	 *
+	 * @param  Absolute PIDL at which to root the folder instance (passed
+	 *         to Initialize).
+	 *
+	 * @returns Smart pointer to the CRemoteFolder's IShellFolder interface.
+	 * @throws  CAtlException if creation fails.
+	 */
+	static CComPtr<IShellFolder> Create(__in PCIDLIST_ABSOLUTE pidl)
+	throw(...)
 	{
-		if (m_pidl)
-			m_RemotePidlManager.Delete( m_pidl );
+		CComPtr<CRemoteFolder> spObject = spObject->CreateCoObject();
+		
+		HRESULT hr = spObject->Initialize(pidl);
+		ATLENSURE_SUCCEEDED(hr);
+		return spObject;
 	}
 
-    // IPersist
-    IFACEMETHODIMP GetClassID( __out CLSID *pClsid );
+protected:
 
-	// IPersistFolder
-	IFACEMETHODIMP Initialize( __in PCIDLIST_ABSOLUTE pidl );
+	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
+	__override CLSID GetCLSID() const;
+	__override CComPtr<IShellFolder> CreateSubfolder(
+		PCIDLIST_ABSOLUTE pidlRoot)
+		const throw(...);
+	__override int ComparePIDLs(
+		__in PCUIDLIST_RELATIVE pidl1, __in PCUIDLIST_RELATIVE pidl2,
+		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
+		const throw(...);
 
-	// IPersistFolder2
-	IFACEMETHODIMP GetCurFolder( __deref_out_opt PIDLIST_ABSOLUTE *ppidl );
+	__override CComPtr<IShellFolderViewCB> GetFolderViewCallback()
+		const throw(...);
+
+public:
 
 	// IShellFolder
-	IFACEMETHODIMP BindToObject(
-		__in PCUIDLIST_RELATIVE pidl, __in_opt IBindCtx *pbc, __in REFIID riid,
-		__out void** ppvOut );
 	STDMETHOD(EnumObjects)( HWND, SHCONTF, LPENUMIDLIST* );
-    STDMETHOD(CreateViewObject)( HWND, REFIID, void** );
 	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
     STDMETHOD(GetUIObjectOf)
 		( HWND, UINT, PCUITEMID_CHILD_ARRAY, REFIID, LPUINT, void** );
-	STDMETHOD(CompareIDs)
-		( LPARAM, PCUIDLIST_RELATIVE, PCUIDLIST_RELATIVE );
-    STDMETHOD(BindToStorage)( PCUIDLIST_RELATIVE, LPBC, REFIID, void** )
-        { return E_NOTIMPL; }
-    STDMETHOD(GetDisplayNameOf)( PCUITEMID_CHILD, SHGDNF, STRRET* );
-    STDMETHOD(ParseDisplayName)
-		( HWND, LPBC, LPOLESTR, LPDWORD, PIDLIST_RELATIVE*, LPDWORD )
-        { return E_NOTIMPL; }
+	IFACEMETHODIMP GetDisplayNameOf( 
+		__in PCUITEMID_CHILD pidl, __in SHGDNF uFlags, __out STRRET *pName);
+	IFACEMETHODIMP ParseDisplayName( 
+		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pwszDisplayName,
+		__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
+		__inout_opt ULONG *pdwAttributes);
 	IFACEMETHODIMP SetNameOf(
 		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
 		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
 
 	// IShellFolder2
-	STDMETHOD(EnumSearches)( IEnumExtraSearch **ppEnum );
 	STDMETHOD(GetDefaultColumn)( DWORD, ULONG *pSort, ULONG *pDisplay );
-	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );		STDMETHOD(GetDefaultSearchGUID)( GUID *pguid )
-		{ return E_NOTIMPL; }
+	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );
 	STDMETHOD(GetDetailsEx)( PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, 
 							 VARIANT *pv );
 	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
@@ -106,25 +122,14 @@ public:
 	// IShellDetails
 	STDMETHOD(GetDetailsOf)( PCUITEMID_CHILD pidl, UINT iColumn, 
 							 LPSHELLDETAILS pDetails );
-	STDMETHOD(ColumnClick)( UINT iColumn );
 
 private:
-	PIDLIST_ABSOLUTE   m_pidl; // Absolute pidl of this folder object
-    CRemotePidlManager m_RemotePidlManager;
-	CHostPidlManager   m_HostPidlManager;
 
-	typedef std::vector<CRemoteChildPidl> RemotePidls;
+	typedef std::vector<CRemoteItem> RemotePidls;
 
 	CConnection _GetConnection(
 		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
-	CString _GetLongNameFromPIDL( PCIDLIST_ABSOLUTE pidl, BOOL fCanonical );
-	CString _GetFilenameFromPIDL( PCUITEMID_CHILD pidl );
-	CString _GetFileExtensionFromPIDL( PCUITEMID_CHILD );
-	HRESULT _GetRegistryKeysForPidl(
-		PCUITEMID_CHILD pidl, 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys );
-	std::vector<CString> _GetExtensionSpecificKeynames( PCTSTR szExtension );
 	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
@@ -143,11 +148,12 @@ private:
 	 * Static dispatcher for Default Context Menu callback
 	 */
 	static HRESULT __callback CALLBACK MenuCallback(
-		IShellFolder *psf, HWND hwnd, IDataObject *pdtobj, UINT uMsg, 
-		WPARAM wParam, LPARAM lParam )
+		__in_opt IShellFolder *psf, HWND hwnd, __in_opt IDataObject *pdtobj, 
+		UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
+		ATLENSURE_RETURN(psf);
 		return static_cast<CRemoteFolder *>(psf)->OnMenuCallback(
-			hwnd, pdtobj, uMsg, wParam, lParam );
+			hwnd, pdtobj, uMsg, wParam, lParam);
 	}
 
 	/** @name Default context menu event handlers */
@@ -184,4 +190,4 @@ DEFINE_PROPERTYKEY(PKEY_SwishRemotePermissions, 0xb816a851, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
 				   PID_SWISH_REMOTE_PERMISSIONS);
 
-#endif // REMOTEFOLDER_H
+#pragma warning (pop)

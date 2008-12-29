@@ -39,7 +39,7 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
                                       ///< display a progress dialogue
 
 /* static */ CComPtr<IDataObject> CDataObjectFactory::CreateDataObjectFromPIDLs(
-	CConnection& conn, PIDLIST_ABSOLUTE pidlCommonParent,
+	CConnection& conn, PCIDLIST_ABSOLUTE pidlCommonParent,
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl
 ) throw(...)
 {
@@ -51,7 +51,7 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
 	CFileGroupDescriptor fgd(cPidl);
 	for (UINT i = 0; i < cPidl; i++)
 	{
-		CRemoteRelativePidl pidl(aPidl[i]);
+		CRemoteItemListHandle pidl(aPidl[i]);
 
 		FILEDESCRIPTOR fd;
 		::ZeroMemory(&fd, sizeof fd);
@@ -146,20 +146,22 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
 	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
 	// (by root we mean the path specified by the user when they added the
 	// connection to Explorer, rather than the root of the server's filesystem)
-	CHostRelativePidl pidlAbsolute(pidl);
-	CHostRelativePidl pidlHost(pidlAbsolute.FindHostPidl());
-	ATLASSERT(pidlHost);
+	CHostItemListHandle pidlHost = 
+		CHostItemAbsoluteHandle(pidl).FindHostPidl();
+	ATLASSERT(pidlHost.IsValid());
+
 	strPath = pidlHost.GetPath();
 
-	// Walk over REMOTEPIDLs and append each filename to form the path
-	CRemoteRelativePidl pidlRemote(pidlHost.GetNext());
-	do {
+	// Walk over RemoteItemIds and append each filename to form the path
+	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
+	while (pidlRemote.IsValid())
+	{
 		strPath += L"/";
 		strPath += pidlRemote.GetFilename();
-	} while (pidlRemote = pidlRemote.GetNext());
+		pidlRemote = pidlRemote.GetNext();
+	}
 
 	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
 
 	return strPath;
 }
-

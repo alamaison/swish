@@ -69,9 +69,8 @@ CRelativePidl CShellDataObject::GetRelativeFile(UINT i) throw(...)
 
 CAbsolutePidl CShellDataObject::GetFile(UINT i) throw(...)
 {
-	CRelativePidl pidlFile = GetRelativeFile(i);
-	CAbsolutePidl pidlFolder = GetParentFolder();
-	return pidlFolder.Join(pidlFile);
+	CAbsolutePidl pidlFolder(GetParentFolder(), GetRelativeFile(i));
+	return pidlFolder;
 }
 
 UINT CShellDataObject::GetPidlCount() throw(...)

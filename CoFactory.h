@@ -1,4 +1,4 @@
-/*  Factory which creates IDataObjects from PIDLs.
+/*  Mixin class which augments CComObjects with a creator of AddReffed instances.
 
     Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -19,17 +19,27 @@
 
 #pragma once
 
-#include "Connection.h"
-
-class CDataObjectFactory
+template <typename T>
+class CCoFactory
 {
 public:
-	static CComPtr<IDataObject> CreateDataObjectFromPIDLs(
-		__in CConnection& conn, __in PCIDLIST_ABSOLUTE pidlCommonParent,
-		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl)
-		throw(...);
+	/**
+	 * Static factory method.
+	 *
+	 * This creator method provides a CComObject-based class with a way to create
+	 * instances with exception-safe lifetimes.  The created instance is AddReffed, 
+	 * unlike those create by CreateInstance which have a reference count of 0.
+	 *
+	 * @returns  Smart pointer to the CComObject<T>-based COM object.
+	 * @throws   CAtlException if creation fails.
+	 */
+	static CComPtr<T> CreateCoObject() throw(...)
+	{
+		CComObject<T> *pObject = NULL;
+		HRESULT hr = CComObject<T>::CreateInstance(&pObject);
+		ATLENSURE_SUCCEEDED(hr);
 
-private:
-	static CString _ExtractPathFromPIDL( __in PCIDLIST_ABSOLUTE pidl );
-	static PCUIDLIST_RELATIVE _FindHostPidl( __in PCIDLIST_ABSOLUTE pidl );
+		pObject->AddRef();
+		return pObject;
+	}
 };
