@@ -444,7 +444,7 @@ ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
 	ULONGLONG uNewPosition = _CalculateNewFilePosition(nMove, dwOrigin);
 
-	libssh2_sftp_seek2(m_pHandle, uNewPosition);
+	libssh2_sftp_seek64(m_pHandle, uNewPosition);
 
 	return uNewPosition;
 }
@@ -528,8 +528,8 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
 		break;
 	case STREAM_SEEK_CUR: // Relative to current position
 	{
-		size_t nCurrentPos = libssh2_sftp_tell(m_pHandle);
-		nNewPosition = nCurrentPos + nMove;
+		nNewPosition = libssh2_sftp_tell64(m_pHandle);
+		nNewPosition += nMove;
 		break;
 	}
 	case STREAM_SEEK_END: // Relative to end (MUST ACCESS SERVER)
