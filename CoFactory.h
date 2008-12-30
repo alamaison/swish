@@ -39,7 +39,6 @@ public:
 		HRESULT hr = CComObject<T>::CreateInstance(&pObject);
 		ATLENSURE_SUCCEEDED(hr);
 
-		pObject->AddRef();
 		return pObject;
 	}
 };
