@@ -19,61 +19,8 @@
 
 #pragma once
 
+#include "DataObject.h"
 #include "Pidl.h"
-
-class CStorageMedium : public STGMEDIUM
-{
-public:
-	~CStorageMedium() throw()
-	{
-		::ReleaseStgMedium(this);
-	}
-};
-
-class CFormatEtc : public FORMATETC
-{
-public:
-	CFormatEtc(
-		CLIPFORMAT cfFormat, DWORD tymed = TYMED_HGLOBAL, LONG lIndex = -1, 
-		DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
-		throw()
-	{
-		_Construct(cfFormat, tymed, lIndex, dwAspect, ptd);
-	}
-
-	CFormatEtc(
-		UINT nFormat, DWORD tymed = TYMED_HGLOBAL, LONG lIndex = -1, 
-		DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
-		throw()
-	{
-		_Construct(static_cast<CLIPFORMAT>(nFormat), 
-			tymed, lIndex, dwAspect, ptd);
-	}
-
-	CFormatEtc(
-		PCWSTR pszFormat, DWORD tymed = TYMED_HGLOBAL, LONG lIndex = -1, 
-		DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
-		throw(...)
-	{
-		UINT nFormat = ::RegisterClipboardFormat(pszFormat);
-		ATLENSURE_THROW(nFormat, E_INVALIDARG);
-
-		_Construct(static_cast<CLIPFORMAT>(nFormat), 
-			tymed, lIndex, dwAspect, ptd);
-	}
-
-private:
-	inline void _Construct(
-		CLIPFORMAT cfFormat, DWORD tymed, LONG lIndex, DWORD dwAspect, 
-		DVTARGETDEVICE *ptd) throw()
-	{
-		this->cfFormat = cfFormat;
-		this->tymed = tymed;
-		this->lindex = lIndex;
-		this->dwAspect = dwAspect;
-		this->ptd = ptd;
-	}
-};
 
 class CGlobalLock
 {
