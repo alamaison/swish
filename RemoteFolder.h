@@ -48,9 +48,14 @@
 ]
 class ATL_NO_VTABLE CRemoteFolder :
 	public CFolder,
-	public CCoFactory<CRemoteFolder>
+	private CCoFactory<CRemoteFolder>
 {
 public:
+
+	BEGIN_COM_MAP(CRemoteFolder)
+		COM_INTERFACE_ENTRY(IShellFolder)
+		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+	END_COM_MAP()
 
 	/*
 	We can assume that the PIDLs contained in this folder (i.e. any PIDL
