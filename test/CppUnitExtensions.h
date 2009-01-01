@@ -72,15 +72,33 @@ inline std::string GetErrorFromHResult(HRESULT hResult)
  * @{
  */
 #define CPPUNIT_ASSERT_OK(hresult) \
-	{ \
+	do { \
 		HRESULT hrCopy; \
 		hrCopy = hresult; \
 		std::string str("COM return code was "); \
 		str += CPPUNIT_NS::GetErrorFromHResult(hrCopy); \
 		CPPUNIT_ASSERT_MESSAGE(str, hrCopy == S_OK); \
-	}
+	} while(0);
 #define CPPUNIT_ASSERT_SUCCEEDED(hresult) CPPUNIT_ASSERT(SUCCEEDED(hresult))
 #define CPPUNIT_ASSERT_FAILED(hresult) CPPUNIT_ASSERT(FAILED(hresult))
 /* @} */
-  
+
+/**
+ * Convenience macros
+ * @{
+ */
+template <class T>
+void assertZero( const T& actual,
+                 SourceLine sourceLine,
+                 const std::string &message )
+{
+	CPPUNIT_NS::assertEquals(static_cast<T>(0), actual, sourceLine, message);
+}
+#define CPPUNIT_ASSERT_ZERO(actual) \
+	do { \
+		CPPUNIT_NS::assertZero((actual), CPPUNIT_SOURCELINE(), \
+			""#actual " != 0"); \
+	} while(0);
+/* @} */
+
 CPPUNIT_NS_END
