@@ -103,6 +103,7 @@ do {                                                                 \
 
 /* COM Exception handler **************************************************** */
 
+#ifdef _DEBUG
 #define catchCom()            \
 catch (const _com_error& e)   \
 {                             \
@@ -114,6 +115,29 @@ catch (const CAtlException& e)\
 	ATLTRACE("Caught CAtlException"); \
 	return e;                 \
 }
+#else
+#define catchCom()            \
+catch (const _com_error& e)   \
+{                             \
+	return e.Error();         \
+}                             \
+catch (const std::bad_alloc&) \
+{                             \
+	return E_OUTOFMEMORY;     \
+}                             \
+catch (const std::exception&) \
+{                             \
+	return E_UNEXPECTED;      \
+}                             \
+catch (const CAtlException& e)\
+{                             \
+	return e;                 \
+}                             \
+catch (...)                   \
+{                             \
+	return E_UNEXPECTED;      \
+}
+#endif // _DEBUG
 
 /* Includes ***************************************************************** */
 
