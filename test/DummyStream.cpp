@@ -3,8 +3,27 @@
 #include "stdafx.h"
 #include "DummyStream.h"
 
+CDummyStream::CDummyStream() : 
+	m_szData(NULL), 
+	m_pSeek(static_cast<const void *>(m_szData))
+{
+}
 
-// CDummyStream
+CDummyStream::~CDummyStream()
+{
+	if (m_szData)
+		delete [] m_szData;
+}
+
+HRESULT CDummyStream::Initialize(PCSTR pszFilePath)
+{
+	size_t len = ::strlen(pszFilePath) + 1;
+	m_szData = new char[len];
+	errno_t err = ::strcpy_s(m_szData, len, pszFilePath);
+
+	return (err == 0) ? S_OK : E_FAIL;
+}
+
 STDMETHODIMP CDummyStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 {
 	size_t cbData = ::strlen(m_szData);
@@ -12,12 +31,12 @@ STDMETHODIMP CDummyStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 	if (cbData < cb)
 	{
 		memcpy(pv, m_szData, cbData);
-		*pcbRead = cbData;
+		*pcbRead = static_cast<ULONG>(cbData);
 	}
 	else
 	{
 		memcpy(pv, m_szData, cb);
-		*pcbRead = cb;
+		*pcbRead = static_cast<ULONG>(cb);
 	}
 
 	return S_OK;

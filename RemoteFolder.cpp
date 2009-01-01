@@ -1,6 +1,6 @@
 /*  Implementation of Explorer folder handling remote files and folders.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
 #include "HostPidl.h"
 #include "ShellDataObject.h"
-#include "DataObjectFactory.h"
+#include "DataObject.h"
 #include "Registry.h"
 
 #include <ATLComTime.h>
@@ -294,9 +294,8 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 			// Create connection object for this folder with hwndOwner for UI
 			CConnection conn = _CreateConnectionForFolder(hwndOwner);
 
-			CComPtr<IDataObject> spDo(
-				CDataObjectFactory::CreateDataObjectFromPIDLs(
-					conn, GetRootPIDL(), cPidl, aPidl));
+			CComPtr<IDataObject> spDo = CDataObject::Create(
+					conn, GetRootPIDL(), cPidl, aPidl);
 			ATLASSERT(spDo);
 			*(IDataObject **)ppvReturn = spDo.Detach();
 		}

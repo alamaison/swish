@@ -307,6 +307,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DummyStream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MockSftpConsumer.cpp"
 				>
 			</File>
@@ -356,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DummyStream.h"
+				>
+			</File>
+			<File
 				RelativePath=".\limits.h"
 				>
 			</File>
@@ -387,6 +395,10 @@
 		<Filter
 			Name="Tests"
 			>
+			<File
+				RelativePath=".\swish\DataObject_test.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\swish\DummyFolder_test.cpp"
 				>
@@ -434,6 +446,10 @@
 		</Filter>
 		<File
 			RelativePath="..\Connection.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\DataObject.cpp"
 			>
 		</File>
 		<File

@@ -317,11 +317,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DataObjectFactory.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyStream.cpp"
+				RelativePath=".\DataObject.cpp"
 				>
 			</File>
 			<File
@@ -430,11 +426,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DataObjectFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyStream.h"
+				RelativePath=".\DataObject.h"
 				>
 			</File>
 			<File

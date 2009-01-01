@@ -3,36 +3,20 @@
 #pragma once
 #include "resource.h"       // main symbols
 
-// CDummyStream
-[
-	coclass,
-	default(IStream),
-	threading(apartment),
-	vi_progid("Swish.DummyStream"),
-	progid("Swish.DummyStream.1"),
-	version(1.0),
-	uuid("96EE89A7-88FF-4FD3-8134-67E5E3205797"),
-	helpstring("DummyStream Class")
-]
 class ATL_NO_VTABLE CDummyStream :
+	public CComObjectRoot,
 	public IStream
 {
 public:
-	CDummyStream() : 
-		m_szData("Dummy file contents."), 
-		m_pSeek(static_cast<const void *>(m_szData))
-	{
-	}
+	BEGIN_COM_MAP(CDummyStream)
+		COM_INTERFACE_ENTRY(IStream)
+		COM_INTERFACE_ENTRY(ISequentialStream)
+	END_COM_MAP()
 
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	HRESULT FinalConstruct()
-	{
-		return S_OK;
-	}
-
-	void FinalRelease()
-	{
-	}
+	CDummyStream();
+	~CDummyStream();
+		
+	HRESULT Initialize(PCSTR pszFilePath);
 
 	// ISequentialStream methods
 	IFACEMETHODIMP Read( 
@@ -94,6 +78,6 @@ public:
 
 private:
 	const void *m_pSeek;
-	const char *m_szData;
+	char *m_szData;
 };
 
