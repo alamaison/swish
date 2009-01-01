@@ -1,6 +1,6 @@
 /*  Base class for IShellFolder implementations.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -318,8 +318,12 @@ STDMETHODIMP CFolder::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)
 			ATLENSURE_THROW(spFolder, E_NOINTERFACE);
 			sfvData.pshf = spFolder;
 
-			// Get the callback object for this folder view, if any
-			sfvData.psfvcb = GetFolderViewCallback();
+			// Get the callback object for this folder view, if any.
+			// Must hold reference to it in this CComPtr over the
+			// ::SHCreateShellFolderView() call in case GetFolderViewCallback()
+			// also creates it (hands back the only pointer to it).
+			CComPtr<IShellFolderViewCB> spCB = GetFolderViewCallback();
+			sfvData.psfvcb = spCB;
 
 			// Create Default Shell Folder View object
 			return ::SHCreateShellFolderView(
