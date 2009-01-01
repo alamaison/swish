@@ -69,14 +69,22 @@ public:
 
 	void tearDown()
 	{
-		m_spFolder.Release();
-
-		if (m_pFolder) // Possible for test to fail before initialised
+		try
 		{
-			ULONG cRefs = m_pFolder->Release();
-			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+			m_spFolder.Release();
+
+			if (m_pFolder) // Test for leaking refs
+			{
+				CPPUNIT_ASSERT_ZERO(m_pFolder->Release());
+				m_pFolder = NULL;
+			}
 		}
-		m_pFolder = NULL;
+		catch(...)
+		{
+			// Shut down COM
+			::CoUninitialize();
+			throw;
+		}
 
 		// Shut down COM
 		::CoUninitialize();
