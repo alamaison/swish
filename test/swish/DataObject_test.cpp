@@ -15,6 +15,12 @@ class CDataObject_test : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( CDataObject_test );
 		CPPUNIT_TEST( testCreate );
 		CPPUNIT_TEST( testCreateMulti );
+		CPPUNIT_TEST( testQueryFormatsEmpty );
+		CPPUNIT_TEST( testEnumFormatsEmpty );
+		CPPUNIT_TEST( testQueryFormats );
+		CPPUNIT_TEST( testEnumFormats );
+		CPPUNIT_TEST( testQueryFormatsMulti );
+		CPPUNIT_TEST( testEnumFormatsMulti );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -166,6 +172,158 @@ protected:
 		_testStreamContents(spDo, L"/tmp/swish/testswishFile", 2);
 	}
 
+	/**
+	 * Test that QueryGetData fails for all our formats when created with
+	 * empty PIDL list.
+	 */
+	void testQueryFormatsEmpty()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		CComPtr<IDataObject> spDo = CDataObject::Create(conn, NULL, 0, NULL);
+
+		// Keep extra reference to check for leaks in tearDown()
+		spDo.CopyTo(&m_pDo);
+
+		// Perform query tests
+		_testQueryFormats(spDo, true);
+	}
+
+	/**
+	 * Test that none of our expected formats are in the enumerator when 
+	 * created with empty PIDL list.
+	 */
+	void testEnumFormatsEmpty()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		CComPtr<IDataObject> spDo = CDataObject::Create(conn, NULL, 0, NULL);
+
+		// Keep extra reference to check for leaks in tearDown()
+		spDo.CopyTo(&m_pDo);
+
+		// Test enumerators of both GetData() and SetData() formats
+		_testBothEnumerators(spDo, true);
+	}
+
+	/**
+	 * Test that QueryGetData responds successfully for all our formats.
+	 */
+	void testQueryFormats()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
+		CRemoteItem pidl(
+			L"testswishfile.ext", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+
+		CComPtr<IDataObject> spDo = 
+			CDataObject::Create(conn, pidlRoot, 1, &(pidl.m_pidl));
+
+		// Keep extra reference to check for leaks in tearDown()
+		spDo.CopyTo(&m_pDo);
+
+		// Perform query tests
+		_testQueryFormats(spDo);
+	}
+
+	/**
+	 * Test that all our expected formats are in the enumeration.
+	 */
+	void testEnumFormats()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
+		CRemoteItem pidl(
+			L"testswishfile.ext", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+
+		CComPtr<IDataObject> spDo = 
+			CDataObject::Create(conn, pidlRoot, 1, &(pidl.m_pidl));
+
+		// Keep extra reference to check for leaks in tearDown()
+		spDo.CopyTo(&m_pDo);
+
+		// Test enumerators of both GetData() and SetData() formats
+		_testBothEnumerators(spDo);
+	}
+
+	/**
+	 * Test that QueryGetData responds successfully for all our formats when
+	 * initialised with multiple PIDLs.
+	 */
+	void testQueryFormatsMulti()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
+		CRemoteItem pidl1(
+			L"testswishfile.ext", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+		CRemoteItem pidl2(
+			L"testswishfile.txt", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+		CRemoteItem pidl3(
+			L"testswishFile", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+		PCUITEMID_CHILD aPidl[3];
+		aPidl[0] = pidl1;
+		aPidl[1] = pidl2;
+		aPidl[2] = pidl3;
+
+		CComPtr<IDataObject> spDo =
+			CDataObject::Create(conn, pidlRoot, 3, aPidl);
+
+		// Keep extra reference to check for leaks in tearDown()
+		spDo.CopyTo(&m_pDo);
+
+		// Perform query tests
+		_testQueryFormats(spDo);
+	}
+
+	/**
+	 * Test that all our expected formats are in the enumeration when
+	 * initialised with multiple PIDLs.
+	 */
+	void testEnumFormatsMulti()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
+		CRemoteItem pidl1(
+			L"testswishfile.ext", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+		CRemoteItem pidl2(
+			L"testswishfile.txt", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+		CRemoteItem pidl3(
+			L"testswishFile", L"mockowner", L"mockgroup",
+			false, false, 0677, 1024);
+		PCUITEMID_CHILD aPidl[3];
+		aPidl[0] = pidl1;
+		aPidl[1] = pidl2;
+		aPidl[2] = pidl3;
+
+		CComPtr<IDataObject> spDo =
+			CDataObject::Create(conn, pidlRoot, 3, aPidl);
+
+		// Keep extra reference to check for leaks in tearDown()
+		spDo.CopyTo(&m_pDo);
+
+		// Test enumerators of both GetData() and SetData() formats
+		_testBothEnumerators(spDo);
+	}
+
 private:
 
 	IDataObject *m_pDo;
@@ -305,6 +463,92 @@ private:
 		CPPUNIT_ASSERT_EQUAL(strExpected, strActual);
 
 		::ReleaseStgMedium(&stg);
+	}
+
+	/**
+	 * Test for success (or failure) when querying the presence of
+	 * our expected formats.
+	 */
+	static void _testQueryFormats(IDataObject *pDo, bool fFailTest=false)
+	{
+		HRESULT hr;
+
+		// Test CFSTR_SHELLIDLIST (PIDL array) format
+		CFormatEtc fetcShellIdList(CFSTR_SHELLIDLIST);
+		hr = pDo->QueryGetData(&fetcShellIdList);
+		CPPUNIT_ASSERT(hr == ((fFailTest) ? S_FALSE : S_OK));
+		CPPUNIT_ASSERT(hr == ((fFailTest) ? S_FALSE : S_OK));
+
+		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
+		CFormatEtc fetcDescriptor(CFSTR_FILEDESCRIPTOR);
+		hr = pDo->QueryGetData(&fetcDescriptor);
+		CPPUNIT_ASSERT(hr == ((fFailTest) ? S_FALSE : S_OK));
+
+		// Test CFSTR_FILECONTENTS (IStream) 
+		CFormatEtc fetcContents(CFSTR_FILECONTENTS);
+		hr = pDo->QueryGetData(&fetcContents);
+		CPPUNIT_ASSERT(hr == ((fFailTest) ? S_FALSE : S_OK));
+	}
+
+	/**
+	 * Test enumerator for the presence (or absence) of our expected formats.
+	 */
+	static void _testEnumerator(IEnumFORMATETC *pEnum, bool fFailTest=false)
+	{
+		CLIPFORMAT cfShellIdList = static_cast<CLIPFORMAT>(
+			::RegisterClipboardFormat(CFSTR_SHELLIDLIST));
+		CLIPFORMAT cfDescriptor = static_cast<CLIPFORMAT>(
+			::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR));
+		CLIPFORMAT cfContents = static_cast<CLIPFORMAT>(
+			::RegisterClipboardFormat(CFSTR_FILECONTENTS));
+
+		bool fFoundShellIdList = false;
+		bool fFoundDescriptor = false;
+		bool fFoundContents = false;
+
+		HRESULT hr;
+		do {
+			FORMATETC fetc;
+			hr = pEnum->Next(1, &fetc, NULL);
+			if (hr == S_OK)
+			{
+				if (fetc.cfFormat == cfShellIdList)
+					fFoundShellIdList = true;
+				else if (fetc.cfFormat == cfDescriptor)
+					fFoundDescriptor = true;
+				else if (fetc.cfFormat == cfContents)
+					fFoundContents = true;
+			}
+		} while (hr == S_OK);
+
+		// Test CFSTR_SHELLIDLIST (PIDL array) format
+		CPPUNIT_ASSERT((fFailTest) ? !fFoundShellIdList : fFoundShellIdList);
+
+		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
+		CPPUNIT_ASSERT((fFailTest) ? !fFoundDescriptor : fFoundDescriptor);
+
+		// Test CFSTR_FILECONTENTS (IStream) 
+		CPPUNIT_ASSERT((fFailTest) ? !fFoundContents : fFoundContents);
+	}
+
+	/**
+	 * Perform our enumerator tests for both SetData() and GetData() enums.
+	 */
+	static void _testBothEnumerators(IDataObject *pDo, bool fFailTest=false)
+	{
+		HRESULT hr;
+
+		// Test enumerator of GetData() formats
+		CComPtr<IEnumFORMATETC> spEnumGet;
+		hr = pDo->EnumFormatEtc(DATADIR_GET, &spEnumGet);
+		CPPUNIT_ASSERT_OK(hr);
+		_testEnumerator(spEnumGet, fFailTest);
+
+		// Test enumerator of SetData() formats
+		CComPtr<IEnumFORMATETC> spEnumSet;
+		hr = pDo->EnumFormatEtc(DATADIR_SET, &spEnumSet);
+		CPPUNIT_ASSERT_OK(hr);
+		_testEnumerator(spEnumSet, fFailTest);
 	}
 
 	/**
