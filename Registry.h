@@ -52,7 +52,7 @@ private:
 		throw();
 
 	static HRESULT _GetHKEYArrayFromKeynames(
-		__in const vector<CString> vecKeynames, 
+		__in const vector<CString> vecNames, 
 		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
 
 	static HRESULT _GetHKEYArrayFromVector(

@@ -67,8 +67,8 @@ public:
 	/**
 	 * Creates and initialises directory instance. 
 	 *
-	 * @param conn          SFTP connection container.
-	 * @param pszDirectory  Path of remote directory this object represents.
+	 * @param conn           SFTP connection container.
+	 * @param pwszDirectory  Path of remote directory this object represents.
 	 */
 	CSftpDirectory(__in CConnection& conn, __in PCWSTR pwszDirectory) :
 		m_connection(conn), // Trim trailing slashes and append single slash

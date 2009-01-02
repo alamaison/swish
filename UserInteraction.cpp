@@ -119,7 +119,7 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
  * @param [in]  bstrNoInfo     The explanation of the No option.
  * @param [in]  bstrCancelInfo The explanation of the Cancel option.
  * @param [in]  bstrTitle      The title of the dialog.
- * @param [out] piResult       The user's choice.
+ * @param [out] pnResult       The user's choice.
  *
  * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
  *         forbidden and S_OK otherwise.

@@ -37,20 +37,20 @@ void CIconExtractor::Initialize(PCTSTR szFilename, bool fIsFolder)
  *
  * @implementing IExtractIconW
  *
- * @param[in] uFlags       Flags that determine what type of icon is being
- *                         requested.
- * @param[out] szIconFile  The name of the file to find the icon in. In our 
- *                         case we return '*' to indicate that the icon is in 
- *                         the system index and the value returned in 
- *                         @p piIndex is the index to it.
- * @param[in] cchMax       The size of the buffer passed as @p szIconFile.
- * @param[out] piIndex     The index to the icon in the system list.
- * @param[out] pwFlags     Output flags. In our case set to indicate that 
- *                         @p szIconFile is not a real filename.
+ * @param[in]  uFlags        Flags that determine what type of icon is being
+ *                           requested.
+ * @param[out] pwszIconFile  The name of the file to find the icon in. In our 
+ *                           case we return '*' to indicate that the icon is in 
+ *                           the system index and the value returned in 
+ *                           @p piIndex is the index to it.
+ * @param[in]  cchMax        The size of the buffer passed as @p szIconFile.
+ * @param[out] piIndex       The index to the icon in the system list.
+ * @param[out] pwFlags       Output flags. In our case set to indicate that 
+ *                           @p szIconFile is not a real filename.
  *             
  */
 STDMETHODIMP CIconExtractor::GetIconLocation(
-	UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags )
+	UINT uFlags, PWSTR pwszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags )
 {
 	ATLTRACE("CIconExtractor::GetIconLocation called\n");
 
@@ -61,7 +61,7 @@ STDMETHODIMP CIconExtractor::GetIconLocation(
 
 	// Output * as filename to indicate icon is in system list
 	ATLVERIFY(SUCCEEDED(
-		::StringCchCopyW(szIconFile, cchMax, L"*")));
+		::StringCchCopyW(pwszIconFile, cchMax, L"*")));
 	*pwFlags = GIL_NOTFILENAME;
 	*piIndex = index;
 
@@ -69,7 +69,7 @@ STDMETHODIMP CIconExtractor::GetIconLocation(
 }
 
 /**
- * @override
+ * @overload
  * @implementing IExtractIconA
  */
 STDMETHODIMP CIconExtractor::GetIconLocation(
@@ -98,14 +98,14 @@ STDMETHODIMP CIconExtractor::GetIconLocation(
  *
  * @returns S_FALSE to tell the shell to extract the icons itself.
  */
-STDMETHODIMP CIconExtractor::Extract(PCTSTR, UINT, HICON *, HICON *, UINT)
+STDMETHODIMP CIconExtractor::Extract(PCWSTR, UINT, HICON *, HICON *, UINT)
 {
 	ATLTRACE("CIconExtractor::Extract called\n");
 	return S_FALSE;
 }
 
 /**
- * @override
+ * @overload
  * @implementing IExtractIconA
  */
 STDMETHODIMP CIconExtractor::Extract(PCSTR, UINT, HICON *, HICON *, UINT)

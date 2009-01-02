@@ -818,10 +818,10 @@ HRESULT CRemoteFolder::OnMergeContextMenu(
  * Handle @c DFM_INVOKECOMMAND callback.
  */
 HRESULT CRemoteFolder::OnInvokeCommand(
-	HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pszArgs )
+	HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pwszArgs )
 {
 	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p, idCmd=%d, "
-		"pszArgs=%ls)\n", hwnd, pDataObj, idCmd, pszArgs);
+		"pwszArgs=%ls)\n", hwnd, pDataObj, idCmd, pwszArgs);
 
 	return S_FALSE;
 }

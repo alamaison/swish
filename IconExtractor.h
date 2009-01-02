@@ -50,7 +50,7 @@ public:
 
 	// IExtractIconW
 	IFACEMETHODIMP GetIconLocation(
-		UINT uFlags, __out_ecount(cchMax) PWSTR pszIconFile, UINT cchMax,
+		UINT uFlags, __out_ecount(cchMax) PWSTR pwszIconFile, UINT cchMax,
 		__out int *piIndex, __out UINT *pwFlags);
 
 	IFACEMETHODIMP Extract(

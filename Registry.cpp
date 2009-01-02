@@ -73,11 +73,11 @@ throw(...)
  * the default context menu.
  *
  * Host connection items are treated as folders so the list of keys is:  
- *   HKCU\Directory
- *   HKCU\Directory\Background
- *   HKCU\Folder
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
+ *   HKCU\\Directory
+ *   HKCU\\Directory\\Background
+ *   HKCU\\Folder
+ *   HKCU\\*
+ *   HKCU\\AllFileSystemObjects
  *
  * @param[out] pcKeys  Number of HKEYS allocated in the array @p paKeys.
  * @param[out] paKeys  Location in which to return th allocated array.
@@ -102,19 +102,19 @@ throw()
  * the default context menu.
  *
  * A (ficticious) example might include:
- *   HKCU\.ppt
- *   HKCU\PowerPoint.Show
- *   HKCU\PowerPoint.Show.12
- *   HKCU\SystemFileAssociations\.ppt
- *   HKCU\SystemFileAssociations\presentation
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
+ *   HKCU\\.ppt
+ *   HKCU\\PowerPoint.Show
+ *   HKCU\\PowerPoint.Show.12
+ *   HKCU\\SystemFileAssociations\\.ppt
+ *   HKCU\\SystemFileAssociations\\presentation
+ *   HKCU\\*
+ *   HKCU\\AllFileSystemObjects
  * for a file and:
- *   HKCU\Directory
- *   HKCU\Directory\Background
- *   HKCU\Folder
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
+ *   HKCU\\Directory
+ *   HKCU\\Directory\\Background
+ *   HKCU\\Folder
+ *   HKCU\\*
+ *   HKCU\\AllFileSystemObjects
  * for a folder.
  *
  * @param[in]  pidl    Remote PIDL representing the file whose association 
@@ -144,11 +144,11 @@ throw()
  *
  * Such a list is required by Windows XP and earlier in order to display the 
  * default context menu. The keys are:
- *   HKCU\Directory
- *   HKCU\Directory\Background
- *   HKCU\Folder
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
+ *   HKCU\\Directory
+ *   HKCU\\Directory\\Background
+ *   HKCU\\Folder
+ *   HKCU\\*
+ *   HKCU\\AllFileSystemObjects
  */
 /* static */ vector<CString> CRegistry::_GetHostFolderAssocKeynames()
 throw()
@@ -169,19 +169,19 @@ throw()
  * Get a list names of registry keys for the types of the selected file.
  *
  * A (ficticious) example might include:
- *   HKCU\.ppt
- *   HKCU\PowerPoint.Show
- *   HKCU\PowerPoint.Show.12
- *   HKCU\SystemFileAssociations\.ppt
- *   HKCU\SystemFileAssociations\presentation
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
+ *   HKCU\\.ppt
+ *   HKCU\\PowerPoint.Show
+ *   HKCU\\PowerPoint.Show.12
+ *   HKCU\\SystemFileAssociations\\.ppt
+ *   HKCU\\SystemFileAssociations\\presentation
+ *   HKCU\\*
+ *   HKCU\\AllFileSystemObjects
  * for a file and:
- *   HKCU\Directory
- *   HKCU\Directory\Background
- *   HKCU\Folder
- *   HKCU\*
- *   HKCU\AllFileSystemObjects
+ *   HKCU\\Directory
+ *   HKCU\\Directory\\Background
+ *   HKCU\\Folder
+ *   HKCU\\*
+ *   HKCU\\AllFileSystemObjects
  * for a folder.
  *
  * @param pidl  Remote PIDL representing the file whose association 
@@ -362,7 +362,7 @@ throw()
  * Create list of registry handles from list of keys names.
  */
 /* static */ vector<HKEY> CRegistry::_GetKeysFromKeynames(
-	__in const vector<CString> vecKeynames)
+	const vector<CString> vecKeynames)
 throw()
 {
 	LSTATUS rc = ERROR_SUCCESS;

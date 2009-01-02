@@ -27,8 +27,8 @@
 /**
  * Handle dialog initialisation by copying member data into Win32 fields.
  *
- * The member data may have been set using the @ref Accessors 
- * "accessor methods".  Once copied, these fields are validated and the 
+ * The member data may have been set using the @ref Accessors "accessor 
+ * methods".  Once copied, these fields are validated and the 
  * dialog modified accordingly
  *
  * @pre the dialog must have been initialised by calling DoModal() or

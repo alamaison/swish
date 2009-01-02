@@ -51,8 +51,8 @@ public:
 	 * compile if @p IdListSupertype is not compatible with Type.  Used in:
 	 *    @code const IdListSupertype p = Type m_pidl @endcode
 	 *
-	 * @param IdListSupertype  Target type of conversion. Does not have to be
-	 *                         supertype of raw PIDL type.  May be same type.
+	 * @tparam IdListSupertype  Target type of conversion. Does not have to be
+	 *                          supertype of raw PIDL type.  May be same type.
 	 */
 	template<typename IdListSupertype>
 	operator const IdListSupertype() const throw()
@@ -95,8 +95,8 @@ public:
 	 * compile if @p IdListSupertype is not compatible with Type.  Used in:
 	 *    @code const IdListSupertype p = Type m_pidl @endcode
 	 *
-	 * @param IdListSupertype  Target type of conversion. Does not have to be
-	 *                         supertype of raw PIDL type.  May be same type.
+	 * @tparam IdListSupertype  Target type of conversion. Does not have to be
+	 *                          supertype of raw PIDL type.  May be same type.
 	 */
 	template<typename IdListSupertype>
 	operator const IdListSupertype() const throw()
