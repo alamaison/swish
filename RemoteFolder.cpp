@@ -155,22 +155,13 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 
     *ppEnumIDList = NULL;
 
-	// Create SFTP connection object for this folder using hwndOwner for UI
-	CConnection conn;
 	try
 	{
-		conn = _CreateConnectionForFolder( hwndOwner );
-	}
-	catchCom()
+		// Create SFTP connection object for this folder using hwndOwner for UI
+		CConnection conn = _CreateConnectionForFolder( hwndOwner );
 
-	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
-	CString strPath = _ExtractPathFromPIDL(GetRootPIDL());
-	ATLASSERT(!strPath.IsEmpty());
-
-    // Create directory handler and get listing as PIDL enumeration
-	try
-	{
- 		CSftpDirectory directory( conn, strPath );
+		// Create directory handler and get listing as PIDL enumeration
+ 		CSftpDirectory directory(GetRootPIDL(), conn);
 		*ppEnumIDList = directory.GetEnum(grfFlags);
 	}
 	catchCom()
@@ -436,31 +427,27 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 }
 
 STDMETHODIMP CRemoteFolder::SetNameOf(
-	__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
-	SHGDNF /*uFlags*/, __deref_out_opt PITEMID_CHILD *ppidlOut)
+	HWND hwnd, PCUITEMID_CHILD pidl, LPCWSTR pwszName,
+	SHGDNF /*uFlags*/, PITEMID_CHILD *ppidlOut)
 {
 	if (ppidlOut)
 		*ppidlOut = NULL;
 
 	try
 	{
-		// Create SFTP connection object for this folder using hwndOwner for UI
-		CConnection conn = _CreateConnectionForFolder( hwnd );
-
-		// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
-		CString strPath = _ExtractPathFromPIDL(GetRootPIDL());
-		ATLASSERT(!strPath.IsEmpty());
+		// Create SFTP connection object for this folder using hwnd for UI
+		CConnection conn = _CreateConnectionForFolder(hwnd);
 
 		// Create instance of our directory handler class
-		CSftpDirectory directory( conn, strPath );
+		CSftpDirectory directory(GetRootPIDL(), conn);
 
 		// Rename file
-		boolean fOverwritten = directory.Rename( pidl, pszName );
+		boolean fOverwritten = directory.Rename(pidl, pwszName);
 
 		// Create new PIDL from old one
 		CRemoteItem pidlNewFile;
 		pidlNewFile.Attach(::ILCloneChild(pidl));
-		pidlNewFile.SetFilename(pszName);
+		pidlNewFile.SetFilename(pwszName);
 
 		// Make PIDLs absolute
 		CAbsolutePidl pidlOld(GetRootPIDL(), pidl);
@@ -872,8 +859,6 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 		RemotePidls vecDeathRow;
 		for (UINT i = 0; i < shdo.GetPidlCount(); i++)
 		{
-			ATLTRACE("PIDL path: %ls\n", _ExtractPathFromPIDL(shdo.GetFile(i)));
-
 			CRemoteItemList pidlFile = shdo.GetRelativeFile(i);
 
 			// May be overkill (it should always be a child) but check anyway
@@ -959,12 +944,8 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 	// Create SFTP connection object for this folder using hwndOwner for UI
 	CConnection conn = _CreateConnectionForFolder( hwnd );
 
-	// Get path by extracting it from chain of PIDLs starting with HOSTPIDL
-	CString strPath = _ExtractPathFromPIDL(GetRootPIDL());
-	ATLASSERT(!strPath.IsEmpty());
-
 	// Create instance of our directory handler class
-	CSftpDirectory directory( conn, strPath );
+	CSftpDirectory directory(GetRootPIDL(), conn);
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();
@@ -1046,36 +1027,6 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
 		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
 
 	return (ret == IDYES);
-}
-
-/**
- * Retrieve the full path of the file on the remote system from the given PIDL.
- */
-CString CRemoteFolder::_ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl )
-{
-	CString strPath;
-
-	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
-	// (by root we mean the path specified by the user when they added the
-	// connection to Explorer, rather than the root of the server's filesystem)
-	CHostItemListHandle pidlHost =
-		CHostItemAbsoluteHandle(pidl).FindHostPidl();
-	ATLASSERT(pidlHost.IsValid());
-
-	strPath = pidlHost.GetPath();
-
-	// Walk over RemoteItemIds and append each filename to form the path
-	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
-	while (pidlRemote.IsValid())
-	{
-		strPath += L"/";
-		strPath += pidlRemote.GetFilename();
-		pidlRemote = pidlRemote.GetNext();
-	}
-
-	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
-
-	return strPath;
 }
 
 /*------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,11 +19,38 @@
 
 #include "stdafx.h"
 #include "SftpDirectory.h"
+
+#include "HostPidl.h"
 #include "RemotePidl.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+
+/**
+ * Creates and initialises directory instance. 
+ *
+ * @param pidlDirectory  Absolute PIDL to the directory this object represents.
+ * @param conn           SFTP connection container.
+ */
+CSftpDirectory::CSftpDirectory(
+	CAbsolutePidlHandle pidlDirectory, CConnection& conn) :
+	m_connection(conn),
+	m_strDirectory( // Trim trailing slashes and append single slash
+		_ExtractPathFromPIDL(pidlDirectory).TrimRight(L'/')+L'/')
+{}
+
+/**
+ * Creates and initialises directory instance. 
+ *
+ * @param pwszDirectory  Absolute path to the directory this object represents.
+ * @param conn           SFTP connection container.
+ */
+CSftpDirectory::CSftpDirectory(PCWSTR pwszDirectory, CConnection& conn) :
+	m_connection(conn),
+	m_strDirectory( // Trim trailing slashes and append single slash
+		CString(pwszDirectory).TrimRight(L'/')+L'/')
+{}
 
 /**
  * Fetches directory listing from the server as an enumeration.
@@ -169,4 +196,32 @@ void CSftpDirectory::Delete(CRemoteItemHandle pidl)
 		AtlThrow(hr);
 }
 
-// CSftpDirectory
+/**
+ * Retrieve the full path of the file on the remote system from the given PIDL.
+ */
+CString CSftpDirectory::_ExtractPathFromPIDL(PCIDLIST_ABSOLUTE pidl)
+{
+	CString strPath;
+
+	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
+	// (by root we mean the path specified by the user when they added the
+	// connection to Explorer, rather than the root of the server's filesystem)
+	CHostItemListHandle pidlHost =
+		CHostItemAbsoluteHandle(pidl).FindHostPidl();
+	ATLASSERT(pidlHost.IsValid());
+
+	strPath = pidlHost.GetPath();
+
+	// Walk over RemoteItemIds and append each filename to form the path
+	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
+	while (pidlRemote.IsValid())
+	{
+		strPath += L"/";
+		strPath += pidlRemote.GetFilename();
+		pidlRemote = pidlRemote.GetNext();
+	}
+
+	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+
+	return strPath;
+}

@@ -107,11 +107,11 @@ protected:
 
 		// Test stack creation
 		{
-			CSftpDirectory directory(conn, CComBSTR("/tmp"));
+			CSftpDirectory directory(L"/tmp", conn);
 		}
 
 		// Test heap creation
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 	}
 
 	void testGetEnumAll()
@@ -160,7 +160,7 @@ protected:
 		conn.spProvider = m_pProvider;
 		conn.spConsumer = m_pConsumer;
 
-		CSftpDirectory directory(conn, CComBSTR("/tmp"));
+		CSftpDirectory directory(L"/tmp", conn);
 
 		// Set mock behaviour
 		m_pCoProvider->SetListingBehaviour(MP::EmptyListing);
@@ -199,7 +199,7 @@ protected:
 		conn.spProvider = m_pProvider;
 		conn.spConsumer = m_pConsumer;
 
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 
 		SHCONTF grfFlags = 
 			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
@@ -225,7 +225,7 @@ protected:
 		m_pCoProvider->SetRenameBehaviour(MP::RenameOK);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -244,7 +244,7 @@ protected:
 		m_pCoProvider->SetRenameBehaviour(MP::RenameOK);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp/swish"));
+		m_pDirectory = new CSftpDirectory(L"/tmp/swish", conn);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testswishfile");
@@ -263,7 +263,7 @@ protected:
 		m_pCoProvider->SetRenameBehaviour(MP::ConfirmOverwrite);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -290,7 +290,7 @@ protected:
 		m_pCoProvider->SetRenameBehaviour(MP::ConfirmOverwrite);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -324,7 +324,7 @@ protected:
 		m_pCoProvider->SetRenameBehaviour(MP::ReportError);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -352,7 +352,7 @@ protected:
 		conn.spConsumer = m_pConsumer;
 
 		// Create
-		m_pDirectory = new CSftpDirectory(conn, CComBSTR("/tmp"));
+		m_pDirectory = new CSftpDirectory(L"/tmp", conn);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -391,7 +391,7 @@ private:
 		conn.spProvider = m_pProvider;
 		conn.spConsumer = m_pConsumer;
 
-		CSftpDirectory directory(conn, CComBSTR("/tmp"));
+		CSftpDirectory directory(L"/tmp", conn);
 
 		IEnumIDList *pEnum = directory.GetEnum( grfFlags );
 		CPPUNIT_ASSERT(pEnum);

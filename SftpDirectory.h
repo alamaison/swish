@@ -64,16 +64,10 @@ typedef CComObject<CComSTLCopyContainer< vector<CChildPidl> > > CComPidlHolder;
 class CSftpDirectory
 {
 public:
-	/**
-	 * Creates and initialises directory instance. 
-	 *
-	 * @param conn           SFTP connection container.
-	 * @param pwszDirectory  Path of remote directory this object represents.
-	 */
-	CSftpDirectory(__in CConnection& conn, __in PCWSTR pwszDirectory) :
-		m_connection(conn), // Trim trailing slashes and append single slash
-		m_strDirectory(CString(pwszDirectory).TrimRight(L'/')+L'/')
-	{}
+	CSftpDirectory(
+		__in CAbsolutePidlHandle pidlDirectory, __in CConnection& conn);
+	CSftpDirectory(
+		__in PCWSTR pwszDirectory, __in CConnection& conn);
 
 	IEnumIDList* GetEnum(__in SHCONTF grfFlags) throw(...);
 	bool Rename(
@@ -89,6 +83,7 @@ private:
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );
+	CString _ExtractPathFromPIDL(__in PCIDLIST_ABSOLUTE pidl);
 };
 
 
