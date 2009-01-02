@@ -69,8 +69,8 @@ public:
 	/**
 	 * Create initialized instance of the CRemoteFolder class.
 	 *
-	 * @param  Absolute PIDL at which to root the folder instance (passed
-	 *         to Initialize).
+	 * @param pidl  Absolute PIDL at which to root the folder instance (passed
+	 *              to Initialize).
 	 *
 	 * @returns Smart pointer to the CRemoteFolder's IShellFolder interface.
 	 * @throws  CAtlException if creation fails.
@@ -103,7 +103,7 @@ protected:
 public:
 
 	// IShellFolder
-	STDMETHOD(EnumObjects)( HWND, SHCONTF, LPENUMIDLIST* );
+	STDMETHOD(EnumObjects)( HWND, SHCONTF, IEnumIDList** );
 	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
     STDMETHOD(GetUIObjectOf)
 		( HWND, UINT, PCUITEMID_CHILD_ARRAY, REFIID, LPUINT, void** );
@@ -168,7 +168,7 @@ private:
 	HRESULT OnMergeContextMenu(
 		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	HRESULT OnInvokeCommand(
-		HWND hwnd, IDataObject *pDataObj, int idCmd, PCTSTR pszArgs );
+		HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pwszArgs );
 	HRESULT OnInvokeCommandEx(
 		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
 	// @}

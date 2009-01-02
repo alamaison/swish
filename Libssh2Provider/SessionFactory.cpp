@@ -41,7 +41,8 @@ using std::string;
  * Creates and authenticates a CSession object with the given parameters.
  *
  * @param pwszHost   Name of the remote host to connect the CSession object to.
- * @param uPort      Port on the remote host to connect the CSession object to.
+ * @param pwszUser   User to connect to remote host as.
+ * @param uPort      Port on the remote host to connect to.
  * @param pConsumer  Pointer to an ISftpConsumer which will be used for any 
  *                   user-interaction such as requesting a password for
  *                   authentication.

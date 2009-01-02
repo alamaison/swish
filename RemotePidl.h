@@ -254,8 +254,9 @@ public:
 	 * @param[in] pwszGroup      Name of file group on remote system.
 	 * @param[in] dwPermissions  Value of the file's Unix permissions bits.
 	 * @param[in] uSize          Size of file in bytes.
-	 * @param[in] dtModified     Date that file was last modified.
+	 * @param[in] dateModified   Date that file was last modified.
 	 * @param[in] fIsFolder      Is file a folder?
+	 * @param[in] fIsLink        Is file a symlink?
 	 * 
 	 * @throws CAtlException if error.
 	 */

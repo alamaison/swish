@@ -144,9 +144,9 @@ public:
 	 * Retrieve the long name of the host connection from the PIDL.
 	 *
 	 * The long name is either the canonical form if fCanonical is set:
-	 *     sftp://username@hostname:port/path
+	 *     sftp://username\@hostname:port/path
 	 * or, if not set and if the port is the default port, the reduced form:
-	 *     sftp://username@hostname/path
+	 *     sftp://username\@hostname/path
 	 */
 	CString GetLongName(bool fCanonical) const throw(...)
 	{
