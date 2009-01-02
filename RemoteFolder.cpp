@@ -1,6 +1,6 @@
 /*  Implementation of Explorer folder handling remote files and folders.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
 #include "HostPidl.h"
 #include "ShellDataObject.h"
+#include "DataObject.h"
 #include "Registry.h"
 
 #include <ATLComTime.h>
@@ -188,7 +189,6 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	__reserved LPUINT puReserved, __out void** ppvReturn )
 {
 	ATLTRACE("CRemoteFolder::GetUIObjectOf called\n");
-	(void)hwndOwner; // No user input required
 	(void)puReserved;
 
 	*ppvReturn = NULL;
@@ -285,14 +285,19 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 	{
 		ATLTRACE("\t\tRequest: IDataObject\n");
 
-		// A DataObject is required in order for the call to 
-		// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
-		// earlier than Vista
+		try
+		{
+			// Create connection object for this folder with hwndOwner for UI
+			CConnection conn = _CreateConnectionForFolder(hwndOwner);
 
-		hr = ::CIDLData_CreateFromIDArray(
-			GetRootPIDL(), cPidl, 
-			reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl),
-			(IDataObject **)ppvReturn);
+			CComPtr<IDataObject> spDo = CDataObject::Create(
+					conn, GetRootPIDL(), cPidl, aPidl);
+			ATLASSERT(spDo);
+			*(IDataObject **)ppvReturn = spDo.Detach();
+		}
+		catchCom()
+
+		hr = S_OK;
 		ATLASSERT(SUCCEEDED(hr));
 	}
 	else	
@@ -523,10 +528,13 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 		dwAttribs |= SFGAO_HASSUBFOLDER;
 	}
 	if (fAllAreDotFiles)
+	{
 		dwAttribs |= SFGAO_GHOSTED;
-
+		dwAttribs |= SFGAO_HIDDEN;
+	}
 	dwAttribs |= SFGAO_CANRENAME;
 	dwAttribs |= SFGAO_CANDELETE;
+	dwAttribs |= SFGAO_CANCOPY;
 
     *pdwAttribs &= dwAttribs;
 
@@ -1147,10 +1155,10 @@ CConnection CRemoteFolder::_GetConnection(
  * The two parts are the provider (SFTP backend) and consumer (user interaction
  * callback).  The connection is created from the information stored in this
  * folder's PIDL, @c m_pidl, and the window handle to be used as the owner
- * window for any user interaction. This window handle cannot be NULL (in order
- * to enforce good UI etiquette - we should attempt to interact with the user
- * if Explorer isn't expecting us to).  If it is, this function will throw
- * an exception.
+ * window for any user interaction. This window handle can be NULL but (in order
+ * to enforce good UI etiquette - we shouldn't attempt to interact with the user
+ * if Explorer isn't expecting us to) any operation which requires user 
+ * interaction should quietly fail.  
  *
  * @param hwndUserInteraction  A handle to the window which should be used
  *                             as the parent window for any user interaction.
@@ -1159,8 +1167,6 @@ CConnection CRemoteFolder::_GetConnection(
 CConnection CRemoteFolder::_CreateConnectionForFolder(
 	HWND hwndUserInteraction )
 {
-	if (hwndUserInteraction == NULL)
-		AtlThrow(E_FAIL);
 
 	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
 	CHostItemListHandle pidlHost(CHostItemListHandle(GetRootPIDL()).FindHostPidl());

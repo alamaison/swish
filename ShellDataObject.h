@@ -19,64 +19,8 @@
 
 #pragma once
 
+#include "DataObject.h"
 #include "Pidl.h"
-
-class CStorageMedium : public STGMEDIUM
-{
-public:
-	~CStorageMedium() throw()
-	{
-		::ReleaseStgMedium(this);
-	}
-};
-
-class CGlobalLock
-{
-public:
-	CGlobalLock() throw() :
-		m_hGlobal(NULL), m_pMem(NULL)
-	{}
-	CGlobalLock(__in HGLOBAL hGlobal) throw() : 
-		m_hGlobal(hGlobal), m_pMem(::GlobalLock(m_hGlobal))
-	{}
-
-	~CGlobalLock() throw()
-	{
-		Clear();
-	}
-
-	/**
-	 * Disable copy constructor.  If the object were copied, the old one would
-	 * be destroyed which unlocks the global memory but the new copy would
-	 * not be re-locked.
-	 */
-	CGlobalLock(const CGlobalLock& lock) throw();
-	CGlobalLock& operator=(const CGlobalLock&) throw();
-
-	void Attach(__in HGLOBAL hGlobal) throw()
-	{
-		Clear();
-
-		m_hGlobal = hGlobal;
-		m_pMem = ::GlobalLock(m_hGlobal);
-	}
-
-	void Clear() throw()
-	{
-		m_pMem = NULL;
-		if (m_hGlobal)
-			::GlobalUnlock(m_hGlobal);
-	}
-
-	CIDA* GetCida()
-	{
-		return static_cast<CIDA *>(m_pMem);
-	}
-
-private:
-	HGLOBAL m_hGlobal;
-	PVOID m_pMem;
-};
 
 class CShellDataObject
 {

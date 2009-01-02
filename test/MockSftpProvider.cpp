@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "MockSftpProvider.h"
+#include "DummyStream.h"
 #include <AtlComTime.h>
 
 // Set up default behaviours
@@ -122,6 +123,38 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 		UNREACHABLE;
 		return E_UNEXPECTED;
 	}
+}
+
+
+STDMETHODIMP CMockSftpProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
+{
+	CPPUNIT_ASSERT( ppStream );
+	CPPUNIT_ASSERT( CComBSTR(bstrFilePath).Length() > 0 );
+	CPPUNIT_ASSERT( CComBSTR(bstrFilePath).Length() <= MAX_FILENAME_LEN );
+	// Temporary condtion - remove for Windows support
+	CPPUNIT_ASSERT( CComBSTR(bstrFilePath)[0] == OLECHAR('/') );
+
+	*ppStream = NULL;
+
+	_TestMockPathExists(bstrFilePath);
+
+	// Create dummy IStream instance whose data is the file path
+	CComObject<CDummyStream> *pStream = NULL;
+	HRESULT hr = pStream->CreateInstance(&pStream);
+	if (SUCCEEDED(hr))
+	{
+		pStream->AddRef();
+
+		hr = pStream->Initialize(CW2A(bstrFilePath));
+		if (SUCCEEDED(hr))
+		{
+			hr = pStream->QueryInterface(ppStream);
+		}
+
+		pStream->Release();
+	}
+
+	return hr;
 }
 
 STDMETHODIMP CMockSftpProvider::Rename(

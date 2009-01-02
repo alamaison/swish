@@ -98,7 +98,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("8C724C21-95A9-4cac-915F-6107B7A43D94"),
+	object, uuid("1F8343E4-71DB-466a-A08D-B517DFBB38FF"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface")
@@ -112,11 +112,15 @@ interface ISftpProvider : IUnknown
 		[in] UINT uPort
 	);
 	HRESULT SwitchConsumer(
-		[in]  ISftpConsumer *pConsumer
+		[in] ISftpConsumer *pConsumer
 	);
 	HRESULT GetListing(
 		[in] BSTR bstrDirectory,
 		[out, retval] IEnumListing **ppEnum
+	);
+	HRESULT GetFile(
+		[in] BSTR bstrFilePath,
+		[out, retval] IStream **ppStream
 	);
 	HRESULT Rename(
 		[in] BSTR bstrFromPath,

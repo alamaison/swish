@@ -344,6 +344,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SftpStream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -395,6 +399,10 @@
 			</File>
 			<File
 				RelativePath=".\SessionFactory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpStream.h"
 				>
 			</File>
 			<File

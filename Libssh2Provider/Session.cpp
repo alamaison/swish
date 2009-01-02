@@ -188,8 +188,8 @@ void CSession::_DestroySftpChannel() throw()
  */
 void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort) throw(...)
 {
-	ATLASSUME(pwszHost[0] != '\0');
-	ATLASSUME(uPort >= MIN_PORT && uPort <= MAX_PORT);
+	ATLASSERT(pwszHost[0] != '\0');
+	ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
 	ATLENSURE_THROW(m_socket == INVALID_SOCKET, E_UNEXPECTED); // Already set up
 
 	// The hints address info struct which is passed to getaddrinfo()

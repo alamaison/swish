@@ -44,7 +44,7 @@
 ]
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,
-	public CCoFactory<CExplorerCallback>
+	private CCoFactory<CExplorerCallback>
 {
 public:
 	CExplorerCallback() : m_hwndView(NULL), m_pidl(NULL) {}

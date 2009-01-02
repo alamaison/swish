@@ -317,6 +317,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DataObject.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ExplorerCallback.cpp"
 				>
 			</File>
@@ -419,6 +423,10 @@
 			</File>
 			<File
 				RelativePath=".\Connection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DataObject.h"
 				>
 			</File>
 			<File

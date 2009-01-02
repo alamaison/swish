@@ -66,8 +66,28 @@ struct _CopyPidl
 
 class ATL_NO_VTABLE CDummyFolder :
 	public CFolder,
-	public CCoFactory<CDummyFolder>
- {
+	private CCoFactory<CDummyFolder>
+{
+public:
+
+	BEGIN_COM_MAP(CDummyFolder)
+		COM_INTERFACE_ENTRY(IShellFolder)
+		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+	END_COM_MAP()
+	
+	/**
+	 * Create instance of the CDummyFolder class and return IShellFolder.
+	 *
+	 * @returns Smart pointer to the CDummyFolder's IShellFolder interface.
+	 * @throws  CAtlException if creation fails.
+	 */
+	static CComPtr<IShellFolder> Create()
+	throw(...)
+	{
+		CComPtr<CDummyFolder> spObject = spObject->CreateCoObject();
+		return spObject.p;
+	}
+
 protected:
 
 	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);

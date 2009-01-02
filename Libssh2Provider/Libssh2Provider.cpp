@@ -33,6 +33,7 @@
 
 #include "Libssh2Provider.h"
 #include "KeyboardInteractive.h"
+#include "SftpStream.h"
 
 #include <ws2tcpip.h>    // Winsock
 #include <wspiapi.h>     // Winsock
@@ -238,16 +239,21 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	list<Listing> lstFiles;
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
-        char szFilename[512];
+		char szFilename[MAX_FILENAME_LENZ];
         LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof(attrs));
-        int rc = libssh2_sftp_readdir(
-			pSftpHandle, szFilename, sizeof(szFilename), &attrs
-		);
-		if(rc <= 0)
-		{
-			szFilename[0] = '\0';
+        int len = libssh2_sftp_readdir(
+			pSftpHandle, szFilename, ARRAYSIZE(szFilename)-1, &attrs);
+		if (len <= 0)
 			break;
+		else
+			szFilename[len] = '\0';
+
+		// Exclude . and ..
+		if (szFilename[0] == '.')
+		{
+			if (len == 1 || (len == 2 && szFilename[1] == '.'))
+				continue;
 		}
 
 		lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
@@ -351,6 +357,40 @@ Listing CLibssh2Provider::_FillListingEntry(
 	}
 
 	return lt;
+}
+
+
+STDMETHODIMP CLibssh2Provider::GetFile(BSTR bstrFilePath, IStream **ppStream)
+{
+	ATLENSURE_RETURN_HR(ppStream, E_POINTER); *ppStream = NULL;
+	ATLENSURE_RETURN_HR(::SysStringLen(bstrFilePath) > 0, E_INVALIDARG);
+	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
+
+	HRESULT hr;
+
+	// Connect to server
+	hr = _Connect();
+	if (FAILED(hr))
+		return hr;
+
+	CComObject<CSftpStream> *pStream = NULL;
+	hr = pStream->CreateInstance(&pStream);
+	if (SUCCEEDED(hr))
+	{
+		pStream->AddRef();
+
+		// TODO: This session that we are passing should outlive the Stream.
+		//       How do we enforce this?
+		hr = pStream->Initialize(*m_spSession, CW2A(bstrFilePath));
+		if (SUCCEEDED(hr))
+		{
+			hr = pStream->QueryInterface(ppStream);
+		}
+
+		pStream->Release();
+	}
+
+	return hr;
 }
 
 /**

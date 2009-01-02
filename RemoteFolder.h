@@ -48,9 +48,14 @@
 ]
 class ATL_NO_VTABLE CRemoteFolder :
 	public CFolder,
-	public CCoFactory<CRemoteFolder>
+	private CCoFactory<CRemoteFolder>
 {
 public:
+
+	BEGIN_COM_MAP(CRemoteFolder)
+		COM_INTERFACE_ENTRY(IShellFolder)
+		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+	END_COM_MAP()
 
 	/*
 	We can assume that the PIDLs contained in this folder (i.e. any PIDL
@@ -128,14 +133,14 @@ private:
 	typedef std::vector<CRemoteItem> RemotePidls;
 
 	CConnection _GetConnection(
-		__in HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
+		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
 	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 	CConnection _CreateConnectionForFolder(
-		__in HWND hwndUserInteraction ) throw(...);
+		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
 		throw(...);
 	void _DoDelete(

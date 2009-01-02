@@ -16,6 +16,32 @@ BEGIN_COM_MAP(CMockSftpConsumer)
 END_COM_MAP()
 
 	/**
+	 * Creates a CMockSftpConsumer and returns smart pointers to its CComObject
+	 * as well as its ISftpConsumer interface.
+	 */
+	static void CMockSftpConsumer::Create(
+		__out CComPtrBase<CMockSftpConsumer>& spCoConsumer,
+		__out CComPtrBase<ISftpConsumer>& spConsumer
+	)
+	{
+		HRESULT hr;
+
+		// Create mock object coclass instance
+		CComObject<CMockSftpConsumer> *pCoConsumer = NULL;
+		hr = CComObject<CMockSftpConsumer>::CreateInstance(&pCoConsumer);
+		CPPUNIT_ASSERT_OK(hr);
+
+		pCoConsumer->AddRef();
+		spCoConsumer.Attach(pCoConsumer);
+		pCoConsumer = NULL;
+
+		// Get ISftpConsumer interface
+		hr = spCoConsumer.QueryInterface(&spConsumer);
+		pCoConsumer = NULL;
+		CPPUNIT_ASSERT_OK(hr);
+	}
+
+	/**
 	 * Possible behaviours of mock password request handler OnPasswordRequest.
 	 */
 	typedef enum tagPasswordBehaviour {

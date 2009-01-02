@@ -48,9 +48,15 @@ using std::vector;
 ]
 class ATL_NO_VTABLE CHostFolder :
 	public CFolder,
-	public CCoFactory<CHostFolder>,
 	public IExtractIcon
 {
+public:
+
+	BEGIN_COM_MAP(CHostFolder)
+		COM_INTERFACE_ENTRY(IExtractIcon)
+		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+	END_COM_MAP()
+
 protected:
 
 	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);

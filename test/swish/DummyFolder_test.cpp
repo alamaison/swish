@@ -25,25 +25,33 @@ public:
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Create instance of folder
-		CComPtr<CDummyFolder> spFolderObj = spFolderObj->CreateCoObject();
-		hr = spFolderObj.QueryInterface(&m_spFolder);
-		CPPUNIT_ASSERT_OK(hr);
+		m_spFolder = CDummyFolder::Create();
+		CPPUNIT_ASSERT(m_spFolder);
 
 		// Copy to regular interface pointer so we can test for memory 
 		// leaks in tearDown()
-		m_spFolder.CopyTo(&m_pFolder);
+		hr = m_spFolder.CopyTo(&m_pFolder);
+		CPPUNIT_ASSERT_OK(hr);
 	}
 
 	void tearDown()
 	{
-		m_spFolder.Release();
-
-		if (m_pFolder) // Possible for test to fail before initialised
+		try
 		{
-			ULONG cRefs = m_pFolder->Release();
-			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+			m_spFolder.Release();
+
+			if (m_pFolder) // Test for leaking refs
+			{
+				CPPUNIT_ASSERT_ZERO(m_pFolder->Release());
+				m_pFolder = NULL;
+			}
 		}
-		m_pFolder = NULL;
+		catch(...)
+		{
+			// Shut down COM
+			::CoUninitialize();
+			throw;
+		}
 
 		// Shut down COM
 		::CoUninitialize();

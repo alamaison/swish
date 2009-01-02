@@ -260,10 +260,6 @@
 				>
 			</File>
 			<File
-				RelativePath="libssh2\include\libssh2_priv.h"
-				>
-			</File>
-			<File
 				RelativePath="libssh2\include\libssh2_sftp.h"
 				>
 			</File>
