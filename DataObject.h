@@ -28,6 +28,8 @@
 #include <vector>
 using std::vector;
 
+class CFileGroupDescriptor; // Forward-ref
+
 /**
  * Pseudo-subclass of IDataObject created by CIDLData_CreateFromIDArray().
  * 
@@ -128,6 +130,9 @@ private:
 	vector<CAbsolutePidl> m_vecPidls;
 
 	static CString _ExtractPathFromPIDL( __in PCIDLIST_ABSOLUTE pidl );
+	static CFileGroupDescriptor _CreateFileGroupDescriptor(
+		UINT cPidl, __in_ecount(cPidl) PCUITEMID_CHILD_ARRAY aPidl)
+		throw(...);
 };
 
 
@@ -184,6 +189,7 @@ private:
 		this->ptd = ptd;
 	}
 };
+
 
 class CGlobalLock
 {
@@ -242,15 +248,14 @@ private:
 class CFileGroupDescriptor
 {
 public:
-	CFileGroupDescriptor(UINT cFiles)
+	CFileGroupDescriptor(UINT cFiles) throw(...)
 		: m_hGlobal(NULL)
 	{
 		ATLENSURE_THROW(cFiles > 0, E_INVALIDARG);
 
 		// Allocate global memory sufficient for group descriptor and as many
 		// file descriptors as specified
-		size_t cbData = sizeof FILEGROUPDESCRIPTOR + 
-		                sizeof FILEDESCRIPTOR * (cFiles - 1);
+		size_t cbData = _GetAllocSizeOf(cFiles);
 		m_hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, cbData);
 		ATLENSURE_THROW(m_hGlobal, E_OUTOFMEMORY);
 
@@ -260,11 +265,39 @@ public:
 		::ZeroMemory(&fgd, cbData);
 		fgd.cItems = cFiles;
 	}
+
+	CFileGroupDescriptor(const CFileGroupDescriptor& fgd) throw(...)
+		: m_hGlobal(NULL)
+	{
+		// Calculate size of incoming
+		size_t cbData = fgd._GetAllocatedSize();
+
+		// Allocate new global of the same size
+		m_hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, cbData);
+		ATLENSURE_THROW(m_hGlobal, E_OUTOFMEMORY);
+
+		// Copy
+		CGlobalLock glockOld(fgd.m_hGlobal);
+		CGlobalLock glockNew(m_hGlobal);
+		::CopyMemory(
+			&(glockNew.GetFileGroupDescriptor()),
+			&(glockOld.GetFileGroupDescriptor()),
+			cbData);
+	}
 	
 	~CFileGroupDescriptor()
 	{
 		::GlobalFree(m_hGlobal);
 		m_hGlobal = NULL;
+	}
+
+	/**
+	 * Get number of files represented by this FILEGROUPDESCRIPTOR.
+	 */
+	UINT GetSize() const throw()
+	{
+		CGlobalLock glock(m_hGlobal);
+		return glock.GetFileGroupDescriptor().cItems;
 	}
 
 	void SetDescriptor(UINT i, FILEDESCRIPTOR& fd)
@@ -286,5 +319,25 @@ public:
 	}
 
 private:
-	HGLOBAL m_hGlobal;
+	/**
+	 * Get the size of global memory allocated for this FILEGROUPDESCRIPTOR.
+	 */
+	inline size_t _GetAllocatedSize() const throw()
+	{
+		return _GetAllocSizeOf(GetSize());
+	}
+
+	/**
+	 * Get necessary size allocate descriptor for given number of files.
+	 *
+	 * Uses @code cFiles - 1 @endcode as the FILEGROUPDESCRIPTOR already
+	 * contains one FILEDESCRIPTOR within it.
+	 */
+	static inline size_t _GetAllocSizeOf(UINT cFiles)
+	{
+		return sizeof(FILEGROUPDESCRIPTOR) + 
+		       sizeof(FILEDESCRIPTOR) * (cFiles - 1);
+	}
+
+	HGLOBAL m_hGlobal; ///< Wrapped item
 };

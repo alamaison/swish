@@ -18,55 +18,13 @@
 */
 
 #include "stdafx.h"
-#include "DataObject.h"
 
+#include "DataObject.h"
 #include "HostPidl.h"
 #include "RemotePidl.h"
-#include "ShellDataObject.h"
-
-inline DWORD LODWORD(ULONGLONG qwSrc)
-{
-	return static_cast<DWORD>(qwSrc & 0xFFFFFFFF);
-}
-
-inline DWORD HIDWORD(ULONGLONG qwSrc)
-{
-	return static_cast<DWORD>((qwSrc >> 32) & 0xFFFFFFFF);
-}
 
 #define SHOW_PROGRESS_THRESHOLD 10000 ///< File size threshold after which we
                                       ///< display a progress dialogue
-
-/**
- * Retrieve the full path of the file on the remote system from the given PIDL.
- */
-/* static */ CString CDataObject::_ExtractPathFromPIDL(
-	PCIDLIST_ABSOLUTE pidl )
-{
-	CString strPath;
-
-	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
-	// (by root we mean the path specified by the user when they added the
-	// connection to Explorer, rather than the root of the server's filesystem)
-	CHostItemListHandle pidlHost = 
-		CHostItemAbsoluteHandle(pidl).FindHostPidl();
-	ATLASSERT(pidlHost.IsValid());
-
-	strPath = pidlHost.GetPath();
-
-	// Walk over RemoteItemIds and append each filename to form the path
-	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
-	while (pidlRemote.IsValid())
-	{
-		strPath += L"/";
-		strPath += pidlRemote.GetFilename();
-		pidlRemote = pidlRemote.GetNext();
-	}
-
-	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
-
-	return strPath;
-}
 
 CDataObject::CDataObject() :
 	m_cfFileContents(static_cast<CLIPFORMAT>(
@@ -113,47 +71,33 @@ HRESULT CDataObject::Initialize(
 	// Create FILEGROUPDESCRIPTOR format which we insert into the default
 	// DataObject.  We will create the FILECONTENTS formats on-demand when 
 	// requested in GetData().
-	CFileGroupDescriptor fgd(cPidl);
-	for (UINT i = 0; i < cPidl; i++)
+	if (cPidl > 0)
 	{
-		CRemoteItemListHandle pidl(aPidl[i]);
+		CFileGroupDescriptor fgd = _CreateFileGroupDescriptor(cPidl, aPidl);
+		ATLASSERT(fgd.GetSize() > 0);
 
-		FILEDESCRIPTOR fd;
-		::ZeroMemory(&fd, sizeof fd);
-		::StringCchCopy(
-			fd.cFileName, ARRAYSIZE(fd.cFileName), pidl.GetFilename());
-
-		fd.dwFlags = FD_WRITESTIME | FD_FILESIZE | FD_ATTRIBUTES;
-		if (pidl.GetFileSize() > SHOW_PROGRESS_THRESHOLD)
-			fd.dwFlags |= FD_PROGRESSUI;
-
-		fd.nFileSizeLow = LODWORD(pidl.GetFileSize());
-		fd.nFileSizeHigh = HIDWORD(pidl.GetFileSize());
-
-		SYSTEMTIME st;
-		ATLVERIFY(pidl.GetDateModified().GetAsSystemTime(st));
-		ATLVERIFY(::SystemTimeToFileTime(&st, &fd.ftLastWriteTime));
-
-		if (pidl.IsFolder())
+		// Add the descriptor to the DataObject
+		CFormatEtc fetcDescriptor(CFSTR_FILEDESCRIPTOR);
+		STGMEDIUM stg;
+		::ZeroMemory(&stg, sizeof stg);
+		stg.tymed = TYMED_HGLOBAL;
+		stg.hGlobal = fgd.Detach();
+		hr = m_spDoInner->SetData(&fetcDescriptor, &stg, true);
+		if (FAILED(hr))
 		{
-			fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-			// TODO: recursively add contents of the directory to the DataObject
+			::ReleaseStgMedium(&stg);
 		}
-		if (pidl.GetFilename()[0] == L'.')
-			fd.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
-		fgd.SetDescriptor(i, fd);
+		// Prod the inner DataObject with a FILEDESCRIPTOR format. This empty
+		// item just registers the format with the inner DO so that calls to
+		// EnumFormatEtc and others return the correct list.
+		CFormatEtc fetcContents(CFSTR_FILECONTENTS);
+		STGMEDIUM stgEmpty;
+		::ZeroMemory(&stgEmpty, sizeof stgEmpty);
+		hr = m_spDoInner->SetData(&fetcContents, &stg, true);
+		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 	}
-
-	// Add the descriptor to the DataObject
-	CFormatEtc fetc(CFSTR_FILEDESCRIPTOR);
-
-	STGMEDIUM stg;
-	::ZeroMemory(&stg, sizeof stg);
-	stg.tymed = TYMED_HGLOBAL;
-	stg.hGlobal = fgd.Detach();
-	hr = m_spDoInner->SetData(&fetc, &stg, true);
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
 	m_conn = conn;
 
@@ -240,4 +184,93 @@ STDMETHODIMP CDataObject::DUnadvise(DWORD dwConnection)
 STDMETHODIMP CDataObject::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
 {
 	return m_spDoInner->EnumDAdvise(ppenumAdvise);
+}
+
+
+/*----------------------------------------------------------------------------*
+ * Private functions
+ *----------------------------------------------------------------------------*/
+
+/**
+ * Retrieve the full path of the file on the remote system from the given PIDL.
+ */
+/* static */ CString CDataObject::_ExtractPathFromPIDL(
+	PCIDLIST_ABSOLUTE pidl )
+{
+	CString strPath;
+
+	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
+	// (by root we mean the path specified by the user when they added the
+	// connection to Explorer, rather than the root of the server's filesystem)
+	CHostItemListHandle pidlHost = 
+		CHostItemAbsoluteHandle(pidl).FindHostPidl();
+	ATLASSERT(pidlHost.IsValid());
+
+	strPath = pidlHost.GetPath();
+
+	// Walk over RemoteItemIds and append each filename to form the path
+	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
+	while (pidlRemote.IsValid())
+	{
+		strPath += L"/";
+		strPath += pidlRemote.GetFilename();
+		pidlRemote = pidlRemote.GetNext();
+	}
+
+	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+
+	return strPath;
+}
+
+inline DWORD LODWORD(ULONGLONG qwSrc)
+{
+	return static_cast<DWORD>(qwSrc & 0xFFFFFFFF);
+}
+
+inline DWORD HIDWORD(ULONGLONG qwSrc)
+{
+	return static_cast<DWORD>((qwSrc >> 32) & 0xFFFFFFFF);
+}
+
+/**
+ * Create FILEGROUPDESCRIPTOR format from array of one or more PIDLs.
+ */
+/*static*/ CFileGroupDescriptor CDataObject::_CreateFileGroupDescriptor(
+	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl)
+throw(...)
+{
+	CFileGroupDescriptor fgd(cPidl);
+	for (UINT i = 0; i < cPidl; i++)
+	{
+		CRemoteItemListHandle pidl(aPidl[i]);
+
+		FILEDESCRIPTOR fd;
+		::ZeroMemory(&fd, sizeof fd);
+		::StringCchCopy(
+			fd.cFileName, ARRAYSIZE(fd.cFileName), pidl.GetFilename());
+
+		fd.dwFlags = FD_WRITESTIME | FD_FILESIZE | FD_ATTRIBUTES;
+		if (pidl.GetFileSize() > SHOW_PROGRESS_THRESHOLD)
+			fd.dwFlags |= FD_PROGRESSUI;
+
+		fd.nFileSizeLow = LODWORD(pidl.GetFileSize());
+		fd.nFileSizeHigh = HIDWORD(pidl.GetFileSize());
+
+		SYSTEMTIME st;
+		ATLVERIFY(pidl.GetDateModified().GetAsSystemTime(st));
+		ATLVERIFY(::SystemTimeToFileTime(&st, &fd.ftLastWriteTime));
+
+		if (pidl.IsFolder())
+		{
+			fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+			// TODO: recursively add contents of directory to the DataObject
+		}
+		if (pidl.GetFilename()[0] == L'.')
+			fd.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+
+		fgd.SetDescriptor(i, fd);
+	}
+
+	ATLASSERT(cPidl == fgd.GetSize());
+	return fgd;
 }
