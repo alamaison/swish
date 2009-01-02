@@ -474,10 +474,12 @@ private:
 		HRESULT hr;
 
 		// Test CFSTR_SHELLIDLIST (PIDL array) format
-		CFormatEtc fetcShellIdList(CFSTR_SHELLIDLIST);
-		hr = pDo->QueryGetData(&fetcShellIdList);
-		CPPUNIT_ASSERT(hr == ((fFailTest) ? S_FALSE : S_OK));
-		CPPUNIT_ASSERT(hr == ((fFailTest) ? S_FALSE : S_OK));
+		if (!fFailTest) // Vista includes this format even for empty PIDL array
+		{
+			CFormatEtc fetcShellIdList(CFSTR_SHELLIDLIST);
+			hr = pDo->QueryGetData(&fetcShellIdList);
+			CPPUNIT_ASSERT_OK(hr);
+		}
 
 		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
 		CFormatEtc fetcDescriptor(CFSTR_FILEDESCRIPTOR);
@@ -522,7 +524,8 @@ private:
 		} while (hr == S_OK);
 
 		// Test CFSTR_SHELLIDLIST (PIDL array) format
-		CPPUNIT_ASSERT((fFailTest) ? !fFoundShellIdList : fFoundShellIdList);
+		if (!fFailTest) // Vista includes this format even for empty PIDL array
+			CPPUNIT_ASSERT(fFoundShellIdList);
 
 		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
 		CPPUNIT_ASSERT((fFailTest) ? !fFoundDescriptor : fFoundDescriptor);
