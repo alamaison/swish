@@ -169,7 +169,7 @@ protected:
 		try
 		{
 			// Get listing
-			pEnum = directory.GetEnum( grfFlags );
+			pEnum = directory.GetEnum( grfFlags ).Detach();
 			CPPUNIT_ASSERT(pEnum);
 
 			// Test
@@ -203,7 +203,7 @@ protected:
 
 		SHCONTF grfFlags = 
 			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
-		IEnumIDList *pEnum = m_pDirectory->GetEnum( grfFlags );
+		IEnumIDList *pEnum = m_pDirectory->GetEnum( grfFlags ).Detach();
 		CPPUNIT_ASSERT(pEnum);
 
 		delete m_pDirectory;
@@ -393,7 +393,7 @@ private:
 
 		CSftpDirectory directory(L"/tmp", conn);
 
-		IEnumIDList *pEnum = directory.GetEnum( grfFlags );
+		IEnumIDList *pEnum = directory.GetEnum( grfFlags ).Detach();
 		CPPUNIT_ASSERT(pEnum);
 
 		_testEnumIDList( pEnum, grfFlags );

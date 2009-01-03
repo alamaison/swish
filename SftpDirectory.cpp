@@ -22,6 +22,7 @@
 
 #include "HostPidl.h"
 #include "RemotePidl.h"
+#include "DataObject.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
@@ -36,6 +37,7 @@
 CSftpDirectory::CSftpDirectory(
 	CAbsolutePidlHandle pidlDirectory, CConnection& conn) :
 	m_connection(conn),
+	m_pidlDirectory(pidlDirectory),
 	m_strDirectory( // Trim trailing slashes and append single slash
 		_ExtractPathFromPIDL(pidlDirectory).TrimRight(L'/')+L'/')
 {}
@@ -48,6 +50,7 @@ CSftpDirectory::CSftpDirectory(
  */
 CSftpDirectory::CSftpDirectory(PCWSTR pwszDirectory, CConnection& conn) :
 	m_connection(conn),
+	m_pidlDirectory(NULL),
 	m_strDirectory( // Trim trailing slashes and append single slash
 		CString(pwszDirectory).TrimRight(L'/')+L'/')
 {}
@@ -119,19 +122,17 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
  * Retrieve an IEnumIDList to enumerate this directory's contents.
  *
  * This function returns an enumerator which can be used to iterate through
- * the contents of this directory as a series of PIDLs.  This listing
- * is obtained from the server by a call to _Fetch() and a copy of it is made.
- * The enumeration will no change as the content of the server change.  In order
- * to obtain an up-to-date listing, this function must be called again to get
- * a new enumerator.
+ * the contents of this directory as a series of PIDLs.  This listing is a
+ * @b copy of the one obtained from the server and will not update to reflect
+ * changes.  In order to obtain an up-to-date listing, this function must be 
+ * called again to get a new enumerator.
  *
  * @param grfFlags  Flags specifying nature of files to fetch.
  *
- * @returns  A pointer to the IEnumIDList.
- *
- * @throws A CAtlException if an error occurs.
+ * @returns  A smart pointer to the IEnumIDList.
+ * @throws  CAtlException if an error occurs.
  */
-IEnumIDList* CSftpDirectory::GetEnum(SHCONTF grfFlags)
+CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 {
 	typedef CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
 	                      _CopyChildPidl, vector<CChildPidl> >
@@ -164,11 +165,42 @@ IEnumIDList* CSftpDirectory::GetEnum(SHCONTF grfFlags)
 	hr = spEnumIDList->Init( spHolder->GetUnknown(), spHolder->m_coll );
 	ATLENSURE_SUCCEEDED(hr);
 
-	return spEnumIDList.Detach();
+	return spEnumIDList;
+}
+
+/**
+ * Create IDataObject instance for the files represented by the array of PIDLs.
+ *
+ * The DataObject represents the files as a CFSTR_SHELLIDLIST format (PIDLs)
+ * and as the CFSTR_FILEDESCRIPTOR/CFSTR_FILECONTENTS pair (IStream).
+ *
+ * @param cPidl  Number of items in the array.
+ * @param aPidl  Array of child PIDLs.
+ *
+ * @pre  This folder must have been created with the constructor that takes
+ *       a PIDL argument or a call to this method will fail.
+ *
+ * @returns  Smart pointer to the IDataObject.
+ * @throws  CAtlException if error.
+ */
+CComPtr<IDataObject> CSftpDirectory::CreateDataObjectFor(
+	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl)
+throw(...)
+{
+	// Must be initialised with with PIDL, not string, in order to call
+	// this method.
+	ATLENSURE(m_pidlDirectory, E_FAIL);
+
+	CComPtr<IDataObject> spDo = 
+		CDataObject::Create(m_connection, m_pidlDirectory, cPidl, aPidl);
+	ATLASSERT(spDo);
+
+	return spDo;
 }
 
 bool CSftpDirectory::Rename(
 	CRemoteItemHandle pidlOldFile, PCWSTR pwszNewFilename)
+throw(...)
 {
 	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
 
@@ -184,6 +216,7 @@ bool CSftpDirectory::Rename(
 }
 
 void CSftpDirectory::Delete(CRemoteItemHandle pidl)
+throw(...)
 {
 	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
 	

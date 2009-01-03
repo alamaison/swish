@@ -25,9 +25,8 @@
 #include "IconExtractor.h"
 #include "ExplorerCallback.h" // For interaction with Explorer window
 #include "UserInteraction.h"  // For implementation of ISftpConsumer
-#include "HostPidl.h"
 #include "ShellDataObject.h"
-#include "DataObject.h"
+#include "HostPidl.h"
 #include "Registry.h"
 
 #include <ATLComTime.h>
@@ -162,7 +161,7 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 
 		// Create directory handler and get listing as PIDL enumeration
  		CSftpDirectory directory(GetRootPIDL(), conn);
-		*ppEnumIDList = directory.GetEnum(grfFlags);
+		*ppEnumIDList = directory.GetEnum(grfFlags).Detach();
 	}
 	catchCom()
 	
@@ -285,10 +284,9 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 			// Create connection object for this folder with hwndOwner for UI
 			CConnection conn = _CreateConnectionForFolder(hwndOwner);
 
-			CComPtr<IDataObject> spDo = CDataObject::Create(
-					conn, GetRootPIDL(), cPidl, aPidl);
-			ATLASSERT(spDo);
-			*(IDataObject **)ppvReturn = spDo.Detach();
+			// Create directory handler and get DataObject for PIDLs
+ 			CSftpDirectory directory(GetRootPIDL(), conn);
+			*ppvReturn = directory.CreateDataObjectFor(cPidl, aPidl).Detach();
 		}
 		catchCom()
 

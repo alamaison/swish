@@ -69,16 +69,18 @@ public:
 	CSftpDirectory(
 		__in PCWSTR pwszDirectory, __in CConnection& conn);
 
-	IEnumIDList* GetEnum(__in SHCONTF grfFlags) throw(...);
+	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
+	CComPtr<IDataObject> CreateDataObjectFor(
+		UINT cPidl, __in_ecount(cPidl) PCUITEMID_CHILD_ARRAY aPidl) throw(...);
 	bool Rename(
 		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)
 		throw(...);
 	void Delete(__in CRemoteItemHandle pidl) throw(...);
 
-
 private:
 	CConnection m_connection;
-	CString m_strDirectory;
+	CString m_strDirectory;        ///< Absolute path to this directory.
+	CAbsolutePidl m_pidlDirectory; ///< Absolute PIDL to this directory.
 
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
