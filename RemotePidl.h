@@ -164,6 +164,31 @@ public:
 		return pwszExtStart;
 	}
 
+	/**
+	 * Return the relative path made by the items in this PIDL.
+	 * e.g.
+	 * - A child PIDL returns:     "filename.ext"
+	 * - A relative PIDL returns:  "dir2/dir2/dir3/filename.ext"
+	 * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
+	 */
+	CString GetFilePath() const throw(...)
+	{
+		// Walk over RemoteItemIds and append each filename to form the path
+		CString strPath = GetFilename();
+		CRemoteItemListHandle pidlNext = GetNext();
+
+		while (pidlNext.IsValid())
+		{
+			strPath += L"/";
+			strPath += pidlNext.Get()->wszFilename;
+			pidlNext = pidlNext.GetNext();			
+		}
+
+		ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+
+		return strPath;
+	}
+
 	CString GetOwner() const throw(...)
 	{
 		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
@@ -250,19 +275,19 @@ public:
 	 * 
 	 * @param[in] pwszFilename   Name of file or directory on the remote 
 	 *                           file-system.
+	 * @param[in] fIsFolder      Is file a folder?
 	 * @param[in] pwszOwner      Name of file owner on remote system.
 	 * @param[in] pwszGroup      Name of file group on remote system.
 	 * @param[in] dwPermissions  Value of the file's Unix permissions bits.
 	 * @param[in] uSize          Size of file in bytes.
 	 * @param[in] dateModified   Date that file was last modified.
-	 * @param[in] fIsFolder      Is file a folder?
 	 * @param[in] fIsLink        Is file a symlink?
 	 * 
 	 * @throws CAtlException if error.
 	 */
 	explicit CRemotePidl(
-		PCWSTR pwszFilename, PCWSTR pwszOwner=L"", PCWSTR pwszGroup=L"",
-		bool fIsFolder=false, bool fIsLink=false, DWORD dwPermissions=0,
+		PCWSTR pwszFilename, bool fIsFolder=false, PCWSTR pwszOwner=L"", 
+		PCWSTR pwszGroup=L"", bool fIsLink=false, DWORD dwPermissions=0,
 		ULONGLONG uSize=0, DATE dateModified=0)
 	throw(...)
 	{

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Pidl.h"
+#include "RemotePidl.h" // For GetFullPath() implementation
 #include "remotelimits.h"
 
 #include <pshpack1.h>
@@ -167,6 +168,34 @@ public:
 		return strName;
 	}
 
+	/**
+	 * Return the absolute path made by the items in this PIDL.
+	 * e.g.
+	 * - A child PIDL returns:     "/path"
+	 * - A relative PIDL returns:  "/path/dir2/dir2/dir3/filename.ext"
+	 * - An absolute PIDL returns: "/path/dir2/dir2/dir3/filename.ext"
+	 *
+	 * This method is in contrast to GetPath() which just returns the
+	 * path information for the current HostItemId.
+	 */
+	CString GetFullPath() const throw(...)
+	{
+		CHostItemListHandle pidlHost = FindHostPidl();
+		ATLENSURE_THROW(pidlHost, E_UNEXPECTED);
+
+		CString strPath = pidlHost.GetPath();
+		CRemoteItemListHandle pidlNext = pidlHost.GetNext();
+
+		if (pidlNext.IsValid())
+		{
+			strPath += L"/";
+			strPath += pidlNext.GetFilePath();
+		}
+
+		ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+		return strPath;
+	}
+
 	inline const HostItemId *Get() const throw()
 	{
 		return reinterpret_cast<const HostItemId *>(m_pidl);
@@ -250,8 +279,8 @@ public:
 	 * @throws CAtlException if error.
 	 */
 	explicit CHostPidl(
-		PCWSTR pwszUser, PCWSTR pwszHost, USHORT uPort=SFTP_DEFAULT_PORT,
-		PCWSTR pwszPath=L"", PCWSTR pwszLabel=L"")
+		PCWSTR pwszUser, PCWSTR pwszHost, PCWSTR pwszPath, 
+		USHORT uPort=SFTP_DEFAULT_PORT, PCWSTR pwszLabel=L"")
 	throw(...)
 	{
 		ATLASSERT(sizeof(HostItemId) % sizeof(DWORD) == 0); // DWORD-aligned
