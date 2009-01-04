@@ -220,7 +220,7 @@ protected:
 		
 		// Create root child REMOTEPIDL
 		CRemoteItem pidlRemote(
-			L"dir", L"owner", L"group", true, false, 0677, 1024);
+			L"dir", true, L"owner", L"group", false, 0677, 1024);
 
 		// Concatenate to make absolute pidl to RemoteFolder root
 		return CAbsolutePidl(pidlHost, pidlRemote);
@@ -236,7 +236,7 @@ protected:
 		
 		// Create test child HOSTPIDL
 		CHostItem pidlHost(
-			L"user", L"test.example.com", 22, L"/home/user", L"Test PIDL");
+			L"user", L"test.example.com", L"/home/user", 22, L"Test PIDL");
 
 		// Concatenate to make absolute pidl to RemoteFolder root
 		return CAbsolutePidl(pidlSwish, pidlHost);
@@ -414,7 +414,7 @@ private:
 	{
 		// Create test REMOTEPIDL
 		CRemoteItem pidl(
-			L"TestFile.bmp", L"me", L"us", false, false, 0677, 511, NULL);
+			L"TestFile.bmp", false, L"me", L"us", false, 0677, 511, NULL);
 		return pidl.Detach();
 	}
 };
@@ -526,7 +526,7 @@ private:
 	{
 		// Create test REMOTEPIDL
 		CRemoteItem pidl(
-			L"TestDirectory.ext", L"me", L"us", true, false, 0677, 511, NULL);
+			L"TestDirectory.ext", true, L"me", L"us", false, 0677, 511, NULL);
 		return pidl.Detach();
 	}
 

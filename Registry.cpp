@@ -428,7 +428,7 @@ throw(...)
 	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
 
 	// Create new PIDL to return
-	CHostItem pidl(wszUser, wszHost, uPort, wszPath, pwszLabel);
+	CHostItem pidl(wszUser, wszHost, wszPath, uPort, pwszLabel);
 
 	ATLVERIFY(regConnection.Close() == ERROR_SUCCESS);
 
