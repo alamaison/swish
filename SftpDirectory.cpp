@@ -20,9 +20,7 @@
 #include "stdafx.h"
 #include "SftpDirectory.h"
 
-#include "HostPidl.h"
-#include "RemotePidl.h"
-#include "DataObject.h"
+#include "SftpDataObject.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
@@ -31,29 +29,20 @@
 /**
  * Creates and initialises directory instance. 
  *
- * @param pidlDirectory  Absolute PIDL to the directory this object represents.
+ * @param pidlDirectory  PIDL to the directory this object represents.  Must
+ *                       start at or before a HostItemId.
  * @param conn           SFTP connection container.
  */
 CSftpDirectory::CSftpDirectory(
-	CAbsolutePidlHandle pidlDirectory, CConnection& conn) :
-	m_connection(conn),
-	m_pidlDirectory(pidlDirectory),
-	m_strDirectory( // Trim trailing slashes and append single slash
-		_ExtractPathFromPIDL(pidlDirectory).TrimRight(L'/')+L'/')
-{}
-
-/**
- * Creates and initialises directory instance. 
- *
- * @param pwszDirectory  Absolute path to the directory this object represents.
- * @param conn           SFTP connection container.
- */
-CSftpDirectory::CSftpDirectory(PCWSTR pwszDirectory, CConnection& conn) :
-	m_connection(conn),
-	m_pidlDirectory(NULL),
-	m_strDirectory( // Trim trailing slashes and append single slash
-		CString(pwszDirectory).TrimRight(L'/')+L'/')
-{}
+	CHostItemAbsoluteHandle pidlDirectory, CConnection& conn) 
+throw(...) : 
+	m_connection(conn), 
+	m_pidlDirectory(pidlDirectory), 
+	// Trim trailing slashes and append single slash
+	m_strDirectory(pidlDirectory.GetFullPath().TrimRight(L'/')+L'/')
+{
+	ATLASSERT(pidlDirectory.FindHostPidl().IsValid()); // Must be a Host PIDL
+}
 
 /**
  * Fetches directory listing from the server as an enumeration.
@@ -95,10 +84,10 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 				try
 				{
 					CRemoteItem pidl(
-						CString(lt.bstrFilename), 
+						CString(lt.bstrFilename),
+						S_ISDIR(lt.uPermissions),
 						CString(lt.bstrOwner),
 						CString(lt.bstrGroup),
-						S_ISDIR(lt.uPermissions),
 						false,
 						lt.uPermissions,
 						lt.uSize,
@@ -129,7 +118,7 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
  *
  * @param grfFlags  Flags specifying nature of files to fetch.
  *
- * @returns  A smart pointer to the IEnumIDList.
+ * @returns  Smart pointer to the IEnumIDList.
  * @throws  CAtlException if an error occurs.
  */
 CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
@@ -159,13 +148,49 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 	CComObject<CComEnumIDList> *pEnumIDList;
 	hr = pEnumIDList->CreateInstance(&pEnumIDList);
 	ATLENSURE_SUCCEEDED(hr);
-	CComPtr<CComObject<CComEnumIDList> > spEnumIDList = pEnumIDList;
 
 	// Give enumerator back-reference to holder of our copied collection
-	hr = spEnumIDList->Init( spHolder->GetUnknown(), spHolder->m_coll );
+	hr = pEnumIDList->Init( spHolder->GetUnknown(), spHolder->m_coll );
 	ATLENSURE_SUCCEEDED(hr);
 
-	return spEnumIDList;
+	return pEnumIDList;
+}
+
+/**
+ * Get instance of CSftpDirectory for a subdirectory of this directory.
+ *
+ * @param pidl  Child PIDL of directory within this directory.
+ *
+ * @returns  Instance of the subdirectory.
+ * @throws  CAtlException if error.
+ */
+CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle pidl)
+throw(...)
+{
+	if (!pidl.IsFolder())
+		AtlThrow(E_INVALIDARG);
+
+	return CSftpDirectory(CAbsolutePidl(m_pidlDirectory, pidl), m_connection);
+}
+
+/**
+ * Get IStream interface to the remote file specified by the given PIDL.
+ *
+ * This 'file' may also be a directory but the IStream does not give access
+ * to its subitems.
+ *
+ * @param pidl  Child PIDL of item within this directory.
+ *
+ * @returns  Smart pointer of an IStream interface to the file.
+ * @throws  CAtlException if error.
+ */
+CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
+throw(...)
+{
+	CComPtr<IStream> spStream;
+	m_connection.spProvider->GetFile(
+		CComBSTR(m_strDirectory + pidl.GetFilename()), &spStream);
+	return spStream;
 }
 
 /**
@@ -177,9 +202,6 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
  * @param cPidl  Number of items in the array.
  * @param aPidl  Array of child PIDLs.
  *
- * @pre  This folder must have been created with the constructor that takes
- *       a PIDL argument or a call to this method will fail.
- *
  * @returns  Smart pointer to the IDataObject.
  * @throws  CAtlException if error.
  */
@@ -187,10 +209,6 @@ CComPtr<IDataObject> CSftpDirectory::CreateDataObjectFor(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl)
 throw(...)
 {
-	// Must be initialised with with PIDL, not string, in order to call
-	// this method.
-	ATLENSURE(m_pidlDirectory, E_FAIL);
-
 	CComPtr<IDataObject> spDo = 
 		CDataObject::Create(m_connection, m_pidlDirectory, cPidl, aPidl);
 	ATLASSERT(spDo);
@@ -227,34 +245,4 @@ throw(...)
 		hr = m_connection.spProvider->Delete(strPath);
 	if (hr != S_OK)
 		AtlThrow(hr);
-}
-
-/**
- * Retrieve the full path of the file on the remote system from the given PIDL.
- */
-CString CSftpDirectory::_ExtractPathFromPIDL(PCIDLIST_ABSOLUTE pidl)
-{
-	CString strPath;
-
-	// Find HOSTPIDL part of pidl and use it to get 'root' path of connection
-	// (by root we mean the path specified by the user when they added the
-	// connection to Explorer, rather than the root of the server's filesystem)
-	CHostItemListHandle pidlHost =
-		CHostItemAbsoluteHandle(pidl).FindHostPidl();
-	ATLASSERT(pidlHost.IsValid());
-
-	strPath = pidlHost.GetPath();
-
-	// Walk over RemoteItemIds and append each filename to form the path
-	CRemoteItemListHandle pidlRemote = pidlHost.GetNext();
-	while (pidlRemote.IsValid())
-	{
-		strPath += L"/";
-		strPath += pidlRemote.GetFilename();
-		pidlRemote = pidlRemote.GetNext();
-	}
-
-	ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
-
-	return strPath;
 }

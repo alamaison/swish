@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 #include "stdafx.h"
 #include "resource.h"          // main symbols
 
-#include "RemotePidl.h"        // PIDL wrapper class
+#include "HostPidl.h"          // PIDL wrapper classes
+#include "RemotePidl.h"
 #include "Connection.h"        // For SFTP Connection container
 
 #include <vector>
@@ -65,11 +66,13 @@ class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		__in CAbsolutePidlHandle pidlDirectory, __in CConnection& conn);
-	CSftpDirectory(
-		__in PCWSTR pwszDirectory, __in CConnection& conn);
+		__in CHostItemAbsoluteHandle pidlDirectory, __in CConnection& conn)
+		throw(...);
 
 	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
+	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
+	CComPtr<IStream> GetFile(__in CRemoteItemHandle pidl) throw(...);
+
 	CComPtr<IDataObject> CreateDataObjectFor(
 		UINT cPidl, __in_ecount(cPidl) PCUITEMID_CHILD_ARRAY aPidl) throw(...);
 	bool Rename(
@@ -81,11 +84,9 @@ private:
 	CConnection m_connection;
 	CString m_strDirectory;        ///< Absolute path to this directory.
 	CAbsolutePidl m_pidlDirectory; ///< Absolute PIDL to this directory.
-
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );
-	CString _ExtractPathFromPIDL(__in PCIDLIST_ABSOLUTE pidl);
 };
 
 
