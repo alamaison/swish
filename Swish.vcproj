@@ -361,6 +361,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SftpDataObject.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SftpDirectory.cpp"
 				>
 			</File>
@@ -511,6 +515,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpDataObject.h"
 				>
 			</File>
 			<File

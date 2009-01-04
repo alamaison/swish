@@ -209,11 +209,8 @@ CComPtr<IDataObject> CSftpDirectory::CreateDataObjectFor(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl)
 throw(...)
 {
-	CComPtr<IDataObject> spDo = 
-		CDataObject::Create(m_connection, m_pidlDirectory, cPidl, aPidl);
-	ATLASSERT(spDo);
-
-	return spDo;
+	return
+		CSftpDataObject::Create(cPidl, aPidl, m_pidlDirectory, m_connection);
 }
 
 bool CSftpDirectory::Rename(

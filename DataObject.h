@@ -28,27 +28,27 @@
 #include <vector>
 using std::vector;
 
-class CFileGroupDescriptor; // Forward-ref
+#include <map>
+using std::map;
 
 /**
  * Pseudo-subclass of IDataObject created by CIDLData_CreateFromIDArray().
  * 
  * The shell-created DataObject is lacking in one respect: it doesn't
  * allow the storage of more than one item with the same format but
- * different lIndex value.  This rules out using it as-is for the common
+ * different @p lindex value.  This rules out using it as-is for the common
  * shell scenario where the contents of a number of selected files
- * are stored in the same DataObject: only the last file is stored regardless
- * of the value of lItem passed in the FORMATETC into SetData().
+ * are stored in the same IDataObject: only the last file is stored regardless
+ * of the value of @p lindex passed in the FORMATETC into SetData().
  *
  * This class works around the problem by intercepting calls to the
  * shell DataObject (stored in @p m_spDoInner) and performing custom 
  * processing for CFSTR_FILECONTENTS formats.  All other requests are simply 
- * forwarded to the inner DataObject.
+ * forwarded to the inner IDataObject.
  *
- * Additionally, this class creates the CFSTR_FILECONTENTS IStreams (this 
- * DataObject) and CFSTR_FILEDESCRIPTOR HGLOBAL data (inner DataObject) from 
- * a list of PIDLs passed to Initialize().  This requires the class to
- * contact the server via an ISftpProvider.
+ * As the locally stored CFSTR_FILECONTENTS formats may be set with any
+ * @p lindex value (not necessarily a continuous series), a std::map is
+ * used as a sparse array.
  */
 class CDataObject :
 	public CComObjectRoot,
@@ -62,28 +62,26 @@ public:
 	END_COM_MAP()
 
 	static CComPtr<IDataObject> Create(
-		__in CConnection& conn, __in PCIDLIST_ABSOLUTE pidlCommonParent,
-		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl)
+		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
+		__in PCIDLIST_ABSOLUTE pidlCommonParent)
 	throw(...)
 	{
 		CComPtr<CDataObject> spObject = spObject->CreateCoObject();
 		
-		HRESULT hr = spObject->Initialize(
-			conn, pidlCommonParent, cPidl, aPidl);
-		ATLENSURE_SUCCEEDED(hr);
+		spObject->Initialize(cPidl, aPidl, pidlCommonParent);
 
 		return spObject.p;
 	}
 
 	CDataObject();
-	~CDataObject();
+	virtual ~CDataObject();
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct();
 
-	HRESULT Initialize(
-		__in CConnection& conn, __in PCIDLIST_ABSOLUTE pidlCommonParent,
-		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl);
+	void Initialize(
+		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
+		__in PCIDLIST_ABSOLUTE pidlCommonParent) throw(...);
 
 public: // IDataObject methods
 
@@ -123,16 +121,28 @@ public: // IDataObject methods
 	IFACEMETHODIMP EnumDAdvise( 
 		__deref_out_opt IEnumSTATDATA **ppenumAdvise);
 
-private:
-	CComPtr<IDataObject> m_spDoInner;       ///< Wrapped inner DataObject
-	CConnection m_conn;
-	CLIPFORMAT m_cfFileContents;       ///< CFSTR_FILECONTENTS
-	vector<CAbsolutePidl> m_vecPidls;
+protected:
 
-	static CString _ExtractPathFromPIDL( __in PCIDLIST_ABSOLUTE pidl );
-	static CFileGroupDescriptor _CreateFileGroupDescriptor(
-		UINT cPidl, __in_ecount(cPidl) PCUITEMID_CHILD_ARRAY aPidl)
-		throw(...);
+	/** @name Stores */
+	// @{
+	typedef map<long, CComPtr<IStream> > StreamStore;
+	StreamStore m_streams;            ///< Local FILECONTENTS IStream store
+	CComPtr<IDataObject> m_spDoInner; ///< Wrapped inner DataObject
+	// @}
+
+	/** @name Explicitly registered CLIPFORMATS */
+	// @{
+	CLIPFORMAT m_cfFileDescriptor;    ///< CFSTR_FILEDESCRIPTOR
+	CLIPFORMAT m_cfFileContents;      ///< CFSTR_FILECONTENTS
+	// @}
+
+	/** @name Cached PIDLs */
+	// @{
+	CAbsolutePidl m_pidlCommonParent; ///< Parent of PIDLs in m_vecPidls
+	vector<CRelativePidl> m_vecPidls; ///< Top-level PIDLs (e.g. selection)
+	// @}
+
+	HRESULT ProdInnerWithFormat(CLIPFORMAT nFormat) throw();
 };
 
 

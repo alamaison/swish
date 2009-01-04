@@ -356,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\DataObjectTests.h"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\DummyFolder.h"
 				>
 			</File>
@@ -440,6 +444,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\swish\SftpDataObject_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\swish\SftpDirectory_test.cpp"
 				>
 			</File>
@@ -462,6 +470,10 @@
 		</File>
 		<File
 			RelativePath="..\NewConnDialog.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\SftpDataObject.cpp"
 			>
 		</File>
 		<File
