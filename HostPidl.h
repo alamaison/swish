@@ -188,7 +188,7 @@ public:
 
 		if (pidlNext.IsValid())
 		{
-			strPath += L"/";
+			(strPath == L"/") || (strPath += L"/");
 			strPath += pidlNext.GetFilePath();
 		}
 
