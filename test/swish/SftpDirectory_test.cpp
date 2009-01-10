@@ -502,7 +502,7 @@ private:
 			RemoteItemId *pidlFile = reinterpret_cast<RemoteItemId *>(pidl);
 
 			// Check REMOTEPIDLness
-			CPPUNIT_ASSERT_EQUAL(sizeof RemoteItemId, (size_t)pidlFile->cb);
+			CPPUNIT_ASSERT_EQUAL((USHORT)sizeof RemoteItemId, pidlFile->cb);
 			CPPUNIT_ASSERT_EQUAL(
 				RemoteItemId::FINGERPRINT, pidlFile->dwFingerprint);
 

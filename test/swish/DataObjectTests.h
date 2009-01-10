@@ -7,6 +7,35 @@
 #include <RemotePidl.h>
 #include <DataObject.h>
 
+/**
+ * Test that Shell PIDL from DataObject holds the expected number of PIDLs.
+ */
+static void _testShellPIDLCount(IDataObject *pDo, UINT nExpected)
+{
+	FORMATETC fetc = {
+		(CLIPFORMAT)::RegisterClipboardFormat(CFSTR_SHELLIDLIST),
+		NULL,
+		DVASPECT_CONTENT,
+		-1,
+		TYMED_HGLOBAL
+	};
+
+	STGMEDIUM stg;
+	HRESULT hr = pDo->GetData(&fetc, &stg);
+	CPPUNIT_ASSERT_OK(hr);
+	
+	CPPUNIT_ASSERT(stg.hGlobal);
+	CIDA *pida = (CIDA *)::GlobalLock(stg.hGlobal);
+	CPPUNIT_ASSERT(pida);
+
+	UINT nActual = pida->cidl;
+	CPPUNIT_ASSERT_EQUAL(nExpected, nActual);
+
+	::GlobalUnlock(stg.hGlobal);
+	pida = NULL;
+	::ReleaseStgMedium(&stg);
+}
+
 #define GetPIDLFolder(pida) \
 	(PCIDLIST_ABSOLUTE)(((LPBYTE)pida)+(pida)->aoffset[0])
 #define GetPIDLItem(pida, i) \
@@ -35,7 +64,7 @@ static void _testShellPIDL(
 	CPPUNIT_ASSERT(pida);
 
 	CRemoteItemListHandle pidlActual = GetPIDLItem(pida, iFile);
-	CPPUNIT_ASSERT_EQUAL(strExpected, pidlActual.GetFilename());
+	CPPUNIT_ASSERT_EQUAL(strExpected, pidlActual.GetFilePath());
 
 	::GlobalUnlock(stg.hGlobal);
 	pida = NULL;

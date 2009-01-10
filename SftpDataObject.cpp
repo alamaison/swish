@@ -24,10 +24,8 @@
 #include "RemotePidl.h"
 #include "SftpDirectory.h"
 
-#define SHOW_PROGRESS_THRESHOLD 10000 ///< File size threshold after which we
-                                      ///< display a progress dialogue
-
-CSftpDataObject::CSftpDataObject()
+CSftpDataObject::CSftpDataObject() :
+	m_fRenderedContents(false), m_fRenderedDescriptor(false)
 {
 }
 
@@ -62,7 +60,7 @@ throw(...)
 	// Make a copy of the PIDLs.  These are used to delay-render the 
 	// CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS format in GetData().
 	m_pidlCommonParent = pidlCommonParent;
-	std::copy(aPidl, aPidl + cPidl, std::back_inserter(m_vecPidls));
+	std::copy(aPidl, aPidl + cPidl, std::back_inserter(m_pidls));
 
 	// Prod the inner object with the formats whose data we will delay-
 	// render in GetData()
@@ -106,6 +104,10 @@ STDMETHODIMP CSftpDataObject::GetData(
 	catchCom()
 }
 
+/*----------------------------------------------------------------------------*
+ * Private methods
+ *----------------------------------------------------------------------------*/
+
 /**
  * Delay render CFSTR_FILEDESCRIPTOR format for PIDLs passed to Initialize().
  *
@@ -128,10 +130,10 @@ STDMETHODIMP CSftpDataObject::GetData(
 void CSftpDataObject::_DelayRenderCfFileGroupDescriptor()
 throw(...)
 {
-	if (m_vecPidls.size() > 0)
+	if (!m_fRenderedDescriptor && !m_pidls.empty())
 	{
 		// Create FILEGROUPDESCRIPTOR format from the cached PIDL list
-		CFileGroupDescriptor fgd = s_CreateFileGroupDescriptor(m_vecPidls);
+		CFileGroupDescriptor fgd = _CreateFileGroupDescriptor();
 		ATLASSERT(fgd.GetSize() > 0);
 
 		// Insert the descriptor into the IDataObject
@@ -146,6 +148,8 @@ throw(...)
 			::ReleaseStgMedium(&stg);
 		}
 		ATLENSURE_SUCCEEDED(hr);
+
+		m_fRenderedDescriptor = true;
 	}
 }
 
@@ -171,87 +175,59 @@ throw(...)
 void CSftpDataObject::_DelayRenderCfFileContents()
 throw(...)
 {
-	// Create IStreams from the cached PIDL list
-	StreamList streams = _CreateFileContentsStreams(m_vecPidls);
-	ATLASSERT(!streams.empty());
-
-	// Create FILECONTENTS format from the list of streams
-	for (UINT i = 0; i < streams.size(); i++)
+	if (!m_fRenderedContents && !m_pidls.empty())
 	{
-		// Insert the stream into the IDataObject
-		CFormatEtc fetc(m_cfFileContents, TYMED_ISTREAM, i);
-		STGMEDIUM stg;
-		stg.tymed = TYMED_ISTREAM;
-		stg.pstm = streams[i].Detach(); // Invalidates stored item
-		stg.pUnkForRelease = NULL;
-		HRESULT hr = SetData(&fetc, &stg, true);
-		if (FAILED(hr))
+		// Create IStreams from the cached PIDL list
+		StreamList streams = _CreateFileContentsStreams();
+		ATLASSERT(!streams.empty());
+
+		// Create FILECONTENTS format from the list of streams
+		for (UINT i = 0; i < streams.size(); i++)
 		{
-			::ReleaseStgMedium(&stg);
+			// Insert the stream into the IDataObject
+			CFormatEtc fetc(m_cfFileContents, TYMED_ISTREAM, i);
+			STGMEDIUM stg;
+			stg.tymed = TYMED_ISTREAM;
+			stg.pstm = streams[i].Detach(); // Invalidates stored item
+			stg.pUnkForRelease = NULL;
+			HRESULT hr = SetData(&fetc, &stg, true);
+			if (FAILED(hr))
+			{
+				::ReleaseStgMedium(&stg);
+			}
+			ATLENSURE_SUCCEEDED(hr);
 		}
-		ATLENSURE_SUCCEEDED(hr);
+
+		m_fRenderedContents = true;
 	}
 
 	// If we fail inside the loop, anything we added in previous iterations
 	// is still set in the IDataObject.  Does this matter?
 }
 
-inline DWORD LODWORD(ULONGLONG qwSrc)
-{
-	return static_cast<DWORD>(qwSrc & 0xFFFFFFFF);
-}
-
-inline DWORD HIDWORD(ULONGLONG qwSrc)
-{
-	return static_cast<DWORD>((qwSrc >> 32) & 0xFFFFFFFF);
-}
-
 /**
- * Create CFSTR_FILEDESCRIPTOR format from collection of PIDLs.
+ * Create CFSTR_FILEDESCRIPTOR format from cached PIDLs.
  */
-/*static*/ CFileGroupDescriptor CSftpDataObject::s_CreateFileGroupDescriptor(
-	vector<CRelativePidl> vecPidls)
+CFileGroupDescriptor CSftpDataObject::_CreateFileGroupDescriptor()
 throw(...)
 {
-	CFileGroupDescriptor fgd(static_cast<UINT>(vecPidls.size()));
+	ExpandedList pidls;
 
-	for (UINT i = 0; i < vecPidls.size(); i++)
+	for (UINT i = 0; i < m_pidls.size(); i++)
 	{
-		CRemoteItemListHandle pidlFull(vecPidls[i]);
-		CRemoteItemHandle pidl = pidlFull.GetLast();
-
-		FILEDESCRIPTOR fd;
-		::ZeroMemory(&fd, sizeof fd);
-
-		// Filename
-		::StringCchCopy(
-			fd.cFileName, ARRAYSIZE(fd.cFileName), pidlFull.GetFilePath());
-
-		// Size
-		ULONGLONG uSize = pidl.GetFileSize();
-		fd.nFileSizeLow = LODWORD(uSize);
-		fd.nFileSizeHigh = HIDWORD(uSize);
-
-		// Date
-		SYSTEMTIME st;
-		ATLVERIFY(pidl.GetDateModified().GetAsSystemTime(st));
-		ATLVERIFY(::SystemTimeToFileTime(&st, &fd.ftLastWriteTime));
-
-		// Flags
-		fd.dwFlags = FD_WRITESTIME | FD_FILESIZE | FD_ATTRIBUTES;
-		if (uSize > SHOW_PROGRESS_THRESHOLD || vecPidls.size() > 1)
-			fd.dwFlags |= FD_PROGRESSUI;
-
-		if (pidl.IsFolder())
-			fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-
-		if (pidl.GetFilename()[0] == L'.')
-			fd.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
-
-		fgd.SetDescriptor(i, fd);
+		ExpandedList expandedPidls = _ExpandTopLevelPidl(m_pidls[i]);
+		pidls.insert(pidls.end(), expandedPidls.begin(), expandedPidls.end());
 	}
 
-	ATLASSERT(vecPidls.size() == fgd.GetSize());
+	CFileGroupDescriptor fgd(static_cast<UINT>(pidls.size()));
+
+	for (UINT j = 0; j < pidls.size(); j++)
+	{
+		CFileDescriptor fd(pidls[j], pidls.size() > 1);
+		fgd.SetDescriptor(j, fd);
+	}
+
+	ATLASSERT(pidls.size() == fgd.GetSize());
 	return fgd;
 }
 
@@ -259,19 +235,56 @@ throw(...)
  * Create IStreams to use in CFSTR_FILECONTENTS formats from a 
  * collection of top-level PIDLs.
  */
-CSftpDataObject::StreamList CSftpDataObject::_CreateFileContentsStreams(
-	const vector<CRelativePidl>& vecPidls)
+CSftpDataObject::StreamList CSftpDataObject::_CreateFileContentsStreams()
 throw(...)
 {
 	StreamList streams;
-	CSftpDirectory directory(m_pidlCommonParent, m_conn);
 
-	for (UINT i = 0; i < vecPidls.size(); i++)
+	for (UINT i = 0; i < m_pidls.size(); i++)
 	{
-		CRemoteItemListHandle pidlFull(vecPidls[i]);
-		CRemoteItemHandle pidl = pidlFull.GetLast();
-		streams.push_back(directory.GetFile(pidl));
+		ExpandedList expandedPidls = _ExpandTopLevelPidl(m_pidls[i]);
+
+		for (UINT j = 0; j < expandedPidls.size(); j++)
+		{
+			CSftpDirectory directory(
+				CHostItemAbsolute(
+					m_pidlCommonParent, expandedPidls[j].CopyParent()),
+				m_conn);
+			CRemoteItemHandle pidl = expandedPidls[j].GetLast();
+			streams.push_back(directory.GetFile(pidl));
+		}
 	}
 
 	return streams;
+}
+
+/**
+ * Expand one of the selected PIDLs to include any descendents.
+ *
+ * If the given PIDL is a simple item, the returned list just contains this
+ * PIDL.  However, if it a directory it will contain the PIDL followed by 
+ * all the items in and below the directory.
+ */
+CSftpDataObject::ExpandedList CSftpDataObject::_ExpandTopLevelPidl(
+	const TopLevelPidl& pidl)
+throw(...)
+{
+	ExpandedList pidls;
+
+	if (pidl.IsFolder())
+	{
+		CAbsolutePidl pidlFolder(m_pidlCommonParent, pidl);
+
+		// Explode subfolder and add to lists
+		CSftpDirectory subdirectory(pidlFolder, m_conn);
+		vector<CRelativePidl> vecPidls = subdirectory.FlattenDirectoryTree();
+		pidls.insert(pidls.end(), vecPidls.begin(), vecPidls.end());
+	}
+	else
+	{
+		// Add simple item - common case
+		pidls.push_back(pidl);
+	}
+
+	return pidls;
 }

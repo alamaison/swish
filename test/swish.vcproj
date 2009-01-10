@@ -395,6 +395,10 @@
 				RelativePath=".\TestConfig.h"
 				>
 			</File>
+			<File
+				RelativePath=".\tree.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Tests"
