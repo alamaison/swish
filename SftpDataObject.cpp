@@ -104,9 +104,11 @@ throw(...)
 STDMETHODIMP CSftpDataObject::GetData(
 	FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 {
+	::ZeroMemory(pmedium, sizeof(pmedium));
+
+	// Delay-render data if necessary
 	try
 	{
-		// Delay-render data if necessary
 		if (pformatetcIn->cfFormat == m_cfFileDescriptor)
 		{
 			// Delay-render CFSTR_FILEDESCRIPTOR format into this IDataObject
@@ -114,11 +116,12 @@ STDMETHODIMP CSftpDataObject::GetData(
 		}
 		else if (pformatetcIn->cfFormat == m_cfFileContents)
 		{
-			// Delay-render CFSTR_FILECONTENTS format into this IDataObject
-			_DelayRenderCfFileContents(pformatetcIn->lindex);
+			// Delay-render CFSTR_FILECONTENTS format directly.  Do not store.
+			*pmedium = _DelayRenderCfFileContents(pformatetcIn->lindex);
+			return S_OK;
 		}
 
-		// Delegate all requests to the superclass
+		// Delegate all non-FILECONTENTS requests to the superclass
 		return __super::GetData(pformatetcIn, pmedium);
 	}
 	catchCom()
@@ -208,35 +211,35 @@ throw(...)
  * it isn't appropriate to do this when the IDataObject is created.  This
  * would lead to large delays when simply opening a directory---an operation
  * that also requires an IDataObject.  Instead, these formats are individually
- * delay-rendered from the list of PIDLs cached during Initialize() the 
- * each time one is requested.
+ * delay-rendered from the list of PIDLs cached during Initialize() each time 
+ * one is requested.
  *
  * @see _DelayRenderCfFileGroupDescriptor()
  *
  * @throws  CAtlException on error.
  */
-void CSftpDataObject::_DelayRenderCfFileContents(long lindex)
+STGMEDIUM CSftpDataObject::_DelayRenderCfFileContents(long lindex)
 throw(...)
 {
+	STGMEDIUM stg;
+	::ZeroMemory(&stg, sizeof(STGMEDIUM));
+
 	if (!m_pidls.empty())
 	{
-		// Create IStreams from the cached PIDL list
+		// Create an IStream from the cached PIDL list
 		CComPtr<IStream> stream = _CreateFileContentsStream(lindex);
 		ATLENSURE(stream);
 
-		// Insert the stream into the IDataObject as FILECONTENTS
-		CFormatEtc fetc(m_cfFileContents, TYMED_ISTREAM, lindex);
-		STGMEDIUM stg;
+		// Pack into a STGMEDIUM which will be returned to the client
 		stg.tymed = TYMED_ISTREAM;
 		stg.pstm = stream.Detach();
-		stg.pUnkForRelease = NULL;
-		HRESULT hr = SetData(&fetc, &stg, true);
-		if (FAILED(hr))
-		{
-			::ReleaseStgMedium(&stg);
-		}
-		ATLENSURE_SUCCEEDED(hr);
 	}
+	else
+	{
+		AtlThrow(DV_E_LINDEX);
+	}
+
+	return stg;
 }
 
 /**

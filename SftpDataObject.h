@@ -25,19 +25,32 @@
 class CFileGroupDescriptor; // Forward decl
 
 /**
- * Subclass of CDataObject with responsibily for creating CFSTR_FILEDESCRIPTOR
- * and CFSTR_FILECONTENTS from remote data.
+ * Subclass of CDataObject which, additionally, creates CFSTR_FILEDESCRIPTOR
+ * and CFSTR_FILECONTENTS from remote data on demand.
  *
- * This class creates the CFSTR_FILEDESCRIPTOR HGLOBAL data (stored in the inner
- * IDataObject) and the CFSTR_FILECONTENTS IStreams (stored locally in this 
- * object) on-demand from the list of PIDLs passed to Initialize().  This is
- * called delay-rendering.
+ * This class creates the CFSTR_FILEDESCRIPTOR HGLOBAL data and delegates its
+ * storage to the superclass (which will, in turn, delegate it to the inner
+ * object provided by the system).  
  *
- * As these operations are expensive---they require the DataObject to contact
+ * This class also creates CFSTR_FILECONTENTS data (as IStreams) as they are 
+ * requested.  Although the superclass (CDataObject) can---as with the file
+ * group descriptor---store these for later, we no longer use this as doing 
+ * so keeps a file-handle open to every file ever requested. This would
+ * cause a large transfer to fail part way through.  Instead, we create the
+ * IStreams afresh on every request.  These file-handles will close when the
+ * client Releases the IStream.
+ *
+ * These operations are expensive---they require the DataObject to contact
  * the remote server via an ISftpProvider to retrieve file data---and may not
  * be needed if the client simply wants, say, a CFSTR_SHELLIDLIST format,
- * delay-rendering is employed to postpone this expence untill we are sure
- * it is required (GetData() is called with for one of the two formats.
+ * so delay-rendering is employed to postpone this expense until we are sure
+ * it is required (GetData() is called with for one of the two formats).
+ *
+ * If the CFSTR_FILEDESCRIPTOR format is requested and any of the initial
+ * PIDLs are directories, the PIDLs are expanded to include every item
+ * anywhere with those directory trees.  Unfortunately, this is a @b very
+ * expensive operation but the shell design doesn't give any way to provide
+ * a partial file group descriptor.
  */
 class CSftpDataObject :
 	public CDataObject,
@@ -128,7 +141,7 @@ private:
 	void _ExpandPidls() throw(...);
 
 	void _DelayRenderCfFileGroupDescriptor() throw(...);
-	void _DelayRenderCfFileContents(long lindex) throw(...);
+	STGMEDIUM _DelayRenderCfFileContents(long lindex) throw(...);
 
 	CFileGroupDescriptor _CreateFileGroupDescriptor() throw(...);
 	CComPtr<IStream> _CreateFileContentsStream(long lindex) throw(...);
