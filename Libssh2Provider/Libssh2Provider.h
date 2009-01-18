@@ -161,4 +161,43 @@ END_COM_MAP()
 
 typedef CComObject<CComSTLCopyContainer< list<Listing> > > CComListingHolder;
 
+
+/**
+ * Copy-policy for use by enumerators of Listing items.
+ */
+template<>
+class _Copy<Listing>
+{
+public:
+	static HRESULT copy(Listing* p1, const Listing* p2)
+	{
+		p1->bstrFilename = SysAllocStringLen(
+			p2->bstrFilename, ::SysStringLen(p2->bstrFilename));
+		p1->uPermissions = p2->uPermissions;
+		p1->bstrOwner = SysAllocStringLen(
+			p2->bstrOwner, ::SysStringLen(p2->bstrOwner));
+		p1->bstrGroup = SysAllocStringLen(
+			p2->bstrGroup, ::SysStringLen(p2->bstrGroup));
+		p1->uSize = p2->uSize;
+		p1->cHardLinks = p2->cHardLinks;
+		p1->dateModified = p2->dateModified;
+
+		return S_OK;
+	}
+	static void init(Listing* p)
+	{
+		::ZeroMemory(p, sizeof(Listing));
+	}
+	static void destroy(Listing* p)
+	{
+		::SysFreeString(p->bstrFilename);
+		::SysFreeString(p->bstrOwner);
+		::SysFreeString(p->bstrGroup);
+		::ZeroMemory(p, sizeof(Listing));
+	}
+};
+
+typedef CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, 
+	_Copy<Listing>, list<Listing> > CComEnumListing;
+
 #endif // LIBSSH2PROVIDER_H

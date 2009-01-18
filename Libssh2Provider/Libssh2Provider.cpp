@@ -218,8 +218,6 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrDirectory) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
 
-	typedef CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, _Copy<Listing>, list<Listing> > CComEnumListing;
-
 	HRESULT hr;
 
 	// Connect to server
