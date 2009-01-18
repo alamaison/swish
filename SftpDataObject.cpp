@@ -25,12 +25,27 @@
 #include "SftpDirectory.h"
 
 CSftpDataObject::CSftpDataObject() :
-	m_fRenderedContents(false), m_fRenderedDescriptor(false)
+	m_fExpandedPidlList(false),
+	m_fRenderedDescriptor(false),
+	m_cfPreferredDropEffect(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT))),
+	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
+	m_cfFileContents(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_FILECONTENTS)))
 {
 }
 
 CSftpDataObject::~CSftpDataObject()
 {
+}
+
+HRESULT CSftpDataObject::FinalConstruct()
+{
+	ATLENSURE_RETURN_HR(m_cfPreferredDropEffect, E_UNEXPECTED);
+	ATLENSURE_RETURN_HR(m_cfFileDescriptor, E_UNEXPECTED);
+	ATLENSURE_RETURN_HR(m_cfFileContents, E_UNEXPECTED);
+	return S_OK;
 }
 
 /**
@@ -52,7 +67,7 @@ void CSftpDataObject::Initialize(
 	PCIDLIST_ABSOLUTE pidlCommonParent, CConnection& conn)
 throw(...)
 {
-	ATLENSURE_THROW(!m_spDoInner, E_UNEXPECTED); // Initialised twice
+	ATLENSURE_THROW(!m_pidlCommonParent, E_UNEXPECTED); // Initialised twice
 
 	// Initialise superclass which will create inner IDataObject
 	__super::Initialize(cPidl, aPidl, pidlCommonParent);
@@ -72,6 +87,11 @@ throw(...)
 		hr = ProdInnerWithFormat(m_cfFileContents);
 		ATLENSURE_SUCCEEDED(hr);
 	}
+
+	// Set preferred drop effect.  This prevents any calls to GetData of FGD or
+	// FILECONTENTS until drag is complete, thereby preventing interruptions
+	// caused by delay-rendering.
+	_RenderCfPreferredDropEffect();
 
 	// Save connection
 	m_conn = conn;
@@ -95,7 +115,7 @@ STDMETHODIMP CSftpDataObject::GetData(
 		else if (pformatetcIn->cfFormat == m_cfFileContents)
 		{
 			// Delay-render CFSTR_FILECONTENTS format into this IDataObject
-			_DelayRenderCfFileContents();
+			_DelayRenderCfFileContents(pformatetcIn->lindex);
 		}
 
 		// Delegate all requests to the superclass
@@ -107,6 +127,29 @@ STDMETHODIMP CSftpDataObject::GetData(
 /*----------------------------------------------------------------------------*
  * Private methods
  *----------------------------------------------------------------------------*/
+
+void CSftpDataObject::_RenderCfPreferredDropEffect()
+throw(...)
+{
+	// Create DROPEFFECT_COPY in global memory
+	HGLOBAL hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DWORD));
+	CGlobalLock glock(hGlobal);
+	DWORD &dwDropEffect = glock.GetDword();
+	dwDropEffect = DROPEFFECT_COPY;
+
+	// Save in IDataObject
+	CFormatEtc fetc(m_cfPreferredDropEffect);
+	STGMEDIUM stg;
+	stg.tymed = TYMED_HGLOBAL;
+	stg.hGlobal = glock.Detach();
+	stg.pUnkForRelease = NULL;
+	HRESULT hr = SetData(&fetc, &stg, true);
+	if (FAILED(hr))
+	{
+		::ReleaseStgMedium(&stg);
+	}
+	ATLENSURE_SUCCEEDED(hr);	
+}
 
 /**
  * Delay render CFSTR_FILEDESCRIPTOR format for PIDLs passed to Initialize().
@@ -154,55 +197,46 @@ throw(...)
 }
 
 /**
- * Delay render CFSTR_FILECONTENTS formats for PIDLs passed to Initialize().
+ * Delay-render a CFSTR_FILECONTENTS format for a PIDL passed to Initialize().
  *
  * Unlike the CFSTR_SHELLIDLIST format, the file contents formats should
- * include not only the top-level items but also any subitems within and
+ * include not only the top-level items but also any subitems within any
  * directories.  This enables Explorer to copy or move an entire directory
  * tree.
  *
  * As this operation can be very expensive when the directory tree is deep,
  * it isn't appropriate to do this when the IDataObject is created.  This
  * would lead to large delays when simply opening a directory---an operation
- * that also requires an IDataObject.  Instead, these formats are 
+ * that also requires an IDataObject.  Instead, these formats are individually
  * delay-rendered from the list of PIDLs cached during Initialize() the 
- * first time it is requested.
+ * each time one is requested.
  *
  * @see _DelayRenderCfFileGroupDescriptor()
  *
  * @throws  CAtlException on error.
  */
-void CSftpDataObject::_DelayRenderCfFileContents()
+void CSftpDataObject::_DelayRenderCfFileContents(long lindex)
 throw(...)
 {
-	if (!m_fRenderedContents && !m_pidls.empty())
+	if (!m_pidls.empty())
 	{
 		// Create IStreams from the cached PIDL list
-		StreamList streams = _CreateFileContentsStreams();
-		ATLASSERT(!streams.empty());
+		CComPtr<IStream> stream = _CreateFileContentsStream(lindex);
+		ATLENSURE(stream);
 
-		// Create FILECONTENTS format from the list of streams
-		for (UINT i = 0; i < streams.size(); i++)
+		// Insert the stream into the IDataObject as FILECONTENTS
+		CFormatEtc fetc(m_cfFileContents, TYMED_ISTREAM, lindex);
+		STGMEDIUM stg;
+		stg.tymed = TYMED_ISTREAM;
+		stg.pstm = stream.Detach();
+		stg.pUnkForRelease = NULL;
+		HRESULT hr = SetData(&fetc, &stg, true);
+		if (FAILED(hr))
 		{
-			// Insert the stream into the IDataObject
-			CFormatEtc fetc(m_cfFileContents, TYMED_ISTREAM, i);
-			STGMEDIUM stg;
-			stg.tymed = TYMED_ISTREAM;
-			stg.pstm = streams[i].Detach(); // Invalidates stored item
-			stg.pUnkForRelease = NULL;
-			HRESULT hr = SetData(&fetc, &stg, true);
-			if (FAILED(hr))
-			{
-				::ReleaseStgMedium(&stg);
-			}
-			ATLENSURE_SUCCEEDED(hr);
+			::ReleaseStgMedium(&stg);
 		}
-
-		m_fRenderedContents = true;
+		ATLENSURE_SUCCEEDED(hr);
 	}
-
-	// If we fail inside the loop, anything we added in previous iterations
-	// is still set in the IDataObject.  Does this matter?
 }
 
 /**
@@ -211,51 +245,73 @@ throw(...)
 CFileGroupDescriptor CSftpDataObject::_CreateFileGroupDescriptor()
 throw(...)
 {
-	ExpandedList pidls;
+	_ExpandPidls();
 
-	for (UINT i = 0; i < m_pidls.size(); i++)
+	CFileGroupDescriptor fgd(static_cast<UINT>(m_expandedPidls.size()));
+
+	for (UINT i = 0; i < m_expandedPidls.size(); i++)
 	{
-		ExpandedList expandedPidls = _ExpandTopLevelPidl(m_pidls[i]);
-		pidls.insert(pidls.end(), expandedPidls.begin(), expandedPidls.end());
+		CFileDescriptor fd(m_expandedPidls[i], m_expandedPidls.size() > 1);
+		fgd.SetDescriptor(i, fd);
 	}
 
-	CFileGroupDescriptor fgd(static_cast<UINT>(pidls.size()));
-
-	for (UINT j = 0; j < pidls.size(); j++)
-	{
-		CFileDescriptor fd(pidls[j], pidls.size() > 1);
-		fgd.SetDescriptor(j, fd);
-	}
-
-	ATLASSERT(pidls.size() == fgd.GetSize());
+	ATLASSERT(m_expandedPidls.size() == fgd.GetSize());
 	return fgd;
 }
 
 /**
- * Create IStreams to use in CFSTR_FILECONTENTS formats from a 
- * collection of top-level PIDLs.
+ * Create IStream to the file represented by one of our cached expanded PIDLs.
+ *
+ * The PIDL to use is give by @p lindex and this must correspond the item in
+ * the File Group Descriptor with the same index (although we do not check 
+ * this).  The lindex is also the index at which this will be inserted into
+ * the DataObject as a FILECONTENTS format.
+ *
+ * Asking for an IStream to folder may not break (libssh2 can do this) but it
+ * is a waste of effort. Explorer won't use it, nor should it.
  */
-CSftpDataObject::StreamList CSftpDataObject::_CreateFileContentsStreams()
+CComPtr<IStream> CSftpDataObject::_CreateFileContentsStream(long lindex)
 throw(...)
 {
-	StreamList streams;
+	_ExpandPidls(); // This should noop
 
-	for (UINT i = 0; i < m_pidls.size(); i++)
+	const ExpandedPidl& pidl = m_expandedPidls[lindex];
+	CRemoteItemHandle pidlItem = pidl.GetLast(); // Our item in question
+
+	// Create an absolute PIDL to our PIDL's parent. For top-level items this
+	// is just m_pidlCommonParent but not so when pidl is not a child.
+	CRelativePidl pidlParent;
+	pidlParent.Attach(pidl.CopyParent());
+	CAbsolutePidl pidlParentAbs(m_pidlCommonParent, pidlParent);
+
+	CSftpDirectory directory(pidlParentAbs, m_conn);
+	CComPtr<IStream> spStream = directory.GetFile(pidlItem);
+
+	return spStream;
+}
+
+/**
+ * Expand all top-level PIDLs and cache in m_expandedPidls.
+ *
+ * Once expanded, this should not need to be done again for this DataObject.
+ * All delay-rendering will use this same expanded list.
+ */
+void CSftpDataObject::_ExpandPidls() throw(...)
+{
+	if (!m_fExpandedPidlList)
 	{
-		ExpandedList expandedPidls = _ExpandTopLevelPidl(m_pidls[i]);
+		ATLASSERT(m_expandedPidls.empty());
+		m_expandedPidls.clear(); // Just in case
 
-		for (UINT j = 0; j < expandedPidls.size(); j++)
+		for (UINT i = 0; i < m_pidls.size(); i++)
 		{
-			CSftpDirectory directory(
-				CHostItemAbsolute(
-					m_pidlCommonParent, expandedPidls[j].CopyParent()),
-				m_conn);
-			CRemoteItemHandle pidl = expandedPidls[j].GetLast();
-			streams.push_back(directory.GetFile(pidl));
+			ExpandedList pidls = _ExpandTopLevelPidl(m_pidls[i]);
+			m_expandedPidls.insert(
+				m_expandedPidls.end(), pidls.begin(), pidls.end());
 		}
-	}
 
-	return streams;
+		m_fExpandedPidlList = true;
+	}
 }
 
 /**
@@ -267,7 +323,7 @@ throw(...)
  */
 CSftpDataObject::ExpandedList CSftpDataObject::_ExpandTopLevelPidl(
 	const TopLevelPidl& pidl)
-throw(...)
+const throw(...)
 {
 	ExpandedList pidls;
 

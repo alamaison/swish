@@ -34,7 +34,7 @@
  * @param conn           SFTP connection container.
  */
 CSftpDirectory::CSftpDirectory(
-	CAbsolutePidlHandle pidlDirectory, CConnection& conn) 
+	CAbsolutePidlHandle pidlDirectory, const CConnection& conn) 
 throw(...) : 
 	m_connection(conn), 
 	m_pidlDirectory(pidlDirectory),
@@ -97,9 +97,9 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 				}
 				catchCom()
 
-				/*::SysFreeString(lt.bstrFilename);
+				::SysFreeString(lt.bstrFilename);
 				::SysFreeString(lt.bstrGroup);
-				::SysFreeString(lt.bstrOwner);*/
+				::SysFreeString(lt.bstrOwner);
 			}
 		} while (hr == S_OK);
 	}
@@ -257,9 +257,10 @@ throw(...)
 vector<CRelativePidl> CSftpDirectory::FlattenDirectoryTree()
 throw(...)
 {
-	vector<CRelativePidl> vecPidls;
-	_FlattenDirectoryTreeInto(vecPidls, NULL);
-	return vecPidls;
+	vector<CRelativePidl> pidls;
+	_FlattenDirectoryTreeInto(pidls, NULL);
+	ATLASSERT(pidls.size() > 0);
+	return pidls;
 }
 
 /**

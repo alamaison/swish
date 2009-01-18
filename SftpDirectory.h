@@ -66,7 +66,8 @@ class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		__in CAbsolutePidlHandle pidlDirectory, __in CConnection& conn)
+		__in CAbsolutePidlHandle pidlDirectory,
+		__in const CConnection& conn)
 		throw(...);
 
 	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
@@ -88,7 +89,6 @@ private:
 	CConnection m_connection;
 	CString m_strDirectory;        ///< Absolute path to this directory.
 	CAbsolutePidl m_pidlDirectory; ///< Absolute PIDL to this directory.
-
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );

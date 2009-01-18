@@ -67,6 +67,9 @@ public:
 	CSftpDataObject();
 	virtual ~CSftpDataObject();
 
+	DECLARE_PROTECT_FINAL_CONSTRUCT()
+	HRESULT FinalConstruct();
+
 	void Initialize(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
 		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in CConnection& conn)
@@ -98,29 +101,40 @@ private:
 	typedef vector<ExpandedPidl> ExpandedList;
 	// @}
 
-	/** Type of list of IStreams with contiguous (non-sparse) indices, 0..n. */
-	typedef vector< CComPtr<IStream> > StreamList;
-
 	CConnection m_conn;               ///< Connection to SFTP server
 
 	/** @name Cached PIDLs */
 	// @{
 	CAbsolutePidl m_pidlCommonParent; ///< Parent of PIDLs in m_pidls
 	TopLevelList m_pidls;             ///< Top-level PIDLs (the selection)
+	ExpandedList m_expandedPidls;     ///< Top-level PIDLs expanded to include
+	                                  ///< all items in their heirarchy
 	// @}
+
+	/** @name Registered CLIPFORMATS */
+	// @{
+	CLIPFORMAT m_cfPreferredDropEffect;  ///< CFSTR_PREFERREDDROPEFFECT
+	CLIPFORMAT m_cfFileDescriptor;       ///< CFSTR_FILEDESCRIPTOR
+	CLIPFORMAT m_cfFileContents;         ///< CFSTR_FILECONTENTS
+	// @}
+
+	void _RenderCfPreferredDropEffect() throw(...);
 
 	/** @name Delay-rendering */
 	//@{
-	bool m_fRenderedDescriptor;       ///< FileGroupDescriptor state flag
-	bool m_fRenderedContents;         ///< File contents state flag
+	bool m_fExpandedPidlList;         ///< Have we expanded top-level PIDLs?
+	bool m_fRenderedDescriptor;       ///< Have we rendered FileGroupDescriptor
+
+	void _ExpandPidls() throw(...);
 
 	void _DelayRenderCfFileGroupDescriptor() throw(...);
-	void _DelayRenderCfFileContents() throw(...);
+	void _DelayRenderCfFileContents(long lindex) throw(...);
 
-	StreamList _CreateFileContentsStreams() throw(...);
 	CFileGroupDescriptor _CreateFileGroupDescriptor() throw(...);
+	CComPtr<IStream> _CreateFileContentsStream(long lindex) throw(...);
 
-	ExpandedList _ExpandTopLevelPidl(const TopLevelPidl& pidl);
+	ExpandedList _ExpandTopLevelPidl(const TopLevelPidl& pidl)
+		const throw(...);
 	// @}
 };
 
@@ -180,7 +194,7 @@ public:
 		return glock.GetFileGroupDescriptor().cItems;
 	}
 
-	void SetDescriptor(UINT i, FILEDESCRIPTOR& fd)
+	void SetDescriptor(UINT i, const FILEDESCRIPTOR& fd)
 	{
 		CGlobalLock glock(m_hGlobal);
 
@@ -238,6 +252,9 @@ inline DWORD HIDWORD(ULONGLONG qwSrc)
 
 /**
  * FILEDESCRIPTOR wrapper adding construction from a remote PIDL.
+ *
+ * @note  No destructor required as FILEDESCRIPTOR has no pointer members.
+ *        cFileName is an array within the descriptor.
  */
 class CFileDescriptor : public FILEDESCRIPTOR
 {
@@ -247,12 +264,13 @@ public:
 		::ZeroMemory(this, sizeof(FILEDESCRIPTOR));
 
 		// Filename
-		::StringCchCopy(cFileName, ARRAYSIZE(cFileName), pidl.GetFilePath());
+		ATLVERIFY(SUCCEEDED(::StringCchCopy(
+			cFileName, ARRAYSIZE(cFileName), pidl.GetFilePath())));
 
 		// The PIDL we have been passed may be multilevel, representing a
 		// path to the file.  Get last item in PIDL to get properties of the
 		// file itself.
-		const CRemoteItem& pidlEnd = pidl.GetLast();
+		CRemoteItemHandle pidlEnd = pidl.GetLast();
 
 		// Size
 		ULONGLONG uSize = pidlEnd.GetFileSize();
@@ -271,6 +289,8 @@ public:
 
 		if (pidlEnd.IsFolder())
 			dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		else
+			dwFileAttributes |= FILE_ATTRIBUTE_NORMAL;
 
 		if (pidlEnd.GetFilename()[0] == L'.')
 			dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;

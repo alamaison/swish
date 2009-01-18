@@ -122,6 +122,10 @@ public: // IDataObject methods
 		__deref_out_opt IEnumSTATDATA **ppenumAdvise);
 
 protected:
+	
+	HRESULT ProdInnerWithFormat(CLIPFORMAT nFormat) throw();
+
+private:
 
 	/** @name Stores */
 	// @{
@@ -130,13 +134,12 @@ protected:
 	CComPtr<IDataObject> m_spDoInner; ///< Wrapped inner DataObject
 	// @}
 
-	/** @name Explicitly registered CLIPFORMATS */
+	/** @name Explicitly recognised CLIPFORMATS */
 	// @{
 	CLIPFORMAT m_cfFileDescriptor;    ///< CFSTR_FILEDESCRIPTOR
 	CLIPFORMAT m_cfFileContents;      ///< CFSTR_FILECONTENTS
 	// @}
 
-	HRESULT ProdInnerWithFormat(CLIPFORMAT nFormat) throw();
 };
 
 
@@ -226,6 +229,14 @@ public:
 		m_pMem = ::GlobalLock(m_hGlobal);
 	}
 
+	HGLOBAL Detach() throw()
+	{
+		::GlobalUnlock(m_hGlobal);
+		HGLOBAL hGlobal = m_hGlobal;
+		m_hGlobal = NULL;
+		return hGlobal;
+	}
+
 	void Clear() throw()
 	{
 		m_pMem = NULL;
@@ -241,6 +252,11 @@ public:
 	FILEGROUPDESCRIPTOR& GetFileGroupDescriptor()
 	{
 		return *static_cast<FILEGROUPDESCRIPTOR*>(m_pMem);
+	}
+
+	DWORD& GetDword()
+	{
+		return *static_cast<DWORD *>(m_pMem);
 	}
 
 private:
