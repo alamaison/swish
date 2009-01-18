@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "DummyStream.h"
+#include <shlwapi.h>
 
 CDummyStream::CDummyStream() : 
 	m_szData(NULL), 
@@ -152,12 +153,8 @@ STDMETHODIMP CDummyStream::Stat(
 
 	if (grfStatFlag & !STATFLAG_NONAME)
 	{
-		size_t cchData = ::wcslen(L"bob");
-		LPOLESTR pszBob = (LPOLESTR)::CoTaskMemAlloc(
-			(cchData+1) * sizeof OLECHAR);
-		hr = ::StringCchCopy(pszBob, cchData, L"bob");
+		hr = ::SHStrDup(L"bob", &(pstatstg->pwcsName));
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), STG_E_INSUFFICIENTMEMORY);
-		pstatstg->pwcsName = pszBob;
 	}
 	
 	pstatstg->type = STGTY_STREAM;
