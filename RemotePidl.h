@@ -26,9 +26,7 @@
 
 #include <pshpack1.h>
 /** 
- * Duplicate of REMOTEPIDL defined in RemotePidlManager.cpp.
- * These must be kept in sync.  Eventually this file will replace 
- * RemotePidlManager.cpp
+ * Internal structure of the PIDLs representing items on the remote filesystem.
  */
 struct RemoteItemId
 {
@@ -36,7 +34,7 @@ struct RemoteItemId
 	DWORD dwFingerprint;
 	bool fIsFolder;
 	bool fIsLink;
-	WCHAR wszFilename[MAX_PATH_LENZ];
+	WCHAR wszFilename[MAX_FILENAME_LENZ];
 	WCHAR wszOwner[MAX_USERNAME_LENZ];
 	WCHAR wszGroup[MAX_USERNAME_LENZ];
 	DWORD dwPermissions;
@@ -295,13 +293,12 @@ public:
 
 		// Allocate enough memory to hold RemoteItemId structure & terminator
 		static size_t cbItem = sizeof RemoteItemId + sizeof USHORT;
-		RemoteItemId *item = static_cast<RemoteItemId *>(
-			::CoTaskMemAlloc(cbItem));
-		if(item == NULL)
-			AtlThrow(E_OUTOFMEMORY);
-		::ZeroMemory(item, cbItem);
+		m_pidl = static_cast<PidlType>(::CoTaskMemAlloc(cbItem));
+		ATLENSURE_THROW(m_pidl, E_OUTOFMEMORY);
+		::ZeroMemory(m_pidl, cbItem);
 
 		// Fill members of the PIDL with data
+		RemoteItemId *item = reinterpret_cast<RemoteItemId *>(m_pidl);
 		item->cb = sizeof RemoteItemId;
 		item->dwFingerprint = RemoteItemId::FINGERPRINT; // Sign with fprint
 		CopyWSZString(item->wszFilename, 
@@ -314,7 +311,6 @@ public:
 		item->fIsFolder = fIsFolder;
 		item->fIsLink = fIsLink;
 
-		m_pidl = reinterpret_cast<PidlType>(item);
 		ATLASSERT(IsValid());
 		ATLASSERT(GetNext() == NULL); // PIDL is terminated
 	}
