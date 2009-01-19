@@ -21,6 +21,7 @@
 #include "remotelimits.h"
 #include "RemoteFolder.h"
 #include "SftpDirectory.h"
+#include "SftpDataObject.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
 #include "ExplorerCallback.h" // For interaction with Explorer window
@@ -284,9 +285,9 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 			// Create connection object for this folder with hwndOwner for UI
 			CConnection conn = _CreateConnectionForFolder(hwndOwner);
 
-			// Create directory handler and get DataObject for PIDLs
- 			CSftpDirectory directory(GetRootPIDL(), conn);
-			*ppvReturn = directory.CreateDataObjectFor(cPidl, aPidl).Detach();
+			CComPtr<IDataObject> spDo = CSftpDataObject::Create(
+				cPidl, aPidl, GetRootPIDL(), conn);
+			*ppvReturn = spDo.Detach();
 		}
 		catchCom()
 

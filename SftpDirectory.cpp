@@ -193,26 +193,6 @@ throw(...)
 	return spStream;
 }
 
-/**
- * Create IDataObject instance for the files represented by the array of PIDLs.
- *
- * The DataObject represents the files as a CFSTR_SHELLIDLIST format (PIDLs)
- * and as the CFSTR_FILEDESCRIPTOR/CFSTR_FILECONTENTS pair (IStream).
- *
- * @param cPidl  Number of items in the array.
- * @param aPidl  Array of child PIDLs.
- *
- * @returns  Smart pointer to the IDataObject.
- * @throws  CAtlException if error.
- */
-CComPtr<IDataObject> CSftpDirectory::CreateDataObjectFor(
-	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl)
-throw(...)
-{
-	return CSftpDataObject::Create(
-		cPidl, aPidl, m_pidlDirectory, m_connection);
-}
-
 bool CSftpDirectory::Rename(
 	CRemoteItemHandle pidlOldFile, PCWSTR pwszNewFilename)
 throw(...)
