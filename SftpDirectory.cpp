@@ -43,20 +43,6 @@ throw(...) :
 }
 
 /**
- * Creates and initialises directory instance from a string. 
- *
- * @param pwszDirectory  Absolute path to the directory this object represents.
- * @param conn           SFTP connection container.
- */
-CSftpDirectory::CSftpDirectory(PCWSTR pwszDirectory, const CConnection& conn)
-throw(...) : 
-	m_connection(conn), 
-	m_pidlDirectory(NULL),
-	m_strDirectory(CString(pwszDirectory).GetFullPath().TrimRight(L'/')+L'/')
-{
-}
-
-/**
  * Fetches directory listing from the server as an enumeration.
  *
  * This listing is cached as a collection of PIDLs in the m_vecPidls member.
@@ -182,16 +168,8 @@ throw(...)
 	if (!pidl.IsFolder())
 		AtlThrow(E_INVALIDARG);
 
-	if (m_pidlDirectory) // Constructed with PIDL
-	{
-		CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
-		return CSftpDirectory(pidlSub, m_connection);
-	}
-	else // Constructed with string
-	{
-		CString strSubPath(m_strDirectory + pidl.GetFilename());
-		return CSftpDirectory(strSubPath, m_connection);
-	}
+	CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
+	return CSftpDirectory(pidlSub, m_connection);
 }
 
 /**
@@ -226,7 +204,7 @@ throw(...)
  * @returns  Smart pointer of an IStream interface to the file.
  * @throws  CAtlException if error.
  */
-CComPtr<IStream> CSftpDirectory::GetFile(PCWSTR pwszPath)
+CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
 throw(...)
 {
 	CComPtr<IStream> spStream;

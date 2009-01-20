@@ -287,7 +287,7 @@ throw(...)
 	CFileDescriptor fd = fgd.GetDescriptor(lindex);
 	fgd.Detach();
 
-	return CSftpDirectory(m_pidlCommonParent, m_conn).GetFile(fd.GetPath());
+	return CSftpDirectory(m_pidlCommonParent, m_conn).GetFileByPath(fd.GetPath());
 }
 
 /**

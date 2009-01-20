@@ -68,14 +68,11 @@ public:
 	CSftpDirectory(
 		__in CAbsolutePidlHandle pidlDirectory, const CConnection& conn)
 		throw(...);
-	CSftpDirectory(
-		PCWSTR pwszDirectory, const CConnection& conn)
-		throw(...);
 
 	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
 	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
 	CComPtr<IStream> GetFile(__in CRemoteItemHandle pidl) throw(...);
-	CComPtr<IStream> GetFile(PCWSTR pwszPath) throw(...);
+	CComPtr<IStream> GetFileByPath(PCWSTR pwszPath) throw(...);
 
 	bool Rename(
 		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)
