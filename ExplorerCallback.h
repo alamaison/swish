@@ -1,6 +1,6 @@
-/*  Component that handles Shell Folder View interaction with Explorer.
+/*  Handler for the Shell Folder View's interaction with Explorer.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,36 +17,24 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef EXPLORERCALLBACK_H
-#define EXPLORERCALLBACK_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif // _MSC_VER > 1000
 
-#pragma once
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
 #include "CoFactory.h"
 
-// CExplorerCallback
-[
-	coclass,
-	// default(IShellFolderViewCB) causes unsatisfied forward declaration error
-	default(IUnknown), 
-	threading(apartment),
-	vi_progid("Swish.ExplorerCallback"),
-	progid("Swish.ExplorerCallback.1"),
-	version(1.0),
-	uuid("b816a848-5022-11dc-9153-0090f5284f85"),
-	helpstring("ExplorerCallback Class")
-]
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,
+	public CComObjectRoot,
 	private CCoFactory<CExplorerCallback>
 {
 public:
+
+	BEGIN_COM_MAP(CExplorerCallback)
+		COM_INTERFACE_ENTRY(IShellFolderViewCB)
+	END_COM_MAP()
+
 	CExplorerCallback() : m_hwndView(NULL), m_pidl(NULL) {}
 	~CExplorerCallback()
 	{
@@ -72,7 +60,7 @@ public:
 		HRESULT hr = spCB->Initialize(pidl);
 		ATLENSURE_SUCCEEDED(hr);
 
-		return spCB;
+		return CComPtr<IShellFolderViewCB>(spCB);
 	}
 
 public: // IShellFolderViewCB
@@ -81,6 +69,7 @@ public: // IShellFolderViewCB
 
 private:
 
+	__checkReturn HMENU _GetToolsMenu(HMENU hParentMenu);
 	HRESULT _AddNewConnection();
 	HRESULT _AddConnectionToRegistry(
 		PCTSTR szName, PCTSTR szHost, UINT uPort, 
@@ -99,5 +88,3 @@ private:
 	HWND m_hwndView;          ///< Handle to folder view window
 	PIDLIST_ABSOLUTE m_pidl;  ///< Our copy of pidl to owning folder
 };
-
-#endif // EXPLORERCALLBACK_H
