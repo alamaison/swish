@@ -210,7 +210,7 @@ public:
 
 	~CGlobalLock() throw()
 	{
-		Clear();
+		_Clear();
 	}
 
 	/**
@@ -223,7 +223,7 @@ public:
 
 	void Attach(__in HGLOBAL hGlobal) throw()
 	{
-		Clear();
+		_Clear();
 
 		m_hGlobal = hGlobal;
 		m_pMem = ::GlobalLock(m_hGlobal);
@@ -231,17 +231,9 @@ public:
 
 	HGLOBAL Detach() throw()
 	{
-		::GlobalUnlock(m_hGlobal);
 		HGLOBAL hGlobal = m_hGlobal;
-		m_hGlobal = NULL;
+		_Clear();
 		return hGlobal;
-	}
-
-	void Clear() throw()
-	{
-		m_pMem = NULL;
-		if (m_hGlobal)
-			::GlobalUnlock(m_hGlobal);
 	}
 
 	CIDA* GetCida()
@@ -260,6 +252,15 @@ public:
 	}
 
 private:
+
+	void _Clear() throw()
+	{
+		m_pMem = NULL;
+		if (m_hGlobal)
+			::GlobalUnlock(m_hGlobal);
+		m_hGlobal = NULL;
+	}
+
 	HGLOBAL m_hGlobal;
 	PVOID m_pMem;
 };
