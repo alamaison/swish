@@ -75,14 +75,12 @@ public:
 	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
 	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
 	CComPtr<IStream> GetFile(__in CRemoteItemHandle pidl) throw(...);
-
-	vector<CRelativePidl> FlattenDirectoryTree() throw(...);
+	CComPtr<IStream> GetFile(PCWSTR pwszPath) throw(...);
 
 	bool Rename(
 		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)
 		throw(...);
 	void Delete(__in CRemoteItemHandle pidl) throw(...);
-
 
 private:
 	CConnection m_connection;
@@ -91,10 +89,6 @@ private:
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );
-
-	void _FlattenDirectoryTreeInto(
-		__inout vector<CRelativePidl>& vecPidls,
-		__in CRelativePidlHandle pidlPrefix) throw(...);
 };
 
 

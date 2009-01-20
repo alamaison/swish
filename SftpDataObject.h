@@ -23,6 +23,7 @@
 #include "RemotePidl.h"
 
 class CFileGroupDescriptor; // Forward decl
+class CFileDescriptor; // Forward decl
 
 /**
  * Subclass of CDataObject which, additionally, creates CFSTR_FILEDESCRIPTOR
@@ -105,13 +106,14 @@ private:
 	// @}
 
 	/**
-	 * Expanded PIDL types.  These represent all the items in or below 
-	 * the top-level and are needed in order to store entire directory trees
-	 * in an IDataObject.
+	 * Expanded types.  The are the types that the top-levl PIDLs are expanded
+	 * into when a file group descriptor is requested.  They can represent all
+	 * the items in or below the top-level and are needed in order to store 
+	 * entire directory trees in an IDataObject.
 	 */
 	// @{
-	typedef CRemoteItemList ExpandedPidl;
-	typedef vector<ExpandedPidl> ExpandedList;
+	typedef CFileDescriptor ExpandedItem;
+	typedef vector<ExpandedItem> ExpandedList;
 	// @}
 
 	CConnection m_conn;               ///< Connection to SFTP server
@@ -120,8 +122,6 @@ private:
 	// @{
 	CAbsolutePidl m_pidlCommonParent; ///< Parent of PIDLs in m_pidls
 	TopLevelList m_pidls;             ///< Top-level PIDLs (the selection)
-	ExpandedList m_expandedPidls;     ///< Top-level PIDLs expanded to include
-	                                  ///< all items in their heirarchy
 	// @}
 
 	/** @name Registered CLIPFORMATS */
@@ -138,16 +138,22 @@ private:
 	bool m_fExpandedPidlList;         ///< Have we expanded top-level PIDLs?
 	bool m_fRenderedDescriptor;       ///< Have we rendered FileGroupDescriptor
 
-	void _ExpandPidls() throw(...);
-
 	void _DelayRenderCfFileGroupDescriptor() throw(...);
 	STGMEDIUM _DelayRenderCfFileContents(long lindex) throw(...);
 
 	CFileGroupDescriptor _CreateFileGroupDescriptor() throw(...);
 	CComPtr<IStream> _CreateFileContentsStream(long lindex) throw(...);
 
-	ExpandedList _ExpandTopLevelPidl(const TopLevelPidl& pidl)
+	void _ExpandPidlsInto(__inout ExpandedList& descriptors) const throw(...);
+	void _ExpandTopLevelPidlInto(
+		const TopLevelPidl& pidl, __inout ExpandedList& descriptors)
 		const throw(...);
+	void _ExpandDirectoryTreeInto(
+		const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
+		__inout ExpandedList& descriptors) const throw(...);
+	CComPtr<IEnumIDList> _GetEnumAll(const CAbsolutePidl& pidl)
+		const throw(...);
+	inline bool _WantProgressDialogue() const throw();
 	// @}
 };
 
@@ -155,6 +161,22 @@ private:
 class CFileGroupDescriptor
 {
 public:
+	/**
+	 * Create empty.
+	 */
+	CFileGroupDescriptor() : m_hGlobal(NULL) {}
+
+	/**
+	 * Create from HGLOBAL to FILEGROUPDESCRIPTOR.
+	 */
+	CFileGroupDescriptor(HGLOBAL hGlobal) : m_hGlobal(NULL)
+	{
+		Attach(hGlobal);
+	}
+
+	/**
+	 * Create with zeroed space for FILEDESCRIPTORs allocated.
+	 */
 	CFileGroupDescriptor(UINT cFiles) throw(...)
 		: m_hGlobal(NULL)
 	{
@@ -173,6 +195,9 @@ public:
 		fgd.cItems = cFiles;
 	}
 
+	/**
+	 * Copy construct.
+	 */
 	CFileGroupDescriptor(const CFileGroupDescriptor& fgd) throw(...)
 		: m_hGlobal(NULL)
 	{
@@ -191,11 +216,15 @@ public:
 			&(glockOld.GetFileGroupDescriptor()),
 			cbData);
 	}
+
+	/**
+	 * No copy assignment.
+	 */
+	CFileGroupDescriptor& operator=(const CFileGroupDescriptor& fgd);
 	
 	~CFileGroupDescriptor()
 	{
-		::GlobalFree(m_hGlobal);
-		m_hGlobal = NULL;
+		Delete();
 	}
 
 	/**
@@ -207,7 +236,7 @@ public:
 		return glock.GetFileGroupDescriptor().cItems;
 	}
 
-	void SetDescriptor(UINT i, const FILEDESCRIPTOR& fd)
+	void SetDescriptor(UINT i, const FILEDESCRIPTOR& fd) throw(...)
 	{
 		CGlobalLock glock(m_hGlobal);
 
@@ -218,11 +247,36 @@ public:
 		::CopyMemory(&(fgd.fgd[i]), &fd, sizeof fd);
 	}
 
+	FILEDESCRIPTOR GetDescriptor(UINT i) throw(...)
+	{
+		CGlobalLock glock(m_hGlobal);
+
+		FILEGROUPDESCRIPTOR& fgd = glock.GetFileGroupDescriptor();
+		if (i >= fgd.cItems)
+			AtlThrow(E_INVALIDARG); // Out-of-range
+
+		return fgd.fgd[i];
+	}
+
+	CFileGroupDescriptor& Attach(HGLOBAL hGlobal)
+	{
+		Delete();
+		m_hGlobal = hGlobal;
+		return *this;
+	}
+
 	HGLOBAL Detach()
 	{
 		HGLOBAL hGlobal = m_hGlobal;
 		m_hGlobal = NULL;
 		return hGlobal;
+	}
+
+	void Delete()
+	{
+		if (m_hGlobal)
+			::GlobalFree(m_hGlobal);
+		m_hGlobal = NULL;
 	}
 
 private:
@@ -277,8 +331,7 @@ public:
 		::ZeroMemory(this, sizeof(FILEDESCRIPTOR));
 
 		// Filename
-		ATLVERIFY(SUCCEEDED(::StringCchCopy(
-			cFileName, ARRAYSIZE(cFileName), pidl.GetFilePath())));
+		SetPath(pidl.GetFilePath());
 
 		// The PIDL we have been passed may be multilevel, representing a
 		// path to the file.  Get last item in PIDL to get properties of the
@@ -307,5 +360,54 @@ public:
 
 		if (pidlEnd.GetFilename()[0] == L'.')
 			dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	}
+
+	CFileDescriptor(const FILEDESCRIPTOR& fd)
+	{
+		*static_cast<FILEDESCRIPTOR *>(this) = fd;
+	}
+
+	/**
+	 * Set the cFileName field.
+	 *
+	 * This field often holds relative paths so this method is more 
+	 * appropriately named.  A FILEDESCRIPTOR path should use Windows
+	 * path separators '\\' so this methods converts any forward-slashes
+	 * to back-slashes.
+	 */
+	CFileDescriptor& SetPath(PCWSTR pwszPath) throw()
+	{
+		CString strPath = pwszPath;
+		UnixToWin(strPath);
+
+		HRESULT hr = ::StringCchCopy(cFileName, ARRAYSIZE(cFileName), strPath);
+		ATLASSERT(SUCCEEDED(hr));
+
+		return *this;
+	}
+
+	/**
+	 * Set the path stored in the cFileName field.
+	 *
+	 * This field often holds relative paths so this method is more 
+	 * appropriately named.  A FILEDESCRIPTOR path should use Windows
+	 * path separators '\\' but the caller expects a path in Unix format so
+	 * so this methods converts any back-slashes to forward-slashes.
+	 */
+	CString GetPath() throw()
+	{
+		CString strPath = cFileName;
+		WinToUnix(strPath);
+		return strPath;
+	}
+
+	static inline void UnixToWin(CString& strPath) throw()
+	{
+		strPath.Replace(L"/", L"\\");
+	}
+
+	static inline void WinToUnix(CString& strPath) throw()
+	{
+		strPath.Replace(L"\\", L"/");
 	}
 };

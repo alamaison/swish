@@ -117,10 +117,14 @@ static void _testShellPIDLFolder(IDataObject *pDo, CString strExpected)
 /**
  * Test that the the FILEGROUPDESCRIPTOR and ith FILEDESCRIPTOR
  * match expected values.
+ * File descriptors should use Windows path separators so we replace
+ * forward slashes with back slashes in expected string.
  */
 static void _testFileDescriptor(
 	IDataObject *pDo, CString strExpected, UINT iFile)
 {
+	strExpected.Replace(L"/", L"\\");
+
 	FORMATETC fetc = {
 		(CLIPFORMAT)::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR),
 		NULL,

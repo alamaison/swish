@@ -104,7 +104,7 @@ throw(...)
 STDMETHODIMP CSftpDataObject::GetData(
 	FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 {
-	::ZeroMemory(pmedium, sizeof(pmedium));
+	::ZeroMemory(pmedium, sizeof(STGMEDIUM));
 
 	// Delay-render data if necessary
 	try
@@ -248,72 +248,66 @@ throw(...)
 CFileGroupDescriptor CSftpDataObject::_CreateFileGroupDescriptor()
 throw(...)
 {
-	_ExpandPidls();
+	ExpandedList descriptors;
+	_ExpandPidlsInto(descriptors);
 
-	CFileGroupDescriptor fgd(static_cast<UINT>(m_expandedPidls.size()));
+	CFileGroupDescriptor fgd(static_cast<UINT>(descriptors.size()));
 
-	for (UINT i = 0; i < m_expandedPidls.size(); i++)
+	for (UINT i = 0; i < descriptors.size(); ++i)
 	{
-		CFileDescriptor fd(m_expandedPidls[i], m_expandedPidls.size() > 1);
-		fgd.SetDescriptor(i, fd);
+		fgd.SetDescriptor(i, descriptors[i]);
 	}
 
-	ATLASSERT(m_expandedPidls.size() == fgd.GetSize());
+	ATLASSERT(descriptors.size() == fgd.GetSize());
 	return fgd;
 }
 
 /**
- * Create IStream to the file represented by one of our cached expanded PIDLs.
+ * Create an IStream for relative path stored in the lindexth FILEDESCRIPTOR.
  *
- * The PIDL to use is give by @p lindex and this must correspond the item in
- * the File Group Descriptor with the same index (although we do not check 
- * this).  The lindex is also the index at which this will be inserted into
- * the DataObject as a FILECONTENTS format.
+ * @p lindex corresponds to an item in the File Group Descriptor (which
+ * we created in _DelayRenderCfFileGroupDescriptor) with the same index.
  *
- * Asking for an IStream to folder may not break (libssh2 can do this) but it
- * is a waste of effort. Explorer won't use it, nor should it.
+ * @note Asking for an IStream to folder may not break (libssh2 can do 
+ * this) but it is a waste of effort. Explorer won't use it, nor should it.
  */
 CComPtr<IStream> CSftpDataObject::_CreateFileContentsStream(long lindex)
 throw(...)
 {
-	_ExpandPidls(); // This should noop
+	ATLENSURE(m_fRenderedDescriptor);
 
-	const ExpandedPidl& pidl = m_expandedPidls[lindex];
-	CRemoteItemHandle pidlItem = pidl.GetLast(); // Our item in question
+	// Pull the FILEGROUPDESCRIPTOR we made earlier out of the DataObject
+	CFormatEtc fetc(m_cfFileDescriptor);
+	STGMEDIUM stg;
+	HRESULT hr = GetData(&fetc, &stg);
+	ATLENSURE_SUCCEEDED(hr);
+	CFileGroupDescriptor fgd(stg.hGlobal);
 
-	// Create an absolute PIDL to our PIDL's parent. For top-level items this
-	// is just m_pidlCommonParent but not so when pidl is not a child.
-	CRelativePidl pidlParent;
-	pidlParent.Attach(pidl.CopyParent());
-	CAbsolutePidl pidlParentAbs(m_pidlCommonParent, pidlParent);
+	// Get stream from relative path stored in the lindexth FILEDESCRIPTOR
+	CFileDescriptor fd = fgd.GetDescriptor(lindex);
+	fgd.Detach();
 
-	CSftpDirectory directory(pidlParentAbs, m_conn);
-	CComPtr<IStream> spStream = directory.GetFile(pidlItem);
-
-	return spStream;
+	return CSftpDirectory(m_pidlCommonParent, m_conn).GetFile(fd.GetPath());
 }
 
 /**
- * Expand all top-level PIDLs and cache in m_expandedPidls.
+ * Expand all top-level PIDLs into a list of CFileDescriptors with relative 
+ * paths.
  *
- * Once expanded, this should not need to be done again for this DataObject.
- * All delay-rendering will use this same expanded list.
+ * There should be a file descriptor for every item in the directory 
+ * heirarchies.  Once expanded, this should not need to be done again for this
+ * DataObject as the descriptors will be saved in the superclass.
+ *
+ * In an attempt to reduce the memory footprint of this very expensive
+ * operation to an absolute minimum, all expansion is done by appending to a
+ * single container by reference.
  */
-void CSftpDataObject::_ExpandPidls() throw(...)
+void CSftpDataObject::_ExpandPidlsInto(ExpandedList& descriptors)
+const throw(...)
 {
-	if (!m_fExpandedPidlList)
+	for (UINT i = 0; i < m_pidls.size(); ++i)
 	{
-		ATLASSERT(m_expandedPidls.empty());
-		m_expandedPidls.clear(); // Just in case
-
-		for (UINT i = 0; i < m_pidls.size(); i++)
-		{
-			ExpandedList pidls = _ExpandTopLevelPidl(m_pidls[i]);
-			m_expandedPidls.insert(
-				m_expandedPidls.end(), pidls.begin(), pidls.end());
-		}
-
-		m_fExpandedPidlList = true;
+		_ExpandTopLevelPidlInto(m_pidls[i], descriptors);
 	}
 }
 
@@ -324,26 +318,109 @@ void CSftpDataObject::_ExpandPidls() throw(...)
  * PIDL.  However, if it a directory it will contain the PIDL followed by 
  * all the items in and below the directory.
  */
-CSftpDataObject::ExpandedList CSftpDataObject::_ExpandTopLevelPidl(
-	const TopLevelPidl& pidl)
+void CSftpDataObject::_ExpandTopLevelPidlInto(
+	const TopLevelPidl& pidl, ExpandedList& descriptors)
 const throw(...)
 {
-	ExpandedList pidls;
+	// Add file descriptor from PIDL - common case
+	ATLENSURE_THROW(
+		descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
+	descriptors.push_back(CFileDescriptor(pidl, _WantProgressDialogue()));
 
+	// Explode the contents of subfolders into the list
 	if (pidl.IsFolder())
 	{
-		CAbsolutePidl pidlFolder(m_pidlCommonParent, pidl);
-
-		// Explode subfolder and add to lists
-		CSftpDirectory subdirectory(pidlFolder, m_conn);
-		vector<CRelativePidl> vecPidls = subdirectory.FlattenDirectoryTree();
-		pidls.insert(pidls.end(), vecPidls.begin(), vecPidls.end());
+		_ExpandDirectoryTreeInto(m_pidlCommonParent, pidl, descriptors);
 	}
-	else
-	{
-		// Add simple item - common case
-		pidls.push_back(pidl);
-	}
+}
 
+/**
+ * Flattens the filesystem tree rooted at this directory into a list of PIDLs.
+ *
+ * The list includes this directory, all the items in this directory and all
+ * items below any of those which are directories.
+ *
+ * Although called 'flat', all the PIDL are returned relative to this 
+ * directory's parent and therefore, actually do maintain a record of the 
+ * directory structure.
+ *//*
+vector<CRelativePidl> CSftpDataObject::FlattenDirectoryTree()
+throw(...)
+{
+	vector<CRelativePidl> pidls;
+	_FlattenDirectoryTreeInto(pidls, NULL);
+	ATLASSERT(pidls.size() > 0);
 	return pidls;
+}*/
+
+/**
+ * Return a list of all the PIDLs in this directory and below as a single list.
+ *
+ * The PIDLs are returned appended to the end of the @p vecPidls inout 
+ * parameter which reduces the amount of copying.
+ *
+ * All the PIDL (which are relative to this directory's parent) are prefixed with 
+ * a given parent PIDL. This allows this method to be used recursively and still 
+ * produce a list of PIDLs relative to a common root.
+ *
+ * @param[in,out] vecPidl  List of flattened PIDLs to append our flattened 
+ *                         PIDLs.
+ * @param[in] pidlPrefix   PIDL with which to prefix the PIDLs below this 
+ *                         folder. If NULL, the returned list is relative to 
+ *                         this folder.
+ */
+void CSftpDataObject::_ExpandDirectoryTreeInto(
+	const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
+	ExpandedList& descriptors)
+const throw(...)
+{
+	CComPtr<IEnumIDList> spEnum = _GetEnumAll(
+		CAbsolutePidl(pidlParent, pidlDirectory));
+
+	// Add all items below this directory (this directory added by caller)
+	HRESULT hr;
+	while(true)
+	{
+		CRemoteItem pidl;
+		hr = spEnum->Next(1, &pidl, NULL);
+		if (hr != S_OK)
+			break;
+
+		// Create version of pidl relative to the common root (pidlParent)
+		CRelativePidl pidlRelative(pidlDirectory, pidl);
+
+		// Add simple item - common case
+		ATLENSURE_THROW(
+			descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
+		descriptors.push_back(CFileDescriptor(pidlRelative, true));
+
+		// Explode the contents of subfolders into the list
+		if (pidl.IsFolder())
+		{
+			pidl.Delete(); // Reduce recursion footprint
+			_ExpandDirectoryTreeInto(pidlParent, pidlRelative, descriptors);
+		}
+	}
+	ATLENSURE(hr == S_FALSE);
+}
+
+CComPtr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
+const throw(...)
+{
+	CSftpDirectory dir(pidl, m_conn);
+	return dir.GetEnum(
+		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
+}
+
+/**
+ * We want a progress dialogue unless the entire selection consists of a
+ * single non-directory.  This is for the FD_PROGRESSUI flag.
+ *
+ * @rant WHY did MS put this flag in the descriptors!!??
+ */
+inline bool CSftpDataObject::_WantProgressDialogue()
+const throw()
+{
+	return m_pidls.size() > 1
+		|| (m_pidls.size() == 1 && m_pidls[0].IsFolder());
 }

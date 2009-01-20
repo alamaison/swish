@@ -214,6 +214,27 @@ throw(...)
 	return spStream;
 }
 
+/**
+ * Get IStream interface to the remote file specified by a relative path.
+ *
+ * This 'file' may also be a directory but the IStream does not give access
+ * to its subitems.
+ *
+ * @param pidl  Path of item relative to this directory (may be at a level
+ *              below this directory).
+ *
+ * @returns  Smart pointer of an IStream interface to the file.
+ * @throws  CAtlException if error.
+ */
+CComPtr<IStream> CSftpDirectory::GetFile(PCWSTR pwszPath)
+throw(...)
+{
+	CComPtr<IStream> spStream;
+	m_connection.spProvider->GetFile(
+		CComBSTR(m_strDirectory + pwszPath), &spStream);
+	return spStream;
+}
+
 bool CSftpDirectory::Rename(
 	CRemoteItemHandle pidlOldFile, PCWSTR pwszNewFilename)
 throw(...)
@@ -243,74 +264,4 @@ throw(...)
 		hr = m_connection.spProvider->Delete(strPath);
 	if (hr != S_OK)
 		AtlThrow(hr);
-}
-
-/**
- * Flattens the filesystem tree rooted at this directory into a list of PIDLs.
- *
- * The list includes this directory, all the items in this directory and all
- * items below any of those which are directories.
- *
- * Although called 'flat', all the PIDL are returned relative to this 
- * directory's parent and therefore, actually do maintain a record of the 
- * directory structure.
- */
-vector<CRelativePidl> CSftpDirectory::FlattenDirectoryTree()
-throw(...)
-{
-	vector<CRelativePidl> pidls;
-	_FlattenDirectoryTreeInto(pidls, NULL);
-	ATLASSERT(pidls.size() > 0);
-	return pidls;
-}
-
-/**
- * Return a list of all the PIDLs in this directory and below as a single list.
- *
- * The PIDLs are returned appended to the end of the @p vecPidls inout 
- * parameter which reduces the amount of copying.
- *
- * All the PIDL (which are relative to this directory's parent) are prefixed with 
- * a given parent PIDL. This allows this method to be used recursively and still 
- * produce a list of PIDLs relative to a common root.
- *
- * @param[in,out] vecPidl  List of flattened PIDLs to append our flattened 
- *                         PIDLs.
- * @param[in] pidlPrefix   PIDL with which to prefix the PIDLs below this 
- *                         folder. If NULL, the returned list is relative to 
- *                         this folder.
- */
-void CSftpDirectory::_FlattenDirectoryTreeInto(
-	vector<CRelativePidl>& vecPidls, CRelativePidlHandle pidlPrefix)
-throw(...)
-{
-	CComPtr<IEnumIDList> spEnum = GetEnum(
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
-
-	// Make prefixed PIDL to this directory and add to list
-	CRelativePidl pidlThis(pidlPrefix, m_pidlDirectory.GetLast());
-	vecPidls.push_back(pidlThis);
-
-	// Add all items below this directory
-	HRESULT hr;
-	while(true)
-	{
-		CRemoteItem pidl;
-		hr = spEnum->Next(1, &pidl, NULL);
-		if (hr != S_OK)
-			break;
-
-		if (pidl.IsFolder())
-		{
-			// Explode subdirectory and append to list
-			CSftpDirectory subdirectory = GetSubdirectory(pidl);
-			subdirectory._FlattenDirectoryTreeInto(vecPidls, pidlThis);
-		}
-		else
-		{
-			// Add simple item - common case
-			vecPidls.push_back(CRelativePidl(pidlThis, pidl));
-		}
-	}
-	ATLENSURE(hr == S_FALSE);
 }
