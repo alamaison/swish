@@ -66,8 +66,10 @@ class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		__in CAbsolutePidlHandle pidlDirectory,
-		__in const CConnection& conn)
+		__in CAbsolutePidlHandle pidlDirectory, const CConnection& conn)
+		throw(...);
+	CSftpDirectory(
+		PCWSTR pwszDirectory, const CConnection& conn)
 		throw(...);
 
 	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);

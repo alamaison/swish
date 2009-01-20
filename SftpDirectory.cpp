@@ -25,7 +25,7 @@
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 
 /**
- * Creates and initialises directory instance. 
+ * Creates and initialises directory instance from a PIDL. 
  *
  * @param pidlDirectory  PIDL to the directory this object represents.  Must
  *                       start at or before a HostItemId.
@@ -39,6 +39,20 @@ throw(...) :
 	m_strDirectory( // Trim trailing slashes and append single slash
 		CHostItemAbsoluteHandle(
 			pidlDirectory).GetFullPath().TrimRight(L'/')+L'/')
+{
+}
+
+/**
+ * Creates and initialises directory instance from a string. 
+ *
+ * @param pwszDirectory  Absolute path to the directory this object represents.
+ * @param conn           SFTP connection container.
+ */
+CSftpDirectory::CSftpDirectory(PCWSTR pwszDirectory, const CConnection& conn)
+throw(...) : 
+	m_connection(conn), 
+	m_pidlDirectory(NULL),
+	m_strDirectory(CString(pwszDirectory).GetFullPath().TrimRight(L'/')+L'/')
 {
 }
 
@@ -168,7 +182,16 @@ throw(...)
 	if (!pidl.IsFolder())
 		AtlThrow(E_INVALIDARG);
 
-	return CSftpDirectory(CAbsolutePidl(m_pidlDirectory, pidl), m_connection);
+	if (m_pidlDirectory) // Constructed with PIDL
+	{
+		CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
+		return CSftpDirectory(pidlSub, m_connection);
+	}
+	else // Constructed with string
+	{
+		CString strSubPath(m_strDirectory + pidl.GetFilename());
+		return CSftpDirectory(strSubPath, m_connection);
+	}
 }
 
 /**
