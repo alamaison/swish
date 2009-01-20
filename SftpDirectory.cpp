@@ -20,8 +20,6 @@
 #include "stdafx.h"
 #include "SftpDirectory.h"
 
-#include "SftpDataObject.h"
-
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
