@@ -244,7 +244,7 @@ public:
 		if (i >= fgd.cItems)
 			AtlThrow(E_INVALIDARG); // Out-of-range
 
-		::CopyMemory(&(fgd.fgd[i]), &fd, sizeof fd);
+		fgd.fgd[i] = fd;
 	}
 
 	FILEDESCRIPTOR GetDescriptor(UINT i) throw(...)
