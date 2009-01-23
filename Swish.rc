@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "atlres.h"
-
+#include "atlres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -63,8 +62,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2,1,8
- PRODUCTVERSION 0,2,1,9
+ FILEVERSION 0,2,1,11
+ PRODUCTVERSION 0,2,1,11
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x3L
@@ -81,12 +80,12 @@ BEGIN
         BEGIN
             VALUE "Comments", "Secure access to remote directories from Windows Explorer via SSH/SFTP"
             VALUE "FileDescription", "Swish Module"
-            VALUE "FileVersion", "0.2.1.8"
+            VALUE "FileVersion", "0.2.1.11"
             VALUE "InternalName", "Swish"
-            VALUE "LegalCopyright", "Copyright (C) 2008 Alexander Lamaison <awl03 (at) doc.ic.ac.uk>"
+            VALUE "LegalCopyright", "Copyright (C) 2009 Alexander Lamaison <awl03 (at) doc.ic.ac.uk>"
             VALUE "OriginalFilename", "Swish.dll"
             VALUE "ProductName", "Swish"
-            VALUE "ProductVersion", "0.2.1.9"
+            VALUE "ProductVersion", "0.2.1.11"
         END
     END
     BLOCK "VarFileInfo"
@@ -186,8 +185,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

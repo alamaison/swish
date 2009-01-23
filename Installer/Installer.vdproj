@@ -15,30 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_08EFA10130B94B9980C424914BF963EB"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_08EFA10130B94B9980C424914BF963EB"
-        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_08EFA10130B94B9980C424914BF963EB"
-        "OwnerKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_36D53783E0F74DD37E1936A586D6ED37"
-        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_441AFAEFB4F8433B89C85C8DA36A9C4E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -57,14 +33,14 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_4D6A4B0F815F453B6D4DD8275132B729"
-        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmKey" = "8:_502F184D6F8C43B592CB01C1410D5150"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_502F184D6F8C43B592CB01C1410D5150"
-        "OwnerKey" = "8:_UNDEFINED"
+        "MsmKey" = "8:_552BB8CAFA2B4F1CA17C5CD6E87EAD90"
+        "OwnerKey" = "8:_E410B9202038487FA3C09DE4F7D3AA48"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -99,20 +75,50 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_C4FDFA8E13C841FD804B082E569190D3"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C4FDFA8E13C841FD804B082E569190D3"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C4FDFA8E13C841FD804B082E569190D3"
+        "OwnerKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C8C9BBD13D268AF0B0F523950DCC4145"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_D5BCA5075195446DB2CCDA3D7C881C7A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E758D4F178F24B47A1E6EEA691594EA1"
-        "OwnerKey" = "8:_08EFA10130B94B9980C424914BF963EB"
+        "MsmKey" = "8:_E410B9202038487FA3C09DE4F7D3AA48"
+        "OwnerKey" = "8:_8AE030F171114ACF95FF33409DFA9B61"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_E855C84F58774ED08DAD1E53554A1B17"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EBF6936C2D96431AADC45956B6383DAC"
+        "OwnerKey" = "8:_C4FDFA8E13C841FD804B082E569190D3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -129,7 +135,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\swish-0.2.1.9-debug.msi"
+        "OutputFilename" = "8:Debug\\swish-0.2.1.11-debug.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -183,7 +189,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\swish-0.2.1.9.msi"
+        "OutputFilename" = "8:Release\\swish-0.2.1.11.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -235,26 +241,6 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_36D53783E0F74DD37E1936A586D6ED37"
-            {
-            "SourcePath" = "8:LIBEAY32.dll"
-            "TargetName" = "8:libeay32.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_441AFAEFB4F8433B89C85C8DA36A9C4E"
             {
             "SourcePath" = "8:..\\Libssh2Provider\\COPYING"
@@ -293,26 +279,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4D6A4B0F815F453B6D4DD8275132B729"
-            {
-            "SourcePath" = "8:zlib1.dll"
-            "TargetName" = "8:zlib1.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_502F184D6F8C43B592CB01C1410D5150"
@@ -393,6 +359,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C8C9BBD13D268AF0B0F523950DCC4145"
+            {
+            "SourcePath" = "8:zlib1.dll"
+            "TargetName" = "8:zlib1.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D5BCA5075195446DB2CCDA3D7C881C7A"
@@ -1120,11 +1106,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_08EFA10130B94B9980C424914BF963EB"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_552BB8CAFA2B4F1CA17C5CD6E87EAD90"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_CRT_x86.msm"
+            "SourcePath" = "8:policy_8_0_microsoft_vc80_atl_x86.msm"
                 "Properties"
                 {
                 }
@@ -1134,11 +1120,39 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E758D4F178F24B47A1E6EEA691594EA1"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_C4FDFA8E13C841FD804B082E569190D3"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_crt_x86.msm"
+            "SourcePath" = "8:Microsoft_VC80_DebugCRT_x86.msm"
+                "Properties"
+                {
+                }
+            "LanguageId" = "3:0"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E410B9202038487FA3C09DE4F7D3AA48"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "SourcePath" = "8:Microsoft_VC80_ATL_x86.msm"
+                "Properties"
+                {
+                }
+            "LanguageId" = "3:0"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_EBF6936C2D96431AADC45956B6383DAC"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "SourcePath" = "8:policy_8_0_microsoft_vc80_debugcrt_x86.msm"
                 "Properties"
                 {
                 }
@@ -1181,7 +1195,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_4B42AC5F4BDE4461843EF135AD4F6CC9"
             {
-            "SourcePath" = "8:..\\Release\\Swish.dll"
+            "SourcePath" = "8:..\\Debug\\Swish.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1265,7 +1279,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_8AE030F171114ACF95FF33409DFA9B61"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\Release\\Libssh2Provider.dll"
+            "SourcePath" = "8:..\\Libssh2Provider\\Debug\\Libssh2Provider.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1293,7 +1307,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_983A937A8ABA42269182B9CED8AE4DBC"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\Release_libssh2\\libssh2.dll"
+            "SourcePath" = "8:..\\Libssh2Provider\\Debug_libssh2\\libssh2.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
