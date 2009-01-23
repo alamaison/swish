@@ -10,8 +10,18 @@ CMockSftpProvider::CMockSftpProvider() :
 	m_enumListingBehaviour(MockListing),
 	m_enumRenameBehaviour(RenameOK)
 {
-	_FillMockListing(_T("/tmp/"));
-	_FillMockListing(_T("/tmp/swish/"));
+	// Create filesystem root
+	FilesystemLocation root = m_filesystem.insert(
+		m_filesystem.begin(), _MakeDirectoryItem(L""));
+
+	// Create two subdirectories and fill them with an expected set of items
+	// whose names are 'tagged' with the directory name
+	FilesystemLocation tmp =
+		m_filesystem.append_child(root, _MakeDirectoryItem(L"tmp"));
+	FilesystemLocation swish =
+		m_filesystem.append_child(tmp, _MakeDirectoryItem(L"swish"));
+	_FillMockListing(L"/tmp");
+	_FillMockListing(L"/tmp/swish");
 }
 
 void CMockSftpProvider::SetListingBehaviour( ListingBehaviour enumBehaviour )
@@ -78,37 +88,42 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 		(Swish::IEnumListing *)NULL, *ppEnum
 	);
 
+	vector<Swish::Listing> files; // List of files in directory
+	Swish::Listing *pStart;
+	Swish::Listing *pEnd;
+
 	switch (m_enumListingBehaviour)
 	{
-	case EmptyListing: // Fallthru: listing populated in constructor
-		m_mapDirectories[bstrDirectory].clear();
+	case EmptyListing:
+		// Create dummy start and end pointers.  Making the equal and
+		// non-NULL indicates an empty collection.
+		pStart = pEnd = (Swish::Listing*)this; // Why 'this'? Why not.
+		break;
+
 	case MockListing:
 		{
-			typedef CComEnumOnSTL<Swish::IEnumListing,
-				&__uuidof(Swish::IEnumListing), Swish::Listing,
-				_Copy<Swish::Listing>, vector<Swish::Listing> >
-			CComEnumListing;
-
+			FilesystemLocation dir = _FindLocationFromPath(bstrDirectory);
 			CPPUNIT_ASSERT_MESSAGE(
 				"Requested a listing that hasn't been generated.",
-				m_mapDirectories.find(bstrDirectory) != m_mapDirectories.end()
+				 dir != m_filesystem.end()
 			);
-
-			// Create instance of Enum from ATL template class
-			CComObject<CComEnumListing> *pEnum = NULL;
-			HRESULT hr = CComObject<CComEnumListing>::CreateInstance(&pEnum);
-			CPPUNIT_ASSERT_OK(hr);
-
-			pEnum->AddRef();
-
-			hr = pEnum->Init(
-				this->GetUnknown(), m_mapDirectories[bstrDirectory]);
-			if (SUCCEEDED(hr))
-				hr = pEnum->QueryInterface(ppEnum);
-
-			pEnum->Release();
+				
+			// Copy directory out of tree and sort alphabetically
+			files.insert(
+				files.begin(), m_filesystem.begin(dir), m_filesystem.end(dir));
+			std::sort(files.begin(), files.end(), lt_item());
+			
+			if (!files.empty())
+			{
+				pStart = &files[0];
+				pEnd = &files[0] + files.size();
+			}
+			else // Make dummy pointer to empty collection
+			{
+				pStart = pEnd = (Swish::Listing*)this; // Why 'this'? Why not.
+			}
 		}
-		return S_OK;
+		break;
 
 	case SFalseNoListing:
 		return S_FALSE;
@@ -123,6 +138,25 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 		UNREACHABLE;
 		return E_UNEXPECTED;
 	}
+
+	// Create instance of Enum from ATL template class
+	CComObject<CMockEnumListing> *pEnum = NULL;
+	HRESULT hr = CComObject<CMockEnumListing>::CreateInstance(&pEnum);
+	CPPUNIT_ASSERT_OK(hr);
+
+	// Initialise enumerator with list of files
+	pEnum->AddRef();
+
+	hr = pEnum->Init(pStart, pEnd, NULL, AtlFlagCopy);
+	CPPUNIT_ASSERT_OK(hr);
+
+	hr = pEnum->QueryInterface(ppEnum);
+	CPPUNIT_ASSERT_OK(hr);
+
+	pEnum->Release();
+
+	return S_OK;
+
 }
 
 
@@ -273,10 +307,10 @@ CComBSTR CMockSftpProvider::_TagFilename(PCWSTR pszFilename, PCWSTR pszTag)
  * Generates a listing for the given directory and tags each filename with the
  * name of the parent folder.  This allows us to detect a correct listing later.
  */
-void CMockSftpProvider::_FillMockListing(PCWSTR pszDirectory)
+void CMockSftpProvider::_FillMockListing(PCWSTR pwszDirectory)
 {
-	// Get directory name part of path
-	CString strPath(pszDirectory);
+	// Get directory name part of path for tag: "/tmp/swish/" -> "swish"
+	CString strPath(pwszDirectory);
 	strPath.TrimRight(L'/');
 	int iLastSep = strPath.ReverseFind(L'/');
 	int cFilenameLen = strPath.GetLength() - (iLastSep+1);
@@ -302,7 +336,7 @@ void CMockSftpProvider::_FillMockListing(PCWSTR pszDirectory)
 	vecDates.push_back(COleDateTime(9999, 12, 31, 23, 59, 59));
 	vecDates.push_back(COleDateTime(2000, 2, 29, 12, 47, 1));
 	vecDates.push_back(COleDateTime(1978, 3, 3, 3, 00, 00));
-	vecDates.push_back(COleDateTime(100, 1, 1, 0, 00, 00));
+	vecDates.push_back(COleDateTime(1601, 1, 1, 0, 00, 00));
 	vecDates.push_back(COleDateTime(2007, 2, 28, 0, 0, 0));
 	vecDates.push_back(COleDateTime(1752, 9, 03, 7, 27, 8));
 
@@ -325,7 +359,7 @@ void CMockSftpProvider::_FillMockListing(PCWSTR pszDirectory)
 		ATLASSERT( 
 			COleDateTime(lt.dateModified).GetStatus() == COleDateTime::valid
 		);
-		m_mapDirectories[pszDirectory].push_back(lt);
+		_MakeItemIn(pwszDirectory, lt);
 
 		vecDates.pop_back();
 		vecFilenames.pop_back();
@@ -343,51 +377,104 @@ void CMockSftpProvider::_FillMockListing(PCWSTR pszDirectory)
 
 	while (!vecFoldernames.empty())
 	{
-		Swish::Listing lt;
-		lt.bstrFilename = vecFoldernames.back().Detach();
-		lt.uPermissions = 040777;
-		lt.bstrOwner =  CComBSTR("mockowner").Detach();
-		lt.bstrGroup = CComBSTR("mockgroup").Detach();
-		lt.uSize = 42;
-		lt.cHardLinks = 7;
-		lt.dateModified = COleDateTime(1582, 10, 5, 13, 54, 22);
-		m_mapDirectories[pszDirectory].push_back(lt);
-
+		_MakeItemIn(pwszDirectory, _MakeDirectoryItem(vecFoldernames.back()));
 		vecFoldernames.pop_back();
 	}
 }
 
-void CMockSftpProvider::_TestMockPathExists(PCTSTR strPath)
+Swish::Listing CMockSftpProvider::_MakeDirectoryItem(PCWSTR pwszName)
+{
+	Swish::Listing lt;
+	lt.bstrFilename = CComBSTR(pwszName).Detach();
+	lt.uPermissions = 040777;
+	lt.bstrOwner =  CComBSTR("mockowner").Detach();
+	lt.bstrGroup = CComBSTR("mockgroup").Detach();
+	lt.uSize = 42;
+	lt.cHardLinks = 7;
+	lt.dateModified = COleDateTime(1601, 10, 5, 13, 54, 22);
+	ATLASSERT( 
+		COleDateTime(lt.dateModified).GetStatus() == COleDateTime::valid);
+
+	return lt;
+}
+
+void CMockSftpProvider::_MakeItemIn(
+	FilesystemLocation loc, const Swish::Listing& item)
+{
+	m_filesystem.append_child(loc, item);
+}
+
+void CMockSftpProvider::_MakeItemIn(
+	const wstring& path, const Swish::Listing& item)
+{
+	FilesystemLocation loc = _FindLocationFromPath(path);
+	ATLASSERT(loc != m_filesystem.end());
+	_MakeItemIn(loc, item);
+}
+
+/**
+ * Return an iterator to the node in the mock filesystem indicated by the
+ * path given as a string.
+ */
+CMockSftpProvider::FilesystemLocation CMockSftpProvider::_FindLocationFromPath(
+	const wstring& path)
+{
+	vector<wstring> tokens = _TokenisePath(path);
+
+	// Start searching in root of 'filesystem'
+	FilesystemLocation currentDir = m_filesystem.begin();
+
+	// Walk down list of tokens finding each item below the previous
+	for (vector<wstring>::const_iterator it = tokens.begin();
+		it != tokens.end();
+		it++)
+	{
+		FilesystemLocation dir = find_if(
+			m_filesystem.begin(currentDir), m_filesystem.end(currentDir),
+			bind2nd(eq_item(), *it));
+
+		if (dir == m_filesystem.end(currentDir))
+			return m_filesystem.end();
+		
+		currentDir = dir;
+	}
+
+	return currentDir;
+}
+
+vector<wstring> CMockSftpProvider::_TokenisePath(const wstring& path)
+{
+	vector<wstring> tokens;
+
+	size_t pos = path.find_first_not_of(L'/'); // Skip initial slashes
+	size_t limit = pos;
+	size_t last = path.find_last_not_of(L'/'); // Last valid character
+
+	while (limit < last)
+	{
+		limit = path.find(L'/', pos);
+		tokens.push_back(path.substr(pos, limit - pos));
+		pos = limit + 1; // Skip delimeter
+	}
+
+	return tokens;
+}
+
+void CMockSftpProvider::_TestMockPathExists(PCWSTR pwszPath)
 {
 	// Find filename and directory
-	CString strFile(strPath);
+	CString strFile(pwszPath);
 	strFile.TrimRight(L'/');
 	int iLastSep = strFile.ReverseFind(L'/');
-	CString strDirectory = strFile.Left(iLastSep+1);
-	int cFilenameLen = strFile.GetLength() - (iLastSep+1);
-	CString strFilename = strFile.Right(cFilenameLen);
+	wstring strDirectory = strFile.Left(iLastSep+1);
 
 	CPPUNIT_ASSERT_MESSAGE(
 		"The requested file is in a directory which hasn't been generated. "
 		"This is probably not intended.",
-		m_mapDirectories.find(strDirectory) != m_mapDirectories.end()
+		_FindLocationFromPath(strDirectory) != m_filesystem.end()
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"The file was not found in the mock collection.",
-		_IsInListing(strDirectory, strFilename)
+		_FindLocationFromPath(pwszPath) != m_filesystem.end()
 	);
-}
-
-bool CMockSftpProvider::_IsInListing(PCTSTR strDirectory, PCTSTR strFilename)
-{
-	vector<Swish::Listing>& vecListing = m_mapDirectories[strDirectory];
-	for (vector<Swish::Listing>::iterator i = vecListing.begin();
-		i != vecListing.end();
-		i++)
-	{
-		if (CComBSTR(i->bstrFilename) == strFilename)
-			return true;
-	}
-
-	return false;
 }

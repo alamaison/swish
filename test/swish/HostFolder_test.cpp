@@ -359,7 +359,7 @@ private:
 	{
 		// Create test HOSTPIDL
 		CHostItem pidl(
-			L"user", L"test.example.com", 22, L"/home/user/dir", L"Test PIDL");
+			L"user", L"test.example.com", L"/home/user/dir", 22, L"Test PIDL");
 		return pidl.Detach();
 	}
 

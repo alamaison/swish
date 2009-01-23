@@ -476,6 +476,10 @@ HRESULT CDummyFolder::OnInvokeCommand(
 {
 	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p, idCmd=%d, "
 		"pszArgs=%ls)\n", hwnd, pDataObj, idCmd, pszArgs);
+	UNREFERENCED_PARAMETER(hwnd);
+	UNREFERENCED_PARAMETER(pDataObj);
+	UNREFERENCED_PARAMETER(idCmd);
+	UNREFERENCED_PARAMETER(pszArgs);
 
 	return S_FALSE;
 }
@@ -488,6 +492,10 @@ HRESULT CDummyFolder::OnInvokeCommandEx(
 {
 	ATLTRACE(__FUNCTION__" called (pDataObj=%p, idCmd=%d, pdfmics=%p)\n",
 		pDataObj, idCmd, pdfmics);
+	UNREFERENCED_PARAMETER(hwnd);
+	UNREFERENCED_PARAMETER(pDataObj);
+	UNREFERENCED_PARAMETER(idCmd);
+	UNREFERENCED_PARAMETER(pdfmics);
 
 	return S_FALSE;
 }

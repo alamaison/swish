@@ -142,6 +142,13 @@ public:
 		return Clone(m_pidl);
 	}
 
+	PidlType CopyParent() const throw(...)
+	{
+		PidlType pidl = CopyTo();
+		ATLVERIFY(::ILRemoveLastID(pidl));
+		return pidl;
+	}
+
 	PCUIDLIST_RELATIVE GetNext() const throw()
 	{
 		if (m_pidl == NULL)
@@ -149,6 +156,11 @@ public:
 
 		PCUIDLIST_RELATIVE pidl = ::ILNext(m_pidl);
 		return (::ILIsEmpty(pidl)) ? NULL : pidl;
+	}
+
+	PCUITEMID_CHILD GetLast() const throw(...)
+	{
+		return ::ILFindLastID(m_pidl);
 	}
 
 	inline bool IsEmpty() const throw()

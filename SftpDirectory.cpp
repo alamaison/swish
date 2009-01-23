@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,11 +19,28 @@
 
 #include "stdafx.h"
 #include "SftpDirectory.h"
-#include "RemotePidl.h"
 
 #define S_IFMT     0170000 /* type of file */
 #define S_IFDIR    0040000 /* directory 'd' */
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+
+/**
+ * Creates and initialises directory instance from a PIDL. 
+ *
+ * @param pidlDirectory  PIDL to the directory this object represents.  Must
+ *                       start at or before a HostItemId.
+ * @param conn           SFTP connection container.
+ */
+CSftpDirectory::CSftpDirectory(
+	CAbsolutePidlHandle pidlDirectory, const CConnection& conn) 
+throw(...) : 
+	m_connection(conn), 
+	m_pidlDirectory(pidlDirectory),
+	m_strDirectory( // Trim trailing slashes and append single slash
+		CHostItemAbsoluteHandle(
+			pidlDirectory).GetFullPath().TrimRight(L'/')+L'/')
+{
+}
 
 /**
  * Fetches directory listing from the server as an enumeration.
@@ -65,10 +82,10 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 				try
 				{
 					CRemoteItem pidl(
-						CString(lt.bstrFilename), 
+						CString(lt.bstrFilename),
+						S_ISDIR(lt.uPermissions),
 						CString(lt.bstrOwner),
 						CString(lt.bstrGroup),
-						S_ISDIR(lt.uPermissions),
 						false,
 						lt.uPermissions,
 						lt.uSize,
@@ -78,9 +95,9 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 				}
 				catchCom()
 
-				/*::SysFreeString(lt.bstrFilename);
+				::SysFreeString(lt.bstrFilename);
 				::SysFreeString(lt.bstrGroup);
-				::SysFreeString(lt.bstrOwner);*/
+				::SysFreeString(lt.bstrOwner);
 			}
 		} while (hr == S_OK);
 	}
@@ -92,19 +109,17 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
  * Retrieve an IEnumIDList to enumerate this directory's contents.
  *
  * This function returns an enumerator which can be used to iterate through
- * the contents of this directory as a series of PIDLs.  This listing
- * is obtained from the server by a call to _Fetch() and a copy of it is made.
- * The enumeration will no change as the content of the server change.  In order
- * to obtain an up-to-date listing, this function must be called again to get
- * a new enumerator.
+ * the contents of this directory as a series of PIDLs.  This listing is a
+ * @b copy of the one obtained from the server and will not update to reflect
+ * changes.  In order to obtain an up-to-date listing, this function must be 
+ * called again to get a new enumerator.
  *
  * @param grfFlags  Flags specifying nature of files to fetch.
  *
- * @returns  A pointer to the IEnumIDList.
- *
- * @throws A CAtlException if an error occurs.
+ * @returns  Smart pointer to the IEnumIDList.
+ * @throws  CAtlException if an error occurs.
  */
-IEnumIDList* CSftpDirectory::GetEnum(SHCONTF grfFlags)
+CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 {
 	typedef CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
 	                      _CopyChildPidl, vector<CChildPidl> >
@@ -131,17 +146,76 @@ IEnumIDList* CSftpDirectory::GetEnum(SHCONTF grfFlags)
 	CComObject<CComEnumIDList> *pEnumIDList;
 	hr = pEnumIDList->CreateInstance(&pEnumIDList);
 	ATLENSURE_SUCCEEDED(hr);
-	CComPtr<CComObject<CComEnumIDList> > spEnumIDList = pEnumIDList;
 
 	// Give enumerator back-reference to holder of our copied collection
-	hr = spEnumIDList->Init( spHolder->GetUnknown(), spHolder->m_coll );
+	hr = pEnumIDList->Init( spHolder->GetUnknown(), spHolder->m_coll );
 	ATLENSURE_SUCCEEDED(hr);
 
-	return spEnumIDList.Detach();
+	return pEnumIDList;
+}
+
+/**
+ * Get instance of CSftpDirectory for a subdirectory of this directory.
+ *
+ * @param pidl  Child PIDL of directory within this directory.
+ *
+ * @returns  Instance of the subdirectory.
+ * @throws  CAtlException if error.
+ */
+CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle pidl)
+throw(...)
+{
+	if (!pidl.IsFolder())
+		AtlThrow(E_INVALIDARG);
+
+	CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
+	return CSftpDirectory(pidlSub, m_connection);
+}
+
+/**
+ * Get IStream interface to the remote file specified by the given PIDL.
+ *
+ * This 'file' may also be a directory but the IStream does not give access
+ * to its subitems.
+ *
+ * @param pidl  Child PIDL of item within this directory.
+ *
+ * @returns  Smart pointer of an IStream interface to the file.
+ * @throws  CAtlException if error.
+ */
+CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
+throw(...)
+{
+	CComPtr<IStream> spStream;
+	m_connection.spProvider->GetFile(
+		CComBSTR(m_strDirectory + pidl.GetFilename()), &spStream);
+	return spStream;
+}
+
+/**
+ * Get IStream interface to the remote file specified by a relative path.
+ *
+ * This 'file' may also be a directory but the IStream does not give access
+ * to its subitems.
+ *
+ * @param pidl  Path of item relative to this directory (may be at a level
+ *              below this directory).
+ *
+ * @returns  Smart pointer of an IStream interface to the file.
+ * @throws  CAtlException if error.
+ */
+CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
+throw(...)
+{
+	CComPtr<IStream> spStream;
+	m_connection.spProvider->GetFile(
+		CComBSTR(m_strDirectory + pwszPath), &spStream);
+	return spStream;
 }
 
 bool CSftpDirectory::Rename(
 	CRemoteItemHandle pidlOldFile, PCWSTR pwszNewFilename)
+throw(...)
 {
 	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
 
@@ -157,6 +231,7 @@ bool CSftpDirectory::Rename(
 }
 
 void CSftpDirectory::Delete(CRemoteItemHandle pidl)
+throw(...)
 {
 	CComBSTR strPath(m_strDirectory + pidl.GetFilename());
 	
@@ -168,5 +243,3 @@ void CSftpDirectory::Delete(CRemoteItemHandle pidl)
 	if (hr != S_OK)
 		AtlThrow(hr);
 }
-
-// CSftpDirectory

@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 #include "stdafx.h"
 #include "resource.h"          // main symbols
 
-#include "RemotePidl.h"        // PIDL wrapper class
+#include "HostPidl.h"          // PIDL wrapper classes
+#include "RemotePidl.h"
 #include "Connection.h"        // For SFTP Connection container
 
 #include <vector>
@@ -64,28 +65,24 @@ typedef CComObject<CComSTLCopyContainer< vector<CChildPidl> > > CComPidlHolder;
 class CSftpDirectory
 {
 public:
-	/**
-	 * Creates and initialises directory instance. 
-	 *
-	 * @param conn           SFTP connection container.
-	 * @param pwszDirectory  Path of remote directory this object represents.
-	 */
-	CSftpDirectory(__in CConnection& conn, __in PCWSTR pwszDirectory) :
-		m_connection(conn), // Trim trailing slashes and append single slash
-		m_strDirectory(CString(pwszDirectory).TrimRight(L'/')+L'/')
-	{}
+	CSftpDirectory(
+		__in CAbsolutePidlHandle pidlDirectory, const CConnection& conn)
+		throw(...);
 
-	IEnumIDList* GetEnum(__in SHCONTF grfFlags) throw(...);
+	CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
+	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
+	CComPtr<IStream> GetFile(__in CRemoteItemHandle pidl) throw(...);
+	CComPtr<IStream> GetFileByPath(PCWSTR pwszPath) throw(...);
+
 	bool Rename(
 		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)
 		throw(...);
 	void Delete(__in CRemoteItemHandle pidl) throw(...);
 
-
 private:
 	CConnection m_connection;
-	CString m_strDirectory;
-
+	CString m_strDirectory;        ///< Absolute path to this directory.
+	CAbsolutePidl m_pidlDirectory; ///< Absolute PIDL to this directory.
 	vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );

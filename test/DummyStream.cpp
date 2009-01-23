@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "DummyStream.h"
+#include <shlwapi.h>
 
 CDummyStream::CDummyStream() : 
 	m_szData(NULL), 
@@ -43,9 +44,7 @@ STDMETHODIMP CDummyStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
 }
 
 STDMETHODIMP CDummyStream::Write( 
-	__in_bcount(cb) const void *pv,
-	__in ULONG cb,
-	__out_opt ULONG *pcbWritten
+	const void * /*pv*/, ULONG /*cb*/, ULONG * /*pcbWritten*/
 )
 {
 	return E_NOTIMPL;
@@ -53,7 +52,7 @@ STDMETHODIMP CDummyStream::Write(
 
 STDMETHODIMP CDummyStream::Seek(
 	__in LARGE_INTEGER dlibMove,
-	__in DWORD dwOrigin,
+	__in DWORD /*dwOrigin*/,
 	__out ULARGE_INTEGER *plibNewPosition
 )
 {
@@ -68,7 +67,7 @@ STDMETHODIMP CDummyStream::Seek(
 }
 
 STDMETHODIMP CDummyStream::SetSize( 
-	__in ULARGE_INTEGER libNewSize
+	__in ULARGE_INTEGER /*libNewSize*/
 )
 {
 	return E_NOTIMPL;
@@ -88,7 +87,7 @@ STDMETHODIMP CDummyStream::CopyTo(
 	if (cbData < cb.QuadPart)
 	{
 		ULONG cbWritten = 0;
-		hr = pstm->Write(m_szData, cbData, &cbWritten);
+		hr = pstm->Write(m_szData, static_cast<ULONG>(cbData), &cbWritten);
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 		if (pcbRead)
 			pcbRead->QuadPart = cbData;
@@ -98,7 +97,8 @@ STDMETHODIMP CDummyStream::CopyTo(
 	else
 	{
 		ULONG cbWritten = 0;
-		hr = pstm->Write(m_szData, cb.QuadPart, &cbWritten);
+		hr = pstm->Write(
+			m_szData, static_cast<ULONG>(cb.QuadPart), &cbWritten);
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 		if (pcbRead)
 			pcbRead->QuadPart = cb.QuadPart;
@@ -110,7 +110,7 @@ STDMETHODIMP CDummyStream::CopyTo(
 }
 
 STDMETHODIMP CDummyStream::Commit( 
-	__in DWORD grfCommitFlags
+	__in DWORD /*grfCommitFlags*/
 )
 {
 	return E_NOTIMPL;
@@ -122,18 +122,18 @@ STDMETHODIMP CDummyStream::Revert()
 }
 
 STDMETHODIMP CDummyStream::LockRegion( 
-	__in ULARGE_INTEGER libOffset,
-	__in ULARGE_INTEGER cb,
-	__in DWORD dwLockType
+	__in ULARGE_INTEGER /*libOffset*/,
+	__in ULARGE_INTEGER /*cb*/,
+	__in DWORD /*dwLockType*/
 )
 {
 	return E_NOTIMPL;
 }
 
 STDMETHODIMP CDummyStream::UnlockRegion( 
-	__in ULARGE_INTEGER libOffset,
-	__in ULARGE_INTEGER cb,
-	__in DWORD dwLockType
+	__in ULARGE_INTEGER /*libOffset*/,
+	__in ULARGE_INTEGER /*cb*/,
+	__in DWORD /*dwLockType*/
 )
 {
 	return E_NOTIMPL;
@@ -152,12 +152,8 @@ STDMETHODIMP CDummyStream::Stat(
 
 	if (grfStatFlag & !STATFLAG_NONAME)
 	{
-		size_t cchData = ::wcslen(L"bob");
-		LPOLESTR pszBob = (LPOLESTR)::CoTaskMemAlloc(
-			(cchData+1) * sizeof OLECHAR);
-		hr = ::StringCchCopy(pszBob, cchData, L"bob");
+		hr = ::SHStrDup(L"bob", &(pstatstg->pwcsName));
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), STG_E_INSUFFICIENTMEMORY);
-		pstatstg->pwcsName = pszBob;
 	}
 	
 	pstatstg->type = STGTY_STREAM;
@@ -166,7 +162,7 @@ STDMETHODIMP CDummyStream::Stat(
 }
 
 STDMETHODIMP CDummyStream::Clone( 
-	__deref_out_opt IStream **ppstm
+	__deref_out_opt IStream ** /*ppstm*/
 )
 {
 	return E_NOTIMPL;

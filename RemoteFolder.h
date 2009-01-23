@@ -1,6 +1,6 @@
 /*  Explorer folder handling remote files and folders in a directory.
 
-    Copyright (C) 2007, 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ public:
 		__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
 		__inout_opt ULONG *pdwAttributes);
 	IFACEMETHODIMP SetNameOf(
-		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pszName,
+		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pwszName,
 		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
 
 	// IShellFolder2
@@ -135,7 +135,6 @@ private:
 	CConnection _GetConnection(
 		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
-	CString _ExtractPathFromPIDL( PCIDLIST_ABSOLUTE pidl );
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
 	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );

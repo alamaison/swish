@@ -1,7 +1,6 @@
 // DummyStream.h : Declaration of the CDummyStream
 
 #pragma once
-#include "resource.h"       // main symbols
 
 class ATL_NO_VTABLE CDummyStream :
 	public CComObjectRoot,

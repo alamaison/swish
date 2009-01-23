@@ -325,8 +325,8 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 	try
 	{
 		CHostItem pidl(
-			strUser.c_str(), strHost.c_str(), static_cast<USHORT>(nPort),
-			strPath.c_str());
+			strUser.c_str(), strHost.c_str(), strPath.c_str(),
+			static_cast<USHORT>(nPort));
 
 		CComPtr<IShellFolder> spSubfolder;
 		hr = BindToObject(pidl, pbc, IID_PPV_ARGS(&spSubfolder));

@@ -7,24 +7,13 @@ typedef CMockSftpConsumer MC;
 #include "../TestConfig.h"
 #include "DataObjectTests.h"
 
-#include <DataObject.h>
+#include <SftpDataObject.h>
 #include <RemotePidl.h>
 #include <HostPidl.h>
 
-/**
- * Tests for our generic shell DataObject wrapper.  This class only creates
- * CFSTR_SHELLIDLIST formats (and some misc private shell ones) on its own.
- * However, it will store other format when they are set using SetData() and
- * will return them in GetData() and well as acknowleging their presence
- * in QueryGetData() and in the IEnumFORMATETC.
- *
- * Creation of other formats is left to the CSftpDataObject subclass.
- *
- * These tests verify this behaviour.
- */
-class CDataObject_test : public CPPUNIT_NS::TestFixture
+class CSftpDataObject_test : public CPPUNIT_NS::TestFixture
 {
-	CPPUNIT_TEST_SUITE( CDataObject_test );
+	CPPUNIT_TEST_SUITE( CSftpDataObject_test );
 		CPPUNIT_TEST( testCreate );
 		CPPUNIT_TEST( testCreateMulti );
 		CPPUNIT_TEST( testQueryFormatsEmpty );
@@ -33,10 +22,11 @@ class CDataObject_test : public CPPUNIT_NS::TestFixture
 		CPPUNIT_TEST( testEnumFormats );
 		CPPUNIT_TEST( testQueryFormatsMulti );
 		CPPUNIT_TEST( testEnumFormatsMulti );
+		CPPUNIT_TEST( testFullDirectoryTree );
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	CDataObject_test() :
+	CSftpDataObject_test() :
 		m_pDo(NULL),
 		m_pCoConsumer(NULL), m_pCoProvider(NULL),
 		m_pConsumer(NULL), m_pProvider(NULL) {}
@@ -106,13 +96,16 @@ protected:
 
 	void testCreate()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CDataObject::Create(1, &(pidl.m_pidl), pidlRoot);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -123,20 +116,17 @@ protected:
 		_testShellPIDL(spDo, pidl.GetFilename(), 0);
 
 		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
-		CPPUNIT_ASSERT_THROW_MESSAGE(
-			"CDataObject should not produce a CFSTR_FILEDESCRIPTOR format",
-			_testFileDescriptor(spDo, L"testswishfile.ext", 0),
-			CppUnit::Exception);
+		_testFileDescriptor(spDo, L"testswishfile.ext", 0);
 
 		// Test CFSTR_FILECONTENTS (IStream) format
-		CPPUNIT_ASSERT_THROW_MESSAGE(
-			"CDataObject should not produce a CFSTR_FILECONTENTS format",
-			_testStreamContents(spDo, L"/tmp/swish/testswishfile.ext", 0),
-			CppUnit::Exception);
+		_testStreamContents(spDo, L"/tmp/swish/testswishfile.ext", 0);
 	}
 
 	void testCreateMulti()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
@@ -153,7 +143,7 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CDataObject::Create(3, aPidl, pidlRoot);
+			CSftpDataObject::Create(3, aPidl, pidlRoot, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		m_pDo = spDo.p;
@@ -165,6 +155,16 @@ protected:
 		_testShellPIDL(spDo, pidl1.GetFilename(), 0);
 		_testShellPIDL(spDo, pidl2.GetFilename(), 1);
 		_testShellPIDL(spDo, pidl3.GetFilename(), 2);
+
+		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
+		_testFileDescriptor(spDo, L"testswishfile.ext", 0);
+		_testFileDescriptor(spDo, L"testswishfile.txt", 1);
+		_testFileDescriptor(spDo, L"testswishFile", 2);
+
+		// Test CFSTR_FILECONTENTS (IStream) format
+		_testStreamContents(spDo, L"/tmp/swish/testswishfile.ext", 0);
+		_testStreamContents(spDo, L"/tmp/swish/testswishfile.txt", 1);
+		_testStreamContents(spDo, L"/tmp/swish/testswishFile", 2);
 	}
 
 	/**
@@ -173,12 +173,16 @@ protected:
 	 */
 	void testQueryFormatsEmpty()
 	{
-		CComPtr<IDataObject> spDo = CDataObject::Create(0, NULL, NULL);
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		CComPtr<IDataObject> spDo = CSftpDataObject::Create(0, NULL, NULL, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
-		// Test that QueryGetData() responds negatively for all our formats
+		// Perform query tests
 		_testQueryFormats(spDo, true);
 	}
 
@@ -188,13 +192,16 @@ protected:
 	 */
 	void testEnumFormatsEmpty()
 	{
-		CComPtr<IDataObject> spDo = CDataObject::Create(0, NULL, NULL);
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		CComPtr<IDataObject> spDo = CSftpDataObject::Create(0, NULL, NULL, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
-		// Test that enumerators of both GetData() and SetData()
-		// formats fail to enumerate any of our formats
+		// Test enumerators of both GetData() and SetData() formats
 		_testBothEnumerators(spDo, true);
 	}
 
@@ -203,19 +210,22 @@ protected:
 	 */
 	void testQueryFormats()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CDataObject::Create(1, &(pidl.m_pidl), pidlRoot);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
 		// Perform query tests
-		_testCDataObjectQueryFormats(spDo);
+		_testQueryFormats(spDo);
 	}
 
 	/**
@@ -223,19 +233,22 @@ protected:
 	 */
 	void testEnumFormats()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CDataObject::Create(1, &(pidl.m_pidl), pidlRoot);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
 		// Test enumerators of both GetData() and SetData() formats
-		_testBothCDataObjectEnumerators(spDo);
+		_testBothEnumerators(spDo);
 	}
 
 	/**
@@ -244,6 +257,9 @@ protected:
 	 */
 	void testQueryFormatsMulti()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
@@ -259,13 +275,14 @@ protected:
 		aPidl[1] = pidl2;
 		aPidl[2] = pidl3;
 
-		CComPtr<IDataObject> spDo = CDataObject::Create(3, aPidl, pidlRoot);
+		CComPtr<IDataObject> spDo =
+			CSftpDataObject::Create(3, aPidl, pidlRoot, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
 		// Perform query tests
-		_testCDataObjectQueryFormats(spDo);
+		_testQueryFormats(spDo);
 	}
 
 	/**
@@ -274,6 +291,9 @@ protected:
 	 */
 	void testEnumFormatsMulti()
 	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
@@ -289,13 +309,96 @@ protected:
 		aPidl[1] = pidl2;
 		aPidl[2] = pidl3;
 
-		CComPtr<IDataObject> spDo = CDataObject::Create(3, aPidl, pidlRoot);
+		CComPtr<IDataObject> spDo =
+			CSftpDataObject::Create(3, aPidl, pidlRoot, conn);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
 		// Test enumerators of both GetData() and SetData() formats
-		_testBothCDataObjectEnumerators(spDo);
+		_testBothEnumerators(spDo);
+	}
+
+	void testFullDirectoryTree()
+	{
+		CConnection conn;
+		conn.spProvider = m_pProvider;
+		conn.spConsumer = m_pConsumer;
+
+		// Create absolute PIDL to Swish icon
+		CAbsolutePidl pidlSwish = _GetSwishPidl();
+		
+		// Create test child HOSTPIDL to Unix root directory
+		CHostItem pidlHostRoot(
+			L"user", L"test.example.com", L"/", 22, L"Test PIDL");
+		CAbsolutePidl pidlRoot(pidlSwish, pidlHostRoot);
+
+		CRemoteItem pidl(
+			L"tmp", true, L"mockowner", L"mockgroup",
+			false, 0677, 1024);
+
+		CComPtr<IDataObject> spDo =
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
+
+		// Keep extra reference to check for leaks in tearDown()
+		m_pDo = spDo.p;
+		m_pDo->AddRef();
+
+		// Test CFSTR_SHELLIDLIST (PIDL array) format.  
+		CRemoteItemHandle pidlFolder = ::ILFindLastID(pidlRoot);
+		_testShellPIDLFolder(spDo, L"/");
+		_testShellPIDLCount(spDo, 1);
+		_testShellPIDL(spDo, L"tmp", 0);
+
+		// Build list of paths in entire expected hierarchy
+		vector<wstring> testfiles;
+		testfiles.push_back(L"tmp");
+		testfiles.push_back(L"tmp/.testtmphiddenfile");
+		testfiles.push_back(L"tmp/.testtmphiddenfolder");
+		testfiles.push_back(L"tmp/Testtmpfolder");
+		testfiles.push_back(L"tmp/swish");
+		testfiles.push_back(L"tmp/swish/.testswishhiddenfile");
+		testfiles.push_back(L"tmp/swish/.testswishhiddenfolder");
+		testfiles.push_back(L"tmp/swish/Testswishfolder");
+		testfiles.push_back(L"tmp/swish/testswishFile");
+		testfiles.push_back(L"tmp/swish/testswishfile");
+		testfiles.push_back(
+			L"tmp/swish/testswishfile with \"quotes\" and spaces");
+		testfiles.push_back(L"tmp/swish/testswishfile with spaces");
+		testfiles.push_back(L"tmp/swish/testswishfile..");
+		testfiles.push_back(L"tmp/swish/testswishfile.ext");
+		testfiles.push_back(L"tmp/swish/testswishfile.ext.txt");
+		testfiles.push_back(L"tmp/swish/testswishfile.txt");
+		testfiles.push_back(L"tmp/swish/testswishfolder with spaces");
+		testfiles.push_back(L"tmp/swish/testswishfolder.bmp");
+		testfiles.push_back(L"tmp/swish/testswishfolder.ext");
+		testfiles.push_back(L"tmp/testtmpFile");
+		testfiles.push_back(L"tmp/testtmpfile");
+		testfiles.push_back(L"tmp/testtmpfile with \"quotes\" and spaces");
+		testfiles.push_back(L"tmp/testtmpfile with spaces");
+		testfiles.push_back(L"tmp/testtmpfile..");
+		testfiles.push_back(L"tmp/testtmpfile.ext");
+		testfiles.push_back(L"tmp/testtmpfile.ext.txt");
+		testfiles.push_back(L"tmp/testtmpfile.txt");
+		testfiles.push_back(L"tmp/testtmpfolder with spaces");
+		testfiles.push_back(L"tmp/testtmpfolder.bmp");
+		testfiles.push_back(L"tmp/testtmpfolder.ext");
+
+		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format.  The 
+		// descriptor should include every item in the entire hierarchy 
+		// generated by CMockSftpProvider.
+		for (UINT i = 0; i < testfiles.size(); ++i)
+		{
+			_testFileDescriptor(spDo, testfiles[i].c_str(), i);
+		}
+
+		// Test CFSTR_FILECONTENTS (IStream) format.  The dummy streams should
+		// contain the absolute path to the file as a string
+		for (UINT i = 0; i < testfiles.size(); ++i)
+		{
+			_testStreamContents(
+				spDo, (wstring(L"/") + testfiles[i]).c_str(), i);
+		}
 	}
 
 private:
@@ -307,96 +410,6 @@ private:
 	ISftpProvider *m_pProvider;
 
 	CTestConfig config;
-
-	/**
-	 * Test enumerator for the presence of CFSTR_SHELLIDLIST but the absence of
-	 * CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS.
-	 *
-	 * Format-limited version of _testEnumerator() in DataObjectTests.h.
-	 */
-	static void _testCDataObjectEnumerator(IEnumFORMATETC *pEnum)
-	{
-		CLIPFORMAT cfShellIdList = static_cast<CLIPFORMAT>(
-			::RegisterClipboardFormat(CFSTR_SHELLIDLIST));
-		CLIPFORMAT cfDescriptor = static_cast<CLIPFORMAT>(
-			::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR));
-		CLIPFORMAT cfContents = static_cast<CLIPFORMAT>(
-			::RegisterClipboardFormat(CFSTR_FILECONTENTS));
-
-		bool fFoundShellIdList = false;
-		bool fFoundDescriptor = false;
-		bool fFoundContents = false;
-
-		HRESULT hr;
-		do {
-			FORMATETC fetc;
-			hr = pEnum->Next(1, &fetc, NULL);
-			if (hr == S_OK)
-			{
-				if (fetc.cfFormat == cfShellIdList)
-					fFoundShellIdList = true;
-				else if (fetc.cfFormat == cfDescriptor)
-					fFoundDescriptor = true;
-				else if (fetc.cfFormat == cfContents)
-					fFoundContents = true;
-			}
-		} while (hr == S_OK);
-
-		// Test CFSTR_SHELLIDLIST (PIDL array) format present
-		CPPUNIT_ASSERT(fFoundShellIdList);
-
-		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format absent
-		CPPUNIT_ASSERT(!fFoundDescriptor);
-
-		// Test CFSTR_FILECONTENTS (IStream) format absent
-		CPPUNIT_ASSERT(!fFoundContents);
-	}
-
-	/**
-	 * Test the GetData() enumerator for the presence of CFSTR_SHELLIDLIST
-	 * but the absence of CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS.
-	 *
-	 * Test the SetData() enumerator for the presence of all three formats.
-	 *
-	 * Format-limited version of _testBothEnumerators() in DataObjectTests.h.
-	 */
-	static void _testBothCDataObjectEnumerators(IDataObject *pDo)
-	{
-		HRESULT hr;
-
-		// Test enumerator of GetData() formats
-		CComPtr<IEnumFORMATETC> spEnumGet;
-		hr = pDo->EnumFormatEtc(DATADIR_GET, &spEnumGet);
-		CPPUNIT_ASSERT_OK(hr);
-		_testCDataObjectEnumerator(spEnumGet);
-
-		// Test enumerator of SetData() formats
-		CComPtr<IEnumFORMATETC> spEnumSet;
-		hr = pDo->EnumFormatEtc(DATADIR_SET, &spEnumSet);
-		CPPUNIT_ASSERT_OK(hr);
-		_testCDataObjectEnumerator(spEnumSet);
-	}
-
-	/**
-	 * Test QueryGetData() enumerator for the presence of CFSTR_SHELLIDLIST
-	 * but the absence of CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS.
-	 *
-	 * Format-limited version of _testQueryFormats() in DataObjectTests.h.
-	 */
-	static void _testCDataObjectQueryFormats(IDataObject *pDo)
-	{
-		// Test CFSTR_SHELLIDLIST (PIDL array) format succeeds
-		CFormatEtc fetcShellIdList(CFSTR_SHELLIDLIST);
-		CPPUNIT_ASSERT_OK(pDo->QueryGetData(&fetcShellIdList));
-
-		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format fails
-		CFormatEtc fetcDescriptor(CFSTR_FILEDESCRIPTOR);
-		CPPUNIT_ASSERT(pDo->QueryGetData(&fetcDescriptor) == S_FALSE);
-
-		// Test CFSTR_FILECONTENTS (IStream) format fails
-		CFormatEtc fetcContents(CFSTR_FILECONTENTS);
-		CPPUNIT_ASSERT(pDo->QueryGetData(&fetcContents) == S_FALSE);
-	}
 
 	/**
 	 * Get the PIDL which represents the HostFolder (Swish icon) in Explorer.
@@ -496,4 +509,4 @@ private:
 	}
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CDataObject_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CSftpDataObject_test );

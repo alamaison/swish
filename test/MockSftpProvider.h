@@ -8,8 +8,20 @@
 
 #include <vector>
 using std::vector;
-#include <map>
-using std::map;
+
+#include <string>
+using std::wstring;
+
+#include <algorithm>
+using std::find_if;
+using std::sort;
+
+#include <functional>
+using std::binary_function;
+using std::bind2nd;
+using std::less;
+
+#include "tree.h"
 
 class ATL_NO_VTABLE CMockSftpProvider :
 	public CComObjectRootEx<CComObjectThreadModel>,
@@ -58,12 +70,50 @@ private:
 	RenameBehaviour m_enumRenameBehaviour;
 
 	CComPtr<Swish::ISftpConsumer> m_spConsumer;
-	map<CString, vector<Swish::Listing> > m_mapDirectories;
+
+	/** @name Filesystem
+	 * Mock filesystem holding dummy file heirarchy as an n-ary tree.
+	 */
+	// @{
+	typedef wstring Filename;
+	typedef Swish::Listing FilesystemItem;
+	typedef tree<FilesystemItem> Filesystem;
+	typedef Filesystem::iterator FilesystemLocation;
+
+	struct eq_item : 
+		public binary_function<FilesystemItem, wstring, bool>
+	{
+		bool operator()(const FilesystemItem& item, const wstring& name)
+		const
+		{
+			return wstring(item.bstrFilename) == name;
+		}
+	};
+
+	struct lt_item : public std::less<FilesystemItem>
+	{
+		bool operator()(
+			const FilesystemItem& left, const FilesystemItem& right)
+		const
+		{
+			return wstring(left.bstrFilename) < wstring(right.bstrFilename);
+		}
+	};
+	
+	Filesystem m_filesystem;
+
+	Swish::Listing _MakeDirectoryItem(PCWSTR pwszName);
+
+	void _MakeItemIn(FilesystemLocation loc, const Swish::Listing& item);
+	void _MakeItemIn(const wstring& path, const Swish::Listing& item);
+
+	vector<wstring> _TokenisePath(const wstring& path);
+	FilesystemLocation _FindLocationFromPath(const wstring& path);
+	// @}
 
 	CComBSTR _TagFilename(__in PCTSTR pszFilename, __in PCTSTR pszTag);
-	void _FillMockListing(__in PCTSTR pszDirectory);
-	void _TestMockPathExists(__in PCTSTR strPath);
-	bool _IsInListing(__in PCTSTR strDirectory, __in PCTSTR strFilename);
+	void _FillMockListing(__in PCWSTR pwszDirectory);
+	void _TestMockPathExists(__in PCWSTR pwszPath);
 
 public:
 
@@ -102,3 +152,43 @@ public:
 	// @}
 
 };
+
+
+/**
+ * Copy-policy for use by enumerators of Listing items.
+ */
+template<>
+class _Copy<Swish::Listing>
+{
+public:
+	static HRESULT copy(Swish::Listing* p1, const Swish::Listing* p2)
+	{
+		p1->bstrFilename = SysAllocStringLen(
+			p2->bstrFilename, ::SysStringLen(p2->bstrFilename));
+		p1->uPermissions = p2->uPermissions;
+		p1->bstrOwner = SysAllocStringLen(
+			p2->bstrOwner, ::SysStringLen(p2->bstrOwner));
+		p1->bstrGroup = SysAllocStringLen(
+			p2->bstrGroup, ::SysStringLen(p2->bstrGroup));
+		p1->uSize = p2->uSize;
+		p1->cHardLinks = p2->cHardLinks;
+		p1->dateModified = p2->dateModified;
+
+		return S_OK;
+	}
+	static void init(Swish::Listing* p)
+	{
+		::ZeroMemory(p, sizeof(Swish::Listing));
+	}
+	static void destroy(Swish::Listing* p)
+	{
+		::SysFreeString(p->bstrFilename);
+		::SysFreeString(p->bstrOwner);
+		::SysFreeString(p->bstrGroup);
+		::ZeroMemory(p, sizeof(Swish::Listing));
+	}
+};
+	
+typedef CComEnum<Swish::IEnumListing, &__uuidof(Swish::IEnumListing),
+	Swish::Listing, _Copy<Swish::Listing> >
+	CMockEnumListing;

@@ -9,8 +9,10 @@ What is Swish?
     
 Status:
     ********************************************************************
-    In this version, Swish can only perform simple tasks such as renaming
-    and deleting files on the remote server. It cannot access their contents.
+    In this version, Swish is finally starting to look like a real SFTP 
+    client.  As well as management tasks such as renaming and deleting 
+    files on the remote server it can copy the contents of files and 
+    folders from the remote server to the local filesystem.
     ********************************************************************
     
     The architecture of Swish is divided into a back-end and a front-end.  The
@@ -22,16 +24,18 @@ Status:
     While the eventual aim is to offer a choice of back-end implementations
     with different capabilities, this is currently the only one.
     
-    Currently, Swish can only perform password-based authentication. Also, as
-    it lacks the ability to authenticate a host's key it will BLINDLY CONNECT
-    TO ANY HOST YOU SPECIFY - *WATCH OUT*! Adding host-key authentication is
-    a priority.
+    Currently, Swish only supports simple password and keyboard-interactive
+    authentication. Also, as it lacks any ability to authenticate a host's key 
+    it will BLINDLY CONNECT TO ANY HOST YOU SPECIFY - *WATCH OUT*!
+    Adding host-key has been postponed for the time being but patches are
+    welcome.
 
 Supported Operating Systems:
-    Windows XP   (most tested)
-    Windows 2000 (regularly tested)
-    Windows Me   (rarely tested)
-    Windows 98   (regularly tested)
+    Windows Vista (works but has connection pool issues)
+    Windows XP    (most tested)
+    Windows 2000  (regularly tested)
+    Windows Me    (rarely tested)
+    Windows 98    (regularly tested)
     
     Unfortunately, Windows 95 and NT 4 are not immediately supported.  This is
     because the C runtime used when compiling with Visual Studio 2005 is
@@ -46,12 +50,13 @@ Supported Operating Systems:
        so it might not work.
 
 Building:
-    There is currently an issue with the build process that means you may need
-    to build it two or three times before all the components are fully built.
-    The second time around it will appear to have built all parts but in fact 
-    hasn't.  Just keep choosing Build until there is no more to be done.
+    There is currently an issue with the build process on Vista that means you 
+    may need to build it two or three times before all the components are 
+    fully built. The second time around it will appear to have built all 
+    parts but in fact hasn't.  Just keep choosing Build until there is no 
+    more to be done.
     
-    Vista: When building on Windows Vista, make sure you are running Visual
+    When building on Windows Vista, make sure you are running Visual
     Studio as an Administrator.  Otherwise it can't register the components
     and later components that depends on earlier ones will fail to build.
 

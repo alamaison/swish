@@ -1,6 +1,6 @@
-/*  Implementation of handler for Shell Folder View interaction with Explorer.
+/*  Handler for the Shell Folder View's interaction with Explorer.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,27 +75,27 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			ATLASSERT(pInfo->idCmdLast <= FCIDM_SHVIEWLAST );
 			//ATLASSERT(::IsMenu(pInfo->hmenu));
 
-			// Get handle to explorer Tools menu (index 4)
-			HMENU hSubMenu = ::GetSubMenu(pInfo->hmenu, 4);
+			// Try to get a handle to the  Explorer Tools menu and insert 
+			// add and remove connection menu items into it if we find it
+			HMENU hToolsMenu = _GetToolsMenu(pInfo->hmenu);
+			if (hToolsMenu)
+			{
+				ATLVERIFY_REPORT(
+					::InsertMenu(
+						hToolsMenu, 2, MF_BYPOSITION, 
+						pInfo->idCmdFirst + MENUIDOFFSET_ADD,
+						L"&Add SFTP Connection..."),
+					::GetLastError());
+				ATLVERIFY_REPORT(
+					::InsertMenu(
+						hToolsMenu, 3, MF_BYPOSITION, 
+						pInfo->idCmdFirst + MENUIDOFFSET_REMOVE,
+						L"&Remove SFTP Connection..."),
+					::GetLastError());
 
-			// Insert add and remove connection menu items into it
-			ATLVERIFY_REPORT(
-				::InsertMenu(
-					hSubMenu, 2, MF_BYPOSITION, 
-					pInfo->idCmdFirst + MENUIDOFFSET_ADD,
-					_T("&Add SFTP Connection")),
-				::GetLastError()
-			);
-			ATLVERIFY_REPORT(
-				::InsertMenu(
-					hSubMenu, 3, MF_BYPOSITION, 
-					pInfo->idCmdFirst + MENUIDOFFSET_REMOVE,
-					_T("&Remove SFTP Connection")),
-				::GetLastError()
-			);
-
-			// Return value of last menu ID plus 1
-			pInfo->idCmdFirst += MENUIDOFFSET_LAST+1; // Added 2 items
+				// Return value of last menu ID plus 1
+				pInfo->idCmdFirst += MENUIDOFFSET_LAST+1; // Added 2 items
+			}
 
 			return S_OK;
 
@@ -154,6 +154,25 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 /*----------------------------------------------------------------------------*
  * Private functions
  *----------------------------------------------------------------------------*/
+
+/**
+ * Get handle to explorer 'Tools' menu.
+ *
+ * The menu we want to insert into is actually the @e submenu of the
+ * Tools menu @e item.  Confusing!
+ */
+HMENU CExplorerCallback::_GetToolsMenu(HMENU hParentMenu)
+{
+	MENUITEMINFO info;
+	info.cbSize = sizeof(MENUITEMINFO);
+	info.fMask = MIIM_SUBMENU; // Item we are requesting
+
+	BOOL fSucceeded = ::GetMenuItemInfo(
+		hParentMenu, FCIDM_MENU_TOOLS, FALSE, &info);
+	REPORT(fSucceeded);
+
+	return (fSucceeded) ? info.hSubMenu : NULL;
+}
 
 HRESULT CExplorerCallback::_AddNewConnection()
 {
@@ -219,5 +238,3 @@ void CExplorerCallback::_RefreshView()
 	::SHChangeNotify( SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 
 		m_pidl, NULL );
 }
-
-// CExplorerCallback

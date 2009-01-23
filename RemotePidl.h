@@ -26,9 +26,7 @@
 
 #include <pshpack1.h>
 /** 
- * Duplicate of REMOTEPIDL defined in RemotePidlManager.cpp.
- * These must be kept in sync.  Eventually this file will replace 
- * RemotePidlManager.cpp
+ * Internal structure of the PIDLs representing items on the remote filesystem.
  */
 struct RemoteItemId
 {
@@ -36,7 +34,7 @@ struct RemoteItemId
 	DWORD dwFingerprint;
 	bool fIsFolder;
 	bool fIsLink;
-	WCHAR wszFilename[MAX_PATH_LENZ];
+	WCHAR wszFilename[MAX_FILENAME_LENZ];
 	WCHAR wszOwner[MAX_USERNAME_LENZ];
 	WCHAR wszGroup[MAX_USERNAME_LENZ];
 	DWORD dwPermissions;
@@ -164,6 +162,31 @@ public:
 		return pwszExtStart;
 	}
 
+	/**
+	 * Return the relative path made by the items in this PIDL.
+	 * e.g.
+	 * - A child PIDL returns:     "filename.ext"
+	 * - A relative PIDL returns:  "dir2/dir2/dir3/filename.ext"
+	 * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
+	 */
+	CString GetFilePath() const throw(...)
+	{
+		// Walk over RemoteItemIds and append each filename to form the path
+		CString strPath = GetFilename();
+		CRemoteItemListHandle pidlNext = GetNext();
+
+		while (pidlNext.IsValid())
+		{
+			strPath += L"/";
+			strPath += pidlNext.Get()->wszFilename;
+			pidlNext = pidlNext.GetNext();
+		}
+
+		ATLASSERT( strPath.GetLength() <= MAX_PATH_LEN );
+
+		return strPath;
+	}
+
 	CString GetOwner() const throw(...)
 	{
 		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
@@ -250,19 +273,19 @@ public:
 	 * 
 	 * @param[in] pwszFilename   Name of file or directory on the remote 
 	 *                           file-system.
+	 * @param[in] fIsFolder      Is file a folder?
 	 * @param[in] pwszOwner      Name of file owner on remote system.
 	 * @param[in] pwszGroup      Name of file group on remote system.
 	 * @param[in] dwPermissions  Value of the file's Unix permissions bits.
 	 * @param[in] uSize          Size of file in bytes.
 	 * @param[in] dateModified   Date that file was last modified.
-	 * @param[in] fIsFolder      Is file a folder?
 	 * @param[in] fIsLink        Is file a symlink?
 	 * 
 	 * @throws CAtlException if error.
 	 */
 	explicit CRemotePidl(
-		PCWSTR pwszFilename, PCWSTR pwszOwner=L"", PCWSTR pwszGroup=L"",
-		bool fIsFolder=false, bool fIsLink=false, DWORD dwPermissions=0,
+		PCWSTR pwszFilename, bool fIsFolder=false, PCWSTR pwszOwner=L"", 
+		PCWSTR pwszGroup=L"", bool fIsLink=false, DWORD dwPermissions=0,
 		ULONGLONG uSize=0, DATE dateModified=0)
 	throw(...)
 	{
@@ -270,13 +293,12 @@ public:
 
 		// Allocate enough memory to hold RemoteItemId structure & terminator
 		static size_t cbItem = sizeof RemoteItemId + sizeof USHORT;
-		RemoteItemId *item = static_cast<RemoteItemId *>(
-			::CoTaskMemAlloc(cbItem));
-		if(item == NULL)
-			AtlThrow(E_OUTOFMEMORY);
-		::ZeroMemory(item, cbItem);
+		m_pidl = static_cast<PidlType>(::CoTaskMemAlloc(cbItem));
+		ATLENSURE_THROW(m_pidl, E_OUTOFMEMORY);
+		::ZeroMemory(m_pidl, cbItem);
 
 		// Fill members of the PIDL with data
+		RemoteItemId *item = reinterpret_cast<RemoteItemId *>(m_pidl);
 		item->cb = sizeof RemoteItemId;
 		item->dwFingerprint = RemoteItemId::FINGERPRINT; // Sign with fprint
 		CopyWSZString(item->wszFilename, 
@@ -289,7 +311,6 @@ public:
 		item->fIsFolder = fIsFolder;
 		item->fIsLink = fIsLink;
 
-		m_pidl = reinterpret_cast<PidlType>(item);
 		ATLASSERT(IsValid());
 		ATLASSERT(GetNext() == NULL); // PIDL is terminated
 	}
