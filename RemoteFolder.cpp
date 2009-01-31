@@ -732,11 +732,11 @@ STDMETHODIMP CRemoteFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl,
 				else
 				{
 					// File size if a special case.  We need to format this 
-					// with an appropriate suffix (KB, MB etc.) rather than 
+					// as a value in kilobytes (e.g. 2,348 KB) rather than 
 					// returning it as a number
 					
-					vector<wchar_t> buf(64); // Fits "1024 bytes" in any language?
-					::StrFormatByteSize64(
+					vector<wchar_t> buf(64);
+					::StrFormatKBSize(
 						pv.ullVal, &buf[0], static_cast<UINT>(buf.size()));
 					strSrc = &buf[0];
 				}
