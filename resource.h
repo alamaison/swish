@@ -6,9 +6,16 @@
 #define IDCANCEL                        2
 #define IDS_PROJNAME                    100
 #define IDR_SWISH                       100
+#define IDS_COLUMN_FILENAME             101
 #define IDD_HOSTPASSWORD_DIALOG         102
 #define IDD_PASSWORD_DIALOG             102
+#define IDS_COLUMN_SIZE                 102
+#define IDS_COLUMN_TYPE                 103
+#define IDS_COLUMN_PERMISSIONS          104
 #define IDD_KBDINTERACTIVEDIALOG        105
+#define IDS_COLUMN_MODIFIED             105
+#define IDS_COLUMN_OWNER                106
+#define IDS_COLUMN_GROUP                107
 #define IDD_HOSTINFO_DIALOG             201
 #define IDC_HOST_GROUP                  1002
 #define IDC_USER                        1003

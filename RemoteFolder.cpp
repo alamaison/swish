@@ -527,16 +527,48 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
     return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetDefaultColumn : IShellFolder2
- * Gets the default sorting and display columns.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetDefaultColumn( DWORD dwReserved, 
-											 __out ULONG *pSort, 
-											 __out ULONG *pDisplay )
+/**
+ * Static column information.
+ */
+static const struct {
+	int colnameid;
+	int pcsFlags;
+	int fmt;
+	int cxChar;
+} s_aColumns[] = {
+	{ IDS_COLUMN_FILENAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
+	  LVCFMT_LEFT, 30 }, // Display name (Label)
+	{ IDS_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
+	  LVCFMT_RIGHT, 15 }, // Size
+	{ IDS_COLUMN_PERMISSIONS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
+	  LVCFMT_LEFT, 20 }, // Permissions
+	{ IDS_COLUMN_MODIFIED, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
+	  LVCFMT_LEFT, 20 }, // Modified date
+	{ IDS_COLUMN_OWNER, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
+	  LVCFMT_LEFT, 12 }, // Owner
+	{ IDS_COLUMN_GROUP, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
+	  LVCFMT_LEFT, 12 }  // Group
+};
+
+/**
+ * Return number of columns.
+ */
+UINT s_cColumns()
 {
-	ATLTRACE("CRemoteFolder::GetDefaultColumn called\n");
-	(void)dwReserved;
+	return sizeof(s_aColumns) / sizeof(s_aColumns[0]);
+}
+
+/**
+ * Get the default sorting and display columns.
+ * @implementing IShellFolder2
+ */
+STDMETHODIMP CRemoteFolder::GetDefaultColumn(
+	DWORD /*dwReserved*/, ULONG *pSort, ULONG *pDisplay)
+{
+	METHOD_TRACE;
+
+	ATLENSURE_RETURN_HR(pSort, E_POINTER);
+	ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
 
 	// Sort and display by the filename
 	*pSort = 0;
@@ -545,31 +577,26 @@ STDMETHODIMP CRemoteFolder::GetDefaultColumn( DWORD dwReserved,
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetDefaultColumnState : IShellFolder2
+/**
  * Returns the default state for the column specified by index.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetDefaultColumnState( __in UINT iColumn, 
-												  __out SHCOLSTATEF *pcsFlags )
+ * @implementing IShellFolder2
+ */
+STDMETHODIMP CRemoteFolder::GetDefaultColumnState(
+	UINT iColumn, SHCOLSTATEF* pcsFlags)
 {
-	ATLTRACE("CRemoteFolder::GetDefaultColumnState called\n");
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(pcsFlags, E_POINTER);
+	*pcsFlags = 0;
 
-	switch (iColumn)
+	if (iColumn < s_cColumns())
 	{
-	case 0: // Display name (Label)
-	case 1: // Hostname
-	case 2: // Username
-	case 4: // Remote filesystem path
-		*pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT; break;
-	case 3: // SFTP port
-		*pcsFlags = SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT; break;
-	case 5: // Type
-		*pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_SECONDARYUI; break;
-	default:
+		*pcsFlags = s_aColumns[iColumn].pcsFlags;
+		return S_OK;
+	}
+	else
+	{
 		return E_FAIL;
 	}
-
-	return S_OK;
 }
 
 STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl, 
@@ -678,9 +705,11 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID( __in UINT iColumn,
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetDetailsOf : IShellDetails
+/**
  * Returns detailed information on the items in a folder.
+ *
+ * @implementing IShellDetails
+ *
  * This function operates in two distinctly different ways:
  * If pidl is NULL:
  *     Retrieves the information on the view columns, i.e., the names of
@@ -694,12 +723,15 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID( __in UINT iColumn,
  * Most of the work is delegated to GetDetailsEx by converting the column
  * index to a PKEY with MapColumnToSCID.  This function also now determines
  * what the index of the last supported detail is.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl, 
-										 __in UINT iColumn, 
-										 __out LPSHELLDETAILS pDetails )
+ */
+STDMETHODIMP CRemoteFolder::GetDetailsOf(
+	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* pDetails)
 {
 	ATLTRACE("CRemoteFolder::GetDetailsOf called, iColumn=%u\n", iColumn);
+
+	ATLENSURE_RETURN_HR(pDetails, E_POINTER);
+
+	::ZeroMemory(pDetails, sizeof(SHELLDETAILS));
 
 	PROPERTYKEY pkey;
 
@@ -720,14 +752,11 @@ STDMETHODIMP CRemoteFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl,
 			case VT_BSTR:
 				strSrc = pv.bstrVal;
 				::SysFreeString(pv.bstrVal);
-
-				if(!pidl) // Header requested
-					pDetails->fmt = LVCFMT_LEFT;
 				break;
 			case VT_UI8:
 				if (!IsEqualPropertyKey(pkey, PKEY_Size))
 				{
-					strSrc.Format(_T("%u"), pv.ullVal);
+					strSrc.Format(L"%u", pv.ullVal);
 				}
 				else
 				{
@@ -740,27 +769,22 @@ STDMETHODIMP CRemoteFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl,
 						pv.ullVal, &buf[0], static_cast<UINT>(buf.size()));
 					strSrc = &buf[0];
 				}
-
-				if(!pidl) // Header requested
-					pDetails->fmt = LVCFMT_RIGHT;
 				break;
 			case VT_DATE:
-				{
-				COleDateTime date = pv.date;
-				strSrc = date.Format();
-				if(!pidl) // Header requested
-					pDetails->fmt = LVCFMT_LEFT;
+				strSrc = COleDateTime(pv.date).Format();
 				break;
-				}
 			default:
 				UNREACHABLE;
 			}
-
+			
 			pDetails->str.uType = STRRET_WSTR;
 			SHStrDup(strSrc, &pDetails->str.pOleStr);
-
+			
 			if(!pidl) // Header requested
-				pDetails->cxChar = strSrc.GetLength()^2;
+			{
+				pDetails->fmt = s_aColumns[iColumn].fmt;
+				pDetails->cxChar = s_aColumns[iColumn].cxChar;
+			}
 		}
 
 		VariantClear( &pv );
