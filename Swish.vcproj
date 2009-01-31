@@ -563,6 +563,36 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Properties"
+			>
+			<Filter
+				Name="Header Files"
+				Filter="h;hpp;hxx;hm;inl;inc"
+				>
+				<File
+					RelativePath=".\properties\column.h"
+					>
+				</File>
+				<File
+					RelativePath=".\properties\properties.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+				>
+				<File
+					RelativePath=".\properties\column.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\properties\properties.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 	</Files>
 	<Globals>
 		<Global

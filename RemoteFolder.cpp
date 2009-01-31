@@ -24,11 +24,13 @@
 #include "SftpDataObject.h"
 #include "NewConnDialog.h"
 #include "IconExtractor.h"
-#include "ExplorerCallback.h" // For interaction with Explorer window
-#include "UserInteraction.h"  // For implementation of ISftpConsumer
+#include "ExplorerCallback.h"      // For interaction with Explorer window
+#include "UserInteraction.h"       // For implementation of ISftpConsumer
 #include "ShellDataObject.h"
 #include "HostPidl.h"
 #include "Registry.h"
+#include "properties/properties.h" // File properties handler
+#include "properties/column.h"     // Column details
 
 #include <ATLComTime.h>
 
@@ -38,6 +40,8 @@ using std::iterator;
 
 #include <string>
 using std::wstring;
+
+using namespace swish;
 
 void CRemoteFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
 const throw(...)
@@ -528,184 +532,6 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 }
 
 /**
- * Static column information.
- */
-static const struct {
-	int colnameid;
-	int pcsFlags;
-	int fmt;
-	int cxChar;
-} s_aColumns[] = {
-	{ IDS_COLUMN_FILENAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
-	  LVCFMT_LEFT, 30 }, // Display name (Label)
-	{ IDS_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
-	  LVCFMT_RIGHT, 15 }, // Size
-	{ IDS_COLUMN_PERMISSIONS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
-	  LVCFMT_LEFT, 20 }, // Permissions
-	{ IDS_COLUMN_MODIFIED, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
-	  LVCFMT_LEFT, 20 }, // Modified date
-	{ IDS_COLUMN_OWNER, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
-	  LVCFMT_LEFT, 12 }, // Owner
-	{ IDS_COLUMN_GROUP, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, 
-	  LVCFMT_LEFT, 12 }  // Group
-};
-
-/**
- * Return number of columns.
- */
-UINT s_cColumns()
-{
-	return sizeof(s_aColumns) / sizeof(s_aColumns[0]);
-}
-
-/**
- * Get the default sorting and display columns.
- * @implementing IShellFolder2
- */
-STDMETHODIMP CRemoteFolder::GetDefaultColumn(
-	DWORD /*dwReserved*/, ULONG *pSort, ULONG *pDisplay)
-{
-	METHOD_TRACE;
-
-	ATLENSURE_RETURN_HR(pSort, E_POINTER);
-	ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
-
-	// Sort and display by the filename
-	*pSort = 0;
-	*pDisplay = 0;
-
-	return S_OK;
-}
-
-/**
- * Returns the default state for the column specified by index.
- * @implementing IShellFolder2
- */
-STDMETHODIMP CRemoteFolder::GetDefaultColumnState(
-	UINT iColumn, SHCOLSTATEF* pcsFlags)
-{
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(pcsFlags, E_POINTER);
-	*pcsFlags = 0;
-
-	if (iColumn < s_cColumns())
-	{
-		*pcsFlags = s_aColumns[iColumn].pcsFlags;
-		return S_OK;
-	}
-	else
-	{
-		return E_FAIL;
-	}
-}
-
-STDMETHODIMP CRemoteFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl, 
-										 __in const SHCOLUMNID *pscid,
-										 __out VARIANT *pv )
-{
-	ATLTRACE("CRemoteFolder::GetDetailsEx called\n");
-
-	bool fHeader = (pidl == NULL);
-
-	CRemoteItemHandle rpidl(pidl);
-
-	// If pidl: Request is for an item detail.  Retrieve from pidl and
-	//          return string
-	// Else:    Request is for a column heading.  Return heading as BSTR
-
-	// Display name (Label)
-	if (IsEqualPropertyKey(*pscid, PKEY_ItemNameDisplay))
-	{
-		TRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
-		
-		return _FillDetailsVariant(
-			fHeader ? L"Name" : rpidl.GetFilename(), pv);
-	}
-	// Owner
-	else if (IsEqualPropertyKey(*pscid, PKEY_FileOwner))
-	{
-		TRACE("\t\tRequest: PKEY_FileOwner\n");
-
-		return _FillDetailsVariant(
-			fHeader ? L"Owner" : rpidl.GetOwner(), pv);
-	}
-	// Group
-	else if (IsEqualPropertyKey(*pscid, PKEY_SwishRemoteGroup))
-	{
-		TRACE("\t\tRequest: PKEY_SwishRemoteGroup\n");
-		
-		return _FillDetailsVariant(
-			fHeader ? L"Group" : rpidl.GetGroup(), pv);
-	}
-	// File permissions: drwxr-xr-x form
-	else if (IsEqualPropertyKey(*pscid, PKEY_SwishRemotePermissions))
-	{
-		TRACE("\t\tRequest: PKEY_SwishRemotePermissions\n");
-		
-		return _FillDetailsVariant(
-			fHeader ? L"Permissions" : rpidl.GetPermissionsStr(), pv);
-	}
-	// File size in bytes
-	else if (IsEqualPropertyKey(*pscid, PKEY_Size))
-	{
-		TRACE("\t\tRequest: PKEY_Size\n");
-
-		return fHeader ?
-			_FillDetailsVariant(L"Size", pv) : 
-			_FillUI8Variant(rpidl.GetFileSize(), pv);
-	}
-	// Last modified date
-	else if (IsEqualPropertyKey(*pscid, PKEY_DateModified))
-	{
-		TRACE("\t\tRequest: PKEY_DateModified\n");
-
-		return fHeader ?
-			_FillDetailsVariant(L"Last Modified", pv) : 
-			_FillDateVariant(rpidl.GetDateModified(), pv);
-	}
-	TRACE("\t\tRequest: <unknown>\n");
-
-	// Assert unless request is one of the supported properties
-	// TODO: System.FindData tiggers this
-	// UNREACHABLE;
-
-	return E_FAIL;
-}
-
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetDefaultColumnState : IShellFolder2
- * Convert column to appropriate property set ID (FMTID) and property ID (PID).
- * IMPORTANT:  This function defines which details are supported as
- * GetDetailsOf() just forwards the columnID here.  The first column that we
- * return E_FAIL for marks the end of the supported details.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::MapColumnToSCID( __in UINT iColumn, 
-										    __out PROPERTYKEY *pscid )
-{
-	ATLTRACE("CRemoteFolder::MapColumnToSCID called\n");
-
-	switch (iColumn)
-	{
-	case 0: // Display name (Label)
-		*pscid = PKEY_ItemNameDisplay; break;
-	case 4: // Owner
-		*pscid = PKEY_FileOwner; break;
-	case 5: // Group
-		*pscid = PKEY_SwishRemoteGroup; break;
-	case 2: // File Permissions: drwxr-xr-x form
-		*pscid= PKEY_SwishRemotePermissions; break;
-	case 1: // File size in bytes
-		*pscid = PKEY_Size; break;
-	case 3: // Last modified date
-		*pscid = PKEY_DateModified; break;
-	default:
-		return E_FAIL;
-	}
-
-	return S_OK;
-}
-
-/**
  * Returns detailed information on the items in a folder.
  *
  * @implementing IShellDetails
@@ -719,78 +545,70 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID( __in UINT iColumn,
  *     Retrieves the specific item information for the given pidl and the
  *     requested column.
  * The information is returned in the SHELLDETAILS structure.
- *
- * Most of the work is delegated to GetDetailsEx by converting the column
- * index to a PKEY with MapColumnToSCID.  This function also now determines
- * what the index of the last supported detail is.
  */
 STDMETHODIMP CRemoteFolder::GetDetailsOf(
-	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* pDetails)
+	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* psd)
 {
 	ATLTRACE("CRemoteFolder::GetDetailsOf called, iColumn=%u\n", iColumn);
+	ATLENSURE_RETURN_HR(psd, E_POINTER);
 
-	ATLENSURE_RETURN_HR(pDetails, E_POINTER);
+	return properties::column::GetDetailsOf(pidl, iColumn, psd);
+}
 
-	::ZeroMemory(pDetails, sizeof(SHELLDETAILS));
+/**
+ * Get property of an item as a VARIANT.
+ *
+ * @implementing IShellFolder2
+ */
+STDMETHODIMP CRemoteFolder::GetDetailsEx(
+	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
+{
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(pscid, E_POINTER);
+	ATLENSURE_RETURN_HR(pv, E_POINTER);
 
-	PROPERTYKEY pkey;
+	return properties::GetProperty(pidl, pscid, pv);
+}
 
-	// Lookup PKEY and use it to call GetDetailsEx
-	HRESULT hr = MapColumnToSCID(iColumn, &pkey);
-	if (SUCCEEDED(hr))
-	{
-		VARIANT pv;
+/**
+ * Get the default sorting and display columns.
+ *
+ * @implementing IShellFolder2
+ */
+STDMETHODIMP CRemoteFolder::GetDefaultColumn(
+	DWORD dwReserved, ULONG* pSort, ULONG* pDisplay)
+{
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(pSort, E_POINTER);
+	ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
 
-		// Get details and convert VARIANT result to SHELLDETAILS for return
-		hr = GetDetailsEx(pidl, &pkey, &pv);
-		if (SUCCEEDED(hr))
-		{
-			CString strSrc;
+	return properties::column::GetDefaultColumn(dwReserved, pSort, pDisplay);
+}
 
-			switch (pv.vt)
-			{
-			case VT_BSTR:
-				strSrc = pv.bstrVal;
-				::SysFreeString(pv.bstrVal);
-				break;
-			case VT_UI8:
-				if (!IsEqualPropertyKey(pkey, PKEY_Size))
-				{
-					strSrc.Format(L"%u", pv.ullVal);
-				}
-				else
-				{
-					// File size if a special case.  We need to format this 
-					// as a value in kilobytes (e.g. 2,348 KB) rather than 
-					// returning it as a number
-					
-					vector<wchar_t> buf(64);
-					::StrFormatKBSize(
-						pv.ullVal, &buf[0], static_cast<UINT>(buf.size()));
-					strSrc = &buf[0];
-				}
-				break;
-			case VT_DATE:
-				strSrc = COleDateTime(pv.date).Format();
-				break;
-			default:
-				UNREACHABLE;
-			}
-			
-			pDetails->str.uType = STRRET_WSTR;
-			SHStrDup(strSrc, &pDetails->str.pOleStr);
-			
-			if(!pidl) // Header requested
-			{
-				pDetails->fmt = s_aColumns[iColumn].fmt;
-				pDetails->cxChar = s_aColumns[iColumn].cxChar;
-			}
-		}
+/**
+ * Returns the default state for the column specified by index.
+ * @implementing IShellFolder2
+ */
+STDMETHODIMP CRemoteFolder::GetDefaultColumnState(
+	UINT iColumn, SHCOLSTATEF* pcsFlags)
+{
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(pcsFlags, E_POINTER);
 
-		VariantClear( &pv );
-	}
+	return properties::column::GetDefaultColumnState(iColumn, pcsFlags);
+}
 
-	return hr;
+/**
+ * Convert column to appropriate property set ID (FMTID) and property ID (PID).
+ *
+ * @implementing IShellFolder2
+ */
+STDMETHODIMP CRemoteFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID* pscid)
+{
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(pscid, E_POINTER);
+
+	return properties::column::MapColumnToSCID(iColumn, pscid);
 }
 
 /**
@@ -1061,54 +879,6 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
 		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
 
 	return (ret == IDYES);
-}
-
-/*------------------------------------------------------------------------------
- * CRemoteFolder::_FillDetailsVariant
- * Initialise the VARIANT whose pointer is passed and fill with string data.
- * The string data can be passed in as a wchar array or a CString.  We allocate
- * a new BSTR and store it in the VARIANT.
- *----------------------------------------------------------------------------*/
-HRESULT CRemoteFolder::_FillDetailsVariant( __in PCWSTR szDetail,
-										   __out VARIANT *pv )
-{
-	ATLTRACE("CRemoteFolder::_FillDetailsVariant called\n");
-
-	::VariantInit( pv );
-	pv->vt = VT_BSTR;
-	pv->bstrVal = ::SysAllocString( szDetail );
-
-	return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
-}
-
-/*------------------------------------------------------------------------------
- * CRemoteFolder::_FillDateVariant
- * Initialise the VARIANT whose pointer is passed and fill with date info.
- *----------------------------------------------------------------------------*/
-HRESULT CRemoteFolder::_FillDateVariant( __in DATE date, __out VARIANT *pv )
-{
-	ATLTRACE("CRemoteFolder::_FillDateVariant called\n");
-
-	::VariantInit( pv );
-	pv->vt = VT_DATE;
-	pv->date = date;
-
-	return S_OK;
-}
-
-/*------------------------------------------------------------------------------
- * CRemoteFolder::_FillDateVariant
- * Initialise the VARIANT whose pointer is passed and fill with 64-bit unsigned.
- *----------------------------------------------------------------------------*/
-HRESULT CRemoteFolder::_FillUI8Variant( __in ULONGLONG ull, __out VARIANT *pv )
-{
-	ATLTRACE("CRemoteFolder::_FillUI8Variant called\n");
-
-	::VariantInit( pv );
-	pv->vt = VT_UI8;
-	pv->ullVal = ull;
-
-	return S_OK; // TODO: return success of VariantInit
 }
 
 /**
