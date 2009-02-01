@@ -1,3 +1,7 @@
+swish-0.2.1.12
+-Added 'Type' property to Explorer view.
+-Fixed incorrect column witdths (ticket #2). 
+
 swish-0.2.1.11
 -Read-only file transfer support added.  Files and folders can be copied from a
  remote server to the local computer using cut&paste or drag&drop.

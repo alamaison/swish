@@ -53,7 +53,7 @@ END
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 0,1,1,0
- PRODUCTVERSION 0,2,1,11
+ PRODUCTVERSION 0,2,1,12
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -75,7 +75,7 @@ BEGIN
             VALUE "LegalTrademarks", "This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/)"
             VALUE "OriginalFilename", "Libssh2Provider.dll"
             VALUE "ProductName", "Swish"
-            VALUE "ProductVersion", "0.2.1.11"
+            VALUE "ProductVersion", "0.2.1.12"
         END
     END
     BLOCK "VarFileInfo"
