@@ -23,8 +23,42 @@
 
 #include "../RemotePidl.h"
 
+#include <ShellAPI.h>      // For SHGetFileInfo()
+
 using namespace swish;
 
+namespace { // private
+
+	/**
+	 * Find the Windows friendly type name for the file given as a PIDL.
+	 *
+	 * This type name is the one used in Explorer details.  For example,
+	 * something.txt is given the type name "Text Document" and a directory
+	 * is called a "File Folder" regardless of its name.
+	 */
+	CString LookupFriendlyTypeName(CRemoteItemHandle pidl)
+	{
+		DWORD dwAttributes = 
+			(pidl.IsFolder()) ?
+				FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
+
+		UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME;
+
+		SHFILEINFO shfi;
+		ATLENSURE(::SHGetFileInfo(
+			pidl.GetFilename(), dwAttributes, 
+			&shfi, sizeof(shfi), uInfoFlags));
+		
+		return shfi.szTypeName;
+	}
+}
+
+/**
+ * Get the requested property for a file based on its PIDL.
+ *
+ * Many of these will be standard system properties but some are custom
+ * to Swish if an appropriate one did not already exist.
+ */
 CComVariant properties::GetProperty(
 	PCUITEMID_CHILD pidl, const SHCOLUMNID& scid)
 {
@@ -62,6 +96,11 @@ CComVariant properties::GetProperty(
 	else if (IsEqualPropertyKey(scid, PKEY_DateModified))
 	{
 		var = CComVariant(rpidl.GetDateModified(), VT_DATE);
+	}
+	// Friendly type name
+	else if (IsEqualPropertyKey(scid, PKEY_ItemTypeText))
+	{
+		var = LookupFriendlyTypeName(rpidl);
 	}
 	else
 	{

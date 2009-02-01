@@ -37,8 +37,9 @@ namespace swish
 			const enum columnIndices {
 				FILENAME = 0,
 				SIZE,
-				PERMISSIONS,
+				TYPE,
 				MODIFIED_DATE,
+				PERMISSIONS,
 				OWNER,
 				GROUP
 			};
