@@ -159,6 +159,11 @@ public: // IShellFolder2 methods
 	IFACEMETHODIMP GetDefaultSearchGUID(__out GUID *pguid);
 
 	IFACEMETHODIMP EnumSearches(__deref_out_opt IEnumExtraSearch **ppenum);
+	
+	IFACEMETHODIMP GetDefaultColumn(
+		DWORD dwReserved,
+		__out ULONG* pSort,
+		__out ULONG* pDisplay);
 
 protected:
 

@@ -25,9 +25,6 @@
 #include "CoFactory.h"
 #include "Folder.h"
 
-#define INITGUID
-#include <propkey.h>
-
 #include "Connection.h"     // For SFTP interactive connection objects
 #include "RemotePidl.h"     // For RemoteItemId handling
 #include "Pool.h"           // For access to SFTP global session pool
@@ -117,16 +114,17 @@ public:
 		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pwszName,
 		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
 
-	// IShellFolder2
-	STDMETHOD(GetDefaultColumn)( DWORD, ULONG *pSort, ULONG *pDisplay );
-	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );
-	STDMETHOD(GetDetailsEx)( PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, 
-							 VARIANT *pv );
-	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
-
 	// IShellDetails
-	STDMETHOD(GetDetailsOf)( PCUITEMID_CHILD pidl, UINT iColumn, 
-							 LPSHELLDETAILS pDetails );
+	IFACEMETHODIMP GetDetailsOf(
+		__in_opt PCUITEMID_CHILD pidl, UINT iColumn, __out SHELLDETAILS* psd);
+
+	// IShellFolder2
+	IFACEMETHODIMP GetDefaultColumnState( 
+		UINT iColumn, __out SHCOLSTATEF* pcsFlags);
+	IFACEMETHODIMP GetDetailsEx(
+		__in PCUITEMID_CHILD pidl, __in const SHCOLUMNID* pscid,
+		__out VARIANT* pv);
+	IFACEMETHODIMP MapColumnToSCID(UINT iColumn, __out SHCOLUMNID* pscid);
 
 private:
 
@@ -135,9 +133,6 @@ private:
 	CConnection _GetConnection(
 		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
-	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
-	HRESULT _FillDateVariant( DATE date, VARIANT *pv );
-	HRESULT _FillUI8Variant( ULONGLONG ull, VARIANT *pv );
 	CConnection _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
@@ -178,20 +173,5 @@ private:
 	// @}
 
 };
-
-// Remote folder listing column property IDs
-enum PID_SWISH_REMOTE {
-	PID_SWISH_REMOTE_GROUP = PID_FIRST_USABLE,
-	PID_SWISH_REMOTE_PERMISSIONS
-};
-
-// PKEYs for custom swish details/properties
-// Swish remote folder FMTID GUID {b816a851-5022-11dc-9153-0090f5284f85}
-DEFINE_PROPERTYKEY(PKEY_SwishRemoteGroup, 0xb816a851, 0x5022, 0x11dc, \
-				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-				   PID_SWISH_REMOTE_GROUP);
-DEFINE_PROPERTYKEY(PKEY_SwishRemotePermissions, 0xb816a851, 0x5022, 0x11dc, \
-				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-				   PID_SWISH_REMOTE_PERMISSIONS);
 
 #pragma warning (pop)

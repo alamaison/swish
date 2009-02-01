@@ -381,3 +381,25 @@ STDMETHODIMP CFolder::EnumSearches(IEnumExtraSearch **ppenum)
 
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
+
+/**
+ * Get the default sorting and display columns.
+ *
+ * @implementing IShellFolder2
+ *
+ * This is a default implementation which simply return the 1st (zeroth)
+ * column for both sorting and display.  Derived classes can override this
+ * if they need custom behaviour.
+ */
+STDMETHODIMP CFolder::GetDefaultColumn(
+	DWORD /*dwReserved*/, ULONG* pSort, ULONG* pDisplay)
+{
+	METHOD_TRACE;
+	ATLENSURE_RETURN_HR(pSort, E_POINTER);
+	ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
+
+	*pSort = 0;
+	*pDisplay = 0;
+
+	return S_OK;
+}
