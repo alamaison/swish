@@ -29,19 +29,32 @@ namespace swish
 	{
 		namespace column
 		{
-			HRESULT GetDetailsOf(
-				__in_opt PCUITEMID_CHILD pidl, UINT iColumn, 
-				__out SHELLDETAILS* psd);
+			/**
+			 * Column indices.
+			 * Must start at 0 and be consecutive.  Must be identical to
+			 * the order of entries in s_aColumns (see column.cpp).
+			 */
+			const enum columnIndices {
+				FILENAME = 0,
+				SIZE,
+				PERMISSIONS,
+				MODIFIED_DATE,
+				OWNER,
+				GROUP
+			};
+
+			SHELLDETAILS GetHeader(UINT iColumn);
+
+			SHELLDETAILS GetDetailsFor(
+				__in PCUITEMID_CHILD pidl, UINT iColumn);
+
+			SHCOLUMNID MapColumnIndexToSCID(UINT iColumn);
+
+			SHCOLSTATEF GetDefaultState(UINT iColumn);
 
 			HRESULT GetDefaultColumn(
 				__reserved DWORD dwReserved, 
 				__out ULONG* pSort, __out ULONG* pDisplay);
-			HRESULT GetDefaultColumnState(
-				unsigned int iColumn, SHCOLSTATEF* pcsFlags);
-			HRESULT MapColumnToSCID(
-				__in unsigned int iColumn, __out PROPERTYKEY *pscid);
-
-			UINT columnCount();
 		}
 	}
 }

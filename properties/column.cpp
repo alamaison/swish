@@ -19,49 +19,40 @@
 
 #include "stdafx.h"
 #include "column.h"
-#include "..\resource.h"
+#include "../resource.h"
 
 #include "properties.h" // GetProperty() etc.
 
 #include <propkey.h>    // Predefined shell property keys
 #include <ShlWapi.h>    // Shell helper functions
 #include <CommCtrl.h>   // For LVCFMT_* list view constants
-
-#include <atlstr.h>     // CString
-#include <ATLComTime.h> // COleDateTime
 #include <OleAuto.h>    // VARIANT functions
+
+#include <atldef.h>     // Main ATL macro definitions
+#include <ATLComTime.h> // COleDateTime
+#include <atlstr.h>     // CString
 
 #include <vector>
 using std::vector;
 
-namespace swish {
-namespace properties {
-namespace column {
+using namespace swish::properties;
 
-	/**
-	 * Column indices.
-	 * Must start at 0 and be consecutive.  Must be identical to the order of
-	 * entries in s_aColumns, below.
-	 */
-	static const enum s_columnIndices {
-		FILENAME = 0,
-		SIZE,
-		PERMISSIONS,
-		MODIFIED_DATE,
-		OWNER,
-		GROUP
-	};
+/**
+ * Functions and data private to this compilation unit.
+ */
+namespace { // private
 
 	/**
 	 * Static column information.
+	 * Order of entries must correspond to the indices in columnIndices.
 	 */
-	static const struct {
+	const struct {
 		int colnameid;
 		PROPERTYKEY pkey;
 		int pcsFlags;
 		int fmt;
 		int cxChar;
-	} s_aColumns[] = {
+	} aColumns[] = {
 		{ IDS_COLUMN_FILENAME, PKEY_ItemNameDisplay,   // Display name (Label)
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 }, 
 		{ IDS_COLUMN_SIZE, PKEY_Size,                  // Size
@@ -75,16 +66,22 @@ namespace column {
 		{ IDS_COLUMN_GROUP, PKEY_Group,                // Group
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 }
 	};
-}}}
 
-using namespace swish::properties;
+	/**
+	 * Return number of columns.
+	 */
+	UINT Count()
+	{
+		return sizeof(aColumns) / sizeof(aColumns[0]);
+	}
 
-/**
- * Return number of columns.
- */
-UINT column::columnCount()
-{
-	return sizeof(s_aColumns) / sizeof(s_aColumns[0]);
+	/**
+	 * Return the localised heading of the column with index iColumn.
+	 */
+	CString Header(UINT iColumn)
+	{
+		return CString(MAKEINTRESOURCE(aColumns[iColumn].colnameid));
+	}
 }
 
 /**
@@ -101,128 +98,132 @@ HRESULT column::GetDefaultColumn(
 }
 
 /**
- * Returns the default state for the column specified by index.
+ * Returns the default state for the column specified by index iColumn.
  */
-HRESULT column::GetDefaultColumnState(
-	UINT iColumn, SHCOLSTATEF* pcsFlags)
+SHCOLSTATEF column::GetDefaultState(UINT iColumn)
 {
-	*pcsFlags = 0;
-
-	if (iColumn < columnCount())
-	{
-		*pcsFlags = s_aColumns[iColumn].pcsFlags;
-		return S_OK;
-	}
-	else
-	{
-		return E_FAIL;
-	}
+	if (iColumn >= Count())
+		AtlThrow(E_FAIL);
+	
+	return aColumns[iColumn].pcsFlags;
 }
 
 /**
- * Convert column to appropriate property set ID (FMTID) and property ID (PID).
+ * Convert index to appropriate property set ID (FMTID) and property ID (PID).
  *
  * @warning
  * This function defines which details are supported as GetDetailsOf() just 
- * forwards the columnID here.  The first column that we return E_FAIL for 
+ * forwards the columnID here.  The first column that we throw E_FAIL for 
  * marks the end of the supported details.
  */
-HRESULT column::MapColumnToSCID(
-	UINT iColumn, PROPERTYKEY *pscid)
+SHCOLUMNID column::MapColumnIndexToSCID(UINT iColumn)
 {
-	::ZeroMemory(pscid, sizeof(PROPERTYKEY));
+	if (iColumn >= Count())
+		AtlThrow(E_FAIL);
 
-	if (iColumn < columnCount())
-	{
-		*pscid = s_aColumns[iColumn].pkey;
-		return S_OK;
-	}
-	else
-	{
-		return E_FAIL;
-	}
+	return aColumns[iColumn].pkey;
 }
 
 /**
- * Returns detailed information on the items in a folder.
+ * Get the heading for the column with index iColumn.
  *
- * @implementing IShellDetails
+ * If the index is out-of-range, we throw E_FAIL.  This is how Explorer
+ * finds the end of the supported details.
  *
- * This function operates in two distinctly different ways:
- * If pidl is NULL:
- *     Retrieves the information on the view columns, i.e., the names of
- *     the columns themselves.  The index of the desired column is given
- *     in iColumn.  If this column does not exist we return E_FAIL.
- * If pidl is not NULL:
- *     Retrieves the specific item information for the given pidl and the
- *     requested column.
- * The information is returned in the SHELLDETAILS structure.
+ * As well as the text to use as a label, the returned SHELLDETAILS
+ * holds the width of the column in characters, cxChar, and the
+ * formatting information about the data the column will hold 
+ * (e.g. SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT).
  *
- * Most of the work is delegated to GetDetailsEx by converting the column
- * index to a PKEY with MapColumnToSCID.  This function also now determines
- * what the index of the last supported detail is.
+ * @warning
+ * The returned SHELLDETAILS holds the label as a pointer to a
+ * string allocated with CoTaskMemAlloc.  This must be properly
+ * freed to avoid a memory leak. 
  */
-HRESULT column::GetDetailsOf(
-	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* psd)
+SHELLDETAILS column::GetHeader(UINT iColumn)
 {
-	::ZeroMemory(psd, sizeof(SHELLDETAILS));
+	SHELLDETAILS sd;
+	::ZeroMemory(&sd, sizeof(SHELLDETAILS));
 
-	PROPERTYKEY pkey;
+	if (iColumn >= Count())
+		AtlThrow(E_FAIL);
 
+	sd.str.uType = STRRET_WSTR;
+	::SHStrDup(Header(iColumn), &sd.str.pOleStr);
+	
+	sd.fmt = aColumns[iColumn].fmt;
+	sd.cxChar = aColumns[iColumn].cxChar;
+
+	return sd;
+}
+
+/**
+ * Get the contents of the column with index iColumn for the given PIDL.
+ *
+ * Regardless of the type of the underlying data, this function always
+ * returns the data as a string.  If any formatting is required, it must
+ * be done in this function.
+ *
+ * @warning
+ * The returned SHELLDETAILS holds a pointer to a string allocated with 
+ * CoTaskMemAlloc.  This must be properly freed to avoid a memory leak.
+ *
+ * Most of the work is delegated to the properties functions by converting 
+ * the column index to a PKEY with MapColumnIndexToSCID.
+ *
+ * @throws  E_FAIL if the column index is out of range.
+ */
+SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
+{
 	// Lookup PKEY and use it to call GetProperty
-	HRESULT hr = MapColumnToSCID(iColumn, &pkey);
+	PROPERTYKEY pkey = MapColumnIndexToSCID(iColumn);
+
+	SHELLDETAILS sd;
+	::ZeroMemory(&sd, sizeof(SHELLDETAILS));
+
+	VARIANT pv;
+
+	// Get details and convert VARIANT result to SHELLDETAILS for return
+	HRESULT hr = properties::GetProperty(pidl, &pkey, &pv);
 	if (SUCCEEDED(hr))
 	{
-		VARIANT pv;
+		CString strSrc;
 
-		// Get details and convert VARIANT result to SHELLDETAILS for return
-		hr = properties::GetProperty(pidl, &pkey, &pv);
-		if (SUCCEEDED(hr))
+		switch (pv.vt)
 		{
-			CString strSrc;
-
-			switch (pv.vt)
+		case VT_BSTR:
+			strSrc = pv.bstrVal;
+			::SysFreeString(pv.bstrVal);
+			break;
+		case VT_UI8:
+			if (!IsEqualPropertyKey(pkey, PKEY_Size))
 			{
-			case VT_BSTR:
-				strSrc = pv.bstrVal;
-				::SysFreeString(pv.bstrVal);
-				break;
-			case VT_UI8:
-				if (!IsEqualPropertyKey(pkey, PKEY_Size))
-				{
-					strSrc.Format(L"%u", pv.ullVal);
-				}
-				else
-				{
-					// File size if a special case.  We need to format this 
-					// as a value in kilobytes (e.g. 2,348 KB) rather than 
-					// returning it as a number
-					
-					vector<wchar_t> buf(64);
-					::StrFormatKBSize(
-						pv.ullVal, &buf[0], static_cast<UINT>(buf.size()));
-					strSrc = &buf[0];
-				}
-				break;
-			case VT_DATE:
-				strSrc = COleDateTime(pv.date).Format();
-				break;
-			default:
-				UNREACHABLE;
+				strSrc.Format(L"%u", pv.ullVal);
 			}
-			
-			psd->str.uType = STRRET_WSTR;
-			::SHStrDup(strSrc, &psd->str.pOleStr);
-			
-			if(!pidl) // Header requested
+			else
 			{
-				psd->fmt = s_aColumns[iColumn].fmt;
-				psd->cxChar = s_aColumns[iColumn].cxChar;
+				// File size if a special case.  We need to format this 
+				// as a value in kilobytes (e.g. 2,348 KB) rather than 
+				// returning it as a number
+				
+				vector<wchar_t> buf(64);
+				::StrFormatKBSize(
+					pv.ullVal, &buf[0], static_cast<UINT>(buf.size()));
+				strSrc = &buf[0];
 			}
+			break;
+		case VT_DATE:
+			strSrc = COleDateTime(pv.date).Format();
+			break;
+		default:
+			UNREACHABLE;
 		}
-
-		::VariantClear(&pv);
+		
+		sd.str.uType = STRRET_WSTR;
+		::SHStrDup(strSrc, &sd.str.pOleStr);
 	}
 
-	return hr;
+	::VariantClear(&pv);
+
+	return sd;
 }

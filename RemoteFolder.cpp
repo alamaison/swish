@@ -552,7 +552,15 @@ STDMETHODIMP CRemoteFolder::GetDetailsOf(
 	ATLTRACE("CRemoteFolder::GetDetailsOf called, iColumn=%u\n", iColumn);
 	ATLENSURE_RETURN_HR(psd, E_POINTER);
 
-	return properties::column::GetDetailsOf(pidl, iColumn, psd);
+	try
+	{
+		if (!pidl) // Header requested
+			*psd = properties::column::GetHeader(iColumn);
+		else
+			*psd = properties::column::GetDetailsFor(pidl, iColumn);
+	}
+	catchCom()
+	return S_OK;
 }
 
 /**
@@ -595,7 +603,12 @@ STDMETHODIMP CRemoteFolder::GetDefaultColumnState(
 	METHOD_TRACE;
 	ATLENSURE_RETURN_HR(pcsFlags, E_POINTER);
 
-	return properties::column::GetDefaultColumnState(iColumn, pcsFlags);
+	try
+	{
+		*pcsFlags = properties::column::GetDefaultState(iColumn);
+	}
+	catchCom()
+	return S_OK;
 }
 
 /**
@@ -608,7 +621,12 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID* pscid)
 	METHOD_TRACE;
 	ATLENSURE_RETURN_HR(pscid, E_POINTER);
 
-	return properties::column::MapColumnToSCID(iColumn, pscid);
+	try
+	{
+		*pscid =  properties::column::MapColumnIndexToSCID(iColumn);
+	}
+	catchCom()
+	return S_OK;
 }
 
 /**
