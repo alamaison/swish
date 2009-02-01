@@ -27,6 +27,23 @@ namespace swish
 {
 	namespace properties
 	{
+		/**
+		 * Column-specific aspects of remote item property retrieval.
+		 *
+		 * The functions in this namespace are effectively accessors for
+		 * aColumns, the array of constant column data in column.cpp.
+		 * This data determines the layout and format of the columns in
+		 * the Explorer view.
+		 *
+		 * Columns are fetched by index.  Typically, the first thing
+		 * Explorer does is query for column headers with increasing index
+		 * until a failure occurs.  This marks the end of the columns.
+		 *
+		 * Fetching column details is left to the generic property system
+		 * in swish::properties.  This namespace takes responsibility for
+		 * formatting this data suitable for use by 
+		 * IShellDetails/IShellFolder::GetDetailsOf().
+		 */
 		namespace column
 		{
 			/**
