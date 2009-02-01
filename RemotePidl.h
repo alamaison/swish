@@ -211,12 +211,6 @@ public:
 		return Get()->dwPermissions;
 	}
 
-	CString GetPermissionsStr() const throw(...)
-	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
-		return L"todo";
-	}
-
 	COleDateTime GetDateModified() const throw(...)
 	{
 		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);

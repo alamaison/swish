@@ -22,6 +22,7 @@
 #include "properties.h"
 
 #include "../RemotePidl.h"
+#include "Mode.h"          // Unix-style permissions
 
 #include <ShellAPI.h>      // For SHGetFileInfo()
 
@@ -85,7 +86,8 @@ CComVariant properties::GetProperty(
 	// File permissions: drwxr-xr-x form
 	else if (IsEqualPropertyKey(scid, PKEY_Permissions))
 	{
-		var = rpidl.GetPermissionsStr();
+		DWORD dwPerms = rpidl.GetPermissions();
+		var = mode::Mode(dwPerms).toString().c_str();
 	}
 	// File size in bytes
 	else if (IsEqualPropertyKey(scid, PKEY_Size))
