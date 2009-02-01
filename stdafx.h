@@ -66,6 +66,8 @@ CExeModule
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
+#define _ATL_SUPPORT_VT_I8    // For (U)LONGLONG CComVariant support
+
 #ifdef _DEBUG
 //#define _ATL_DEBUG_QI
 //#define _ATL_DEBUG_INTERFACES

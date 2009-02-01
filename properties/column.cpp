@@ -31,6 +31,7 @@
 #include <atldef.h>     // Main ATL macro definitions
 #include <ATLComTime.h> // COleDateTime
 #include <atlstr.h>     // CString
+#include <atlcomcli.h>  // ATL smart types
 
 #include <vector>
 using std::vector;
@@ -178,52 +179,43 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 	// Lookup PKEY and use it to call GetProperty
 	PROPERTYKEY pkey = MapColumnIndexToSCID(iColumn);
 
+	// Get details and convert VARIANT result to SHELLDETAILS for return
+	CComVariant var = properties::GetProperty(pidl, pkey);
+
+	CString strSrc;
+	switch (var.vt)
+	{
+	case VT_BSTR:
+		strSrc = var.bstrVal;
+		break;
+	case VT_UI8:
+		if (IsEqualPropertyKey(pkey, PKEY_Size))
+		{
+			// File size if a special case.  We need to format this 
+			// as a value in kilobytes (e.g. 2,348 KB) rather than 
+			// returning it as a number
+			
+			vector<wchar_t> buf(64);
+			::StrFormatKBSize(
+				var.ullVal, &buf[0], static_cast<UINT>(buf.size()));
+			strSrc = &buf[0];
+		}
+		else
+		{
+			strSrc.Format(L"%u", var.ullVal);
+		}
+		break;
+	case VT_DATE:
+		strSrc = COleDateTime(var).Format();
+		break;
+	default:
+		UNREACHABLE;
+	}
+	
 	SHELLDETAILS sd;
 	::ZeroMemory(&sd, sizeof(SHELLDETAILS));
-
-	VARIANT pv;
-
-	// Get details and convert VARIANT result to SHELLDETAILS for return
-	HRESULT hr = properties::GetProperty(pidl, &pkey, &pv);
-	if (SUCCEEDED(hr))
-	{
-		CString strSrc;
-
-		switch (pv.vt)
-		{
-		case VT_BSTR:
-			strSrc = pv.bstrVal;
-			::SysFreeString(pv.bstrVal);
-			break;
-		case VT_UI8:
-			if (!IsEqualPropertyKey(pkey, PKEY_Size))
-			{
-				strSrc.Format(L"%u", pv.ullVal);
-			}
-			else
-			{
-				// File size if a special case.  We need to format this 
-				// as a value in kilobytes (e.g. 2,348 KB) rather than 
-				// returning it as a number
-				
-				vector<wchar_t> buf(64);
-				::StrFormatKBSize(
-					pv.ullVal, &buf[0], static_cast<UINT>(buf.size()));
-				strSrc = &buf[0];
-			}
-			break;
-		case VT_DATE:
-			strSrc = COleDateTime(pv.date).Format();
-			break;
-		default:
-			UNREACHABLE;
-		}
-		
-		sd.str.uType = STRRET_WSTR;
-		::SHStrDup(strSrc, &sd.str.pOleStr);
-	}
-
-	::VariantClear(&pv);
+	sd.str.uType = STRRET_WSTR;
+	::SHStrDup(strSrc, &sd.str.pOleStr);
 
 	return sd;
 }

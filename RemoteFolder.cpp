@@ -567,6 +567,9 @@ STDMETHODIMP CRemoteFolder::GetDetailsOf(
  * Get property of an item as a VARIANT.
  *
  * @implementing IShellFolder2
+ *
+ * The work is delegated to the properties functions in the swish::properties
+ * namespace
  */
 STDMETHODIMP CRemoteFolder::GetDetailsEx(
 	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
@@ -574,8 +577,19 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx(
 	METHOD_TRACE;
 	ATLENSURE_RETURN_HR(pscid, E_POINTER);
 	ATLENSURE_RETURN_HR(pv, E_POINTER);
+	ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
 
-	return properties::GetProperty(pidl, pscid, pv);
+	try
+	{
+		::VariantInit(pv);
+
+		CComVariant var = properties::GetProperty(pidl, *pscid);
+
+		HRESULT hr = var.Detach(pv);
+		ATLENSURE_SUCCEEDED(hr);
+	}
+	catchCom()
+	return S_OK;
 }
 
 /**

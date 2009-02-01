@@ -18,117 +18,55 @@
 */
 
 #include "stdafx.h"
-#define INITGUID // Causes PKEYs declared in header to be defined
+#define INITGUID           // Causes PKEYs declared in header to be defined
 #include "properties.h"
 
 #include "../RemotePidl.h"
 
 using namespace swish;
 
-HRESULT properties::GetProperty(
-	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
+CComVariant properties::GetProperty(
+	PCUITEMID_CHILD pidl, const SHCOLUMNID& scid)
 {
-	bool fHeader = (pidl == NULL);
-
 	CRemoteItemHandle rpidl(pidl);
+	ATLASSERT(!rpidl.IsEmpty());
 
-	// If pidl: Request is for an item detail.  Retrieve from pidl and
-	//          return string
-	// Else:    Request is for a column heading.  Return heading as BSTR
+	CComVariant var;
 
 	// Display name (Label)
-	if (IsEqualPropertyKey(*pscid, PKEY_ItemNameDisplay))
+	if (IsEqualPropertyKey(scid, PKEY_ItemNameDisplay))
 	{
-		TRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
-		
-		return _FillDetailsVariant(
-			fHeader ? L"Name" : rpidl.GetFilename(), pv);
+		var = rpidl.GetFilename();
 	}
 	// Owner
-	else if (IsEqualPropertyKey(*pscid, PKEY_FileOwner))
+	else if (IsEqualPropertyKey(scid, PKEY_FileOwner))
 	{
-		TRACE("\t\tRequest: PKEY_FileOwner\n");
-
-		return _FillDetailsVariant(
-			fHeader ? L"Owner" : rpidl.GetOwner(), pv);
+		var = rpidl.GetOwner();
 	}
 	// Group
-	else if (IsEqualPropertyKey(*pscid, PKEY_Group))
-	{
-		TRACE("\t\tRequest: PKEY_SwishRemoteGroup\n");
-		
-		return _FillDetailsVariant(
-			fHeader ? L"Group" : rpidl.GetGroup(), pv);
+	else if (IsEqualPropertyKey(scid, PKEY_Group))
+	{		
+		var = rpidl.GetGroup();
 	}
 	// File permissions: drwxr-xr-x form
-	else if (IsEqualPropertyKey(*pscid, PKEY_Permissions))
+	else if (IsEqualPropertyKey(scid, PKEY_Permissions))
 	{
-		TRACE("\t\tRequest: PKEY_SwishRemotePermissions\n");
-		
-		return _FillDetailsVariant(
-			fHeader ? L"Permissions" : rpidl.GetPermissionsStr(), pv);
+		var = rpidl.GetPermissionsStr();
 	}
 	// File size in bytes
-	else if (IsEqualPropertyKey(*pscid, PKEY_Size))
+	else if (IsEqualPropertyKey(scid, PKEY_Size))
 	{
-		TRACE("\t\tRequest: PKEY_Size\n");
-
-		return fHeader ?
-			_FillDetailsVariant(L"Size", pv) : 
-			_FillUI8Variant(rpidl.GetFileSize(), pv);
+		var = rpidl.GetFileSize();
 	}
 	// Last modified date
-	else if (IsEqualPropertyKey(*pscid, PKEY_DateModified))
+	else if (IsEqualPropertyKey(scid, PKEY_DateModified))
 	{
-		TRACE("\t\tRequest: PKEY_DateModified\n");
-
-		return fHeader ?
-			_FillDetailsVariant(L"Last Modified", pv) : 
-			_FillDateVariant(rpidl.GetDateModified(), pv);
+		var = CComVariant(rpidl.GetDateModified(), VT_DATE);
 	}
-	TRACE("\t\tRequest: <unknown>\n");
+	else
+	{
+		AtlThrow(E_FAIL);
+	}
 
-	// Assert unless request is one of the supported properties
-	// TODO: System.FindData tiggers this
-	// UNREACHABLE;
-
-	return E_FAIL;
-}
-
-/**
- * Initialise the VARIANT whose pointer is passed and fill with string data.
- * The string data can be passed in as a wchar array or a CString.  We allocate
- * a new BSTR and store it in the VARIANT.
- */
-HRESULT properties::_FillDetailsVariant(PCWSTR pwszDetail, VARIANT* pv)
-{
-	::VariantInit(pv);
-	pv->vt = VT_BSTR;
-	pv->bstrVal = ::SysAllocString(pwszDetail);
-
-	return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
-}
-
-/**
- * Initialise the VARIANT whose pointer is passed and fill with date info.
- */
-HRESULT properties::_FillDateVariant(DATE date, VARIANT* pv)
-{
-	::VariantInit( pv );
-	pv->vt = VT_DATE;
-	pv->date = date;
-
-	return S_OK;
-}
-
-/**
- * Initialise the VARIANT whose pointer is passed and fill with 64-bit unsigned.
- */
-HRESULT properties::_FillUI8Variant(ULONGLONG ull, VARIANT* pv)
-{
-	::VariantInit( pv );
-	pv->vt = VT_UI8;
-	pv->ullVal = ull;
-
-	return S_OK; // TODO: return success of VariantInit
+	return var;
 }

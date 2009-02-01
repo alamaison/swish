@@ -27,6 +27,8 @@
 #include <propkey.h>    // Predefined shell property keys
 #include <propkeydef.h> // Property key definition and comparison
 
+#include <atlcomcli.h>  // ATL smart types
+
 namespace swish
 {
 	namespace properties
@@ -57,11 +59,7 @@ namespace swish
 			0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
 			0x4f, 0x85, PID_PERMISSIONS);
 
-		HRESULT GetProperty(
-			PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, __in VARIANT* pv);
-
-		HRESULT _FillDetailsVariant(PCWSTR pwszDetail, __in VARIANT* pv);
-		HRESULT _FillDateVariant(DATE date, __in VARIANT* pv);
-		HRESULT _FillUI8Variant(ULONGLONG ull, __in VARIANT* pv);
+		CComVariant GetProperty(
+			__in PCUITEMID_CHILD pidl, __in const SHCOLUMNID& scid);
 	}
 }
