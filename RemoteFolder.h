@@ -119,9 +119,6 @@ public:
 		__in_opt PCUITEMID_CHILD pidl, UINT iColumn, __out SHELLDETAILS* psd);
 
 	// IShellFolder2
-	IFACEMETHODIMP GetDefaultColumn( 
-		__reserved DWORD dwReserved,
-		__out ULONG* pSort, __out ULONG* pDisplay);
 	IFACEMETHODIMP GetDefaultColumnState( 
 		UINT iColumn, __out SHCOLSTATEF* pcsFlags);
 	IFACEMETHODIMP GetDetailsEx(

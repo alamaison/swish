@@ -51,10 +51,6 @@ namespace swish
 			SHCOLUMNID MapColumnIndexToSCID(UINT iColumn);
 
 			SHCOLSTATEF GetDefaultState(UINT iColumn);
-
-			HRESULT GetDefaultColumn(
-				__reserved DWORD dwReserved, 
-				__out ULONG* pSort, __out ULONG* pDisplay);
 		}
 	}
 }

@@ -86,19 +86,6 @@ namespace { // private
 }
 
 /**
- * Get the default sorting and display columns.
- */
-HRESULT column::GetDefaultColumn(
-	DWORD /*dwReserved*/, ULONG* pSort, ULONG* pDisplay)
-{
-	// Sort and display by the filename
-	*pSort = column::FILENAME;
-	*pDisplay = column::FILENAME;
-
-	return S_OK;
-}
-
-/**
  * Returns the default state for the column specified by index iColumn.
  */
 SHCOLSTATEF column::GetDefaultState(UINT iColumn)

@@ -593,21 +593,6 @@ STDMETHODIMP CRemoteFolder::GetDetailsEx(
 }
 
 /**
- * Get the default sorting and display columns.
- *
- * @implementing IShellFolder2
- */
-STDMETHODIMP CRemoteFolder::GetDefaultColumn(
-	DWORD dwReserved, ULONG* pSort, ULONG* pDisplay)
-{
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(pSort, E_POINTER);
-	ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
-
-	return properties::column::GetDefaultColumn(dwReserved, pSort, pDisplay);
-}
-
-/**
  * Returns the default state for the column specified by index.
  * @implementing IShellFolder2
  */
