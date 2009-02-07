@@ -69,4 +69,7 @@
 
 #define SFTP_DEFAULT_PORT         22
 
+#define MAX_LONGENTRY_LEN        127 // 128 should be long enough to fit any
+#define MAX_LONGENTRY_LENZ       128 // long entry (certainly what we need)
+
 #endif REMOTELIMITS_H

@@ -34,11 +34,12 @@
 #include "Libssh2Provider.h"
 #include "KeyboardInteractive.h"
 #include "SftpStream.h"
+#include "listing/listing.hpp"   // SFTP directory listing helper functions
 
-#include <ws2tcpip.h>    // Winsock
-#include <wspiapi.h>     // Winsock
+#include <ws2tcpip.h>            // Winsock
+#include <wspiapi.h>             // Winsock
 
-#include <ATLComTime.h>  // COleDateTime
+using namespace provider::libssh2;
 
 #pragma warning (push)
 #pragma warning (disable: 4267) // ssize_t to unsigned int
@@ -234,18 +235,29 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 		return E_FAIL;
 
 	// Read entries from directory until we fail
-	list<Listing> lstFiles;
+	std::list<Listing> files;
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
 		char szFilename[MAX_FILENAME_LENZ];
+		::ZeroMemory(szFilename, sizeof(szFilename));
+
+		char szLongEntry[MAX_LONGENTRY_LENZ];
+		::ZeroMemory(szLongEntry, sizeof(szLongEntry));
+
         LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof(attrs));
-        int len = libssh2_sftp_readdir(
-			pSftpHandle, szFilename, ARRAYSIZE(szFilename)-1, &attrs);
+
+        int len = libssh2_sftp_readdir_ex(
+			pSftpHandle, szFilename, sizeof(szFilename) - 1,
+			szLongEntry, sizeof(szLongEntry) - 1, &attrs);
 		if (len <= 0)
 			break;
 		else
-			szFilename[len] = '\0';
+		{
+			// Make doubly sure
+			szFilename[MAX_FILENAME_LEN] = '\0';
+			szLongEntry[MAX_LONGENTRY_LEN] = '\0';
+		}
 
 		// Exclude . and ..
 		if (szFilename[0] == '.')
@@ -254,8 +266,11 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 				continue;
 		}
 
-		lstFiles.push_back( _FillListingEntry(szFilename, attrs) );
-	} while (1);
+		std::string strFilename(szFilename);
+		std::string strLongEntry(szLongEntry);
+		files.push_back(
+			listing::FillListingEntry(strFilename, strLongEntry, attrs));
+	} while (true);
 
     ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);
 
@@ -267,7 +282,7 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	{
 		pHolder->AddRef();
 
-		hr = pHolder->Copy(lstFiles);
+		hr = pHolder->Copy(files);
 		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
 
 		// Create enumerator
@@ -294,69 +309,6 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 
 	return hr;
 }
-
-/**
- * Creates a Listing object for a file entry based on filename and attributes.
- *
- * @param pszFilename Filename as an ANSI char string.
- * @param attrs       Reference to the LIBSSH2_SFTP_ATTRIBUTES containing
- *                    the file's details.
- *
- * @returns A listing object representing the file.
- */
-Listing CLibssh2Provider::_FillListingEntry(
-	PCSTR pszFilename,
-	LIBSSH2_SFTP_ATTRIBUTES& attrs )
-{
-	Listing lt;
-
-	// Filename
-	CComBSTR bstrFile(pszFilename);
-	HRESULT hr = bstrFile.CopyTo(&(lt.bstrFilename));
-	ATLASSERT(SUCCEEDED(hr));
-	if (FAILED(hr))
-		lt.bstrFilename = ::SysAllocString(OLESTR(""));
-
-	// Permissions
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
-	{
-		lt.uPermissions = attrs.permissions;
-    }
-
-	// User & Group
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID)
-	{
-		// TODO: find some way to return names not numbers
-		CString strOwner;
-		CString strGroup;
-		strOwner.Format(_T("%4ld"), attrs.uid);
-		strGroup.Format(_T("%4ld"), attrs.gid);
-		// TODO: these never get free.  We need to find a way.
-		lt.bstrOwner = strOwner.AllocSysString();
-		lt.bstrGroup = strGroup.AllocSysString();
-    }
-
-	// Size of file
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_SIZE)
-	{
-        // TODO: attrs.filesize is an uint64_t. The listings field is not big
-		// enough
-		lt.uSize = static_cast<unsigned long>(attrs.filesize);
-    }
-
-	// Access & Modification time
-	if (attrs.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)
-	{
-		COleDateTime dateModified(static_cast<time_t>(attrs.mtime));
-		COleDateTime dateAccessed(static_cast<time_t>(attrs.atime));
-		lt.dateModified = dateModified;
-		// TODO: add this field to Swish
-		//lt.dateAccessed = dateAccessed;
-	}
-
-	return lt;
-}
-
 
 STDMETHODIMP CLibssh2Provider::GetFile(BSTR bstrFilePath, IStream **ppStream)
 {

@@ -58,7 +58,7 @@ Building:
     
     When building on Windows Vista, make sure you are running Visual
     Studio as an Administrator.  Otherwise it can't register the components
-    and later components that depends on earlier ones will fail to build.
+    and later components that depend on earlier ones will fail to build.
 
 Requirements to run:
     Internet Explorer 5.5 or greater
@@ -72,10 +72,14 @@ Requirements to build:
         ATL attributes which, I believe, require ATL 7).
     A recent version of the Windows SDK 
         (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
-    WTL 8 which can be obtained from Microsoft of through SourceForge
+    WTL 8 which can be obtained from Microsoft or through SourceForge
         Microsoft Permissive Licence: http://www.microsoft.com/downloads/
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
         Common Public Licence: http://sourceforge.net/projects/wtl/.
+    Boost
+        The recommended method is to use the installer from BoostPro Computing:
+        http://www.boostpro.com/products/free.  For more information see
+        http://www.boost.org.
     
     For the Libssh2Provider backend:
      - libssh2

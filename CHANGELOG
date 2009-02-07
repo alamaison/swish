@@ -1,6 +1,7 @@
 swish-0.2.1.12
 -Added 'Type' property to Explorer view.
--Fixed incorrect column witdths (ticket #2). 
+-Fixed incorrect column witdths (ticket #2).
+-Display user name and group name rather than the UID and GID.
 
 swish-0.2.1.11
 -Read-only file transfer support added.  Files and folders can be copied from a
