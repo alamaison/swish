@@ -257,8 +257,11 @@ STDMETHODIMP CFolder::CompareIDs(
 			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, -1); // Only pidl1 empty <
 		else if (::ILIsEmpty(pidl2))
 			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);  // Only pidl2 empty >
-
-		// Neither PIDL is empty - perform comparison
+		
+		// Explorer can pass us invalid PIDLs from its cache if our PIDL 
+		// representation changes.  We catch that here to stop us asserting later.
+		ValidatePidl(pidl1);
+		ValidatePidl(pidl2);
 
 		int result = ComparePIDLs(
 			pidl1, pidl2, uColumn, fCompareAllFields, fCanonical);
