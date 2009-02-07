@@ -34,7 +34,7 @@ struct Listing {
 	BSTR bstrGroup;       ///< The name of the group to which the file belongs
 	ULONG uUid;           ///< Numerical ID of file's owner
 	ULONG uGid;           ///< Numerical ID of group to which the file belongs
-	ULONG uSize;          ///< The file's size in bytes
+	ULONGLONG uSize;      ///< The file's size in bytes
 	ULONG cHardLinks;     ///< The number of hard links referencing this file
 	DATE dateModified;    ///< The date and time at which the file was 
 	                      ///< last modified in automation-compatible format

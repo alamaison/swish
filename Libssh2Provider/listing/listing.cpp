@@ -142,9 +142,7 @@ Listing listing::FillListingEntry(
 	// Size of file
 	if (attrs.flags & LIBSSH2_SFTP_ATTR_SIZE)
 	{
-		// TODO: attrs.filesize is an uint64_t. The listings field is not big
-		// enough
-		lt.uSize = static_cast<unsigned long>(attrs.filesize);
+		lt.uSize = attrs.filesize;
 	}
 
 	// Access & Modification time
