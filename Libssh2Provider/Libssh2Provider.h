@@ -183,6 +183,7 @@ public:
 		p1->uSize = p2->uSize;
 		p1->cHardLinks = p2->cHardLinks;
 		p1->dateModified = p2->dateModified;
+		p1->dateAccessed = p2->dateAccessed;
 
 		return S_OK;
 	}

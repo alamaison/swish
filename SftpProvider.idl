@@ -38,6 +38,8 @@ struct Listing {
 	ULONG cHardLinks;     ///< The number of hard links referencing this file
 	DATE dateModified;    ///< The date and time at which the file was 
 	                      ///< last modified in automation-compatible format
+	DATE dateAccessed;    ///< The date and time at which the file was 
+	                      ///< last accessed in automation-compatible format
 };
 
 // IEnumListing

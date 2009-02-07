@@ -109,6 +109,11 @@ CComVariant properties::GetProperty(
 	{
 		var = CComVariant(rpidl.GetDateModified(), VT_DATE);
 	}
+	// Last accessed date
+	else if (IsEqualPropertyKey(scid, PKEY_DateAccessed))
+	{
+		var = CComVariant(rpidl.GetDateAccessed(), VT_DATE);
+	}
 	// Friendly type name
 	else if (IsEqualPropertyKey(scid, PKEY_ItemTypeText))
 	{

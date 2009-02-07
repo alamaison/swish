@@ -151,8 +151,7 @@ Listing listing::FillListingEntry(
 		COleDateTime dateModified(static_cast<time_t>(attrs.mtime));
 		COleDateTime dateAccessed(static_cast<time_t>(attrs.atime));
 		lt.dateModified = dateModified;
-		// TODO: add this field to Swish
-		//lt.dateAccessed = dateAccessed;
+		lt.dateAccessed = dateAccessed;
 	}
 
 	return lt;

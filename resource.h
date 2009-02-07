@@ -18,6 +18,7 @@
 #define IDS_COLUMN_GROUP                107
 #define IDS_COLUMN_OWNER_ID             108
 #define IDS_COLUMN_GROUP_ID             109
+#define IDS_COLUMN_ACCESSED             110
 #define IDD_HOSTINFO_DIALOG             201
 #define IDC_HOST_GROUP                  1002
 #define IDC_USER                        1003

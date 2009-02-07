@@ -43,6 +43,7 @@ struct RemoteItemId
 	//WORD wPadding;
 	ULONGLONG uSize;
 	DATE dateModified;
+	DATE dateAccessed;
 
 	static const DWORD FINGERPRINT = 0x533aaf69;
 };
@@ -231,6 +232,12 @@ public:
 		return Get()->dateModified;
 	}
 
+	COleDateTime GetDateAccessed() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return Get()->dateAccessed;
+	}
+
 	inline const RemoteItemId *Get() const throw()
 	{
 		return reinterpret_cast<const RemoteItemId *>(m_pidl);
@@ -296,7 +303,8 @@ public:
 	explicit CRemotePidl(
 		PCWSTR pwszFilename, bool fIsFolder=false, PCWSTR pwszOwner=L"", 
 		PCWSTR pwszGroup=L"", ULONG uUid=0, ULONG uGid=0, bool fIsLink=false,
-		DWORD dwPermissions=0, ULONGLONG uSize=0, DATE dateModified=0)
+		DWORD dwPermissions=0, ULONGLONG uSize=0,
+		DATE dateModified=0, DATE dateAccessed=0)
 	throw(...)
 	{
 		ATLASSERT(sizeof(RemoteItemId) % sizeof(DWORD) == 0); // DWORD-aligned
@@ -320,6 +328,7 @@ public:
 		item->dwPermissions = dwPermissions;
 		item->uSize = uSize;
 		item->dateModified = dateModified;
+		item->dateAccessed = dateAccessed;
 		item->fIsFolder = fIsFolder;
 		item->fIsLink = fIsLink;
 

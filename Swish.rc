@@ -192,6 +192,7 @@ BEGIN
     IDS_COLUMN_GROUP        "Group"
     IDS_COLUMN_OWNER_ID     "Owner ID"
     IDS_COLUMN_GROUP_ID     "Group ID"
+    IDS_COLUMN_ACCESSED     "Date Accessed"
 END
 
 #endif    // English (U.K.) resources

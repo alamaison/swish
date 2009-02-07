@@ -56,6 +56,7 @@ namespace swish
 				SIZE,
 				TYPE,
 				MODIFIED_DATE,
+				ACCESSED_DATE,
 				PERMISSIONS,
 				OWNER,
 				GROUP,
