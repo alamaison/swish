@@ -38,7 +38,9 @@ namespace swish
 		 */
 		enum propertyIds {
 			PID_GROUP = PID_FIRST_USABLE,
-			PID_PERMISSIONS
+			PID_PERMISSIONS,
+			PID_OWNER_ID,
+			PID_GROUP_ID
 		};
 
 		/**
@@ -58,6 +60,14 @@ namespace swish
 			PKEY_Permissions, \
 			0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
 			0x4f, 0x85, PID_PERMISSIONS);
+		DEFINE_PROPERTYKEY(
+			PKEY_OwnerId, \
+			0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
+			0x4f, 0x85, PID_OWNER_ID);
+		DEFINE_PROPERTYKEY(
+			PKEY_GroupId, \
+			0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
+			0x4f, 0x85, PID_GROUP_ID);
 
 		CComVariant GetProperty(
 			__in PCUITEMID_CHILD pidl, __in const SHCOLUMNID& scid);

@@ -58,7 +58,9 @@ namespace swish
 				MODIFIED_DATE,
 				PERMISSIONS,
 				OWNER,
-				GROUP
+				GROUP,
+				OWNER_ID,
+				GROUP_ID
 			};
 
 			SHELLDETAILS GetHeader(UINT iColumn);

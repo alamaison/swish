@@ -130,8 +130,13 @@ Listing listing::FillListingEntry(
 	// User & Group
 	if (attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID)
 	{
+		// String fields
 		lt.bstrOwner = ::SysAllocString(ParseUserFromLongEntry(strLongEntry));
 		lt.bstrGroup = ::SysAllocString(ParseGroupFromLongEntry(strLongEntry));
+
+		// Numerical fields (UID and GID)
+		lt.uUid = attrs.uid;
+		lt.uGid = attrs.gid;
 	}
 
 	// Size of file

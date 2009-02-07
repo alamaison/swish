@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "atlres.h"
-
+#include "atlres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -176,6 +175,7 @@ BEGIN
     LTEXT           "The instruction from the server which may be multiline, include embedded newlines or even be empty",IDC_INSTRUCTION,6,6,174,8
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
@@ -190,6 +190,8 @@ BEGIN
     IDS_COLUMN_MODIFIED     "Date Modified"
     IDS_COLUMN_OWNER        "Owner"
     IDS_COLUMN_GROUP        "Group"
+    IDS_COLUMN_OWNER_ID     "Owner ID"
+    IDS_COLUMN_GROUP_ID     "Group ID"
 END
 
 #endif    // English (U.K.) resources
@@ -202,8 +204,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

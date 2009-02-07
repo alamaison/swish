@@ -86,6 +86,8 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 						S_ISDIR(lt.uPermissions),
 						CString(lt.bstrOwner),
 						CString(lt.bstrGroup),
+						lt.uUid,
+						lt.uGid,
 						false,
 						lt.uPermissions,
 						lt.uSize,

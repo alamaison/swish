@@ -67,7 +67,11 @@ namespace { // private
 		{ IDS_COLUMN_OWNER, PKEY_FileOwner,            // Owner
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 },
 		{ IDS_COLUMN_GROUP, PKEY_Group,                // Group
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 }
+		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 },
+		{ IDS_COLUMN_OWNER_ID, PKEY_OwnerId,           // Owner ID (UID)
+		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10 },
+		{ IDS_COLUMN_GROUP_ID, PKEY_GroupId,           // Group ID (GID)
+		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10 }
 	};
 
 	/**
@@ -177,6 +181,9 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 	case VT_BSTR:
 		strSrc = var.bstrVal;
 		break;
+	case VT_UI4:
+		strSrc.Format(L"%u", var.ulVal);
+		break;
 	case VT_UI8:
 		if (IsEqualPropertyKey(pkey, PKEY_Size))
 		{
@@ -198,7 +205,7 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 		strSrc = COleDateTime(var).Format();
 		break;
 	default:
-		UNREACHABLE;
+		ATLASSERT(!"GetProperty() returned a VARIANT type we don't handle");
 	}
 	
 	SHELLDETAILS sd;

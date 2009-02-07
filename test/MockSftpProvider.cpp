@@ -219,17 +219,15 @@ STDMETHODIMP CMockSftpProvider::Rename(
 		if (SUCCEEDED(hr))
 			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
-
-	case ConfirmOverwriteEx:
 		{
 		// TODO: Lookup Listing from collection we returned in GetListing()
 		Swish::Listing ltOld = {
 			bstrFromPath, 0666, CComBSTR("mockowner"), 
-			CComBSTR("mockgroup"), 1024, 12, COleDateTime()
+			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
 		};
 		Swish::Listing ltExisting =  {
 			bstrToPath, 0666, CComBSTR("mockowner"), 
-			CComBSTR("mockgroup"), 1024, 12, COleDateTime()
+			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
 		};
 
 		hr = m_spConsumer->OnConfirmOverwriteEx(ltOld, ltExisting);

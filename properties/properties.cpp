@@ -83,6 +83,16 @@ CComVariant properties::GetProperty(
 	{		
 		var = rpidl.GetGroup();
 	}
+	// Owner ID (UID)
+	else if (IsEqualPropertyKey(scid, PKEY_OwnerId))
+	{
+		var = rpidl.GetOwnerId();
+	}
+	// Group ID (GID)
+	else if (IsEqualPropertyKey(scid, PKEY_GroupId))
+	{		
+		var = rpidl.GetGroupId();
+	}
 	// File permissions: drwxr-xr-x form
 	else if (IsEqualPropertyKey(scid, PKEY_Permissions))
 	{

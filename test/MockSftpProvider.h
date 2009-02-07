@@ -170,6 +170,8 @@ public:
 			p2->bstrOwner, ::SysStringLen(p2->bstrOwner));
 		p1->bstrGroup = SysAllocStringLen(
 			p2->bstrGroup, ::SysStringLen(p2->bstrGroup));
+		p1->uUid = p2->uUid;
+		p1->uGid = p2->uGid;
 		p1->uSize = p2->uSize;
 		p1->cHardLinks = p2->cHardLinks;
 		p1->dateModified = p2->dateModified;
