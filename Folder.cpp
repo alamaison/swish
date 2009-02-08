@@ -268,7 +268,9 @@ STDMETHODIMP CFolder::CompareIDs(
 
 		if ((::ILIsChild(pidl1) && ::ILIsChild(pidl2)) || result != 0)
 		{
-			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, result);
+			// The cast to unsigned short is *crucial*!  Without it, sorting
+			// in Explorer does all sorts of wierd stuff
+			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (unsigned short)result);
 		}
 		else
 		{
