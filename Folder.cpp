@@ -263,8 +263,12 @@ STDMETHODIMP CFolder::CompareIDs(
 		ValidatePidl(pidl1);
 		ValidatePidl(pidl2);
 
+		// The casts here are OK.  We are aware ComparePIDLs only compares a
+		// single item.  We recurse later if needed.
 		int result = ComparePIDLs(
-			pidl1, pidl2, uColumn, fCompareAllFields, fCanonical);
+			static_cast<PCUITEMID_CHILD>(pidl1),
+			static_cast<PCUITEMID_CHILD>(pidl2),
+			uColumn, fCompareAllFields, fCanonical);
 
 		if ((::ILIsChild(pidl1) && ::ILIsChild(pidl2)) || result != 0)
 		{

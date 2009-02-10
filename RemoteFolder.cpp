@@ -91,50 +91,14 @@ const throw(...)
  * - Negative: pidl1 < pidl2
  * - Positive: pidl1 > pidl2
  * - Zero:     pidl1 == pidl2
- *
- * @todo  Take account of fCompareAllFields and fCanonical flags.
  */
 int CRemoteFolder::ComparePIDLs(
-	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
-	bool /*fCompareAllFields*/, bool /*fCanonical*/)
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, USHORT uColumn,
+	bool fCompareAllFields, bool fCanonical)
 const throw(...)
 {
-	CRemoteItemListHandle item1(pidl1);
-	CRemoteItemListHandle item2(pidl2);
-
-	switch (uColumn)
-	{
-	case 0: // Filename
-			// - also default for fCompareAllFields and fCanonical
-		return wcscmp(item1.GetFilename(), item2.GetFilename());
-	case 1: // Owner
-		return wcscmp(item1.GetOwner(), item2.GetOwner());
-	case 2: // Group
-		return wcscmp(item1.GetGroup(), item2.GetGroup());
-	case 3: // File Permissions: drwxr-xr-x form
-		return item1.GetPermissions() - item2.GetPermissions();
-	case 4: // File size in bytes
-		// We have to do this with a series of if-statements as the 
-		// file sizes are ULONGLONGs and a subtraction may overflow
-		if (item1.GetFileSize() == item2.GetFileSize())
-			return 0;
-		else if (item1.GetFileSize() < item2.GetFileSize())
-			return -1;
-		else
-			return 1;
-	case 5: // Last modified date
-		// We have to do this with a series of if-statements as the 
-		// COleDateTime object wraps a floating-point number (double)
-		if (item1.GetDateModified() == item2.GetDateModified())
-			return 0;
-		else if (item1.GetDateModified() < item2.GetDateModified())
-			return -1;
-		else
-			return 1;
-	default:
-		UNREACHABLE;
-		AtlThrow(E_UNEXPECTED);
-	}
+	return swish::properties::column::CompareDetailOf(
+		pidl1, pidl2, uColumn, fCompareAllFields, fCanonical);
 }
 
 /**

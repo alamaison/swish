@@ -34,9 +34,12 @@
 #include <atlcomcli.h>  // ATL smart types
 
 #include <vector>
+
 using std::vector;
 
-using namespace swish::properties;
+namespace swish {
+namespace properties {
+namespace column {
 
 /**
  * Functions and data private to this compilation unit.
@@ -96,7 +99,7 @@ namespace { // private
 /**
  * Returns the default state for the column specified by index iColumn.
  */
-SHCOLSTATEF column::GetDefaultState(UINT iColumn)
+SHCOLSTATEF GetDefaultState(UINT iColumn)
 {
 	if (iColumn >= Count())
 		AtlThrow(E_FAIL);
@@ -112,7 +115,7 @@ SHCOLSTATEF column::GetDefaultState(UINT iColumn)
  * forwards the columnID here.  The first column that we throw E_FAIL for 
  * marks the end of the supported details.
  */
-SHCOLUMNID column::MapColumnIndexToSCID(UINT iColumn)
+SHCOLUMNID MapColumnIndexToSCID(UINT iColumn)
 {
 	if (iColumn >= Count())
 		AtlThrow(E_FAIL);
@@ -136,7 +139,7 @@ SHCOLUMNID column::MapColumnIndexToSCID(UINT iColumn)
  * string allocated with CoTaskMemAlloc.  This must be properly
  * freed to avoid a memory leak. 
  */
-SHELLDETAILS column::GetHeader(UINT iColumn)
+SHELLDETAILS GetHeader(UINT iColumn)
 {
 	SHELLDETAILS sd;
 	::ZeroMemory(&sd, sizeof(SHELLDETAILS));
@@ -169,7 +172,7 @@ SHELLDETAILS column::GetHeader(UINT iColumn)
  *
  * @throws  E_FAIL if the column index is out of range.
  */
-SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
+SHELLDETAILS GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 {
 	// Lookup PKEY and use it to call GetProperty
 	PROPERTYKEY pkey = MapColumnIndexToSCID(iColumn);
@@ -217,3 +220,60 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 
 	return sd;
 }
+
+/**
+ * Helpers for CompareDetailsOf function.
+ */
+namespace { // private
+
+	/**
+	 * Compare two PIDLs by the property in column iColumn.
+	 */
+	inline int CompareByColumn(
+		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2, UINT iColumn)
+	{
+		SHCOLUMNID scid = MapColumnIndexToSCID(iColumn);
+
+		return properties::CompareByProperty(pidl1, pidl2, scid);
+	}
+}
+
+
+/**
+ * Compare two PIDLs by the detail in a column or by all columns.
+ *
+ * If fCompareAllFields is false, the PIDLs are compared by the property in
+ * column iColumn.  Otherwise, all their properties are included in the 
+ * comparison.  In this case, the first non-equal field is used to decide
+ * is a property is less-that or greater-than.
+ *
+ * @retval -1 if pidl1 < pidl2 in column iColumn (or for all columns).
+ * @retval  0 if pidl1 == pidl2 in column iColumn (or for all columns).
+ * @retval  1 if pidl1 > pidl2 in column iColumn (or for all columns).
+ */
+int CompareDetailOf(
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, UINT iColumn, 
+	bool fCompareAllFields, bool fCanonical)
+{
+	(void)fCanonical; // I think our comparisons are always canonical
+
+	if (fCompareAllFields) // Wants a complete equality test
+	{
+		ATLASSERT(iColumn == 0);
+
+		for (UINT i = 0; i < Count(); ++i)
+		{
+			int result = CompareByColumn(pidl1, pidl2, iColumn);
+			if (result != 0)
+				return result;
+		}
+
+		return 0;
+	}
+	else
+	{
+		return CompareByColumn(pidl1, pidl2, iColumn);
+	}
+}
+
+}}} // namespace swish::properties::column

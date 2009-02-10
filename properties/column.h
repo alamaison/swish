@@ -69,6 +69,10 @@ namespace swish
 			SHELLDETAILS GetDetailsFor(
 				__in PCUITEMID_CHILD pidl, UINT iColumn);
 
+			int CompareDetailOf(
+				__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2, 
+				UINT iColumn, bool fCompareAllFields, bool fCanonical);
+
 			SHCOLUMNID MapColumnIndexToSCID(UINT iColumn);
 
 			SHCOLSTATEF GetDefaultState(UINT iColumn);

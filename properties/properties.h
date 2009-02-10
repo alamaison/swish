@@ -71,5 +71,9 @@ namespace swish
 
 		CComVariant GetProperty(
 			__in PCUITEMID_CHILD pidl, __in const SHCOLUMNID& scid);
+		
+		int CompareByProperty(
+			__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2,
+			__in const SHCOLUMNID& scid);
 	}
 }
