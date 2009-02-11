@@ -156,23 +156,45 @@ SHELLDETAILS GetHeader(UINT iColumn)
 	return sd;
 }
 
+/**
+ * Date and time formatting helpers.
+ */
 namespace { // private
 
 	/**
-	 * Format date portion of SYSTEMTIME according to user's locale.
+	 * Type of pointer to GetDateFormat() and GetTimeFormat() formatting 
+	 * functions.
 	 */
-	CString FormatDate(const SYSTEMTIME& st)
+	typedef int (WINAPI *FormatFunction)(
+		__in LCID Locale, __in DWORD dwFlags, __in_opt const SYSTEMTIME* pDate,
+		__in_opt PCWSTR pFormat, __out_ecount_opt(cchDate) PWSTR pDateStr,
+		__in int cchDate);
+
+	/**
+	 * Call given formatting function on given date and return as CString.
+	 *
+	 * The given function in **called twice**.  Once with a null buffer to
+	 * determine necessary length and then with a buffer of that length to
+	 * receive the output string.
+	 *
+	 * @param formatFunction  Date or time formatting function to call.
+	 * @param st              Datetime to be formatted.
+	 * @param dwFlags         Flags to control formatting (passed to formatting
+	 *                        function).
+	 */
+	CString DoFormatFunction(
+		FormatFunction formatFunction, const SYSTEMTIME& st, DWORD dwFlags=0)
 	{
-		int size = ::GetDateFormat(
-			LOCALE_USER_DEFAULT, 0, &st, NULL, NULL, 0);
+		int size = (*formatFunction)(
+			LOCALE_USER_DEFAULT, dwFlags, &st, NULL, NULL, 0);
 		ATLASSERT(size > 0);
 		if (size > 0)
 		{
 			vector<wchar_t> buffer(size);
 			if (buffer.size() > 0)
 			{
-				size = ::GetDateFormat(
-					LOCALE_USER_DEFAULT, 0, &st, NULL, &buffer[0],
+				size = (*formatFunction)(
+					LOCALE_USER_DEFAULT, dwFlags, &st, NULL, &buffer[0],
 					static_cast<UINT>(buffer.size()));
 				ATLASSERT(size > 0);
 
@@ -182,8 +204,16 @@ namespace { // private
 			}
 		}
 
-		ATLASSERT(!"About to return an empty date string");
+		ATLASSERT(!"About to return an empty string");
 		return L"";
+	}
+
+	/**
+	 * Format date portion of SYSTEMTIME according to user's locale.
+	 */
+	CString FormatDate(const SYSTEMTIME& st)
+	{
+		return DoFormatFunction(&(::GetDateFormat), st);
 	}
 
 	/**
@@ -192,27 +222,7 @@ namespace { // private
 	 */
 	CString FormatTime(const SYSTEMTIME& st)
 	{
-		int size = ::GetTimeFormat(
-			LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, NULL, 0);
-		ATLASSERT(size > 0);
-		if (size > 0)
-		{
-			vector<wchar_t> buffer(size);
-			if (buffer.size() > 0)
-			{
-				size = ::GetTimeFormat(
-					LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, &buffer[0],
-					static_cast<UINT>(buffer.size()));
-				ATLASSERT(size > 0);
-
-				return CString(
-					&buffer[0], std::min<int>( // Must not embed NULL
-						size, static_cast<int>(buffer.size())) - 1);
-			}
-		}
-
-		ATLASSERT(!"About to return an empty time string");
-		return L"";
+		return DoFormatFunction(&(::GetTimeFormat), st, TIME_NOSECONDS);
 	}
 
 	/**
