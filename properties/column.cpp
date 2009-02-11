@@ -156,6 +156,82 @@ SHELLDETAILS GetHeader(UINT iColumn)
 	return sd;
 }
 
+namespace { // private
+
+	/**
+	 * Format date portion of SYSTEMTIME according to user's locale.
+	 */
+	CString FormatDate(const SYSTEMTIME& st)
+	{
+		int size = ::GetDateFormat(
+			LOCALE_USER_DEFAULT, 0, &st, NULL, NULL, 0);
+		ATLASSERT(size > 0);
+		if (size > 0)
+		{
+			vector<wchar_t> buffer(size);
+			if (buffer.size() > 0)
+			{
+				size = ::GetDateFormat(
+					LOCALE_USER_DEFAULT, 0, &st, NULL, &buffer[0],
+					static_cast<UINT>(buffer.size()));
+				ATLASSERT(size > 0);
+
+				return CString(
+					&buffer[0], std::min<int>( // Must not embed NULL
+						size, static_cast<int>(buffer.size())) - 1);
+			}
+		}
+
+		ATLASSERT(!"About to return an empty date string");
+		return L"";
+	}
+
+	/**
+	 * Format time portion of SYSTEMTIME according to user's locale but
+	 * without including seconds.
+	 */
+	CString FormatTime(const SYSTEMTIME& st)
+	{
+		int size = ::GetTimeFormat(
+			LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, NULL, 0);
+		ATLASSERT(size > 0);
+		if (size > 0)
+		{
+			vector<wchar_t> buffer(size);
+			if (buffer.size() > 0)
+			{
+				size = ::GetTimeFormat(
+					LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, &buffer[0],
+					static_cast<UINT>(buffer.size()));
+				ATLASSERT(size > 0);
+
+				return CString(
+					&buffer[0], std::min<int>( // Must not embed NULL
+						size, static_cast<int>(buffer.size())) - 1);
+			}
+		}
+
+		ATLASSERT(!"About to return an empty time string");
+		return L"";
+	}
+
+	/**
+	 * Format the date and time according to user locale but without seconds.
+	 *
+	 * Other methods such as COleDateTime.Format() provide no way to suppress
+	 * displaying seconds without abandoning local-independence entirely.  
+	 * This function should render the date and time in the same way that
+	 * Windows Explorer does for any particular locale.
+	 */
+	CString FormatDateAndTime(const COleDateTime& date)
+	{
+		SYSTEMTIME st;
+		ATLVERIFY(date.GetAsSystemTime(st));
+
+		return FormatDate(st) + L" " + FormatTime(st);
+	}
+}
+
 /**
  * Get the contents of the column with index iColumn for the given PIDL.
  *
@@ -207,7 +283,7 @@ SHELLDETAILS GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 		}
 		break;
 	case VT_DATE:
-		strSrc = COleDateTime(var).Format();
+		strSrc = FormatDateAndTime(COleDateTime(var));
 		break;
 	default:
 		ATLASSERT(!"GetProperty() returned a VARIANT type we don't handle");
