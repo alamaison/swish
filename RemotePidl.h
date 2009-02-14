@@ -37,10 +37,13 @@ struct RemoteItemId
 	WCHAR wszFilename[MAX_FILENAME_LENZ];
 	WCHAR wszOwner[MAX_USERNAME_LENZ];
 	WCHAR wszGroup[MAX_USERNAME_LENZ];
+	ULONG uUid;
+	ULONG uGid;
 	DWORD dwPermissions;
 	//WORD wPadding;
 	ULONGLONG uSize;
 	DATE dateModified;
+	DATE dateAccessed;
 
 	static const DWORD FINGERPRINT = 0x533aaf69;
 };
@@ -199,6 +202,18 @@ public:
 		return Get()->wszGroup;
 	}
 
+	ULONG GetOwnerId() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return Get()->uUid;
+	}
+
+	ULONG GetGroupId() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return Get()->uGid;
+	}
+
 	ULONGLONG GetFileSize() const throw(...)
 	{
 		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
@@ -211,16 +226,16 @@ public:
 		return Get()->dwPermissions;
 	}
 
-	CString GetPermissionsStr() const throw(...)
-	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
-		return L"todo";
-	}
-
 	COleDateTime GetDateModified() const throw(...)
 	{
 		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
 		return Get()->dateModified;
+	}
+
+	COleDateTime GetDateAccessed() const throw(...)
+	{
+		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		return Get()->dateAccessed;
 	}
 
 	inline const RemoteItemId *Get() const throw()
@@ -276,6 +291,8 @@ public:
 	 * @param[in] fIsFolder      Is file a folder?
 	 * @param[in] pwszOwner      Name of file owner on remote system.
 	 * @param[in] pwszGroup      Name of file group on remote system.
+	 * @param[in] uUID           Numeric ID of file owner on remote system.
+	 * @param[in] uGID           Numeric ID of file group on remote system.
 	 * @param[in] dwPermissions  Value of the file's Unix permissions bits.
 	 * @param[in] uSize          Size of file in bytes.
 	 * @param[in] dateModified   Date that file was last modified.
@@ -285,8 +302,9 @@ public:
 	 */
 	explicit CRemotePidl(
 		PCWSTR pwszFilename, bool fIsFolder=false, PCWSTR pwszOwner=L"", 
-		PCWSTR pwszGroup=L"", bool fIsLink=false, DWORD dwPermissions=0,
-		ULONGLONG uSize=0, DATE dateModified=0)
+		PCWSTR pwszGroup=L"", ULONG uUid=0, ULONG uGid=0, bool fIsLink=false,
+		DWORD dwPermissions=0, ULONGLONG uSize=0,
+		DATE dateModified=0, DATE dateAccessed=0)
 	throw(...)
 	{
 		ATLASSERT(sizeof(RemoteItemId) % sizeof(DWORD) == 0); // DWORD-aligned
@@ -305,9 +323,12 @@ public:
 			ARRAYSIZE(item->wszFilename), pwszFilename);
 		CopyWSZString(item->wszOwner, ARRAYSIZE(item->wszOwner), pwszOwner);
 		CopyWSZString(item->wszGroup, ARRAYSIZE(item->wszGroup), pwszGroup);
+		item->uUid = uUid;
+		item->uGid = uGid;
 		item->dwPermissions = dwPermissions;
 		item->uSize = uSize;
 		item->dateModified = dateModified;
+		item->dateAccessed = dateAccessed;
 		item->fIsFolder = fIsFolder;
 		item->fIsLink = fIsLink;
 

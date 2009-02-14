@@ -52,7 +52,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include"
+				AdditionalIncludeDirectories="libssh2\include;.."
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -151,7 +151,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include"
+				AdditionalIncludeDirectories="libssh2\include;.."
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -250,7 +250,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include"
+				AdditionalIncludeDirectories="libssh2\include;.."
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -447,6 +447,26 @@
 				RelativePath=".\Libssh2Provider.rgs"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="listing"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\listing\listing.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\listing\listing.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

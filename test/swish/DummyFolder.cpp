@@ -192,7 +192,7 @@ STDMETHODIMP CDummyFolder::EnumObjects(
  * - Zero:     pidl1 == pidl2
  */
 int CDummyFolder::ComparePIDLs(
-	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT /*uColumn*/,
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, USHORT /*uColumn*/,
 	bool /*fCompareAllFields*/, bool /*fCanonical*/)
 const throw(...)
 {

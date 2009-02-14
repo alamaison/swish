@@ -80,12 +80,12 @@ const throw(...)
  * @todo  Take account of fCompareAllFields and fCanonical flags.
  */
 int CHostFolder::ComparePIDLs(
-	PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2, USHORT uColumn,
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, USHORT uColumn,
 	bool /*fCompareAllFields*/, bool /*fCanonical*/)
 const throw(...)
 {
-	CHostItemListHandle item1(pidl1);
-	CHostItemListHandle item2(pidl2);
+	CHostItemHandle item1(pidl1);
+	CHostItemHandle item2(pidl2);
 
 	switch (uColumn)
 	{

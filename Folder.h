@@ -178,7 +178,7 @@ protected:
 		__in PCIDLIST_ABSOLUTE pidlRoot)
 		const throw(...) PURE;
 	virtual int ComparePIDLs(
-		__in PCUIDLIST_RELATIVE pidl1, __in PCUIDLIST_RELATIVE pidl2,
+		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2,
 		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
 		const throw(...) PURE;
 

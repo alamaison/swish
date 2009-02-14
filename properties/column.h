@@ -56,15 +56,22 @@ namespace swish
 				SIZE,
 				TYPE,
 				MODIFIED_DATE,
+				ACCESSED_DATE,
 				PERMISSIONS,
 				OWNER,
-				GROUP
+				GROUP,
+				OWNER_ID,
+				GROUP_ID
 			};
 
 			SHELLDETAILS GetHeader(UINT iColumn);
 
 			SHELLDETAILS GetDetailsFor(
 				__in PCUITEMID_CHILD pidl, UINT iColumn);
+
+			int CompareDetailOf(
+				__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2, 
+				UINT iColumn, bool fCompareAllFields, bool fCanonical);
 
 			SHCOLUMNID MapColumnIndexToSCID(UINT iColumn);
 

@@ -108,7 +108,7 @@ protected:
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
+			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
@@ -139,13 +139,13 @@ protected:
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
+			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		CRemoteItem pidl2(
-			L"testswishfile.txt", false, L"mockowner", L"mockgroup",
+			L"testswishfile.txt", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		CRemoteItem pidl3(
-			L"testswishFile", false, L"mockowner", L"mockgroup",
+			L"testswishFile", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		PCITEMID_CHILD aPidl[3];
 		aPidl[0] = pidl1;
@@ -205,7 +205,7 @@ protected:
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
+			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
@@ -225,7 +225,7 @@ protected:
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
+			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
@@ -246,13 +246,13 @@ protected:
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
+			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		CRemoteItem pidl2(
-			L"testswishfile.txt", false, L"mockowner", L"mockgroup",
+			L"testswishfile.txt", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		CRemoteItem pidl3(
-			L"testswishFile", false, L"mockowner", L"mockgroup",
+			L"testswishFile", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		PCITEMID_CHILD aPidl[3];
 		aPidl[0] = pidl1;
@@ -276,13 +276,13 @@ protected:
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup",
+			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		CRemoteItem pidl2(
-			L"testswishfile.txt", false, L"mockowner", L"mockgroup",
+			L"testswishfile.txt", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		CRemoteItem pidl3(
-			L"testswishFile", false, L"mockowner", L"mockgroup",
+			L"testswishFile", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 		PCITEMID_CHILD aPidl[3];
 		aPidl[0] = pidl1;
@@ -427,7 +427,7 @@ private:
 		
 		// Create root child REMOTEPIDL
 		CRemoteItem pidlRemote(
-			L"swish", true, L"owner", L"group", false, 0677, 1024);
+			L"swish", true, L"owner", L"group", 1001, 1002, false, 0677, 1024);
 
 		// Concatenate to make absolute pidl to RemoteFolder root
 		return CAbsolutePidl(pidlHost, pidlRemote);

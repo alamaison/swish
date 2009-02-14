@@ -26,15 +26,20 @@ import "oaidl.idl";
  * This structure represents a single file contained in the directory 
  * specified to GetListing().
  */
+
 struct Listing {
 	BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
 	ULONG uPermissions;   ///< Unix file permissions
 	BSTR bstrOwner;       ///< The user name of the file's owner
 	BSTR bstrGroup;       ///< The name of the group to which the file belongs
-	ULONG uSize;          ///< The file's size in bytes
+	ULONG uUid;           ///< Numerical ID of file's owner
+	ULONG uGid;           ///< Numerical ID of group to which the file belongs
+	ULONGLONG uSize;      ///< The file's size in bytes
 	ULONG cHardLinks;     ///< The number of hard links referencing this file
 	DATE dateModified;    ///< The date and time at which the file was 
 	                      ///< last modified in automation-compatible format
+	DATE dateAccessed;    ///< The date and time at which the file was 
+	                      ///< last accessed in automation-compatible format
 };
 
 // IEnumListing

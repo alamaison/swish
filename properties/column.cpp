@@ -34,9 +34,12 @@
 #include <atlcomcli.h>  // ATL smart types
 
 #include <vector>
+
 using std::vector;
 
-using namespace swish::properties;
+namespace swish {
+namespace properties {
+namespace column {
 
 /**
  * Functions and data private to this compilation unit.
@@ -57,17 +60,23 @@ namespace { // private
 		{ IDS_COLUMN_FILENAME, PKEY_ItemNameDisplay,   // Display name (Label)
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 }, 
 		{ IDS_COLUMN_SIZE, PKEY_Size,                  // Size
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15 },
+		  SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15 },
 		{ IDS_COLUMN_TYPE, PKEY_ItemTypeText,          // Friendly type
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
 		{ IDS_COLUMN_MODIFIED, PKEY_DateModified,      // Modified date
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
+		  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
+		{ IDS_COLUMN_ACCESSED, PKEY_DateAccessed,      // Accessed date
+		  SHCOLSTATE_TYPE_DATE, LVCFMT_LEFT, 20 },
 		{ IDS_COLUMN_PERMISSIONS, PKEY_Permissions,    // Permissions
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
-		{ IDS_COLUMN_OWNER, PKEY_FileOwner,            // Owner
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 },
+		{ IDS_COLUMN_OWNER, PKEY_FileOwner,            // Owner
+		  SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
 		{ IDS_COLUMN_GROUP, PKEY_Group,                // Group
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 }
+		  SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
+		{ IDS_COLUMN_OWNER_ID, PKEY_OwnerId,           // Owner ID (UID)
+		  SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 },
+		{ IDS_COLUMN_GROUP_ID, PKEY_GroupId,           // Group ID (GID)
+		  SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 }
 	};
 
 	/**
@@ -90,7 +99,7 @@ namespace { // private
 /**
  * Returns the default state for the column specified by index iColumn.
  */
-SHCOLSTATEF column::GetDefaultState(UINT iColumn)
+SHCOLSTATEF GetDefaultState(UINT iColumn)
 {
 	if (iColumn >= Count())
 		AtlThrow(E_FAIL);
@@ -106,7 +115,7 @@ SHCOLSTATEF column::GetDefaultState(UINT iColumn)
  * forwards the columnID here.  The first column that we throw E_FAIL for 
  * marks the end of the supported details.
  */
-SHCOLUMNID column::MapColumnIndexToSCID(UINT iColumn)
+SHCOLUMNID MapColumnIndexToSCID(UINT iColumn)
 {
 	if (iColumn >= Count())
 		AtlThrow(E_FAIL);
@@ -130,7 +139,7 @@ SHCOLUMNID column::MapColumnIndexToSCID(UINT iColumn)
  * string allocated with CoTaskMemAlloc.  This must be properly
  * freed to avoid a memory leak. 
  */
-SHELLDETAILS column::GetHeader(UINT iColumn)
+SHELLDETAILS GetHeader(UINT iColumn)
 {
 	SHELLDETAILS sd;
 	::ZeroMemory(&sd, sizeof(SHELLDETAILS));
@@ -145,6 +154,92 @@ SHELLDETAILS column::GetHeader(UINT iColumn)
 	sd.cxChar = aColumns[iColumn].cxChar;
 
 	return sd;
+}
+
+/**
+ * Date and time formatting helpers.
+ */
+namespace { // private
+
+	/**
+	 * Type of pointer to GetDateFormat() and GetTimeFormat() formatting 
+	 * functions.
+	 */
+	typedef int (WINAPI *FormatFunction)(
+		__in LCID Locale, __in DWORD dwFlags, __in_opt const SYSTEMTIME* pDate,
+		__in_opt PCWSTR pFormat, __out_ecount_opt(cchDate) PWSTR pDateStr,
+		__in int cchDate);
+
+	/**
+	 * Call given formatting function on given date and return as CString.
+	 *
+	 * The given function in **called twice**.  Once with a null buffer to
+	 * determine necessary length and then with a buffer of that length to
+	 * receive the output string.
+	 *
+	 * @param formatFunction  Date or time formatting function to call.
+	 * @param st              Datetime to be formatted.
+	 * @param dwFlags         Flags to control formatting (passed to formatting
+	 *                        function).
+	 */
+	CString DoFormatFunction(
+		FormatFunction formatFunction, const SYSTEMTIME& st, DWORD dwFlags=0)
+	{
+		int size = (*formatFunction)(
+			LOCALE_USER_DEFAULT, dwFlags, &st, NULL, NULL, 0);
+		ATLASSERT(size > 0);
+		if (size > 0)
+		{
+			vector<wchar_t> buffer(size);
+			if (buffer.size() > 0)
+			{
+				size = (*formatFunction)(
+					LOCALE_USER_DEFAULT, dwFlags, &st, NULL, &buffer[0],
+					static_cast<UINT>(buffer.size()));
+				ATLASSERT(size > 0);
+
+				return CString(
+					&buffer[0], std::min<int>( // Must not embed NULL
+						size, static_cast<int>(buffer.size())) - 1);
+			}
+		}
+
+		ATLASSERT(!"About to return an empty string");
+		return L"";
+	}
+
+	/**
+	 * Format date portion of SYSTEMTIME according to user's locale.
+	 */
+	CString FormatDate(const SYSTEMTIME& st)
+	{
+		return DoFormatFunction(&(::GetDateFormat), st);
+	}
+
+	/**
+	 * Format time portion of SYSTEMTIME according to user's locale but
+	 * without including seconds.
+	 */
+	CString FormatTime(const SYSTEMTIME& st)
+	{
+		return DoFormatFunction(&(::GetTimeFormat), st, TIME_NOSECONDS);
+	}
+
+	/**
+	 * Format the date and time according to user locale but without seconds.
+	 *
+	 * Other methods such as COleDateTime.Format() provide no way to suppress
+	 * displaying seconds without abandoning local-independence entirely.  
+	 * This function should render the date and time in the same way that
+	 * Windows Explorer does for any particular locale.
+	 */
+	CString FormatDateAndTime(const COleDateTime& date)
+	{
+		SYSTEMTIME st;
+		ATLVERIFY(date.GetAsSystemTime(st));
+
+		return FormatDate(st) + L" " + FormatTime(st);
+	}
 }
 
 /**
@@ -163,7 +258,7 @@ SHELLDETAILS column::GetHeader(UINT iColumn)
  *
  * @throws  E_FAIL if the column index is out of range.
  */
-SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
+SHELLDETAILS GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 {
 	// Lookup PKEY and use it to call GetProperty
 	PROPERTYKEY pkey = MapColumnIndexToSCID(iColumn);
@@ -176,6 +271,9 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 	{
 	case VT_BSTR:
 		strSrc = var.bstrVal;
+		break;
+	case VT_UI4:
+		strSrc.Format(L"%u", var.ulVal);
 		break;
 	case VT_UI8:
 		if (IsEqualPropertyKey(pkey, PKEY_Size))
@@ -195,10 +293,10 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 		}
 		break;
 	case VT_DATE:
-		strSrc = COleDateTime(var).Format();
+		strSrc = FormatDateAndTime(COleDateTime(var));
 		break;
 	default:
-		UNREACHABLE;
+		ATLASSERT(!"GetProperty() returned a VARIANT type we don't handle");
 	}
 	
 	SHELLDETAILS sd;
@@ -208,3 +306,60 @@ SHELLDETAILS column::GetDetailsFor(PCUITEMID_CHILD pidl, UINT iColumn)
 
 	return sd;
 }
+
+/**
+ * Helpers for CompareDetailsOf function.
+ */
+namespace { // private
+
+	/**
+	 * Compare two PIDLs by the property in column iColumn.
+	 */
+	inline int CompareByColumn(
+		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2, UINT iColumn)
+	{
+		SHCOLUMNID scid = MapColumnIndexToSCID(iColumn);
+
+		return properties::CompareByProperty(pidl1, pidl2, scid);
+	}
+}
+
+
+/**
+ * Compare two PIDLs by the detail in a column or by all columns.
+ *
+ * If fCompareAllFields is false, the PIDLs are compared by the property in
+ * column iColumn.  Otherwise, all their properties are included in the 
+ * comparison.  In this case, the first non-equal field is used to decide
+ * is a property is less-that or greater-than.
+ *
+ * @retval -1 if pidl1 < pidl2 in column iColumn (or for all columns).
+ * @retval  0 if pidl1 == pidl2 in column iColumn (or for all columns).
+ * @retval  1 if pidl1 > pidl2 in column iColumn (or for all columns).
+ */
+int CompareDetailOf(
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, UINT iColumn, 
+	bool fCompareAllFields, bool fCanonical)
+{
+	(void)fCanonical; // I think our comparisons are always canonical
+
+	if (fCompareAllFields) // Wants a complete equality test
+	{
+		ATLASSERT(iColumn == 0);
+
+		for (UINT i = 0; i < Count(); ++i)
+		{
+			int result = CompareByColumn(pidl1, pidl2, iColumn);
+			if (result != 0)
+				return result;
+		}
+
+		return 0;
+	}
+	else
+	{
+		return CompareByColumn(pidl1, pidl2, iColumn);
+	}
+}
+
+}}} // namespace swish::properties::column

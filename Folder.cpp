@@ -257,15 +257,24 @@ STDMETHODIMP CFolder::CompareIDs(
 			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, -1); // Only pidl1 empty <
 		else if (::ILIsEmpty(pidl2))
 			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);  // Only pidl2 empty >
+		
+		// Explorer can pass us invalid PIDLs from its cache if our PIDL 
+		// representation changes.  We catch that here to stop us asserting later.
+		ValidatePidl(pidl1);
+		ValidatePidl(pidl2);
 
-		// Neither PIDL is empty - perform comparison
-
+		// The casts here are OK.  We are aware ComparePIDLs only compares a
+		// single item.  We recurse later if needed.
 		int result = ComparePIDLs(
-			pidl1, pidl2, uColumn, fCompareAllFields, fCanonical);
+			static_cast<PCUITEMID_CHILD>(pidl1),
+			static_cast<PCUITEMID_CHILD>(pidl2),
+			uColumn, fCompareAllFields, fCanonical);
 
 		if ((::ILIsChild(pidl1) && ::ILIsChild(pidl2)) || result != 0)
 		{
-			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, result);
+			// The cast to unsigned short is *crucial*!  Without it, sorting
+			// in Explorer does all sorts of wierd stuff
+			return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (unsigned short)result);
 		}
 		else
 		{
