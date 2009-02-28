@@ -20,8 +20,6 @@
 #define IDS_COLUMN_GROUP_ID             109
 #define IDS_COLUMN_ACCESSED             110
 #define IDD_HOSTINFO_DIALOG             201
-#define IDR_HOSTFOLDER                  204
-#define IDR_REMOTEFOLDER                205
 #define IDC_HOST_GROUP                  1002
 #define IDC_USER                        1003
 #define IDC_LABEL_USER                  1004
@@ -47,7 +45,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        206
+#define _APS_NEXT_RESOURCE_VALUE        202
 #define _APS_NEXT_COMMAND_VALUE         32775
 #define _APS_NEXT_CONTROL_VALUE         1023
 #define _APS_NEXT_SYMED_VALUE           106

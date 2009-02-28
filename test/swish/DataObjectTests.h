@@ -1,7 +1,7 @@
 // Miscellanious tests for the Swish DataObject
 
 #include "stdafx.h"
-#include "../common/CppUnitExtensions.h"
+#include "../CppUnitExtensions.h"
 
 #include <HostPidl.h>
 #include <RemotePidl.h>

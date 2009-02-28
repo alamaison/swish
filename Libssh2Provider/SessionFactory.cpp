@@ -31,13 +31,8 @@
 #include "SessionFactory.h"
 #include "KeyboardInteractive.h"
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
-
 #include <string>
-
 using std::string;
-using std::auto_ptr;
 
 #pragma warning (push)
 #pragma warning (disable: 4267) // ssize_t to unsigned int

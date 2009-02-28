@@ -856,3 +856,24 @@ CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)
 }
 
 #pragma warning (pop)
+
+/*
+   The module attribute causes 
+     DllMain
+     DllRegisterServer
+     DllUnregisterServer
+     DllCanUnloadNow
+     DllGetClassObject. 
+   to be automatically implemented
+ */
+[ module(dll, uuid = "{b816a846-5022-11dc-9153-0090f5284f85}", 
+		 name = "Libssh2Provider", 
+		 helpstring = "Libssh2Provider 0.1 Type Library",
+		 resource_name = "IDR_LIBSSH2PROVIDER") ];
+/*
+class CLibssh2ProviderModule
+{
+public:
+// Override CAtlDllModuleT members
+};
+*/

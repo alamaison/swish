@@ -1,75 +1,79 @@
-HKCR
-{
-	NoRemove CLSID
-	{
-		ForceRemove {b816a83a-5022-11dc-9153-0090f5284f85} = s 'Swish'
-		{
-			ProgID = s 'Swish.HostFolder.1'
-			VersionIndependentProgID = s 'Swish.HostFolder'
-
-			InprocServer32 = s '%MODULE%'
-			{
-				val ThreadingModel = s 'Apartment'
-			}
-
-			val AppID = s '%APPID%'
-			TypeLib = s '%APPID%'
-
-			val InfoTip = s 'Remote file-system access via SFTP'
-			val TileInfo = s 'prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{b816a850-5022-11dc-9153-0090f5284f85} 2;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7'
-
-			ShellFolder
-			{
-				val Attributes = d '2684354560'
-			}
-
-			DefaultIcon = s 'shell32.dll,9'
-		}
-	}
-	Swish.HostFolder.1 = s 'CHostFolder Class'
-	{
-		CLSID = s '{b816a83a-5022-11dc-9153-0090f5284f85}'
-	}
-	Swish.HostFolder = s 'CHostFolder Class'
-	{
-		CLSID = s '{b816a83a-5022-11dc-9153-0090f5284f85}'
-		CurVer = s 'Swish.HostFolder.1'
-	}
-}
 
 HKLM
 {
-	NoRemove Software
-	{
-		NoRemove Microsoft
-		{
-			NoRemove Windows
-			{
-				NoRemove CurrentVersion
-				{
-					NoRemove Explorer
-					{
-						NoRemove MyComputer
-						{
-							NoRemove NameSpace
-							{
-								ForceRemove {b816a83a-5022-11dc-9153-0090f5284f85} = s 'Swish'
-								{
-									val 'Removal Message' = s 'Please don''t remove Swish this way - uninstall it.'
-								}
-							}
-						}
-					}
-
-					NoRemove 'Shell Extensions'
-					{
-						NoRemove Approved
-						{
-							val {b816a83a-5022-11dc-9153-0090f5284f85} = s 'Swish HostFolder'
-						}
-					}
-				}
-			}
-		}
-	}
+    NoRemove Software
+    {
+        NoRemove Microsoft
+        {
+            NoRemove Windows
+            {
+                NoRemove CurrentVersion
+                {
+                    NoRemove Explorer
+                    {
+                        NoRemove MyComputer
+                        {
+                            NoRemove NameSpace
+                            {
+                                ForceRemove {[!uuid]}
+                                {
+                                    val 'Removal Message' = s 'Please don''t remove Swish this way - uninstall it.'
+                                }
+                            }
+                        }
+                    }
+                    
+                    NoRemove 'Shell Extensions'
+                    {
+                        NoRemove Approved
+                        {
+                            val {[!uuid]} = s 'Swish HostFolder'
+                        }
+                    }
+                }
+            }
+        }
+        
+        NoRemove Classes
+        {
+            NoRemove CLSID
+            {
+                ForceRemove {[!uuid]} = s 'Swish'
+                {
+                    val AppID = s '%APPID%'
+                    
+                    InprocServer32 = s '%MODULE%'
+                    {
+                        val ThreadingModel = s '[!threading]'
+                    }
+            
+                    ProgID = s '[!progid]'
+                    VersionIndependentProgID = s '[!vi_progid]'
+                    
+                    TypeLib = s '%APPID%'
+                    
+                    val InfoTip = s 'Remote file-system access via SFTP'
+                    val TileInfo = s 'prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{b816a850-5022-11dc-9153-0090f5284f85} 2;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7'
+                    
+                    ShellFolder
+                    {
+                        val Attributes = d '2684354560'
+                    }
+                    
+                    DefaultIcon = s 'shell32.dll,9'
+                }
+            }
+                
+            ForceRemove [!vi_progid] = s 'CHostFolder Object'
+            {
+                CLSID = s '{[!uuid]}'
+                CurVer = s '[!progid]'
+            }
+            
+            ForceRemove [!progid] = s 'CHostFolder Object'
+            {
+                CLSID = s '{[!uuid]}'
+            }
+        }
+    }    
 }

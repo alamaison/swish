@@ -1,13 +1,18 @@
 //Libssh2Provider_Test.cpp  -   defines the class Libssh2Provider_Test
 
 #include "stdafx.h"
-#include "../common/CppUnitExtensions.h"
-#include "../common/MockSftpConsumer.h"
-#include "../common/TestConfig.h"
+#include "../CppUnitExtensions.h"
+#include "../MockSftpConsumer.h"
+#include "../TestConfig.h"
 
 #include <ATLComTime.h>
 
-#include <Libssh2ProviderDLL.h>
+// Libssh2Provider CLibssh2Provider component
+#pragma warning (push)
+#pragma warning (disable: 4192) // automatically excluding while importing type
+#import "progid:Libssh2Provider.Libssh2Provider" raw_interfaces_only, \
+	raw_native_types, auto_search
+#pragma warning (pop)
 
 struct testFILEDATA
 {
@@ -77,7 +82,7 @@ public:
 		LPOLESTR pszUuid = NULL;
 		hr = ::StringFromCLSID( CLSID_CLibssh2Provider, &pszUuid );
 		CPPUNIT_ASSERT_OK(hr);
-		CString strExpectedUuid = _T("{b816a862-5022-11dc-9153-0090f5284f85}");
+		CString strExpectedUuid = _T("{b816a847-5022-11dc-9153-0090f5284f85}");
 		CString strActualUuid = pszUuid;
 		CPPUNIT_ASSERT_EQUAL(
 			strExpectedUuid.MakeLower(),
@@ -99,9 +104,9 @@ public:
 
 		// Create instance of Libssh2 Provider using CLSID
 		hr = ::CoCreateInstance(
-			__uuidof(Libssh2Provider), NULL,
+			__uuidof(Libssh2Provider::CLibssh2Provider), NULL,
 			CLSCTX_INPROC_SERVER,
-			__uuidof(ISftpProvider), (LPVOID *)&m_pProvider);
+			__uuidof(Swish::ISftpProvider), (LPVOID *)&m_pProvider);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Create mock SftpConsumer for use in Initialize()
@@ -149,7 +154,7 @@ protected:
 		pUnk->Release();
 
 		// Supports ILibssh2Provider (valid self!)?
-		ISftpProvider *pProv;
+		Swish::ISftpProvider *pProv;
 		hr = m_pProvider->QueryInterface(&pProv);
 		CPPUNIT_ASSERT_OK(hr);
 		pProv->Release();
@@ -200,7 +205,7 @@ protected:
 		HRESULT hr;
 
 		// Fetch listing enumerator
-		IEnumListing *pEnum;
+		Swish::IEnumListing *pEnum;
 		CComBSTR bstrDirectory(_T("/tmp"));
 		hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
 		if (FAILED(hr))
@@ -228,7 +233,7 @@ protected:
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
 		// Fetch listing enumerator
-		IEnumListing *pEnum;
+		Swish::IEnumListing *pEnum;
 		CComBSTR bstrDirectory(_T("/tmp"));
 		HRESULT hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
 		if (FAILED(hr))
@@ -243,7 +248,7 @@ protected:
 		HRESULT hr;
 
 		// Fetch 5 listing enumerators
-		IEnumListing *apEnum[5];
+		Swish::IEnumListing *apEnum[5];
 		CComBSTR bstrDirectory(_T("/tmp"));
 		for (int i = 0; i < 5; i++)
 		{
@@ -277,7 +282,7 @@ protected:
 		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrThree));
 
 		// Fetch first listing enumerator
-		IEnumListing *pEnumBefore;
+		Swish::IEnumListing *pEnumBefore;
 		hr = m_pProvider->GetListing(bstrDirectory, &pEnumBefore);
 		CPPUNIT_ASSERT_OK(hr);
 
@@ -285,7 +290,7 @@ protected:
 		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTwo));
 
 		// Fetch second listing enumerator
-		IEnumListing *pEnumAfter;
+		Swish::IEnumListing *pEnumAfter;
 		hr = m_pProvider->GetListing(bstrDirectory, &pEnumAfter);
 		CPPUNIT_ASSERT_OK(hr);
 
@@ -740,7 +745,7 @@ protected:
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
 		// Fetch 5 listing enumerators
-		IEnumListing *apEnum[5];
+		Swish::IEnumListing *apEnum[5];
 		CComBSTR bstrDirectory(_T("/tmp"));
 		for (int i = 0; i < 5; i++)
 		{
@@ -774,7 +779,7 @@ protected:
 				m_pConsumer, bstrUser, bstrHost, config.GetPort()));
 
 		// Fetch 5 listing enumerators
-		IEnumListing *apEnum[5];
+		Swish::IEnumListing *apEnum[5];
 		CComBSTR bstrDirectory(_T("/tmp"));
 		for (int i = 0; i < 5; i++)
 		{
@@ -810,7 +815,7 @@ protected:
 			CMockSftpConsumer::AbortResponse);
 
 		// Try to fetch a listing enumerator - it should fail
-		CComPtr<IEnumListing> spEnum;
+		CComPtr<Swish::IEnumListing> spEnum;
 		CComBSTR bstrDirectory(_T("/tmp"));
 		HRESULT hr = m_pProvider->GetListing(bstrDirectory, &spEnum);
 		CPPUNIT_ASSERT(FAILED(hr));
@@ -830,8 +835,8 @@ protected:
 
 private:
 	CComObject<CMockSftpConsumer> *m_pCoConsumer;
-	ISftpConsumer *m_pConsumer;
-	ISftpProvider *m_pProvider;
+	Swish::ISftpConsumer *m_pConsumer;
+	Swish::ISftpProvider *m_pProvider;
 	CTestConfig config;
 	const CComBSTR m_bstrHomeDir;
 
@@ -872,11 +877,11 @@ private:
 	 *
 	 * @param pEnum The Listing enumerator to be tested.
 	 */
-	void _TestListingFormat(__in IEnumListing *pEnum) const
+	void _TestListingFormat(__in Swish::IEnumListing *pEnum) const
 	{
 		// Check format of listing is sensible
 		CPPUNIT_ASSERT_OK( pEnum->Reset() );
-		Listing lt;
+		Swish::Listing lt;
 		HRESULT hr = pEnum->Next(1, &lt, NULL);
 		CPPUNIT_ASSERT_OK(hr);
 		while (hr == S_OK)
@@ -947,12 +952,12 @@ private:
 	}
 
 	bool _FileExistsInListing(
-		__in CComBSTR bstrFilename, __in CComPtr<IEnumListing> spEnum)
+		__in CComBSTR bstrFilename, __in CComPtr<Swish::IEnumListing> spEnum)
 	{
 		HRESULT hr;
 
 		// Search for file
-		Listing lt;
+		Swish::Listing lt;
 		hr = spEnum->Reset();
 		CPPUNIT_ASSERT_OK(hr);
 		hr = spEnum->Next(1, &lt, NULL);
@@ -983,7 +988,7 @@ private:
 		CString strFilename = strFilePath.Right(cFilenameLen);
 
 		// Fetch listing enumerator
-		CComPtr<IEnumListing> spEnum;
+		CComPtr<Swish::IEnumListing> spEnum;
 		hr = m_pProvider->GetListing(CComBSTR(strDirectory), &spEnum);
 		if (FAILED(hr))
 			return false;
@@ -1040,7 +1045,7 @@ private:
 	 */
 	static void _CreateMockSftpConsumer(
 		__out CComObject<CMockSftpConsumer> **ppCoConsumer,
-		__out ISftpConsumer **ppConsumer
+		__out Swish::ISftpConsumer **ppConsumer
 	)
 	{
 		HRESULT hr;

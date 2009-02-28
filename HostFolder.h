@@ -29,22 +29,28 @@
 #define INITGUID
 #include <propkey.h>
 
-#include <atlbase.h>
-#include <atlcom.h>
-
 #include <vector>
 using std::vector;
 
-#include "Swish.h"
+#pragma warning (push)
+#pragma warning (disable: 4199) // Not injecting base class
 
+[
+	coclass,
+	default(IUnknown),
+	threading(apartment),
+	vi_progid("Swish.HostFolder"),
+	progid("Swish.HostFolder.1"),
+	version(1.0),
+	registration_script("HostFolder.rgs"),
+	uuid("b816a83a-5022-11dc-9153-0090f5284f85"),
+	helpstring("HostFolder Class")
+]
 class ATL_NO_VTABLE CHostFolder :
-	public IExtractIcon,
 	public CFolder,
-	public CComCoClass<CHostFolder, &CLSID_CHostFolder>
+	public IExtractIcon
 {
 public:
-
-	DECLARE_REGISTRY_RESOURCEID(IDR_HOSTFOLDER)
 
 	BEGIN_COM_MAP(CHostFolder)
 		COM_INTERFACE_ENTRY(IExtractIcon)
@@ -129,8 +135,6 @@ private:
 	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(CHostFolder), CHostFolder)
-
 // Host column property IDs
 enum PID_SWISH_HOST {
 	PID_SWISH_HOST_USER = PID_FIRST_USABLE,
@@ -146,3 +150,4 @@ DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
 				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
 				   PID_SWISH_HOST_PORT);
 
+#pragma warning (pop)

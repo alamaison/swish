@@ -31,14 +31,16 @@
 
 #include "Session.h"
 
-#include <memory>
+#include <libssh2.h>
+#include <libssh2_sftp.h>
 
-interface ISftpConsumer;
+#include <memory>
+using std::auto_ptr;
 
 class CSessionFactory
 {
 public:
-	static std::auto_ptr<CSession> CreateSftpSession(
+	static auto_ptr<CSession> CreateSftpSession(
 		PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
 		__in ISftpConsumer *pConsumer) throw(...);
 

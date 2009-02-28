@@ -41,8 +41,6 @@ using std::iterator;
 #include <string>
 using std::wstring;
 
-#include "Swish.h"
-
 using namespace swish;
 
 void CRemoteFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
@@ -656,7 +654,6 @@ HRESULT CRemoteFolder::OnInvokeCommand(
 	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p, idCmd=%d, "
 		"pwszArgs=%ls)\n", hwnd, pDataObj, idCmd, pwszArgs);
 
-	hwnd; pDataObj; idCmd; pwszArgs; // Unused in Release build
 	return S_FALSE;
 }
 
@@ -668,8 +665,6 @@ HRESULT CRemoteFolder::OnInvokeCommandEx(
 {
 	ATLTRACE(__FUNCTION__" called (pDataObj=%p, idCmd=%d, pdfmics=%p)\n",
 		pDataObj, idCmd, pdfmics);
-
-	pdfmics; // Unused in Release build
 
 	switch (idCmd)
 	{

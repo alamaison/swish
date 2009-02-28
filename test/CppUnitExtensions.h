@@ -15,16 +15,16 @@ CPPUNIT_NS_BEGIN
  * CPPUNIT_ASSERT_EQUAL( x, y )
  */
 template <>
-struct assertion_traits<ATL::CString>
+struct assertion_traits<CString>
 {  
-    static bool equal(ATL::CString x, ATL::CString y)
+    static bool equal( CString x, CString y )
     {
         return x == y;
     }
 
-    static std::string toString(ATL::CString x)
+    static std::string toString( CString x )
     {
-		ATL::CStringA y(x);
+		CStringA y(x);
 		std::string s(y);
 		return s;
     }

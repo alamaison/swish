@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="swish_test"
+	Name="testSwish"
 	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
-	RootNamespace="swish_test"
+	RootNamespace="testSwish"
 	>
 	<Platforms>
 		<Platform
@@ -16,10 +16,10 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="swish\$(ConfigurationName)"
+			IntermediateDirectory="swish\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfATL="1"
+			UseOfATL="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
@@ -53,8 +53,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..;..\..\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;..\..\wtl\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;CPPUNIT_DLL"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\wtl\include"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -111,8 +111,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="swish\$(ConfigurationName)"
+			IntermediateDirectory="swish\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -147,8 +147,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..;..\..\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;..\..\wtl\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;CPPUNIT_DLL"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="4"
@@ -160,7 +160,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\wtl\include"
+				AdditionalIncludeDirectories="..\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -203,6 +203,89 @@
 				CommandLine="&quot;$(CPPUNITDIR)\lib\DllPlugInTester_dll.exe&quot; -b --xml tests.xml -c &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
+		<Configuration
+			Name="PREfast|Win32"
+			OutputDirectory="swish\$(ConfigurationName)"
+			IntermediateDirectory="swish\$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfATL="2"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions="/analyze"
+				Optimization="0"
+				AdditionalIncludeDirectories="swish;..;&quot;$(CPPUNITDIR)\include&quot;;..\wtl\include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;SIMPLECPPUNITTESTDLL_EXPORTS;CPPUNIT_DLL;_ATL_ATTRIBUTES;"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\wtl\include"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="cppunitd_dll.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Running unit tests..."
+				CommandLine="&quot;$(CPPUNITDIR)\lib\DllPlugInTesterd_dll.exe&quot; -b --xml tests.xml -c &quot;$(TargetPath)&quot;"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
@@ -213,10 +296,6 @@
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-			RelativePathToProject=".\test\common\common.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter
@@ -224,15 +303,27 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\DummyFolder.cpp"
+				RelativePath=".\swish\DummyFolder.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SimplePlugIn.cpp"
+				RelativePath=".\DummyStream.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.cpp"
+				RelativePath=".\MockSftpConsumer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpProvider.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\SimplePlugIn.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\stdafx.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -251,29 +342,61 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\TestConfig.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
-				RelativePath=".\DataObjectTests.h"
+				RelativePath=".\CppUnitExtensions.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DummyFolder.h"
+				RelativePath=".\swish\DataObjectTests.h"
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog_test.h"
+				RelativePath=".\swish\DummyFolder.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Pidl_test.h"
+				RelativePath=".\DummyStream.h"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h"
+				RelativePath=".\limits.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpConsumer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MockSftpProvider.h"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\NewConnDialog_test.h"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\Pidl_test.h"
+				>
+			</File>
+			<File
+				RelativePath=".\swish\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TestConfig.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tree.h"
 				>
 			</File>
 		</Filter>
@@ -281,88 +404,88 @@
 			Name="Tests"
 			>
 			<File
-				RelativePath=".\DataObject_test.cpp"
+				RelativePath=".\swish\DataObject_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DummyFolder_test.cpp"
+				RelativePath=".\swish\DummyFolder_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\HostFolder_test.cpp"
+				RelativePath=".\swish\HostFolder_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\HostPidl_test.cpp"
+				RelativePath=".\swish\HostPidl_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\KbdInteractiveDialog_test.cpp"
+				RelativePath=".\swish\KbdInteractiveDialog_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider_test.cpp"
+				RelativePath=".\swish\Libssh2Provider_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog_test.cpp"
+				RelativePath=".\swish\NewConnDialog_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Pidl_test.cpp"
+				RelativePath=".\swish\Pidl_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\PidlHandle_test.cpp"
+				RelativePath=".\swish\PidlHandle_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\RemoteFolder_test.cpp"
+				RelativePath=".\swish\RemoteFolder_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\RemotePidl_test.cpp"
+				RelativePath=".\swish\RemotePidl_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SftpDataObject_test.cpp"
+				RelativePath=".\swish\SftpDataObject_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SftpDirectory_test.cpp"
+				RelativePath=".\swish\SftpDirectory_test.cpp"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\Connection.cpp"
+			RelativePath="..\Connection.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\DataObject.cpp"
+			RelativePath="..\DataObject.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\Folder.cpp"
+			RelativePath="..\Folder.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\KbdInteractiveDialog.cpp"
+			RelativePath="..\KbdInteractiveDialog.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\NewConnDialog.cpp"
+			RelativePath="..\NewConnDialog.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\SftpDataObject.cpp"
+			RelativePath="..\SftpDataObject.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\SftpDirectory.cpp"
+			RelativePath="..\SftpDirectory.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\Swish.rc"
+			RelativePath="..\Swish.rc"
 			>
 		</File>
 	</Files>

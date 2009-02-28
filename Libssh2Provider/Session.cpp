@@ -34,9 +34,6 @@
 #include <ws2tcpip.h>    // Winsock
 #include <wspiapi.h>     // Winsock
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
-
 CSession::CSession() throw(...) : 
 	m_pSession(NULL), m_pSftpSession(NULL), m_socket(INVALID_SOCKET),
 	m_bConnected(false)

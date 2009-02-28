@@ -1,16 +1,9 @@
-/**
- * @file Mock ISftpConsumer COM object implementation.
- */
+// Mock SftpConsumer COM object implementation
 
-#include "pch.h"              // Precompiled header
-#include "standard.h"
-
-#include "debug.h"            // Debug macros
+#include "stdafx.h"
 #include "MockSftpConsumer.h"
 
-#include <atlsafe.h>          // CComSafeArray
-
-using namespace ATL;
+#include <atlsafe.h>         // CComSafeArray
 
 void CMockSftpConsumer::SetCustomPassword( PCTSTR pszPassword )
 {
@@ -242,7 +235,7 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
 }
 
 STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
-	Listing ltOldFile, Listing ltNewFile )
+	Swish::Listing ltOldFile, Swish::Listing ltNewFile )
 {
 	CPPUNIT_ASSERT( CComBSTR(ltOldFile.bstrFilename).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(ltNewFile.bstrFilename).Length() > 0 );

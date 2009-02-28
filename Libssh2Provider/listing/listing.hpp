@@ -36,8 +36,6 @@
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-#include <SftpProvider.h>  // Swish ISftpProvider & ISftpConsumer interfaces
-
 namespace provider {
 	namespace libssh2 {
 		namespace listing {

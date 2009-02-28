@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "../common/CppUnitExtensions.h"
-#include "../common/MockSftpConsumer.h"
-#include "../common/MockSftpProvider.h"
+#include "../CppUnitExtensions.h"
+#include "../MockSftpConsumer.h"
+#include "../MockSftpProvider.h"
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
-#include "../common/TestConfig.h"
+#include "../TestConfig.h"
 #include "DataObjectTests.h"
 
 #include <DataObject.h>

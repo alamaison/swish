@@ -27,27 +27,37 @@
     carries forward this exception.
 */
 
+#ifndef LIBSSH2PROVIDER_H
+#define LIBSSH2PROVIDER_H
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+
 #pragma once
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
 #include "SessionFactory.h" // for CSession
 
-#include <SftpProvider.h>   // Swish ISftpProvider & ISftpConsumer interfaces
-
-#include <atlstr.h>         // CString
-
 #include <list>
+using std::list;
 
+// CLibssh2Provider
+[
+	coclass,
+	default(ISftpProvider),
+	threading(apartment),
+	vi_progid("Libssh2Provider.Libssh2Provider"),
+	progid("Libssh2Provider.Libssh2Provider.1"),
+	version(1.0),
+	uuid("b816a847-5022-11dc-9153-0090f5284f85"),
+	helpstring("Libssh2Provider Class")
+]
 class ATL_NO_VTABLE CLibssh2Provider :
-	public ISftpProvider,
-	public CComObjectRoot
+	public ISftpProvider
 {
 public:
-
-	BEGIN_COM_MAP(CLibssh2Provider)
-		COM_INTERFACE_ENTRY(ISftpProvider)
-	END_COM_MAP()
 
 	/** @name ATL Constructors */
 	// @{
@@ -84,13 +94,16 @@ public:
 private:
 	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
-	std::auto_ptr<CSession> m_spSession;///< SSH/SFTP session
+	auto_ptr<CSession> m_spSession;///< SSH/SFTP session
 	CString m_strUser;             ///< Holds username for remote connection
 	CString m_strHost;             ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
 
 	HRESULT _Connect();
 	void _Disconnect();
+
+	Listing _FillListingEntry(
+		PCSTR pszFilename, LIBSSH2_SFTP_ATTRIBUTES& attrs );
 
 	CString _GetLastErrorMessage();
 	CString _GetSftpErrorMessage( ULONG uError );
@@ -146,8 +159,7 @@ END_COM_MAP()
 	CollType m_coll;
 };
 
-typedef CComObject<CComSTLCopyContainer< std::list<Listing> > >
-	CComListingHolder;
+typedef CComObject<CComSTLCopyContainer< list<Listing> > > CComListingHolder;
 
 
 /**
@@ -189,4 +201,6 @@ public:
 };
 
 typedef CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, 
-	_Copy<Listing>, std::list<Listing> > CComEnumListing;
+	_Copy<Listing>, list<Listing> > CComEnumListing;
+
+#endif // LIBSSH2PROVIDER_H

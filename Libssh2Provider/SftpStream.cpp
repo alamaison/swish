@@ -30,8 +30,6 @@
 #include "stdafx.h"
 #include "SftpStream.h"
 
-using std::string;
-
 /**
  * Construct a new CSftpStream instance with NULL filehandle.
  */

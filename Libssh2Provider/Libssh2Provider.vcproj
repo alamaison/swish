@@ -17,10 +17,10 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
-			UseOfATL="1"
+			ConfigurationType="2"
+			UseOfATL="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
@@ -39,12 +39,11 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories=".."
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2ProviderIDL.h"
+				HeaderFileName="Libssh2Provider.h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="Libssh2Provider_i.c"
 				ProxyFileName="Libssh2Provider_p.c"
@@ -54,7 +53,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="libssh2\include;.."
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBSSH2_WIN32"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -69,18 +68,31 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
+				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
+				Description="Copying DLLs to target directory ..."
+				CommandLine="xcopy &quot;$(InputDir)$(ConfigurationName)_libssh2\libssh2.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(InputDir)openssl\out32dll\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(InputDir)openssl\out32dll\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(InputDir)zlib\zlib1.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="unicows.lib ws2_32.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -92,15 +104,21 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -120,7 +138,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=".."
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
@@ -135,7 +152,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				AdditionalIncludeDirectories="libssh2\include;.."
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -153,13 +170,28 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
+				Description="Copying DLLs to target directory ..."
+				CommandLine="xcopy &quot;$(InputDir)$(ConfigurationName)_libssh2\libssh2.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(InputDir)openssl\out32dll\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(InputDir)openssl\out32dll\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(InputDir)zlib\zlib1.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="unicows.lib ws2_32.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -171,14 +203,20 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="PREfast|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -198,7 +236,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=".."
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
@@ -214,7 +251,7 @@
 				AdditionalOptions="/analyze"
 				Optimization="2"
 				AdditionalIncludeDirectories="libssh2\include;.."
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -235,10 +272,24 @@
 				CommandLine=""
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				RegisterOutput="false"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="unicows.lib ws2_32.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -248,6 +299,12 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -358,13 +415,44 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\Libssh2Provider.rc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						Culture="2057"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						Culture="2057"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						Culture="2057"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Libssh2Provider.rgs"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="listing"
 			>
 			<Filter
 				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
 				>
 				<File
 					RelativePath=".\listing\listing.hpp"
@@ -373,7 +461,6 @@
 			</Filter>
 			<Filter
 				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 				>
 				<File
 					RelativePath=".\listing\listing.cpp"

@@ -29,16 +29,25 @@
 #include "RemotePidl.h"     // For RemoteItemId handling
 #include "Pool.h"           // For access to SFTP global session pool
 
-#include "Swish.h"
+#pragma warning (push)
+#pragma warning (disable: 4199) // Not injecting base class
 
+[
+	coclass,
+	default(IUnknown),
+	threading(apartment),
+	vi_progid("Swish.RemoteFolder"),
+	progid("Swish.RemoteFolder.1"),
+	version(1.0),
+	registration_script("RemoteFolder.rgs"),
+	uuid("b816a83c-5022-11dc-9153-0090f5284f85"),
+	helpstring("RemoteFolder Class")
+]
 class ATL_NO_VTABLE CRemoteFolder :
 	public CFolder,
-	public CComCoClass<CRemoteFolder, &CLSID_CRemoteFolder>,
 	private CCoFactory<CRemoteFolder>
 {
 public:
-
-	DECLARE_REGISTRY_RESOURCEID(IDR_REMOTEFOLDER)
 
 	BEGIN_COM_MAP(CRemoteFolder)
 		COM_INTERFACE_ENTRY(IShellFolder)
@@ -70,7 +79,7 @@ public:
 		
 		HRESULT hr = spObject->Initialize(pidl);
 		ATLENSURE_SUCCEEDED(hr);
-		return spObject.p;
+		return spObject;
 	}
 
 protected:
@@ -165,4 +174,4 @@ private:
 
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(CRemoteFolder), CRemoteFolder)
+#pragma warning (pop)

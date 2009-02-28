@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "../common/CppUnitExtensions.h"
+#include "../CppUnitExtensions.h"
 
 #include <Pidl.h>
 

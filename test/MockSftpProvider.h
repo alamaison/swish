@@ -1,32 +1,36 @@
-/**
- * @file Mock ISftpProvider COM object for testing without using the network.
- */
+// Declaration of mock SftpProvider COM object
 
 #pragma once
 
+#include "stdafx.h"
 #include "CppUnitExtensions.h"
-#include "testlimits.h"
+#include "limits.h"
 
 #include <vector>
+using std::vector;
+
 #include <string>
+using std::wstring;
+
 #include <algorithm>
+using std::find_if;
+using std::sort;
+
 #include <functional>
+using std::binary_function;
+using std::bind2nd;
+using std::less;
 
-#include "tree.h"            // N-ary tree container for mocking a filesystem
-
-#include <atlbase.h>         // ATL base classes
-#include <atlcom.h>          // ATL CComObject et. al.
-
-#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+#include "tree.h"
 
 class ATL_NO_VTABLE CMockSftpProvider :
-	public ATL::CComObjectRootEx<ATL::CComObjectThreadModel>,
-	public ISftpProvider
+	public CComObjectRootEx<CComObjectThreadModel>,
+	public Swish::ISftpProvider
 {
 public:
 	
 BEGIN_COM_MAP(CMockSftpProvider)
-	COM_INTERFACE_ENTRY(ISftpProvider)
+	COM_INTERFACE_ENTRY(Swish::ISftpProvider)
 END_COM_MAP()
 
 public:
@@ -65,25 +69,24 @@ private:
 	ListingBehaviour m_enumListingBehaviour;
 	RenameBehaviour m_enumRenameBehaviour;
 
-	ATL::CComPtr<ISftpConsumer> m_spConsumer;
+	CComPtr<Swish::ISftpConsumer> m_spConsumer;
 
 	/** @name Filesystem
 	 * Mock filesystem holding dummy file heirarchy as an n-ary tree.
 	 */
 	// @{
-	typedef std::wstring Filename;
-	typedef Listing FilesystemItem;
+	typedef wstring Filename;
+	typedef Swish::Listing FilesystemItem;
 	typedef tree<FilesystemItem> Filesystem;
 	typedef Filesystem::iterator FilesystemLocation;
 
 	struct eq_item : 
-		public std::binary_function<FilesystemItem, std::wstring, bool>
+		public binary_function<FilesystemItem, wstring, bool>
 	{
-		bool operator()(
-			const FilesystemItem& item, const std::wstring& name)
+		bool operator()(const FilesystemItem& item, const wstring& name)
 		const
 		{
-			return std::wstring(item.bstrFilename) == name;
+			return wstring(item.bstrFilename) == name;
 		}
 	};
 
@@ -93,23 +96,22 @@ private:
 			const FilesystemItem& left, const FilesystemItem& right)
 		const
 		{
-			return std::wstring(left.bstrFilename) < 
-				std::wstring(right.bstrFilename);
+			return wstring(left.bstrFilename) < wstring(right.bstrFilename);
 		}
 	};
 	
 	Filesystem m_filesystem;
 
-	Listing _MakeDirectoryItem(PCWSTR pwszName);
+	Swish::Listing _MakeDirectoryItem(PCWSTR pwszName);
 
-	void _MakeItemIn(FilesystemLocation loc, const Listing& item);
-	void _MakeItemIn(const std::wstring& path, const Listing& item);
+	void _MakeItemIn(FilesystemLocation loc, const Swish::Listing& item);
+	void _MakeItemIn(const wstring& path, const Swish::Listing& item);
 
-	std::vector<std::wstring> _TokenisePath(const std::wstring& path);
-	FilesystemLocation _FindLocationFromPath(const std::wstring& path);
+	vector<wstring> _TokenisePath(const wstring& path);
+	FilesystemLocation _FindLocationFromPath(const wstring& path);
 	// @}
 
-	ATL::CComBSTR _TagFilename(__in PCWSTR pszFilename, __in PCWSTR pszTag);
+	CComBSTR _TagFilename(__in PCTSTR pszFilename, __in PCTSTR pszTag);
 	void _FillMockListing(__in PCWSTR pwszDirectory);
 	void _TestMockPathExists(__in PCWSTR pwszPath);
 
@@ -118,17 +120,17 @@ public:
 	/** @name ISftpProvider methods */
 	// @{
 	IFACEMETHODIMP Initialize(
-		__in ISftpConsumer *pConsumer,
+		__in Swish::ISftpConsumer *pConsumer,
 		__in BSTR bstrUser,
 		__in BSTR bstrHost,
 		__in UINT uPort
 	);
 	IFACEMETHODIMP SwitchConsumer (
-		__in ISftpConsumer *pConsumer
+		__in Swish::ISftpConsumer *pConsumer
 	);
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory,
-		__out IEnumListing **ppEnum
+		__out Swish::IEnumListing **ppEnum
 	);
 	IFACEMETHODIMP GetFile(
 		__in BSTR bstrFilePath,
@@ -156,10 +158,10 @@ public:
  * Copy-policy for use by enumerators of Listing items.
  */
 template<>
-class ATL::_Copy<Listing>
+class _Copy<Swish::Listing>
 {
 public:
-	static HRESULT copy(Listing* p1, const Listing* p2)
+	static HRESULT copy(Swish::Listing* p1, const Swish::Listing* p2)
 	{
 		p1->bstrFilename = SysAllocStringLen(
 			p2->bstrFilename, ::SysStringLen(p2->bstrFilename));
@@ -177,19 +179,19 @@ public:
 
 		return S_OK;
 	}
-	static void init(Listing* p)
+	static void init(Swish::Listing* p)
 	{
-		::ZeroMemory(p, sizeof(Listing));
+		::ZeroMemory(p, sizeof(Swish::Listing));
 	}
-	static void destroy(Listing* p)
+	static void destroy(Swish::Listing* p)
 	{
 		::SysFreeString(p->bstrFilename);
 		::SysFreeString(p->bstrOwner);
 		::SysFreeString(p->bstrGroup);
-		::ZeroMemory(p, sizeof(Listing));
+		::ZeroMemory(p, sizeof(Swish::Listing));
 	}
 };
 	
-typedef ATL::CComEnum<IEnumListing, &__uuidof(IEnumListing),
-	Listing, ATL::_Copy<Listing> >
+typedef CComEnum<Swish::IEnumListing, &__uuidof(Swish::IEnumListing),
+	Swish::Listing, _Copy<Swish::Listing> >
 	CMockEnumListing;

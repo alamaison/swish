@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include "../common/CppUnitExtensions.h"
+#include "../CppUnitExtensions.h"
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
 // test class directly into the target class's header

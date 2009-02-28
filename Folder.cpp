@@ -20,8 +20,6 @@
 #include "stdafx.h"
 #include "Folder.h"
 
-#include <ComDef.h> // For _com_error
-
 CFolder::CFolder() : m_pidlRoot(NULL)
 {
 }

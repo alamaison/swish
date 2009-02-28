@@ -28,18 +28,22 @@
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
+// CIconExtractor
+[
+	coclass,
+	default(IUnknown),
+	threading(apartment),
+	vi_progid("Swish.IconExtractor"),
+	progid("Swish.IconExtractor.1"),
+	version(1.0),
+	uuid("b816a849-5022-11dc-9153-0090f5284f85"),
+	helpstring("IconExtractor Class")
+]
 class ATL_NO_VTABLE CIconExtractor :
 	public IExtractIconW,
-	public IExtractIconA,
-	public CComObjectRoot
+	public IExtractIconA
 {
 public:
-
-	BEGIN_COM_MAP(CIconExtractor)
-		COM_INTERFACE_ENTRY(IExtractIconW)
-		COM_INTERFACE_ENTRY(IExtractIconA)
-	END_COM_MAP()
-
 	CIconExtractor() : m_fForFolder(false) {}
 
 	void Initialize(PCTSTR szFilename, bool fIsFolder);
