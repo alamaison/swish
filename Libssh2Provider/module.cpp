@@ -1,6 +1,6 @@
-/*  SFTP directory listing helper functions
-
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+/** @file DLL exports for COM server. */
+/*
+    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,28 +27,55 @@
     carries forward this exception.
 */
 
-#pragma once
+#include "stdafx.h"
+#include "resource.h"
 
-#include <atlcomcli.h>     // ATL smart types
+#include "Libssh2ProviderDLL.h"
 
-#include <string>
+class CSftpModule : public CAtlDllModuleT< CSftpModule >
+{
+public :
+	DECLARE_LIBID(LIBID_Libssh2ProviderLib)
+	DECLARE_REGISTRY_APPID_RESOURCEID(
+		IDR_LIBSSH2PROVIDERDLL, "{b816a860-5022-11dc-9153-0090f5284f85}")
+};
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
+CSftpModule _AtlModule;
 
-#include <SftpProvider.h>  // Swish ISftpProvider & ISftpConsumer interfaces
+/** DLL Entry Point. */
+extern "C" BOOL WINAPI DllMain(
+	HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+	hInstance;
+    return _AtlModule.DllMain(dwReason, lpReserved); 
+}
 
-namespace provider {
-	namespace libssh2 {
-		namespace listing {
+/** Used to determine whether the DLL can be unloaded by OLE. */
+STDAPI DllCanUnloadNow()
+{
+    return _AtlModule.DllCanUnloadNow();
+}
 
-			CComBSTR ParseUserFromLongEntry(std::string longentry);
+/** Return a class factory to create an object of the requested type. */
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
+{
+    return _AtlModule.DllGetClassObject(rclsid, riid, ppv);
+}
 
-			CComBSTR ParseGroupFromLongEntry(std::string longentry);
+/**
+ * Add entries to the system registry.
+ *
+ * Registers object, typelib and all interfaces in typelib.
+ */
+STDAPI DllRegisterServer()
+{
+    HRESULT hr = _AtlModule.DllRegisterServer();
+	return hr;
+}
 
-			Listing FillListingEntry(
-				const std::string& filename, const std::string& longentry,
-				LIBSSH2_SFTP_ATTRIBUTES& attrs);
-		}
-	}
+/** Remove entries from the system registry. */
+STDAPI DllUnregisterServer()
+{
+	HRESULT hr = _AtlModule.DllUnregisterServer();
+	return hr;
 }

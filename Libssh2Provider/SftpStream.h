@@ -34,11 +34,9 @@
 
 #include "Session.h"
 
+#include <atlstr.h>         // CString
+
 #include <string>
-using std::string;
-
-
-
 
 /**
  * Maps between libssh2 SFTP error codes and an appropriate error string.
@@ -98,22 +96,16 @@ static CString _GetSftpErrorMessage(ULONG uError)
 	}
 }
 
-
-// CSftpStream
-[
-	coclass,
-	default(IUnknown),
-	threading(apartment),
-	vi_progid("Libssh2Provider.SftpStream"),
-	progid("Libssh2Provider.SftpStream.1"),
-	version(1.0),
-	uuid("2D61E174-26A0-4B3C-8BD2-2E8194A809EA"),
-	helpstring("SftpStream Class")
-]
 class ATL_NO_VTABLE CSftpStream :
+	public CComObjectRoot,
 	public IStream
 {
 public:
+	BEGIN_COM_MAP(CSftpStream)
+		COM_INTERFACE_ENTRY(IStream)
+		COM_INTERFACE_ENTRY(ISequentialStream)
+	END_COM_MAP()
+
 	/**
 	 * Static factory method.
 	 *
@@ -231,6 +223,6 @@ private:
 	LIBSSH2_SFTP_HANDLE *m_pHandle;
 	LIBSSH2_SESSION *m_pSession;
 	LIBSSH2_SFTP *m_pSftp;
-	string m_strFilename;
-	string m_strDirectory;
+	std::string m_strFilename;
+	std::string m_strDirectory;
 };

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="Libssh2Provider"
-	ProjectGUID="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-	RootNamespace="Libssh2Provider"
+	Name="Libssh2ProviderDLL"
+	ProjectGUID="{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
+	RootNamespace="Libssh2ProviderDLL"
 	Keyword="AtlProj"
 	>
 	<Platforms>
@@ -18,8 +18,8 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			IntermediateDirectory="$(ConfigurationName)_DLL"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -43,11 +43,11 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2ProviderIDL.h"
+				TypeLibraryName="$(IntDir)/Libssh2ProviderDLL.tlb"
+				HeaderFileName="Libssh2ProviderDLL.h"
 				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2Provider_i.c"
-				ProxyFileName="Libssh2Provider_p.c"
+				InterfaceIdentifierFileName="Libssh2ProviderDLL_i.c"
+				ProxyFileName="Libssh2ProviderDLL_p.c"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -58,7 +58,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -69,7 +69,6 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -77,10 +76,23 @@
 				CommandLine=""
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="unicows.lib ws2_32.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				ModuleDefinitionFile="Libssh2ProviderDLL.def"
+				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -92,6 +104,12 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 				CommandLine=""
 			/>
@@ -99,8 +117,8 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			IntermediateDirectory="$(ConfigurationName)_DLL"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -124,11 +142,11 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2Provider.h"
+				TypeLibraryName="$(IntDir)/Libssh2ProviderDLL.tlb"
+				HeaderFileName="Libssh2ProviderDLL.h"
 				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2Provider_i.c"
-				ProxyFileName="Libssh2Provider_p.c"
+				InterfaceIdentifierFileName="Libssh2ProviderDLL_i.c"
+				ProxyFileName="Libssh2ProviderDLL_p.c"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -148,7 +166,6 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -156,10 +173,25 @@
 				CommandLine=""
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="unicows.lib ws2_32.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				ModuleDefinitionFile="Libssh2ProviderDLL.def"
+				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -171,14 +203,20 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="PREfast|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			IntermediateDirectory="$(ConfigurationName)_DLL"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -202,11 +240,11 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2Provider.h"
+				TypeLibraryName="$(IntDir)/Libssh2ProviderDLL.tlb"
+				HeaderFileName="Libssh2ProviderDLL.h"
 				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2Provider_i.c"
-				ProxyFileName="Libssh2Provider_p.c"
+				InterfaceIdentifierFileName="Libssh2ProviderDLL_i.c"
+				ProxyFileName="Libssh2ProviderDLL_p.c"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -227,7 +265,6 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -235,10 +272,25 @@
 				CommandLine=""
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				RegisterOutput="false"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="unicows.lib ws2_32.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				ModuleDefinitionFile="Libssh2ProviderDLL.def"
+				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -250,18 +302,20 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-			RelativePathToProject=".\Swish.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
-			RelativePathToProject=".\Libssh2Provider\libssh2.vcproj"
+			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
+			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
 	</References>
 	<Files>
@@ -271,23 +325,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\KeyboardInteractive.cpp"
+				RelativePath=".\Libssh2ProviderCoClass.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider.cpp"
+				RelativePath=".\Libssh2ProviderDLL.def"
 				>
 			</File>
 			<File
-				RelativePath=".\Session.cpp"
+				RelativePath=".\Libssh2ProviderDLL.idl"
 				>
 			</File>
 			<File
-				RelativePath=".\SessionFactory.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpStream.cpp"
+				RelativePath=".\module.cpp"
 				>
 			</File>
 			<File
@@ -325,27 +375,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\KeyboardInteractive.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Libssh2Provider.h"
+				RelativePath=".\Libssh2ProviderCoClass.h"
 				>
 			</File>
 			<File
 				RelativePath=".\resource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Session.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SessionFactory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpStream.h"
 				>
 			</File>
 			<File
@@ -358,28 +392,79 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\Libssh2Provider.rc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						Culture="2057"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						Culture="2057"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						Culture="2057"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Libssh2Provider.rgs"
+				>
+			</File>
+			<File
+				RelativePath=".\Libssh2ProviderDLL.rgs"
+				>
+			</File>
 		</Filter>
 		<Filter
-			Name="listing"
+			Name="Generated Files"
+			SourceControlFiles="false"
 			>
-			<Filter
-				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			<File
+				RelativePath=".\Libssh2ProviderDLL.h"
 				>
-				<File
-					RelativePath=".\listing\listing.hpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			</File>
+			<File
+				RelativePath=".\Libssh2ProviderDLL_i.c"
 				>
-				<File
-					RelativePath=".\listing\listing.cpp"
+				<FileConfiguration
+					Name="Debug|Win32"
 					>
-				</File>
-			</Filter>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

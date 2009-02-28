@@ -1,17 +1,33 @@
-// SimplePlugIn.cpp : Defines the entry point for the DLL application.
-//
+/**
+ * @file Entry point for the DLL plugin.  The CPPUNIT test runner uses this.
+ */
 
-#include "stdafx.h"
+#include "pch.h"
+#include "standard.h"
 
-[ module( name="Libssh2ProviderUnitTests" ) ];
-//class CUnitTests
-//{};
+#include <atlbase.h>   // ATL modules
+#include <atlcom.h>    // ATL CComObject et. al.
 
 #include <cppunit/plugin/TestPlugIn.h>
 
-// Implements all the plug-in stuffs, WinMain...
+using namespace ATL;
+
+/**
+ * ATL module needed to use ATL-based objects, e.g. CMockSftpConsumer.
+ */
+class CModule : public CAtlModule
+{
+public :
+	
+	virtual HRESULT AddCommonRGSReplacements(IRegistrarBase*) throw()
+	{
+		return S_OK;
+	}
+};
+
+CModule _AtlModule; ///< Global module instance
+
 #pragma warning(push)
 #pragma warning(disable:4100)
-//CPPUNIT_PLUGIN_IMPLEMENT();
-CPPUNIT_PLUGIN_EXPORTED_FUNCTION_IMPL( CPPUNIT_NS::TestPlugInDefaultImpl );
+CPPUNIT_PLUGIN_IMPLEMENT();
 #pragma warning(pop)

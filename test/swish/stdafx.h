@@ -4,10 +4,6 @@
 
 #pragma once
 
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-
 /* Strictness *************************************************************** */
 
 #ifndef STRICT
@@ -124,13 +120,6 @@ catch (const CAtlException& e)\
 #include <vector>
 #include <strsafe.h>
 #include <shlobj.h>           // Typical Shell header file
-
-// Swish type library
-#pragma warning (push)
-#pragma warning (disable: 4192) // automatically excluding while importing type
-#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, \
-	raw_native_types, auto_search/*, no_namespace, embedded_idl*/
-#pragma warning (pop)
 
 /* Miscellanious ************************************************************ */
 

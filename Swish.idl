@@ -1,0 +1,33 @@
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(b816a838-5022-11dc-9153-0090f5284f85),
+	version(0.2),
+	helpstring("Swish 0.2 Type Library")
+]
+library SwishLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	import "SftpProvider.idl";
+
+	[
+		uuid(b816a83a-5022-11dc-9153-0090f5284f85),
+		helpstring("HostFolder Class")
+	]
+	coclass CHostFolder
+	{
+		[default] interface IUnknown;
+	};
+
+	[
+		uuid(b816a83c-5022-11dc-9153-0090f5284f85),
+		helpstring("RemoteFolder Class")
+	]
+	coclass CRemoteFolder
+	{
+		[default] interface IUnknown;
+	};
+}

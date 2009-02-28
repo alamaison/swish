@@ -89,7 +89,7 @@ using namespace ATL;
 
 #include <atlapp.h>	          // base WTL classes
 //extern CAppModule _Module;  // WTL version of CComModule
-#define _Module (*_pModule)   // WTL alternate version, works with attributes
+//#define _Module (*_pModule)   // WTL alternate version, works with attributes
 //#include <atlframe.h>         // WTL frame window classes
 //#include <atlmisc.h>          // WTL utility classes like CString
 #include <atlcrack.h>         // WTL enhanced msg map macros
@@ -135,6 +135,8 @@ do { \
 #define UNREACHABLE __assume(0);
 #endif
 
+#include <comdef.h> // For _com_error
+
 #define ATLENSURE_REPORT_HR(expr, error, hr)                         \
 do {                                                                 \
 	int __atl_condVal=!!(expr);                                      \
@@ -171,6 +173,8 @@ do {                                                                 \
 
 /* COM Exception handler **************************************************** */
 
+#include <ComDef.h> // For _com_error
+
 #define catchCom()            \
 catch (const _com_error& e)   \
 {                             \
@@ -193,19 +197,7 @@ catch (const CAtlException& e)\
 
 #include <vector>
 #include <strsafe.h>
-#include <shlobj.h>   // Typical Shell header file
-#include <comdef.h>   // For _com_error
+#include <shlobj.h>        // Typical Shell header file
+#include <comdef.h>        // For _com_error
 
-#include "Swish.h"    // Header generated for our hand-written IDL file(s)
-
-/* Manifests **************************************************************** */
-
-#if defined _M_IX86
-  #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#elif defined _M_IA64
-  #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='ia64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#elif defined _M_X64
-  #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#else
-  #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#endif
+#include "SftpProvider.h"  // Header generated for our hand-written IDL file(s)

@@ -1,8 +1,10 @@
 #include "stdafx.h"
-#include "../CppUnitExtensions.h"
+#include "../common/CppUnitExtensions.h"
 
 #include <HostPidl.h>
 #include <RemotePidl.h>
+
+#include <Swish.h>
 
 class CRemoteFolderPreInitialize_test : public CPPUNIT_NS::TestFixture
 {
@@ -39,7 +41,7 @@ public:
 
 		// Check that CLSID was correctly constructed from __uuidof()
 		pszUuid = NULL;
-		hr = ::StringFromCLSID( __uuidof(Swish::CRemoteFolder), &pszUuid );
+		hr = ::StringFromCLSID( __uuidof(CRemoteFolder), &pszUuid );
 		strExpectedUuid = L"{b816a83c-5022-11dc-9153-0090f5284f85}";
 		strActualUuid = pszUuid;
 		::CoTaskMemFree(pszUuid);
@@ -59,7 +61,7 @@ public:
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Create instance of folder using CLSID
-		hr = m_spFolder.CoCreateInstance(__uuidof(Swish::CRemoteFolder));
+		hr = m_spFolder.CoCreateInstance(__uuidof(CRemoteFolder));
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Copy to regular interface pointer so we can test for memory 

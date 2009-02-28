@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "../CppUnitExtensions.h"
+#include "../common/CppUnitExtensions.h"
 
 #include "DummyFolder.h"
 

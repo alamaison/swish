@@ -34,13 +34,14 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""winres.h""\r\n"
+    "#include ""atlres.h""\r\n"
     "\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "\r\0"
+    "1 TYPELIB ""Libssh2ProviderDLL.tlb""\r\n"
+    "\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -91,6 +92,7 @@ END
 //
 
 IDR_LIBSSH2PROVIDER     REGISTRY                "Libssh2Provider.rgs"
+IDR_LIBSSH2PROVIDERDLL  REGISTRY                "Libssh2ProviderDLL.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -112,7 +114,8 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+1 TYPELIB "Libssh2ProviderDLL.tlb"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

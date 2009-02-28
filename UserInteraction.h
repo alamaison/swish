@@ -28,21 +28,15 @@
 #include "stdafx.h"
 #include "resource.h"       // main symbols
 
-// CUserInteraction
-[
-	coclass,
-	default(ISftpConsumer),
-	threading(apartment),
-	vi_progid("Swish.UserInteraction"),
-	progid("Swish.UserInteraction.1"),
-	version(1.0),
-	uuid("b816a84a-5022-11dc-9153-0090f5284f85"),
-	helpstring("UserInteraction Class")
-]
 class ATL_NO_VTABLE CUserInteraction :
-	public ISftpConsumer
+	public ISftpConsumer,
+	public CComObjectRoot
 {
 public:
+
+	BEGIN_COM_MAP(CUserInteraction)
+		COM_INTERFACE_ENTRY(ISftpConsumer)
+	END_COM_MAP()
 
 	CUserInteraction() : m_hwndOwner(NULL) {}
 

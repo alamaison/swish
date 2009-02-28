@@ -2,17 +2,21 @@
 
 #pragma once
 
-#include "stdafx.h"
 #include "CppUnitExtensions.h"
 
+#include <atlbase.h>   // ATL base classes
+#include <atlcom.h>    // ATL CComObject et. al.
+
+#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+
 class ATL_NO_VTABLE CMockSftpConsumer :
-	public CComObjectRootEx<CComObjectThreadModel>,
-	public Swish::ISftpConsumer
+	public ATL::CComObjectRootEx<ATL::CComObjectThreadModel>,
+	public ISftpConsumer
 {
 public:
 
 BEGIN_COM_MAP(CMockSftpConsumer)
-	COM_INTERFACE_ENTRY(Swish::ISftpConsumer)
+	COM_INTERFACE_ENTRY(ISftpConsumer)
 END_COM_MAP()
 
 	/**
@@ -20,15 +24,15 @@ END_COM_MAP()
 	 * as well as its ISftpConsumer interface.
 	 */
 	static void CMockSftpConsumer::Create(
-		__out CComPtrBase<CMockSftpConsumer>& spCoConsumer,
-		__out CComPtrBase<ISftpConsumer>& spConsumer
+		__out ATL::CComPtrBase<CMockSftpConsumer>& spCoConsumer,
+		__out ATL::CComPtrBase<ISftpConsumer>& spConsumer
 	)
 	{
 		HRESULT hr;
 
 		// Create mock object coclass instance
-		CComObject<CMockSftpConsumer> *pCoConsumer = NULL;
-		hr = CComObject<CMockSftpConsumer>::CreateInstance(&pCoConsumer);
+		ATL::CComObject<CMockSftpConsumer> *pCoConsumer = NULL;
+		hr = ATL::CComObject<CMockSftpConsumer>::CreateInstance(&pCoConsumer);
 		CPPUNIT_ASSERT_OK(hr);
 
 		pCoConsumer->AddRef();
@@ -99,7 +103,7 @@ END_COM_MAP()
 	} ReportErrorBehaviour;
 
 private:
-	CComBSTR m_bstrCustomPassword;
+	ATL::CComBSTR m_bstrCustomPassword;
 	PasswordBehaviour m_enumPasswordBehaviour;
 	UINT m_cPasswordAttempts;    ///< Number of password requests so far
 	UINT m_nMaxPasswordAttempts; ///< Max password requests before auto-fail
@@ -152,8 +156,8 @@ public:
 		__in BSTR bstrNewFile
 	);
 	IFACEMETHODIMP OnConfirmOverwriteEx(
-		__in Swish::Listing ltOldFile,
-		__in Swish::Listing ltNewFile
+		__in Listing ltOldFile,
+		__in Listing ltNewFile
 	);
 	IFACEMETHODIMP OnReportError(
 		__in BSTR bstrMessage

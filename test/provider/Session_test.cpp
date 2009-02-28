@@ -1,10 +1,18 @@
-#include "stdafx.h"
-#include "../CppUnitExtensions.h"
-#include "../TestConfig.h"
+/**
+ * @file Tests for the CSession class.
+ */
+
+#include "pch.h"
+#include "standard.h"
+
+#include "../common/CppUnitExtensions.h"
+#include "../common/TestConfig.h"
 
 #include <Session.h>
 
 #include <memory>
+
+using namespace ATL;
 using std::auto_ptr;
 
 class CSession_test : public CPPUNIT_NS::TestFixture

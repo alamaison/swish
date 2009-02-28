@@ -1,9 +1,27 @@
-// Mock SftpProvider COM object implementation
+/**
+ * @file Mock ISftpProvider COM object implementation.
+ */
 
-#include "stdafx.h"
+#include "pch.h"              // Precompiled header
+#include "standard.h"
+
+#include "debug.h"            // Debug macros
 #include "MockSftpProvider.h"
-#include "DummyStream.h"
-#include <AtlComTime.h>
+
+#include "DummyStream.h"      // Bare-bones IStream implementation
+
+#include <AtlComTime.h>       // COleDateTime
+
+using namespace ATL;
+
+using std::vector;
+
+using std::wstring;
+
+using std::find_if;
+using std::sort;
+
+using std::bind2nd;
 
 // Set up default behaviours
 CMockSftpProvider::CMockSftpProvider() :
@@ -35,7 +53,7 @@ void CMockSftpProvider::SetRenameBehaviour( RenameBehaviour enumBehaviour )
 }
 
 STDMETHODIMP CMockSftpProvider::Initialize(
-	Swish::ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
+	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
 {
 	// Test ISftpConsumer pointer
 	CPPUNIT_ASSERT( pConsumer );
@@ -66,14 +84,14 @@ STDMETHODIMP CMockSftpProvider::Initialize(
 }
 
 
-STDMETHODIMP CMockSftpProvider::SwitchConsumer( Swish::ISftpConsumer *pConsumer )
+STDMETHODIMP CMockSftpProvider::SwitchConsumer( ISftpConsumer *pConsumer )
 {
 	m_spConsumer = pConsumer;
 	return S_OK;
 }
 
 STDMETHODIMP CMockSftpProvider::GetListing(
-	BSTR bstrDirectory, Swish::IEnumListing **ppEnum )
+	BSTR bstrDirectory, IEnumListing **ppEnum )
 {
 	// Test directory name
 	CPPUNIT_ASSERT( CComBSTR(bstrDirectory).Length() > 0 );
@@ -85,19 +103,19 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 	CPPUNIT_ASSERT( ppEnum );
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[out] pointer must be NULL when referenced (i.e. point to NULL)",
-		(Swish::IEnumListing *)NULL, *ppEnum
+		(IEnumListing *)NULL, *ppEnum
 	);
 
-	vector<Swish::Listing> files; // List of files in directory
-	Swish::Listing *pStart;
-	Swish::Listing *pEnd;
+	vector<Listing> files; // List of files in directory
+	Listing *pStart;
+	Listing *pEnd;
 
 	switch (m_enumListingBehaviour)
 	{
 	case EmptyListing:
 		// Create dummy start and end pointers.  Making the equal and
 		// non-NULL indicates an empty collection.
-		pStart = pEnd = (Swish::Listing*)this; // Why 'this'? Why not.
+		pStart = pEnd = (Listing*)this; // Why 'this'? Why not.
 		break;
 
 	case MockListing:
@@ -111,7 +129,7 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 			// Copy directory out of tree and sort alphabetically
 			files.insert(
 				files.begin(), m_filesystem.begin(dir), m_filesystem.end(dir));
-			std::sort(files.begin(), files.end(), lt_item());
+			sort(files.begin(), files.end(), lt_item());
 			
 			if (!files.empty())
 			{
@@ -120,7 +138,7 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 			}
 			else // Make dummy pointer to empty collection
 			{
-				pStart = pEnd = (Swish::Listing*)this; // Why 'this'? Why not.
+				pStart = pEnd = (Listing*)this; // Why 'this'? Why not.
 			}
 		}
 		break;
@@ -219,13 +237,15 @@ STDMETHODIMP CMockSftpProvider::Rename(
 		if (SUCCEEDED(hr))
 			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
+
+	case ConfirmOverwriteEx:
 		{
 		// TODO: Lookup Listing from collection we returned in GetListing()
-		Swish::Listing ltOld = {
+		Listing ltOld = {
 			bstrFromPath, 0666, CComBSTR("mockowner"), 
 			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
 		};
-		Swish::Listing ltExisting =  {
+		Listing ltExisting =  {
 			bstrToPath, 0666, CComBSTR("mockowner"), 
 			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
 		};
@@ -346,7 +366,7 @@ void CMockSftpProvider::_FillMockListing(PCWSTR pwszDirectory)
 		unsigned uPerms = 
 			(uCycle % 1) || ((uCycle % 2) << 1) || ((uCycle % 3) << 2);
 
-		Swish::Listing lt;
+		Listing lt;
 		lt.bstrFilename = vecFilenames.back().Detach();
 		lt.uPermissions = uPerms;
 		lt.bstrOwner =  CComBSTR("mockowner").Detach();
@@ -380,9 +400,9 @@ void CMockSftpProvider::_FillMockListing(PCWSTR pwszDirectory)
 	}
 }
 
-Swish::Listing CMockSftpProvider::_MakeDirectoryItem(PCWSTR pwszName)
+Listing CMockSftpProvider::_MakeDirectoryItem(PCWSTR pwszName)
 {
-	Swish::Listing lt;
+	Listing lt;
 	lt.bstrFilename = CComBSTR(pwszName).Detach();
 	lt.uPermissions = 040777;
 	lt.bstrOwner =  CComBSTR("mockowner").Detach();
@@ -397,13 +417,13 @@ Swish::Listing CMockSftpProvider::_MakeDirectoryItem(PCWSTR pwszName)
 }
 
 void CMockSftpProvider::_MakeItemIn(
-	FilesystemLocation loc, const Swish::Listing& item)
+	FilesystemLocation loc, const Listing& item)
 {
 	m_filesystem.append_child(loc, item);
 }
 
 void CMockSftpProvider::_MakeItemIn(
-	const wstring& path, const Swish::Listing& item)
+	const wstring& path, const Listing& item)
 {
 	FilesystemLocation loc = _FindLocationFromPath(path);
 	ATLASSERT(loc != m_filesystem.end());

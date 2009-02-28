@@ -1,6 +1,10 @@
-#include "stdafx.h"
-#include "CppUnitExtensions.h"
+#include "pch.h"
+#include "standard.h"
+
 #include "TestConfig.h"
+#include <cppunit/extensions/HelperMacros.h>
+
+using namespace ATL;
 
 CTestConfig::CTestConfig()
 {

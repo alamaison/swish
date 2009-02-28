@@ -1,6 +1,8 @@
 // DummyStream.cpp : Implementation of CDummyStream
 
-#include "stdafx.h"
+#include "pch.h"
+#include "standard.h"
+
 #include "DummyStream.h"
 #include <shlwapi.h>
 

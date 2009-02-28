@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="testProvider"
-	ProjectGUID="{BC75449A-5679-46EB-B856-8C419E70B8BC}"
-	RootNamespace="testProvider"
+	Name="provider_test"
+	ProjectGUID="{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
+	RootNamespace="provider"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -17,10 +17,10 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="provider\$(ConfigurationName)"
-			IntermediateDirectory="provider\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfATL="2"
+			UseOfATL="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,12 +41,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="provider;..\Libssh2Provider;..\Libssh2Provider\libssh2\include;&quot;$(CPPUNITDIR)\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32;_ATL_ATTRIBUTES"
+				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;..\..\Libssh2Provider;..\..\Libssh2Provider\libssh2\include;..\.."
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32;CPPUNIT_DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -59,8 +59,7 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description="Copying DLLs to target directory ..."
-				CommandLine="xcopy &quot;$(SolutionDir)Libssh2Provider\$(ConfigurationName)_libssh2\libssh2.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)Libssh2Provider\openssl\out32dll\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)Libssh2Provider\openssl\out32dll\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)Libssh2Provider\zlib\zlib1.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -95,13 +94,13 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests ..."
-				CommandLine="cd &quot;$(TargetDir)&quot; &amp;&amp; &quot;$(CPPUNITDIR)\lib\DllPlugInTesterd_dll.exe&quot; -b --xml tests.xml -c &quot;$(TargetPath)&quot;"
+				CommandLine="cd &quot;$(TargetDir)&quot; &amp;&amp; &quot;$(CPPUNITDIR)\lib\DllPlugInTesterd_dll.exe&quot; -b -c &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="provider\$(ConfigurationName)"
-			IntermediateDirectory="provider\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
 			CharacterSet="1"
@@ -124,10 +123,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="provider;..\Libssh2Provider;..\Libssh2Provider\libssh2\include;&quot;$(CPPUNITDIR)\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32;_ATL_ATTRIBUTES"
+				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;..\..\Libssh2Provider;..\..\Libssh2Provider\libssh2\include;..\.."
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32;CPPUNIT_DLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -140,8 +140,7 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description="Copying DLLs to target directory ..."
-				CommandLine="xcopy &quot;$(SolutionDir)Libssh2Provider\$(ConfigurationName)_libssh2\libssh2.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)Libssh2Provider\openssl\out32dll\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)Libssh2Provider\openssl\out32dll\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)Libssh2Provider\zlib\zlib1.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -178,18 +177,18 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests ..."
-				CommandLine="cd &quot;$(TargetDir)&quot; &amp;&amp; &quot;$(CPPUNITDIR)\lib\DllPlugInTester_dll.exe&quot; -b --xml tests.xml -c &quot;$(TargetPath)&quot;"
+				CommandLine="cd &quot;$(TargetDir)&quot; &amp;&amp; &quot;$(CPPUNITDIR)\lib\DllPlugInTester_dll.exe&quot; -b -c &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
-			RelativePathToProject=".\Libssh2Provider\libssh2.vcproj"
+			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
+			RelativePathToProject=".\test\common\common.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-			RelativePathToProject=".\Swish.vcproj"
+			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
+			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
 	</References>
 	<Files>
@@ -199,15 +198,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\MockSftpConsumer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\provider\SimplePlugIn.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\provider\stdafx.cpp"
+				RelativePath=".\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -215,6 +206,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -223,12 +215,57 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\TestConfig.cpp"
+				RelativePath="..\provider\Session_test.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\provider\SessionFactory_test.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\provider\SftpStream_test.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\provider\SimplePlugIn.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -237,46 +274,18 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\provider\stdafx.h"
+				RelativePath=".\debug.h"
 				>
 			</File>
 			<File
-				RelativePath=".\TestConfig.h"
+				RelativePath=".\pch.h"
+				>
+			</File>
+			<File
+				RelativePath=".\standard.h"
 				>
 			</File>
 		</Filter>
-		<Filter
-			Name="Tests"
-			>
-			<File
-				RelativePath=".\provider\Session_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\provider\SessionFactory_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\provider\SftpStream_test.cpp"
-				>
-			</File>
-		</Filter>
-		<File
-			RelativePath="..\Libssh2Provider\KeyboardInteractive.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\Libssh2Provider\Session.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\Libssh2Provider\SessionFactory.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\Libssh2Provider\SftpStream.cpp"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

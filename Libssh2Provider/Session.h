@@ -29,8 +29,8 @@
 
 #pragma once
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
+typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
+typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
 
 class CSession
 {
