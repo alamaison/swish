@@ -1,12 +1,22 @@
-#include "stdafx.h"
-#include "../CppUnitExtensions.h"
-#include "../TestConfig.h"
-#include "../MockSftpConsumer.h"
+/**
+ * @file Tests for the IStream implementation.
+ */
 
-#include "../../Libssh2Provider/SftpStream.h"
+#include "pch.h"
+#include "standard.h"
+
+#include "../common/CppUnitExtensions.h"
+#include "../common/TestConfig.h"
+#include "../common/MockSftpConsumer.h"
+
+#include <SftpStream.h>
 #include <SessionFactory.h>
 
-#include <memory>
+#include <memory>            // auto_ptr
+
+#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+
+using namespace ATL;
 using std::auto_ptr;
 
 static const char *szTestFile = 

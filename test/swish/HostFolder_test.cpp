@@ -1,11 +1,9 @@
 #include "stdafx.h"
-#include "../CppUnitExtensions.h"
+#include "../common/CppUnitExtensions.h"
 
 #include <HostPidl.h>
 
-// CHostFolder component
-#import "progid:Swish.HostFolder" raw_interfaces_only, raw_native_types, \
-	auto_search
+#include <Swish.h>
 
 class CHostFolderPreInitialize_test : public CPPUNIT_NS::TestFixture
 {
@@ -53,7 +51,7 @@ public:
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Create instance of folder using CLSID
-		hr = m_spFolder.CoCreateInstance(__uuidof(Swish::CHostFolder));
+		hr = m_spFolder.CoCreateInstance(__uuidof(CHostFolder));
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Copy to regular interface pointer so we can test for memory 

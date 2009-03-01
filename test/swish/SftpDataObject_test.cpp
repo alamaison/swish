@@ -1,15 +1,19 @@
 #include "stdafx.h"
-#include "../CppUnitExtensions.h"
-#include "../MockSftpConsumer.h"
-#include "../MockSftpProvider.h"
-typedef CMockSftpProvider MP;
-typedef CMockSftpConsumer MC;
-#include "../TestConfig.h"
+#include "../common/CppUnitExtensions.h"
+#include "../common/MockSftpConsumer.h"
+#include "../common/MockSftpProvider.h"
+#include "../common/TestConfig.h"
 #include "DataObjectTests.h"
 
 #include <SftpDataObject.h>
 #include <RemotePidl.h>
 #include <HostPidl.h>
+
+typedef CMockSftpProvider MP;
+typedef CMockSftpConsumer MC;
+
+using std::vector;
+using std::wstring;
 
 class CSftpDataObject_test : public CPPUNIT_NS::TestFixture
 {

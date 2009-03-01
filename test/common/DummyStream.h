@@ -2,8 +2,13 @@
 
 #pragma once
 
+#include <objidl.h>    // IStream
+
+#include <atlbase.h>   // ATL base classes
+#include <atlcom.h>    // ATL CComObject et. al.
+
 class ATL_NO_VTABLE CDummyStream :
-	public CComObjectRoot,
+	public ATL::CComObjectRoot,
 	public IStream
 {
 public:

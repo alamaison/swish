@@ -5,8 +5,8 @@
  * relaxing test constraints
  */
 
-#ifndef LIMITS_H
-#define LIMITS_H
+#ifndef TEST_LIMITS_H
+#define TEST_LIMITS_H
 
 #pragma once
 
@@ -54,4 +54,4 @@
 
 #define SFTP_DEFAULT_PORT         22
 
-#endif LIMITS_H
+#endif // TEST_LIMITS_H

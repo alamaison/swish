@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
@@ -43,7 +43,6 @@
 				WarningLevel="2"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				GenerateTypeLibrary="false"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -56,7 +55,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl/include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;ISOLATION_AWARE_ENABLED;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;ISOLATION_AWARE_ENABLED;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -71,7 +70,6 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
 				AdditionalIncludeDirectories="$(IntDir);wtl/include"
 			/>
 			<Tool
@@ -83,6 +81,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="unicows.lib"
 				LinkIncremental="2"
+				ModuleDefinitionFile="Swish.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -116,7 +115,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
@@ -141,7 +140,6 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				GenerateTypeLibrary="false"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -152,10 +150,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="wtl/include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;ISOLATION_AWARE_ENABLED"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;ISOLATION_AWARE_ENABLED"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
-				WarningLevel="3"
+				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
@@ -165,7 +163,6 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
 				AdditionalIncludeDirectories="$(IntDir);wtl/include"
 			/>
 			<Tool
@@ -177,6 +174,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="unicows.lib"
 				LinkIncremental="1"
+				ModuleDefinitionFile="Swish.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -210,7 +208,7 @@
 		</Configuration>
 		<Configuration
 			Name="PREfast|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
@@ -247,7 +245,7 @@
 				AdditionalOptions="/analyze"
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl/include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;ISOLATION_AWARE_ENABLED"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;ISOLATION_AWARE_ENABLED"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="2"
@@ -262,7 +260,6 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
 				AdditionalIncludeDirectories="$(IntDir);wtl/include"
 			/>
 			<Tool
@@ -274,6 +271,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="unicows.lib"
 				LinkIncremental="1"
+				ModuleDefinitionFile="Swish.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
 				SubSystem="2"
 				TargetMachine="1"
@@ -371,6 +369,37 @@
 			<File
 				RelativePath=".\SftpProvider.idl"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						HeaderFileName="SftpProvider.h"
+						InterfaceIdentifierFileName="SftpProvider_i.c"
+						ProxyFileName="SftpProvider_p.c"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						GenerateTypeLibrary="true"
+						HeaderFileName="SftpProvider.h"
+						InterfaceIdentifierFileName="SftpProvider_i.c"
+						ProxyFileName="SftpProvider_p.c"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						HeaderFileName="SftpProvider.h"
+						InterfaceIdentifierFileName="SftpProvider_i.c"
+						ProxyFileName="SftpProvider_p.c"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ShellDataObject.cpp"
@@ -407,6 +436,24 @@
 			<File
 				RelativePath=".\Swish.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\Swish.def"
+				>
+			</File>
+			<File
+				RelativePath=".\Swish.idl"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						HeaderFileName="Swish.h"
+						InterfaceIdentifierFileName="Swish_i.c"
+						ProxyFileName="Swish_i.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\UserInteraction.cpp"
@@ -656,6 +703,75 @@
 					>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="Generated Files"
+			SourceControlFiles="false"
+			>
+			<File
+				RelativePath=".\SftpProvider.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpProvider_i.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Swish.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Swish_i.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

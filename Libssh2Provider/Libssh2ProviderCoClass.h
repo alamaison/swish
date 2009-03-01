@@ -1,6 +1,6 @@
-/*  SFTP directory listing helper functions
+/*  Externally COM-creatable aspects of libssh2-based SFTP component.
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,27 +28,24 @@
 */
 
 #pragma once
+#include "stdafx.h"
+#include "resource.h"       // main symbols
 
-#include <atlcomcli.h>     // ATL smart types
+#include "Libssh2Provider.h"
+#include "Libssh2ProviderDLL.h"
 
-#include <string>
+class ATL_NO_VTABLE CLibssh2ProviderCoClass :
+	public CLibssh2Provider,
+	public CComCoClass<CLibssh2ProviderCoClass, &CLSID_Libssh2Provider>
+{
+public:
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
+	DECLARE_REGISTRY_RESOURCEID(IDR_LIBSSH2PROVIDER)
 
-#include <SftpProvider.h>  // Swish ISftpProvider & ISftpConsumer interfaces
+	BEGIN_COM_MAP(CLibssh2ProviderCoClass)
+		COM_INTERFACE_ENTRY(IUnknown)
+		COM_INTERFACE_ENTRY_CHAIN(CLibssh2Provider)
+	END_COM_MAP()
+};
 
-namespace provider {
-	namespace libssh2 {
-		namespace listing {
-
-			CComBSTR ParseUserFromLongEntry(std::string longentry);
-
-			CComBSTR ParseGroupFromLongEntry(std::string longentry);
-
-			Listing FillListingEntry(
-				const std::string& filename, const std::string& longentry,
-				LIBSSH2_SFTP_ATTRIBUTES& attrs);
-		}
-	}
-}
+OBJECT_ENTRY_AUTO(__uuidof(Libssh2Provider), CLibssh2ProviderCoClass)

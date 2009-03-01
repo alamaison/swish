@@ -51,12 +51,16 @@
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
 #endif
 
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+
 #define _ATL_APARTMENT_THREADED
 #define _ATL_NO_AUTOMATIC_NAMESPACE
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
 #define _CRT_SECURE_NO_WARNINGS 1
+
+#include <comdef.h>      // C++ 'straight-to-COM' definitions
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -148,10 +152,3 @@ catch (...)                   \
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
-
-// Swish type library
-#pragma warning (push)
-#pragma warning (disable: 4192) // automatically excluding while importing type
-#import "libid:b816a838-5022-11dc-9153-0090f5284f85" raw_interfaces_only, \
-	raw_native_types, no_namespace, auto_search, embedded_idl
-#pragma warning (pop)

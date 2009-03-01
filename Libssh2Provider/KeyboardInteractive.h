@@ -31,6 +31,8 @@
 
 #include <atlsafe.h>         // CComSafeArray
 
+#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+
 class CKeyboardInteractive
 {
 public:
