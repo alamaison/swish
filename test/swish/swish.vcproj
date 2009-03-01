@@ -18,7 +18,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -54,7 +54,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..;..\..\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;..\..\wtl\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -75,11 +75,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cppunitd_dll.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -106,14 +105,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests..."
-				CommandLine="&quot;$(CPPUNITDIR)\lib\DllPlugInTesterd_dll.exe&quot; -b --xml tests.xml -c &quot;$(TargetPath)&quot;"
+				CommandLine="&quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -148,7 +147,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..;..\..\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;..\..\wtl\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="4"
@@ -167,11 +166,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cppunit_dll.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;;&quot;$(TargetDir)&quot;"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -200,7 +198,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests..."
-				CommandLine="&quot;$(CPPUNITDIR)\lib\DllPlugInTester_dll.exe&quot; -b --xml tests.xml -c &quot;$(TargetPath)&quot;"
+				CommandLine="&quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -228,7 +226,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SimplePlugIn.cpp"
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\module.cpp"
 				>
 			</File>
 			<File

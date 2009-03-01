@@ -2,7 +2,11 @@
 
 #pragma once
 
+#pragma warning(push)
+#pragma warning(disable:4512) // assignment operator could not be generated
 #include <cppunit/extensions/HelperMacros.h>
+#pragma warning(pop)
+
 #include <atlstr.h>
 
 CPPUNIT_NS_BEGIN

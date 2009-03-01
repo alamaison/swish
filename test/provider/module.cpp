@@ -1,5 +1,5 @@
 /**
- * @file Entry point for the DLL plugin.  The CPPUNIT test runner uses this.
+ * @file ATL Module required for ATL support.
  */
 
 #include "pch.h"
@@ -7,8 +7,6 @@
 
 #include <atlbase.h>   // ATL modules
 #include <atlcom.h>    // ATL CComObject et. al.
-
-#include <cppunit/plugin/TestPlugIn.h>
 
 using namespace ATL;
 
@@ -26,8 +24,3 @@ public :
 };
 
 CModule _AtlModule; ///< Global module instance
-
-#pragma warning(push)
-#pragma warning(disable:4100)
-CPPUNIT_PLUGIN_IMPLEMENT();
-#pragma warning(pop)

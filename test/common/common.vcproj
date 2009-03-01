@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;..\.."
-				PreprocessorDefinitions="WIN32;STRICT;_DEBUG;_LIB;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;STRICT;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -62,7 +62,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalLibraryDirectories=""
+				AdditionalDependencies="cppunitd.lib"
+				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -107,7 +108,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;..\.."
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;CPPUNIT_DLL"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -125,7 +126,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalLibraryDirectories=""
+				AdditionalDependencies="cppunit.lib"
+				AdditionalLibraryDirectories="&quot;$(CPPUNITDIR)\lib&quot;"
 			/>
 			<Tool
 				Name="VCALinkTool"
