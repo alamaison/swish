@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Swish", "Swish.vcproj", "{3F48C01A-FE7D-4907-860B-B7F45926F277}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Swish", "swish\Swish.vcproj", "{3F48C01A-FE7D-4907-860B-B7F45926F277}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{4AC841DB-FEDF-4624-BFBD-A494B1F8B188}"
 EndProject

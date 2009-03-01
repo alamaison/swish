@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories=".."
+				AdditionalIncludeDirectories="$(SolutionDir)\swish"
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include;.."
+				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\swish"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -69,7 +69,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -138,7 +138,7 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=".."
+				AdditionalIncludeDirectories="$(SolutionDir)\swish"
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
@@ -152,7 +152,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;.."
+				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\swish"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -166,7 +166,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -236,7 +236,7 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=".."
+				AdditionalIncludeDirectories="$(SolutionDir)\swish"
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
@@ -251,7 +251,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;.."
+				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\swish"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -265,7 +265,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"

@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;..\..\Libssh2Provider;..\..\Libssh2Provider\libssh2\include;..\.."
+				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -123,7 +123,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;..\..\Libssh2Provider;..\..\Libssh2Provider\libssh2\include;..\.."
+				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"

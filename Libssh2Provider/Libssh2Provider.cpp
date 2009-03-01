@@ -29,7 +29,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "../remotelimits.h"
+#include <remotelimits.h>
 
 #include "Libssh2Provider.h"
 #include "KeyboardInteractive.h"

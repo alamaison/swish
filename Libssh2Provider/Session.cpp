@@ -29,7 +29,7 @@
 
 #include "StdAfx.h"
 #include "Session.h"
-#include "../remotelimits.h"
+#include <remotelimits.h>
 
 #include <ws2tcpip.h>    // Winsock
 #include <wspiapi.h>     // Winsock

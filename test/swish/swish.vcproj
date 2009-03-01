@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..;..\..\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;..\..\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish;$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\wtl\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -146,7 +146,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..;..\..\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;..\..\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish;$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\wtl\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -205,7 +205,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-			RelativePathToProject=".\Swish.vcproj"
+			RelativePathToProject=".\swish\Swish.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
@@ -336,35 +336,35 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\Connection.cpp"
+			RelativePath="..\..\swish\Connection.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\DataObject.cpp"
+			RelativePath="..\..\swish\DataObject.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\Folder.cpp"
+			RelativePath="..\..\swish\Folder.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\KbdInteractiveDialog.cpp"
+			RelativePath="..\..\swish\KbdInteractiveDialog.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\NewConnDialog.cpp"
+			RelativePath="..\..\swish\NewConnDialog.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\SftpDataObject.cpp"
+			RelativePath="..\..\swish\SftpDataObject.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\SftpDirectory.cpp"
+			RelativePath="..\..\swish\SftpDirectory.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\Swish.rc"
+			RelativePath="..\..\swish\Swish.rc"
 			>
 		</File>
 	</Files>

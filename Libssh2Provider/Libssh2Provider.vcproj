@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include;.."
+				AdditionalIncludeDirectories="libssh2\include;&quot;$(SolutionDir)\swish&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -134,7 +134,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;.."
+				AdditionalIncludeDirectories="libssh2\include;&quot;$(SolutionDir)\swish&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -213,7 +213,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;.."
+				AdditionalIncludeDirectories="libssh2\include;&quot;$(SolutionDir)\swish&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -257,7 +257,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-			RelativePathToProject=".\Swish.vcproj"
+			RelativePathToProject=".\swish\Swish.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"

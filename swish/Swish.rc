@@ -216,7 +216,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-//1 TYPELIB "Swish.tlb"
+1 TYPELIB "Swish.tlb"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
