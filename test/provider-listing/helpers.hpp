@@ -1,4 +1,9 @@
-/*  SFTP directory listing helper functions
+/**
+    @file
+
+    Helper functions for Boost.Test adding support for wide strings.
+
+    @if licence
 
     Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -25,30 +30,45 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
 #pragma once
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider interfaces
-
-#include "common/atl.hpp"                     // Common ATL setup
-
 #include <string>
+#include <ostream>
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
+#pragma warning (push)
+#pragma warning (disable: 4996) // 'wctomb': This function may be unsafe.
 
-namespace provider {
-	namespace libssh2 {
-		namespace listing {
+#include <boost/archive/iterators/mb_from_wchar.hpp>
 
-			ATL::CComBSTR ParseUserFromLongEntry(std::string longentry);
+#pragma warning (pop)
 
-			ATL::CComBSTR ParseGroupFromLongEntry(std::string longentry);
+typedef boost::archive::iterators::mb_from_wchar<std::wstring::const_iterator>
+	converter;
 
-			Listing FillListingEntry(
-				const std::string& filename, const std::string& longentry,
-				LIBSSH2_SFTP_ATTRIBUTES& attrs);
-		}
+namespace std {
+
+	inline std::ostream& operator<<(
+		std::ostream& out, const std::wstring& wide_in)
+	{
+		std::string narrow_out(
+			converter(wide_in.begin()), converter(wide_in.end()));
+		
+		out << narrow_out;
+		return out;
+	}
+
+	inline std::ostream& operator<<(
+		std::ostream& out, const wchar_t* wide_in)
+	{
+		std::wstring wstr_in(wide_in);
+		std::string narrow_out(
+			converter(wstr_in.begin()), converter(wstr_in.end()));
+		
+		out << narrow_out;
+		return out;
 	}
 }

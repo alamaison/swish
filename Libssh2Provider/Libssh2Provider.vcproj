@@ -53,7 +53,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
+				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir);$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -134,7 +134,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
+				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir);$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -213,7 +213,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
+				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir);$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
