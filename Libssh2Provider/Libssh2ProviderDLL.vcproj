@@ -20,6 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)_DLL"
 			ConfigurationType="2"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -53,14 +54,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\swish\shell_folder"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBSSH2_WIN32"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder"
+				PreprocessorDefinitions="_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -69,19 +68,16 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="unicows.lib ws2_32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
 				ModuleDefinitionFile="Libssh2ProviderDLL.def"
 				MergedIDLBaseFileName="_Libssh2Provider.idl"
 				GenerateDebugInformation="true"
@@ -119,6 +115,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)_DLL"
 			ConfigurationType="2"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -152,12 +149,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\swish\shell_folder"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder"
+				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -166,19 +161,17 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="unicows.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="Libssh2ProviderDLL.def"
 				MergedIDLBaseFileName="_Libssh2Provider.idl"
 				GenerateDebugInformation="true"
@@ -217,6 +210,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)_DLL"
 			ConfigurationType="2"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -251,12 +245,10 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="libssh2\include;$(SolutionDir)\swish\shell_folder"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBSSH2_WIN32"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder"
+				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -265,19 +257,17 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="false"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="unicows.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(ConfigurationName)_libssh2"
+				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="Libssh2ProviderDLL.def"
 				MergedIDLBaseFileName="_Libssh2Provider.idl"
 				GenerateDebugInformation="true"

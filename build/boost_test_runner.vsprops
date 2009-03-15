@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="boost_test_runner"
+	>
+	<Tool
+		Name="VCPostBuildEventTool"
+		Description="Running Boost unit tests ..."
+		CommandLine="&quot;$(TargetPath)&quot; --result_code=no --report_level=confirm"
+	/>
+</VisualStudioPropertySheet>

@@ -582,8 +582,10 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 		if (!rc)
 		{
 			// Delete temporary
-			HRESULT hr = _DeleteRecursive( strTemporary.c_str(), CString() );
+			CString strError; // unused
+			HRESULT hr = _DeleteRecursive( strTemporary.c_str(), strError );
 			ATLASSERT(SUCCEEDED(hr));
+			(void)hr; // The rename succeeded even if this fails
 			return S_OK;
 		}
 

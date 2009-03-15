@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="swish"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="$(SolutionDir)"
+		PreprocessorDefinitions="WIN32;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_NT4;WIN32_LEAN_AND_MEAN;ISOLATION_AWARE_ENABLED"
+		WarningLevel="4"
+		Detect64BitPortabilityProblems="true"
+	/>
+	<Tool
+		Name="VCLibrarianTool"
+		AdditionalDependencies="unicows.lib"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalDependencies="unicows.lib"
+	/>
+</VisualStudioPropertySheet>

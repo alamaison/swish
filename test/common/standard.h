@@ -14,14 +14,6 @@
 
 #pragma once
 
-/* API versions ************************************************************ */
-
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501 // Allow features specific to Windows XP or later
-#endif
-
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
-
 /* ATL Setup **************************************************************** */
 
 #define _ATL_APARTMENT_THREADED
@@ -37,14 +29,5 @@
 
 /* Strictness *************************************************************** */
 
-#ifndef STRICT
-#define STRICT
-#endif
-
 // Better type safety for PIDLs (must be before <shlobj.h>)
 #define STRICT_TYPED_ITEMIDS
-
-// Ensure strictly correct usage of SAL attributes
-#ifndef __SPECSTRINGS_STRICT_LEVEL
-#define __SPECSTRINGS_STRICT_LEVEL 1 //3 // see specstrings_strict.h
-#endif

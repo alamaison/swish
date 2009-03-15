@@ -20,6 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -41,14 +42,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CPPUNITDIR)\include;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32"
+				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				PreprocessorDefinitions="_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -59,13 +58,10 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -93,8 +89,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Running unit tests ..."
-				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 		<Configuration
@@ -102,6 +96,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -123,13 +118,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(CPPUNITDIR)\include;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32"
+				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
-				WarningLevel="4"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -144,9 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -176,8 +167,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Running unit tests ..."
-				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 	</Configurations>
