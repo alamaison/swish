@@ -1,5 +1,7 @@
 /**
- * @file Tests for the CSession class.
+ * @file
+ *
+ * Tests for the CSession class.
  */
 
 #include "pch.h"

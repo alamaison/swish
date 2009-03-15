@@ -1,5 +1,7 @@
 /**
- * @file Tests for the CSessionFactory class.
+ * @file
+ *
+ * Tests for the CSessionFactory class.
  */
 
 #include "pch.h"

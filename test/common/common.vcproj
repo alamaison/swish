@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="common"
+	Name="test-common"
 	ProjectGUID="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
 	RootNamespace="common"
 	Keyword="Win32Proj"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish"
+				AdditionalIncludeDirectories="$(CPPUNITDIR)\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="WIN32;STRICT;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish"
+				AdditionalIncludeDirectories="$(CPPUNITDIR)\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -264,10 +264,6 @@
 			>
 			<File
 				RelativePath=".\CppUnitExtensions.h"
-				>
-			</File>
-			<File
-				RelativePath=".\debug.h"
 				>
 			</File>
 			<File

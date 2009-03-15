@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "../common/CppUnitExtensions.h"
 #include "../common/MockSftpConsumer.h"
 #include "../common/MockSftpProvider.h"
@@ -6,7 +6,8 @@ typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
 #include "../common/TestConfig.h"
 
-#include <ATLComTime.h>
+#include <atl.hpp>         // Common ATL setup
+#include <ATLComTime.h>    // COleDateTime
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
 // test class directly into the target class's header
@@ -19,6 +20,13 @@ class CSftpDirectory_test;
 
 #include <Connection.h>
 #include <HostPidl.h>
+
+using ATL::CComObject;
+using ATL::CAtlException;
+using ATL::CComPtr;
+using ATL::CComBSTR;
+using ATL::CString;
+using ATL::COleDateTime;
 
 class CSftpDirectory_test : public CPPUNIT_NS::TestFixture
 {

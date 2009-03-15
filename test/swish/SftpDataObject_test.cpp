@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "../common/CppUnitExtensions.h"
 #include "../common/MockSftpConsumer.h"
 #include "../common/MockSftpProvider.h"
@@ -11,6 +11,10 @@
 
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
+
+using ATL::CComObject;
+using ATL::CComPtr;
+using ATL::CComBSTR;
 
 using std::vector;
 using std::wstring;

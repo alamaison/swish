@@ -1,5 +1,7 @@
 /**
- * @file Tests for the IStream implementation.
+ * @file
+ *
+ * Tests for the IStream implementation.
  */
 
 #include "pch.h"

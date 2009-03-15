@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "Pidl_test.h"
 
 #include <RemotePidl.h>

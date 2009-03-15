@@ -1,5 +1,7 @@
 /**
- * @file Main test runner implementation.
+ * @file
+ *
+ * Main test runner implementation.
  */
 
 #include "pch.h"

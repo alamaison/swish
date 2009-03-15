@@ -1,5 +1,7 @@
 /**
- * @file ATL Module required for ATL support.
+ * @file
+ *
+ * ATL Module required for ATL support.
  */
 
 #include "pch.h"

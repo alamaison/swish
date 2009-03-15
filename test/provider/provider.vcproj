@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="provider_test"
+	Name="test-provider"
 	ProjectGUID="{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
 	RootNamespace="provider"
 	Keyword="Win32Proj"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish"
+				AdditionalIncludeDirectories="$(CPPUNITDIR)\include;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -94,7 +94,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests ..."
-				CommandLine="&quot;$(TargetPath)&quot;"
+				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 		<Configuration
@@ -123,7 +123,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish"
+				AdditionalIncludeDirectories="$(CPPUNITDIR)\include;$(SolutionDir)\Libssh2Provider;$(SolutionDir)\Libssh2Provider\libssh2\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSSH2_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -177,7 +177,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests ..."
-				CommandLine="&quot;$(TargetPath)&quot;"
+				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 	</Configurations>
@@ -277,10 +277,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\debug.h"
-				>
-			</File>
 			<File
 				RelativePath=".\pch.h"
 				>

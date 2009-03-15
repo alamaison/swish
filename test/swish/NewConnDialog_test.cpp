@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "NewConnDialog_test.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CNewConnDialog_test );

@@ -1,11 +1,12 @@
 /**
- * @file Mock ISftpConsumer COM object implementation.
+ * @file
+ *
+ * Mock ISftpConsumer COM object implementation.
  */
 
 #include "pch.h"              // Precompiled header
 #include "standard.h"
 
-#include "debug.h"            // Debug macros
 #include "MockSftpConsumer.h"
 
 #include <atlsafe.h>          // CComSafeArray
@@ -99,7 +100,7 @@ STDMETHODIMP CMockSftpConsumer::OnPasswordRequest(
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised OnPasswordRequest() behaviour");
 		return E_UNEXPECTED;
 	}
 
@@ -164,7 +165,8 @@ STDMETHODIMP CMockSftpConsumer::OnKeyboardInteractiveRequest(
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised "
+			"OnKeyboardInteractiveRequest() behaviour");
 		return E_UNEXPECTED;
 	}
 
@@ -212,7 +214,7 @@ STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised OnYesNoCancel() behaviour");
 		return E_UNEXPECTED;
 	}
 }
@@ -236,7 +238,8 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised "
+			"OnConfirmOverwrite() behaviour");
 		return E_UNEXPECTED;
 	}
 }
@@ -260,7 +263,8 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
 		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
 		return E_FAIL;
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised "
+			"OnConfirmOverwriteEx() behaviour");
 		return E_UNEXPECTED;
 	}
 }
@@ -280,7 +284,7 @@ STDMETHODIMP CMockSftpConsumer::OnReportError( BSTR bstrMessage )
 			return E_FAIL;
 		}
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised OnReportError() behaviour");
 		return E_FAIL;
 	}
 }

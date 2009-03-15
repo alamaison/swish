@@ -18,7 +18,6 @@
 */
 
 #pragma once
-#include "resource.h"       // main symbols
 
 #include <CoFactory.h>
 #include <Folder.h>
@@ -81,10 +80,10 @@ public:
 	 * @returns Smart pointer to the CDummyFolder's IShellFolder interface.
 	 * @throws  CAtlException if creation fails.
 	 */
-	static CComPtr<IShellFolder> Create()
+	static ATL::CComPtr<IShellFolder> Create()
 	throw(...)
 	{
-		CComPtr<CDummyFolder> spObject = spObject->CreateCoObject();
+		ATL::CComPtr<CDummyFolder> spObject = spObject->CreateCoObject();
 		return spObject.p;
 	}
 
@@ -92,7 +91,7 @@ protected:
 
 	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
 	__override CLSID GetCLSID() const;
-	__override CComPtr<IShellFolder> CreateSubfolder(
+	__override ATL::CComPtr<IShellFolder> CreateSubfolder(
 		PCIDLIST_ABSOLUTE pidlRoot)
 		const throw(...);
 	__override int ComparePIDLs(

@@ -1,8 +1,10 @@
 /**
- * @file Main test runner implementation.
+ * @file
+ *
+ * Main test runner implementation.
  */
 
-#include "stdafx.h"
+#include "pch.h"
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>

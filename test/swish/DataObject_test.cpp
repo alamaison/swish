@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "../common/CppUnitExtensions.h"
 #include "../common/MockSftpConsumer.h"
 #include "../common/MockSftpProvider.h"
@@ -10,6 +10,10 @@ typedef CMockSftpConsumer MC;
 #include <DataObject.h>
 #include <RemotePidl.h>
 #include <HostPidl.h>
+
+using ATL::CComObject;
+using ATL::CComPtr;
+using ATL::CComBSTR;
 
 /**
  * Tests for our generic shell DataObject wrapper.  This class only creates
@@ -54,12 +58,6 @@ public:
 			m_pConsumer, CComBSTR(config.GetUser()),
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
-
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-		CPPUNIT_ASSERT(conn.spProvider);
-		CPPUNIT_ASSERT(conn.spConsumer);
 	}
 
 	void tearDown()

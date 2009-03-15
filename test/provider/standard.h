@@ -1,5 +1,7 @@
 /**
- * @file Declarations which must be included by @b every file.
+ * @file
+ *
+ * Declarations which must be included by @b every file.
  *
  * @warning
  * This header must be the @b first thing after the precompiled is included.

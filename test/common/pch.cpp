@@ -1,5 +1,7 @@
 /**
- * @file Source file for the precompiled header.
+ * @file
+ *
+ * Source file for the precompiled header.
  *
  * The precompiled header will be common.pch and the intermediate file
  * pch.obj will contain the pre-compiled type information.

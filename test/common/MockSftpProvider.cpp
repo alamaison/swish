@@ -1,11 +1,12 @@
 /**
- * @file Mock ISftpProvider COM object implementation.
+ * @file
+ *
+ * Mock ISftpProvider COM object implementation.
  */
 
 #include "pch.h"              // Precompiled header
 #include "standard.h"
 
-#include "debug.h"            // Debug macros
 #include "MockSftpProvider.h"
 
 #include "DummyStream.h"      // Bare-bones IStream implementation
@@ -153,7 +154,7 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 		return E_FAIL;
 
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised GetListing() behaviour");
 		return E_UNEXPECTED;
 	}
 
@@ -269,7 +270,7 @@ STDMETHODIMP CMockSftpProvider::Rename(
 		return E_FAIL;
 
 	default:
-		UNREACHABLE;
+		CPPUNIT_FAIL("Unreachable: Unrecognised Rename() behaviour");
 		return E_UNEXPECTED;
 	}
 }

@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="swish_test"
+	Name="test-swish"
 	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
 	RootNamespace="swish_test"
 	>
@@ -53,12 +53,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish;$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;_USRDLL"
+				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_WIN32_WINNT=_WIN32_WINNT_NT4;WIN32_LEAN_AND_MEAN"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -68,15 +69,16 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -105,7 +107,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests..."
-				CommandLine="&quot;$(TargetPath)&quot;"
+				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 		<Configuration
@@ -146,10 +148,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish;$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;_USRDLL"
+				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_WIN32_WINNT=_WIN32_WINNT_NT4;WIN32_LEAN_AND_MEAN"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -159,15 +162,16 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -198,14 +202,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Running unit tests..."
-				CommandLine="&quot;$(TargetPath)&quot;"
+				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-			RelativePathToProject=".\swish\Swish.vcproj"
+			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
+			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
@@ -234,7 +238,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.cpp"
+				RelativePath=".\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -271,11 +275,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Pidl_test.h"
+				RelativePath=".\pch.h"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h"
+				RelativePath=".\Pidl_test.h"
 				>
 			</File>
 		</Filter>
@@ -288,10 +292,6 @@
 			</File>
 			<File
 				RelativePath=".\DummyFolder_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HostFolder_test.cpp"
 				>
 			</File>
 			<File
@@ -319,10 +319,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RemoteFolder_test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\RemotePidl_test.cpp"
 				>
 			</File>
@@ -335,38 +331,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\swish\Connection.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\DataObject.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\Folder.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\KbdInteractiveDialog.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\NewConnDialog.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\SftpDataObject.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\SftpDirectory.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\swish\Swish.rc"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

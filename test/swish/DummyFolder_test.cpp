@@ -1,7 +1,13 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "../common/CppUnitExtensions.h"
 
 #include "DummyFolder.h"
+
+#include <mshtml.h>  // For IHTMLDOMTextNode2
+
+using ATL::CComPtr;
+using ATL::CComQIPtr;
+using ATL::CString;
 
 class CDummyFolderPreInitialize_test : public CPPUNIT_NS::TestFixture
 {

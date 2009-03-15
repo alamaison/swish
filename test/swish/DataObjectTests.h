@@ -1,6 +1,5 @@
 // Miscellanious tests for the Swish DataObject
 
-#include "stdafx.h"
 #include "../common/CppUnitExtensions.h"
 
 #include <HostPidl.h>
@@ -45,7 +44,7 @@ static void _testShellPIDLCount(IDataObject *pDo, UINT nExpected)
  * Test that Shell PIDL from DataObject represent the expected file.
  */
 static void _testShellPIDL(
-	IDataObject *pDo, CString strExpected, UINT iFile)
+	IDataObject *pDo, ATL::CString strExpected, UINT iFile)
 {
 	FORMATETC fetc = {
 		(CLIPFORMAT)::RegisterClipboardFormat(CFSTR_SHELLIDLIST),
@@ -79,7 +78,7 @@ static void _testShellPIDL(
  * case the path (e.g. "/tmp") that is expected to be found in that item
  * should be passed.
  */
-static void _testShellPIDLFolder(IDataObject *pDo, CString strExpected)
+static void _testShellPIDLFolder(IDataObject *pDo, ATL::CString strExpected)
 {
 	FORMATETC fetc = {
 		(CLIPFORMAT)::RegisterClipboardFormat(CFSTR_SHELLIDLIST),
@@ -121,7 +120,7 @@ static void _testShellPIDLFolder(IDataObject *pDo, CString strExpected)
  * forward slashes with back slashes in expected string.
  */
 static void _testFileDescriptor(
-	IDataObject *pDo, CString strExpected, UINT iFile)
+	IDataObject *pDo, ATL::CString strExpected, UINT iFile)
 {
 	strExpected.Replace(L"/", L"\\");
 
@@ -144,7 +143,7 @@ static void _testFileDescriptor(
 
 	CPPUNIT_ASSERT(iFile < fgd->cItems);
 	CPPUNIT_ASSERT(fgd->fgd);
-	CString strActual(fgd->fgd[iFile].cFileName);
+	ATL::CString strActual(fgd->fgd[iFile].cFileName);
 	CPPUNIT_ASSERT_EQUAL(strExpected, strActual);
 
 	::GlobalUnlock(stg.hGlobal);
@@ -156,7 +155,7 @@ static void _testFileDescriptor(
  * Test that the contents of the DummyStream matches what is expected.
  */
 static void _testStreamContents(
-	IDataObject *pDo, CString strExpected, UINT iFile)
+	IDataObject *pDo, ATL::CString strExpected, UINT iFile)
 {
 	FORMATETC fetc = {
 		(CLIPFORMAT)::RegisterClipboardFormat(CFSTR_FILECONTENTS),
@@ -178,7 +177,7 @@ static void _testStreamContents(
 	hr = stg.pstm->Read(szBuf, ARRAYSIZE(szBuf), &cbRead);
 	CPPUNIT_ASSERT_OK(hr);
 
-	CString strActual(szBuf);
+	ATL::CString strActual(szBuf);
 	CPPUNIT_ASSERT_EQUAL(strExpected, strActual);
 
 	::ReleaseStgMedium(&stg);
@@ -261,13 +260,13 @@ static void _testBothEnumerators(IDataObject *pDo, bool fFailTest=false)
 	HRESULT hr;
 
 	// Test enumerator of GetData() formats
-	CComPtr<IEnumFORMATETC> spEnumGet;
+	ATL::CComPtr<IEnumFORMATETC> spEnumGet;
 	hr = pDo->EnumFormatEtc(DATADIR_GET, &spEnumGet);
 	CPPUNIT_ASSERT_OK(hr);
 	_testEnumerator(spEnumGet, fFailTest);
 
 	// Test enumerator of SetData() formats
-	CComPtr<IEnumFORMATETC> spEnumSet;
+	ATL::CComPtr<IEnumFORMATETC> spEnumSet;
 	hr = pDo->EnumFormatEtc(DATADIR_SET, &spEnumSet);
 	CPPUNIT_ASSERT_OK(hr);
 	_testEnumerator(spEnumSet, fFailTest);

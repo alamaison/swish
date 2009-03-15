@@ -1,6 +1,6 @@
 /*  Dummy IShellFolder namespace extension to test CFolder abstract class.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,14 +17,26 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "stdafx.h"
-
+#include "pch.h"
 #include "DummyFolder.h"
+
 #include <Pidl.h>
 
+#include <atl.hpp>   // Common ATL setup
+#include <atlstr.h>  // CString
+
 #include <vector>
+
+using ATL::CComObject;
+using ATL::CComPtr;
+using ATL::CComQIPtr;
+using ATL::CString;
+using ATL::CRegKey;
+
 using std::vector;
 using std::iterator;
+
+#define FUNCTION_TRACE ATLTRACE(__FUNCTION__" called\n");
 
 CDummyFolder::CDummyFolder()
 {
@@ -48,6 +60,8 @@ void CDummyFolder::FinalRelease()
 
 STDMETHODIMP CDummyFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
+	FUNCTION_TRACE;
+
 	HRESULT hr = __super::Initialize(pidl);
 
 	if (SUCCEEDED(hr))
@@ -159,7 +173,8 @@ STDMETHODIMP CDummyFolder::EnumObjects(
 	if (!(grfFlags & SHCONTF_FOLDERS))
 		return S_FALSE;
 
-	typedef CComEnum<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD, _CopyPidl>
+	typedef ATL::CComEnum<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
+		                  _CopyPidl>
 	        CComEnumIDList;
 
 	CComObject<CComEnumIDList> *pEnum = NULL;

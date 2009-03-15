@@ -1,5 +1,7 @@
 /**
- * @file Mock ISftpProvider COM object for testing without using the network.
+ * @file
+ *
+ * Mock ISftpProvider COM object for testing without using the network.
  */
 
 #pragma once

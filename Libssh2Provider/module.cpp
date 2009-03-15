@@ -1,6 +1,11 @@
-/** @file DLL exports for COM server. */
-/*
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+/**
+    @file
+
+    DLL exports for COM server.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +30,8 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+    
+    @endif
 */
 
 #include "stdafx.h"

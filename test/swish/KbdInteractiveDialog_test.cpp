@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdafx.h"
+#include "pch.h"
 #include "../common/CppUnitExtensions.h"
 
 // Redefine the 'private' keyword to inject a friend declaration for this 

@@ -1,8 +1,10 @@
 /**
- * @file ATL Module required for ATL support.
+ * @file
+ *
+ * ATL Module required for ATL support.
  */
 
-#include "stdafx.h"
+#include "pch.h"
 
 #include <atlbase.h>   // ATL modules
 #include <atlcom.h>    // ATL CComObject et. al.

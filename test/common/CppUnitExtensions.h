@@ -1,4 +1,8 @@
-/* @file Swish-specific extensions to the CppUnit facilities */
+/**
+    @file
+
+    Swish-specific extensions to the CppUnit facilities
+*/
 
 #pragma once
 
@@ -7,7 +11,8 @@
 #include <cppunit/extensions/HelperMacros.h>
 #pragma warning(pop)
 
-#include <atlstr.h>
+#include <atl.hpp>   // Common ATL setup
+#include <atlstr.h>  // CString
 
 CPPUNIT_NS_BEGIN
 /**

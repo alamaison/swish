@@ -1,13 +1,23 @@
 //Libssh2Provider_Test.cpp  -   defines the class Libssh2Provider_Test
 
-#include "stdafx.h"
+#include "pch.h"
 #include "../common/CppUnitExtensions.h"
 #include "../common/MockSftpConsumer.h"
 #include "../common/TestConfig.h"
 
-#include <ATLComTime.h>
+#include <atl.hpp>        // Common ATL setup
+#include <ATLComTime.h>   // COleDateTime
+
+#include <mshtml.h>       // For IHTMLDOMTextNode2
 
 #include <Libssh2ProviderDLL.h>
+
+using ATL::CComObject;
+using ATL::CComPtr;
+using ATL::CComBSTR;
+using ATL::CString;
+using ATL::COleDateTime;
+using ATL::CW2A;
 
 struct testFILEDATA
 {
