@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\Libssh2Provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -96,7 +96,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)swish\Libssh2Provider&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;&quot;$(SolutionDir)\common&quot;"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -177,7 +177,7 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
+			RelativePathToProject=".\swish\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
 	</References>
 	<Files>

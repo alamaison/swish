@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -95,7 +95,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -169,7 +169,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
+			RelativePathToProject=".\swish\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
 	</References>
 	<Files>

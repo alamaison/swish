@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -49,7 +49,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common;$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -112,7 +112,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common;$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -154,7 +154,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -202,7 +202,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -231,7 +231,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common;$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -246,7 +246,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"

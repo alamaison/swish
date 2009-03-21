@@ -37,7 +37,7 @@
 #define BOOST_TEST_MODULE provider::libssh2::listing tests
 
 #include "helpers.hpp"
-#include "Libssh2Provider/listing/listing.hpp"
+#include "swish/Libssh2Provider/listing/listing.hpp"
 
 #include <boost/test/unit_test.hpp>
 

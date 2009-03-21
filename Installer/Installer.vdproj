@@ -269,7 +269,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_441AFAEFB4F8433B89C85C8DA36A9C4E"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\COPYING"
+            "SourcePath" = "8:..\\swish\\Libssh2Provider\\COPYING"
             "TargetName" = "8:COPYING.libssh2"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -389,7 +389,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B322D5C941DE451D8E8DB1166C0D9A21"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\openssl\\out32dll\\ssleay32.dll"
+            "SourcePath" = "8:..\\thirdparty\\openssl\\out32dll\\ssleay32.dll"
             "TargetName" = "8:ssleay32.dll"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -409,7 +409,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D5BCA5075195446DB2CCDA3D7C881C7A"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\zlib\\zlib1.dll"
+            "SourcePath" = "8:..\\thirdparty\\zlib\\zlib1.dll"
             "TargetName" = "8:zlib1.dll"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -449,7 +449,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FB833527733D4807B6026A3EECFB7138"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\openssl\\out32dll\\libeay32.dll"
+            "SourcePath" = "8:..\\thirdparty\\openssl\\out32dll\\libeay32.dll"
             "TargetName" = "8:libeay32.dll"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1333,7 +1333,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_983A937A8ABA42269182B9CED8AE4DBC"
             {
-            "SourcePath" = "8:..\\Libssh2Provider\\Debug_libssh2\\libssh2.dll"
+            "SourcePath" = "8:..\\thirdparty\\libssh2\\Debug\\libssh2.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"

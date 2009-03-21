@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -54,7 +54,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\common;$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\common"
 				PreprocessorDefinitions="_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -69,7 +69,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="$(OutDir);$(IntDir);$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(OutDir);$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
 			<Tool
@@ -100,7 +100,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -132,7 +132,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(SolutionDir)\common;$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -145,7 +145,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(IntDir);$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
 			<Tool
@@ -176,7 +176,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -210,7 +210,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\common;$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -225,7 +225,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(OutDir);$(IntDir);$(SolutionDir)\wtl\include"
+				AdditionalIncludeDirectories="$(OutDir);$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
 			<Tool

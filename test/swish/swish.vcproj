@@ -19,7 +19,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -54,7 +54,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -116,7 +116,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\wtl\include;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\Libssh2Provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -164,7 +164,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;&quot;$(SolutionDir)\wtl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -215,7 +215,7 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\Libssh2Provider\Libssh2Provider.vcproj"
+			RelativePathToProject=".\swish\Libssh2Provider\Libssh2Provider.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
