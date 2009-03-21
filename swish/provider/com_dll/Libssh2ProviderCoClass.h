@@ -29,10 +29,11 @@
 
 #pragma once
 #include "stdafx.h"
-#include "resource.h"       // main symbols
 
-#include "Provider.hpp"
-#include "com_dll.h"
+#include "resource.h"                  // main symbols
+#include "com_dll.h"                   // provider UUIDs (generated header)
+
+#include "swish/provider/Provider.hpp" // CLibssh2Provider
 
 class ATL_NO_VTABLE CLibssh2ProviderCoClass :
 	public CLibssh2Provider,

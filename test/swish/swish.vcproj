@@ -54,7 +54,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)swish\provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\provider\com_dll;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)swish\provider;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\provider\com_dll;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"

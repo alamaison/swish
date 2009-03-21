@@ -296,10 +296,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Session.h"
 				>
 			</File>

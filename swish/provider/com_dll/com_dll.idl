@@ -1,8 +1,6 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
-import "SftpProvider.idl";
-
 [
 	uuid(b816a861-5022-11dc-9153-0090f5284f85),
 	version(1.0),
@@ -19,6 +17,6 @@ library Libssh2ProviderLib
 	]
 	coclass Libssh2Provider
 	{
-		[default] interface ISftpProvider;
+		[default] interface IUnknown;
 	};
 };

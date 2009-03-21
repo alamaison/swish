@@ -53,7 +53,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder"
 				PreprocessorDefinitions="_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -146,7 +145,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder"
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -239,7 +237,6 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(SolutionDir)\swish\shell_folder"
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"

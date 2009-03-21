@@ -28,14 +28,15 @@
 */
 
 #pragma once
+
 #include "stdafx.h"
-#include "resource.h"       // main symbols
 
-#include "SessionFactory.h" // for CSession
+#include "resource.h"                        // main symbols
+#include "SessionFactory.h"                  // CSession
 
-#include <SftpProvider.h>   // Swish ISftpProvider & ISftpConsumer interfaces
+#include "swish/shell_folder/SftpProvider.h" // ISftpProvider & ISftpConsumer
 
-#include <atlstr.h>         // CString
+#include <atlstr.h>                          // CString
 
 #include <list>
 
