@@ -31,7 +31,7 @@
 #include "resource.h"
 #include <remotelimits.h>
 
-#include "Libssh2Provider.h"
+#include "Provider.hpp"
 #include "KeyboardInteractive.h"
 #include "SftpStream.h"
 #include "listing/listing.hpp"   // SFTP directory listing helper functions

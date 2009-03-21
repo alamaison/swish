@@ -13,13 +13,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-swish", "test\swish\sw
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{D3818F0B-C311-4E86-AD4A-AA9AFE387E24}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Libssh2Provider", "swish\Libssh2Provider\Libssh2Provider.vcproj", "{CFC0C998-B275-48AB-AAD3-C99272154656}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swish-provider", "swish\provider\provider.vcproj", "{CFC0C998-B275-48AB-AAD3-C99272154656}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libssh2", "thirdparty\libssh2\libssh2.vcproj", "{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{9866A391-2C55-4E6E-81AF-627C789FA76A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Libssh2ProviderDLL", "swish\Libssh2Provider\Libssh2ProviderDLL.vcproj", "{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swish-provider-com_dll", "swish\provider\com_dll.vcproj", "{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 	EndProjectSection

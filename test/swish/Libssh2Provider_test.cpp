@@ -10,7 +10,7 @@
 
 #include <mshtml.h>       // For IHTMLDOMTextNode2
 
-#include <Libssh2ProviderDLL.h>
+#include <com_dll.h>
 
 using ATL::CComObject;
 using ATL::CComPtr;

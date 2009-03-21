@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="Libssh2ProviderDLL"
+	Name="swish-provider-com_dll"
 	ProjectGUID="{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
-	RootNamespace="Libssh2ProviderDLL"
+	RootNamespace="swish"
 	Keyword="AtlProj"
 	>
 	<Platforms>
@@ -44,11 +44,10 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2ProviderDLL.tlb"
-				HeaderFileName="Libssh2ProviderDLL.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2ProviderDLL_i.c"
-				ProxyFileName="Libssh2ProviderDLL_p.c"
+				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
+				HeaderFileName="com_dll.h"
+				InterfaceIdentifierFileName="com_dll_i.c"
+				ProxyFileName="com_dll_p.c"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -78,8 +77,7 @@
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
 				LinkIncremental="2"
-				ModuleDefinitionFile="Libssh2ProviderDLL.def"
-				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				ModuleDefinitionFile="com_dll.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -139,11 +137,10 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2ProviderDLL.tlb"
-				HeaderFileName="Libssh2ProviderDLL.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2ProviderDLL_i.c"
-				ProxyFileName="Libssh2ProviderDLL_p.c"
+				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
+				HeaderFileName="com_dll.h"
+				InterfaceIdentifierFileName="com_dll_i.c"
+				ProxyFileName="com_dll_p.c"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -171,9 +168,7 @@
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="Libssh2ProviderDLL.def"
-				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				ModuleDefinitionFile="com_dll.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -234,11 +229,10 @@
 				MkTypLibCompatible="false"
 				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2ProviderDLL.tlb"
-				HeaderFileName="Libssh2ProviderDLL.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2ProviderDLL_i.c"
-				ProxyFileName="Libssh2ProviderDLL_p.c"
+				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
+				HeaderFileName="com_dll.h"
+				InterfaceIdentifierFileName="com_dll_i.c"
+				ProxyFileName="com_dll_p.c"
 				ValidateParameters="false"
 			/>
 			<Tool
@@ -267,9 +261,7 @@
 				RegisterOutput="false"
 				IgnoreImportLibrary="true"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="Libssh2ProviderDLL.def"
-				MergedIDLBaseFileName="_Libssh2Provider.idl"
+				ModuleDefinitionFile="com_dll.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -305,7 +297,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\swish\Libssh2Provider\Libssh2Provider.vcproj"
+			RelativePathToProject=".\swish\provider\provider.vcproj"
 		/>
 	</References>
 	<Files>
@@ -315,15 +307,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\com_dll.def"
+				>
+			</File>
+			<File
+				RelativePath=".\com_dll.idl"
+				>
+			</File>
+			<File
 				RelativePath=".\Libssh2ProviderCoClass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Libssh2ProviderDLL.def"
-				>
-			</File>
-			<File
-				RelativePath=".\Libssh2ProviderDLL.idl"
 				>
 			</File>
 			<File
@@ -383,7 +375,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\Libssh2Provider.rc"
+				RelativePath=".\com_dll.rc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -411,11 +403,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider.rgs"
+				RelativePath=".\com_dll.rgs"
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2ProviderDLL.rgs"
+				RelativePath=".\provider.rgs"
 				>
 			</File>
 		</Filter>
@@ -424,11 +416,11 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\Libssh2ProviderDLL.h"
+				RelativePath=".\com_dll.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2ProviderDLL_i.c"
+				RelativePath=".\com_dll_i.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

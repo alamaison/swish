@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="Libssh2Provider"
+	Name="swish-provider"
 	ProjectGUID="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-	RootNamespace="Libssh2Provider"
+	RootNamespace="swish"
 	Keyword="AtlProj"
 	>
 	<Platforms>
@@ -40,16 +40,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories=".."
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2ProviderIDL.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2Provider_i.c"
-				ProxyFileName="Libssh2Provider_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -118,16 +108,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=".."
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2Provider.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2Provider_i.c"
-				ProxyFileName="Libssh2Provider_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -194,16 +174,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=".."
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Libssh2Provider.tlb"
-				HeaderFileName="Libssh2Provider.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Libssh2Provider_i.c"
-				ProxyFileName="Libssh2Provider_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -268,7 +238,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider.cpp"
+				RelativePath=".\Provider.cpp"
 				>
 			</File>
 			<File
@@ -322,7 +292,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider.h"
+				RelativePath=".\Provider.hpp"
 				>
 			</File>
 			<File
@@ -345,12 +315,6 @@
 				RelativePath=".\stdafx.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
 		</Filter>
 		<Filter
 			Name="listing"

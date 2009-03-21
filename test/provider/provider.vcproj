@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)swish\Libssh2Provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)swish\Libssh2Provider&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;&quot;$(SolutionDir)\common&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)swish\provider;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -177,7 +177,7 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\swish\Libssh2Provider\Libssh2Provider.vcproj"
+			RelativePathToProject=".\swish\provider\provider.vcproj"
 		/>
 	</References>
 	<Files>

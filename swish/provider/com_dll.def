@@ -1,4 +1,4 @@
-LIBRARY	"Libssh2ProviderDLL"
+LIBRARY	"swish-provider-com_dll"
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE

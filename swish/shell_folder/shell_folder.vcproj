@@ -351,6 +351,7 @@
 					>
 					<Tool
 						Name="VCMIDLTool"
+						GenerateTypeLibrary="false"
 						HeaderFileName="SftpProvider.h"
 						InterfaceIdentifierFileName="SftpProvider_i.c"
 						ProxyFileName="SftpProvider_p.c"
@@ -361,7 +362,7 @@
 					>
 					<Tool
 						Name="VCMIDLTool"
-						GenerateTypeLibrary="true"
+						GenerateTypeLibrary="false"
 						HeaderFileName="SftpProvider.h"
 						InterfaceIdentifierFileName="SftpProvider_i.c"
 						ProxyFileName="SftpProvider_p.c"
@@ -372,6 +373,7 @@
 					>
 					<Tool
 						Name="VCMIDLTool"
+						GenerateTypeLibrary="false"
 						HeaderFileName="SftpProvider.h"
 						InterfaceIdentifierFileName="SftpProvider_i.c"
 						ProxyFileName="SftpProvider_p.c"

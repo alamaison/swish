@@ -1,11 +1,6 @@
-/**
-    @file
+/*  Externally COM-creatable aspects of libssh2-based SFTP component.
 
-    DLL exports for COM server.
-
-    @if licence
-
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,59 +25,27 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
-    
-    @endif
 */
 
+#pragma once
 #include "stdafx.h"
-#include "resource.h"
+#include "resource.h"       // main symbols
 
-#include "Libssh2ProviderDLL.h"
+#include "Provider.hpp"
+#include "com_dll.h"
 
-class CSftpModule : public CAtlDllModuleT< CSftpModule >
+class ATL_NO_VTABLE CLibssh2ProviderCoClass :
+	public CLibssh2Provider,
+	public CComCoClass<CLibssh2ProviderCoClass, &CLSID_Libssh2Provider>
 {
-public :
-	DECLARE_LIBID(LIBID_Libssh2ProviderLib)
-	DECLARE_REGISTRY_APPID_RESOURCEID(
-		IDR_LIBSSH2PROVIDERDLL, "{b816a860-5022-11dc-9153-0090f5284f85}")
+public:
+
+	DECLARE_REGISTRY_RESOURCEID(IDR_LIBSSH2PROVIDER)
+
+	BEGIN_COM_MAP(CLibssh2ProviderCoClass)
+		COM_INTERFACE_ENTRY(IUnknown)
+		COM_INTERFACE_ENTRY_CHAIN(CLibssh2Provider)
+	END_COM_MAP()
 };
 
-CSftpModule _AtlModule;
-
-/** DLL Entry Point. */
-extern "C" BOOL WINAPI DllMain(
-	HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	hInstance;
-    return _AtlModule.DllMain(dwReason, lpReserved); 
-}
-
-/** Used to determine whether the DLL can be unloaded by OLE. */
-STDAPI DllCanUnloadNow()
-{
-    return _AtlModule.DllCanUnloadNow();
-}
-
-/** Return a class factory to create an object of the requested type. */
-STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
-{
-    return _AtlModule.DllGetClassObject(rclsid, riid, ppv);
-}
-
-/**
- * Add entries to the system registry.
- *
- * Registers object, typelib and all interfaces in typelib.
- */
-STDAPI DllRegisterServer()
-{
-    HRESULT hr = _AtlModule.DllRegisterServer();
-	return hr;
-}
-
-/** Remove entries from the system registry. */
-STDAPI DllUnregisterServer()
-{
-	HRESULT hr = _AtlModule.DllUnregisterServer();
-	return hr;
-}
+OBJECT_ENTRY_AUTO(__uuidof(Libssh2Provider), CLibssh2ProviderCoClass)
