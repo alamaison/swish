@@ -7,7 +7,7 @@
 #include <atlbase.h>   // ATL base classes
 #include <atlcom.h>    // ATL CComObject et. al.
 
-#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+#include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
 
 class ATL_NO_VTABLE CMockSftpConsumer :
 	public ATL::CComObjectRootEx<ATL::CComObjectThreadModel>,

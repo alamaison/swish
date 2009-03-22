@@ -2,9 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-swish"
-	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
-	RootNamespace="swish_test"
+	Name="test-provider-com_dll"
+	ProjectGUID="{4A4A271A-7EC9-49C9-AEC7-7BFA0F8F4017}"
+	RootNamespace="swish_com_dll"
+	Keyword="Win32Proj"
 	>
 	<Platforms>
 		<Platform
@@ -19,9 +20,8 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
 			<Tool
@@ -38,31 +38,17 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="false"
-				WarningLevel="2"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/UnitTests.tlb"
-				HeaderFileName="UnitTests.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="UnitTests_i.c"
-				ProxyFileName="UnitTests_p.c"
-				EnableErrorChecks="2"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)swish\provider\com_dll;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
-				WarningLevel="4"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -70,16 +56,13 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -107,7 +90,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Running unit tests..."
+				Description="Running unit tests ..."
 				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
@@ -116,9 +99,8 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -136,27 +118,14 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/UnitTests.tlb"
-				HeaderFileName="UnitTests.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="UnitTests_i.c"
-				ProxyFileName="UnitTests_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)swish\provider\com_dll;&quot;$(CPPUNITDIR)\include&quot;;$(SolutionDir)\swish\shell_folder;$(SolutionDir)\common"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pch.h"
-				WarningLevel="4"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -164,16 +133,13 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -203,40 +169,33 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Running unit tests..."
+				Description="Running unit tests ..."
 				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
-			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\swish\provider\provider.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
 			RelativePathToProject=".\test\common\common.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
+			RelativePathToProject=".\swish\provider\com_dll\com_dll.vcproj"
 		/>
 	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\DummyFolder.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\module.cpp"
+				RelativePath=".\Module.cpp"
 				>
 			</File>
 			<File
@@ -259,73 +218,18 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\Provider_test.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\DataObjectTests.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyFolder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\NewConnDialog_test.h"
-				>
-			</File>
 			<File
 				RelativePath=".\pch.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Pidl_test.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Tests"
-			>
-			<File
-				RelativePath=".\DataObject_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyFolder_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HostPidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\KbdInteractiveDialog_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\NewConnDialog_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Pidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PidlHandle_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RemotePidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDataObject_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDirectory_test.cpp"
 				>
 			</File>
 		</Filter>

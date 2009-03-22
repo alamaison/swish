@@ -1,16 +1,40 @@
-//Provider_Test.cpp  -   defines the class Provider_Test
+/**
+    @file
+
+    Testing Provider via the external COM interfaces alone.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
+*/
 
 #include "pch.h"
 #include "../common/CppUnitExtensions.h"
 #include "../common/MockSftpConsumer.h"
 #include "../common/TestConfig.h"
 
-#include <atl.hpp>        // Common ATL setup
-#include <ATLComTime.h>   // COleDateTime
+#include "swish/provider/com_dll/com_dll.h" // Provider UUID and forward-decl
 
-#include <mshtml.h>       // For IHTMLDOMTextNode2
+#include "common/atl.hpp"                   // Common ATL setup
+#include <ATLComTime.h>                     // COleDateTime
 
-#include <com_dll.h>
+#include <mshtml.h>                         // For IHTMLDOMTextNode2
 
 using ATL::CComObject;
 using ATL::CComPtr;
