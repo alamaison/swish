@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)_DLL"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -111,7 +111,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)_DLL"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -203,7 +203,7 @@
 		<Configuration
 			Name="PREfast|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)_DLL"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
