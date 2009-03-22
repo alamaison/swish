@@ -2,8 +2,8 @@ HKCR
 {
 	NoRemove AppID
 	{
-		'%APPID%' = s 'Libssh2Provider'
-		'Libssh2Provider.DLL'
+		'%APPID%' = s 'Provider'
+		'Provider.DLL'
 		{
 			val AppID = s '%APPID%'
 		}

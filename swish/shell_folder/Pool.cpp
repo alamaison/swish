@@ -38,7 +38,7 @@ using ATL::CComBSTR;
  * "!username@hostname:port".
  *
  * If an existing session can't be found in the ROT (as will happen the first
- * a connection is made) this function creates a new (Libssh2Provider) 
+ * a connection is made) this function creates a new (Provider) 
  * connection with the given parameters.  In the future this may be extended to
  * give a choice of the type of connection to make.
  *
@@ -141,7 +141,7 @@ CComPtr<ISftpProvider> CPool::_CreateNewSession(
 	// Create SFTP Provider from ProgID and initialise
 
 	CComPtr<ISftpProvider> spProvider;
-	hr = spProvider.CoCreateInstance(OLESTR("Libssh2Provider.Libssh2Provider"));
+	hr = spProvider.CoCreateInstance(OLESTR("Provider.Provider"));
 	ATLENSURE_SUCCEEDED(hr);
 
 	hr = spProvider->Initialize(

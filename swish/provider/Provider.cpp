@@ -60,7 +60,7 @@ using std::list;
  *   The Initialize() method must be called before the other methods
  *   of the object can be used.
  */
-CLibssh2Provider::CLibssh2Provider() :
+CProvider::CProvider() :
 	m_fInitialized(false),
 	m_pConsumer(NULL)
 {
@@ -72,7 +72,7 @@ CLibssh2Provider::CLibssh2Provider() :
  * As various parts of the initialisation can potentially fail, they
  * are done here rather than in the constructor.
  */
-HRESULT CLibssh2Provider::FinalConstruct()
+HRESULT CProvider::FinalConstruct()
 {
 	// Start up Winsock
 	WSADATA wsadata;
@@ -87,7 +87,7 @@ HRESULT CLibssh2Provider::FinalConstruct()
 /**
  * Free libssh2 and shutdown Winsock
  */
-void CLibssh2Provider::FinalRelease()
+void CProvider::FinalRelease()
 {
 	_Disconnect(); // Destroy session before shutting down Winsock
 
@@ -121,7 +121,7 @@ void CLibssh2Provider::FinalRelease()
  *   @retval E_POINTER is pConsumer is invalid
  *   @retval E_FAIL if other error encountered
  */
-STDMETHODIMP CLibssh2Provider::Initialize(
+STDMETHODIMP CProvider::Initialize(
 	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
 {
 
@@ -151,7 +151,7 @@ STDMETHODIMP CLibssh2Provider::Initialize(
  *
  * @param pConsumer  New SftpConsumer to recieve interaction callbacks.
  */
-STDMETHODIMP CLibssh2Provider::SwitchConsumer( ISftpConsumer *pConsumer )
+STDMETHODIMP CProvider::SwitchConsumer( ISftpConsumer *pConsumer )
 {
 	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
 	ATLASSERT(m_pConsumer);
@@ -180,7 +180,7 @@ STDMETHODIMP CLibssh2Provider::SwitchConsumer( ISftpConsumer *pConsumer )
  *
  * @returns S_OK if session successfully created or an error otherwise.
  */
-HRESULT CLibssh2Provider::_Connect()
+HRESULT CProvider::_Connect()
 {
 	try
 	{
@@ -195,7 +195,7 @@ HRESULT CLibssh2Provider::_Connect()
 	return S_OK;
 }
 
-void CLibssh2Provider::_Disconnect()
+void CProvider::_Disconnect()
 {
 	m_spSession.reset();
 }
@@ -221,7 +221,7 @@ void CLibssh2Provider::_Disconnect()
 *
 * @see Listing for details of what file information is retrieved.
 */
-STDMETHODIMP CLibssh2Provider::GetListing(
+STDMETHODIMP CProvider::GetListing(
 	BSTR bstrDirectory, IEnumListing **ppEnum )
 {
 	ATLENSURE_RETURN_HR(ppEnum, E_POINTER); *ppEnum = NULL;
@@ -319,7 +319,7 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 	return hr;
 }
 
-STDMETHODIMP CLibssh2Provider::GetFile(BSTR bstrFilePath, IStream **ppStream)
+STDMETHODIMP CProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
 {
 	ATLENSURE_RETURN_HR(ppStream, E_POINTER); *ppStream = NULL;
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrFilePath) > 0, E_INVALIDARG);
@@ -392,7 +392,7 @@ STDMETHODIMP CLibssh2Provider::GetFile(BSTR bstrFilePath, IStream **ppStream)
  *                                     we needed to overwrite an existing file 
  *                                     or directory at the target path. 
  */
-STDMETHODIMP CLibssh2Provider::Rename(
+STDMETHODIMP CProvider::Rename(
 	BSTR bstrFromPath, BSTR bstrToPath, VARIANT_BOOL *pfWasTargetOverwritten  )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrFromPath) > 0, E_INVALIDARG);
@@ -456,7 +456,7 @@ STDMETHODIMP CLibssh2Provider::Rename(
  * @param szFrom  Absolute path of the file or directory to be renamed.
  * @param szTo    Absolute path to rename @a szFrom to.
  */
-HRESULT CLibssh2Provider::_RenameSimple(const char *szFrom, const char *szTo)
+HRESULT CProvider::_RenameSimple(const char *szFrom, const char *szTo)
 {
 	int rc = libssh2_sftp_rename_ex(
 		*m_spSession, szFrom, strlen(szFrom), szTo, strlen(szTo),
@@ -483,7 +483,7 @@ HRESULT CLibssh2Provider::_RenameSimple(const char *szFrom, const char *szTo)
  *
  * @param [out] strError       Error message if the operation fails.
  */
-HRESULT CLibssh2Provider::_RenameRetryWithOverwrite(
+HRESULT CProvider::_RenameRetryWithOverwrite(
 	ULONG uPreviousError, const char *szFrom, const char *szTo, 
 	CString& strError)
 {
@@ -543,7 +543,7 @@ HRESULT CLibssh2Provider::_RenameRetryWithOverwrite(
  * @param [in]  szTo      Absolute path to rename @a szFrom to.
  * @param [out] strError  Error message if the operation fails.
  */
-HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
+HRESULT CProvider::_RenameAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
 	int rc = libssh2_sftp_rename_ex(
@@ -577,7 +577,7 @@ HRESULT CLibssh2Provider::_RenameAtomicOverwrite(
  * @param [in]  szTo      Absolute path to rename @a szFrom to.
  * @param [out] strError  Error message if the operation fails.
  */
-HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
+HRESULT CProvider::_RenameNonAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
 	// First, rename existing file to temporary
@@ -611,7 +611,7 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 	return E_FAIL;
 }
 
-STDMETHODIMP CLibssh2Provider::Delete( BSTR bstrPath )
+STDMETHODIMP CProvider::Delete( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -635,7 +635,7 @@ STDMETHODIMP CLibssh2Provider::Delete( BSTR bstrPath )
 	return E_FAIL;
 }
 
-HRESULT CLibssh2Provider::_Delete( const char *szPath, CString& strError )
+HRESULT CProvider::_Delete( const char *szPath, CString& strError )
 {
 	if (libssh2_sftp_unlink(*m_spSession, szPath) == 0)
 		return S_OK;
@@ -645,7 +645,7 @@ HRESULT CLibssh2Provider::_Delete( const char *szPath, CString& strError )
 	return E_FAIL;
 }
 
-STDMETHODIMP CLibssh2Provider::DeleteDirectory( BSTR bstrPath )
+STDMETHODIMP CProvider::DeleteDirectory( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -669,7 +669,7 @@ STDMETHODIMP CLibssh2Provider::DeleteDirectory( BSTR bstrPath )
 	return E_FAIL;
 }
 
-HRESULT CLibssh2Provider::_DeleteDirectory(
+HRESULT CProvider::_DeleteDirectory(
 	const char *szPath, CString& strError )
 {
 	HRESULT hr;
@@ -723,7 +723,7 @@ HRESULT CLibssh2Provider::_DeleteDirectory(
 	return E_FAIL;
 }
 
-HRESULT CLibssh2Provider::_DeleteRecursive(
+HRESULT CProvider::_DeleteRecursive(
 	const char *szPath, CString& strError)
 {
 	LIBSSH2_SFTP_ATTRIBUTES attrs;
@@ -742,7 +742,7 @@ HRESULT CLibssh2Provider::_DeleteRecursive(
 		return _Delete(szPath, strError);
 }
 
-STDMETHODIMP CLibssh2Provider::CreateNewFile( BSTR bstrPath )
+STDMETHODIMP CProvider::CreateNewFile( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -766,7 +766,7 @@ STDMETHODIMP CLibssh2Provider::CreateNewFile( BSTR bstrPath )
 	return S_OK;
 }
 
-STDMETHODIMP CLibssh2Provider::CreateNewDirectory( BSTR bstrPath )
+STDMETHODIMP CProvider::CreateNewDirectory( BSTR bstrPath )
 {
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrPath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
@@ -793,7 +793,7 @@ STDMETHODIMP CLibssh2Provider::CreateNewDirectory( BSTR bstrPath )
  * In the case that the last SSH error is an SFTP error it returns the SFTP
  * error message in preference.
  */
-CString CLibssh2Provider::_GetLastErrorMessage()
+CString CProvider::_GetLastErrorMessage()
 {
 	CString bstrMessage;
 	int nErr; PSTR pszErr; int cchErr;
@@ -813,7 +813,7 @@ CString CLibssh2Provider::_GetLastErrorMessage()
  *
  * @param uError  SFTP error code as returned by libssh2_sftp_last_error().
  */
-CString CLibssh2Provider::_GetSftpErrorMessage(ULONG uError)
+CString CProvider::_GetSftpErrorMessage(ULONG uError)
 {
 	switch (uError)
 	{

@@ -315,10 +315,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2ProviderCoClass.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pch.cpp"
 				>
 				<FileConfiguration
@@ -345,6 +341,10 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\ProviderCoClass.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\ProviderModule.cpp"

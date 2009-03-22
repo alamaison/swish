@@ -305,10 +305,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Libssh2Provider_test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\NewConnDialog_test.cpp"
 				>
 			</File>
@@ -318,6 +314,10 @@
 			</File>
 			<File
 				RelativePath=".\PidlHandle_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Provider_test.cpp"
 				>
 			</File>
 			<File

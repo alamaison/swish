@@ -39,24 +39,30 @@
 #include "resource.h"                  // main symbols
 #include "com_dll.h"                   // provider UUIDs (generated header)
 
-#include "swish/provider/Provider.hpp" // CLibssh2Provider
+#include "swish/provider/Provider.hpp" // CProvider
 
 #include "common/atl.hpp"              // Common ATL setup
 
 using ATL::CComCoClass;
 
-class ATL_NO_VTABLE CLibssh2ProviderCoClass :
-	public CLibssh2Provider,
-	public CComCoClass<CLibssh2ProviderCoClass, &CLSID_Libssh2Provider>
+namespace swish {
+namespace provider {
+namespace com_dll {
+
+class ATL_NO_VTABLE CProviderCoClass :
+	public CProvider,
+	public CComCoClass<CProviderCoClass, &CLSID_Provider>
 {
 public:
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_LIBSSH2PROVIDER)
+	DECLARE_REGISTRY_RESOURCEID(IDR_PROVIDER)
 
-	BEGIN_COM_MAP(CLibssh2ProviderCoClass)
+	BEGIN_COM_MAP(CProviderCoClass)
 		COM_INTERFACE_ENTRY(IUnknown)
-		COM_INTERFACE_ENTRY_CHAIN(CLibssh2Provider)
+		COM_INTERFACE_ENTRY_CHAIN(CProvider)
 	END_COM_MAP()
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(Libssh2Provider), CLibssh2ProviderCoClass)
+OBJECT_ENTRY_AUTO(__uuidof(Provider), CProviderCoClass)
+
+}}} // namespace swish::provider::com_dll

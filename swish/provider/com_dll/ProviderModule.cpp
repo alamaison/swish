@@ -50,9 +50,9 @@ using ATL::CAtlDllModuleT;
 class CProviderModule : public CAtlDllModuleT< CProviderModule >
 {
 public :
-	DECLARE_LIBID(LIBID_Libssh2ProviderLib)
+	DECLARE_LIBID(LIBID_ProviderLib)
 	DECLARE_REGISTRY_APPID_RESOURCEID(
-		IDR_LIBSSH2PROVIDERDLL, "{b816a860-5022-11dc-9153-0090f5284f85}")
+		IDR_PROVIDERDLL, "{b816a860-5022-11dc-9153-0090f5284f85}")
 };
 
 }}} // namespace swish::provider::com_dll

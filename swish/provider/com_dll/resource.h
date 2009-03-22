@@ -3,8 +3,8 @@
 // Used by Libssh2Provider.rc
 //
 #define IDS_PROJNAME                    100
-#define IDR_LIBSSH2PROVIDER             101
-#define IDR_LIBSSH2PROVIDERDLL          201
+#define IDR_PROVIDER                    101
+#define IDR_PROVIDERDLL                 201
 
 // Next default values for new objects
 // 

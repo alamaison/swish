@@ -75,7 +75,7 @@ Requirements to build:
         http://www.boostpro.com/products/free.  For more information see
         http://www.boost.org.
     
-    For the Libssh2Provider backend:
+    For the Provider backend:
      - libssh2
      - OpenSSL
      - zlib

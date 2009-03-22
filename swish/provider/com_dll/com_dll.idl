@@ -4,18 +4,18 @@ import "ocidl.idl";
 [
 	uuid(b816a861-5022-11dc-9153-0090f5284f85),
 	version(1.0),
-	helpstring("Libssh2Provider 1.0 Type Library")
+	helpstring("Provider 1.0 Type Library")
 ]
-library Libssh2ProviderLib
+library ProviderLib
 {
 	importlib("stdole32.tlb");
 	importlib("stdole2.tlb");
 
 	[
 		uuid(b816a862-5022-11dc-9153-0090f5284f85),
-		helpstring("Libssh2Provider Class")
+		helpstring("Provider Class")
 	]
-	coclass Libssh2Provider
+	coclass Provider
 	{
 		[default] interface IUnknown;
 	};

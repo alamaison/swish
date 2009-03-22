@@ -2,10 +2,10 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {b816a862-5022-11dc-9153-0090f5284f85} = s 'CLibssh2Provider Class'
+		ForceRemove {b816a862-5022-11dc-9153-0090f5284f85} = s 'Provider Class'
 		{
-			ProgID = s 'Libssh2Provider.Libssh2Provider.1'
-			VersionIndependentProgID = s 'Libssh2Provider.Libssh2Provider'
+			ProgID = s 'Provider.Provider.1'
+			VersionIndependentProgID = s 'Provider.Provider'
 			
 			InprocServer32 = s '%MODULE%'
 			{
@@ -16,13 +16,13 @@ HKCR
 			TypeLib = s '{b816a861-5022-11dc-9153-0090f5284f85}'
 		}
 	}
-	Libssh2Provider.Libssh2Provider.1 = s 'CLibssh2Provider Class'
+	Provider.Provider.1 = s 'Provider Class'
 	{
 		CLSID = s '{b816a862-5022-11dc-9153-0090f5284f85}'
 	}
-	Libssh2Provider.Libssh2Provider = s 'CLibssh2Provider Class'
+	Provider.Provider = s 'Provider Class'
 	{
 		CLSID = s '{b816a862-5022-11dc-9153-0090f5284f85}'
-		CurVer = s 'Libssh2Provider.Libssh2Provider.1'
+		CurVer = s 'Provider.Provider.1'
 	}
 }

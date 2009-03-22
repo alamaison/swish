@@ -91,8 +91,8 @@ END
 // REGISTRY
 //
 
-IDR_LIBSSH2PROVIDER     REGISTRY                "provider.rgs"
-IDR_LIBSSH2PROVIDERDLL  REGISTRY                "com_dll.rgs"
+IDR_PROVIDER     REGISTRY                "provider.rgs"
+IDR_PROVIDERDLL  REGISTRY                "com_dll.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //

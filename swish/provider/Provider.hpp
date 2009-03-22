@@ -44,19 +44,22 @@
 
 #include <list>
 
-class ATL_NO_VTABLE CLibssh2Provider :
+namespace swish {
+namespace provider {
+
+class ATL_NO_VTABLE CProvider :
 	public ISftpProvider,
 	public ATL::CComObjectRoot
 {
 public:
 
-	BEGIN_COM_MAP(CLibssh2Provider)
+	BEGIN_COM_MAP(CProvider)
 		COM_INTERFACE_ENTRY(ISftpProvider)
 	END_COM_MAP()
 
 	/** @name ATL Constructors */
 	// @{
-	CLibssh2Provider();
+	CProvider();
 	DECLARE_PROTECT_FINAL_CONSTRUCT();
 	HRESULT FinalConstruct();
 	void FinalRelease();
@@ -118,6 +121,8 @@ private:
 	HRESULT _DeleteRecursive(
 		__in_z const char *szPath, __out ATL::CString& strError );
 };
+
+}} // namespace swish::provider
 
 /**
  * A COM holder for an STL collection that can be used in an enumeration.

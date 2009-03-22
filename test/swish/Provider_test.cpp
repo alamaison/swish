@@ -1,4 +1,4 @@
-//Libssh2Provider_Test.cpp  -   defines the class Libssh2Provider_Test
+//Provider_Test.cpp  -   defines the class Provider_Test
 
 #include "pch.h"
 #include "../common/CppUnitExtensions.h"
@@ -36,9 +36,9 @@ struct testFILEDATA
 #define CHECK_PATH_NOT_EXISTS(path) \
 	_CheckPathNotExists(path, CPPUNIT_SOURCELINE())
 
-class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
+class CProvider_test : public CPPUNIT_NS::TestFixture
 {
-	CPPUNIT_TEST_SUITE( CLibssh2Provider_test );
+	CPPUNIT_TEST_SUITE( CProvider_test );
 		CPPUNIT_TEST( testQueryInterface );
 		CPPUNIT_TEST( testInitialize );
 		CPPUNIT_TEST( testGetListing );
@@ -63,7 +63,7 @@ class CLibssh2Provider_test : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	CLibssh2Provider_test() : 
+	CProvider_test() : 
 	    m_pProvider(NULL), m_pConsumer(NULL),
 		m_bstrHomeDir(CComBSTR("/home/")+config.GetUser()+CComBSTR("/"))
 	{
@@ -75,17 +75,17 @@ public:
 
 		// One-off tests
 
-		// Store Libssh2Provider CLSID
-		CLSID CLSID_CLibssh2Provider;
+		// Store Provider CLSID
+		CLSID CLSID_CProvider;
 		hr = ::CLSIDFromProgID(
-			OLESTR("Libssh2Provider.Libssh2Provider"),
-			&CLSID_CLibssh2Provider
+			OLESTR("Provider.Provider"),
+			&CLSID_CProvider
 		);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Check that CLSID was correctly constructed from ProgID
 		LPOLESTR pszUuid = NULL;
-		hr = ::StringFromCLSID( CLSID_CLibssh2Provider, &pszUuid );
+		hr = ::StringFromCLSID( CLSID_CProvider, &pszUuid );
 		CPPUNIT_ASSERT_OK(hr);
 		CString strExpectedUuid = _T("{b816a862-5022-11dc-9153-0090f5284f85}");
 		CString strActualUuid = pszUuid;
@@ -109,7 +109,7 @@ public:
 
 		// Create instance of Libssh2 Provider using CLSID
 		hr = ::CoCreateInstance(
-			__uuidof(Libssh2Provider), NULL,
+			__uuidof(Provider), NULL,
 			CLSCTX_INPROC_SERVER,
 			__uuidof(ISftpProvider), (LPVOID *)&m_pProvider);
 		CPPUNIT_ASSERT_OK(hr);
@@ -158,7 +158,7 @@ protected:
 		CPPUNIT_ASSERT_OK(hr);
 		pUnk->Release();
 
-		// Supports ILibssh2Provider (valid self!)?
+		// Supports ISftpProvider (valid self!)?
 		ISftpProvider *pProv;
 		hr = m_pProvider->QueryInterface(&pProv);
 		CPPUNIT_ASSERT_OK(hr);
@@ -1068,4 +1068,4 @@ private:
 	}
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( CLibssh2Provider_test );
+CPPUNIT_TEST_SUITE_REGISTRATION( CProvider_test );
