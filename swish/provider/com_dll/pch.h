@@ -1,6 +1,11 @@
-/*  Includes for pre-compiled header.
+/**
+    @file
+	
+	Precompiled-header.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +30,32 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "stdafx.h"
+/**
+ * @file
+ *
+ * This file exists @b solely to include other headers which should be
+ * precompiled to reduce build times.  The source files which include this
+ * header should not depend on anything in it.  In other words, this file
+ * is an optimisation alone and all files should still compile if
+ * USING_PRECOMPILED_HEADERS is not defined.
+ *
+ * @note  It is specifically forbidden to add anything other than #include
+ * statements to this file.
+ *
+ * @warning  Do not include pch.h in any header files.  External clients
+ * should not be affected by anything in it.
+ */
+
+#pragma once
+
+#ifdef USING_PRECOMPILED_HEADERS
+
+#ifdef __cplusplus
+#include <atl.hpp>
+#endif
+
+#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

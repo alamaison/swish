@@ -57,7 +57,8 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -148,6 +149,7 @@
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -240,6 +242,7 @@
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -316,11 +319,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\module.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.cpp"
+				RelativePath=".\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -347,6 +346,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\ProviderModule.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -354,11 +357,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath=".\pch.h"
 				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 		</Filter>

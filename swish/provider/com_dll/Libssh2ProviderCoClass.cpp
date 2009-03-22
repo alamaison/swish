@@ -34,12 +34,16 @@
     @endif
 */
 
-#include "stdafx.h"
+#include "pch.h"
 
 #include "resource.h"                  // main symbols
 #include "com_dll.h"                   // provider UUIDs (generated header)
 
 #include "swish/provider/Provider.hpp" // CLibssh2Provider
+
+#include "common/atl.hpp"              // Common ATL setup
+
+using ATL::CComCoClass;
 
 class ATL_NO_VTABLE CLibssh2ProviderCoClass :
 	public CLibssh2Provider,
