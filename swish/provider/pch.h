@@ -1,11 +1,11 @@
 /**
     @file
-
-    SFTP directory listing helper functions.
+	
+	Precompiled-header.
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,27 +34,28 @@
     @endif
 */
 
+/**
+ * @file
+ *
+ * This file exists @b solely to include other headers which should be
+ * precompiled to reduce build times.  The source files which include this
+ * header should not depend on anything in it.  In other words, this file
+ * is an optimisation alone and all files should still compile if
+ * USING_PRECOMPILED_HEADERS is not defined.
+ *
+ * @note  It is specifically forbidden to add anything other than #include
+ * statements to this file.
+ *
+ * @warning  Do not include pch.h in any header files.  External clients
+ * should not be affected by anything in it.
+ */
+
 #pragma once
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider interfaces
+#ifdef USING_PRECOMPILED_HEADERS
 
-#include "common/atl.hpp"                     // Common ATL setup
+#ifdef __cplusplus
+#include <atl.hpp>
+#endif
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
-
-#include <string>
-
-namespace swish {
-namespace provider {
-namespace listing {
-
-	ATL::CComBSTR ParseUserFromLongEntry(std::string longentry);
-
-	ATL::CComBSTR ParseGroupFromLongEntry(std::string longentry);
-
-	Listing FillListingEntry(
-		const std::string& filename, const std::string& longentry,
-		LIBSSH2_SFTP_ATTRIBUTES& attrs);
-
-}}} // namespace swish::provider::listing
+#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

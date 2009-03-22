@@ -1,4 +1,9 @@
-/*  SFTP directory listing helper functions
+/**
+    @file
+
+    SFTP directory listing helper functions.
+
+    @if licence
 
     Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -25,17 +30,22 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "stdafx.h"
+#include "pch.h"
 #include "listing.hpp"
 
-#include <WinError.h>      // Windows error codes
-
-#include <atldef.h>        // Main ATL macro definitions
 #include <ATLComTime.h>    // COleDateTime
 
 #include <boost/regex.hpp> // Regular expressions
+
+using ATL::CComBSTR;
+using ATL::COleDateTime;
+
+using std::string;
+
 
 namespace { // private
 
@@ -44,7 +54,10 @@ namespace { // private
 	const unsigned int GROUP_MATCH = 2;
 }
 
-using namespace provider::libssh2;
+
+namespace swish {
+namespace provider {
+namespace listing {
 
 /**
  * Get the username part of an SFTP 'ls -l'-style long entry.
@@ -63,7 +76,7 @@ using namespace provider::libssh2;
  * The spec specifically forbids parsing this long entry by it is the
  * only way to get the user @b name rather than the user @b ID.
  */
-CComBSTR listing::ParseUserFromLongEntry(std::string longentry)
+CComBSTR ParseUserFromLongEntry(string longentry)
 {
 	boost::smatch match;
 	if (regex_match(longentry, match, regex) 
@@ -80,7 +93,7 @@ CComBSTR listing::ParseUserFromLongEntry(std::string longentry)
  *
  * @see ParseUserFromLongEntry() for more information.
  */
-CComBSTR listing::ParseGroupFromLongEntry(std::string longentry)
+CComBSTR ParseGroupFromLongEntry(string longentry)
 {
 	boost::smatch match;
 	if (regex_match(longentry, match, regex) 
@@ -105,8 +118,8 @@ CComBSTR listing::ParseGroupFromLongEntry(std::string longentry)
  *
  * @returns A listing object representing the file.
  */
-Listing listing::FillListingEntry(
-	const std::string& strFilename, const std::string& strLongEntry,
+Listing FillListingEntry(
+	const string& strFilename, const string& strLongEntry,
 	LIBSSH2_SFTP_ATTRIBUTES& attrs)
 {
 	Listing lt;
@@ -156,3 +169,5 @@ Listing listing::FillListingEntry(
 
 	return lt;
 }
+
+}}} // namespace swish::provider::listing

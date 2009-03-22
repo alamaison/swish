@@ -11,7 +11,7 @@
 #include "../common/TestConfig.h"
 #include "../common/MockSftpConsumer.h"
 
-#include <SessionFactory.h>
+#include <SessionFactory.hpp>
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>

@@ -1,6 +1,11 @@
-/*  Handles keyboard-interactive authentication via a callback.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Keyboard-interactive authentication via a callback.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,10 +30,19 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "StdAfx.h"
-#include "KeyboardInteractive.h"
+#include "pch.h"
+#include "KeyboardInteractive.hpp"
+
+#include <libssh2.h>
+#include <libssh2_sftp.h>
+
+using ATL::CAtlException;
+using ATL::CComBSTR;
+using ATL::CComSafeArray;
 
 CKeyboardInteractive::CKeyboardInteractive(ISftpConsumer *pConsumer) throw() :
 	m_spConsumer(pConsumer), m_hr(S_OK)

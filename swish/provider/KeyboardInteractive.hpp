@@ -1,6 +1,11 @@
-/*  Handles keyboard-interactive authentication via a callback.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Keyboard-interactive authentication via a callback.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,20 +30,29 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
 #pragma once
 
-#include <atlsafe.h>         // CComSafeArray
+#include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
 
-#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+#include "common/atl.hpp"                    // Common ATL setup
+#include <atlsafe.h>                         // CComSafeArray
+
+
+typedef struct _LIBSSH2_USERAUTH_KBDINT_PROMPT  // Forward-decls
+	LIBSSH2_USERAUTH_KBDINT_PROMPT;
+typedef struct _LIBSSH2_USERAUTH_KBDINT_RESPONSE
+	LIBSSH2_USERAUTH_KBDINT_RESPONSE;
 
 class CKeyboardInteractive
 {
 public:
-	typedef CComSafeArray<BSTR> PromptArray;
-	typedef CComSafeArray<VARIANT_BOOL> EchoArray;
-	typedef CComSafeArray<BSTR> ResponseArray;
+	typedef ATL::CComSafeArray<BSTR> PromptArray;
+	typedef ATL::CComSafeArray<VARIANT_BOOL> EchoArray;
+	typedef ATL::CComSafeArray<BSTR> ResponseArray;
 
 	CKeyboardInteractive(__in ISftpConsumer *pConsumer) throw();
 
@@ -63,7 +77,7 @@ private:
 		__in_ecount(cPrompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts)
 		throw();
 
-	static inline CComSafeArray<VARIANT_BOOL> _PackEchoSafearray(
+	static inline EchoArray _PackEchoSafearray(
 		int cPrompts,
 		__in_ecount(cPrompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts)
 		throw();
@@ -74,7 +88,7 @@ private:
 		__out_ecount(cPrompts) LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses)
 		throw();
 
-	CComPtr<ISftpConsumer> m_spConsumer;
+	ATL::CComPtr<ISftpConsumer> m_spConsumer;
 
 	/** @name Delayed-error holder */
 	// As we cannot safely throw an exception throw the C code which calls

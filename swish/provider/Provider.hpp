@@ -1,6 +1,11 @@
-/*  Declaration of the libssh2-based SFTP provider component.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    libssh2-based SFTP provider component.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,24 +30,23 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
 #pragma once
 
-#include "stdafx.h"
+#include "SessionFactory.hpp"                // CSession
+#include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
 
-#include "resource.h"                        // main symbols
-#include "SessionFactory.h"                  // CSession
-
-#include "swish/shell_folder/SftpProvider.h" // ISftpProvider & ISftpConsumer
-
+#include "common/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
 
 #include <list>
 
 class ATL_NO_VTABLE CLibssh2Provider :
 	public ISftpProvider,
-	public CComObjectRoot
+	public ATL::CComObjectRoot
 {
 public:
 
@@ -85,34 +89,34 @@ public:
 private:
 	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
-	std::auto_ptr<CSession> m_spSession;///< SSH/SFTP session
-	CString m_strUser;             ///< Holds username for remote connection
-	CString m_strHost;             ///< Hold name of remote host
+	std::auto_ptr<CSession> m_spSession; ///< SSH/SFTP session
+	ATL::CString m_strUser;        ///< Holds username for remote connection
+	ATL::CString m_strHost;        ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
 
 	HRESULT _Connect();
 	void _Disconnect();
 
-	CString _GetLastErrorMessage();
-	CString _GetSftpErrorMessage( ULONG uError );
+	ATL::CString _GetLastErrorMessage();
+	ATL::CString _GetSftpErrorMessage( ULONG uError );
 
 	HRESULT _RenameSimple( __in_z const char* szFrom, __in_z const char* szTo );
 	HRESULT _RenameRetryWithOverwrite(
 		__in ULONG uPreviousError,
 		__in_z const char* szFrom, __in_z const char* szTo, 
-		__out CString& strError );
+		__out ATL::CString& strError );
 	HRESULT _RenameAtomicOverwrite(
 		__in_z const char* szFrom, __in_z const char* szTo, 
-		__out CString& strError );
+		__out ATL::CString& strError );
 	HRESULT _RenameNonAtomicOverwrite(
-		const char* szFrom, const char* szTo, CString& strError );
+		const char* szFrom, const char* szTo, ATL::CString& strError );
 
 	HRESULT _Delete(
-		__in_z const char *szPath, __out CString& strError );
+		__in_z const char *szPath, __out ATL::CString& strError );
 	HRESULT _DeleteDirectory(
-		__in_z const char *szPath, __out CString& strError );
+		__in_z const char *szPath, __out ATL::CString& strError );
 	HRESULT _DeleteRecursive(
-		__in_z const char *szPath, __out CString& strError );
+		__in_z const char *szPath, __out ATL::CString& strError );
 };
 
 /**
@@ -121,9 +125,11 @@ private:
  * created which ensures that the STL collection lives at least as long as
  * the enumerator.
  */
-template <typename CollType, typename ThreadingModel = CComObjectThreadModel>
+template <
+	typename CollType, 
+	typename ThreadingModel=ATL::CComObjectThreadModel>
 class CComSTLCopyContainer :
-	public CComObjectRootEx<ThreadingModel>,
+	public ATL::CComObjectRootEx<ThreadingModel>,
 	public IUnknown
 {
 public:
@@ -147,7 +153,7 @@ END_COM_MAP()
 	CollType m_coll;
 };
 
-typedef CComObject<CComSTLCopyContainer< std::list<Listing> > >
+typedef ATL::CComObject<CComSTLCopyContainer< std::list<Listing> > >
 	CComListingHolder;
 
 
@@ -155,7 +161,7 @@ typedef CComObject<CComSTLCopyContainer< std::list<Listing> > >
  * Copy-policy for use by enumerators of Listing items.
  */
 template<>
-class _Copy<Listing>
+class ATL::_Copy<Listing>
 {
 public:
 	static HRESULT copy(Listing* p1, const Listing* p2)
@@ -189,5 +195,5 @@ public:
 	}
 };
 
-typedef CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, 
-	_Copy<Listing>, std::list<Listing> > CComEnumListing;
+typedef ATL::CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, 
+	ATL::_Copy<Listing>, std::list<Listing> > CComEnumListing;

@@ -1,6 +1,11 @@
-/*  Factory producing connected, authenticated CSession objects.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Factory producing connected, authenticated CSession objects.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,16 +30,25 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "StdAfx.h"
-#include "SessionFactory.h"
-#include "KeyboardInteractive.h"
+#include "pch.h"
+#include "SessionFactory.hpp"
+
+#include "KeyboardInteractive.hpp"
+#include "common/debug.hpp"
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
+#include "common/atl.hpp"         // Common ATL setup
+
 #include <string>
+
+using ATL::CT2A;
+using ATL::CComBSTR;
 
 using std::string;
 using std::auto_ptr;

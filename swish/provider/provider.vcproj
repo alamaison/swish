@@ -44,12 +44,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -112,10 +113,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -179,10 +181,11 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(SolutionDir)\common;$(SolutionDir)\swish\shell_folder"
+				AdditionalIncludeDirectories=""
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -238,23 +241,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Provider.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Session.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SessionFactory.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpStream.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.cpp"
+				RelativePath=".\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -281,6 +268,22 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\Provider.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Session.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SessionFactory.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SftpStream.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -288,7 +291,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\KeyboardInteractive.h"
+				RelativePath=".\KeyboardInteractive.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pch.h"
 				>
 			</File>
 			<File
@@ -296,19 +303,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Session.h"
+				RelativePath=".\Session.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SessionFactory.h"
+				RelativePath=".\SessionFactory.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SftpStream.h"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.h"
+				RelativePath=".\SftpStream.hpp"
 				>
 			</File>
 		</Filter>

@@ -1,6 +1,11 @@
-/*  Includes for pre-compiled header.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    COM Exception handler.
+
+    @if licence
+
+    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +30,37 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "stdafx.h"
+#include "common/atl.hpp" // For CAtlException
+
+#include <ComDef.h>       // For _com_error
+
+#include <exception>      // For std::exception and std::bad_alloc
+
+#define catchCom()                  \
+catch (const _com_error& e)         \
+{                                   \
+	ATLTRACE("Caught _com_error exception: %w\n", e.ErrorMessage()); \
+	return e.Error();               \
+}                                   \
+catch (const std::bad_alloc&)       \
+{                                   \
+	return E_OUTOFMEMORY;           \
+}                                   \
+catch (const std::exception&)       \
+{                                   \
+	return E_UNEXPECTED;            \
+}                                   \
+catch (const ATL::CAtlException& e) \
+{                                   \
+	return e;                       \
+}                                   \
+catch (...)                         \
+{                                   \
+	ATLASSERT(!"Caught unknown exception at COM boundary"); \
+	return E_UNEXPECTED;            \
+}
+

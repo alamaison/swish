@@ -10,7 +10,7 @@
 #include "../common/CppUnitExtensions.h"
 #include "../common/TestConfig.h"
 
-#include <Session.h>
+#include <Session.hpp>
 
 #include <memory>
 

@@ -1,6 +1,11 @@
-/*  IStream interface around the libssh2 SFTP file access functions.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    IStream interface around the libssh2 SFTP file access functions.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,12 +30,109 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "stdafx.h"
-#include "SftpStream.h"
+#include "pch.h"
+#include "SftpStream.hpp"
+
+#include "common/debug.hpp"                  // Debug macros
+#include "common/catch_com.hpp"              // COM Exception handler
+
+#include <atlstr.h>                          // CString
+
+#include <libssh2.h>
+#include <libssh2_sftp.h>
+
+using ATL::CA2W;
+using ATL::CString;
 
 using std::string;
+
+
+namespace { // private
+
+/**
+ * Maps between libssh2 SFTP error codes and an appropriate error string.
+ *
+ * @param uError  SFTP error code as returned by libssh2_sftp_last_error().
+ */
+CString GetSftpErrorMessage(ULONG uError)
+{
+	switch (uError)
+	{
+	case LIBSSH2_FX_OK:
+		return _T("Successful");
+	case LIBSSH2_FX_EOF:
+		return _T("File ended unexpectedly");
+	case LIBSSH2_FX_NO_SUCH_FILE:
+		return _T("Required file or folder does not exist");
+	case LIBSSH2_FX_PERMISSION_DENIED:
+		return _T("Permission denied");
+	case LIBSSH2_FX_FAILURE:
+		return _T("Unknown failure");
+	case LIBSSH2_FX_BAD_MESSAGE:
+		return _T("Server returned an invalid message");
+	case LIBSSH2_FX_NO_CONNECTION:
+		return _T("No connection");
+	case LIBSSH2_FX_CONNECTION_LOST:
+		return _T("Connection lost");
+	case LIBSSH2_FX_OP_UNSUPPORTED:
+		return _T("Server does not support this operation");
+	case LIBSSH2_FX_INVALID_HANDLE:
+		return _T("Invalid handle");
+	case LIBSSH2_FX_NO_SUCH_PATH:
+		return _T("The path does not exist");
+	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+		return _T("A file or folder of that name already exists");
+	case LIBSSH2_FX_WRITE_PROTECT:
+		return _T("This file or folder has been write-protected");
+	case LIBSSH2_FX_NO_MEDIA:
+		return _T("No media was found");
+	case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
+		return _T("There is no space left on the server's filesystem");
+	case LIBSSH2_FX_QUOTA_EXCEEDED:
+		return _T("You have exceeded your disk quota on the server");
+	case LIBSSH2_FX_UNKNOWN_PRINCIPLE:
+		return _T("Unknown principle");
+	case LIBSSH2_FX_LOCK_CONFlICT:
+		return _T("Lock conflict");
+	case LIBSSH2_FX_DIR_NOT_EMPTY:
+		return _T("The folder is not empty");
+	case LIBSSH2_FX_NOT_A_DIRECTORY:
+		return _T("This file is not a folder");
+	case LIBSSH2_FX_INVALID_FILENAME:
+		return _T("The filename is not valid on the server's filesystem");
+	case LIBSSH2_FX_LINK_LOOP:
+		return _T("Operation would cause a link loop which is not permitted");
+	default:
+		return _T("Unexpected error code returned by server");
+	}
+}
+
+/**
+ * Retrieves a string description of the last error reported by libssh2.
+ *
+ * In the case that the last SSH error is an SFTP error it returns the SFTP
+ * error message in preference.
+ */
+CString GetLastErrorMessage(LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp)
+{
+	int nErr; PSTR pszErr; int cchErr;
+
+	nErr = libssh2_session_last_error(session, &pszErr, &cchErr, false);
+	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
+	{
+		ULONG uErr = libssh2_sftp_last_error(sftp);
+		return GetSftpErrorMessage(uErr);
+	}
+	else // A non-SFTP error occurred
+		return CString(pszErr);
+}
+
+} // namespace
+
 
 /**
  * Construct a new CSftpStream instance with NULL filehandle.
@@ -71,7 +173,7 @@ HRESULT CSftpStream::Initialize(CSession& session, PCSTR pszFilePath)
 	{
 		UNREACHABLE;
 		TRACE("libssh2_sftp_open(%s) failed: %ws",
-			pszFilePath, _GetLastErrorMessage());
+			pszFilePath, GetLastErrorMessage(m_pSession, m_pSftp));
 		return E_UNEXPECTED;
 	}
 
@@ -353,7 +455,8 @@ void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG& cbRead) throw(...)
 	{
 		cbRead = 0;
 		UNREACHABLE;
-		TRACE("libssh2_sftp_read() failed: %ws", _GetLastErrorMessage());
+		TRACE("libssh2_sftp_read() failed: %ws", 
+			GetLastErrorMessage(m_pSession, m_pSftp));
 		AtlThrow(STG_E_INVALIDFUNCTION);
 	}
 }
@@ -471,7 +574,8 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 	if (libssh2_sftp_fstat(m_pHandle, &attrs) != 0)
 	{
 		UNREACHABLE;
-		TRACE("libssh2_sftp_fstat() failed: %ws", _GetLastErrorMessage());
+		TRACE("libssh2_sftp_fstat() failed: %ws", 
+			GetLastErrorMessage(m_pSession, m_pSftp));
 		AtlThrow(STG_E_INVALIDFUNCTION);
 	}
 

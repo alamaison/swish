@@ -1,6 +1,11 @@
-/*  C++ wrapper round Libssh2 SSH and SFTP session creation.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Factory producing connected, authenticated CSession objects.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,40 +30,44 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
 #pragma once
 
-typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
-typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
+#include "Session.hpp"
 
-class CSession
+#include <winerror.h>  // HRESULT
+
+#include <memory>      // auto_ptr
+
+struct ISftpConsumer;
+
+class CSessionFactory
 {
 public:
-	CSession() throw(...);
-	~CSession();
-	operator LIBSSH2_SESSION*() const;
-	operator LIBSSH2_SFTP*() const;
-
-	void Connect(PCWSTR pwszHost, unsigned int uPort) throw(...);
-	void StartSftp() throw(...);
+	static std::auto_ptr<CSession> CreateSftpSession(
+		const wchar_t* pwszHost, unsigned int uPort, const wchar_t* pwszUser,
+		__in ISftpConsumer* pConsumer);
 
 private:
-	LIBSSH2_SESSION *m_pSession;   ///< SSH session
-	SOCKET m_socket;               ///< TCP/IP socket to the remote host
-	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
-	bool m_bConnected;             ///< Have we already connected to server?
+	static void _VerifyHostKey(
+		CSession& session, __in ISftpConsumer *pConsumer);
 
-	CSession(const CSession& session); // Intentionally not implemented
-	CSession& operator=(const CSession& pidl); // Intentionally not impl
-	
-	void _OpenSocketToHost(PCWSTR pszHost, unsigned int uPort) throw(...);
-	void _CloseSocketToHost() throw();
+	static void _AuthenticateUser(
+		const wchar_t* pwszUser, CSession& session, 
+		__in ISftpConsumer* pConsumer);
 
-	void _CreateSession() throw(...);
-	void _DestroySession() throw();
-	void _ResetSession() throw(...);
+	static HRESULT _PasswordAuthentication(
+		const char* szUsername, CSession& session, 
+		__in ISftpConsumer* pConsumer);
 
-	void _CreateSftpChannel() throw(...);
-	void _DestroySftpChannel() throw();
+	static HRESULT _KeyboardInteractiveAuthentication(
+		const char*  szUsername, CSession& session, 
+		__in ISftpConsumer* pConsumer);
+
+	static HRESULT _PublicKeyAuthentication(
+		const char*  szUsername, CSession& session, 
+		__in ISftpConsumer* pConsumer);
 };

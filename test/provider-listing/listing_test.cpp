@@ -48,7 +48,7 @@ using ATL::CComBSTR;
 using std::string;
 using std::wstring;
 
-using namespace provider::libssh2;
+using namespace swish::provider;
 
 namespace {
 	const string longentry = 

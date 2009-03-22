@@ -11,8 +11,8 @@
 #include "../common/TestConfig.h"
 #include "../common/MockSftpConsumer.h"
 
-#include <SftpStream.h>
-#include <SessionFactory.h>
+#include <SftpStream.hpp>
+#include <SessionFactory.hpp>
 
 #include <memory>            // auto_ptr
 

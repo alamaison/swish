@@ -27,19 +27,28 @@
     carries forward this exception.
 */
 
-#include "stdafx.h"
-#include "resource.h"
-#include <remotelimits.h>
-
+#include "pch.h"
 #include "Provider.hpp"
-#include "KeyboardInteractive.h"
-#include "SftpStream.h"
+
+#include "KeyboardInteractive.hpp"
+#include "SftpStream.hpp"
 #include "listing/listing.hpp"   // SFTP directory listing helper functions
+
+#include "common/remotelimits.h"
+#include "common/catch_com.hpp"  // COM exception handler
 
 #include <ws2tcpip.h>            // Winsock
 #include <wspiapi.h>             // Winsock
 
-using namespace provider::libssh2;
+using namespace swish::provider;
+
+using ATL::CComObject;
+using ATL::CW2A;
+using ATL::CComBSTR;
+using ATL::CString;
+
+using std::string;
+using std::list;
 
 #pragma warning (push)
 #pragma warning (disable: 4267) // ssize_t to unsigned int
@@ -235,7 +244,7 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 		return E_FAIL;
 
 	// Read entries from directory until we fail
-	std::list<Listing> files;
+	list<Listing> files;
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
 		char szFilename[MAX_FILENAME_LENZ];
@@ -266,8 +275,8 @@ STDMETHODIMP CLibssh2Provider::GetListing(
 				continue;
 		}
 
-		std::string strFilename(szFilename);
-		std::string strLongEntry(szLongEntry);
+		string strFilename(szFilename);
+		string strLongEntry(szLongEntry);
 		files.push_back(
 			listing::FillListingEntry(strFilename, strLongEntry, attrs));
 	} while (true);
@@ -572,7 +581,7 @@ HRESULT CLibssh2Provider::_RenameNonAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
 	// First, rename existing file to temporary
-	std::string strTemporary(szTo);
+	string strTemporary(szTo);
 	strTemporary += ".swish_rename_temp";
 	int rc = libssh2_sftp_rename( *m_spSession, szTo, strTemporary.c_str() );
 	if (!rc)
@@ -693,7 +702,7 @@ HRESULT CLibssh2Provider::_DeleteDirectory(
 		if (szFilename[0] == '.' && szFilename[1] == '.' && !szFilename[2])
 			continue; // Skip ..
 
-		std::string strSubPath(szPath);
+		string strSubPath(szPath);
 		strSubPath += "/";
 		strSubPath += szFilename;
 		hr = _DeleteRecursive(strSubPath.c_str(), strError);

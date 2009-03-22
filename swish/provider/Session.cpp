@@ -1,6 +1,11 @@
-/*  Libssh2 SSH and SFTP session management
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Libssh2 SSH and SFTP session management
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,17 +30,25 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
-#include "StdAfx.h"
-#include "Session.h"
-#include <remotelimits.h>
+#include "pch.h"
+#include "Session.hpp"
 
-#include <ws2tcpip.h>    // Winsock
-#include <wspiapi.h>     // Winsock
+#include "common/remotelimits.h"
+#include "common/debug.hpp"       // Debug macros
+
+#include "common/atl.hpp"         // Common ATL setup
+
+#include <ws2tcpip.h>             // Winsock
+#include <wspiapi.h>              // Winsock
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
+
+using ATL::CW2A;
 
 CSession::CSession() throw(...) : 
 	m_pSession(NULL), m_pSftpSession(NULL), m_socket(INVALID_SOCKET),

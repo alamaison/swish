@@ -398,10 +398,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
-				RelativePath=".\catch_com.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\CoFactory.h"
 				>
 			</File>
@@ -415,10 +411,6 @@
 			</File>
 			<File
 				RelativePath=".\DataObject.h"
-				>
-			</File>
-			<File
-				RelativePath=".\debug.hpp"
 				>
 			</File>
 			<File
