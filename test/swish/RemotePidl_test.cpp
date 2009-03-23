@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Pidl_test.h"
 
-#include <RemotePidl.h>
+#include "swish/shell_folder/RemotePidl.h"
 
 /** Standard PIDL-wrapper tests for CRemotePidl family */
 

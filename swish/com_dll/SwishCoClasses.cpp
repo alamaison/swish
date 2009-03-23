@@ -26,11 +26,11 @@
 
 #include "pch.h"
 
-#include <HostFolder.h>
-#include <RemoteFolder.h>
+#include "swish/shell_folder/HostFolder.h"
+#include "swish/shell_folder/RemoteFolder.h"
+#include "swish/shell_folder/Swish.h"  // CHost/RemoteFolder UUIDs
 
-#include "resource.h"       // main symbols
-#include "swish.h"          // Swish type-library
+#include "resource.h"
 
 namespace swish {
 namespace com_dll {

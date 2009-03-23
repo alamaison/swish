@@ -20,7 +20,7 @@
 #include "pch.h"
 #include "NewConnDialog.h"
 
-#include <remotelimits.h>  // Text field limits
+#include "common/remotelimits.h"  // Text field limits
 
 using ATL::CString;
 

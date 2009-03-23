@@ -24,7 +24,7 @@
     @endif
 */
 
-#include "../common/testlimits.h"
+#include "test/common/testlimits.h"
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).

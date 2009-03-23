@@ -7,10 +7,10 @@
 #include "pch.h"
 #include "standard.h"
 
-#include "../common/CppUnitExtensions.h"
-#include "../common/TestConfig.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/TestConfig.h"
 
-#include <Session.hpp>
+#include "swish/provider/Session.hpp"
 
 #include <memory>
 

@@ -19,16 +19,16 @@
 
 #pragma once
 
-#include "Folder.h"         // Superclass
+#include "Folder.h"             // Superclass
 
-#include "resource.h"       // main symbols
-#include "swish.h"          // For CRemoteFolder UUID
-#include "RemotePidl.h"     // RemoteItemId handling
-#include "Pool.h"           // Access to SFTP global session pool
-#include "Connection.h"     // Two way frontend-backend connection
-#include "CoFactory.h"      // CComObject factory
+#include "resource.h"           // main symbols
+#include "swish.h"              // For CRemoteFolder UUID
+#include "RemotePidl.h"         // RemoteItemId handling
+#include "Pool.h"               // Access to SFTP global session pool
+#include "Connection.h"         // Two way frontend-backend connection
+#include "common/CoFactory.hpp" // CComObject factory
 
-#include <atl.hpp>          // Common ATL setup
+#include "common/atl.hpp"       // Common ATL setup
 
 #include <vector>
 

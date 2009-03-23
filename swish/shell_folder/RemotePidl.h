@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include "Pidl.h"            // Superclass
+#include "Pidl.h"                // Superclass
 
-#include <remotelimits.h>    // Text field limits
+#include "common/remotelimits.h" // Text field limits
 
-#include <atlstr.h>          // CString
-#include <ATLComTime.h>      // COleDateTime
+#include <atlstr.h>              // CString
+#include <ATLComTime.h>          // COleDateTime
 
 #include <pshpack1.h>
 /** 

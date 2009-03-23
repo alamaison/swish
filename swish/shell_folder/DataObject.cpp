@@ -20,7 +20,7 @@
 #include "pch.h"
 #include "DataObject.h"
 
-#include "catch_com.hpp"       // COM catch block
+#include "common/catch_com.hpp"  // COM catch block
 
 CDataObject::CDataObject() :
 	m_cfFileDescriptor(static_cast<CLIPFORMAT>(

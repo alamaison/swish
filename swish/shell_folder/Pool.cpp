@@ -20,9 +20,9 @@
 #include "pch.h"
 #include "Pool.h"
 
-#include <remotelimits.h>  // Text field limits
+#include "common/remotelimits.h"  // Text field limits
 
-#include <atlstr.h>        // CString
+#include <atlstr.h>  // CString
 
 using ATL::CComPtr;
 using ATL::CComQIPtr;

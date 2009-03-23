@@ -9,17 +9,16 @@
 #include "CppUnitExtensions.h"
 #include "testlimits.h"
 
+#include "tree.h"  // N-ary tree container for mocking a filesystem
+
+#include "common/atl.hpp"  // Common ATL setup
+
+#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
+
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <functional>
-
-#include "tree.h"            // N-ary tree container for mocking a filesystem
-
-#include <atlbase.h>         // ATL base classes
-#include <atlcom.h>          // ATL CComObject et. al.
-
-#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
 
 class ATL_NO_VTABLE CMockSftpProvider :
 	public ATL::CComObjectRootEx<ATL::CComObjectThreadModel>,

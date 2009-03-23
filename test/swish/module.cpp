@@ -6,8 +6,7 @@
 
 #include "pch.h"
 
-#include <atlbase.h>   // ATL modules
-#include <atlcom.h>    // ATL CComObject et. al.
+#include "common/atl.hpp"  // Common ATL setup
 
 using namespace ATL;
 

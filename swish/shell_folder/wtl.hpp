@@ -36,6 +36,6 @@
 
 #define _WTL_NO_AUTOMATIC_NAMESPACE
 
-#include <atl.hpp>   // Common ATL setup
+#include "common/atl.hpp"   // Common ATL setup
 
 #include <atlapp.h>  // WTL

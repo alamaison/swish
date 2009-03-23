@@ -26,10 +26,10 @@
 
 #include "pch.h"
 
-#include <atl.hpp>
+#include "resource.h"                  // main symbols
+#include "swish/shell_folder/Swish.h"  // Swish type-library
 
-#include "resource.h"       // main symbols
-#include "swish.h"          // Swish type-library
+#include "common/atl.hpp"
 
 namespace swish {
 namespace com_dll {

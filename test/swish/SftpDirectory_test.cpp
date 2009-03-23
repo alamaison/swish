@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
-#include "../common/MockSftpConsumer.h"
-#include "../common/MockSftpProvider.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/MockSftpConsumer.h"
+#include "test/common/MockSftpProvider.h"
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
-#include "../common/TestConfig.h"
+#include "test/common/TestConfig.h"
 
-#include <atl.hpp>         // Common ATL setup
+#include "common/atl.hpp"  // Common ATL setup
 #include <ATLComTime.h>    // COleDateTime
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
@@ -15,11 +15,11 @@ class CSftpDirectory_test;
 #undef private
 #define private \
 	friend class CSftpDirectory_test; private
-#include <SftpDirectory.h>
+#include "swish/shell_folder/SftpDirectory.h"
 #undef private
 
-#include <Connection.h>
-#include <HostPidl.h>
+#include "swish/shell_folder/Connection.h"
+#include "swish/shell_folder/HostPidl.h"
 
 using ATL::CComObject;
 using ATL::CAtlException;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
+#include "test/common/CppUnitExtensions.h"
 
 // Redefine the 'private' keyword to inject a friend declaration for this 
 // test class directly into the target class's header
@@ -9,7 +9,7 @@ class CKbdInteractiveDialog_test;
 #undef private
 #define private \
 	friend class CKbdInteractiveDialog_test; private
-#include <KbdInteractiveDialog.h>
+#include "swish/shell_folder/KbdInteractiveDialog.h"
 #undef private
 
 class CKbdInteractiveDialog_test : public CPPUNIT_NS::TestFixture

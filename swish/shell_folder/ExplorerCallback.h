@@ -19,13 +19,13 @@
 
 #pragma once
 
-#include "CoFactory.h"  // CComObject factory
+#include "common/CoFactory.hpp"  // CComObject factory
 
-#include <atl.hpp>      // Common ATL setup
+#include "common/atl.hpp"  // Common ATL setup
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
-#include <shlobj.h>     // Windows Shell API
+#include <shlobj.h>  // Windows Shell API
 
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,

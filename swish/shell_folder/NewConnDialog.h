@@ -21,14 +21,14 @@
 
 #include "resource.h"       // main symbols
 
-#include <atl.hpp>          // Common ATL setup
+#include "common/atl.hpp"   // Common ATL setup
 #include <atlwin.h>         // ATL windowing classes
 #include <atlstr.h>         // CString
 
 #include "wtl.hpp"          // WTL
 #include <atlddx.h>         // WTL DDX/DDV
 
-#include <remotelimits.h>
+#include "common/remotelimits.h"
 
 /**
  * WTL-based wrapper class for the host information entry dialog box.

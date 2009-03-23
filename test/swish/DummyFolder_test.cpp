@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
+#include "test/common/CppUnitExtensions.h"
 
 #include "DummyFolder.h"
 

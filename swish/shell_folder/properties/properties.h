@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <atl.hpp>    // Common ATL setup
+#include "common/atl.hpp"    // Common ATL setup
 
 #include <initguid.h> // Force DEFINE_PROPKEY() to actually define a key
 #include <propkey.h>  // Predefined shell property keys

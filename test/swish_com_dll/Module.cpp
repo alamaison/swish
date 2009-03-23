@@ -26,7 +26,7 @@
 
 #include "pch.h"
 
-#include <atl.hpp>
+#include "common/atl.hpp"
 
 namespace test {
 namespace swish {

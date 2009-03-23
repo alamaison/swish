@@ -28,11 +28,11 @@
 
 #include "pidl.hpp"  // Custom PIDL functions
 
-#include "../common/CppUnitExtensions.h"
+#include "test/common/CppUnitExtensions.h"
 
-#include <Swish.h>
+#include "swish/shell_folder/Swish.h" // for HostFolder UUID
 
-#include <atl.hpp>   // Common ATL setup
+#include "common/atl.hpp"  // Common ATL setup
 
 #include <mshtml.h>  // For IHTMLDOMTextNode2
 

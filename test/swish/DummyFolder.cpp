@@ -20,9 +20,9 @@
 #include "pch.h"
 #include "DummyFolder.h"
 
-#include <Pidl.h>
+#include "swish/shell_folder/Pidl.h"
 
-#include <atl.hpp>   // Common ATL setup
+#include "common/atl.hpp"  // Common ATL setup
 #include <atlstr.h>  // CString
 
 #include <vector>

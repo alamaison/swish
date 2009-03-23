@@ -1,6 +1,11 @@
-/*  Mixin class which augments CComObjects with a creator of AddReffed instances.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Mixin class which gives CComObjects a creator of AddReffed instances.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,11 +20,23 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    In addition, as a special exception, the the copyright holders give you
+    permission to combine this program with free software programs or the 
+    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
+    with unchanged license). You may copy and distribute such a system 
+    following the terms of the GNU GPL for this program and the licenses 
+    of the other code concerned. The GNU General Public License gives 
+    permission to release a modified version without this exception; this 
+    exception also makes it possible to release a modified version which 
+    carries forward this exception.
+
+    @endif
 */
 
 #pragma once
 
-#include <atl.hpp>      // Common ATL setup
+#include "atl.hpp"      // Common ATL setup
 
 template <typename T>
 class CCoFactory

@@ -1,10 +1,10 @@
 // Miscellanious tests for the Swish DataObject
 
-#include "../common/CppUnitExtensions.h"
+#include "test/common/CppUnitExtensions.h"
 
-#include <HostPidl.h>
-#include <RemotePidl.h>
-#include <DataObject.h>
+#include "swish/shell_folder/HostPidl.h"
+#include "swish/shell_folder/RemotePidl.h"
+#include "swish/shell_folder/DataObject.h"
 
 /**
  * Test that Shell PIDL from DataObject holds the expected number of PIDLs.

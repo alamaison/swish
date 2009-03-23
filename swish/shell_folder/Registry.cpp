@@ -21,8 +21,8 @@
 #include "Registry.h"
 
 #include "RemotePidl.h"
-#include "catch_com.hpp"       // COM catch block
-#include "debug.hpp"
+#include "common/catch_com.hpp"  // COM catch block
+#include "common/debug.hpp"
 
 using ATL::CRegKey;
 using ATL::CString;

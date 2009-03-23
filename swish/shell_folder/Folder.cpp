@@ -20,8 +20,8 @@
 #include "pch.h"
 #include "Folder.h"
 
-#include "debug.hpp"
-#include "catch_com.hpp"
+#include "common/debug.hpp"
+#include "common/catch_com.hpp"
 
 using ATL::CComPtr;
 

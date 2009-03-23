@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
+#include "test/common/CppUnitExtensions.h"
 
-#include <Pidl.h>
+#include "swish/shell_folder/Pidl.h"
 
 template<typename IdListType>
 class CPidlHandle_test : public CPPUNIT_NS::TestFixture

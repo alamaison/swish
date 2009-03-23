@@ -7,11 +7,11 @@
 #include "pch.h"
 #include "standard.h"
 
-#include "../common/CppUnitExtensions.h"
-#include "../common/TestConfig.h"
-#include "../common/MockSftpConsumer.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/TestConfig.h"
+#include "test/common/MockSftpConsumer.h"
 
-#include <SessionFactory.hpp>
+#include "swish/provider/SessionFactory.hpp"
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>

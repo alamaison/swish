@@ -7,16 +7,16 @@
 #include "pch.h"
 #include "standard.h"
 
-#include "../common/CppUnitExtensions.h"
-#include "../common/TestConfig.h"
-#include "../common/MockSftpConsumer.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/TestConfig.h"
+#include "test/common/MockSftpConsumer.h"
 
-#include <SftpStream.hpp>
-#include <SessionFactory.hpp>
+#include "swish/provider/SftpStream.hpp"
+#include "swish/provider/SessionFactory.hpp"
 
-#include <memory>            // auto_ptr
+#include <memory>  // auto_ptr
 
-#include <SftpProvider.h>    // Swish ISftpProvider & ISftpConsumer interfaces
+#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
 
 using namespace ATL;
 using std::auto_ptr;

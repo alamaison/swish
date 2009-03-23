@@ -25,9 +25,9 @@
 */
 
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
-#include "../common/MockSftpConsumer.h"
-#include "../common/TestConfig.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/MockSftpConsumer.h"
+#include "test/common/TestConfig.h"
 
 #include "swish/provider/com_dll/com_dll.h" // Provider UUID and forward-decl
 

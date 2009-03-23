@@ -19,17 +19,17 @@
 
 #pragma once
 
-#include "Folder.h"         // Superclass
+#include "Folder.h"              // Superclass
 
-#include "resource.h"       // main symbols
-#include "swish.h"          // For CHostFolder UUID
-#include "HostPidl.h"       // HostItemId handling
-#include "CoFactory.h"      // CComObject factory
+#include "resource.h"            // main symbols
+#include "swish.h"               // For CHostFolder UUID
+#include "HostPidl.h"            // HostItemId handling
+#include "common/CoFactory.hpp"  // CComObject factory
 
-#include <atl.hpp>          // Common ATL setup
+#include "common/atl.hpp"        // Common ATL setup
 
-#include <initguid.h>       // Make DEFINE_PROPERTYKEY() actually define a key
-#include <propkey.h>        // For DEFINE_PROPERTYKEY
+#include <initguid.h>  // Make DEFINE_PROPERTYKEY() actually define a key
+#include <propkey.h>   // For DEFINE_PROPERTYKEY
 
 #include <vector>
 

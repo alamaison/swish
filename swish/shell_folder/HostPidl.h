@@ -21,9 +21,9 @@
 
 #include "Pidl.h"
 
-#include "RemotePidl.h"    // For GetFullPath() implementation
+#include "RemotePidl.h"  // For GetFullPath() implementation
 
-#include <remotelimits.h>  // Text field limits
+#include "common/remotelimits.h"  // Text field limits
 
 #include <pshpack1.h>
 /** 

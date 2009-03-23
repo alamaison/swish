@@ -19,15 +19,15 @@
 
 #pragma once
 
-#include "CoFactory.h"    // CComObject factory
+#include "common/CoFactory.hpp"  // CComObject factory
 
-#include <atl.hpp>        // Common ATL setup
+#include "common/atl.hpp"  // Common ATL setup
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
-#include <shlobj.h>       // Windows Shell API
+#include <shlobj.h>  // Windows Shell API
 
-#include <map>            // Associative container for IStream store
+#include <map>  // Associative container for IStream store
 
 /**
  * Pseudo-subclass of IDataObject created by CIDLData_CreateFromIDArray().

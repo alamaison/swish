@@ -22,7 +22,7 @@
 
 #include "PasswordDialog.h"       // Password dialog box
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
-#include "debug.hpp"
+#include "common/debug.hpp"
 
 #include <atlsafe.h>              // CComSafeArray
 

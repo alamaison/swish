@@ -21,7 +21,7 @@
 #include "ExplorerCallback.h"
 
 #include "NewConnDialog.h"
-#include "debug.hpp"
+#include "common/debug.hpp"
 
 #include <strsafe.h>          // For StringCchCopy
 

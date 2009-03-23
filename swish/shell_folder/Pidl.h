@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <atl.hpp>   // Common ATL setup
+#include "common/atl.hpp"   // Common ATL setup
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).

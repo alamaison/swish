@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
+#include "test/common/CppUnitExtensions.h"
 
-#include <Pidl.h>
+#include "swish/shell_folder/Pidl.h"
 
 /**
  * Templated class for standard tests on non-const PIDL wrappers.

@@ -1,15 +1,15 @@
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
-#include "../common/MockSftpConsumer.h"
-#include "../common/MockSftpProvider.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/MockSftpConsumer.h"
+#include "test/common/MockSftpProvider.h"
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
-#include "../common/TestConfig.h"
+#include "test/common/TestConfig.h"
 #include "DataObjectTests.h"
 
-#include <DataObject.h>
-#include <RemotePidl.h>
-#include <HostPidl.h>
+#include "swish/shell_folder/DataObject.h"
+#include "swish/shell_folder/RemotePidl.h"
+#include "swish/shell_folder/HostPidl.h"
 
 using ATL::CComObject;
 using ATL::CComPtr;

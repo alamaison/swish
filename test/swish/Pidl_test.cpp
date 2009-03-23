@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Pidl_test.h"
 
-#include <Pidl.h>
+#include "swish/shell_folder/Pidl.h"
 
 /** Standard PIDL-wrapper tests for CPidl family */
 

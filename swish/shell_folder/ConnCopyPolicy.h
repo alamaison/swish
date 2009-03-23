@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include "HostPidl.h"    // PIDLs
-#include "catch_com.hpp" // COM catch block
+#include "HostPidl.h"  // PIDLs
+#include "common/catch_com.hpp" // COM catch block
 
-#include <atl.hpp>       // Common ATL setup
+#include "common/atl.hpp"  // Common ATL setup
 
-#include <vector>        // STL collection for CEnumIDListImpl backing store
+#include <vector>  // STL collection for CEnumIDListImpl backing store
 
 class CConnCopyPolicy  
 {

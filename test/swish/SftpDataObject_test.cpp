@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "../common/CppUnitExtensions.h"
-#include "../common/MockSftpConsumer.h"
-#include "../common/MockSftpProvider.h"
-#include "../common/TestConfig.h"
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/MockSftpConsumer.h"
+#include "test/common/MockSftpProvider.h"
+#include "test/common/TestConfig.h"
 #include "DataObjectTests.h"
 
-#include <SftpDataObject.h>
-#include <RemotePidl.h>
-#include <HostPidl.h>
+#include "swish/shell_folder/SftpDataObject.h"
+#include "swish/shell_folder/RemotePidl.h"
+#include "swish/shell_folder/HostPidl.h"
 
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;

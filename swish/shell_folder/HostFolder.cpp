@@ -22,13 +22,12 @@
 
 #include "RemoteFolder.h"
 #include "ConnCopyPolicy.h"
-#include "ExplorerCallback.h" // For interaction with Explorer window
-#include "Registry.h"         // For saved connection details
-#include "debug.hpp"
+#include "ExplorerCallback.h"     // For interaction with Explorer window
+#include "Registry.h"             // For saved connection details
+#include "common/debug.hpp"
+#include "common/remotelimits.h"  // Text field limits
 
-#include <remotelimits.h>
-
-#include <strsafe.h>          // For StringCchCopy
+#include <strsafe.h>  // For StringCchCopy
 
 #include <string>
 

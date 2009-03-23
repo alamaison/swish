@@ -19,10 +19,10 @@
 
 #pragma once
 
-#include "HostPidl.h"          // PIDL wrapper classes
+#include "HostPidl.h"            // PIDL wrapper classes
 #include "RemotePidl.h"
-#include "Connection.h"        // For SFTP Connection container
-#include "catch_com.hpp"       // COM catch block
+#include "Connection.h"          // For SFTP Connection container
+#include "common/catch_com.hpp"  // COM catch block
 
 #include <vector>
 

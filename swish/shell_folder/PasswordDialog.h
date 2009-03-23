@@ -19,7 +19,7 @@
 
 #include "resource.h"       // main symbols
 
-#include <atl.hpp>          // Common ATL setup
+#include "common/atl.hpp"          // Common ATL setup
 #include <atlwin.h>         // ATL windowing classes
 #include <atlstr.h>         // CString
 

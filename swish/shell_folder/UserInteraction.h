@@ -21,7 +21,7 @@
 
 #include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
 
-#include <atl.hpp>          // Common ATL setup
+#include "common/atl.hpp"          // Common ATL setup
 
 class ATL_NO_VTABLE CUserInteraction :
 	public ISftpConsumer,

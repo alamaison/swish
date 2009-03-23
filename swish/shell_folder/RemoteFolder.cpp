@@ -29,7 +29,7 @@
 #include "Registry.h"
 #include "properties/properties.h" // File properties handler
 #include "properties/column.h"     // Column details
-#include "debug.hpp"
+#include "common/debug.hpp"
 
 #include <string>
 
