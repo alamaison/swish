@@ -19,7 +19,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -39,17 +39,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="false"
-				WarningLevel="2"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/UnitTests.tlb"
-				HeaderFileName="UnitTests.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="UnitTests_i.c"
-				ProxyFileName="UnitTests_p.c"
-				EnableErrorChecks="2"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -67,16 +56,13 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -104,8 +90,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Running unit tests..."
-				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 		<Configuration
@@ -113,7 +97,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -134,15 +118,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/UnitTests.tlb"
-				HeaderFileName="UnitTests.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="UnitTests_i.c"
-				ProxyFileName="UnitTests_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -158,16 +133,13 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\swish\frontend&quot;;&quot;$(SolutionDir)\swish\frontend\$(ConfigurationName)&quot;;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -197,8 +169,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Running unit tests..."
-				CommandLine="&quot;$(TargetPath)&quot; || True"
 			/>
 		</Configuration>
 	</Configurations>
@@ -206,10 +176,6 @@
 		<ProjectReference
 			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
 			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\swish\provider\provider.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
@@ -267,10 +233,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog_test.h"
-				>
-			</File>
-			<File
 				RelativePath=".\pch.h"
 				>
 			</File>
@@ -292,14 +254,6 @@
 			</File>
 			<File
 				RelativePath=".\HostPidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\KbdInteractiveDialog_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\NewConnDialog_test.cpp"
 				>
 			</File>
 			<File

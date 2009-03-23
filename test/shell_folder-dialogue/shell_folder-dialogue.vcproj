@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-provider-listing"
-	ProjectGUID="{541385C8-3DF7-401E-92E8-133B36AC7B62}"
-	RootNamespace="test"
+	Name="test-shell_folder-dialogue"
+	ProjectGUID="{9225F798-2571-4F7A-8E30-42165A44B16A}"
+	RootNamespace="test-shell_folder-dialogue"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -20,8 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
-			UseOfATL="1"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -60,7 +59,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -95,8 +96,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
-			UseOfATL="1"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -117,7 +117,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
+				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -133,7 +133,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -168,8 +170,12 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\swish\provider\provider.vcproj"
+			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
+			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
+			RelativePathToProject=".\test\common\common.vcproj"
 		/>
 	</References>
 	<Files>
@@ -179,7 +185,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\listing_test.cpp"
+				RelativePath=".\KbdInteractiveDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Module.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\NewConnDialog_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pch.cpp"
 				>
 			</File>
 		</Filter>
@@ -189,7 +211,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\helpers.hpp"
+				RelativePath=".\pch.h"
 				>
 			</File>
 		</Filter>

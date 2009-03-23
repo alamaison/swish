@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="cppunit_runner"
+	InheritedPropertySheets=".\cppunit_client.vsprops"
 	>
 	<Tool
 		Name="VCPostBuildEventTool"

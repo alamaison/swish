@@ -10,11 +10,5 @@
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalLibraryDirectories=""
-	/>
-	<Tool
-		Name="VCPostBuildEventTool"
-		Description=""
-		CommandLine=""
 	/>
 </VisualStudioPropertySheet>

@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@
 /**
  * @file
  *
- * The precompiled header will be test-shell_folder-dialogue.pch and the 
- * intermediate file pch.obj will contain the pre-compiled type information.
+ * The precompiled header will be provider.pch and the intermediate file
+ * pch.obj will contain the pre-compiled type information.
  *
  * @warning
  * Do not add anything else nor include any other headers in this file.

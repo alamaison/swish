@@ -1,11 +1,69 @@
+/**
+    @file
+
+    Basic testing of the 'New Connection' dialogue box.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
+*/
+
 #include "pch.h"
-#include "NewConnDialog_test.h"
+
+#include "test/common/CppUnitExtensions.h"
+
+// Redefine the 'private' keyword to inject a friend declaration for this 
+// test class directly into the target class's header
+class CNewConnDialog_test;
+#undef private
+#define private \
+	friend class CNewConnDialog_test; private
+#include "swish/shell_folder/NewConnDialog.h"
+#undef private
+
+class CNewConnDialog_test : public CPPUNIT_NS::TestFixture
+{
+	CPPUNIT_TEST_SUITE( CNewConnDialog_test );
+		CPPUNIT_TEST( testGetUser );
+		CPPUNIT_TEST( testGetHost );
+		CPPUNIT_TEST( testGetPath );
+		CPPUNIT_TEST( testGetPort );
+		CPPUNIT_TEST( testDoModal );
+	CPPUNIT_TEST_SUITE_END();
+
+protected:
+	void testGetUser();
+	void testGetHost();
+	void testGetPath();
+	void testGetPort();
+	void testDoModal();
+
+private:
+	CNewConnDialog m_dlg;
+
+	/* Thread related functions and variables */
+	static DWORD WINAPI ClickCancelThread( __in LPVOID lpThreadParam );
+};
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CNewConnDialog_test );
 
-void CNewConnDialog_test::setUp()
-{
-}
 
 void CNewConnDialog_test::testGetUser()
 {
@@ -62,9 +120,6 @@ void CNewConnDialog_test::testDoModal()
 	hClickCancelThread = NULL;
 }
 
-void CNewConnDialog_test::tearDown()
-{
-}
 
 /*----------------------------------------------------------------------------*
  * Private functions
