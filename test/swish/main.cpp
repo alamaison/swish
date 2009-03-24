@@ -6,7 +6,7 @@
 
 #include "pch.h"
 
-#include <cppunit/BriefTestProgressListener.h>
+#include <cppunit/TextTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TestResult.h>
@@ -28,7 +28,7 @@ int main()
 	controller.addListener(&result);        
 
 	// Add a listener that print dots as test run.
-	CPPUNIT_NS::BriefTestProgressListener progress;
+	CPPUNIT_NS::TextTestProgressListener progress;
 	controller.addListener(&progress);      
 
 	// Add the top suite to the test runner
