@@ -8,6 +8,6 @@
 	<Tool
 		Name="VCPostBuildEventTool"
 		Description="Running CppUnit unit tests ..."
-		CommandLine="&quot;$(TargetPath)&quot; || True"
+		CommandLine="&quot;$(TargetPath)&quot; &amp; set noop="
 	/>
 </VisualStudioPropertySheet>

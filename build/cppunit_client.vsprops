@@ -8,7 +8,4 @@
 		Name="VCCLCompilerTool"
 		AdditionalIncludeDirectories="$(CPPUNITDIR)\include"
 	/>
-	<Tool
-		Name="VCLinkerTool"
-	/>
 </VisualStudioPropertySheet>
