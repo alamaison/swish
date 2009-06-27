@@ -445,7 +445,7 @@ protected:
 	void testReadFileMassiveBuffer()
 	{
 		CComPtr<CSftpStream> pStream = _CreateConnectInit(
-			"/usr/share/example-content/gimp-ubuntu-splash.xcf");
+			"/usr/share/example-content/GIMP_Ubuntu_splash_screen.xcf");
 		HRESULT hr;
 
 		ULONG cbRead = 0;
