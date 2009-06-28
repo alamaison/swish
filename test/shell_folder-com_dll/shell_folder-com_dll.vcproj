@@ -2,9 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-swish"
-	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
-	RootNamespace="swish_test"
+	Name="test-shell_folder-com_dll"
+	ProjectGUID="{D5415386-FA78-4411-AAAA-7B1FEB0D25AF}"
+	RootNamespace="swish_com_dll"
+	Keyword="Win32Proj"
 	>
 	<Platforms>
 		<Platform
@@ -19,9 +20,8 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
 			<Tool
@@ -38,7 +38,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -97,9 +96,8 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -117,11 +115,9 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -174,21 +170,22 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
-			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
 			RelativePathToProject=".\test\common\common.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
+			RelativePathToProject=".\swish\com_dll\com_dll.vcproj"
 		/>
 	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\DummyFolder.cpp"
+				RelativePath=".\HostFolder_test.cpp"
 				>
 			</File>
 			<File
@@ -196,7 +193,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\module.cpp"
+				RelativePath=".\Module.cpp"
 				>
 			</File>
 			<File
@@ -219,61 +216,26 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\pidl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoteFolder_test.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\DataObjectTests.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyFolder.h"
-				>
-			</File>
 			<File
 				RelativePath=".\pch.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Pidl_test.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Tests"
-			>
-			<File
-				RelativePath=".\DataObject_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyFolder_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HostPidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Pidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PidlHandle_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RemotePidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDataObject_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDirectory_test.cpp"
+				RelativePath=".\pidl.hpp"
 				>
 			</File>
 		</Filter>

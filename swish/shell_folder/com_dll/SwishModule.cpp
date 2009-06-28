@@ -32,6 +32,7 @@
 #include "swish/atl.hpp"
 
 namespace swish {
+namespace shell_folder {
 namespace com_dll {
 
 using namespace ATL;
@@ -48,9 +49,9 @@ public :
 		IDR_SWISH, "{b816a838-5022-11dc-9153-0090f5284f85}")
 };
 
-}} // namespace swish::com_dll
+}}} // namespace swish::shell_folder::com_dll
 
-swish::com_dll::CSwishModule _Module;
+swish::shell_folder::com_dll::CSwishModule _Module;
 
 
 /** DLL Entry Point. */

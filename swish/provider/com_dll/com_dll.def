@@ -1,4 +1,4 @@
-LIBRARY	"swish-provider-com_dll"
+LIBRARY	"provider-com_dll"
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE

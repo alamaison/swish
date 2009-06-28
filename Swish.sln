@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swish-com_dll", "swish\com_dll\com_dll.vcproj", "{3F48C01A-FE7D-4907-860B-B7F45926F277}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell_folder-com_dll", "swish\shell_folder\com_dll\com_dll.vcproj", "{3F48C01A-FE7D-4907-860B-B7F45926F277}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{4AC841DB-FEDF-4624-BFBD-A494B1F8B188}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-swish", "test\swish\swish.vcproj", "{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder", "test\shell_folder\shell_folder.vcproj", "{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 		{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0} = {80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}
@@ -13,13 +13,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-swish", "test\swish\sw
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{D3818F0B-C311-4E86-AD4A-AA9AFE387E24}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swish-provider", "swish\provider\provider.vcproj", "{CFC0C998-B275-48AB-AAD3-C99272154656}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "provider", "swish\provider\provider.vcproj", "{CFC0C998-B275-48AB-AAD3-C99272154656}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libssh2", "thirdparty\libssh2\libssh2.vcproj", "{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{9866A391-2C55-4E6E-81AF-627C789FA76A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swish-provider-com_dll", "swish\provider\com_dll\com_dll.vcproj", "{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "provider-com_dll", "swish\provider\com_dll\com_dll.vcproj", "{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 	EndProjectSection
@@ -28,9 +28,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-common", "test\common\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider", "test\provider\provider.vcproj", "{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swish-shell_folder", "swish\shell_folder\shell_folder.vcproj", "{859B89CB-90B5-4F71-B501-07D5A3600271}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell_folder", "swish\shell_folder\shell_folder.vcproj", "{859B89CB-90B5-4F71-B501-07D5A3600271}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-swish_com_dll", "test\swish_com_dll\swish_com_dll.vcproj", "{D5415386-FA78-4411-AAAA-7B1FEB0D25AF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-com_dll", "test\shell_folder-com_dll\shell_folder-com_dll.vcproj", "{D5415386-FA78-4411-AAAA-7B1FEB0D25AF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{D17C85C0-179F-4460-993A-FB627E20DA2F}"
 EndProject

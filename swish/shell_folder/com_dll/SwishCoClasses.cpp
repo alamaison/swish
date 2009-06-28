@@ -33,6 +33,7 @@
 #include "resource.h"
 
 namespace swish {
+namespace shell_folder {
 namespace com_dll {
 
 using namespace ATL;
@@ -75,4 +76,4 @@ public:
 
 OBJECT_ENTRY_AUTO(__uuidof(CRemoteFolder), CRemoteFolderCoClass)
 
-}} // namespace swish::com_dll
+}}} // namespace swish::shell_folder::com_dll

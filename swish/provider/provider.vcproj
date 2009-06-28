@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="swish-provider"
+	Name="provider"
 	ProjectGUID="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 	RootNamespace="swish"
 	Keyword="AtlProj"
