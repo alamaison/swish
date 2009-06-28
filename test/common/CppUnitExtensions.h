@@ -11,7 +11,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #pragma warning(pop)
 
-#include "common/atl.hpp"   // Common ATL setup
+#include "swish/atl.hpp"    // Common ATL setup
 #include <atlstr.h>         // CString
 
 CPPUNIT_NS_BEGIN

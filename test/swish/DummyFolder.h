@@ -27,7 +27,7 @@
 #pragma once
 
 #include "swish/shell_folder/Folder.h"  // Superclass
-#include "common/CoFactory.hpp"         // CComObject factory
+#include "swish/CoFactory.hpp"          // CComObject factory
 
 #include <pshpack1.h>
 struct DummyItemId
@@ -72,7 +72,7 @@ struct _CopyPidl
 
 class ATL_NO_VTABLE CDummyFolder :
 	public CFolder,
-	private swish::common::CCoFactory<CDummyFolder>
+	private swish::CCoFactory<CDummyFolder>
 {
 public:
 

@@ -32,7 +32,7 @@
 
 #include "swish/shell_folder/Swish.h" // for HostFolder UUID
 
-#include "common/atl.hpp"  // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #include <mshtml.h>  // For IHTMLDOMTextNode2
 

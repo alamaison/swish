@@ -11,7 +11,7 @@
 
 #include "tree.h"  // N-ary tree container for mocking a filesystem
 
-#include "common/atl.hpp"  // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
 

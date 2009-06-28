@@ -6,7 +6,7 @@ typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
 #include "test/common/TestConfig.h"
 
-#include "common/atl.hpp"  // Common ATL setup
+#include "swish/atl.hpp"   // Common ATL setup
 #include <ATLComTime.h>    // COleDateTime
 
 // Redefine the 'private' keyword to inject a friend declaration for this 

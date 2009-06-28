@@ -22,7 +22,7 @@
 
 #include "swish/shell_folder/Pidl.h"
 
-#include "common/atl.hpp"  // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 #include <atlstr.h>  // CString
 
 #include <vector>

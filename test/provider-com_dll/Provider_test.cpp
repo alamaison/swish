@@ -31,7 +31,7 @@
 
 #include "swish/provider/com_dll/com_dll.h" // Provider UUID and forward-decl
 
-#include "common/atl.hpp"                   // Common ATL setup
+#include "swish/atl.hpp"                    // Common ATL setup
 #include <ATLComTime.h>                     // COleDateTime
 
 #include <mshtml.h>                         // For IHTMLDOMTextNode2
