@@ -38,6 +38,7 @@
 
 #include "SessionFactory.hpp"                // CSession
 #include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
+#include "common/ComSTLContainer.hpp"        // CComSTLContainer
 
 #include "common/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
@@ -122,45 +123,10 @@ private:
 		__in_z const char *szPath, __out ATL::CString& strError );
 };
 
-}} // namespace swish::provider
-
-/**
- * A COM holder for an STL collection that can be used in an enumeration.
- * The enumerator (IEnumXXX) will take a pointer to this holder when it is
- * created which ensures that the STL collection lives at least as long as
- * the enumerator.
- */
-template <
-	typename CollType, 
-	typename ThreadingModel=ATL::CComObjectThreadModel>
-class CComSTLCopyContainer :
-	public ATL::CComObjectRootEx<ThreadingModel>,
-	public IUnknown
-{
-public:
-	HRESULT Copy(const CollType& coll)
-	{
-		try
-		{
-			m_coll = coll;
-			return S_OK;
-		}
-		catch (...)
-		{
-			return E_OUTOFMEMORY;
-		}
-	}
-
-BEGIN_COM_MAP(CComSTLCopyContainer)
-	COM_INTERFACE_ENTRY(IUnknown)
-END_COM_MAP()
-
-	CollType m_coll;
-};
-
-typedef ATL::CComObject<CComSTLCopyContainer< std::list<Listing> > >
+typedef ATL::CComObject<swish::common::CComSTLContainer< std::list<Listing> > >
 	CComListingHolder;
 
+}} // namespace swish::provider
 
 /**
  * Copy-policy for use by enumerators of Listing items.

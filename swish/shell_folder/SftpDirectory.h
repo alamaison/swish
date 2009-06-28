@@ -23,42 +23,12 @@
 #include "RemotePidl.h"
 #include "Connection.h"          // For SFTP Connection container
 #include "common/catch_com.hpp"  // COM catch block
+#include "common/ComSTLContainer.hpp"  // CComSTLContainer
 
 #include <vector>
 
-/**
- * A COM holder for an STL collection that can be used in an enumeration.
- * The enumerator (IEnumXXX) will take a pointer to this holder when it is
- * created which ensures that the STL collection lives at least as long as
- * the enumerator.
- */
-template <typename CollType, typename ThreadingModel=ATL::CComObjectThreadModel>
-class CComSTLCopyContainer :
-	public ATL::CComObjectRootEx<ThreadingModel>,
-	public IUnknown
-{
-public:
-	HRESULT Copy(const CollType& coll)
-	{
-		try
-		{
-			m_coll = coll;
-			return S_OK;
-		}
-		catch (...)
-		{
-			return E_OUTOFMEMORY;
-		}
-	}
-
-BEGIN_COM_MAP(CComSTLCopyContainer)
-	COM_INTERFACE_ENTRY(IUnknown)
-END_COM_MAP()
-
-	CollType m_coll;
-};
-
-typedef ATL::CComObject<CComSTLCopyContainer< std::vector<CChildPidl> > >
+typedef ATL::CComObject<
+        swish::common::CComSTLContainer< std::vector<CChildPidl> > >
 	CComPidlHolder;
 
 class CSftpDirectory
