@@ -72,7 +72,7 @@ struct _CopyPidl
 
 class ATL_NO_VTABLE CDummyFolder :
 	public CFolder,
-	private CCoFactory<CDummyFolder>
+	private swish::common::CCoFactory<CDummyFolder>
 {
 public:
 

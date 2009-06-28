@@ -30,7 +30,7 @@
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,
 	public ATL::CComObjectRoot,
-	private CCoFactory<CExplorerCallback>
+	private swish::common::CCoFactory<CExplorerCallback>
 {
 public:
 

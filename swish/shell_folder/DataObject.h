@@ -51,7 +51,7 @@
 class CDataObject :
 	public ATL::CComObjectRoot,
 	public IDataObject,
-	private CCoFactory<CDataObject>
+	private swish::common::CCoFactory<CDataObject>
 {
 public:
 

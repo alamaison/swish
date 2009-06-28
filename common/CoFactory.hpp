@@ -38,6 +38,9 @@
 
 #include "atl.hpp"      // Common ATL setup
 
+namespace swish {
+namespace common {
+
 template <typename T>
 class CCoFactory
 {
@@ -62,3 +65,5 @@ public:
 		return pObject;
 	}
 };
+
+}}; // namespace swish::common

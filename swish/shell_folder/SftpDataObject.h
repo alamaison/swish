@@ -56,7 +56,7 @@
  */
 class CSftpDataObject :
 	public CDataObject,
-	private CCoFactory<CSftpDataObject>
+	private swish::common::CCoFactory<CSftpDataObject>
 {
 public:
 
@@ -65,7 +65,7 @@ public:
 		COM_INTERFACE_ENTRY_CHAIN(CDataObject)
 	END_COM_MAP()
 
-	using CCoFactory<CSftpDataObject>::CreateCoObject;
+	using swish::common::CCoFactory<CSftpDataObject>::CreateCoObject;
 
 	static ATL::CComPtr<IDataObject> Create(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,

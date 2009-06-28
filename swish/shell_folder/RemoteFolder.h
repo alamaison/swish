@@ -34,7 +34,7 @@
 
 class ATL_NO_VTABLE CRemoteFolder :
 	public CFolder,
-	private CCoFactory<CRemoteFolder>
+	private swish::common::CCoFactory<CRemoteFolder>
 {
 public:
 
