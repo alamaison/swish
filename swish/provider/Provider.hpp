@@ -38,9 +38,9 @@
 
 #include "SessionFactory.hpp"                // CSession
 #include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
-#include "common/ComSTLContainer.hpp"        // CComSTLContainer
+#include "swish/ComSTLContainer.hpp"        // CComSTLContainer
 
-#include "common/atl.hpp"                    // Common ATL setup
+#include "swish/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
 
 #include <list>
@@ -123,7 +123,7 @@ private:
 		__in_z const char *szPath, __out ATL::CString& strError );
 };
 
-typedef ATL::CComObject<swish::common::CComSTLContainer< std::list<Listing> > >
+typedef ATL::CComObject<swish::CComSTLContainer< std::list<Listing> > >
 	CComListingHolder;
 
 }} // namespace swish::provider

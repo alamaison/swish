@@ -38,7 +38,7 @@
 
 #include "swish/shell_folder/SftpProvider.h"  // ISftpProvider interfaces
 
-#include "common/atl.hpp"                     // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>

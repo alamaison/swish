@@ -1,4 +1,9 @@
-/*  Implementation of Explorer folder handling remote files and folders.
+/**
+    @file
+
+    Explorer folder that handles remote files and folders.
+
+    @if licence
 
     Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -15,6 +20,8 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #include "pch.h"
@@ -29,7 +36,7 @@
 #include "Registry.h"
 #include "properties/properties.h" // File properties handler
 #include "properties/column.h"     // Column details
-#include "common/debug.hpp"
+#include "swish/debug.hpp"
 
 #include <string>
 

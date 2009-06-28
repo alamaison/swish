@@ -45,7 +45,7 @@
 #ifdef USING_PRECOMPILED_HEADERS
 
 #ifdef __cplusplus
-#include "common/atl.hpp"
+#include "swish/atl.hpp"
 #endif
 
 #endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

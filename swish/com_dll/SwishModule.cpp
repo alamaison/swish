@@ -29,7 +29,7 @@
 #include "resource.h"                  // main symbols
 #include "swish/shell_folder/Swish.h"  // Swish type-library
 
-#include "common/atl.hpp"
+#include "swish/atl.hpp"
 
 namespace swish {
 namespace com_dll {

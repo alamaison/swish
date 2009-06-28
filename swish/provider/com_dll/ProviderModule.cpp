@@ -39,7 +39,7 @@
 #include "resource.h"            // main symbols
 #include "com_dll.h"             // provider UUIDs (generated header)
 
-#include "common/atl.hpp"        // Common ATL setup
+#include "swish/atl.hpp"         // Common ATL setup
 
 namespace swish {
 namespace provider {

@@ -1,11 +1,11 @@
 /**
     @file
-	
-	Precompiled-header.
+
+    COM holder to manage lifetime of an STL collection used in an enumeration.
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,28 +34,44 @@
     @endif
 */
 
-/**
- * @file
- *
- * This file exists @b solely to include other headers which should be
- * precompiled to reduce build times.  The source files which include this
- * header should not depend on anything in it.  In other words, this file
- * is an optimisation alone and all files should still compile if
- * USING_PRECOMPILED_HEADERS is not defined.
- *
- * @note  It is specifically forbidden to add anything other than #include
- * statements to this file.
- *
- * @warning  Do not include pch.h in any header files.  External clients
- * should not be affected by anything in it.
- */
-
 #pragma once
 
-#ifdef USING_PRECOMPILED_HEADERS
+#include "atl.hpp"  // Common ATL setup
 
-#ifdef __cplusplus
-#include "swish/atl.hpp"
-#endif
+namespace swish {
 
-#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line
+/**
+ * A COM holder for an STL collection that can be used in an enumeration.
+ * The enumerator (IEnumXXX) will take a pointer to this holder when it is
+ * created which ensures that the STL collection lives at least as long as
+ * the enumerator.
+ */
+template <
+	typename CollType, 
+	typename ThreadingModel=ATL::CComObjectThreadModel>
+class CComSTLContainer :
+	public ATL::CComObjectRootEx<ThreadingModel>,
+	public IUnknown
+{
+public:
+	HRESULT Copy(const CollType& coll)
+	{
+		try
+		{
+			m_coll = coll;
+			return S_OK;
+		}
+		catch (...)
+		{
+			return E_OUTOFMEMORY;
+		}
+	}
+
+BEGIN_COM_MAP(CComSTLContainer)
+	COM_INTERFACE_ENTRY(IUnknown)
+END_COM_MAP()
+
+	CollType m_coll;
+};
+
+} // namespace swish

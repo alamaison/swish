@@ -1,11 +1,11 @@
 /**
     @file
-	
-	Precompiled-header.
+
+    COM Exception handler.
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,28 +34,33 @@
     @endif
 */
 
-/**
- * @file
- *
- * This file exists @b solely to include other headers which should be
- * precompiled to reduce build times.  The source files which include this
- * header should not depend on anything in it.  In other words, this file
- * is an optimisation alone and all files should still compile if
- * USING_PRECOMPILED_HEADERS is not defined.
- *
- * @note  It is specifically forbidden to add anything other than #include
- * statements to this file.
- *
- * @warning  Do not include pch.h in any header files.  External clients
- * should not be affected by anything in it.
- */
+#include "atl.hpp"        // For CAtlException
 
-#pragma once
+#include <ComDef.h>       // For _com_error
 
-#ifdef USING_PRECOMPILED_HEADERS
+#include <exception>      // For std::exception and std::bad_alloc
 
-#ifdef __cplusplus
-#include "swish/atl.hpp"
-#endif
+#define catchCom()                  \
+catch (const _com_error& e)         \
+{                                   \
+	ATLTRACE("Caught _com_error exception: %w\n", e.ErrorMessage()); \
+	return e.Error();               \
+}                                   \
+catch (const std::bad_alloc&)       \
+{                                   \
+	return E_OUTOFMEMORY;           \
+}                                   \
+catch (const std::exception&)       \
+{                                   \
+	return E_UNEXPECTED;            \
+}                                   \
+catch (const ATL::CAtlException& e) \
+{                                   \
+	return e;                       \
+}                                   \
+catch (...)                         \
+{                                   \
+	ATLASSERT(!"Caught unknown exception at COM boundary"); \
+	return E_UNEXPECTED;            \
+}
 
-#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

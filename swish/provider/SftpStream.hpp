@@ -38,7 +38,7 @@
 
 #include "Session.hpp"
 
-#include "common/atl.hpp"                    // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #include <string>
 

@@ -38,7 +38,7 @@
 
 #include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
 
-#include "common/atl.hpp"                    // Common ATL setup
+#include "swish/atl.hpp"                     // Common ATL setup
 #include <atlsafe.h>                         // CComSafeArray
 
 

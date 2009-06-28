@@ -1,11 +1,11 @@
 /**
     @file
-	
-	Precompiled-header.
+
+    Set up ATL support.
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,28 +34,48 @@
     @endif
 */
 
-/**
+/**    
  * @file
  *
- * This file exists @b solely to include other headers which should be
- * precompiled to reduce build times.  The source files which include this
- * header should not depend on anything in it.  In other words, this file
- * is an optimisation alone and all files should still compile if
- * USING_PRECOMPILED_HEADERS is not defined.
+ * Any files that need ATL support should include this header to ensure
+ * that ATL is set up consistently across different files and projects.
  *
- * @note  It is specifically forbidden to add anything other than #include
- * statements to this file.
- *
- * @warning  Do not include pch.h in any header files.  External clients
- * should not be affected by anything in it.
+ * This file must be included before any other ATL headers as they depend
+ * on <atlbase.h> and <atlcom.h> already being included.  Also, any macros
+ * in this file must be allowed to affect the behaviour of other parts of 
+ * ATL.  This is contrary to the usual top-down include order.
  */
 
 #pragma once
 
-#ifdef USING_PRECOMPILED_HEADERS
+#define _ATL_APARTMENT_THREADED
 
-#ifdef __cplusplus
-#include "swish/atl.hpp"
+#ifdef _ATL_SINGLE_THREADED
+#error "_ATL_SINGLE_THREADED conflicts with _ATL_APARTMENT_THREADED"
 #endif
 
-#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line
+#ifdef _ATL_FREE_THREADED
+#error "_ATL_FREE_THREADED conflicts with _ATL_APARTMENT_THREADED"
+#endif
+
+
+#define _ATL_NO_AUTOMATIC_NAMESPACE
+
+// Make some CString constructors explicit
+#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS
+
+// (U)LONGLONG CComVariant support
+#define _ATL_SUPPORT_VT_I8
+
+#ifdef _DEBUG
+#define _ATL_DEBUG_QI
+#define _ATL_DEBUG_INTERFACES
+#endif
+
+#define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be before
+                             ///< <shtypes.h> or <shlobj.h>).  As <atlbase.h>
+                             ///< includes <shtypes.h> via <shlwapi.h> we 
+                             ///< need to define this here.
+
+#include <atlbase.h> // base ATL classes
+#include <atlcom.h>

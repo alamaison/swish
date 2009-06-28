@@ -26,15 +26,15 @@
 #include "RemotePidl.h"         // RemoteItemId handling
 #include "Pool.h"               // Access to SFTP global session pool
 #include "Connection.h"         // Two way frontend-backend connection
-#include "common/CoFactory.hpp" // CComObject factory
+#include "swish/CoFactory.hpp"  // CComObject factory
 
-#include "common/atl.hpp"       // Common ATL setup
+#include "swish/atl.hpp"        // Common ATL setup
 
 #include <vector>
 
 class ATL_NO_VTABLE CRemoteFolder :
 	public CFolder,
-	private swish::common::CCoFactory<CRemoteFolder>
+	private swish::CCoFactory<CRemoteFolder>
 {
 public:
 

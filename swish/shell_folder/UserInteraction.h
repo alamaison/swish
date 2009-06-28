@@ -1,6 +1,11 @@
-/*  Component to handle user-interaction between the user and an SftpProvider.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+	Component to handle user-interaction between the user and an SftpProvider.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,13 +20,15 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #pragma once
 
 #include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
 
-#include "common/atl.hpp"          // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 class ATL_NO_VTABLE CUserInteraction :
 	public ISftpConsumer,

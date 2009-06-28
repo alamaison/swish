@@ -38,12 +38,12 @@
 #include "SessionFactory.hpp"
 
 #include "KeyboardInteractive.hpp"
-#include "common/debug.hpp"
+#include "swish/debug.hpp"
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-#include "common/atl.hpp"         // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #include <string>
 

@@ -37,8 +37,8 @@
 #include "pch.h"
 #include "SftpStream.hpp"
 
-#include "common/debug.hpp"                  // Debug macros
-#include "common/catch_com.hpp"              // COM Exception handler
+#include "swish/debug.hpp"                   // Debug macros
+#include "swish/catch_com.hpp"               // COM Exception handler
 
 #include <atlstr.h>                          // CString
 

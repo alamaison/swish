@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include "common/CoFactory.hpp"  // CComObject factory
+#include "swish/CoFactory.hpp"  // CComObject factory
 
-#include "common/atl.hpp"  // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
@@ -51,7 +51,7 @@
 class CDataObject :
 	public ATL::CComObjectRoot,
 	public IDataObject,
-	private swish::common::CCoFactory<CDataObject>
+	private swish::CCoFactory<CDataObject>
 {
 public:
 

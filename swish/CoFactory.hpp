@@ -1,7 +1,7 @@
 /**
     @file
-	
-	Precompiled-header.
+
+    Mixin class which gives CComObjects a creator of AddReffed instances.
 
     @if licence
 
@@ -34,28 +34,35 @@
     @endif
 */
 
-/**
- * @file
- *
- * This file exists @b solely to include other headers which should be
- * precompiled to reduce build times.  The source files which include this
- * header should not depend on anything in it.  In other words, this file
- * is an optimisation alone and all files should still compile if
- * USING_PRECOMPILED_HEADERS is not defined.
- *
- * @note  It is specifically forbidden to add anything other than #include
- * statements to this file.
- *
- * @warning  Do not include pch.h in any header files.  External clients
- * should not be affected by anything in it.
- */
-
 #pragma once
 
-#ifdef USING_PRECOMPILED_HEADERS
+#include "atl.hpp"      // Common ATL setup
 
-#ifdef __cplusplus
-#include "swish/atl.hpp"
-#endif
+namespace swish {
 
-#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line
+template <typename T>
+class CCoFactory
+{
+public:
+	/**
+	 * Static factory method.
+	 *
+	 * This creator method provides a CComObject-based class with a way to 
+	 * create instances with exception-safe lifetimes.  The created 
+	 * instance is AddReffed, unlike those create by CreateInstance which 
+	 * have a reference count of 0.
+	 *
+	 * @returns  Smart pointer to the CComObject<T>-based COM object.
+	 * @throws   CAtlException if creation fails.
+	 */
+	static ATL::CComPtr<T> CreateCoObject() throw(...)
+	{
+		ATL::CComObject<T> *pObject = NULL;
+		HRESULT hr = ATL::CComObject<T>::CreateInstance(&pObject);
+		ATLENSURE_SUCCEEDED(hr);
+
+		return pObject;
+	}
+};
+
+}; // namespace swish

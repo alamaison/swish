@@ -1,6 +1,11 @@
-/*  Implementation of libssh2-based SFTP component.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    libssh2-based SFTP provider component.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +30,8 @@
     permission to release a modified version without this exception; this 
     exception also makes it possible to release a modified version which 
     carries forward this exception.
+
+    @endif
 */
 
 #include "pch.h"
@@ -34,8 +41,8 @@
 #include "SftpStream.hpp"
 #include "listing/listing.hpp"   // SFTP directory listing helper functions
 
-#include "common/remotelimits.h"
-#include "common/catch_com.hpp"  // COM exception handler
+#include "swish/remotelimits.h"
+#include "swish/catch_com.hpp"   // COM exception handler
 
 #include <ws2tcpip.h>            // Winsock
 #include <wspiapi.h>             // Winsock

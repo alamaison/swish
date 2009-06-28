@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include "common/CoFactory.hpp"  // CComObject factory
+#include "swish/CoFactory.hpp"  // CComObject factory
 
-#include "common/atl.hpp"  // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
@@ -30,7 +30,7 @@
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,
 	public ATL::CComObjectRoot,
-	private swish::common::CCoFactory<CExplorerCallback>
+	private swish::CCoFactory<CExplorerCallback>
 {
 public:
 

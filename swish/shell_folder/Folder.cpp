@@ -1,4 +1,9 @@
-/*  Base class for IShellFolder implementations.
+/**
+    @file
+
+	Base class for IShellFolder implementations.
+
+    @if licence
 
     Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -15,13 +20,15 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #include "pch.h"
 #include "Folder.h"
 
-#include "common/debug.hpp"
-#include "common/catch_com.hpp"
+#include "swish/debug.hpp"
+#include "swish/catch_com.hpp"
 
 using ATL::CComPtr;
 

@@ -1,4 +1,9 @@
-/*  File property handling.
+/**
+    @file
+
+    File property handling.
+
+    @if licence
 
     Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
@@ -15,11 +20,13 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #pragma once
 
-#include "common/atl.hpp"    // Common ATL setup
+#include "swish/atl.hpp"    // Common ATL setup
 
 #include <initguid.h> // Force DEFINE_PROPKEY() to actually define a key
 #include <propkey.h>  // Predefined shell property keys

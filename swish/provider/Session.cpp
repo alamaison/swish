@@ -37,10 +37,10 @@
 #include "pch.h"
 #include "Session.hpp"
 
-#include "common/remotelimits.h"
-#include "common/debug.hpp"       // Debug macros
+#include "swish/remotelimits.h"
+#include "swish/debug.hpp"        // Debug macros
 
-#include "common/atl.hpp"         // Common ATL setup
+#include "swish/atl.hpp"          // Common ATL setup
 
 #include <ws2tcpip.h>             // Winsock
 #include <wspiapi.h>              // Winsock

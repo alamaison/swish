@@ -45,7 +45,7 @@
 #ifdef USING_PRECOMPILED_HEADERS
 
 #ifdef __cplusplus
-#include "common/atl.hpp"
+#include "swish/atl.hpp"
 
 #include <vector>
 #endif

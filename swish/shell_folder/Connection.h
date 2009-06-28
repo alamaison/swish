@@ -1,6 +1,11 @@
-/*  Container for both sides of the SFTP connection, producer and consumer.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+	Container for both sides of the SFTP connection, producer and consumer.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +20,8 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #ifndef CONNECTION_H
@@ -26,7 +33,7 @@
 
 #include "SftpProvider.h" // ISftpProvider/ISftpConsumer interfaces
 
-#include "common/atl.hpp"      // Common ATL setup
+#include "swish/atl.hpp"  // Common ATL setup
 
 class CConnection
 {

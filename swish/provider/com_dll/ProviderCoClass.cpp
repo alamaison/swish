@@ -41,7 +41,7 @@
 
 #include "swish/provider/Provider.hpp" // CProvider
 
-#include "common/atl.hpp"              // Common ATL setup
+#include "swish/atl.hpp"               // Common ATL setup
 
 using ATL::CComCoClass;
 
