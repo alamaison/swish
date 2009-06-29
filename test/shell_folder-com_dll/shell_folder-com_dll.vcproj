@@ -17,8 +17,6 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -93,8 +91,6 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -175,7 +171,7 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-			RelativePathToProject=".\swish\com_dll\com_dll.vcproj"
+			RelativePathToProject=".\swish\shell_folder\com_dll\com_dll.vcproj"
 		/>
 	</References>
 	<Files>

@@ -17,8 +17,6 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -63,7 +61,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;"
+				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -108,8 +106,6 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -152,7 +148,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;"
+				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)..\..\shell_folder\$(ConfigurationName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -197,8 +193,6 @@
 		</Configuration>
 		<Configuration
 			Name="PREfast|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
@@ -243,7 +237,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\swish\shell_folder&quot;;$(IntDir);&quot;$(SolutionDir)\swish\shell_folder\$(IntDir)&quot;;"
+				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)..\..\shell_folder\$(ConfigurationName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"

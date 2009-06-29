@@ -7,8 +7,8 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Inst
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder", "test\shell_folder\shell_folder.vcproj", "{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
 	ProjectSection(ProjectDependencies) = postProject
-		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 		{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0} = {80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}
+		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{D3818F0B-C311-4E86-AD4A-AA9AFE387E24}"
@@ -25,6 +25,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "provider-com_dll", "swish\p
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-common", "test\common\common.vcproj", "{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{859B89CB-90B5-4F71-B501-07D5A3600271} = {859B89CB-90B5-4F71-B501-07D5A3600271}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider", "test\provider\provider.vcproj", "{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
 EndProject

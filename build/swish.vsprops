@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="swish"
+	InheritedPropertySheets=".\swish_output_dirs.vsprops"
 	>
 	<Tool
 		Name="VCCLCompilerTool"

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="swish_output_dirs"
+	OutputDirectory="$(SolutionDir)bin\$(ConfigurationName)\"
+	IntermediateDirectory="$(SolutionDir)bin\$(ProjectName)\$(ConfigurationName)\"
+	>
+</VisualStudioPropertySheet>
