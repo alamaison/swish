@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "NewConnDialog.h"
 
 #include "swish/remotelimits.h"  // Text field limits

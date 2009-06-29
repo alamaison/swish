@@ -1,6 +1,5 @@
 // DummyStream.cpp : Implementation of CDummyStream
 
-#include "pch.h"
 #include "standard.h"
 
 #include "DummyStream.h"

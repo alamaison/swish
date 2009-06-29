@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "pidl.hpp"
 
 namespace { // private

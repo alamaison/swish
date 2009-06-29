@@ -4,8 +4,6 @@
  * ATL Module required for ATL support.
  */
 
-#include "pch.h"
-
 #include "swish/atl.hpp"  // Common ATL setup
 
 using namespace ATL;

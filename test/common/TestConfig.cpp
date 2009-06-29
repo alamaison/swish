@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "standard.h"
 
 #include "TestConfig.h"

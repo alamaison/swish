@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "Folder.h"
 
 #include "swish/debug.hpp"

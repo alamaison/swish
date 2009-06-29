@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "HostFolder.h"
 
 #include "RemoteFolder.h"

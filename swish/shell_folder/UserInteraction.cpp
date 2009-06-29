@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "UserInteraction.h"
 
 #include "PasswordDialog.h"       // Password dialog box

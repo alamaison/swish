@@ -34,7 +34,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "KeyboardInteractive.hpp"
 
 #include <libssh2.h>

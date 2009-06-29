@@ -1,7 +1,7 @@
 /**
     @file
-	
-	Precompiled-header.
+
+    Source file for the precompiled header.
 
     @if licence
 
@@ -37,25 +37,15 @@
 /**
  * @file
  *
- * This file exists @b solely to include other headers which should be
- * precompiled to reduce build times.  The source files which include this
- * header should not depend on anything in it.  In other words, this file
- * is an optimisation alone and all files should still compile if
- * USING_PRECOMPILED_HEADERS is not defined.
+ * Any project that force-includes a precompiled header 'pch.h' should have
+ * this file in its list of source files.  This file should also have
+ * Create Precompiled Header (/Yc) set in the project properties.  
  *
- * @note  It is specifically forbidden to add anything other than #include
- * statements to this file.
+ * The combination of the two step above causes the compiler to place a
+ * precompiled header in the intermediate directory at the start of compilation.
+ * The precompiled header will be $(TargetName).pch and the intermediate file 
+ * pch.obj will contain the pre-compiled type information.
  *
- * @warning  Do not include pch.h in any header files.  External clients
- * should not be affected by anything in it.
+ * @warning
+ * Do not add any code nor include any other headers in this file.
  */
-
-#pragma once
-
-#ifdef USING_PRECOMPILED_HEADERS
-
-#ifdef __cplusplus
-#include "swish/atl.hpp"
-#endif
-
-#endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

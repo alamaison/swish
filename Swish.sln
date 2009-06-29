@@ -43,6 +43,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider-com_dll", "te
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-dialogue", "test\shell_folder-dialogue\shell_folder-dialogue.vcproj", "{9225F798-2571-4F7A-8E30-42165A44B16A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{AAB28A44-0697-484F-980B-F6553EA157BE}"
+	ProjectSection(SolutionItems) = preProject
+		swish\atl.hpp = swish\atl.hpp
+		swish\catch_com.hpp = swish\catch_com.hpp
+		swish\CoFactory.hpp = swish\CoFactory.hpp
+		swish\ComSTLContainer.hpp = swish\ComSTLContainer.hpp
+		swish\debug.hpp = swish\debug.hpp
+		swish\pch.cpp = swish\pch.cpp
+		swish\pch.h = swish\pch.h
+		swish\remotelimits.h = swish\remotelimits.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

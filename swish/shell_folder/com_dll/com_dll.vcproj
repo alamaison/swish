@@ -51,8 +51,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -136,8 +134,6 @@
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -227,8 +223,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -296,7 +290,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pch.cpp"
+				RelativePath="..\..\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -304,7 +298,6 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -313,7 +306,6 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -322,7 +314,6 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 			</File>
@@ -339,10 +330,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
-			<File
-				RelativePath=".\pch.h"
-				>
-			</File>
 			<File
 				RelativePath=".\resource.h"
 				>

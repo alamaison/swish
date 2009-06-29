@@ -4,7 +4,6 @@
  * Main test runner implementation.
  */
 
-#include "pch.h"
 #include "standard.h"
 
 #include <cppunit/BriefTestProgressListener.h>

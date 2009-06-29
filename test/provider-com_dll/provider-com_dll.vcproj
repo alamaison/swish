@@ -44,8 +44,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -118,8 +116,6 @@
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -193,7 +189,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pch.cpp"
+				RelativePath="..\..\swish\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -222,10 +218,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\pch.h"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

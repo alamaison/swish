@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "ExplorerCallback.h"
 
 #include "NewConnDialog.h"

@@ -17,7 +17,6 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "pch.h"
 #include "DataObject.h"
 
 #include "swish/catch_com.hpp"  // COM catch block

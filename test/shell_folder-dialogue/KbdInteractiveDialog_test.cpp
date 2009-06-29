@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "test/common/CppUnitExtensions.h"
 
 // Redefine the 'private' keyword to inject a friend declaration for this 

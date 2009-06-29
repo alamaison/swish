@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "Registry.h"
 
 #include "RemotePidl.h"

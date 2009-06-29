@@ -34,7 +34,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "SftpStream.hpp"
 
 #include "swish/debug.hpp"                   // Debug macros

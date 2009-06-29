@@ -4,7 +4,6 @@
  * Mock ISftpConsumer COM object implementation.
  */
 
-#include "pch.h"              // Precompiled header
 #include "standard.h"
 
 #include "MockSftpConsumer.h"

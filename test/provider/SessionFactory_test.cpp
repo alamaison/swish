@@ -4,7 +4,6 @@
  * Tests for the CSessionFactory class.
  */
 
-#include "pch.h"
 #include "standard.h"
 
 #include "test/common/CppUnitExtensions.h"

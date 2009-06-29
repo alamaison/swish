@@ -34,7 +34,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "Session.hpp"
 
 #include "swish/remotelimits.h"

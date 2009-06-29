@@ -56,8 +56,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -129,8 +127,6 @@
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -206,8 +202,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="pch.h"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -287,7 +281,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pch.cpp"
+				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -458,10 +452,6 @@
 			</File>
 			<File
 				RelativePath=".\PasswordDialog.h"
-				>
-			</File>
-			<File
-				RelativePath=".\pch.h"
 				>
 			</File>
 			<File

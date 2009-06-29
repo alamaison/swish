@@ -34,8 +34,6 @@
     @endif
 */
 
-#include "pch.h"
-
 #include "resource.h"                  // main symbols
 #include "com_dll.h"                   // provider UUIDs (generated header)
 

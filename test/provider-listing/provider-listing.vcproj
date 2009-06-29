@@ -44,7 +44,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -115,7 +114,6 @@
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -177,6 +175,26 @@
 			<File
 				RelativePath=".\listing_test.cpp"
 				>
+			</File>
+			<File
+				RelativePath="..\..\swish\pch.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

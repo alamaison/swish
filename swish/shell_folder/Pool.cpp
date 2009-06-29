@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "Pool.h"
 
 #include "swish/remotelimits.h"  // Text field limits

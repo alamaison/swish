@@ -34,7 +34,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "listing.hpp"
 
 #include <ATLComTime.h>    // COleDateTime

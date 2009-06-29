@@ -37,7 +37,7 @@
 /**
  * @file
  *
- * This file exists @b solely to include other headers which should be
+ * This file exists @b solely to include other headers which will be
  * precompiled to reduce build times.  The source files which include this
  * header should not depend on anything in it.  In other words, this file
  * is an optimisation alone and all files should still compile if
@@ -46,8 +46,15 @@
  * @note  It is specifically forbidden to add anything other than #include
  * statements to this file.
  *
- * @warning  Do not include pch.h in any header files.  External clients
- * should not be affected by anything in it.
+ * The top-level of the Swish solution is set to force-include this header
+ * in all source files.  Therefore, it doesn't have to be included
+ * explicitly.  All projects that want to use precompiled headers must have 
+ * pch.cpp in their sources and set to Create Precompiled Header (/Yc) in 
+ * order to output the compiled header.
+ *
+ * If a project needs its own set of precompiled includes, it can just
+ * override the Create/Use PCH Through File and Force Includes properties
+ * for the project.
  */
 
 #pragma once

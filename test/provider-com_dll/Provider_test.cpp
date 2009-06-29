@@ -24,7 +24,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "test/common/CppUnitExtensions.h"
 #include "test/common/MockSftpConsumer.h"
 #include "test/common/TestConfig.h"

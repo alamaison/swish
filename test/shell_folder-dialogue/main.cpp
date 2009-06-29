@@ -4,8 +4,6 @@
  * Main test runner implementation.
  */
 
-#include "pch.h"
-
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>

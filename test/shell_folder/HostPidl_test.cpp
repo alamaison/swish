@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Pidl_test.h"
 
 #include "swish/shell_folder/HostPidl.h"

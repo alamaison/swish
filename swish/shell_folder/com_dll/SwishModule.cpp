@@ -24,8 +24,6 @@
     @endif
 */
 
-#include "pch.h"
-
 #include "resource.h"                  // main symbols
 #include "swish/shell_folder/Swish.h"  // Swish type-library
 

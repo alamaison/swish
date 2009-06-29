@@ -24,8 +24,6 @@
     @endif
 */
 
-#include "pch.h"
-
 #include "swish/shell_folder/HostFolder.h"
 #include "swish/shell_folder/RemoteFolder.h"
 #include "swish/shell_folder/Swish.h"  // CHost/RemoteFolder UUIDs

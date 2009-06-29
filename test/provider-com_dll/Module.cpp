@@ -24,8 +24,6 @@
     @endif
 */
 
-#include "pch.h"
-
 #include "swish/atl.hpp"
 
 namespace test {

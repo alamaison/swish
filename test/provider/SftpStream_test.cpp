@@ -4,7 +4,6 @@
  * Tests for the IStream implementation.
  */
 
-#include "pch.h"
 #include "standard.h"
 
 #include "test/common/CppUnitExtensions.h"

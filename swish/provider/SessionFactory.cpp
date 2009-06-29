@@ -34,7 +34,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "SessionFactory.hpp"
 
 #include "KeyboardInteractive.hpp"

@@ -34,7 +34,6 @@
     @endif
 */
 
-#include "pch.h"
 #include "Provider.hpp"
 
 #include "KeyboardInteractive.hpp"

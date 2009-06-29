@@ -4,7 +4,6 @@
  * ATL Module required for ATL support.
  */
 
-#include "pch.h"
 #include "standard.h"
 
 #include <atlbase.h>   // ATL modules

@@ -44,7 +44,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -104,7 +103,6 @@
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="2"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -149,65 +147,17 @@
 			<File
 				RelativePath=".\DummyStream.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MockSftpConsumer.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MockSftpProvider.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\pch.cpp"
+				RelativePath="..\..\swish\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -215,7 +165,6 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -224,29 +173,12 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\TestConfig.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -268,10 +200,6 @@
 			</File>
 			<File
 				RelativePath=".\MockSftpProvider.h"
-				>
-			</File>
-			<File
-				RelativePath=".\pch.h"
 				>
 			</File>
 			<File
