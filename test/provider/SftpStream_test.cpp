@@ -1,12 +1,23 @@
-#include "stdafx.h"
-#include "../CppUnitExtensions.h"
-#include "../TestConfig.h"
-#include "../MockSftpConsumer.h"
+/**
+ * @file
+ *
+ * Tests for the IStream implementation.
+ */
 
-#include "../../Libssh2Provider/SftpStream.h"
-#include <SessionFactory.h>
+#include "standard.h"
 
-#include <memory>
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/TestConfig.h"
+#include "test/common/MockSftpConsumer.h"
+
+#include "swish/provider/SftpStream.hpp"
+#include "swish/provider/SessionFactory.hpp"
+
+#include <memory>  // auto_ptr
+
+#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
+
+using namespace ATL;
 using std::auto_ptr;
 
 static const char *szTestFile = 
@@ -433,7 +444,7 @@ protected:
 	void testReadFileMassiveBuffer()
 	{
 		CComPtr<CSftpStream> pStream = _CreateConnectInit(
-			"/usr/share/example-content/gimp-ubuntu-splash.xcf");
+			"/usr/share/example-content/GIMP_Ubuntu_splash_screen.xcf");
 		HRESULT hr;
 
 		ULONG cbRead = 0;

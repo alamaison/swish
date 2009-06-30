@@ -50,12 +50,7 @@ Supported Operating Systems:
        so it might not work.
 
 Building:
-    There is currently an issue with the build process on Vista that means you 
-    may need to build it two or three times before all the components are 
-    fully built. The second time around it will appear to have built all 
-    parts but in fact hasn't.  Just keep choosing Build until there is no 
-    more to be done.
-    
+
     When building on Windows Vista, make sure you are running Visual
     Studio as an Administrator.  Otherwise it can't register the components
     and later components that depend on earlier ones will fail to build.
@@ -68,8 +63,7 @@ Requirements to run:
         4F0D-80A4-2A7EEAEE17E2&displaylang=en.
 
 Requirements to build:
-    Visual C++ 2005 (Express edition is unlikely to work as the code uses
-        ATL attributes which, I believe, require ATL 7).
+    Visual C++ 2005 (Express edition is unlikely to work but feel free to try).
     A recent version of the Windows SDK 
         (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
     WTL 8 which can be obtained from Microsoft or through SourceForge
@@ -81,12 +75,12 @@ Requirements to build:
         http://www.boostpro.com/products/free.  For more information see
         http://www.boost.org.
     
-    For the Libssh2Provider backend:
+    For the Provider backend:
      - libssh2
      - OpenSSL
      - zlib
     The directories to put the sourcecode for these dependencies in should
-    already exist in the Libssh2Provider/ directory.
+    already exist in the thirdparty/ directory.
     
     libssh2 can be obtained from http://www.libssh2.org.  Either the latest
     release (0.18) or the CVS head appear to work.  You can get OpenSSL from
@@ -95,27 +89,11 @@ Requirements to build:
     http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download.
     zlib binaries are available at http://www.zlib.net/.
     
-    Assuming you have the necessary tools available on your PATH (probably by 
+    Assuming you have cvs, wget and unzip on your PATH (probably by 
     installing cygwin), the easiest way to set everything up is to run the 
-    following commands in the Libssh2Provider/ directory:
-    
-      cvs -d :pserver:libssh2.cvs.sourceforge.net:/cvsroot/libssh2 co libssh2
-      wget "http://prdownloads.sourceforge.net/libpng/zlib123-dll.zip?download"
-      unzip -d zlib zlib123-dll.zip
-      rm zlib123-dll.zip
-      wget "http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download"
-      unzip -d openssl openssl-0.9.8g-swish.zip
-      rm openssl-0.9.8g-swish.zip
-    
-    and, if you do not have WTL installed elsewhere, run the following in the
-    top-level Swish directory:
-    
-      mkdir wtl
-      cd wtl
-      wget "http://downloads.sourceforge.net/wtl/WTL80_7161_Final.zip?download"
-      unzip WTL80_7161_Final.zip
-      rm WTL80_7161_Final.zip
-      cd ..
+    prereqs.bat script in the build/ directory.  This script will fetch
+    all the dependencies except the Windows SDK and Boost.  These two you must
+    install yourself from the links above.
 
 Requirements for testing:
     CppUnit (works with v1.12.0, may work with other versions) must be present

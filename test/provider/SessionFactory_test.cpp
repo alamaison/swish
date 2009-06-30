@@ -1,11 +1,23 @@
-#include "stdafx.h"
-#include "../CppUnitExtensions.h"
-#include "../TestConfig.h"
-#include "../MockSftpConsumer.h"
+/**
+ * @file
+ *
+ * Tests for the CSessionFactory class.
+ */
 
-#include <SessionFactory.h>
+#include "standard.h"
+
+#include "test/common/CppUnitExtensions.h"
+#include "test/common/TestConfig.h"
+#include "test/common/MockSftpConsumer.h"
+
+#include "swish/provider/SessionFactory.hpp"
+
+#include <libssh2.h>
+#include <libssh2_sftp.h>
 
 #include <memory>
+
+using namespace ATL;
 using std::auto_ptr;
 
 #pragma warning (push)
