@@ -62,7 +62,17 @@
 #ifdef USING_PRECOMPILED_HEADERS
 
 #ifdef __cplusplus
+
 #include "swish/atl.hpp"
+#include <atlstr.h>
+#include <atltypes.h>
+#include <atlctl.h>
+
+#include <shlobj.h>
+
+#include <vector>
+#include <string>
+
 #endif
 
 #endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

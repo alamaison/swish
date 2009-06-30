@@ -72,6 +72,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalOptions="/IGNORE:4221"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -143,6 +144,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalOptions="/IGNORE:4221"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -218,6 +220,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalOptions="/IGNORE:4221"
 			/>
 			<Tool
 				Name="VCALinkTool"
