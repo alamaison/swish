@@ -25,7 +25,6 @@
 #include "swish.h"              // For CRemoteFolder UUID
 #include "RemotePidl.h"         // RemoteItemId handling
 #include "Pool.h"               // Access to SFTP global session pool
-#include "Connection.h"         // Two way frontend-backend connection
 #include "swish/CoFactory.hpp"  // CComObject factory
 
 #include "swish/atl.hpp"        // Common ATL setup
@@ -119,10 +118,10 @@ private:
 
 	typedef std::vector<CRemoteItem> RemotePidls;
 
-	CConnection _GetConnection(
+	ATL::CComPtr<ISftpProvider> _GetConnection(
 		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
 		UINT uPort ) throw(...);
-	CConnection _CreateConnectionForFolder(
+	ATL::CComPtr<ISftpProvider> _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
 		throw(...);

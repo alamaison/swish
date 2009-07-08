@@ -51,12 +51,6 @@ public:
 			m_pConsumer, CComBSTR(config.GetUser()),
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
-
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-		CPPUNIT_ASSERT(conn.spProvider);
-		CPPUNIT_ASSERT(conn.spConsumer);
 	}
 
 	void tearDown()
@@ -103,16 +97,13 @@ protected:
 
 	void testCreate()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -131,9 +122,6 @@ protected:
 
 	void testCreateMulti()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
@@ -150,7 +138,7 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(3, aPidl, pidlRoot, conn);
+			CSftpDataObject::Create(3, aPidl, pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		m_pDo = spDo.p;
@@ -180,11 +168,8 @@ protected:
 	 */
 	void testQueryFormatsEmpty()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
-		CComPtr<IDataObject> spDo = CSftpDataObject::Create(0, NULL, NULL, conn);
+		CComPtr<IDataObject> spDo = CSftpDataObject::Create(
+			0, NULL, NULL, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -199,11 +184,8 @@ protected:
 	 */
 	void testEnumFormatsEmpty()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
-		CComPtr<IDataObject> spDo = CSftpDataObject::Create(0, NULL, NULL, conn);
+		CComPtr<IDataObject> spDo = CSftpDataObject::Create(
+			0, NULL, NULL, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -217,16 +199,13 @@ protected:
 	 */
 	void testQueryFormats()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -240,16 +219,13 @@ protected:
 	 */
 	void testEnumFormats()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -264,9 +240,6 @@ protected:
 	 */
 	void testQueryFormatsMulti()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
@@ -283,7 +256,7 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(3, aPidl, pidlRoot, conn);
+			CSftpDataObject::Create(3, aPidl, pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -298,9 +271,6 @@ protected:
 	 */
 	void testEnumFormatsMulti()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
 		CRemoteItem pidl1(
 			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
@@ -317,7 +287,7 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(3, aPidl, pidlRoot, conn);
+			CSftpDataObject::Create(3, aPidl, pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -328,10 +298,6 @@ protected:
 
 	void testFullDirectoryTree()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Create absolute PIDL to Swish icon
 		CAbsolutePidl pidlSwish = _GetSwishPidl();
 		
@@ -345,7 +311,7 @@ protected:
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, conn);
+			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
 
 		// Keep extra reference to check for leaks in tearDown()
 		m_pDo = spDo.p;

@@ -1,8 +1,6 @@
 #include "test/common/CppUnitExtensions.h"
 #include "test/common/MockSftpConsumer.h"
 #include "test/common/MockSftpProvider.h"
-typedef CMockSftpProvider MP;
-typedef CMockSftpConsumer MC;
 #include "test/common/TestConfig.h"
 
 #include "swish/atl.hpp"   // Common ATL setup
@@ -17,8 +15,10 @@ class CSftpDirectory_test;
 #include "swish/shell_folder/SftpDirectory.h"
 #undef private
 
-#include "swish/shell_folder/Connection.h"
 #include "swish/shell_folder/HostPidl.h"
+
+typedef CMockSftpProvider MP;
+typedef CMockSftpConsumer MC;
 
 using ATL::CComObject;
 using ATL::CAtlException;
@@ -67,12 +67,6 @@ public:
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
 
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-		CPPUNIT_ASSERT(conn.spProvider);
-		CPPUNIT_ASSERT(conn.spConsumer);
-
 		m_pidlTestHost = CHostItemAbsolute(
 			L"testuser", L"testhost", L"/tmp", 22);
 	}
@@ -114,17 +108,13 @@ protected:
 
 	void testCSftpDirectory()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Test stack creation
 		{
-			CSftpDirectory directory(m_pidlTestHost, conn);
+			CSftpDirectory directory(m_pidlTestHost, m_pProvider);
 		}
 
 		// Test heap creation
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 	}
 
 	void testGetEnumAll()
@@ -169,11 +159,7 @@ protected:
 		SHCONTF grfFlags = 
 			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
-		CSftpDirectory directory(m_pidlTestHost, conn);
+		CSftpDirectory directory(m_pidlTestHost, m_pProvider);
 
 		// Set mock behaviour
 		m_pCoProvider->SetListingBehaviour(MP::EmptyListing);
@@ -208,11 +194,7 @@ protected:
 	 */
 	void testIEnumIDListSurvival()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 
 		SHCONTF grfFlags = 
 			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
@@ -230,15 +212,11 @@ protected:
 
 	void testRename()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Set mock behaviour
 		m_pCoProvider->SetRenameBehaviour(MP::RenameOK);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -249,17 +227,13 @@ protected:
 
 	void testRenameInSubfolder()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Set mock behaviour
 		m_pCoProvider->SetRenameBehaviour(MP::RenameOK);
 
 		// Create
 		m_pDirectory = new CSftpDirectory(
 			CHostItemAbsolute(
-				L"testuser", L"testhost", L"/tmp/swish", 22), conn);
+				L"testuser", L"testhost", L"/tmp/swish", 22), m_pProvider);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testswishfile");
@@ -270,15 +244,11 @@ protected:
 
 	void testRenameWithConfirmation()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Set mock behaviour
 		m_pCoProvider->SetRenameBehaviour(MP::ConfirmOverwrite);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -297,15 +267,11 @@ protected:
 
 	void testRenameWithConfirmationForbidden()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Set mock behaviour
 		m_pCoProvider->SetRenameBehaviour(MP::ConfirmOverwrite);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -331,15 +297,11 @@ protected:
 
 	void testRenameWithErrorReported()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Set mock behaviour
 		m_pCoProvider->SetRenameBehaviour(MP::ReportError);
 
 		// Create
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -362,12 +324,8 @@ protected:
 
 	void testRenameFail()
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
 		// Create
-		m_pDirectory = new CSftpDirectory(m_pidlTestHost, conn);
+		m_pDirectory = new CSftpDirectory(m_pidlTestHost, m_pProvider);
 
 		// PIDL of old file.  Would normally come from GetEnum()
 		CRemoteItem pidl(L"testtmpfile");
@@ -403,11 +361,7 @@ private:
 
 	void _testGetEnum( __in SHCONTF grfFlags )
 	{
-		CConnection conn;
-		conn.spProvider = m_pProvider;
-		conn.spConsumer = m_pConsumer;
-
-		CSftpDirectory directory(m_pidlTestHost, conn);
+		CSftpDirectory directory(m_pidlTestHost, m_pProvider);
 
 		IEnumIDList *pEnum = directory.GetEnum( grfFlags ).Detach();
 		CPPUNIT_ASSERT(pEnum);

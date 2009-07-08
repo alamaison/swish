@@ -22,7 +22,8 @@
 #include "DataObject.h"
 #include "FileGroupDescriptor.h"
 #include "RemotePidl.h"
-#include "Connection.h"
+
+#include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
 
 #include <vector>
 
@@ -69,12 +70,12 @@ public:
 
 	static ATL::CComPtr<IDataObject> Create(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in CConnection& conn)
+		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in ISftpProvider *pProvider)
 	throw(...)
 	{
 		ATL::CComPtr<CSftpDataObject> spObject = spObject->CreateCoObject();
 		
-		spObject->Initialize(cPidl, aPidl, pidlCommonParent, conn);
+		spObject->Initialize(cPidl, aPidl, pidlCommonParent, pProvider);
 
 		return spObject.p;
 	}
@@ -87,7 +88,7 @@ public:
 
 	void Initialize(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in CConnection& conn)
+		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in ISftpProvider *pProvider)
 	throw(...);
 
 public: // IDataObject methods
@@ -117,12 +118,12 @@ private:
 	typedef std::vector<ExpandedItem> ExpandedList;
 	// @}
 
-	CConnection m_conn;               ///< Connection to SFTP server
+	ATL::CComPtr<ISftpProvider> m_spProvider; ///< Connection to backend
 
 	/** @name Cached PIDLs */
 	// @{
-	CAbsolutePidl m_pidlCommonParent; ///< Parent of PIDLs in m_pidls
-	TopLevelList m_pidls;             ///< Top-level PIDLs (the selection)
+	CAbsolutePidl m_pidlCommonParent;    ///< Parent of PIDLs in m_pidls
+	TopLevelList m_pidls;                ///< Top-level PIDLs (the selection)
 	// @}
 
 	/** @name Registered CLIPFORMATS */

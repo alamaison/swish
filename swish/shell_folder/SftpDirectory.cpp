@@ -36,9 +36,9 @@ using ATL::CString;
  * @param conn           SFTP connection container.
  */
 CSftpDirectory::CSftpDirectory(
-	CAbsolutePidlHandle pidlDirectory, const CConnection& conn) 
+	CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider) 
 throw(...) : 
-	m_connection(conn), 
+	m_spProvider(pProvider), 
 	m_pidlDirectory(pidlDirectory),
 	m_strDirectory( // Trim trailing slashes and append single slash
 		CHostItemAbsoluteHandle(
@@ -65,7 +65,7 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 
 	// Get listing enumerator
 	CComPtr<IEnumListing> spEnum;
-	hr = m_connection.spProvider->GetListing(CComBSTR(m_strDirectory), &spEnum);
+	hr = m_spProvider->GetListing(CComBSTR(m_strDirectory), &spEnum);
 	if (SUCCEEDED(hr))
 	{
 		m_vecPidls.clear();
@@ -129,8 +129,8 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 {
 	typedef ATL::CComEnumOnSTL<IEnumIDList, &__uuidof(IEnumIDList), 
-		                       PITEMID_CHILD, _CopyChildPidl, 
-							   std::vector<CChildPidl> >
+	                           PITEMID_CHILD, _CopyChildPidl,
+	                           std::vector<CChildPidl> >
 	        CComEnumIDList;
 
 	HRESULT hr;
@@ -177,7 +177,7 @@ throw(...)
 		AtlThrow(E_INVALIDARG);
 
 	CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
-	return CSftpDirectory(pidlSub, m_connection);
+	return CSftpDirectory(pidlSub, m_spProvider);
 }
 
 /**
@@ -195,7 +195,7 @@ CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
 throw(...)
 {
 	CComPtr<IStream> spStream;
-	m_connection.spProvider->GetFile(
+	m_spProvider->GetFile(
 		CComBSTR(m_strDirectory + pidl.GetFilename()), &spStream);
 	return spStream;
 }
@@ -216,7 +216,7 @@ CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
 throw(...)
 {
 	CComPtr<IStream> spStream;
-	m_connection.spProvider->GetFile(
+	m_spProvider->GetFile(
 		CComBSTR(m_strDirectory + pwszPath), &spStream);
 	return spStream;
 }
@@ -227,7 +227,7 @@ throw(...)
 {
 	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
 
-	HRESULT hr = m_connection.spProvider->Rename(
+	HRESULT hr = m_spProvider->Rename(
 		CComBSTR(m_strDirectory+pidlOldFile.GetFilename()),
 		CComBSTR(m_strDirectory+pwszNewFilename),
 		&fWasTargetOverwritten
@@ -245,9 +245,9 @@ throw(...)
 	
 	HRESULT hr;
 	if (pidl.IsFolder())
-		hr = m_connection.spProvider->DeleteDirectory(strPath);
+		hr = m_spProvider->DeleteDirectory(strPath);
 	else
-		hr = m_connection.spProvider->Delete(strPath);
+		hr = m_spProvider->Delete(strPath);
 	if (hr != S_OK)
 		AtlThrow(hr);
 }

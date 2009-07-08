@@ -59,13 +59,13 @@ HRESULT CSftpDataObject::FinalConstruct()
  * @param cPidl             Number of PIDLs in the selection.
  * @param aPidl             The selected PIDLs.
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
- * @param conn              SFTP connection to communicate with remote server.
+ * @param pProvider         Backend to communicate with remote server.
  *
  * @throws  CAtlException on error.
  */
 void CSftpDataObject::Initialize(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-	PCIDLIST_ABSOLUTE pidlCommonParent, CConnection& conn)
+	PCIDLIST_ABSOLUTE pidlCommonParent, ISftpProvider *pProvider)
 throw(...)
 {
 	ATLENSURE_THROW(!m_pidlCommonParent, E_UNEXPECTED); // Initialised twice
@@ -94,8 +94,8 @@ throw(...)
 	// caused by delay-rendering.
 	_RenderCfPreferredDropEffect();
 
-	// Save connection
-	m_conn = conn;
+	// Save backend session instance
+	m_spProvider = pProvider;
 }
 
 /*----------------------------------------------------------------------------*
@@ -288,7 +288,8 @@ throw(...)
 	CFileDescriptor fd = fgd.GetDescriptor(lindex);
 	fgd.Detach();
 
-	return CSftpDirectory(m_pidlCommonParent, m_conn).GetFileByPath(fd.GetPath());
+	CSftpDirectory dir(m_pidlCommonParent, m_spProvider);
+	return dir.GetFileByPath(fd.GetPath());
 }
 
 /**
@@ -408,7 +409,7 @@ const throw(...)
 CComPtr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
 const throw(...)
 {
-	CSftpDirectory dir(pidl, m_conn);
+	CSftpDirectory dir(pidl, m_spProvider);
 	return dir.GetEnum(
 		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 }

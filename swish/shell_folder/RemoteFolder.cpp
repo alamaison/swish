@@ -131,11 +131,12 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 
 	try
 	{
-		// Create SFTP connection object for this folder using hwndOwner for UI
-		CConnection conn = _CreateConnectionForFolder( hwndOwner );
+		// Create SFTP connection for this folder using hwndOwner for UI
+		CComPtr<ISftpProvider> spProvider = 
+			_CreateConnectionForFolder(hwndOwner);
 
 		// Create directory handler and get listing as PIDL enumeration
- 		CSftpDirectory directory(GetRootPIDL(), conn);
+		CSftpDirectory directory(GetRootPIDL(), spProvider);
 		*ppEnumIDList = directory.GetEnum(grfFlags).Detach();
 	}
 	catchCom()
@@ -252,11 +253,12 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 
 		try
 		{
-			// Create connection object for this folder with hwndOwner for UI
-			CConnection conn = _CreateConnectionForFolder(hwndOwner);
+			// Create connection for this folder with hwndOwner for UI
+			CComPtr<ISftpProvider> spProvider =
+				_CreateConnectionForFolder(hwndOwner);
 
 			CComPtr<IDataObject> spDo = CSftpDataObject::Create(
-				cPidl, aPidl, GetRootPIDL(), conn);
+				cPidl, aPidl, GetRootPIDL(), spProvider);
 			*ppvReturn = spDo.Detach();
 		}
 		catchCom()
@@ -411,13 +413,11 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 	try
 	{
 		// Create SFTP connection object for this folder using hwnd for UI
-		CConnection conn = _CreateConnectionForFolder(hwnd);
-
-		// Create instance of our directory handler class
-		CSftpDirectory directory(GetRootPIDL(), conn);
+		CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder(hwnd);
 
 		// Rename file
-		boolean fOverwritten = directory.Rename(pidl, pwszName);
+		CSftpDirectory directory(GetRootPIDL(), spProvider);
+		bool fOverwritten = directory.Rename(pidl, pwszName);
 
 		// Create new PIDL from old one
 		CRemoteItem pidlNewFile;
@@ -789,10 +789,10 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 		AtlThrow(E_FAIL);
 
 	// Create SFTP connection object for this folder using hwndOwner for UI
-	CConnection conn = _CreateConnectionForFolder( hwnd );
+	CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder( hwnd );
 
 	// Create instance of our directory handler class
-	CSftpDirectory directory(GetRootPIDL(), conn);
+	CSftpDirectory directory(GetRootPIDL(), spProvider);
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();
@@ -879,7 +879,7 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
 /**
  * Gets connection for given SFTP session parameters.
  */
-CConnection CRemoteFolder::_GetConnection(
+CComPtr<ISftpProvider> CRemoteFolder::_GetConnection(
 	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
 {
 	HRESULT hr;
@@ -894,19 +894,13 @@ CConnection CRemoteFolder::_GetConnection(
 	CComPtr<ISftpProvider> spProvider = pool.GetSession(
 		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
 
-	// Pack both ends of connection into object
-	CConnection conn;
-	conn.spProvider = spProvider;
-	conn.spConsumer = spConsumer;
-
-	return conn;
+	return spProvider;
 }
 
 /**
- * Creates a CConnection object holding the two parts of an SFTP connection.
+ * Creates an SFTP connection.
  *
- * The two parts are the provider (SFTP backend) and consumer (user interaction
- * callback).  The connection is created from the information stored in this
+ * The connection is created from the information stored in this
  * folder's PIDL, @c m_pidl, and the window handle to be used as the owner
  * window for any user interaction. This window handle can be NULL but (in order
  * to enforce good UI etiquette - we shouldn't attempt to interact with the user
@@ -917,7 +911,7 @@ CConnection CRemoteFolder::_GetConnection(
  *                             as the parent window for any user interaction.
  * @throws ATL exceptions on failure.
  */
-CConnection CRemoteFolder::_CreateConnectionForFolder(
+CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 	HWND hwndUserInteraction )
 {
 

@@ -26,11 +26,12 @@
 
 #pragma once
 
-#include "HostPidl.h"            // PIDL wrapper classes
+#include "HostPidl.h"  // PIDL wrapper classes
 #include "RemotePidl.h"
-#include "Connection.h"          // For SFTP Connection container
 #include "swish/catch_com.hpp"  // COM catch block
 #include "swish/ComSTLContainer.hpp"  // CComSTLContainer
+
+#include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
 
 #include <vector>
 
@@ -42,7 +43,7 @@ class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		__in CAbsolutePidlHandle pidlDirectory, const CConnection& conn)
+		__in CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider)
 		throw(...);
 
 	ATL::CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
@@ -56,10 +57,10 @@ public:
 	void Delete(__in CRemoteItemHandle pidl) throw(...);
 
 private:
-	CConnection m_connection;
-	ATL::CString m_strDirectory;        ///< Absolute path to this directory.
-	CAbsolutePidl m_pidlDirectory;      ///< Absolute PIDL to this directory.
-	std::vector<CChildPidl> m_vecPidls; ///< Directory contents as PIDLs.
+	ATL::CComPtr<ISftpProvider> m_spProvider;  ///< Backend data provider
+	ATL::CString m_strDirectory;         ///< Absolute path to this directory.
+	CAbsolutePidl m_pidlDirectory;       ///< Absolute PIDL to this directory.
+	std::vector<CChildPidl> m_vecPidls;  ///< Directory contents as PIDLs.
 
 	HRESULT _Fetch( __in SHCONTF grfFlags );
 };
