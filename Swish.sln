@@ -46,6 +46,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{AAB28A44-0697-484F-980B-F6553EA157BE}"
 	ProjectSection(SolutionItems) = preProject
 		swish\atl.hpp = swish\atl.hpp
+		swish\boost_process.hpp = swish\boost_process.hpp
 		swish\catch_com.hpp = swish\catch_com.hpp
 		swish\CoFactory.hpp = swish\CoFactory.hpp
 		swish\ComSTLContainer.hpp = swish\ComSTLContainer.hpp
@@ -54,6 +55,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{AAB28A
 		swish\pch.h = swish\pch.h
 		swish\remotelimits.h = swish\remotelimits.h
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-legacy", "test\shell_folder-legacy\shell_folder-legacy.vcproj", "{408AB4A6-1F61-4776-AA16-48BD3E981293}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-common_boost", "test\common_boost\common_boost.vcproj", "{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -137,6 +142,18 @@ Global
 		{9225F798-2571-4F7A-8E30-42165A44B16A}.PREfast|Win32.Build.0 = Release|Win32
 		{9225F798-2571-4F7A-8E30-42165A44B16A}.Release|Win32.ActiveCfg = Release|Win32
 		{9225F798-2571-4F7A-8E30-42165A44B16A}.Release|Win32.Build.0 = Release|Win32
+		{408AB4A6-1F61-4776-AA16-48BD3E981293}.Debug|Win32.ActiveCfg = Debug|Win32
+		{408AB4A6-1F61-4776-AA16-48BD3E981293}.Debug|Win32.Build.0 = Debug|Win32
+		{408AB4A6-1F61-4776-AA16-48BD3E981293}.PREfast|Win32.ActiveCfg = Release|Win32
+		{408AB4A6-1F61-4776-AA16-48BD3E981293}.PREfast|Win32.Build.0 = Release|Win32
+		{408AB4A6-1F61-4776-AA16-48BD3E981293}.Release|Win32.ActiveCfg = Release|Win32
+		{408AB4A6-1F61-4776-AA16-48BD3E981293}.Release|Win32.Build.0 = Release|Win32
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Debug|Win32.Build.0 = Debug|Win32
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.PREfast|Win32.ActiveCfg = Release|Win32
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.PREfast|Win32.Build.0 = Release|Win32
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Release|Win32.ActiveCfg = Release|Win32
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -151,6 +168,8 @@ Global
 		{541385C8-3DF7-401E-92E8-133B36AC7B62} = {9866A391-2C55-4E6E-81AF-627C789FA76A}
 		{4A4A271A-7EC9-49C9-AEC7-7BFA0F8F4017} = {9866A391-2C55-4E6E-81AF-627C789FA76A}
 		{9225F798-2571-4F7A-8E30-42165A44B16A} = {9866A391-2C55-4E6E-81AF-627C789FA76A}
+		{408AB4A6-1F61-4776-AA16-48BD3E981293} = {9866A391-2C55-4E6E-81AF-627C789FA76A}
+		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5} = {9866A391-2C55-4E6E-81AF-627C789FA76A}
 		{CFC0C998-B275-48AB-AAD3-C99272154656} = {D3818F0B-C311-4E86-AD4A-AA9AFE387E24}
 		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {D3818F0B-C311-4E86-AD4A-AA9AFE387E24}
 		{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0} = {D3818F0B-C311-4E86-AD4A-AA9AFE387E24}

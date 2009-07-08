@@ -4,7 +4,7 @@
 	Version="8.00"
 	Name="test-shell_folder"
 	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
-	RootNamespace="swish_test"
+	RootNamespace="test"
 	>
 	<Platforms>
 		<Platform
@@ -17,13 +17,14 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Copying files needed for testing ..."
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\libssh2\tests\etc&quot; &quot;$(TargetDir)\sshd-etc&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -36,7 +37,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -91,9 +91,8 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -111,12 +110,10 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -170,23 +167,16 @@
 			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-			RelativePathToProject=".\test\common\common.vcproj"
+			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
+			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
 		/>
 	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\DummyFolder.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\main.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\module.cpp"
 				>
@@ -211,59 +201,16 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\pool_test.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\DataObjectTests.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyFolder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Pidl_test.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Tests"
-			>
-			<File
-				RelativePath=".\DataObject_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DummyFolder_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\HostPidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Pidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PidlHandle_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RemotePidl_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDataObject_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpDirectory_test.cpp"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
