@@ -102,6 +102,15 @@ public:
 	}
 
 	/**
+	 * Throw an exception if the PIDL is invalid.
+	 */
+	inline void CheckValidity() const
+	{
+		if (!IsValid())
+			AtlThrow(E_UNEXPECTED);
+	}
+
+	/**
 	 * Does fingerprint stored in @p pidl correspond to a HostItemId?
 	 */
 	static bool IsValid(ConstPidlType pidl)
@@ -113,37 +122,37 @@ public:
 
 	ATL::CString GetLabel() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszLabel;
 	}
 
 	ATL::CString GetUser() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszUser;
 	}
 
 	ATL::CString GetHost() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszHost;
 	}
 
 	ATL::CString GetPath() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszPath;
 	}
 
 	USHORT GetPort() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->uPort;
 	}
 
 	ATL::CString GetPortStr() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 
 		ATL::CString strPort;
 		strPort.Format(L"%u", Get()->uPort);
@@ -160,7 +169,7 @@ public:
 	 */
 	ATL::CString GetLongName(bool fCanonical) const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 
 		ATL::CString strName;
 

@@ -109,6 +109,15 @@ public:
 	}
 
 	/**
+	 * Throw an exception if the PIDL is invalid.
+	 */
+	inline void CheckValidity() const
+	{
+		if (!IsValid())
+			AtlThrow(E_UNEXPECTED);
+	}
+
+	/**
 	 * Does fingerprint stored in @p pidl correspond to a RemoteItemId?
 	 */
 	static bool IsValid(ConstPidlType pidl)
@@ -120,19 +129,19 @@ public:
 
 	bool IsFolder() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->fIsFolder;
 	}
 
 	bool IsLink() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->fIsLink;
 	}
 
 	ATL::CString GetFilename() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszFilename;
 	}
 
@@ -160,7 +169,7 @@ public:
 	 */
 	ATL::CString GetExtension() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 
 		const wchar_t *pwszExtStart = ::PathFindExtension(GetFilename());
 		ATLASSERT(pwszExtStart);
@@ -201,49 +210,49 @@ public:
 
 	ATL::CString GetOwner() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszOwner;
 	}
 
 	ATL::CString GetGroup() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->wszGroup;
 	}
 
 	ULONG GetOwnerId() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->uUid;
 	}
 
 	ULONG GetGroupId() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->uGid;
 	}
 
 	ULONGLONG GetFileSize() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->uSize;
 	}
 
 	DWORD GetPermissions() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->dwPermissions;
 	}
 
 	ATL::COleDateTime GetDateModified() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->dateModified;
 	}
 
 	ATL::COleDateTime GetDateAccessed() const throw(...)
 	{
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 		return Get()->dateAccessed;
 	}
 
@@ -369,7 +378,7 @@ public:
 	{
 		ATLENSURE_THROW(pwszFilename, E_POINTER);
 		ATLENSURE_THROW(*pwszFilename != L'\0', E_INVALIDARG);
-		ATLENSURE_THROW(IsValid(), E_UNEXPECTED);
+		CheckValidity();
 
 		CopyWSZString(
 			Set()->wszFilename, ARRAYSIZE(Set()->wszFilename), pwszFilename);

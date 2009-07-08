@@ -350,50 +350,55 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 
 	::ZeroMemory(pName, sizeof STRRET);
 
-	CString strName;
-	CRemoteItem rpidl(pidl);
-
-	bool fForParsing = (uFlags & SHGDN_FORPARSING) != 0;
-
-	if (fForParsing || (uFlags & SHGDN_FORADDRESSBAR))
-	{
-		if (!(uFlags & SHGDN_INFOLDER))
+	try
 		{
-			// Bind to parent
-			CComPtr<IShellFolder> spParent;
-			PCUITEMID_CHILD pidlThisFolder = NULL;
-			HRESULT hr = ::SHBindToParent(
-				GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
-			ATLASSERT(SUCCEEDED(hr));
+		CString strName;
+		CRemoteItem rpidl(pidl);
 
-			STRRET strret;
-			::ZeroMemory(&strret, sizeof strret);
-			hr = spParent->GetDisplayNameOf(pidlThisFolder, uFlags, &strret);
-			ATLASSERT(SUCCEEDED(hr));
-			ATLASSERT(strret.uType == STRRET_WSTR);
+		bool fForParsing = (uFlags & SHGDN_FORPARSING) != 0;
 
-			strName += strret.pOleStr;
-			strName += L'/';
+		if (fForParsing || (uFlags & SHGDN_FORADDRESSBAR))
+		{
+			if (!(uFlags & SHGDN_INFOLDER))
+			{
+				// Bind to parent
+				CComPtr<IShellFolder> spParent;
+				PCUITEMID_CHILD pidlThisFolder = NULL;
+				HRESULT hr = ::SHBindToParent(
+					GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+				ATLASSERT(SUCCEEDED(hr));
+
+				STRRET strret;
+				::ZeroMemory(&strret, sizeof strret);
+				hr = spParent->GetDisplayNameOf(
+					pidlThisFolder, uFlags, &strret);
+				ATLASSERT(SUCCEEDED(hr));
+				ATLASSERT(strret.uType == STRRET_WSTR);
+
+				strName += strret.pOleStr;
+				strName += L'/';
+			}
+
+			// Add child path - include extension if FORPARSING
+			strName += rpidl.GetFilename(fForParsing);
+		}
+		else if (uFlags & SHGDN_FOREDITING)
+		{
+			strName = rpidl.GetFilename();
+		}
+		else
+		{
+			ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER);
+
+			strName = rpidl.GetFilename(false);
 		}
 
-		// Add child path - include extension if FORPARSING
-		strName += rpidl.GetFilename(fForParsing);
-	}
-	else if (uFlags & SHGDN_FOREDITING)
-	{
-		strName = rpidl.GetFilename();
-	}
-	else
-	{
-		ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER);
+		// Store in a STRRET and return
+		pName->uType = STRRET_WSTR;
 
-		strName = rpidl.GetFilename(false);
+		return SHStrDupW( strName, &pName->pOleStr );
 	}
-
-	// Store in a STRRET and return
-	pName->uType = STRRET_WSTR;
-
-	return SHStrDupW( strName, &pName->pOleStr );
+	catchCom()
 }
 
 STDMETHODIMP CRemoteFolder::SetNameOf(

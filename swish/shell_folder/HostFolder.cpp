@@ -374,50 +374,55 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 
 	::ZeroMemory(pName, sizeof STRRET);
 
-	CString strName;
-	CHostItem hpidl(pidl);
-
-	if (uFlags & SHGDN_FORPARSING)
+	try
 	{
-		if (!(uFlags & SHGDN_INFOLDER))
+		CString strName;
+		CHostItem hpidl(pidl);
+
+		if (uFlags & SHGDN_FORPARSING)
 		{
-			// Bind to parent
-			CComPtr<IShellFolder> spParent;
-			PCUITEMID_CHILD pidlThisFolder;
-			HRESULT hr = ::SHBindToParent(
-				GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
-			ATLASSERT(SUCCEEDED(hr));
+			if (!(uFlags & SHGDN_INFOLDER))
+			{
+				// Bind to parent
+				CComPtr<IShellFolder> spParent;
+				PCUITEMID_CHILD pidlThisFolder;
+				HRESULT hr = ::SHBindToParent(
+					GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+				ATLASSERT(SUCCEEDED(hr));
 
-			STRRET strret;
-			::ZeroMemory(&strret, sizeof strret);
-			hr = spParent->GetDisplayNameOf(pidlThisFolder, uFlags, &strret);
-			ATLASSERT(SUCCEEDED(hr));
-			ATLASSERT(strret.uType == STRRET_WSTR);
+				STRRET strret;
+				::ZeroMemory(&strret, sizeof strret);
+				hr = spParent->GetDisplayNameOf(
+					pidlThisFolder, uFlags, &strret);
+				ATLASSERT(SUCCEEDED(hr));
+				ATLASSERT(strret.uType == STRRET_WSTR);
 
-			strName += strret.pOleStr;
-			strName += L'\\';
+				strName += strret.pOleStr;
+				strName += L'\\';
+			}
+
+			strName += hpidl.GetLongName(true);
+		}
+		else if (uFlags == SHGDN_NORMAL || uFlags & SHGDN_FORADDRESSBAR)
+		{
+			strName = hpidl.GetLongName(false);
+		}
+		else if (uFlags == SHGDN_INFOLDER || uFlags & SHGDN_FOREDITING)
+		{
+			strName = hpidl.GetLabel();
+		}
+		else
+		{
+			UNREACHABLE;
+			return E_INVALIDARG;
 		}
 
-		strName += hpidl.GetLongName(true);
-	}
-	else if (uFlags == SHGDN_NORMAL || uFlags & SHGDN_FORADDRESSBAR)
-	{
-		strName = hpidl.GetLongName(false);
-	}
-	else if (uFlags == SHGDN_INFOLDER || uFlags & SHGDN_FOREDITING)
-	{
-		strName = hpidl.GetLabel();
-	}
-	else
-	{
-		UNREACHABLE;
-		return E_INVALIDARG;
-	}
+		// Store in a STRRET and return
+		pName->uType = STRRET_WSTR;
 
-	// Store in a STRRET and return
-	pName->uType = STRRET_WSTR;
-
-	return SHStrDupW( strName, &pName->pOleStr );
+		return SHStrDupW( strName, &pName->pOleStr );
+	}
+	catchCom()
 }
 
 /*------------------------------------------------------------------------------
