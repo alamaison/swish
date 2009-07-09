@@ -48,7 +48,7 @@ using std::map;
 
 namespace {
 
-	static const string SSHD_EXE_NAME = "sshd";
+	static const string SSHD_EXE_NAME = "sshd.exe";
 	static const string SSHD_DIR_ENVIRONMENT_VAR = "OPENSSH_DIR";
 	static const string SSHD_CONFIG_DIR = "sshd-etc";
 	static const string SSHD_CONFIG_FILE = "sshd_config";
