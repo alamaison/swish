@@ -1,3 +1,6 @@
+swish-0.2.1.13
+-Enable removal of hosts from Swish folder.
+
 swish-0.2.1.12
 -Added 'Type' property to Explorer view.
 -Fixed incorrect column witdths (ticket #2).

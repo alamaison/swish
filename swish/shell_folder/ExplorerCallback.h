@@ -23,6 +23,8 @@
 
 #include "swish/atl.hpp"  // Common ATL setup
 
+#include "HostPidl.h"
+
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
 #include <shlobj.h>  // Windows Shell API
@@ -30,15 +32,18 @@
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,
 	public ATL::CComObjectRoot,
+	public ATL::IObjectWithSiteImpl<CExplorerCallback>,
 	private swish::CCoFactory<CExplorerCallback>
 {
 public:
 
 	BEGIN_COM_MAP(CExplorerCallback)
 		COM_INTERFACE_ENTRY(IShellFolderViewCB)
+		COM_INTERFACE_ENTRY(IObjectWithSite)
 	END_COM_MAP()
 
-	CExplorerCallback() : m_hwndView(NULL), m_pidl(NULL) {}
+	CExplorerCallback() : 
+		m_hwndView(NULL), m_hToolsMenu(NULL), m_idCmdFirst(0), m_pidl(NULL) {}
 	~CExplorerCallback()
 	{
 		if (m_pidl)
@@ -79,6 +84,16 @@ private:
 		PCTSTR szUsername, PCTSTR szPath );
 	void _RefreshView();
 
+	HRESULT _RemoveConnection();
+	HRESULT _RemoveConnectionFromRegistry(
+		PCTSTR szLabel );
+	bool _ShouldEnableRemove();
+
+	ATL::CComPtr<IShellBrowser> _GetShellBrowser();
+	ATL::CComPtr<IShellView> _GetShellView();
+	ATL::CComPtr<IDataObject> _GetSelectionDataObject();
+	CAbsolutePidl _GetSelectedItem();
+
 	// Menu command ID offsets for Explorer Tools menu
 	enum MENUOFFSET
 	{
@@ -89,5 +104,7 @@ private:
 	};
 
 	HWND m_hwndView;          ///< Handle to folder view window
+	HMENU m_hToolsMenu;       ///< Handle to the Explorer 'Tools' menu
+	UINT m_idCmdFirst;        ///< Start of our tools menu ID range
 	PIDLIST_ABSOLUTE m_pidl;  ///< Our copy of pidl to owning folder
 };

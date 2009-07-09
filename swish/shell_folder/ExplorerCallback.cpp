@@ -27,11 +27,29 @@
 #include "ExplorerCallback.h"
 
 #include "NewConnDialog.h"
+#include "ShellDataObject.h"
+#include "Registry.h"
 #include "swish/debug.hpp"
+#include "swish/catch_com.hpp"
 
 #include <strsafe.h>          // For StringCchCopy
 
+#include <string>
+#include <algorithm>
+#include <vector>
+
+#include <boost/lambda/lambda.hpp>
+#include <boost/bind.hpp>
+
+using ATL::CAtlException;
+using ATL::CComPtr;
+using ATL::CComQIPtr;
 using ATL::CString;
+
+using std::wstring;
+using std::vector;
+
+#define SFVM_SELECTIONCHANGED 8
 
 HRESULT CExplorerCallback::Initialize( PCIDLIST_ABSOLUTE pidl )
 {
@@ -86,22 +104,23 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			ATLASSERT(pInfo->idCmdFirst >= FCIDM_SHVIEWFIRST );
 			ATLASSERT(pInfo->idCmdLast <= FCIDM_SHVIEWLAST );
 			//ATLASSERT(::IsMenu(pInfo->hmenu));
+			m_idCmdFirst = pInfo->idCmdFirst;
 
 			// Try to get a handle to the  Explorer Tools menu and insert 
 			// add and remove connection menu items into it if we find it
-			HMENU hToolsMenu = _GetToolsMenu(pInfo->hmenu);
-			if (hToolsMenu)
+			m_hToolsMenu = _GetToolsMenu(pInfo->hmenu);
+			if (m_hToolsMenu)
 			{
 				ATLVERIFY_REPORT(
 					::InsertMenu(
-						hToolsMenu, 2, MF_BYPOSITION, 
-						pInfo->idCmdFirst + MENUIDOFFSET_ADD,
+						m_hToolsMenu, 2, MF_BYPOSITION, 
+						m_idCmdFirst + MENUIDOFFSET_ADD,
 						L"&Add SFTP Connection..."),
 					::GetLastError());
 				ATLVERIFY_REPORT(
 					::InsertMenu(
-						hToolsMenu, 3, MF_BYPOSITION, 
-						pInfo->idCmdFirst + MENUIDOFFSET_REMOVE,
+						m_hToolsMenu, 3, MF_BYPOSITION | MF_GRAYED, 
+						m_idCmdFirst + MENUIDOFFSET_REMOVE,
 						L"&Remove SFTP Connection..."),
 					::GetLastError());
 
@@ -113,6 +132,17 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 
 			// I would have expected to have to remove these menu items
 			// in SFVM_UNMERGEMENU but this seems to happen automatically
+		}
+	case SFVM_SELECTIONCHANGED:
+		// Update the menus to match the current selection.
+		if (m_hToolsMenu)
+		{
+			UINT flags = (_ShouldEnableRemove()) ? MF_ENABLED : MF_GRAYED;
+			ATLVERIFY(::EnableMenuItem(
+				m_hToolsMenu, m_idCmdFirst + MENUIDOFFSET_REMOVE,
+				MF_BYCOMMAND | flags) >= 0);
+
+			return S_OK;
 		}
 	case SFVM_INVOKECOMMAND:
 		{
@@ -130,8 +160,10 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			}
 			else if (idCmd == MENUIDOFFSET_REMOVE)
 			{
-				// TODO: Implement this
-				return S_OK;
+				HRESULT hr = _RemoveConnection();
+				if (SUCCEEDED(hr))
+					_RefreshView();
+				return hr;
 			}
 
 			return E_NOTIMPL;
@@ -186,6 +218,52 @@ HMENU CExplorerCallback::_GetToolsMenu(HMENU hParentMenu)
 	return (fSucceeded) ? info.hSubMenu : NULL;
 }
 
+namespace {
+
+	bool ConnectionExists(PCWSTR pszName)
+	{
+		vector<CHostItem> connections = 
+			CRegistry::LoadConnectionsFromRegistry();
+
+		return find_if(connections.begin(), connections.end(), 
+			bind(&CHostItem::GetLabel, _1) == pszName) != connections.end();
+	}
+}
+
+HRESULT CExplorerCallback::_RemoveConnection()
+{
+	ATLASSUME(m_hwndView);
+
+	try
+	{
+		CHostItemAbsolute pidl_selected = _GetSelectedItem();
+		wstring label = pidl_selected.FindHostPidl().GetLabel();
+		ATLENSURE_RETURN_HR(label.size() > 0, E_UNEXPECTED);
+
+		ATLENSURE_RETURN_HR(ConnectionExists(label.c_str()), E_UNEXPECTED);
+		return _RemoveConnectionFromRegistry(label.c_str());
+	}
+	catchCom()
+}
+
+HRESULT CExplorerCallback::_RemoveConnectionFromRegistry(PCTSTR szLabel)
+{
+	ATL::CRegKey regConnection;
+	LSTATUS rc = ERROR_SUCCESS;
+
+	rc = regConnection.Open(
+		HKEY_CURRENT_USER, L"Software\\Swish\\Connections");
+	ATLENSURE_RETURN_HR(rc == ERROR_SUCCESS, E_UNEXPECTED);
+	
+	rc = regConnection.RecurseDeleteKey( szLabel );
+	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
+
+	rc = regConnection.Close();
+	ATLASSERT(rc == ERROR_SUCCESS);
+
+	return S_OK;
+}
+
 HRESULT CExplorerCallback::_AddNewConnection()
 {
 	ATLASSUME(m_hwndView);
@@ -204,6 +282,9 @@ HRESULT CExplorerCallback::_AddNewConnection()
 		uPort = dlgNewConnection.GetPort();
 	}
 	else
+		return E_FAIL;
+
+	if (ConnectionExists(strName))
 		return E_FAIL;
 
 	return _AddConnectionToRegistry(strName, strHost, uPort, strUser, strPath);
@@ -249,4 +330,80 @@ void CExplorerCallback::_RefreshView()
 	// what the new PIDL is until we reload from the registry, hence UPDATEDIR)
 	::SHChangeNotify( SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 
 		m_pidl, NULL );
+}
+
+/**
+ * Return whether the Remove Host menu should be enabled.
+ */
+bool CExplorerCallback::_ShouldEnableRemove()
+{
+	try
+	{
+		CShellDataObject data_object = _GetSelectionDataObject();
+		return data_object.GetPidlCount() == 1;
+	}
+	catch (CAtlException)
+	{
+		return false;
+	}
+}
+
+/**
+ * Return the single item in the ShellView that is currently selected.
+ * Fail if more than one item is selected or if none is.
+ */
+CAbsolutePidl CExplorerCallback::_GetSelectedItem()
+{
+	CShellDataObject data_object = _GetSelectionDataObject();
+	if (data_object.GetPidlCount() != 1)
+		AtlThrow(E_FAIL);
+	return data_object.GetFile(0);
+}
+
+/**
+ * Return a DataObject representing the items currently selected.
+ *
+ * @throw AtlException if interface not found.
+ */
+CComPtr<IDataObject> CExplorerCallback::_GetSelectionDataObject()
+{
+	CComPtr<IShellView> spView = _GetShellView();
+	CComPtr<IDataObject> spDataObject;
+	HRESULT hr = spView->GetItemObject(
+		SVGIO_SELECTION, __uuidof(IDataObject), (void **)&spDataObject);
+	if (FAILED(hr))
+		AtlThrow(hr); // Legal to fail here - maybe nothing selected
+	return spDataObject;
+}
+
+/**
+ * Return the parent IShellView from the site set through IObjectWithSite.
+ *
+ * @throw AtlException if interface not found.
+ */
+CComPtr<IShellView> CExplorerCallback::_GetShellView()
+{
+	CComPtr<IShellBrowser> spBrowser = _GetShellBrowser();
+	CComPtr<IShellView> spView;
+	ATLENSURE_SUCCEEDED(spBrowser->QueryActiveShellView(&spView));
+	return spView;
+}
+
+/**
+ * Return the parent IShellBrowser from the site set through IObjectWithSite.
+ *
+ * @throw AtlException if interface not found.
+ */
+CComPtr<IShellBrowser> CExplorerCallback::_GetShellBrowser()
+{
+	if (!m_spUnkSite)
+		AtlThrow(E_NOINTERFACE);
+
+	CComQIPtr<IServiceProvider> spSP = m_spUnkSite;
+	if (!spSP)
+		AtlThrow(E_NOINTERFACE);
+
+	CComPtr<IShellBrowser> spBrowser;
+	ATLENSURE_SUCCEEDED(spSP->QueryService(SID_SShellBrowser, &spBrowser));
+	return spBrowser;
 }
