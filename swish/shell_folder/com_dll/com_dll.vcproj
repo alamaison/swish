@@ -68,7 +68,6 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
 				ModuleDefinitionFile="com_dll.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"

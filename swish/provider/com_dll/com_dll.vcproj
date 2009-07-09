@@ -72,7 +72,6 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				LinkIncremental="2"
 				ModuleDefinitionFile="com_dll.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
