@@ -30,9 +30,12 @@
 
 #include "swish/atl.hpp"  // Common ATL setup
 
+#include "swish/CoFactory.hpp"
+
 class ATL_NO_VTABLE CUserInteraction :
 	public ISftpConsumer,
-	public ATL::CComObjectRoot
+	public ATL::CComObjectRoot,
+	public swish::CCoFactory<CUserInteraction> // Needs to be public
 {
 public:
 
@@ -40,39 +43,9 @@ public:
 		COM_INTERFACE_ENTRY(ISftpConsumer)
 	END_COM_MAP()
 
-	CUserInteraction() : m_hwndOwner(NULL) {}
-
-	HRESULT Initialize( __in_opt HWND hwndOwner );
-
-	/**
-	 * Create and initialise an instance of the CUserInteraction class.
-	 *
-	 * @param [in]  hwndOwner  A window handle to parent window which this 
-	 *                         instance should use as the parent for any 
-	 *                         user-interaction.
-	 * @param [out] ppReturn   The location in which to return the 
-	 *                         ISftpConsumer interace pointer for this instance.
-	 */
-	static HRESULT MakeInstance(
-		__in_opt HWND hwndOwner, __deref_out ISftpConsumer **ppReturn )
-	{
-		HRESULT hr;
-
-		ATL::CComObject<CUserInteraction> *pConsumer;
-		hr = ATL::CComObject<CUserInteraction>::CreateInstance(&pConsumer);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr );
-
-		pConsumer->AddRef();
-
-		pConsumer->Initialize(hwndOwner);
-		hr = pConsumer->QueryInterface(ppReturn);
-		ATLASSERT(SUCCEEDED(hr));
-
-		pConsumer->Release();
-		pConsumer = NULL;
-
-		return hr;
-	}
+	CUserInteraction();
+	void SetHWND(__in_opt HWND hwnd);
+	void ClearHWND();
 
 	/**
 	 * User interaction callbacks.
@@ -110,5 +83,6 @@ public:
 	/* @} */
 
 private:
-	HWND m_hwndOwner; ///< Window to use as parent for user interaction.
+	HWND m_hwnd;      ///< Window to use as parent for user interaction.
 };
+

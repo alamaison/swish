@@ -36,10 +36,16 @@ using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
 
-HRESULT CUserInteraction::Initialize( HWND hwndOwner )
+CUserInteraction::CUserInteraction() : m_hwnd(NULL) {}
+
+void CUserInteraction::SetHWND(HWND hwnd)
 {
-	m_hwndOwner = hwndOwner;
-	return S_OK;
+	m_hwnd = hwnd;
+}
+
+void CUserInteraction::ClearHWND()
+{
+	SetHWND(NULL);
 }
 
 /**
@@ -55,8 +61,9 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 	BSTR bstrRequest, BSTR *pbstrPassword
 )
 {
-	if (m_hwndOwner == NULL)
+	if (m_hwnd == NULL)
 		return E_FAIL;
+	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	CString strPrompt = bstrRequest;
 	ATLASSERT(strPrompt.GetLength() > 0);
@@ -79,8 +86,9 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 	SAFEARRAY *psaShowResponses, SAFEARRAY **ppsaResponses
 )
 {
-	if (m_hwndOwner == NULL)
+	if (m_hwnd == NULL)
 		return E_FAIL;
+	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	CComSafeArray<BSTR> saPrompts(psaPrompts);
 	CComSafeArray<VARIANT_BOOL> saShowPrompts(psaShowResponses);
@@ -99,9 +107,7 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 
 	// Show dialogue and fetch responses when user clicks OK
 	CKbdInteractiveDialog dlg(bstrName, bstrInstruction, vecPrompts, vecEcho);
-	INT_PTR rc = dlg.DoModal();
-	REPORT(rc > 0);
-	if (rc == IDCANCEL)
+	if (dlg.DoModal() == IDCANCEL)
 		return E_ABORT;
 	ResponseList vecResponses = dlg.GetResponses();
 
@@ -146,8 +152,9 @@ STDMETHODIMP CUserInteraction::OnYesNoCancel(
 	BSTR bstrTitle, int *pnResult
 )
 {
-	if (m_hwndOwner == NULL)
+	if (m_hwnd == NULL)
 		return E_FAIL;
+	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	// Construct unknown key information message
 	CString strMessage = bstrMessage;
@@ -194,8 +201,9 @@ STDMETHODIMP CUserInteraction::OnYesNoCancel(
 STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
 	BSTR bstrOldFile, BSTR bstrExistingFile )
 {
-	if (m_hwndOwner == NULL)
+	if (m_hwnd == NULL)
 		return E_FAIL;
+	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	CString strMessage = _T("The folder already contains a file named '");
 	strMessage += bstrExistingFile;
@@ -205,7 +213,7 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
 	strMessage += _T("\r\n\r\nwith this one?\r\n\r\n\t");
 	strMessage += bstrOldFile;
 
-	int ret = ::IsolationAwareMessageBox(m_hwndOwner, strMessage, NULL, 
+	int ret = ::IsolationAwareMessageBox(m_hwnd, strMessage, NULL, 
 		MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2);
 
 	if (ret == IDYES)
@@ -223,10 +231,11 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwriteEx(
 
 STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 {
-	if (m_hwndOwner == NULL)
+	if (m_hwnd == NULL)
 		return E_FAIL;
+	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
-	::IsolationAwareMessageBox(m_hwndOwner, CComBSTR(bstrMessage), NULL,
+	::IsolationAwareMessageBox(m_hwnd, CComBSTR(bstrMessage), NULL,
 		MB_OK | MB_ICONERROR);
 	return S_OK;
 }
