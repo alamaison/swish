@@ -232,6 +232,8 @@ HRESULT CExplorerCallback::_RemoveConnection()
 		RemoveConnectionFromRegistry(label);
 	}
 	catchCom()
+
+	return S_OK;
 }
 
 HRESULT CExplorerCallback::_AddNewConnection()
@@ -262,6 +264,8 @@ HRESULT CExplorerCallback::_AddNewConnection()
 		AddConnectionToRegistry(label, host, port, user, path);
 	}
 	catchCom()
+
+	return S_OK;
 }
 
 /**
