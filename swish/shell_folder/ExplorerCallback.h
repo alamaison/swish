@@ -78,15 +78,10 @@ public: // IShellFolderViewCB
 private:
 
 	__checkReturn HMENU _GetToolsMenu(HMENU hParentMenu);
-	HRESULT _AddNewConnection();
-	HRESULT _AddConnectionToRegistry(
-		PCTSTR szName, PCTSTR szHost, UINT uPort, 
-		PCTSTR szUsername, PCTSTR szPath );
 	void _RefreshView();
 
+	HRESULT _AddNewConnection();
 	HRESULT _RemoveConnection();
-	HRESULT _RemoveConnectionFromRegistry(
-		PCTSTR szLabel );
 	bool _ShouldEnableRemove();
 
 	ATL::CComPtr<IShellBrowser> _GetShellBrowser();

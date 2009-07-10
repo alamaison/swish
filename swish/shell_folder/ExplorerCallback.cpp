@@ -29,17 +29,14 @@
 #include "NewConnDialog.h"
 #include "ShellDataObject.h"
 #include "Registry.h"
+#include "host_management.hpp"
 #include "swish/debug.hpp"
 #include "swish/catch_com.hpp"
 
 #include <strsafe.h>          // For StringCchCopy
 
 #include <string>
-#include <algorithm>
 #include <vector>
-
-#include <boost/lambda/lambda.hpp>
-#include <boost/bind.hpp>
 
 using ATL::CAtlException;
 using ATL::CComPtr;
@@ -48,6 +45,10 @@ using ATL::CString;
 
 using std::wstring;
 using std::vector;
+
+using swish::host_management::AddConnectionToRegistry;
+using swish::host_management::RemoveConnectionFromRegistry;
+using swish::host_management::ConnectionExists;
 
 #define SFVM_SELECTIONCHANGED 8
 
@@ -218,18 +219,6 @@ HMENU CExplorerCallback::_GetToolsMenu(HMENU hParentMenu)
 	return (fSucceeded) ? info.hSubMenu : NULL;
 }
 
-namespace {
-
-	bool ConnectionExists(PCWSTR pszName)
-	{
-		vector<CHostItem> connections = 
-			CRegistry::LoadConnectionsFromRegistry();
-
-		return find_if(connections.begin(), connections.end(), 
-			bind(&CHostItem::GetLabel, _1) == pszName) != connections.end();
-	}
-}
-
 HRESULT CExplorerCallback::_RemoveConnection()
 {
 	ATLASSUME(m_hwndView);
@@ -238,85 +227,41 @@ HRESULT CExplorerCallback::_RemoveConnection()
 	{
 		CHostItemAbsolute pidl_selected = _GetSelectedItem();
 		wstring label = pidl_selected.FindHostPidl().GetLabel();
-		ATLENSURE_RETURN_HR(label.size() > 0, E_UNEXPECTED);
+		ATLENSURE_THROW(label.size() > 0, E_UNEXPECTED);
 
-		ATLENSURE_RETURN_HR(ConnectionExists(label.c_str()), E_UNEXPECTED);
-		return _RemoveConnectionFromRegistry(label.c_str());
+		RemoveConnectionFromRegistry(label);
 	}
 	catchCom()
-}
-
-HRESULT CExplorerCallback::_RemoveConnectionFromRegistry(PCTSTR szLabel)
-{
-	ATL::CRegKey regConnection;
-	LSTATUS rc = ERROR_SUCCESS;
-
-	rc = regConnection.Open(
-		HKEY_CURRENT_USER, L"Software\\Swish\\Connections");
-	ATLENSURE_RETURN_HR(rc == ERROR_SUCCESS, E_UNEXPECTED);
-	
-	rc = regConnection.RecurseDeleteKey( szLabel );
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	rc = regConnection.Close();
-	ATLASSERT(rc == ERROR_SUCCESS);
-
-	return S_OK;
 }
 
 HRESULT CExplorerCallback::_AddNewConnection()
 {
 	ATLASSUME(m_hwndView);
 
-	// Display dialog to get connection info from user
-	CString strName, strUser, strHost, strPath;
-	UINT uPort;
-	CNewConnDialog dlgNewConnection;
-	dlgNewConnection.SetPort( 22 ); // Sensible default
-	if (dlgNewConnection.DoModal(m_hwndView) == IDOK)
+	try
 	{
-		strName = dlgNewConnection.GetName();
-		strUser = dlgNewConnection.GetUser();
-		strHost = dlgNewConnection.GetHost();
-		strPath = dlgNewConnection.GetPath();
-		uPort = dlgNewConnection.GetPort();
+		// Display dialog to get connection info from user
+		wstring label, user, host, path;
+		UINT port;
+		CNewConnDialog dlgNewConnection;
+		dlgNewConnection.SetPort( 22 ); // Sensible default
+		if (dlgNewConnection.DoModal(m_hwndView) == IDOK)
+		{
+			label = dlgNewConnection.GetName();
+			user = dlgNewConnection.GetUser();
+			host = dlgNewConnection.GetHost();
+			path = dlgNewConnection.GetPath();
+			port = dlgNewConnection.GetPort();
+		}
+		else
+			AtlThrow(E_FAIL);
+
+		if (ConnectionExists(label))
+			AtlThrow(E_FAIL);
+
+		AddConnectionToRegistry(label, host, port, user, path);
 	}
-	else
-		return E_FAIL;
-
-	if (ConnectionExists(strName))
-		return E_FAIL;
-
-	return _AddConnectionToRegistry(strName, strHost, uPort, strUser, strPath);
-}
-
-HRESULT CExplorerCallback::_AddConnectionToRegistry(
-	PCTSTR szLabel, PCTSTR szHost, UINT uPort,
-	PCTSTR szUser, PCTSTR szPath )
-{
-	ATL::CRegKey regConnection;
-	LSTATUS rc = ERROR_SUCCESS;
-	CString strKey = CString("Software\\Swish\\Connections\\") + szLabel;
-
-	rc = regConnection.Create( HKEY_CURRENT_USER, strKey );
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	rc = regConnection.SetStringValue(_T("Host"), szHost);
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	rc = regConnection.SetDWORDValue(_T("Port"), uPort);
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	rc = regConnection.SetStringValue(_T("User"), szUser);
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	rc = regConnection.SetStringValue(_T("Path"), szPath);
-	ATLENSURE_REPORT_HR(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	rc = regConnection.Close();
-	ATLASSERT(rc == ERROR_SUCCESS);
-
-	return S_OK;
+	catchCom()
 }
 
 /**

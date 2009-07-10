@@ -260,6 +260,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\host_management.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HostFolder.cpp"
 				>
 			</File>
@@ -399,6 +403,10 @@
 			</File>
 			<File
 				RelativePath=".\Folder.h"
+				>
+			</File>
+			<File
+				RelativePath=".\host_management.hpp"
 				>
 			</File>
 			<File

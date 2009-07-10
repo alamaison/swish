@@ -30,6 +30,7 @@
 #include "ConnCopyPolicy.h"
 #include "ExplorerCallback.h"     // For interaction with Explorer window
 #include "Registry.h"             // For saved connection details
+#include "host_management.hpp"
 #include "swish/debug.hpp"
 #include "swish/remotelimits.h"   // Text field limits
 
@@ -42,6 +43,8 @@ using ATL::CComPtr;
 using ATL::CComObject;
 
 using std::wstring;
+
+using swish::host_management::LoadConnectionsFromRegistry;
 
 void CHostFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
 const throw(...)
@@ -156,7 +159,7 @@ STDMETHODIMP CHostFolder::EnumObjects(
 	try
 	{
 		// Load connections from HKCU\Software\Swish\Connections
-		m_vecConnData = CRegistry::LoadConnectionsFromRegistry();
+		m_vecConnData = LoadConnectionsFromRegistry();
 	}
 	catchCom()
 

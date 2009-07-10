@@ -1,6 +1,11 @@
-/*  Helper class for Swish registry access.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Helper class for Swish registry access.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,23 +20,18 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #pragma once
 
-#include "HostPidl.h"
 #include "RemotePidl.h"
 
 #include <vector>
 
 class CRegistry
 {
-public:
-	static std::vector<CHostItem> LoadConnectionsFromRegistry() throw(...);
-	
-private:
-	static CHostItem _GetConnectionDetailsFromRegistry(__in PCWSTR pwszLabel)
-		throw(...);
 
 public:
 	static HRESULT GetHostFolderAssocKeys(

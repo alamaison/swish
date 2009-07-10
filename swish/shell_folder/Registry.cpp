@@ -1,7 +1,7 @@
 /**
     @file
 
-	Helper class for Swish registry access.
+    Helper class for Swish registry access.
 
     @if licence
 
@@ -34,50 +34,6 @@ using ATL::CRegKey;
 using ATL::CString;
 
 using std::vector;
-
-/**
- * Load all the connections stored in the registry into PIDLs.
- *
- * It's possible that there aren't any connections in 
- * the @c Software\\Swish\\Connections key of the registry, in which case 
- * the vector is left empty.
- *
- * @returns  Vector of PIDLs containing the details of all the SFTP
- *           stored in the registry.
- * @throws  CAtlException if something unexpected happens such as corrupt
- *          registry structure.
- */
-/* static */ vector<CHostItem> CRegistry::LoadConnectionsFromRegistry()
-throw(...)
-{
-	CRegKey regConnections;
-	LSTATUS rc = ERROR_SUCCESS;
-	vector<CHostItem> vecConnections;
-
-	rc = regConnections.Open(
-		HKEY_CURRENT_USER, L"Software\\Swish\\Connections");
-
-	if (rc == ERROR_SUCCESS) // Legal to fail here - may be first ever connection
-	{
-		int iSubKey = 0;
-		wchar_t wszLabel[2048]; 
-		do {
-			DWORD cchLabel = 2048;
-			rc = regConnections.EnumKey(iSubKey, wszLabel, &cchLabel);
-			if (rc == ERROR_SUCCESS)
-			{
-				vecConnections.push_back(
-					_GetConnectionDetailsFromRegistry(wszLabel));
-			}
-			iSubKey++;
-		} while (rc == ERROR_SUCCESS);
-
-		ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
-		ATLVERIFY(regConnections.Close() == ERROR_SUCCESS);
-	}
-
-	return vecConnections; // May be empty
-}
 
 /**
  * Get registry keys for HostFolder connection association info.
@@ -392,59 +348,4 @@ throw()
 	}
 
 	return vecKeys;
-}
-
-/**
- * Get a single connection from the registry as a PIDL.
- *
- * @pre The @c Software\\Swish\\Connections registry key exists.
- * @pre The connection is present as a subkey of the 
- *      @c Software\\Swish\\Connections registry key whose name is given
- *      by @p pwszLabel.
- *
- * @param pwszLabel  Friendly name of the connection to load.
- *
- * @returns  A host PIDL holding the connection details.
- * @throws  CAtlException: E_FAIL if the registry key does not exist
- *          and E_UNEXPECTED if the registry is corrupted.
- */
-/* static */ CHostItem CRegistry::_GetConnectionDetailsFromRegistry(
-	__in PCWSTR pwszLabel)
-throw(...)
-{
-	CRegKey regConnection;
-	LSTATUS rc = ERROR_SUCCESS;
-
-	// Target variables to load values into
-	wchar_t wszHost[MAX_HOSTNAME_LENZ]; ULONG cchHost = MAX_HOSTNAME_LENZ;
-	DWORD dwPort;
-	wchar_t wszUser[MAX_USERNAME_LENZ]; ULONG cchUser = MAX_USERNAME_LENZ;
-	wchar_t wszPath[MAX_PATH_LENZ];     ULONG cchPath = MAX_PATH_LENZ;
-
-	// Open HKCU\Software\Swish\Connections\<pwszLabel> registry key
-	CString strKey = CString(L"Software\\Swish\\Connections\\") + pwszLabel;
-	rc = regConnection.Open(HKEY_CURRENT_USER, strKey);
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
-
-	// Load values
-	rc = regConnection.QueryStringValue(L"Host", wszHost, &cchHost); // Host
-
-	rc = regConnection.QueryDWORDValue(L"Port", dwPort);             // Port
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-	ATLASSERT(dwPort >= MIN_PORT);
-	ATLASSERT(dwPort <= MAX_PORT);
-	USHORT uPort = static_cast<USHORT>(dwPort);
-
-	rc = regConnection.QueryStringValue(L"User", wszUser, &cchUser); // User
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-
-	rc = regConnection.QueryStringValue(L"Path", wszPath, &cchPath); // Path
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-
-	// Create new PIDL to return
-	CHostItem pidl(wszUser, wszHost, wszPath, uPort, pwszLabel);
-
-	ATLVERIFY(regConnection.Close() == ERROR_SUCCESS);
-
-	return pidl;
 }
