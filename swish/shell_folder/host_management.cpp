@@ -209,6 +209,9 @@ void RemoveConnectionFromRegistry(wstring label)
  */
 bool ConnectionExists(wstring label)
 {
+	if (label.size() < 1)
+		return false;
+
 	vector<CHostItem> connections = LoadConnectionsFromRegistry();
 
 	return find_if(connections.begin(), connections.end(), 

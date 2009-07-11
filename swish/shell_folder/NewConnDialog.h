@@ -28,12 +28,13 @@
 
 #include "resource.h"       // main symbols
 
-#include "swish/atl.hpp"   // Common ATL setup
+#include "swish/atl.hpp"    // Common ATL setup
 #include <atlwin.h>         // ATL windowing classes
 #include <atlstr.h>         // CString
 
 #include "wtl.hpp"          // WTL
 #include <atlddx.h>         // WTL DDX/DDV
+#include <atlctrls.h>       // WTL control wrappers
 
 #include "swish/remotelimits.h"
 
@@ -63,22 +64,22 @@ public:
 	/** Dialog box resource identifier */
 	enum { IDD = IDD_HOSTINFO_DIALOG };
 
-	CNewConnDialog() : m_uPort(22) {}
+	CNewConnDialog();
 
 	/** @name Accessors
 	 * Dialog field setters and getters
 	 */
 	// @{
-	ATL::CString GetName();
-	ATL::CString GetUser();
-	ATL::CString GetHost();
-	ATL::CString GetPath();
-	UINT GetPort();
-	void SetName( PCTSTR pszName );
-	void SetUser( PCTSTR pszUser );
-	void SetHost( PCTSTR pszHost );
-	void SetPath( PCTSTR pszPath );
-	void SetPort( UINT uPort );
+	ATL::CString GetName() const;
+	ATL::CString GetUser() const;
+	ATL::CString GetHost() const;
+	ATL::CString GetPath() const;
+	UINT GetPort() const;
+	void SetName(PCWSTR pwszName);
+	void SetUser(PCWSTR pwszUser);
+	void SetHost(PCWSTR pwszHost);
+	void SetPath(PCWSTR pwszPath);
+	void SetPort(UINT uPort);
 	// @}
 
 	BEGIN_MSG_MAP(CNewConnDialog)
@@ -112,10 +113,37 @@ private:
 
 	/** @name Field validity */
 	// @{
-	BOOL _IsValid() const;
-	void _HandleValidity();
+	void _UpdateValidity();
+	bool _IsValidUser() const;
+	bool _IsValidHost() const;
+	bool _IsValidPath() const;
+	bool _IsValidPort() const;
+	// @}
+	
+	/** @name Status message */
+	// @{
+	void _ShowStatus(PCWSTR message);	
+	void _ShowStatus(int id);
+	void _HideStatus();
+	void _ShowStatusInfoIcon();
+	void _ShowStatusErrorIcon();
+	void _HideStatusIcon();
 	// @}
 
+	/** @name Data fields */
+	// @{
 	ATL::CString m_strName, m_strUser, m_strHost, m_strPath;
 	UINT m_uPort;
+	// @}
+
+	/** @name GUI controls */
+	// @{
+	WTL::CIcon m_infoIcon;  ///< Small icon displaying a blue 'i' symbol
+	WTL::CIcon m_errorIcon; ///< Small icon displaying a red error cross
+	WTL::CStatic m_status;  ///< Status message window
+	WTL::CStatic m_icon;    ///< Status icon display area
+	// @}
+
+	bool m_fLoadedInitial;  ///< Have we loaded the initial data from the Set*
+	                        ///< method into the Win32 controls?
 };

@@ -25,13 +25,58 @@
 */
 
 #include "NewConnDialog.h"
-
+#include "host_management.hpp"
 #include "swish/remotelimits.h"  // Text field limits
+#include "swish/debug.hpp"
+
+#include "Registry.h"
+#include "HostPidl.h"
+
+#include <vector>
 
 using ATL::CString;
+using WTL::CStatic;
 
-#define FORBIDDEN_CHARS _T("@: \t\n\r\b\"'\\")
-#define FORBIDDEN_PATH_CHARS _T("\"\t\n\r\b\\")
+using std::vector;
+
+using swish::host_management::ConnectionExists;
+
+namespace { //private
+
+	const int DEFAULT_PORT = 22;
+
+	const PWSTR FORBIDDEN_CHARS = L"@: \t\n\r\b\"'\\";
+	const PWSTR FORBIDDEN_PATH_CHARS = L"\"\t\n\r\b\\";
+
+	const PWSTR ICON_MODULE = L"user32.dll";
+	const int ICON_ERROR = 103;
+	const int ICON_INFO = 104;
+	const int ICON_SIZE = 16;
+
+	/**
+	 * Load a small (16x16) icon from user32.dll by ordinal.
+	 */
+	HICON LoadSmallSystemIcon(int icon)
+	{
+		HMODULE module = ::GetModuleHandle(ICON_MODULE);
+
+		HANDLE iconHandle = ::LoadImage(
+			module, MAKEINTRESOURCE(icon), IMAGE_ICON, ICON_SIZE, 
+			ICON_SIZE, 0);
+		ATLASSERT_REPORT(iconHandle, ::GetLastError());
+
+		return static_cast<HICON>(iconHandle);
+	}
+}
+
+/**
+ * Construct dialogue instance and load system icons for status messages.
+ */
+CNewConnDialog::CNewConnDialog() : m_uPort(DEFAULT_PORT), 
+                                   m_infoIcon(LoadSmallSystemIcon(ICON_INFO)), 
+                                   m_errorIcon(LoadSmallSystemIcon(ICON_ERROR)),
+								   m_fLoadedInitial(false)
+{}
 
 /**
  * Handle dialog initialisation by copying member data into Win32 fields.
@@ -45,15 +90,21 @@ using ATL::CString;
  *      order to copy data into them.
  *
  * @see SetUser() SetHost() SetPath() SetPort()
- * @see _HandleValidity()
+ * @see _UpdateValidity()
  */
 LRESULT CNewConnDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 {
-	// Copy member data to Win32 object fields
-	DoDataExchange(DDX_LOAD);
+	// Save handles to status controls which will be continually updated
+	m_status = GetDlgItem(IDC_HOSTDLG_STATUS);
+	m_icon = GetDlgItem(IDC_HOSTDLG_STATUS_ICON);
 
-	// Check validity
-	_HandleValidity();
+	// Copy any intial data into Win32 controls
+	DoDataExchange(DDX_LOAD);
+	m_fLoadedInitial = true; // Initial load phase complete; start reacting
+	                         // to changes
+
+	// Redraw the window to match the state of the fields
+	_UpdateValidity();
 
 	return 1;  // Let the system set the focus
 }
@@ -66,11 +117,12 @@ LRESULT CNewConnDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
  * @pre the dialog must have been initialised by calling DoModal() or
  *      Create() before this function is called.
  *
- * @see _HandleValidity()
+ * @see _UpdateValidity()
  */
 LRESULT CNewConnDialog::OnChange(WORD, WORD, HWND, BOOL&)
 {
-	_HandleValidity();
+	if (m_fLoadedInitial) // Skip update during initial load phase
+		_UpdateValidity();
 	return 0;
 }
 
@@ -80,7 +132,7 @@ LRESULT CNewConnDialog::OnChange(WORD, WORD, HWND, BOOL&)
  * The data in the Win32 dialog fields is copied to the member variables
  * thereby making it available to the accessor methods.
  *
- * @pre The _IsValid() function must have passed allowing _HandleValidity() to
+ * @pre The _IsValid() function must have passed allowing _UpdateValidity() to
  *      enable the OK button before this handler could be invoked.  This means 
  *      we don't need to check the fields.
  *
@@ -119,160 +171,44 @@ LRESULT CNewConnDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
 }
 
 /**
- * Checks if the values in the dialog box fields are valid.
- *
- * Criteria:
- * - The name field must not be empty.
- * - The user name field must not be empty, must not contain more than 
- *   @ref MAX_USERNAME_LEN characters and must not contain any characters
- *   from @ref FORBIDDEN_CHARS.
- * - The host name field must not be empty, must not contain more than 
- *   @ref MAX_HOSTNAME_LEN characters and must not contain any characters
- *   from @ref FORBIDDEN_CHARS.
- * - The path field must not be empty, must not contain more than 
- *   @ref MAX_PATH_LEN characters and must not contain any characters
- *   from @ref FORBIDDEN_PATH_CHARS.
- * - The port field must contain a number between 0 and 65535 (@ref MAX_PORT).
- *
- * @pre the dialog must have been initialised by calling DoModal() or
- *      Create() before this function is called.  The fields must exist in
- *      order to check them.
- *
- * @returns
- *     @retval true if all fields meet the validity criteria.
- *     @retval false if any field fails the criteria.
- *
- * @todo The validity criteria are woefully inadequate:
- * - There are many characters that are not allowed in usernames or hostnames.
- *   The test should really check that characters are all from an allowed list
- *   rather than not from a forbidden list.
- * - Windows usernames can contain spaces.  These must be escaped.
- * - Paths can contain almost any character.  Some will have to be escaped.
- * @todo Use balloons or some other method to warn the user of problems as 
- *       they complete the fields.
- *
- * @see _HandleValidity()
- */
-BOOL CNewConnDialog::_IsValid() const
-{
-	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
-
-	// Check string fields
-	CString strName, strUser, strHost, strPath;
-	GetDlgItemText(IDC_NAME, strName);
-	GetDlgItemText(IDC_USER, strUser);
-	GetDlgItemText(IDC_HOST, strHost);
-	GetDlgItemText(IDC_PATH, strPath);
-	if (strName.IsEmpty() || strUser.IsEmpty() || strHost.IsEmpty()
-		|| strPath.IsEmpty())
-		return false;
-	if (strUser.FindOneOf(FORBIDDEN_CHARS) > -1 ||
-	    strHost.FindOneOf(FORBIDDEN_CHARS) > -1 ||
-		strPath.FindOneOf(FORBIDDEN_PATH_CHARS) > -1)
-		return false;
-	if (strUser.GetLength() > MAX_USERNAME_LEN ||
-		strHost.GetLength() > MAX_HOSTNAME_LEN ||
-		strPath.GetLength() > MAX_PATH_LEN)
-		return false;
-
-	// Check numeric field (port number)
-	BOOL fTranslated;
-	UINT uPort = GetDlgItemInt(IDC_PORT, &fTranslated, false);
-	if (!fTranslated)
-		return false;
-	if (uPort > MAX_PORT)
-		return false;
-
-	return true;
-}
-
-/**
- * Disables the OK button if a field in the dialog is invalid.
- *
- * @pre the dialog must have been initialised by calling DoModal() or
- *      Create() before this function is called.  The fields must exist in
- *      order to check them.
- *
- * @todo Use balloons or some other method to warn the user of problems as 
- *       they complete the fields.
- *
- * @see OnOK()
- */
-void CNewConnDialog::_HandleValidity()
-{
-	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
-
-	::EnableWindow(GetDlgItem(IDOK), _IsValid());
-}
-
-/**
  * Get value of the connection name field.
  *
- * @pre the OK button must be clicked first in order to copy the data out
- *      of the Win32 field.
  * @returns the friendly connection name (label).
- * @todo copy the data directly from the field or update the member variables
- *       as the field value changes.
  */
-CString CNewConnDialog::GetName()
+CString CNewConnDialog::GetName() const
 {
 	return m_strName;
 }
 
 /**
  * Get value of the user name field.
- *
- * @pre the OK button must be clicked first in order to copy the data out
- *      of the Win32 field.
- * @returns the user name.
- * @todo copy the data directly from the field or update the member variables
- *       as the field value changes.
  */
-CString CNewConnDialog::GetUser()
+CString CNewConnDialog::GetUser() const
 {
 	return m_strUser;
 }
 
 /**
  * Get value of the host name field.
- *
- * @pre the OK button must be clicked first in order to copy the data out
- *      of the Win32 field.
- * @returns the host name.
- * @todo copy the data directly from the field or update the member variables
- *       as the field value changes.
  */
-CString CNewConnDialog::GetHost()
+CString CNewConnDialog::GetHost() const
 {
 	return m_strHost;
 }
 
 /**
  * Get value of the path field.
- *
- * @pre the OK button must be clicked first in order to copy the data out
- *      of the Win32 field.
- * @returns the path name.
- * @todo copy the data directly from the field or update the member variables
- *       as the field value changes.
  */
-CString CNewConnDialog::GetPath()
+CString CNewConnDialog::GetPath() const
 {
 	return m_strPath;
 }
 
 /**
  * Get value of the port field.
- *
- * @pre the OK button must be clicked first in order to copy the data out
- *      of the Win32 field.
- * @returns the user name.
- * @todo copy the data directly from the field or update the member variables
- *       as the field value changes.
  */
-UINT CNewConnDialog::GetPort()
+UINT CNewConnDialog::GetPort() const
 {
-	ATLASSERT(m_uPort >= MIN_PORT && m_uPort <= MAX_PORT);
 	return m_uPort;
 }
 
@@ -285,9 +221,9 @@ UINT CNewConnDialog::GetPort()
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetName( PCTSTR pszName )
+void CNewConnDialog::SetName(PCWSTR pwszName)
 {
-	m_strName = pszName;
+	m_strName = pwszName;
 }
 
 /**
@@ -299,9 +235,9 @@ void CNewConnDialog::SetName( PCTSTR pszName )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetUser( PCTSTR pszUser )
+void CNewConnDialog::SetUser(PCWSTR pwszUser)
 {
-	m_strUser = pszUser;
+	m_strUser = pwszUser;
 }
 
 /**
@@ -313,9 +249,9 @@ void CNewConnDialog::SetUser( PCTSTR pszUser )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetHost( PCTSTR pszHost )
+void CNewConnDialog::SetHost(PCWSTR pwszHost)
 {
-	m_strHost = pszHost;
+	m_strHost = pwszHost;
 }
 
 /**
@@ -327,9 +263,9 @@ void CNewConnDialog::SetHost( PCTSTR pszHost )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetPath( PCTSTR pszPath )
+void CNewConnDialog::SetPath(PCWSTR pwszPath)
 {
-	m_strPath = pszPath;
+	m_strPath = pwszPath;
 }
 
 /**
@@ -342,9 +278,217 @@ void CNewConnDialog::SetPath( PCTSTR pszPath )
  *
  * @see OnInitDialog()
  */
-void CNewConnDialog::SetPort( UINT uPort )
+void CNewConnDialog::SetPort(UINT uPort)
 {
 	m_uPort = min(uPort, MAX_PORT);
 }
 
-// CNewConnDialog
+/**
+ * Set the status message to the given text and make the control visible.
+ */
+void CNewConnDialog::_ShowStatus(PCWSTR pwszMessage) 
+{
+	m_status.SetWindowText(pwszMessage);
+	m_status.ShowWindow(SW_SHOW);
+}
+
+/**
+ * Set the status message to a string resource and make the control visible.
+ */
+void CNewConnDialog::_ShowStatus(int id) 
+{
+	CString strMessage;
+	ATLVERIFY(strMessage.LoadString(id));
+	_ShowStatus(strMessage);
+}
+
+/**
+ * Hide the status message.
+ */
+void CNewConnDialog::_HideStatus() 
+{
+	m_status.ShowWindow(SW_HIDE);
+}
+
+/**
+ * Display an information icon (blue 'i') next to the status message.
+ */
+void CNewConnDialog::_ShowStatusInfoIcon()
+{
+	m_icon.SetIcon(m_infoIcon);
+	m_icon.ShowWindow(SW_SHOW);
+}
+
+/**
+ * Display an error icon (red 'X') next to the status message.
+ */
+void CNewConnDialog::_ShowStatusErrorIcon()
+{
+	m_icon.SetIcon(m_errorIcon);
+	m_icon.ShowWindow(SW_SHOW);
+}
+
+/**
+ * Hide the status icon.
+ */
+void CNewConnDialog::_HideStatusIcon()
+{
+	m_icon.ShowWindow(SW_HIDE);
+}
+
+/**
+ * Checks if the value in the dialog box User field is valid.
+ *
+ * Criteria:
+ * - The field must not contain more than @ref MAX_USERNAME_LEN characters 
+ *   and must not contain any characters from @ref FORBIDDEN_CHARS.
+ *
+ * @pre the dialog must have been initialised by calling DoModal() or
+ *      Create() before this function is called.  The fields must exist in
+ *      order to check them.
+ *
+ * @todo The validity criteria are woefully inadequate:
+ * - There are many characters that are not allowed in usernames.
+ *   The test should really check that characters are all from an allowed list
+ *   rather than not from a forbidden list.
+ * - Windows usernames can contain spaces.  These must be escaped.
+ *
+ * @see _UpdateValidity()
+ */
+bool CNewConnDialog::_IsValidUser() const
+{
+	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
+
+	CString strUser = GetUser();
+	return strUser.GetLength() <= MAX_USERNAME_LEN
+		&& strUser.FindOneOf(FORBIDDEN_CHARS) < 0;
+}
+
+/**
+ * Checks if the value in the dialog box Host field is valid.
+ *
+ * Criteria:
+ * - The field must not contain more than @ref MAX_HOSTNAME_LEN characters 
+ *   and must not contain any characters from @ref FORBIDDEN_CHARS
+ *
+ * @pre the dialog must have been initialised by calling DoModal() or
+ *      Create() before this function is called.  The fields must exist in
+ *      order to check them.
+ *
+ * @todo The validity criteria are woefully inadequate:
+ * - There are many characters that are not allowed in hostnames.
+ *   The test should really check that characters are all from an allowed list
+ *   rather than not from a forbidden list.
+ *
+ * @see _UpdateValidity()
+ */
+bool CNewConnDialog::_IsValidHost() const
+{
+	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
+
+	CString strHost = GetHost();
+	return strHost.GetLength() <= MAX_HOSTNAME_LEN
+		&& strHost.FindOneOf(FORBIDDEN_CHARS) < 0;
+}
+
+/**
+ * Checks if the value in the dialog box Path field is valid.
+ *
+ * Criteria:
+ * - The path field must not contain more than @ref MAX_PATH_LEN characters 
+ *   and must not contain any characters from @ref FORBIDDEN_PATH_CHARS.
+ *
+ * @pre the dialog must have been initialised by calling DoModal() or
+ *      Create() before this function is called.  The fields must exist in
+ *      order to check them.
+ *
+ * @todo The validity criteria are woefully inadequate:
+ * - Paths can contain almost any character.  Some will have to be escaped.
+ *
+ * @see _UpdateValidity()
+ */
+bool CNewConnDialog::_IsValidPath() const
+{
+	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
+
+	CString strPath = GetPath();
+	return strPath.GetLength() <= MAX_PATH_LEN 
+		&& strPath.FindOneOf(FORBIDDEN_PATH_CHARS) < 0;
+}
+
+/**
+ * Checks if the value in the dialog box Port field is valid.
+ *
+ * Criteria:
+ * - The field must contain a number between 0 and 65535 (@ref MAX_PORT).
+ *
+ * @pre the dialog must have been initialised by calling DoModal() or
+ *      Create() before this function is called.  The fields must exist in
+ *      order to check them.
+ *
+ * @see _UpdateValidity()
+ */
+bool CNewConnDialog::_IsValidPort() const
+{
+	UINT port = GetPort();
+	return port >= MIN_PORT && port <= MAX_PORT;
+}
+
+/**
+ * Disables the OK button if a field in the dialog is invalid.
+ *
+ * @pre the dialog must have been initialised by calling DoModal() or
+ *      Create() before this function is called.  The fields must exist in
+ *      order to check them.
+ *
+ * @see OnOK()
+ */
+void CNewConnDialog::_UpdateValidity()
+{
+	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
+
+	// Copy member data from Win32 object fields
+	DoDataExchange(DDX_SAVE);
+
+	bool enableOK = false;
+
+	if (!_IsValidHost())
+	{
+		_ShowStatus(IDS_HOSTDLG_INVALID_HOST);
+		_ShowStatusErrorIcon();
+	}
+	else if (!_IsValidPort())
+	{
+		_ShowStatus(IDS_HOSTDLG_INVALID_PORT);
+		_ShowStatusErrorIcon();
+	}
+	else if (!_IsValidUser())
+	{
+		_ShowStatus(IDS_HOSTDLG_INVALID_USER);
+		_ShowStatusErrorIcon();
+	}
+	else if (!_IsValidPath())
+	{
+		_ShowStatus(IDS_HOSTDLG_INVALID_PATH);
+		_ShowStatusErrorIcon();
+	}
+	else if (ConnectionExists(GetName().GetString()))
+	{
+		_ShowStatus(IDS_HOSTDLG_CONNECTION_EXISTS);
+		_ShowStatusErrorIcon();
+	}
+	else if (GetName().GetLength() < 1 || GetHost().GetLength() < 1
+		|| GetUser().GetLength() < 1 || GetPath().GetLength() < 1)
+	{
+		_ShowStatus(IDS_HOSTDLG_COMPLETE_ALL);
+		_ShowStatusInfoIcon();
+	}
+	else
+	{
+		_HideStatus();
+		_HideStatusIcon();
+		enableOK = true;
+	}
+
+	::EnableWindow(GetDlgItem(IDOK), enableOK);
+}

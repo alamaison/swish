@@ -18,6 +18,12 @@
 #define IDS_COLUMN_OWNER_ID             108
 #define IDS_COLUMN_GROUP_ID             109
 #define IDS_COLUMN_ACCESSED             110
+#define IDS_HOSTDLG_INVALID_PORT        111
+#define IDS_HOSTDLG_INVALID_HOST        112
+#define IDS_HOSTDLG_INVALID_USER        113
+#define IDS_HOSTDLG_INVALID_PATH        114
+#define IDS_HOSTDLG_COMPLETE_ALL        115
+#define IDS_HOSTDLG_CONNECTION_EXISTS   116
 #define IDD_HOSTINFO_DIALOG             201
 #define IDC_HOST_GROUP                  1002
 #define IDC_USER                        1003
@@ -32,12 +38,15 @@
 #define IDC_NAME                        1012
 #define IDC_PASSWORD                    1013
 #define IDC_PASSWORD_LABEL              1014
+#define IDC_ERROR_NEWCONNECTION         1015
+#define IDC_HOSTDLG_STATUS              1015
 #define IDC_SEPARATOR                   1017
 #define IDC_BLURB_CONNECTION            1018
 #define IDC_BLURB_SERVER                1019
 #define IDC_BLURB_PATH                  1020
 #define IDC_PATH_EXAMPLE                1021
 #define IDC_INSTRUCTION                 1022
+#define IDC_HOSTDLG_STATUS_ICON         1023
 
 // Next default values for new objects
 // 
@@ -46,7 +55,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        206
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif
