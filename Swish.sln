@@ -25,21 +25,24 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "provider-com_dll", "swish\p
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-common", "test\common\common.vcproj", "{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{859B89CB-90B5-4F71-B501-07D5A3600271} = {859B89CB-90B5-4F71-B501-07D5A3600271}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider", "test\provider\provider.vcproj", "{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell_folder", "swish\shell_folder\shell_folder.vcproj", "{859B89CB-90B5-4F71-B501-07D5A3600271}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-com_dll", "test\shell_folder-com_dll\shell_folder-com_dll.vcproj", "{D5415386-FA78-4411-AAAA-7B1FEB0D25AF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3F48C01A-FE7D-4907-860B-B7F45926F277} = {3F48C01A-FE7D-4907-860B-B7F45926F277}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{D17C85C0-179F-4460-993A-FB627E20DA2F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider-listing", "test\provider-listing\provider-listing.vcproj", "{541385C8-3DF7-401E-92E8-133B36AC7B62}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider-com_dll", "test\provider-com_dll\provider-com_dll.vcproj", "{4A4A271A-7EC9-49C9-AEC7-7BFA0F8F4017}"
+	ProjectSection(ProjectDependencies) = postProject
+		{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0} = {80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-dialogue", "test\shell_folder-dialogue\shell_folder-dialogue.vcproj", "{9225F798-2571-4F7A-8E30-42165A44B16A}"
 EndProject

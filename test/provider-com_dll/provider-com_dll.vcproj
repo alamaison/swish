@@ -164,10 +164,6 @@
 			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
 			RelativePathToProject=".\test\common\common.vcproj"
 		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
-			RelativePathToProject=".\swish\provider\com_dll\com_dll.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter
