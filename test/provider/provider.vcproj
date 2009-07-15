@@ -3,8 +3,8 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test-provider"
-	ProjectGUID="{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
-	RootNamespace="provider"
+	ProjectGUID="{541385C8-3DF7-401E-92E8-133B36AC7B62}"
+	RootNamespace="test"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -89,7 +89,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -111,7 +111,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -123,7 +123,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -162,10 +161,6 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-			RelativePathToProject=".\test\common\common.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 			RelativePathToProject=".\swish\provider\provider.vcproj"
 		/>
@@ -177,11 +172,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\module.cpp"
+				RelativePath=".\listing_test.cpp"
 				>
 			</File>
 			<File
@@ -204,28 +195,12 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath="..\provider\Session_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\provider\SessionFactory_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\provider\SftpStream_test.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\standard.h"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
