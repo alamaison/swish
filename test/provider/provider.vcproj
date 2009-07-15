@@ -176,6 +176,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Module.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\swish\pch.cpp"
 				>
 				<FileConfiguration

@@ -34,8 +34,6 @@
     @endif
 */
 
-#define BOOST_TEST_MODULE provider::libssh2::listing tests
-
 #include "swish/provider/listing/listing.hpp"
 
 #include "test/common_boost/helpers.hpp"
