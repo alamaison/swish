@@ -40,10 +40,33 @@
 
 #include <exception>      // For std::exception and std::bad_alloc
 
+#ifdef _DEBUG
 #define catchCom()                  \
 catch (const _com_error& e)         \
 {                                   \
-	ATLTRACE("Caught _com_error exception: %w\n", e.ErrorMessage()); \
+	ATLTRACE("Caught _com_error: %ws\n", e.ErrorMessage()); \
+	return e.Error();               \
+}                                   \
+catch (const std::bad_alloc&)       \
+{                                   \
+	ATLTRACE("Caught std::bad_alloc\n"); \
+	return E_OUTOFMEMORY;           \
+}                                   \
+catch (const std::exception& e)     \
+{                                   \
+	ATLTRACE("Caught std::exception: %hs\n", e.what()); \
+	return E_UNEXPECTED;            \
+}                                   \
+catch (const ATL::CAtlException& e) \
+{                                   \
+	ATLTRACE("Caught CAtlException: %ws\n", _com_error(e).ErrorMessage()); \
+	return e;                       \
+}
+#else
+#define catchCom()                  \
+catch (const _com_error& e)         \
+{                                   \
+	ATLTRACE("Caught _com_error: %ws\n", e.ErrorMessage()); \
 	return e.Error();               \
 }                                   \
 catch (const std::bad_alloc&)       \
@@ -63,4 +86,4 @@ catch (...)                         \
 	ATLASSERT(!"Caught unknown exception at COM boundary"); \
 	return E_UNEXPECTED;            \
 }
-
+#endif // _DEBUG
