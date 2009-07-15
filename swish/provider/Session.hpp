@@ -51,6 +51,7 @@ public:
 	operator LIBSSH2_SFTP*() const;
 
 	void Connect(const wchar_t* pwszHost, unsigned int uPort) throw(...);
+	void Disconnect();
 	void StartSftp() throw(...);
 
 private:

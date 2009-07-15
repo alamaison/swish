@@ -59,6 +59,7 @@ CSession::CSession() throw(...) :
 
 CSession::~CSession()
 {
+	_DestroySftpChannel();
 	_DestroySession();
 }
 
@@ -107,6 +108,15 @@ void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
 	m_bConnected = true;
 }
 
+void CSession::Disconnect()
+{
+	if (!m_bConnected)
+		return;
+
+	libssh2_session_disconnect(m_pSession, "Swish says goodbye.");
+	m_bConnected = false;
+}
+
 void CSession::StartSftp() throw(...)
 {
 	_CreateSftpChannel();
@@ -135,6 +145,7 @@ void CSession::_DestroySession() throw()
 	ATLASSUME(m_pSession);
 	if (m_pSession)	// dual of libssh2_session_init()
 	{
+		Disconnect();
 		libssh2_session_free(m_pSession);
 		m_pSession = NULL;
 	}
@@ -149,6 +160,7 @@ void CSession::_DestroySession() throw()
 void CSession::_ResetSession() throw(...)
 {
 	_DestroySession();
+	_DestroySftpChannel();
 	_CreateSession();
 }
 
