@@ -21,20 +21,32 @@ setlocal
 echo.
 
 cd ..\thirdparty
+set WGET=..\build\wget\wget.exe -N
+set SEVENZ=..\build\7za\7za.exe
 
 :: libssh2
 
 echo ===- Dowloading libssh2 ...
-cvs -z3 -d:pserver:anonymous:@libssh2.cvs.sourceforge.net:/cvsroot/libssh2 co -r RELEASE_1_0 libssh2 || (
+%WGET% "http://sourceforge.net/projects/libssh2/files/libssh2/libssh2-1.1.tar.gz/download" || (
 	echo ===- Error while trying to download libssh2 & goto error)
+%SEVENZ% x libssh2-1.1.tar.gz -aoa || (
+	echo ===- Error while trying to extract libssh2 & goto error)
+%SEVENZ% x libssh2-1.1.tar -aoa || (
+	echo ===- Error while trying to extract libssh2 & goto error)
+xcopy /E /Q /Y libssh2-1.1 libssh2 || (
+	echo ===- Error while trying to copy libssh2 files & goto error)
+rd /S /Q libssh2-1.1 || (
+	echo ===- Error while trying to clean up libssh2 files & goto error)
+del libssh2-1.1.tar
+del libssh2-1.1.tar.gz
 
 :: zlib
 
 echo.
 echo ===- Downloading zlib ...
-wget "http://prdownloads.sourceforge.net/libpng/zlib123-dll.zip?download" || (
+%WGET% "http://prdownloads.sourceforge.net/libpng/zlib123-dll.zip?download" || (
 	echo ===- Error while trying to download zlib. & goto error)
-unzip -d zlib zlib123-dll.zip || (
+%SEVENZ% x zlib123-dll.zip -ozlib -aoa || (
 	echo ===- Error while trying to extract zlib. & goto error)
 del zlib123-dll.zip
 
@@ -42,9 +54,9 @@ del zlib123-dll.zip
 
 echo.
 echo ===- Downloading OpenSSL ...
-wget "http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download" || (
+%WGET% "http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download" || (
 	echo ===- Error while trying to download OpenSSL. & goto error)
-unzip -d openssl openssl-0.9.8g-swish.zip || (
+%SEVENZ% x openssl-0.9.8g-swish.zip -oopenssl -aoa || (
 	echo ===- Error while trying to extract OpenSSL. & goto error)
 del openssl-0.9.8g-swish.zip
 
@@ -52,9 +64,9 @@ del openssl-0.9.8g-swish.zip
 
 echo.
 echo ===- Downloading WTL ...
-wget "http://downloads.sourceforge.net/wtl/WTL80_7161_Final.zip?download" || (
+%WGET% "http://downloads.sourceforge.net/wtl/WTL80_7161_Final.zip?download" || (
 	echo ===- Error while trying to download WTL. & goto error)
-unzip -d wtl WTL80_7161_Final.zip || (
+%SEVENZ% x WTL80_7161_Final.zip -owtl -aoa || (
 	echo ===- Error while trying to extract WTL. & goto error)
 del WTL80_7161_Final.zip
 

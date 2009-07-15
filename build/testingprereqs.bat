@@ -21,18 +21,20 @@ setlocal
 echo.
 
 cd ..\thirdparty
+set WGET=..\build\wget\wget.exe -N
+set SEVENZ=..\build\7za\7za.exe
 
 :: Boost.Process
 
 echo ===- Dowloading Boost.Process ...
-wget "http://www.highscore.de/boost/process.zip" || (
+%WGET% "http://www.highscore.de/boost/process.zip" || (
 	echo ===- Error while trying to download Boost.Process. & goto error)
-unzip -d boost.process process.zip || (
+%SEVEN7% process.zip -oboost.process -aoa || (
 	echo ===- Error while trying to extract Boost.Process. & goto error)
 del process.zip
 
 echo.
-echo ===- All build prerequisites successfully created.
+echo ===- All testing prerequisites successfully created.
 echo.
 pause
 exit /B
