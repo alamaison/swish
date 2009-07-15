@@ -28,6 +28,9 @@
 
 #include "swish/boost_process.hpp"
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
+
+#include <string>
 
 namespace test {
 namespace common_boost {
@@ -61,6 +64,11 @@ public:
 	~OpenSshFixture();
 
 	int StopServer();
+
+	std::string GetHost() const;
+	int GetPort() const;
+	boost::filesystem::path GetPrivateKey() const;
+	boost::filesystem::path GetPublicKey() const;
 
 private:
 	boost::process::child m_sshd;

@@ -23,8 +23,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description="Copying files needed for testing ..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\libssh2\tests\etc&quot; &quot;$(TargetDir)\sshd-etc&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

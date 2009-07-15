@@ -29,6 +29,7 @@
 #include <boost/filesystem.hpp>
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <string>
 #include <vector>
@@ -41,20 +42,26 @@ using boost::process::child;
 using boost::process::self;
 using boost::process::find_executable_in_path;
 using boost::assign::list_of;
+using boost::lexical_cast;
 
 using std::string;
 using std::vector;
 using std::map;
 
-namespace {
+namespace { // private
 
-	static const string SSHD_EXE_NAME = "sshd.exe";
-	static const string SSHD_DIR_ENVIRONMENT_VAR = "OPENSSH_DIR";
-	static const string SSHD_CONFIG_DIR = "sshd-etc";
-	static const string SSHD_CONFIG_FILE = "sshd_config";
-	static const string SSHD_HOST_KEY_FILE = "host";
-	static const string SSHD_AUTH_KEY_FILE = "user";
-	static const string SSHD_PORT = "30000";
+	const int SSHD_PORT = 30000;
+	const string SSHD_LISTEN_ADDRESS = "localhost";
+	const string SSHD_EXE_NAME = "sshd.exe";
+	const string SFTP_SUBSYSTEM = "sftp-server";
+	const string SSHD_DIR_ENVIRONMENT_VAR = "OPENSSH_DIR";
+	const string SSHD_CONFIG_DIR = "sshd-etc";
+	const string SSHD_CONFIG_FILE = "/dev/null";
+	const string SSHD_HOST_KEY_FILE = "fixture_hostkey";
+	const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
+	const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
+
+	const path CYGDRIVE_PREFIX = "/cygdrive/";
 
 	/**
 	 * Return the path of the currently running executable.
@@ -107,6 +114,20 @@ namespace {
 	}
 
 	/**
+	 * Find OpenSSH SFTP subsystem (sftp-server). 
+	 * Either in an environment variable or on the path in the same directory 
+	 * as sshd.
+	 */
+	path GetSftpPath()
+	{
+		path sshd_dir = GetSshdDirFromEnvironment();
+		if (!sshd_dir.empty())
+			return sshd_dir / SFTP_SUBSYSTEM;
+		else
+			return find_executable_in_path(SFTP_SUBSYSTEM);
+	}
+
+	/**
 	 * Invoke the sshd program with the given list of arguments.
 	 */
 	child StartSshd(vector<string> args)
@@ -118,8 +139,8 @@ namespace {
 		context ctx; 
 		ctx.environment = self::get_environment();
 		/* Uncomment if needed
-		ctx.stdout_behavior = inherit_stream();
-		ctx.stderr_behavior = redirect_stream_to_stdout();
+		ctx.stdout_behavior = boost::process::inherit_stream();
+		ctx.stderr_behavior = boost::process::redirect_stream_to_stdout();
 		*/
 		return launch(sshd_path, full_args, ctx);
 	}
@@ -129,18 +150,33 @@ namespace {
 		return GetModulePath().parent_path() / SSHD_CONFIG_DIR;
 	}
 
+	/**
+	 * Turn a path, rooted at a Windows drive letter, into a /cygdrive path.
+	 *
+	 * For example:
+	 *   C:\\Users\\username\\file becomes /cygdrive/c/Users/username/file
+	 */
+	path Cygdriveify(path windowsPath)
+	{
+		string drive(windowsPath.root_name(), 0, 1);
+		return CYGDRIVE_PREFIX / drive / windowsPath.relative_path();
+	}
+
 	vector<string> GetSshdOptions()
 	{
 		path host_key_file = ConfigDir() / SSHD_HOST_KEY_FILE;
-		path auth_key_file = ConfigDir() / SSHD_AUTH_KEY_FILE;
+		path auth_key_file = ConfigDir() / SSHD_PUBLIC_KEY_FILE;
 		vector<string> options = (list_of(string("-D")),
-			"-f", "/dev/null",
-			"-h", host_key_file.string(),
-			"-o", "AuthorizedKeysFile \"" + auth_key_file.string() + "\"",
-			"-o", "ListenAddress localhost:" + SSHD_PORT,
+			"-f", SSHD_CONFIG_FILE,
+			"-h", Cygdriveify(host_key_file).string(),
+			"-o", "AuthorizedKeysFile \"" +
+			      Cygdriveify(auth_key_file).string() + "\"",
+			"-o", "ListenAddress " + SSHD_LISTEN_ADDRESS + ":" +
+			       lexical_cast<string>(SSHD_PORT),
 			"-o", "Protocol 2",
 			"-o", "UsePrivilegeSeparation no",
-			"-o", "StrictModes no");
+			"-o", "StrictModes no",
+			"-o", "Subsystem sftp " + Cygdriveify(GetSftpPath()).string());
 		return options;
 	}
 }
@@ -162,6 +198,26 @@ int OpenSshFixture::StopServer()
 {
 	m_sshd.terminate();
 	return m_sshd.wait().exit_status();
+}
+
+string OpenSshFixture::GetHost() const
+{
+	return SSHD_LISTEN_ADDRESS;
+}
+
+int OpenSshFixture::GetPort() const
+{
+	return SSHD_PORT;
+}
+
+path OpenSshFixture::GetPrivateKey() const
+{
+	return ConfigDir() / SSHD_PRIVATE_KEY_FILE;
+}
+
+path OpenSshFixture::GetPublicKey() const
+{
+	return ConfigDir() / SSHD_PUBLIC_KEY_FILE;
 }
 
 }} // namespace test::common_boost
