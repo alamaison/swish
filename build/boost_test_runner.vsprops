@@ -7,6 +7,6 @@
 	<Tool
 		Name="VCPostBuildEventTool"
 		Description="Running Boost unit tests ..."
-		CommandLine="&quot;$(TargetPath)&quot; --result_code=no --report_level=confirm"
+		CommandLine="&quot;$(TargetPath)&quot; --result_code=no --report_level=confirm --log_level=message"
 	/>
 </VisualStudioPropertySheet>
