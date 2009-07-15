@@ -62,7 +62,7 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("58E53763-C954-4e3a-B31C-4CE90BB3FD3F"),
+	object, uuid("644740CC-9490-4243-A4EA-23F2006E626A"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
 	helpstring("ISftpConsumer Interface")
@@ -79,6 +79,12 @@ interface ISftpConsumer : IUnknown
 		[in]          SAFEARRAY(BSTR) saPrompts,
 		[in]          SAFEARRAY(VARIANT_BOOL) saShowResponses,
 		[out, retval] SAFEARRAY(BSTR) *psaResponses
+	);
+	HRESULT OnPrivateKeyFileRequest(
+		[out]         BSTR *pbstrPrivateKeyFile
+	);
+	HRESULT OnPublicKeyFileRequest(
+		[out]         BSTR *pbstrPublicKeyFile
 	);
 	HRESULT OnYesNoCancel(
 		[in]          BSTR bstrMessage,

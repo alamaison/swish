@@ -28,8 +28,11 @@
 
 #include "swish/atl.hpp"
 #include "swish/CoFactory.hpp"
+#include "swish/catch_com.hpp"
 
 #include <string>
+
+#include <boost/filesystem.hpp>
 
 namespace test {
 namespace common_boost {
@@ -45,12 +48,19 @@ public:
 		COM_INTERFACE_ENTRY(ISftpConsumer)
 	END_COM_MAP()
 
+	void SetKeyPaths(
+		boost::filesystem::path privatekey, boost::filesystem::path publickey)
+	{
+		m_privateKey = privatekey;
+		m_publicKey = publickey;
+	}
+
 	// ISftpConsumer methods
 	IFACEMETHODIMP OnPasswordRequest(
 		__in BSTR /*bstrRequest*/, __out BSTR *pbstrPassword)
 	{
-		*pbstrPassword = ATL::CComBSTR(L"").Detach();
-		return S_OK;
+		*pbstrPassword = NULL;
+		return E_NOTIMPL;
 	}
 
 	IFACEMETHODIMP OnKeyboardInteractiveRequest(
@@ -61,6 +71,46 @@ public:
 	{
 		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
+	}
+
+	/**
+	 * Return the path of the file containing the private key.
+	 *
+	 * The path is set via SetKeyPaths().
+	 */
+	IFACEMETHODIMP OnPrivateKeyFileRequest(__out BSTR *pbstrPrivateKeyFile)
+	{
+		ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
+		*pbstrPrivateKeyFile = NULL;
+
+		try
+		{
+			ATL::CComBSTR bstrPrivate = m_privateKey.file_string().c_str();
+			*pbstrPrivateKeyFile = bstrPrivate.Detach();
+		}
+		catchCom()
+
+		return S_OK;
+	}
+
+	/**
+	 * Return the path of the file containing the public key.
+	 *
+	 * The path is set via SetKeyPaths().
+	 */
+	IFACEMETHODIMP OnPublicKeyFileRequest(__out BSTR *pbstrPublicKeyFile)
+	{
+		ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
+		*pbstrPublicKeyFile = NULL;
+
+		try
+		{
+			ATL::CComBSTR bstrPublic = m_publicKey.file_string().c_str();
+			*pbstrPublicKeyFile = bstrPublic.Detach();
+		}
+		catchCom()
+
+		return S_OK;
 	}
 
 	IFACEMETHODIMP OnYesNoCancel(
@@ -96,6 +146,10 @@ public:
 			std::wstring(L"Unexpected call to "__FUNCTIONW__) + message);
 		return S_OK;
 	}
+
+private:
+	boost::filesystem::path m_privateKey;
+	boost::filesystem::path m_publicKey;
 };
 
 }} // namespace test::common_boost

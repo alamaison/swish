@@ -34,7 +34,7 @@
     @endif
 */
 
-#include "swish/utils.hpp"
+#include "swish/utils.hpp"  // Test subject
 
 #include "test/common_boost/helpers.hpp"
 
@@ -101,6 +101,16 @@ BOOST_AUTO_TEST_CASE( widening_empty_string )
 	wstring out = swish::utils::Utf8StringToWideString(narrow);
 
 	BOOST_REQUIRE_EQUAL(out, wide);
+}
+
+/**
+ * Test getting current user's username.
+ */
+BOOST_AUTO_TEST_CASE( get_current_user )
+{
+	wstring name = swish::utils::GetCurrentUser();
+
+	BOOST_REQUIRE_GE(name.size(), wstring(L"a").size());
 }
 
 BOOST_AUTO_TEST_SUITE_END();

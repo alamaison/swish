@@ -184,6 +184,18 @@ STDMETHODIMP CMockSftpConsumer::OnKeyboardInteractiveRequest(
 	return S_OK;
 }
 
+STDMETHODIMP CMockSftpConsumer::OnPrivateKeyFileRequest(
+	BSTR* /*bstrPrivateKeyFile*/)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CMockSftpConsumer::OnPublicKeyFileRequest(
+	BSTR* /*bstrPublicKeyFile*/)
+{
+	return E_NOTIMPL;
+}
+
 STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
 	BSTR bstrMessage, BSTR bstrYesInfo, 
 	BSTR bstrNoInfo, BSTR bstrCancelInfo,

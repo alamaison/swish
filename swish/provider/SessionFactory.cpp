@@ -38,6 +38,8 @@
 
 #include "KeyboardInteractive.hpp"
 #include "swish/debug.hpp"
+#include "swish/utils.hpp"
+#include "swish/catch_com.hpp"
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
@@ -45,6 +47,8 @@
 #include "swish/atl.hpp"  // Common ATL setup
 
 #include <string>
+
+using swish::utils::WideStringToUtf8String;
 
 using ATL::CT2A;
 using ATL::CComBSTR;
@@ -239,17 +243,33 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
 HRESULT CSessionFactory::_PublicKeyAuthentication(
 	PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
 {
-	ATLASSUME(pConsumer); UNREFERENCED_PARAMETER(pConsumer);
+	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
 
-	// TODO: use proper file paths
-	const char *keyfile1="~/.ssh/id_rsa.pub";
-	const char *keyfile2="~/.ssh/id_rsa";
-	// TODO: unlock public key using passphrase
-	if (libssh2_userauth_publickey_fromfile(
-			session, szUsername, keyfile1, keyfile2, ""))
-		return E_ABORT;
+	try
+	{
+		CComBSTR bstrPrivateKey;
+		HRESULT hr = pConsumer->OnPrivateKeyFileRequest(&bstrPrivateKey);
+		if (FAILED(hr))
+			return hr;
 
-	ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+		CComBSTR bstrPublicKey;
+		hr = pConsumer->OnPublicKeyFileRequest(&bstrPublicKey);
+		if (FAILED(hr))
+			return hr;
+
+		string privateKey = WideStringToUtf8String(bstrPrivateKey.m_str);
+		string publicKey = WideStringToUtf8String(bstrPublicKey.m_str);
+
+		// TODO: unlock public key using passphrase
+		int rc = libssh2_userauth_publickey_fromfile(
+			session, szUsername, publicKey.c_str(), privateKey.c_str(), "");
+		if (rc)
+			return E_ABORT;
+
+		ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+	}
+	catchCom()
+
 	return S_OK;
 }
 

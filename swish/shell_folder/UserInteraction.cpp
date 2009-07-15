@@ -135,6 +135,30 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 }
 
 /**
+ * Return the path of the file containing the private key.
+ */
+STDMETHODIMP CUserInteraction::OnPrivateKeyFileRequest(
+	BSTR *pbstrPrivateKeyFile)
+{
+	ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
+	*pbstrPrivateKeyFile = NULL;
+
+	return E_NOTIMPL;
+}
+
+/**
+ * Return the path of the file containing the public key.
+ */
+STDMETHODIMP CUserInteraction::OnPublicKeyFileRequest(
+	BSTR *pbstrPublicKeyFile)
+{
+	ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
+	*pbstrPublicKeyFile = NULL;
+
+	return E_NOTIMPL;
+}
+
+/**
  * Display Yes/No/Cancel dialog to the user with given message.
  *
  * @param [in]  bstrMessage    The prompt to display to the user.

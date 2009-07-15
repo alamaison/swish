@@ -61,6 +61,12 @@ public:
 		__in SAFEARRAY *psaShowResponses,
 		__deref_out SAFEARRAY **ppsaResponses
 	);
+	IFACEMETHODIMP OnPrivateKeyFileRequest(
+		__out BSTR *pbstrPrivateKeyFile
+	);
+	IFACEMETHODIMP OnPublicKeyFileRequest(
+		__out BSTR *pbstrPublicKeyFile
+	);
 	IFACEMETHODIMP OnYesNoCancel(
 		__in BSTR bstrMessage,
 		__in_opt BSTR bstrYesInfo,

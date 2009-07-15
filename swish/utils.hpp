@@ -129,4 +129,38 @@ inline std::wstring Utf8StringToWideString(const std::string& narrow)
 	return swish::utils::ConvertString<Widen>(narrow);
 }
 
+/**
+ * Get the current user's username.
+ */
+inline std::wstring GetCurrentUser()
+{
+	// Calculate required size of output buffer
+	DWORD len = 0;
+	if (::GetUserNameW(NULL, &len))
+		return std::wstring();
+
+	DWORD err = ::GetLastError();
+	if (err != ERROR_INSUFFICIENT_BUFFER)
+	{
+		throw boost::system::system_error(err, boost::system::system_category);
+	}
+
+	// Repeat call with a buffer of required size
+	if (len > 0)
+	{
+		std::vector<wchar_t> buffer(len);
+		if (::GetUserName(&buffer[0], &len))
+		{
+			return std::wstring(&buffer[0], buffer.size());
+		}
+		else
+		{
+			throw boost::system::system_error(
+				::GetLastError(), boost::system::system_category);
+		}
+	}
+
+	return std::wstring();
+}
+
 }} // namespace swish::utils

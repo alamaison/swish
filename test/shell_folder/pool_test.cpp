@@ -24,48 +24,64 @@
     @endif
 */
 
-#define BOOST_TEST_MODULE CPool tests
-
 #include "swish/atl.hpp"
 
-#include "swish/shell_folder/Pool.h"
+#include "swish/shell_folder/Pool.h"  // Test subject
+#include "swish/utils.hpp"
 
 #include "test/common_boost/helpers.hpp"
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/ConsumerStub.hpp"
 
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 #include <string>
-#include <vector>
-#include <map>
-#include <algorithm>
+
+using ATL::CComBSTR;
+using ATL::CComPtr;
+
+using swish::utils::Utf8StringToWideString;
+using swish::utils::GetCurrentUser;
 
 using test::common_boost::ComFixture;
 using test::common_boost::OpenSshFixture;
 using test::common_boost::CConsumerStub;
 
-using ATL::CComBSTR;
-using ATL::CComPtr;
+using boost::filesystem::path;
 
 using std::string;
 using std::wstring;
 
-using std::vector;
-using std::map;
-
 
 namespace { // private
 
-	CComPtr<ISftpProvider> GetSession()
+	class SessionFixture : public ComFixture<OpenSshFixture>
 	{
-		CPool pool;
-		CComPtr<ISftpConsumer> consumer = CConsumerStub::CreateCoObject();
-		return pool.GetSession(consumer, L"localhost", L"swish", 40000);
+	public:
+		CComPtr<ISftpProvider> GetSession()
+		{
+			CPool pool;
+			CComPtr<CConsumerStub> consumer = CConsumerStub::CreateCoObject();
+			consumer->SetKeyPaths(GetPrivateKey(), GetPublicKey());
+			return pool.GetSession(
+				consumer, Utf8StringToWideString(GetHost()).c_str(), 
+				GetCurrentUser().c_str(), GetPort());
+		}
+	};
+
+	/**
+	 * Check that the given provider responds sensibly to a request.
+	 */
+	void CheckAlive(CComPtr<ISftpProvider> spProvider)
+	{
+		CComPtr<IEnumListing> spListing;
+		HRESULT hr = spProvider->GetListing(CComBSTR(L"/home"), &spListing);
+		BOOST_WARN(SUCCEEDED(hr));
 	}
 }
 
-BOOST_FIXTURE_TEST_SUITE(ssh_tests, ComFixture<OpenSshFixture>)
+BOOST_FIXTURE_TEST_SUITE(Pool, SessionFixture)
 
 /**
  * Test a single call to GetSession().
@@ -74,6 +90,7 @@ BOOST_AUTO_TEST_CASE( get_session )
 {
 	CComPtr<ISftpProvider> provider = GetSession();
 	BOOST_REQUIRE(provider);
+	CheckAlive(provider);
 }
 
 /**
@@ -86,6 +103,7 @@ BOOST_AUTO_TEST_CASE( get_session_twice )
 
 	CComPtr<ISftpProvider> second_provider = GetSession();
 	BOOST_REQUIRE(second_provider);
+	CheckAlive(second_provider);
 
 	BOOST_REQUIRE(second_provider.IsEqualObject(first_provider));
 }
@@ -108,6 +126,7 @@ BOOST_AUTO_TEST_CASE( get_session_twice_separately )
 
 	CComPtr<ISftpProvider> second_provider = GetSession();
 	BOOST_REQUIRE(second_provider);
+	CheckAlive(second_provider);
 
 	CComPtr<IUnknown> second_unk(second_provider);
 	BOOST_REQUIRE_NE(first_unk, second_unk.p);
