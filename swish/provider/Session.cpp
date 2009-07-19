@@ -239,7 +239,7 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort) throw(...)
 	int rc = ::getaddrinfo(pszAddress, szPort, &aiHints, &paiList);
 	// It is valid to fail here - e.g. unknown host
 	if (rc)
-		AtlThrow(E_FAIL);
+		AtlThrow(HRESULT_FROM_WIN32(::WSAGetLastError()));
 	ATLASSERT(paiList);
 	ATLASSERT(paiList->ai_addr);
 
@@ -253,7 +253,7 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort) throw(...)
 			m_socket, paiList->ai_addr, static_cast<int>(paiList->ai_addrlen));
 		if (rc != 0)
 		{
-			hr = E_FAIL;
+			hr = HRESULT_FROM_WIN32(::WSAGetLastError());
 			_CloseSocketToHost(); // Clean up socket
 		}
 		else
