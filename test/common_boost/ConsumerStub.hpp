@@ -29,6 +29,9 @@
 #include "swish/atl.hpp"
 #include "swish/CoFactory.hpp"
 #include "swish/catch_com.hpp"
+#include "swish/shell_folder/SftpProvider.h"
+
+#include "test/common_boost/helpers.hpp"
 
 #include <string>
 
