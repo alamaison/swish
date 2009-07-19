@@ -31,7 +31,6 @@ class CSftpStream_test : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( CSftpStream_test );
 		CPPUNIT_TEST( testCreate );
 		CPPUNIT_TEST( testCreateUsingFactory );
-		CPPUNIT_TEST( testInitialize );
 		CPPUNIT_TEST( testStat );
 		CPPUNIT_TEST( testStatExcludeName );
 		CPPUNIT_TEST( testStatExact ); // Likely to fail on other machine
@@ -95,19 +94,12 @@ protected:
 
 	void testCreateUsingFactory()
 	{
-		CComPtr<CSftpStream> pStream = pStream->Create();
+		auto_ptr<CSession> session = _CreateSession();
+		session->Connect(config.GetHost(), config.GetPort());
+
+		CComPtr<CSftpStream> pStream = pStream->Create(
+			session, "/var/log/messages");
 		CPPUNIT_ASSERT(pStream);
-	}
-
-	void testInitialize()
-	{
-		CComPtr<CSftpStream> pStream = pStream->Create();
-
-		auto_ptr<CSession> spSession = _CreateSession();
-		spSession->Connect(config.GetHost(), config.GetPort());
-
-		HRESULT hr = pStream->Initialize(*spSession, "/var/log/messages");
-		CPPUNIT_ASSERT_OK(hr);
 	}
 
 	void testStat()
@@ -499,10 +491,9 @@ private:
 
 	CComPtr<CSftpStream> _CreateConnectInit(PCSTR pszFilePath)
 	{
-		CComPtr<CSftpStream> pStream = pStream->Create();
-
-		HRESULT hr = pStream->Initialize(*m_spSession, pszFilePath);
-		CPPUNIT_ASSERT_OK(hr);
+		CComPtr<CSftpStream> pStream = pStream->Create(
+			m_spSession, pszFilePath);
+		CPPUNIT_ASSERT(pStream);
 
 		return pStream;
 	}

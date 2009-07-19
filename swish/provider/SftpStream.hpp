@@ -39,6 +39,9 @@
 #include "Session.hpp"
 
 #include "swish/atl.hpp"  // Common ATL setup
+#include "swish/CoFactory.hpp"
+
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 
@@ -46,7 +49,8 @@ typedef struct _LIBSSH2_SFTP_HANDLE LIBSSH2_SFTP_HANDLE; // Forward-decl
 
 class ATL_NO_VTABLE CSftpStream :
 	public ATL::CComObjectRoot,
-	public IStream
+	public IStream,
+	public swish::CCoFactory<CSftpStream>
 {
 public:
 	BEGIN_COM_MAP(CSftpStream)
@@ -54,26 +58,20 @@ public:
 		COM_INTERFACE_ENTRY(ISequentialStream)
 	END_COM_MAP()
 
-	/**
-	 * Static factory method.
-	 *
-	 * @returns A smart pointer to the CSftpStream COM object.
-	 * @throws  A CAtlException if creation fails.
-	 */
-	static ATL::CComPtr<CSftpStream> Create() throw(...)
-	{
-		ATL::CComObject<CSftpStream> *pObject = NULL;
-		HRESULT hr = ATL::CComObject<CSftpStream>::CreateInstance(&pObject);
-		ATLENSURE_SUCCEEDED(hr);
-
-		pObject->AddRef();
-		return pObject;
-	}
-
 	CSftpStream();
 	~CSftpStream();
 
-	HRESULT Initialize(CSession& session, PCSTR pszFilePath);
+	typedef int OpenFlags;
+	static const OpenFlags read = 0x01;
+	static const OpenFlags write = 0x02;
+	static const OpenFlags create = 0x04;
+
+	static ATL::CComPtr<CSftpStream> Create(
+		boost::shared_ptr<CSession> session, const std::string& file,
+		OpenFlags flags=read);
+	void Initialize(
+		boost::shared_ptr<CSession> session, const std::string& file,
+		OpenFlags flags);
 
 	// ISequentialStream methods
 	IFACEMETHODIMP Read( 
@@ -137,8 +135,11 @@ private:
 	ULONGLONG _CalculateNewFilePosition(
 		__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
 	void _Read(
-		__out_bcount_part(cb, pcbRead) char *pbuf, __in ULONG cb, 
-		__out ULONG& cbRead) throw(...);
+		__out_bcount_part(cb, cbRead) char *pbuf, __in ULONG cb, 
+		__out ULONG& cbRead);
+	void _Write(
+		__out_bcount_part(cb, cbWritten) const char *pbuf, __in ULONG cb,
+		__out ULONG& cbWritten);
 	void _CopyTo(
 		__in IStream *pstm, __in ULONGLONG cb, 
 		__out ULONGLONG& cbRead, __out ULONGLONG& cbWritten) throw(...);
@@ -148,9 +149,8 @@ private:
 	ULONGLONG _Seek(__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
 	STATSTG _Stat(__in bool bWantName) throw(...);
 
-	LIBSSH2_SFTP_HANDLE *m_pHandle;
-	LIBSSH2_SESSION *m_pSession;
-	LIBSSH2_SFTP *m_pSftp;
+	boost::shared_ptr<CSession> m_session;
+	boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
 	std::string m_strFilename;
 	std::string m_strDirectory;
 };

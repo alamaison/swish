@@ -1,7 +1,7 @@
 /**
     @file
 
-    Helper functions for Boost.Test adding support for wide strings.
+    Helper functions for Boost.Test,
 
     @if licence
 
@@ -26,15 +26,15 @@
 
 #pragma once
 
-#include <string>
-#include <ostream>
-
 #pragma warning (push)
 #pragma warning (disable: 4996) // 'wctomb': This function may be unsafe.
-
 #include <boost/archive/iterators/mb_from_wchar.hpp>
-
 #pragma warning (pop)
+#include <boost/system/error_code.hpp>
+#include <boost/test/test_tools.hpp>
+
+#include <string>
+#include <ostream>
 
 typedef boost::archive::iterators::mb_from_wchar<std::wstring::const_iterator>
 	converter;
@@ -62,3 +62,20 @@ namespace std {
 		return out;
 	}
 }
+
+/**
+ * COM HRESULT-specific assertions
+ * @{
+ */
+#define BOOST_REQUIRE_OK(hr)                                    \
+do                                                              \
+{                                                               \
+	boost::system::error_code hr_error(                         \
+		(hr), boost::system::get_system_category());            \
+                                                                \
+	std::string message("COM return status was not S_OK: ");    \
+	message += hr_error.message();                              \
+                                                                \
+	BOOST_REQUIRE_MESSAGE(hr_error.value() == S_OK, message);   \
+} while (0)
+/* @} */

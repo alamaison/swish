@@ -69,6 +69,8 @@ public:
 	int GetPort() const;
 	boost::filesystem::path GetPrivateKey() const;
 	boost::filesystem::path GetPublicKey() const;
+	std::string ToRemotePath(
+		boost::filesystem::path local_path) const;
 
 private:
 	boost::process::child m_sshd;

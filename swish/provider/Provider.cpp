@@ -49,6 +49,7 @@
 using namespace swish::provider;
 
 using ATL::CComObject;
+using ATL::CComPtr;
 using ATL::CW2A;
 using ATL::CComBSTR;
 using ATL::CString;
@@ -190,9 +191,9 @@ HRESULT CProvider::_Connect()
 {
 	try
 	{
-		if (!m_spSession.get())
+		if (!m_session.get())
 		{
-			m_spSession = CSessionFactory::CreateSftpSession(
+			m_session = CSessionFactory::CreateSftpSession(
 				m_strHost, m_uPort, m_strUser, m_pConsumer);
 		}
 	}
@@ -203,7 +204,7 @@ HRESULT CProvider::_Connect()
 
 void CProvider::_Disconnect()
 {
-	m_spSession.reset();
+	m_session.reset();
 }
 
 /**
@@ -244,7 +245,7 @@ STDMETHODIMP CProvider::GetListing(
 	// Open directory
 	CW2A szDirectory(bstrDirectory);
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-		*m_spSession, szDirectory
+		*m_session, szDirectory
 	);
 	if (!pSftpHandle)
 		return E_FAIL;
@@ -327,7 +328,8 @@ STDMETHODIMP CProvider::GetListing(
 
 STDMETHODIMP CProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
 {
-	ATLENSURE_RETURN_HR(ppStream, E_POINTER); *ppStream = NULL;
+	ATLENSURE_RETURN_HR(ppStream, E_POINTER);
+	 *ppStream = NULL;
 	ATLENSURE_RETURN_HR(::SysStringLen(bstrFilePath) > 0, E_INVALIDARG);
 	ATLENSURE_RETURN_HR(m_fInitialized, E_UNEXPECTED); // Call Initialize first
 
@@ -338,22 +340,13 @@ STDMETHODIMP CProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
 	if (FAILED(hr))
 		return hr;
 
-	CComObject<CSftpStream> *pStream = NULL;
-	hr = pStream->CreateInstance(&pStream);
-	if (SUCCEEDED(hr))
+	try
 	{
-		pStream->AddRef();
-
-		// TODO: This session that we are passing should outlive the Stream.
-		//       How do we enforce this?
-		hr = pStream->Initialize(*m_spSession, CW2A(bstrFilePath));
-		if (SUCCEEDED(hr))
-		{
-			hr = pStream->QueryInterface(ppStream);
-		}
-
-		pStream->Release();
+		CComPtr<CSftpStream> spStream = CSftpStream::Create(
+			m_session, CW2A(bstrFilePath).m_psz);
+		*ppStream = spStream.Detach();
 	}
+	catchCom()
 
 	return hr;
 }
@@ -427,12 +420,12 @@ STDMETHODIMP CProvider::Rename(
 	// Rename failed - this is OK, it might be an overwrite - check
 	CComBSTR bstrMessage;
 	int nErr; PSTR pszErr; int cchErr;
-	nErr = libssh2_session_last_error(*m_spSession, &pszErr, &cchErr, false);
+	nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
 		CString strError;
 		hr = _RenameRetryWithOverwrite(
-			libssh2_sftp_last_error(*m_spSession), szFrom, szTo, strError);
+			libssh2_sftp_last_error(*m_session), szFrom, szTo, strError);
 		if (SUCCEEDED(hr))
 		{
 			*pfWasTargetOverwritten = VARIANT_TRUE;
@@ -465,7 +458,7 @@ STDMETHODIMP CProvider::Rename(
 HRESULT CProvider::_RenameSimple(const char *szFrom, const char *szTo)
 {
 	int rc = libssh2_sftp_rename_ex(
-		*m_spSession, szFrom, strlen(szFrom), szTo, strlen(szTo),
+		*m_session, szFrom, strlen(szFrom), szTo, strlen(szTo),
 		LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
 
 	return (!rc) ? S_OK : E_FAIL;
@@ -519,7 +512,7 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
 		// for race conditions.
 		LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
 		::ZeroMemory(&attrsTarget, sizeof attrsTarget);
-		if (!libssh2_sftp_stat(*m_spSession, szTo, &attrsTarget))
+		if (!libssh2_sftp_stat(*m_session, szTo, &attrsTarget))
 		{
 			// File already exists
 
@@ -553,7 +546,7 @@ HRESULT CProvider::_RenameAtomicOverwrite(
 	const char *szFrom, const char *szTo, CString& strError)
 {
 	int rc = libssh2_sftp_rename_ex(
-		*m_spSession, szFrom, strlen(szFrom), szTo, strlen(szTo), 
+		*m_session, szFrom, strlen(szFrom), szTo, strlen(szTo), 
 		LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
 		LIBSSH2_SFTP_RENAME_NATIVE
 	);
@@ -563,7 +556,8 @@ HRESULT CProvider::_RenameAtomicOverwrite(
 	else
 	{
 		char *pszMessage; int cchMessage;
-		libssh2_session_last_error(*m_spSession, &pszMessage, &cchMessage, false);
+		libssh2_session_last_error(
+			*m_session, &pszMessage, &cchMessage, false);
 		strError = pszMessage;
 		return E_FAIL;
 	}
@@ -589,23 +583,23 @@ HRESULT CProvider::_RenameNonAtomicOverwrite(
 	// First, rename existing file to temporary
 	string strTemporary(szTo);
 	strTemporary += ".swish_rename_temp";
-	int rc = libssh2_sftp_rename( *m_spSession, szTo, strTemporary.c_str() );
+	int rc = libssh2_sftp_rename(*m_session, szTo, strTemporary.c_str());
 	if (!rc)
 	{
 		// Rename our subject
-		rc = libssh2_sftp_rename( *m_spSession, szFrom, szTo );
+		rc = libssh2_sftp_rename(*m_session, szFrom, szTo);
 		if (!rc)
 		{
 			// Delete temporary
 			CString strError; // unused
-			HRESULT hr = _DeleteRecursive( strTemporary.c_str(), strError );
+			HRESULT hr = _DeleteRecursive(strTemporary.c_str(), strError);
 			ATLASSERT(SUCCEEDED(hr));
 			(void)hr; // The rename succeeded even if this fails
 			return S_OK;
 		}
 
 		// Rename failed, rename our temporary back to its old name
-		rc = libssh2_sftp_rename( *m_spSession, szFrom, szTo );
+		rc = libssh2_sftp_rename(*m_session, szFrom, szTo);
 		ATLASSERT(!rc);
 
 		strError = _T("Cannot overwrite \"");
@@ -643,7 +637,7 @@ STDMETHODIMP CProvider::Delete( BSTR bstrPath )
 
 HRESULT CProvider::_Delete( const char *szPath, CString& strError )
 {
-	if (libssh2_sftp_unlink(*m_spSession, szPath) == 0)
+	if (libssh2_sftp_unlink(*m_session, szPath) == 0)
 		return S_OK;
 
 	// Delete failed
@@ -682,7 +676,7 @@ HRESULT CProvider::_DeleteDirectory(
 
 	// Open directory
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-		*m_spSession, szPath
+		*m_session, szPath
 	);
 	if (!pSftpHandle)
 	{
@@ -721,7 +715,7 @@ HRESULT CProvider::_DeleteDirectory(
 	ATLVERIFY(libssh2_sftp_close_handle(pSftpHandle) == 0);
 
 	// Delete directory itself
-	if (libssh2_sftp_rmdir(*m_spSession, szPath) == 0)
+	if (libssh2_sftp_rmdir(*m_session, szPath) == 0)
 		return S_OK;
 
 	// Delete failed
@@ -734,7 +728,7 @@ HRESULT CProvider::_DeleteRecursive(
 {
 	LIBSSH2_SFTP_ATTRIBUTES attrs;
 	::ZeroMemory(&attrs, sizeof attrs);
-	if (libssh2_sftp_lstat(*m_spSession, szPath, &attrs) != 0)
+	if (libssh2_sftp_lstat(*m_session, szPath, &attrs) != 0)
 	{
 		strError = _GetLastErrorMessage();
 		return E_FAIL;
@@ -760,7 +754,7 @@ STDMETHODIMP CProvider::CreateNewFile( BSTR bstrPath )
 
 	CW2A szPath(bstrPath);
 	LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
-		*m_spSession, szPath, LIBSSH2_FXF_CREAT, 0644);
+		*m_session, szPath, LIBSSH2_FXF_CREAT, 0644);
 	if (pHandle == NULL)
 	{
 		// Report error to front-end
@@ -783,7 +777,7 @@ STDMETHODIMP CProvider::CreateNewDirectory( BSTR bstrPath )
 		return hr;
 
 	CW2A szPath(bstrPath);
-	if (libssh2_sftp_mkdir(*m_spSession, szPath, 0755) != 0)
+	if (libssh2_sftp_mkdir(*m_session, szPath, 0755) != 0)
 	{
 		// Report error to front-end
 		m_pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
@@ -804,10 +798,10 @@ CString CProvider::_GetLastErrorMessage()
 	CString bstrMessage;
 	int nErr; PSTR pszErr; int cchErr;
 
-	nErr = libssh2_session_last_error(*m_spSession, &pszErr, &cchErr, false);
+	nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
-		ULONG uErr = libssh2_sftp_last_error(*m_spSession);
+		ULONG uErr = libssh2_sftp_last_error(*m_session);
 		return _GetSftpErrorMessage(uErr);
 	}
 	else // A non-SFTP error occurred

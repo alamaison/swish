@@ -191,7 +191,11 @@ OpenSshFixture::OpenSshFixture() : m_sshd(StartSshd(GetSshdOptions()))
 
 OpenSshFixture::~OpenSshFixture()
 {
-	BOOST_WARN_NO_THROW(StopServer());
+	try
+	{
+		StopServer();
+	}
+	catch (...) {}
 }
 
 int OpenSshFixture::StopServer()
@@ -218,6 +222,15 @@ path OpenSshFixture::GetPrivateKey() const
 path OpenSshFixture::GetPublicKey() const
 {
 	return ConfigDir() / SSHD_PUBLIC_KEY_FILE;
+}
+
+/**
+ * Transform a local (Windows) path into a form usuable on the
+ * command-line of the fixture SSH server.
+ */
+string OpenSshFixture::ToRemotePath(path local_path) const
+{
+	return Cygdriveify(local_path).string();
 }
 
 }} // namespace test::common_boost
