@@ -12,7 +12,6 @@
 		UsePrecompiledHeader="2"
 		PrecompiledHeaderThrough="swish/pch.h"
 		WarningLevel="4"
-		Detect64BitPortabilityProblems="true"
 		ForcedIncludeFiles="swish/pch.h"
 	/>
 	<Tool
