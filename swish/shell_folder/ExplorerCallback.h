@@ -59,7 +59,7 @@ public:
 	 *                  creating this callback object.
 	 *
 	 * @returns  Pointer to the object's IShellFolderViewCB interface.
-	 * @throws   CAtlException if creation fails.
+	 * @throws   com_exception if creation fails.
 	 */
 	static ATL::CComPtr<IShellFolderViewCB> Create(__in PCIDLIST_ABSOLUTE pidl)
 	throw(...)

@@ -72,7 +72,7 @@ using std::auto_ptr;
  *           host (subject to verification of the host's key), authenticated and 
  *           over which an SFTP channel has been started.
  *
- * @throws CAtlException if any part of this process fails:
+ * @throws com_exception if any part of this process fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -126,7 +126,7 @@ void CSessionFactory::_VerifyHostKey(
  * and these are tried one at time until one succeeds in the order:
  * public-key, keyboard-interactive, plain password.
  *
- * @throws CAtlException if authentication fails:
+ * @throws com_exception if authentication fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -179,7 +179,7 @@ void CSessionFactory::_AuthenticateUser(
  * asked for the password again.  This repeats until the user supplies a 
  * correct password or cancels the request.
  *
- * @throws CAtlException if authentication fails:
+ * @throws com_exception if authentication fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -213,7 +213,7 @@ HRESULT CSessionFactory::_PasswordAuthentication(
  * This uses the ISftpConsumer callback to challenge the user for various
  * pieces of information (usually just their password).
  *
- * @throws CAtlException if authentication fails:
+ * @throws com_exception if authentication fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */

@@ -51,7 +51,7 @@ HRESULT CDataObject::FinalConstruct()
  * @param aPidl             The selected PIDLs.
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
  *
- * @throws  CAtlException on error.
+ * @throws  com_exception on error.
  */
 void CDataObject::Initialize(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 

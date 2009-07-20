@@ -80,7 +80,8 @@ protected:
 	void testStartSftpBeforeConnect()
 	{
 		CSession session;
-		CPPUNIT_ASSERT_THROW( session.StartSftp(), CAtlException );
+		CPPUNIT_ASSERT_THROW(
+			session.StartSftp(), swish::exception::com_exception);
 	}
 
 	/** 
@@ -90,7 +91,8 @@ protected:
 	{
 		CSession session;
 		session.Connect(config.GetHost(), config.GetPort());
-		CPPUNIT_ASSERT_THROW( session.StartSftp(), CAtlException );
+		CPPUNIT_ASSERT_THROW(
+			session.StartSftp(), swish::exception::com_exception);
 	}
 	
 	/**

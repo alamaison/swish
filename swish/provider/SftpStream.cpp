@@ -471,7 +471,7 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  * @returns  Number of bytes actually read in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
 void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
@@ -493,7 +493,7 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
  * @returns  Number of bytes actually written in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
 void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 {
@@ -515,7 +515,7 @@ void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly
  *           even if the call fails (throws an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
 void CSftpStream::_CopyTo(
 	IStream *pstm, ULONGLONG cb, 
@@ -554,7 +554,7 @@ void CSftpStream::_CopyTo(
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly 
  *           even if the call fails (throws an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  *
  * @todo  Performance could be improved by continuing the _Read() operation
  *        in the background while writing the buffer to the target stream.
@@ -589,7 +589,7 @@ void CSftpStream::_CopyOne(
  * Move the seek pointer by nMove bytes (may be negative).
  *
  * @returns  New location of seek pointer.
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
@@ -603,7 +603,7 @@ ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 /**
  * Create STATSTG structure for the stream.
  *
- * @throws  CAtlException with STG_E_* code if an error occurs.
+ * @throws  com_exception with STG_E_* code if an error occurs.
  */
 STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 {	
@@ -666,7 +666,7 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 /**
  * Calculate new position of the seek pointer.
  *
- * @throws  CAtlException with STG_E_* code if an error occurs.
+ * @throws  com_exception with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_CalculateNewFilePosition(
 	LONGLONG nMove, DWORD dwOrigin) throw(...)

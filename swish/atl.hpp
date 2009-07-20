@@ -77,27 +77,15 @@
                              ///< includes <shtypes.h> via <shlwapi.h> we 
                              ///< need to define this here.
 
-
-// Custom ATL exception thrower which throws std::exception derived exceptions
-/*
 #define _ATL_CUSTOM_THROW
-
-#include <exception>
-#include <boost/system/system_error.hpp>
-#include <WinError.h>
-inline void AtlThrow(HRESULT hr)
+#include "exception.hpp"
+/**
+ * Custom ATL thrower which throws std::exception derived exceptions.
+ */
+__declspec(noreturn) inline void AtlThrow(HRESULT hr)
 {
-	//ATLTRACE(atlTraceException, 0, L"AtlThrow: hr = 0x%x\n"), hr);
-	if(hr == E_OUTOFMEMORY)
-	{
-		throw std::bad_alloc();
-	}
-	else
-	{
-		throw boost::system::system_error(
-			hr, boost::system::get_system_category());
-	}
+	throw swish::exception::com_exception(hr);
 };
-*/
+
 #include <atlbase.h> // base ATL classes
 #include <atlcom.h>

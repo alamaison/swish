@@ -32,13 +32,13 @@
 #include "host_management.hpp"
 #include "swish/debug.hpp"
 #include "swish/catch_com.hpp"
+#include "swish/exception.hpp"
 
 #include <strsafe.h>          // For StringCchCopy
 
 #include <string>
 #include <vector>
 
-using ATL::CAtlException;
 using ATL::CComPtr;
 using ATL::CComQIPtr;
 using ATL::CString;
@@ -49,6 +49,7 @@ using std::vector;
 using swish::host_management::AddConnectionToRegistry;
 using swish::host_management::RemoveConnectionFromRegistry;
 using swish::host_management::ConnectionExists;
+using swish::exception::com_exception;
 
 #define SFVM_SELECTIONCHANGED 8
 
@@ -291,7 +292,7 @@ bool CExplorerCallback::_ShouldEnableRemove()
 		CShellDataObject data_object = _GetSelectionDataObject();
 		return data_object.GetPidlCount() == 1;
 	}
-	catch (CAtlException)
+	catch (com_exception)
 	{
 		return false;
 	}

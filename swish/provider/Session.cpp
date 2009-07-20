@@ -208,7 +208,7 @@ void CSession::_DestroySftpChannel() throw()
  * If any errors occur, the socket is set to @c INVALID_SOCKET and an ATL
  * exception is thrown.
  *
- * @throws a CAtlException if there is a failure.
+ * @throws a com_exception if there is a failure.
  *
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c _CloseSocketToHost()

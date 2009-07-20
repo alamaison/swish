@@ -294,7 +294,7 @@ public:
 	 * @param[in] pwszPath   Path on host to use as starting directory.
 	 * @param[in] pwszLabel  Friendly name of connection.
 	 * 
-	 * @throws CAtlException if error.
+	 * @throws com_exception if error.
 	 */
 	explicit CHostPidl(
 		PCWSTR pwszUser, PCWSTR pwszHost, PCWSTR pwszPath, 
@@ -351,7 +351,7 @@ private:
 	 * @param[in]  cchDest   Length of destination buffer in @b wide-chars.
 	 * @param[in]  pwszSrc   Source string.  Must be NULL-terminated.
 	 *
-	 * @throws CAtlException if an error occurs while copying.
+	 * @throws com_exception if an error occurs while copying.
 	 */
 	static void CopyWSZString(
 		__out_ecount(cchDest) PWSTR pwszDest, __in size_t cchDest,

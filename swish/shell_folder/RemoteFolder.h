@@ -58,7 +58,7 @@ public:
 	 *              to Initialize).
 	 *
 	 * @returns Smart pointer to the CRemoteFolder's IShellFolder interface.
-	 * @throws  CAtlException if creation fails.
+	 * @throws  com_exception if creation fails.
 	 */
 	static ATL::CComPtr<IShellFolder> Create(__in PCIDLIST_ABSOLUTE pidl)
 	throw(...)

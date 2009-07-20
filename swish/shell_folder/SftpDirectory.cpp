@@ -124,7 +124,7 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
  * @param grfFlags  Flags specifying nature of files to fetch.
  *
  * @returns  Smart pointer to the IEnumIDList.
- * @throws  CAtlException if an error occurs.
+ * @throws  com_exception if an error occurs.
  */
 CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 {
@@ -168,7 +168,7 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
  * @param pidl  Child PIDL of directory within this directory.
  *
  * @returns  Instance of the subdirectory.
- * @throws  CAtlException if error.
+ * @throws  com_exception if error.
  */
 CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle pidl)
 throw(...)
@@ -189,7 +189,7 @@ throw(...)
  * @param pidl  Child PIDL of item within this directory.
  *
  * @returns  Smart pointer of an IStream interface to the file.
- * @throws  CAtlException if error.
+ * @throws  com_exception if error.
  */
 CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
 throw(...)
@@ -210,7 +210,7 @@ throw(...)
  *              below this directory).
  *
  * @returns  Smart pointer of an IStream interface to the file.
- * @throws  CAtlException if error.
+ * @throws  com_exception if error.
  */
 CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
 throw(...)

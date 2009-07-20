@@ -61,7 +61,7 @@ namespace { // private
 	 * @param label  Friendly name of the connection to load.
 	 *
 	 * @returns  A host PIDL holding the connection details.
-	 * @throws  CAtlException: E_FAIL if the registry key does not exist
+	 * @throws  com_exception: E_FAIL if the registry key does not exist
 	 *          and E_UNEXPECTED if the registry is corrupted.
 	 */
 	CHostItem GetConnectionDetailsFromRegistry(wstring label)
@@ -125,7 +125,7 @@ namespace host_management {
  *
  * @returns  Vector of PIDLs containing the details of all the SFTP
  *           stored in the registry.
- * @throws  CAtlException if something unexpected happens such as corrupt
+ * @throws  com_exception if something unexpected happens such as corrupt
  *          registry structure.
  */
 vector<CHostItem> LoadConnectionsFromRegistry()

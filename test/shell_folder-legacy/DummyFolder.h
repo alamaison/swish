@@ -85,7 +85,7 @@ public:
 	 * Create instance of the CDummyFolder class and return IShellFolder.
 	 *
 	 * @returns Smart pointer to the CDummyFolder's IShellFolder interface.
-	 * @throws  CAtlException if creation fails.
+	 * @throws  com_exception if creation fails.
 	 */
 	static ATL::CComPtr<IShellFolder> Create()
 	throw(...)

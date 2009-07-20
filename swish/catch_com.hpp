@@ -34,7 +34,7 @@
     @endif
 */
 
-#include "atl.hpp"        // For CAtlException
+#include "atl.hpp"        // For CAtlException, com_exception
 
 #include <ComDef.h>       // For _com_error
 
@@ -46,6 +46,11 @@ catch (const _com_error& e)         \
 {                                   \
 	ATLTRACE("Caught _com_error: %ws\n", e.ErrorMessage()); \
 	return e.Error();               \
+}                                   \
+catch (const swish::exception::com_exception& e) \
+{                                   \
+	ATLTRACE("Caught com_exception %s\n", e.what()); \
+	return e;                       \
 }                                   \
 catch (const std::bad_alloc&)       \
 {                                   \
@@ -68,6 +73,10 @@ catch (const _com_error& e)         \
 {                                   \
 	ATLTRACE("Caught _com_error: %ws\n", e.ErrorMessage()); \
 	return e.Error();               \
+}                                   \
+catch (const swish::exception::com_exception& e) \
+{                                   \
+	return e;                       \
 }                                   \
 catch (const std::bad_alloc&)       \
 {                                   \
