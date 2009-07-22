@@ -36,141 +36,28 @@
 
 #include "swish/provider/SftpStream.hpp"  // Test subject
 #include "swish/provider/SessionFactory.hpp"
-#include "swish/utils.hpp"
 
-#include "test/common_boost/fixtures.hpp"
-#include "test/common_boost/ConsumerStub.hpp"
+#include "test/provider/StreamFixture.hpp"
 #include "test/common_boost/helpers.hpp"
 
 #include "swish/atl.hpp"
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/system/system_error.hpp>
-
-#include <Winsock2.h>
 
 #include <string>
 #include <vector>
 #include <memory>
 
-using swish::utils::WideStringToUtf8String;
-using swish::utils::GetCurrentUser;
-using swish::utils::Utf8StringToWideString;
-
-using test::common_boost::ComFixture;
-using test::common_boost::OpenSshFixture;
-using test::common_boost::CConsumerStub;
+using test::provider::StreamFixture;
 
 using ATL::CComPtr;
 
-using boost::filesystem::wpath;
-
 using std::string;
-using std::wstring;
 using std::vector;
 using std::auto_ptr;
 
-namespace { // private
 
-	const wstring SANDBOX_NAME = L"swish-sandbox";
-
-	wpath NewTempFilePath()
-	{
-		vector<wchar_t> buffer(MAX_PATH);
-		DWORD len = ::GetTempPath(buffer.size(), &buffer[0]);
-		BOOST_REQUIRE_LE(len, buffer.size());
-		
-		wpath directory(wstring(&buffer[0], buffer.size()));
-		directory /= SANDBOX_NAME;
-		create_directory(directory);
-
-		if (!GetTempFileName(
-			directory.directory_string().c_str(), NULL, 0, &buffer[0]))
-			throw boost::system::system_error(
-				::GetLastError(), boost::system::system_category);
-		
-		return wpath(wstring(&buffer[0], buffer.size()));
-	}
-
-	class SandboxFixture : public ComFixture<OpenSshFixture>
-	{
-	public:
-		SandboxFixture() : m_sandboxFile(NewTempFilePath())
-		{
-			WSADATA wsadata;
-			int err = ::WSAStartup(MAKEWORD(2, 2), &wsadata);
-			if (err)
-				throw boost::system::system_error(
-					err, boost::system::system_category);
-		}
-
-		~SandboxFixture()
-		{
-			try
-			{
-				remove(m_sandboxFile);
-			}
-			catch (...) {}
-
-			::WSACleanup();
-		}
-		
-		/**
-		 * Create an IStream instance open for writing on a temporary file
-		 * in our sandbox.
-		 */
-		CComPtr<IStream> GetStream()
-		{
-			auto_ptr<CSession> session(GetSession());
-			string file = ToRemotePath(
-				WideStringToUtf8String(m_sandboxFile.file_string()));
-
-			CComPtr<IStream> stream = CSftpStream::Create(
-				session, file, CSftpStream::read | CSftpStream::write);
-			return stream;
-		}
-
-		auto_ptr<CSession> GetSession()
-		{
-			CComPtr<CConsumerStub> spConsumer = 
-				CConsumerStub::CreateCoObject();
-			spConsumer->SetKeyPaths(GetPrivateKey(), GetPublicKey());
-
-			return CSessionFactory::CreateSftpSession(
-				Utf8StringToWideString(GetHost()).c_str(), GetPort(), 
-				GetCurrentUser().c_str(), spConsumer);
-		}
-
-		wpath m_sandboxFile;
-	};
-}
-
-
-/**
- * Exercise our test helper function.
- */
-BOOST_AUTO_TEST_CASE( create_new_temp )
-{
-	wpath p = NewTempFilePath();
-	BOOST_CHECK(exists(p));
-	BOOST_CHECK(is_regular_file(p));
-	BOOST_CHECK(p.is_complete());
-	remove(p);
-}
-
-
-BOOST_FIXTURE_TEST_SUITE(StreamWrite, SandboxFixture)
-
-/**
- * Simply get a session.
- */
-BOOST_AUTO_TEST_CASE( get_session )
-{
-	auto_ptr<CSession> session(GetSession());
-	BOOST_REQUIRE(session.get());
-}
+BOOST_FIXTURE_TEST_SUITE(StreamWrite, StreamFixture)
 
 /**
  * Simply get a stream.

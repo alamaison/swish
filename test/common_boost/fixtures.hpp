@@ -29,6 +29,10 @@
 #include "swish/boost_process.hpp"
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/system/system_error.hpp>  // For system_error
+
+#include <Winsock2.h>  // For WSAStartup/Cleanup
+#include <objbase.h>  // For CoInitialize/Uninitialize
 
 #include <string>
 
@@ -38,8 +42,7 @@ namespace common_boost {
 /**
  * Fixture that initialises and uninitialises COM.
  */
-template<typename T>
-class ComFixture : public T
+class ComFixture
 {
 public:
 	ComFixture()
@@ -55,9 +58,30 @@ public:
 };
 
 /**
+ * Fixture that initialises and uninitialises Winsock.
+ */
+class WinsockFixture
+{
+public:
+	WinsockFixture()
+	{
+		WSADATA wsadata;
+		int err = ::WSAStartup(MAKEWORD(2, 2), &wsadata);
+		if (err)
+			throw boost::system::system_error(
+				err, boost::system::system_category);
+	}
+
+	~WinsockFixture()
+	{
+		::WSACleanup();
+	}
+};
+
+/**
  * Fixture that starts and stops a local OpenSSH server instance.
  */
-class OpenSshFixture
+class OpenSshFixture : public WinsockFixture
 {
 public:
 	OpenSshFixture();
@@ -67,13 +91,29 @@ public:
 
 	std::string GetHost() const;
 	int GetPort() const;
-	boost::filesystem::path GetPrivateKey() const;
-	boost::filesystem::path GetPublicKey() const;
+	boost::filesystem::path PrivateKeyPath() const;
+	boost::filesystem::path PublicKeyPath() const;
 	std::string ToRemotePath(
 		boost::filesystem::path local_path) const;
 
 private:
 	boost::process::child m_sshd;
+};
+
+/**
+ * Fixture that creates and destroys a sandbox directory.
+ */
+class SandboxFixture
+{
+public:
+	SandboxFixture();
+	~SandboxFixture();
+
+	boost::filesystem::wpath Sandbox();
+	boost::filesystem::wpath NewFileInSandbox();
+
+private:
+	boost::filesystem::wpath m_sandbox;
 };
 
 }} // namespace test::common_boost

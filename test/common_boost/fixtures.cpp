@@ -30,12 +30,18 @@
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <vector>
 #include <map>
 
+#include <cstdio>
+
+using boost::system::system_error;
+using boost::system::system_category;
 using boost::filesystem::path;
+using boost::filesystem::wpath;
 using boost::process::environment;
 using boost::process::context;
 using boost::process::child;
@@ -43,8 +49,10 @@ using boost::process::self;
 using boost::process::find_executable_in_path;
 using boost::assign::list_of;
 using boost::lexical_cast;
+using boost::shared_ptr;
 
 using std::string;
+using std::wstring;
 using std::vector;
 using std::map;
 
@@ -214,12 +222,12 @@ int OpenSshFixture::GetPort() const
 	return SSHD_PORT;
 }
 
-path OpenSshFixture::GetPrivateKey() const
+path OpenSshFixture::PrivateKeyPath() const
 {
 	return ConfigDir() / SSHD_PRIVATE_KEY_FILE;
 }
 
-path OpenSshFixture::GetPublicKey() const
+path OpenSshFixture::PublicKeyPath() const
 {
 	return ConfigDir() / SSHD_PUBLIC_KEY_FILE;
 }
@@ -231,6 +239,79 @@ path OpenSshFixture::GetPublicKey() const
 string OpenSshFixture::ToRemotePath(path local_path) const
 {
 	return Cygdriveify(local_path).string();
+}
+
+
+namespace { // private
+
+	const wstring SANDBOX_NAME = L"swish-sandbox";
+
+	wpath NewTempFilePath()
+	{
+		vector<wchar_t> buffer(MAX_PATH);
+		DWORD len = ::GetTempPath(buffer.size(), &buffer[0]);
+		BOOST_REQUIRE_LE(len, buffer.size());
+		
+		wpath directory(wstring(&buffer[0], buffer.size()));
+		directory /= SANDBOX_NAME;
+		create_directory(directory);
+
+		if (!GetTempFileName(
+			directory.directory_string().c_str(), NULL, 0, &buffer[0]))
+			throw boost::system::system_error(
+				::GetLastError(), boost::system::system_category);
+		
+		return wpath(wstring(&buffer[0], buffer.size()));
+	}
+
+	/**
+	 * Return the path to the sandbox directory.
+	 */
+	wpath SandboxDirectory()
+	{
+		shared_ptr<wchar_t> name(
+			_wtempnam(NULL, SANDBOX_NAME.c_str()), free);
+		BOOST_REQUIRE(name);
+		
+		return wpath(name.get());
+	}
+}
+
+SandboxFixture::SandboxFixture() : m_sandbox(SandboxDirectory())
+{
+	create_directory(m_sandbox);
+}
+
+SandboxFixture::~SandboxFixture()
+{
+	try
+	{
+		remove_all(m_sandbox);
+	}
+	catch (...) {}
+}
+
+wpath SandboxFixture::Sandbox()
+{
+	return m_sandbox;
+}
+
+/**
+ * Create a new empty file in the fixture sandbox and return the path.
+ */
+wpath SandboxFixture::NewFileInSandbox()
+{
+	vector<wchar_t> buffer(MAX_PATH);
+
+	if (!GetTempFileName(
+		Sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
+		throw system_error(::GetLastError(), system_category);
+	
+	wpath p = wpath(wstring(&buffer[0], buffer.size()));
+	BOOST_CHECK(exists(p));
+	BOOST_CHECK(is_regular_file(p));
+	BOOST_CHECK(p.is_complete());
+	return p;
 }
 
 }} // namespace test::common_boost
