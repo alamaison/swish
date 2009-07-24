@@ -26,17 +26,24 @@
 
 #include "fixtures.hpp"
 
+#include "swish/utils.hpp"
+
 #include <boost/filesystem.hpp>
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/mersenne_twister.hpp>  // mt19937
 
 #include <string>
 #include <vector>
 #include <map>
 
 #include <cstdio>
+
+using swish::utils::Utf8StringToWideString;
 
 using boost::system::system_error;
 using boost::system::system_category;
@@ -50,6 +57,9 @@ using boost::process::find_executable_in_path;
 using boost::assign::list_of;
 using boost::lexical_cast;
 using boost::shared_ptr;
+using boost::uniform_int;
+using boost::variate_generator;
+using boost::mt19937;
 
 using std::string;
 using std::wstring;
@@ -58,7 +68,6 @@ using std::map;
 
 namespace { // private
 
-	const int SSHD_PORT = 30000;
 	const string SSHD_LISTEN_ADDRESS = "localhost";
 	const string SSHD_EXE_NAME = "sshd.exe";
 	const string SFTP_SUBSYSTEM = "sftp-server";
@@ -158,6 +167,15 @@ namespace { // private
 		return GetModulePath().parent_path() / SSHD_CONFIG_DIR;
 	}
 
+	int GenerateRandomPort()
+	{
+		static mt19937 rndgen;
+		static uniform_int<> distribution(10000, 65535);
+		static variate_generator<mt19937, uniform_int<> > gen(
+			rndgen, distribution);
+		return gen();
+	}
+
 	/**
 	 * Turn a path, rooted at a Windows drive letter, into a /cygdrive path.
 	 *
@@ -170,7 +188,15 @@ namespace { // private
 		return CYGDRIVE_PREFIX / drive / windowsPath.relative_path();
 	}
 
-	vector<string> GetSshdOptions()
+	wpath Cygdriveify(wpath windowsPath)
+	{
+		wstring drive(windowsPath.root_name(), 0, 1);
+		return wpath(Utf8StringToWideString(
+			CYGDRIVE_PREFIX.directory_string())) / drive / 
+			windowsPath.relative_path();
+	}
+
+	vector<string> GetSshdOptions(int port)
 	{
 		path host_key_file = ConfigDir() / SSHD_HOST_KEY_FILE;
 		path auth_key_file = ConfigDir() / SSHD_PUBLIC_KEY_FILE;
@@ -180,7 +206,7 @@ namespace { // private
 			"-o", "AuthorizedKeysFile \"" +
 			      Cygdriveify(auth_key_file).string() + "\"",
 			"-o", "ListenAddress " + SSHD_LISTEN_ADDRESS + ":" +
-			       lexical_cast<string>(SSHD_PORT),
+			       lexical_cast<string>(port),
 			"-o", "Protocol 2",
 			"-o", "UsePrivilegeSeparation no",
 			"-o", "StrictModes no",
@@ -193,7 +219,9 @@ namespace { // private
 namespace test {
 namespace common_boost {
 
-OpenSshFixture::OpenSshFixture() : m_sshd(StartSshd(GetSshdOptions()))
+OpenSshFixture::OpenSshFixture() : 
+	m_port(GenerateRandomPort()),
+	m_sshd(StartSshd(GetSshdOptions(m_port)))
 {
 }
 
@@ -219,7 +247,7 @@ string OpenSshFixture::GetHost() const
 
 int OpenSshFixture::GetPort() const
 {
-	return SSHD_PORT;
+	return m_port;
 }
 
 path OpenSshFixture::PrivateKeyPath() const
@@ -237,6 +265,11 @@ path OpenSshFixture::PublicKeyPath() const
  * command-line of the fixture SSH server.
  */
 string OpenSshFixture::ToRemotePath(path local_path) const
+{
+	return Cygdriveify(local_path).string();
+}
+
+wpath OpenSshFixture::ToRemotePath(wpath local_path) const
 {
 	return Cygdriveify(local_path).string();
 }

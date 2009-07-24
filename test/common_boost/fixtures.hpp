@@ -95,8 +95,11 @@ public:
 	boost::filesystem::path PublicKeyPath() const;
 	std::string ToRemotePath(
 		boost::filesystem::path local_path) const;
+	boost::filesystem::wpath ToRemotePath(
+		boost::filesystem::wpath local_path) const;
 
 private:
+	int m_port;
 	boost::process::child m_sshd;
 };
 
