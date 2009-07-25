@@ -98,7 +98,7 @@ protected:
 		session->Connect(config.GetHost(), config.GetPort());
 
 		CComPtr<CSftpStream> pStream = pStream->Create(
-			session, "/var/log/messages");
+			session, "/var/log/messages", CSftpStream::read);
 		CPPUNIT_ASSERT(pStream);
 	}
 
@@ -492,7 +492,7 @@ private:
 	CComPtr<CSftpStream> _CreateConnectInit(PCSTR pszFilePath)
 	{
 		CComPtr<CSftpStream> pStream = pStream->Create(
-			m_spSession, pszFilePath);
+			m_spSession, pszFilePath, CSftpStream::read);
 		CPPUNIT_ASSERT(pStream);
 
 		return pStream;

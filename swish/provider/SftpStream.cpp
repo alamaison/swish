@@ -176,16 +176,20 @@ void CSftpStream::Initialize(
 	m_session = session;
 
 	// Map between CSftpStream flags and libssh2 flags
-	unsigned long libssh2Flags = 0;
+	unsigned long libssh2_flags = 0;
 	if (flags & read)
-		libssh2Flags |= LIBSSH2_FXF_READ;
+		libssh2_flags |= LIBSSH2_FXF_READ;
 	if (flags & write)
-		libssh2Flags |= LIBSSH2_FXF_WRITE;
+		libssh2_flags |= LIBSSH2_FXF_WRITE;
 	if (flags & create)
-		libssh2Flags |= LIBSSH2_FXF_CREAT;
+		libssh2_flags |= LIBSSH2_FXF_CREAT;
+
+	long mode = // rw-r--r--
+		LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR | LIBSSH2_SFTP_S_IRGRP |
+		LIBSSH2_SFTP_S_IROTH;
 
 	m_handle = shared_ptr<LIBSSH2_SFTP_HANDLE>(
-		libssh2_sftp_open(*m_session, file.c_str(), flags, NULL),
+		libssh2_sftp_open(*m_session, file.c_str(), libssh2_flags, mode),
 		safe_libssh2_sftp_close_handle);
 	if (!m_handle)
 	{
@@ -475,16 +479,15 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  */
 void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
-	cbRead = libssh2_sftp_read(m_handle.get(), pbuf, cb);
-
-	if (cbRead < 0)
+	ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
+	if (rc < 0)
 	{
 		cbRead = 0;
-		UNREACHABLE;
 		TRACE("libssh2_sftp_read() failed: %ws", 
 			GetLastErrorMessage(*m_session));
 		AtlThrow(STG_E_INVALIDFUNCTION);
 	}
+	cbRead = rc;
 }
 
 /**
@@ -497,14 +500,15 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
  */
 void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 {
-	cbWritten = libssh2_sftp_write(m_handle.get(), pbuf, cb);
-	if (cbWritten < 0)
+	ssize_t rc = libssh2_sftp_write(m_handle.get(), pbuf, cb);
+	if (rc < 0)
 	{
 		cbWritten = 0;
 		TRACE("libssh2_sftp_write() failed: %ws", 
 			GetLastErrorMessage(*m_session));
 		AtlThrow(STG_E_CANTSAVE);
 	}
+	cbWritten = rc;
 }
 
 #define COPY_CHUNK ULONG_MAX ///< Maximum size of any single copy operation.

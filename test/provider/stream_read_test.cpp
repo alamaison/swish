@@ -1,7 +1,7 @@
 /**
     @file
 
-    Unit tests for CSftpStream exercising the write mechanism.
+    Unit tests for CSftpStream exercising the read mechanism.
 
     @if licence
 
@@ -42,6 +42,8 @@
 #include "swish/atl.hpp"
 
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -52,6 +54,7 @@ using test::provider::StreamFixture;
 
 using ATL::CComPtr;
 
+using boost::filesystem::ofstream;
 using boost::system::system_error;
 using boost::system::system_category;
 using boost::shared_ptr;
@@ -59,83 +62,84 @@ using boost::shared_ptr;
 using std::string;
 using std::vector;
 
-BOOST_FIXTURE_TEST_SUITE(StreamWrite, StreamFixture)
+namespace { // private
+
+	const string TEST_DATA = "Humpty dumpty\nsat on the wall.\n\rHumpty ...";
+
+	/**
+	 * Fixture for tests that need to read data from an existing file.
+	 */
+	class StreamReadFixture : public StreamFixture
+	{
+	public:
+
+		/**
+		 * Create an IStream instance open for reading on a temporary file 
+		 * in our sandbox.  The file contained the same data that 
+		 * ExpectedData() returns.
+		 */
+		CComPtr<IStream> GetReadStream()
+		{
+			// Put some data in the test file
+			ofstream file(m_local_path, std::ios::binary);
+			file << ExpectedData() << std::flush;
+
+			return GetStream(CSftpStream::read);
+		}
+
+		/**
+		 * Return the data we expect to be able to read using the IStream.
+		 */
+		string ExpectedData()
+		{
+			return TEST_DATA;
+		}
+	};
+}
+
+BOOST_FIXTURE_TEST_SUITE(StreamRead, StreamReadFixture)
 
 /**
  * Simply get a stream.
  */
 BOOST_AUTO_TEST_CASE( get )
 {
-	CComPtr<IStream> spStream = GetStream();
+	CComPtr<IStream> spStream = GetReadStream();
 	BOOST_REQUIRE(spStream);
 }
 
 /**
- * Write one byte to stream, read it back and check that it is the same.
+ * Read a sequence of characters.
  */
-BOOST_AUTO_TEST_CASE( write_one_byte )
+BOOST_AUTO_TEST_CASE( read_a_string )
 {
-	CComPtr<IStream> spStream = GetStream();
+	CComPtr<IStream> spStream = GetReadStream();
 
-	// Write the character 'M' to the file
-	char in[1] = {'M'};
-	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(spStream->Write(in, sizeof(in), &cbWritten));
-	BOOST_REQUIRE_EQUAL(cbWritten, sizeof(in));
-
-	// Reset seek pointer to beginning and read back
-	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
-
-	char out[1];
+	string expected = ExpectedData();
 	ULONG cbRead = 0;
-	BOOST_REQUIRE_OK(spStream->Read(out, sizeof(out), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, sizeof(out));
-	BOOST_REQUIRE_EQUAL('M', out[0]);
-	
-	// Reading another byte should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(out, sizeof(out), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, 0U);
-}
+	vector<char> buf(expected.size());
+	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
+	BOOST_REQUIRE_EQUAL(cbRead, expected.size());
 
-/**
- * Write a sequence of characters.
- */
-BOOST_AUTO_TEST_CASE( write_a_string )
-{
-	CComPtr<IStream> spStream = GetStream();
-
-	string in = "Lorem ipsum dolor sit amet. ";
-	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(spStream->Write(&in[0], in.size(), &cbWritten));
-	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
-
-	// Reset seek pointer to beginning and read back
-	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
-
-	vector<char> out(in.size());
-	ULONG cbRead = 0;
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, out.size());
+	// Test that the bytes we read match
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
-		out.begin(), out.end(), in.begin(), in.end());
+		buf.begin(), buf.end(), expected.begin(), expected.end());
 	
 	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
+	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
 	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
 /**
- * Try to write to a locked file.
- * This tests how we deal with a failure in a write case.  In order to
+ * Try to read from a locked file.
+ * This tests how we deal with a failure in a read case.  In order to
  * force a failure we open the stream but then lock the first 30 bytes
- * of the file that's under it before trying to write to the stream.
+ * of the file that's under it before trying to read from the stream.
  */
 
-BOOST_AUTO_TEST_CASE( write_fail )
+BOOST_AUTO_TEST_CASE( read_fail )
 {
-	CComPtr<IStream> spStream = GetStream();
+	CComPtr<IStream> spStream = GetReadStream();
 
 	// Open stream's file
 	shared_ptr<void> file_handle(
@@ -151,14 +155,14 @@ BOOST_AUTO_TEST_CASE( write_fail )
 	if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
 		throw system_error(::GetLastError(), system_category);
 
-	// Try to write to it via the stream
+	// Try to read from the stream
 	try
 	{
-		string in = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
-		ULONG cbWritten = 0;
-		BOOST_REQUIRE(FAILED(
-			spStream->Write(&in[0], in.size(), &cbWritten)));
-		BOOST_REQUIRE_EQUAL(cbWritten, 0U);
+		string expected = ExpectedData();
+		ULONG cbRead = 0;
+		vector<char> buf(expected.size());
+		BOOST_REQUIRE(FAILED(spStream->Read(&buf[0], buf.size(), &cbRead)));
+		BOOST_REQUIRE_EQUAL(cbRead, 0U);
 	}
 	catch (...)
 	{

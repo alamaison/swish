@@ -68,7 +68,7 @@ public:
 
 	static ATL::CComPtr<CSftpStream> Create(
 		boost::shared_ptr<CSession> session, const std::string& file,
-		OpenFlags flags=read);
+		OpenFlags flags);
 	void Initialize(
 		boost::shared_ptr<CSession> session, const std::string& file,
 		OpenFlags flags);

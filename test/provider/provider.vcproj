@@ -204,6 +204,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\stream_create_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stream_read_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stream_write_test.cpp"
 				>
 			</File>

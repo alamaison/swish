@@ -39,7 +39,7 @@
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture etc.
 
-#include "swish/provider/Session.hpp"  // CSession
+#include "swish/provider/SessionFactory.hpp"  // CSessionFactory
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
 #include <memory>  // auto_ptr
@@ -59,23 +59,36 @@ class StreamFixture :
 {
 public:
 
+	boost::filesystem::wpath m_local_path;
+	std::string m_remote_path;
+
 	/**
-	 * Create an IStream instance open for writing on a temporary file
-	 * in our sandbox.
+	 * Initialise the test fixture with the path of a new, empty file
+	 * in the sandbox.
 	 */
-	ATL::CComPtr<IStream> GetStream()
+	StreamFixture() 
+		: m_local_path(NewFileInSandbox()), 
+		  m_remote_path(ToRemotePath(
+			swish::utils::WideStringToUtf8String(m_local_path.file_string())))
+	{
+	}
+
+	/**
+	 * Create an IStream instance open on a temporary file in our sandbox.
+	 * By default the stream is open for reading and writing but different
+	 * flags can be passed to change this.
+	 */
+	ATL::CComPtr<IStream> GetStream(
+		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
 	{
 		std::auto_ptr<CSession> session(_GetSession());
-		std::string file = swish::utils::WideStringToUtf8String(
-			NewFileInSandbox().file_string());
-		std::string remote_file = ToRemotePath(file);
 
 		ATL::CComPtr<IStream> stream = CSftpStream::Create(
-			session, remote_file, CSftpStream::read | CSftpStream::write);
+			session, m_remote_path, flags);
 		return stream;
 	}
 
-private:
+protected:
 
 	/**
 	 * Return a new CSession instance connected to the fixture SSH server.
