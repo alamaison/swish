@@ -252,6 +252,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DropTarget.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ExplorerCallback.cpp"
 				>
 			</File>
@@ -391,6 +395,10 @@
 			</File>
 			<File
 				RelativePath=".\DataObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DropTarget.hpp"
 				>
 			</File>
 			<File

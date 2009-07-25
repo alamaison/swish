@@ -326,6 +326,9 @@ STDMETHODIMP CProvider::GetListing(
 	return hr;
 }
 
+/**
+ * @todo  Add flag to interface to allow choice of read or write.
+ */
 STDMETHODIMP CProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
 {
 	ATLENSURE_RETURN_HR(ppStream, E_POINTER);
@@ -343,7 +346,8 @@ STDMETHODIMP CProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
 	try
 	{
 		CComPtr<CSftpStream> spStream = CSftpStream::Create(
-			m_session, CW2A(bstrFilePath).m_psz);
+			m_session, CW2A(bstrFilePath).m_psz, 
+			CSftpStream::read | CSftpStream::write | CSftpStream::create);
 		*ppStream = spStream.Detach();
 	}
 	catchCom()

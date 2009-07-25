@@ -32,12 +32,15 @@
 #include "ExplorerCallback.h"      // Interaction with Explorer window
 #include "UserInteraction.h"       // Implementation of ISftpConsumer
 #include "ShellDataObject.h"
+#include "DropTarget.hpp"          // CDropTarget
 #include "Registry.h"
 #include "properties/properties.h" // File properties handler
 #include "properties/column.h"     // Column details
 #include "swish/debug.hpp"
 
 #include <string>
+
+using swish::shell_folder::CDropTarget;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -266,10 +269,31 @@ STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
 		hr = S_OK;
 		ATLASSERT(SUCCEEDED(hr));
 	}
+	else if (riid == __uuidof(IDropTarget))
+	{
+		ATLTRACE("\t\tRequest: IDropTarget\n");
+		ATLASSERT(cPidl == 1);
+
+		CRemoteItemHandle pidl(aPidl[0]);
+
+		try
+		{
+			// Create connection for this folder with hwndOwner for UI
+			CComPtr<ISftpProvider> spProvider =
+				_CreateConnectionForFolder(hwndOwner);
+
+			CComPtr<IDropTarget> spdt = CDropTarget::Create(
+				spProvider, pidl.GetFilePath().GetString());
+			*ppvReturn = spdt.Detach();
+		}
+		catchCom()
+
+		hr = S_OK;
+	}
 	else	
 		ATLTRACE("\t\tRequest: <unknown>\n");
 
-    return hr;
+	return hr;
 }
 
 /**
@@ -491,6 +515,7 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	{
 		dwAttribs |= SFGAO_FOLDER;
 		dwAttribs |= SFGAO_HASSUBFOLDER;
+		dwAttribs |= SFGAO_DROPTARGET;
 	}
 	if (fAllAreDotFiles)
 	{
