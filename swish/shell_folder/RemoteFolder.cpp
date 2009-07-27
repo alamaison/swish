@@ -37,10 +37,12 @@
 #include "properties/properties.h" // File properties handler
 #include "properties/column.h"     // Column details
 #include "swish/debug.hpp"
+#include "swish/exception.hpp"     // com_exception
 
 #include <string>
 
 using swish::shell_folder::CDropTarget;
+using swish::exception::com_exception;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -52,63 +54,11 @@ using std::wstring;
 
 using namespace swish;
 
-void CRemoteFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
-const throw(...)
-{
-	if (pidl == NULL)
-		AtlThrow(E_POINTER);
-
-	if (!CRemoteItemList::IsValid(pidl))
-		AtlThrow(E_INVALIDARG);
-}
-
-CLSID CRemoteFolder::GetCLSID()
-const
-{
-	return __uuidof(this);
-}
-
-/**
- * Create and initialise new folder object for subfolder.
- */
-CComPtr<IShellFolder> CRemoteFolder::CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot)
-const throw(...)
-{
-	// Create CRemoteFolder initialised with its root PIDL
-	CComPtr<IShellFolder> spFolder = CRemoteFolder::Create(pidlRoot);
-	ATLENSURE_THROW(spFolder, E_NOINTERFACE);
-
-	return spFolder;
-}
-
-/**
- * Create an instance of our Shell Folder View callback handler.
- */
-CComPtr<IShellFolderViewCB> CRemoteFolder::GetFolderViewCallback()
-const throw(...)
-{
-	return CExplorerCallback::Create(GetRootPIDL());
-}
-
-/**
- * Determine the relative order of two file objects or folders.
- *
- * @implementing CFolder
- *
- * Given their PIDLs, compare the two items and return a value
- * indicating the result of the comparison:
- * - Negative: pidl1 < pidl2
- * - Positive: pidl1 > pidl2
- * - Zero:     pidl1 == pidl2
- */
-int CRemoteFolder::ComparePIDLs(
-	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, USHORT uColumn,
-	bool fCompareAllFields, bool fCanonical)
-const throw(...)
-{
-	return swish::properties::column::CompareDetailOf(
-		pidl1, pidl2, uColumn, fCompareAllFields, fCanonical);
-}
+/*--------------------------------------------------------------------------*/
+/*                     Remaining IShellFolder functions.                    */
+/* Eventually these should be replaced by the internal interfaces of        */
+/* CFolder and CSwishFolder.                                                */
+/*--------------------------------------------------------------------------*/
 
 /**
  * Create an IEnumIDList which enumerates the items in this folder.
@@ -139,7 +89,7 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 			_CreateConnectionForFolder(hwndOwner);
 
 		// Create directory handler and get listing as PIDL enumeration
-		CSftpDirectory directory(GetRootPIDL(), spProvider);
+		CSftpDirectory directory(root_pidl(), spProvider);
 		*ppEnumIDList = directory.GetEnum(grfFlags).Detach();
 	}
 	catchCom()
@@ -147,157 +97,10 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetUIObjectOf : IShellFolder
- * Retrieve an optional interface supported by objects in the folder.
- * This method is called when the shell is requesting extra information
- * about an object such as its icon, context menu, thumbnail image etc.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CRemoteFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
-	__in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl, REFIID riid,
-	__reserved LPUINT puReserved, __out void** ppvReturn )
-{
-	ATLTRACE("CRemoteFolder::GetUIObjectOf called\n");
-	(void)puReserved;
-
-	*ppvReturn = NULL;
-	HRESULT hr = E_NOINTERFACE;
-	
-	/*
-	IContextMenu    The cidl parameter can be greater than or equal to one.
-	IContextMenu2   The cidl parameter can be greater than or equal to one.
-	IDataObject     The cidl parameter can be greater than or equal to one.
-	IDropTarget     The cidl parameter can only be one.
-	IExtractIcon    The cidl parameter can only be one.
-	IQueryInfo      The cidl parameter can only be one.
-	*/
-
-	if (riid == __uuidof(IExtractIcon))
-    {
-		ATLTRACE("\t\tRequest: IExtractIcon\n");
-		ATLASSERT(cPidl == 1);
-
-		CComObject<CIconExtractor> *pExtractor;
-		hr = CComObject<CIconExtractor>::CreateInstance(&pExtractor);
-		if(SUCCEEDED(hr))
-		{
-			pExtractor->AddRef();
-			
-			CRemoteItemHandle pidl(aPidl[0]);
-
-			pExtractor->Initialize(pidl.GetFilename(), pidl.IsFolder());
-			hr = pExtractor->QueryInterface(riid, ppvReturn);
-			ATLASSERT(SUCCEEDED(hr));
-
-			pExtractor->Release();
-		}
-    }
-	else if (riid == __uuidof(IQueryAssociations))
-	{
-		ATLTRACE("\t\tRequest: IQueryAssociations\n");
-		ATLASSERT(cPidl == 1);
-
-		CComPtr<IQueryAssociations> spAssoc;
-		hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-		CRemoteItemHandle pidl(aPidl[0]);
-		
-		if (pidl.IsFolder())
-		{
-			// Initialise default assoc provider for Folders
-			hr = spAssoc->Init(
-				ASSOCF_INIT_DEFAULTTOFOLDER, L"Folder", NULL, NULL);
-			ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-		}
-		else
-		{
-			// Initialise default assoc provider for given file extension
-			CString strExt = L"." + pidl.GetExtension();
-			hr = spAssoc->Init(
-				ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, NULL);
-			ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-		}
-
-		*ppvReturn = spAssoc.Detach();
-	}
-	else if (riid == __uuidof(IContextMenu))
-	{
-		ATLTRACE("\t\tRequest: IContextMenu\n");
-
-		// Get keys associated with filetype from registry.
-		// We only take into account the item that was right-clicked on 
-		// (the first array element) even if this was a multi-selection.
-		//
-		// This article says that we don't need to specify the keys:
-		// http://groups.google.com/group/microsoft.public.platformsdk.shell/
-		// browse_thread/thread/6f07525eaddea29d/
-		// but we do for the context menu to appear in versions of Windows 
-		// earlier than Vista.
-		HKEY *aKeys; UINT cKeys;
-		ATLENSURE_RETURN_HR(SUCCEEDED(
-			CRegistry::GetRemoteFolderAssocKeys(aPidl[0], &cKeys, &aKeys)),
-			E_UNEXPECTED  // Might fail if registry is corrupted
-		);
-
-		CComPtr<IShellFolder> spThisFolder = this;
-		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
-
-		// Create default context menu from list of PIDLs
-		hr = ::CDefFolderMenu_Create2(
-			GetRootPIDL(), hwndOwner, cPidl, aPidl, spThisFolder, 
-			MenuCallback, cKeys, aKeys, (IContextMenu **)ppvReturn);
-
-		ATLASSERT(SUCCEEDED(hr));
-	}
-	else if (riid == __uuidof(IDataObject))
-	{
-		ATLTRACE("\t\tRequest: IDataObject\n");
-
-		try
-		{
-			// Create connection for this folder with hwndOwner for UI
-			CComPtr<ISftpProvider> spProvider =
-				_CreateConnectionForFolder(hwndOwner);
-
-			CComPtr<IDataObject> spDo = CSftpDataObject::Create(
-				cPidl, aPidl, GetRootPIDL(), spProvider);
-			*ppvReturn = spDo.Detach();
-		}
-		catchCom()
-
-		hr = S_OK;
-		ATLASSERT(SUCCEEDED(hr));
-	}
-	else if (riid == __uuidof(IDropTarget))
-	{
-		ATLTRACE("\t\tRequest: IDropTarget\n");
-		ATLASSERT(cPidl == 1);
-
-		CRemoteItemHandle pidl(aPidl[0]);
-
-		try
-		{
-			// Create connection for this folder with hwndOwner for UI
-			CComPtr<ISftpProvider> spProvider =
-				_CreateConnectionForFolder(hwndOwner);
-
-			CComPtr<IDropTarget> spdt = CDropTarget::Create(
-				spProvider, pidl.GetFilePath().GetString());
-			*ppvReturn = spdt.Detach();
-		}
-		catchCom()
-
-		hr = S_OK;
-	}
-	else	
-		ATLTRACE("\t\tRequest: <unknown>\n");
-
-	return hr;
-}
-
 /**
  * Convert path string relative to this folder into a PIDL to the item.
+ *
+ * @implementing IShellFolder
  *
  * @todo  Handle the attributes parameter.  Will need to contact server
  * as the PIDL we create is fake and will not have correct folderness, etc.
@@ -366,6 +169,8 @@ STDMETHODIMP CRemoteFolder::ParseDisplayName(
 
 /**
  * Retrieve the display name for the specified file object or subfolder.
+ *
+ * @implementing IShellFolder
  */
 STDMETHODIMP CRemoteFolder::GetDisplayNameOf( 
 	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
@@ -391,7 +196,7 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 				CComPtr<IShellFolder> spParent;
 				PCUITEMID_CHILD pidlThisFolder = NULL;
 				HRESULT hr = ::SHBindToParent(
-					GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+					root_pidl(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
 				ATLASSERT(SUCCEEDED(hr));
 
 				STRRET strret;
@@ -427,6 +232,11 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 	catchCom()
 }
 
+/**
+ * Rename item.
+ *
+ * @implementing IShellFolder
+ */
 STDMETHODIMP CRemoteFolder::SetNameOf(
 	HWND hwnd, PCUITEMID_CHILD pidl, LPCWSTR pwszName,
 	SHGDNF /*uFlags*/, PITEMID_CHILD *ppidlOut)
@@ -440,7 +250,7 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder(hwnd);
 
 		// Rename file
-		CSftpDirectory directory(GetRootPIDL(), spProvider);
+		CSftpDirectory directory(root_pidl(), spProvider);
 		bool fOverwritten = directory.Rename(pidl, pwszName);
 
 		// Create new PIDL from old one
@@ -449,8 +259,8 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		pidlNewFile.SetFilename(pwszName);
 
 		// Make PIDLs absolute
-		CAbsolutePidl pidlOld(GetRootPIDL(), pidl);
-		CAbsolutePidl pidlNew(GetRootPIDL(), pidlNewFile);
+		CAbsolutePidl pidlOld(root_pidl(), pidl);
+		CAbsolutePidl pidlNew(root_pidl(), pidlNewFile);
 
 		// Return new child pidl if requested else dispose of it
 		if (ppidlOut)
@@ -474,10 +284,11 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 	catchCom()
 }
 
-/*------------------------------------------------------------------------------
- * CRemoteFolder::GetAttributesOf : IShellFolder
+/**
  * Returns the attributes for the items whose PIDLs are passed in.
- *----------------------------------------------------------------------------*/
+ *
+ * @implementing IShellFolder
+ */
 STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	UINT cIdl,
 	__in_ecount_opt( cIdl ) PCUITEMID_CHILD_ARRAY aPidl,
@@ -628,6 +439,219 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID* pscid)
 	return S_OK;
 }
 
+/*--------------------------------------------------------------------------*/
+/*                     CFolder NVI internal interface.                      */
+/* These method implement the internal interface of the CFolder abstract    */
+/* class                                                                    */
+/*--------------------------------------------------------------------------*/
+
+/**
+ * Return the folder's registered CLSID
+ *
+ * @implementing CFolder
+ */
+CLSID CRemoteFolder::clsid() const
+{
+	return __uuidof(this);
+}
+
+/**
+ * Sniff PIDLs to determine if they are of our type.  Throw if not.
+ *
+ * @implementing CFolder
+ */
+void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
+{
+	if (pidl == NULL)
+		throw com_exception(E_POINTER);
+
+	if (!CRemoteItemList::IsValid(pidl))
+		throw com_exception(E_INVALIDARG);
+}
+
+/**
+ * Create and initialise new folder object for subfolder.
+ *
+ * @implementing CFolder
+ *
+ * Create new CRemoteFolder initialised with its root PIDL.  CRemoteFolder
+ * only have instances of themselves as subfolders.
+ */
+CComPtr<IShellFolder> CRemoteFolder::subfolder(PCIDLIST_ABSOLUTE pidl) const
+{
+	// Create CRemoteFolder initialised with its root PIDL
+	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl);
+	ATLENSURE_THROW(folder, E_NOINTERFACE);
+
+	return folder;
+}
+
+/**
+ * Determine the relative order of two file objects or folders.
+ *
+ * @implementing CFolder
+ *
+ * Given their PIDLs, compare the two items and return a value
+ * indicating the result of the comparison:
+ * - Negative: pidl1 < pidl2
+ * - Positive: pidl1 > pidl2
+ * - Zero:     pidl1 == pidl2
+ */
+int CRemoteFolder::compare_pidls(
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
+	int column, bool compare_all_fields, bool canonical)
+const
+{
+	return swish::properties::column::CompareDetailOf(
+		pidl1, pidl2, column, compare_all_fields, canonical);
+}
+
+
+/*--------------------------------------------------------------------------*/
+/*                    CSwishFolder internal interface.                      */
+/* These method override the (usually no-op) implementations of some        */
+/* in the CSwishFolder base class                                           */
+/*--------------------------------------------------------------------------*/
+
+/**
+ * Create an icon extraction helper object for the selected item.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IExtractIconW> CRemoteFolder::extract_icon_w(
+	HWND /*hwnd*/, PCUITEMID_CHILD pidl)
+{
+	TRACE("Request: IExtractIconW");
+
+	CRemoteItemHandle rpidl(pidl);
+	return CIconExtractor::Create(rpidl.GetFilename(), rpidl.IsFolder());
+}
+
+/**
+ * Create a file association handler for the selected items.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
+	HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IQueryAssociations");
+	assert(cpidl > 0);
+
+	CComPtr<IQueryAssociations> spAssoc;
+	HRESULT hr = ::AssocCreate(
+		CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
+	ATLENSURE_SUCCEEDED(hr);
+
+	CRemoteItemHandle pidl(apidl[0]);
+	
+	if (pidl.IsFolder())
+	{
+		// Initialise default assoc provider for Folders
+		hr = spAssoc->Init(
+			ASSOCF_INIT_DEFAULTTOFOLDER, L"Folder", NULL, NULL);
+		ATLENSURE_SUCCEEDED(hr);
+	}
+	else
+	{
+		// Initialise default assoc provider for given file extension
+		CString strExt = L"." + pidl.GetExtension();
+		hr = spAssoc->Init(
+			ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, NULL);
+		ATLENSURE_SUCCEEDED(hr);
+	}
+
+	return spAssoc;
+}
+
+/**
+ * Create a context menu for the selected items.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IContextMenu> CRemoteFolder::context_menu(
+	HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IContextMenu");
+	assert(cpidl > 0);
+
+	// Get keys associated with filetype from registry.
+	// We only take into account the item that was right-clicked on 
+	// (the first array element) even if this was a multi-selection.
+	//
+	// This article says that we don't need to specify the keys:
+	// http://groups.google.com/group/microsoft.public.platformsdk.shell/
+	// browse_thread/thread/6f07525eaddea29d/
+	// but we do for the context menu to appear in versions of Windows 
+	// earlier than Vista.
+	HKEY *akeys; UINT ckeys;
+	ATLENSURE_THROW(SUCCEEDED(
+		CRegistry::GetRemoteFolderAssocKeys(apidl[0], &ckeys, &akeys)),
+		E_UNEXPECTED  // Might fail if registry is corrupted
+	);
+
+	CComPtr<IShellFolder> spThisFolder = this;
+	ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
+
+	// Create default context menu from list of PIDLs
+	CComPtr<IContextMenu> spMenu;
+	HRESULT hr = ::CDefFolderMenu_Create2(
+		root_pidl(), hwnd, cpidl, apidl, spThisFolder, 
+		MenuCallback, ckeys, akeys, &spMenu);
+	if (FAILED(hr))
+		throw com_exception(hr);
+
+	return spMenu;
+}
+
+/**
+ * Create a data object for the selected items.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IDataObject> CRemoteFolder::data_object(
+	HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IDataObject");
+	assert(cpidl > 0);
+
+	// Create connection for this folder with hwnd for UI
+	CComPtr<ISftpProvider> spProvider =
+		_CreateConnectionForFolder(hwnd);
+
+	return CSftpDataObject::Create(
+		cpidl, apidl, root_pidl(), spProvider);
+}
+
+/**
+ * Create a drop target handler for the folder.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
+{
+	TRACE("Request: IDropTarget");
+
+	// Create connection for this folder with hwnd for UI
+	CComPtr<ISftpProvider> spProvider =
+		_CreateConnectionForFolder(hwnd);
+	CHostItemAbsoluteHandle pidl = root_pidl();
+	return CDropTarget::Create(spProvider, pidl.GetFullPath().GetString());
+}
+
+/**
+ * Create an instance of our Shell Folder View callback handler.
+ */
+CComPtr<IShellFolderViewCB> CRemoteFolder::folder_view_callback(HWND /*hwnd*/)
+{
+	return CExplorerCallback::Create(root_pidl());
+}
+
+
+/*--------------------------------------------------------------------------*/
+/*                         Context menu handlers.                           */
+/*--------------------------------------------------------------------------*/
+
 /**
  * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
  */
@@ -725,7 +749,7 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 	{
 		CShellDataObject shdo(pDataObj);
 		CAbsolutePidl pidlFolder = shdo.GetParentFolder();
-		ATLASSERT(::ILIsEqual(GetRootPIDL(), pidlFolder));
+		ATLASSERT(::ILIsEqual(root_pidl(), pidlFolder));
 
 		// Build up a list of PIDLs for all the items to be deleted
 		RemotePidls vecDeathRow;
@@ -753,8 +777,9 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 	return S_OK;
 }
 
+
 /*----------------------------------------------------------------------------*/
-/* --- Private functions -----------------------------------------------------*/
+/*                           Private functions                                */
 /*----------------------------------------------------------------------------*/
 
 /**
@@ -817,7 +842,7 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 	CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder( hwnd );
 
 	// Create instance of our directory handler class
-	CSftpDirectory directory(GetRootPIDL(), spProvider);
+	CSftpDirectory directory(root_pidl(), spProvider);
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();
@@ -826,7 +851,7 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 		directory.Delete( *it );
 
 		// Make PIDL absolute
-		CAbsolutePidl pidlFull(GetRootPIDL(), *it);
+		CAbsolutePidl pidlFull(root_pidl(), *it);
 
 		// Notify the shell
 		::SHChangeNotify(
@@ -938,7 +963,7 @@ CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 {
 
 	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-	CHostItemListHandle pidlHost(CHostItemListHandle(GetRootPIDL()).FindHostPidl());
+	CHostItemListHandle pidlHost(CHostItemListHandle(root_pidl()).FindHostPidl());
 	ATLASSERT(pidlHost.IsValid());
 
 	// Extract connection info from PIDL

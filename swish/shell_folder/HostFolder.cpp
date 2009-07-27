@@ -1,7 +1,7 @@
 /**
     @file
 
-	SFTP connections Explorer folder implementation.
+    SFTP connections Explorer folder implementation.
 
     @if licence
 
@@ -33,8 +33,11 @@
 #include "host_management.hpp"
 #include "swish/debug.hpp"
 #include "swish/remotelimits.h"   // Text field limits
+#include "swish/exception.hpp"    // com_exception
 
 #include <strsafe.h>  // For StringCchCopy
+
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 
@@ -42,89 +45,35 @@ using ATL::CString;
 using ATL::CComPtr;
 using ATL::CComObject;
 
+using boost::shared_ptr;
+
 using std::wstring;
 
 using swish::host_management::LoadConnectionsFromRegistry;
+using swish::exception::com_exception;
 
-void CHostFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
-const throw(...)
-{
-	if (pidl == NULL)
-		AtlThrow(E_POINTER);
-
-	if (!CHostItemList::IsValid(pidl))
-		AtlThrow(E_INVALIDARG);
-}
-
-CLSID CHostFolder::GetCLSID()
-const
-{
-	return __uuidof(this);
-}
-
-/**
- * Create and initialise new folder object for subfolder.
- */
-CComPtr<IShellFolder> CHostFolder::CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot)
-const throw(...)
-{
-	// Create CRemoteFolder initialised with its root PIDL
-	CComPtr<IShellFolder> spFolder = CRemoteFolder::Create(pidlRoot);
-	ATLENSURE_THROW(spFolder, E_NOINTERFACE);
-
-	return spFolder;
-}
-
-/**
- * Create an instance of our Shell Folder View callback handler.
- */
-CComPtr<IShellFolderViewCB> CHostFolder::GetFolderViewCallback()
-const throw(...)
-{
-	return CExplorerCallback::Create(GetRootPIDL());
-}
-
-/**
- * Determine the relative order of two file objects or folders.
- *
- * @implementing CFolder
- *
- * Given their PIDLs, compare the two items and return a value
- * indicating the result of the comparison:
- * - Negative: pidl1 < pidl2
- * - Positive: pidl1 > pidl2
- * - Zero:     pidl1 == pidl2
- *
- * @todo  Take account of fCompareAllFields and fCanonical flags.
- */
-int CHostFolder::ComparePIDLs(
-	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, USHORT uColumn,
-	bool /*fCompareAllFields*/, bool /*fCanonical*/)
-const throw(...)
-{
-	CHostItemHandle item1(pidl1);
-	CHostItemHandle item2(pidl2);
-
-	switch (uColumn)
+namespace { // private
+	
+	/**
+	 * Initialise the VARIANT whose pointer is passed and fill with string 
+	 * data. The string data can be passed in as a wchar array or a CString.
+	 * We allocate a new BSTR and store it in the VARIANT.
+	 */
+	HRESULT FillDetailsVariant(__in PCWSTR pszDetail, __out VARIANT* pv)
 	{
-	case 0: // Display name (Label)
-			// - also default for fCompareAllFields and fCanonical
-		return wcscmp(item1.GetLabel(), item2.GetLabel());
-	case 1: // Hostname
-		return wcscmp(item1.GetHost(), item2.GetHost());
-	case 2: // Username
-		return wcscmp(item1.GetUser(), item2.GetUser());
-	case 4: // Remote filesystem path
-		return wcscmp(item1.GetPath(), item2.GetPath());
-	case 3: // SFTP port
-		return item1.GetPort() - item2.GetPort();
-	case 5: // Type
-		return 0;
-	default:
-		UNREACHABLE;
-		AtlThrow(E_UNEXPECTED);
+		::VariantInit(pv);
+		pv->vt = VT_BSTR;
+		pv->bstrVal = ::SysAllocString(pszDetail);
+
+		return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
 	}
 }
+
+/*--------------------------------------------------------------------------*/
+/*                     Remaining IShellFolder functions.                    */
+/* Eventually these should be replaced by the internal interfaces of        */
+/* CFolder and CSwishFolder.                                                */
+/*--------------------------------------------------------------------------*/
 
 /**
  * Create an IEnumIDList which enumerates the items in this folder.
@@ -182,108 +131,10 @@ STDMETHODIMP CHostFolder::EnumObjects(
     return hr;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetUIObjectOf : IShellFolder
- * Retrieve an optional interface supported by objects in the folder.
- * This method is called when the shell is requesting extra information
- * about an object such as its icon, context menu, thumbnail image etc.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::GetUIObjectOf( HWND hwndOwner, UINT cPidl,
-	__in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl, REFIID riid,
-	__reserved LPUINT puReserved, __out void** ppvReturn )
-{
-	ATLTRACE("CHostFolder::GetUIObjectOf called\n");
-	(void)hwndOwner; // No user input required
-	(void)puReserved;
-
-	*ppvReturn = NULL;
-
-	HRESULT hr = E_NOINTERFACE;
-	
-	/*
-	IContextMenu    The cidl parameter can be greater than or equal to one.
-	IContextMenu2   The cidl parameter can be greater than or equal to one.
-	IDataObject     The cidl parameter can be greater than or equal to one.
-	IDropTarget     The cidl parameter can only be one.
-	IExtractIcon    The cidl parameter can only be one.
-	IQueryInfo      The cidl parameter can only be one.
-	*/
-
-	if (riid == IID_IExtractIconW)
-    {
-		ATLTRACE("\t\tRequest: IID_IExtractIconW\n");
-		ATLASSERT( cPidl == 1 ); // Only one file 'selected'
-
-		hr = QueryInterface(riid, ppvReturn);
-    }
-	else if (riid == __uuidof(IQueryAssociations))
-	{
-		ATLTRACE("\t\tRequest: IQueryAssociations\n");
-		ATLASSERT(cPidl == 1);
-
-		CComPtr<IQueryAssociations> spAssoc;
-		hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-		// Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
-		LPOLESTR posz;
-		::StringFromCLSID(__uuidof(CHostFolder), &posz);
-
-		// Initialise default assoc provider to use Swish CLSID key for data.
-		// This is necessary to pick up properties and TileInfo etc.
-		hr = spAssoc->Init(0, posz, NULL, NULL);
-		::CoTaskMemFree(posz);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-		*ppvReturn = spAssoc.Detach();
-	}
-	else if (riid == __uuidof(IContextMenu))
-	{
-		ATLTRACE("\t\tRequest: IContextMenu\n");
-
-		// Get keys associated with filetype from registry.
-		//
-		// This article says that we don't need to specify the keys:
-		// http://groups.google.com/group/microsoft.public.platformsdk.shell/
-		// browse_thread/thread/6f07525eaddea29d/
-		// but we do for the context menu to appear in versions of Windows 
-		// earlier than Vista.
-		HKEY *aKeys; UINT cKeys;
-		ATLENSURE_RETURN_HR(SUCCEEDED(
-			CRegistry::GetHostFolderAssocKeys(&cKeys, &aKeys)),
-			E_UNEXPECTED  // Might fail if registry is corrupted
-		);
-
-		CComPtr<IShellFolder> spThisFolder = this;
-		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
-
-		// Create default context menu from list of PIDLs
-		hr = ::CDefFolderMenu_Create2(
-			GetRootPIDL(), hwndOwner, cPidl, aPidl, spThisFolder, 
-			MenuCallback, cKeys, aKeys, (IContextMenu **)ppvReturn);
-
-		ATLASSERT(SUCCEEDED(hr));
-	}
-	else if (riid == __uuidof(IDataObject))
-	{
-		ATLTRACE("\t\tRequest: IDataObject\n");
-
-		// A DataObject is required in order for the call to 
-		// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
-		// earlier than Vista
-
-		hr = ::CIDLData_CreateFromIDArray(
-			GetRootPIDL(), cPidl, 
-			reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl),
-			(IDataObject **)ppvReturn);
-		ATLASSERT(SUCCEEDED(hr));
-	}
-
-    return hr;
-}
-
 /**
  * Convert path string relative to this folder into a PIDL to the item.
+ *
+ * @implementing IShellFolder
  *
  * @todo  Handle the attributes parameter.  Should just return
  * GetAttributesOf() the PIDL we create but it is a bit hazy where the
@@ -305,7 +156,7 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 	wstring strDisplayName(pwszDisplayName);
 	if (strDisplayName.empty())
 	{
-		*ppidl = CloneRootPIDL().Detach();
+		*ppidl = clone_root_pidl().Detach();
 		return S_OK;
 	}
 
@@ -358,7 +209,7 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 			hwnd, pbc, wszPath, pchEaten, &pidlPath, pdwAttributes);
 		ATLENSURE_SUCCEEDED(hr);
 
-		*ppidl = CRelativePidl(GetRootPIDL(), pidlPath).Detach();
+		*ppidl = CRelativePidl(root_pidl(), pidlPath).Detach();
 	}
 	catchCom()
 
@@ -367,6 +218,8 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 
 /**
  * Retrieve the display name for the specified file object or subfolder.
+ *
+ * @implementing IShellFolder
  */
 STDMETHODIMP CHostFolder::GetDisplayNameOf(
 	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
@@ -390,7 +243,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 				CComPtr<IShellFolder> spParent;
 				PCUITEMID_CHILD pidlThisFolder;
 				HRESULT hr = ::SHBindToParent(
-					GetRootPIDL(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+					root_pidl(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
 				ATLASSERT(SUCCEEDED(hr));
 
 				STRRET strret;
@@ -428,10 +281,11 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 	catchCom()
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetAttributesOf : IShellFolder
+/**
  * Returns the attributes for the items whose PIDLs are passed in.
- *----------------------------------------------------------------------------*/
+ *
+ * @implementing IShellFolder
+ */
 STDMETHODIMP CHostFolder::GetAttributesOf(
 	UINT cIdl,
 	__in_ecount_opt( cIdl ) PCUITEMID_CHILD_ARRAY aPidl,
@@ -449,28 +303,11 @@ STDMETHODIMP CHostFolder::GetAttributesOf(
     return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetDefaultColumn : IShellFolder2
- * Gets the default sorting and display columns.
- *----------------------------------------------------------------------------*/
-STDMETHODIMP CHostFolder::GetDefaultColumn( DWORD dwReserved, 
-											__out ULONG *pSort, 
-											__out ULONG *pDisplay )
-{
-	ATLTRACE("CHostFolder::GetDefaultColumn called\n");
-	(void)dwReserved;
-
-	// Sort and display by the label (friendly display name)
-	*pSort = 0;
-	*pDisplay = 0;
-
-	return S_OK;
-}
-
-/*------------------------------------------------------------------------------
- * CHostFolder::GetDefaultColumnState : IShellFolder2
+/**
  * Returns the default state for the column specified by index.
- *----------------------------------------------------------------------------*/
+ *
+ * @implementing IShellFolder2
+ */
 STDMETHODIMP CHostFolder::GetDefaultColumnState( __in UINT iColumn, 
 												 __out SHCOLSTATEF *pcsFlags )
 {
@@ -494,6 +331,11 @@ STDMETHODIMP CHostFolder::GetDefaultColumnState( __in UINT iColumn,
 	return S_OK;
 }
 
+/**
+ * Get property of an item as a VARIANT.
+ *
+ * @implementing IShellFolder2
+ */
 STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl, 
 										 __in const SHCOLUMNID *pscid,
 										 __out VARIANT *pv )
@@ -513,7 +355,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	{
 		TRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
 
-		return _FillDetailsVariant(
+		return FillDetailsVariant(
 			(fHeader) ? L"Name" : hpidl.GetLabel(), pv);
 	}
 	// Hostname
@@ -521,7 +363,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	{
 		TRACE("\t\tRequest: PKEY_ComputerName\n");
 
-		return _FillDetailsVariant(
+		return FillDetailsVariant(
 			(fHeader) ? L"Host" : hpidl.GetHost(), pv);
 	}
 	// Username
@@ -529,7 +371,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	{
 		TRACE("\t\tRequest: PKEY_SwishHostUser\n");
 
-		return _FillDetailsVariant(
+		return FillDetailsVariant(
 			(fHeader) ? L"Username" : hpidl.GetUser(), pv);
 	}
 	// SFTP port
@@ -537,7 +379,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	{
 		TRACE("\t\tRequest: PKEY_SwishHostPort\n");
 
-		return _FillDetailsVariant(
+		return FillDetailsVariant(
 			(fHeader) ? L"Port" : hpidl.GetPortStr(), pv);
 	}
 	// Remote filesystem path
@@ -545,7 +387,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	{
 		TRACE("\t\tRequest: PKEY_ItemPathDisplay\n");
 
-		return _FillDetailsVariant(
+		return FillDetailsVariant(
 			(fHeader) ? L"Remote Path" : hpidl.GetPath(), pv);
 	}
 	// Type: always 'Network Drive'
@@ -553,7 +395,7 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	{
 		TRACE("\t\tRequest: PKEY_ItemType\n");
 
-		return _FillDetailsVariant(
+		return FillDetailsVariant(
 			(fHeader) ? L"Type" : L"Network Drive", pv);
 	}
 
@@ -566,13 +408,15 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
 	return E_FAIL;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetDefaultColumnState : IShellFolder2
+/**
  * Convert column to appropriate property set ID (FMTID) and property ID (PID).
+ *
+ * @implementing IShellFolder2
+ *
  * IMPORTANT:  This function defines which details are supported as
  * GetDetailsOf() just forwards the columnID here.  The first column that we
  * return E_FAIL for marks the end of the supported details.
- *----------------------------------------------------------------------------*/
+ */
 STDMETHODIMP CHostFolder::MapColumnToSCID( __in UINT iColumn, 
 										    __out PROPERTYKEY *pscid )
 {
@@ -599,22 +443,26 @@ STDMETHODIMP CHostFolder::MapColumnToSCID( __in UINT iColumn,
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::Extract : IExtractIcon
+/**
  * Extract an icon bitmap given the information passed.
+ *
+ * @implementing IExtractIconW
+ *
  * We return S_FALSE to tell the shell to extract the icons itself.
- *----------------------------------------------------------------------------*/
+ */
 STDMETHODIMP CHostFolder::Extract( LPCTSTR, UINT, HICON *, HICON *, UINT )
 {
 	ATLTRACE("CHostFolder::Extract called\n");
 	return S_FALSE;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetIconLocation : IExtractIcon
+/**
  * Retrieve the location of the appropriate icon.
+ *
+ * @implementing IExtractIconW
+ *
  * We set all SFTP hosts to have the icon from shell32.dll.
- *----------------------------------------------------------------------------*/
+ */
 STDMETHODIMP CHostFolder::GetIconLocation(
 	__in UINT uFlags, __out_ecount(cchMax) LPTSTR szIconFile, 
 	__in UINT cchMax, __out int *piIndex, __out UINT *pwFlags )
@@ -630,9 +478,11 @@ STDMETHODIMP CHostFolder::GetIconLocation(
 	return S_OK;
 }
 
-/*------------------------------------------------------------------------------
- * CHostFolder::GetDetailsOf : IShellDetails
+/**
  * Returns detailed information on the items in a folder.
+ *
+ * @implementing IShellDetails
+ *
  * This function operates in two distinctly different ways:
  * If pidl is NULL:
  *     Retrieves the information on the view columns, i.e., the names of
@@ -646,7 +496,7 @@ STDMETHODIMP CHostFolder::GetIconLocation(
  * Most of the work is delegated to GetDetailsEx by converting the column
  * index to a PKEY with MapColumnToSCID.  This function also now determines
  * what the index of the last supported detail is.
- *----------------------------------------------------------------------------*/
+ */
 STDMETHODIMP CHostFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl, 
 										 __in UINT iColumn, 
 										 __out LPSHELLDETAILS pDetails )
@@ -686,6 +536,229 @@ STDMETHODIMP CHostFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl,
 	return hr;
 }
 
+/*--------------------------------------------------------------------------*/
+/*                     CFolder NVI internal interface.                      */
+/* These method implement the internal interface of the CFolder abstract    */
+/* class                                                                    */
+/*--------------------------------------------------------------------------*/
+
+/**
+ * Return the folder's registered CLSID
+ *
+ * @implementing CFolder
+ */
+CLSID CHostFolder::clsid() const
+{
+	return __uuidof(this);
+}
+
+/**
+ * Sniff PIDLs to determine if they are of our type.  Throw if not.
+ *
+ * @implementing CFolder
+ */
+void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
+{
+	if (pidl == NULL)
+		throw com_exception(E_POINTER);
+
+	if (!CHostItemList::IsValid(pidl))
+		throw com_exception(E_INVALIDARG);
+}
+
+/**
+ * Create and initialise new folder object for subfolder.
+ *
+ * @implementing CFolder
+ *
+ * Create CRemoteFolder initialised with its root PIDL.  CHostFolders
+ * don't have any other types of subfolder.
+ */
+CComPtr<IShellFolder> CHostFolder::subfolder(PCIDLIST_ABSOLUTE pidl) const
+{
+	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl);
+	ATLENSURE_THROW(folder, E_NOINTERFACE);
+
+	return folder;
+}
+
+/**
+ * Determine the relative order of two file objects or folders.
+ *
+ * @implementing CFolder
+ *
+ * Given their PIDLs, compare the two items and return a value
+ * indicating the result of the comparison:
+ * - Negative: pidl1 < pidl2
+ * - Positive: pidl1 > pidl2
+ * - Zero:     pidl1 == pidl2
+ *
+ * @todo  Take account of fCompareAllFields and fCanonical flags.
+ */
+int CHostFolder::compare_pidls(
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
+	int column, bool /*compare_all_fields*/, bool /*canonical*/)
+const throw(...)
+{
+	CHostItemHandle item1(pidl1);
+	CHostItemHandle item2(pidl2);
+
+	switch (column)
+	{
+	case 0: // Display name (Label)
+			// - also default for fCompareAllFields and fCanonical
+		return wcscmp(item1.GetLabel(), item2.GetLabel());
+	case 1: // Hostname
+		return wcscmp(item1.GetHost(), item2.GetHost());
+	case 2: // Username
+		return wcscmp(item1.GetUser(), item2.GetUser());
+	case 4: // Remote filesystem path
+		return wcscmp(item1.GetPath(), item2.GetPath());
+	case 3: // SFTP port
+		return item1.GetPort() - item2.GetPort();
+	case 5: // Type
+		return 0;
+	default:
+		UNREACHABLE;
+		AtlThrow(E_UNEXPECTED);
+	}
+}
+
+
+/*--------------------------------------------------------------------------*/
+/*                    CSwishFolder internal interface.                      */
+/* These method override the (usually no-op) implementations of some        */
+/* in the CSwishFolder base class                                           */
+/*--------------------------------------------------------------------------*/
+
+/**
+ * Create an icon extraction helper object for the selected item.
+ *
+ * @implementing CSwishFolder
+ *
+ * For host folders, the extraction object happens to be the folder
+ * itself. We don't need to look at the PIDLs as all host items are the same.
+ */
+CComPtr<IExtractIconW> CHostFolder::extract_icon_w(
+	HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
+{
+	TRACE("Request: IExtractIconW");
+
+	return this;
+}
+
+/**
+ * Create a file association handler for host items.
+ *
+ * @implementing CSwishFolder
+ *
+ * We don't need to look at the PIDLs as all host items are the same.
+ */
+CComPtr<IQueryAssociations> CHostFolder::query_associations(
+	HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
+{
+	TRACE("Request: IQueryAssociations");
+
+	CComPtr<IQueryAssociations> spAssoc;
+	HRESULT hr = ::AssocCreate(
+		CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
+	ATLENSURE_SUCCEEDED(hr);
+
+	// Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
+	LPOLESTR posz;
+	::StringFromCLSID(__uuidof(CHostFolder), &posz);
+	shared_ptr<OLECHAR> clsid(posz, ::CoTaskMemFree);
+	posz = NULL;
+
+	// Initialise default assoc provider to use Swish CLSID key for data.
+	// This is necessary to pick up properties and TileInfo etc.
+	hr = spAssoc->Init(0, clsid.get(), NULL, NULL);
+	if (FAILED(hr))
+		throw com_exception(hr);
+
+	return spAssoc;
+}
+
+/**
+ * Create a context menu for the selected items.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IContextMenu> CHostFolder::context_menu(
+	HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IContextMenu");
+	assert(cpidl > 0);
+
+	// Get keys associated with filetype from registry.
+	// We only take into account the item that was right-clicked on 
+	// (the first array element) even if this was a multi-selection.
+	//
+	// This article says that we don't need to specify the keys:
+	// http://groups.google.com/group/microsoft.public.platformsdk.shell/
+	// browse_thread/thread/6f07525eaddea29d/
+	// but we do for the context menu to appear in versions of Windows 
+	// earlier than Vista.
+	HKEY *akeys; UINT ckeys;
+	ATLENSURE_THROW(SUCCEEDED(
+		CRegistry::GetHostFolderAssocKeys(&ckeys, &akeys)),
+		E_UNEXPECTED  // Might fail if registry is corrupted
+	);
+
+	CComPtr<IShellFolder> spThisFolder = this;
+	ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
+
+	// Create default context menu from list of PIDLs
+	CComPtr<IContextMenu> spMenu;
+	HRESULT hr = ::CDefFolderMenu_Create2(
+		root_pidl(), hwnd, cpidl, apidl, spThisFolder, 
+		MenuCallback, ckeys, akeys, &spMenu);
+	if (FAILED(hr))
+		throw com_exception(hr);
+
+	return spMenu;
+}
+
+/**
+ * Create a data object for the selected items.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IDataObject> CHostFolder::data_object(
+	HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IDataObject");
+	assert(cpidl > 0);
+
+	// A DataObject is required in order for the call to 
+	// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
+	// earlier than Vista
+
+	CComPtr<IDataObject> spdo;
+	HRESULT hr = ::CIDLData_CreateFromIDArray(
+		root_pidl(), cpidl, 
+		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
+	if (FAILED(hr))
+		throw com_exception(hr);
+
+	return spdo;
+}
+
+/**
+ * Create an instance of our Shell Folder View callback handler.
+ *
+ * @implementing CSwishFolder
+ */
+CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
+{
+	return CExplorerCallback::Create(root_pidl());
+}
+
+
+/*--------------------------------------------------------------------------*/
+/*                         Context menu handlers.                           */
+/*--------------------------------------------------------------------------*/
+
 /**
  * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
  */
@@ -723,27 +796,4 @@ HRESULT CHostFolder::OnMergeContextMenu(
 	// It seems we have to return S_OK even if we do nothing else or Explorer
 	// won't put Open as the default item and in the right order
 	return S_OK;
-}
-
-
-/*----------------------------------------------------------------------------*/
-/* --- Private functions -----------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
-
-/*------------------------------------------------------------------------------
- * CHostFolder::_FillDetailsVariant
- * Initialise the VARIANT whose pointer is passed and fill with string data.
- * The string data can be passed in as a wchar array or a CString.  We allocate
- * a new BSTR and store it in the VARIANT.
- *----------------------------------------------------------------------------*/
-HRESULT CHostFolder::_FillDetailsVariant( __in PCWSTR szDetail,
-										   __out VARIANT *pv )
-{
-	ATLTRACE("CHostFolder::_FillDetailsVariant called\n");
-
-	VariantInit( pv );
-	pv->vt = VT_BSTR;
-	pv->bstrVal = ::SysAllocString( szDetail );
-
-	return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
 }

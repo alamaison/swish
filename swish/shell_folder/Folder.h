@@ -1,7 +1,7 @@
 /**
     @file
 
-	Base class for IShellFolder implementations.
+    Base class for IShellFolder implementations.
 
     @if licence
 
@@ -52,40 +52,9 @@
     };
 #endif
 
-/**
- * Return the parent IShellFolder of the last item in the PIDL.
- *
- * Optionally, return the a pointer to the last item as well.  This
- * function emulates the Vista-specific SHBindToFolderIDListParent API
- * call.
- */
-inline HRESULT _BindToParentFolderOfPIDL(
-	IShellFolder *psfRoot, PCUIDLIST_RELATIVE pidl, REFIID riid, 
-	__out void **ppvParent, __out_opt PCUITEMID_CHILD *ppidlChild)
-{
-	*ppvParent = NULL;
-	if (ppidlChild)
-		*ppidlChild = NULL;
-
-	// Equivalent to 
-	//     ::SHBindToFolderIDListParent(
-	//         psfRoot, pidl, riid, ppvParent, ppidlChild);
-	
-	// Create PIDL to penultimate item (parent)
-	PIDLIST_RELATIVE pidlParent = ::ILClone(pidl);
-	ATLVERIFY(::ILRemoveLastID(pidlParent));
-
-	// Bind to the penultimate PIDL's folder (parent folder)
-	HRESULT hr = psfRoot->BindToObject(pidlParent, NULL, riid, ppvParent);
-	::ILFree(pidlParent);
-	
-	if (SUCCEEDED(hr) && ppidlChild)
-	{
-		*ppidlChild = ::ILFindLastID(pidl);
-	}
-
-	return hr;
-}
+namespace swish {
+namespace shell_folder {
+namespace folder {
 
 class CFolder :
 	public ATL::CComObjectRoot,
@@ -109,6 +78,9 @@ public:
 
 	CFolder();
 	virtual ~CFolder();
+
+	CAbsolutePidl clone_root_pidl() const;
+	PCIDLIST_ABSOLUTE root_pidl() const;
 
 public: // IPersist methods
 
@@ -162,6 +134,14 @@ public: // IShellFolder methods
 		__in REFIID riid,
 		__deref_out_opt void **ppv);
 
+	IFACEMETHODIMP GetUIObjectOf( 
+		__in_opt HWND hwndOwner,
+		__in UINT cpidl,
+		__in_ecount_opt(cpidl) PCUITEMID_CHILD_ARRAY apidl,
+		__in REFIID riid,
+		__reserved  UINT *rgfReserved,
+		__deref_out_opt void **ppv);
+
 public: // IShellDetails methods
 
 	IFACEMETHODIMP ColumnClick(UINT iColumn);
@@ -179,24 +159,113 @@ public: // IShellFolder2 methods
 
 protected:
 
-	CAbsolutePidl CloneRootPIDL() const;
-	PCIDLIST_ABSOLUTE GetRootPIDL() const;
+	/**
+	 * Return the folder implementation's CLSID.
+	 *
+	 * This allows callers to identify the type of folder for persistence
+	 * etc.
+	 */
+	virtual CLSID clsid() const = 0;
 
-	virtual void ValidatePidl(__in PCUIDLIST_RELATIVE pidl)
-		const throw(...) PURE;
-	virtual CLSID GetCLSID()
-		const PURE;
-	virtual ATL::CComPtr<IShellFolder> CreateSubfolder(
-		__in PCIDLIST_ABSOLUTE pidlRoot)
-		const throw(...) PURE;
-	virtual int ComparePIDLs(
-		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2,
-		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
-		const throw(...) PURE;
+	/**
+	 * Check if a PIDL is recognised.
+	 *
+	 * Explorer has a tendency to pass our folders PIDLs that don't belong to
+	 * them to see if we are paying attention (or, more likely, to see if it
+	 * can use some PIDL data that it cached earlier.  We need to disbelieve 
+	 * everything Explorer tells us an validate each PIDL it gives us.
+	 *
+	 * Implementation should sniff the PIDLs passed to this method and
+	 * throw an exception of they don't recognise them.
+	 */
+	virtual void validate_pidl(PCUIDLIST_RELATIVE pidl) const = 0;
 
-	virtual ATL::CComPtr<IShellFolderViewCB> GetFolderViewCallback()
-		const throw(...);
+	/**
+	 * Compare two items in the folder.
+	 *
+	 * @returns
+	 * - Negative: pidl1 < pidl2
+	 * - Positive: pidl1 > pidl2
+	 * - Zero:     pidl1 == pidl2
+	 *
+	 * This is one of the most important methods to get right.  When
+	 * implementing it, take care that if two PIDLs don't represent the 
+	 * same filesystem item you don't return 0 from this method!  Explorer
+	 * uses this to test if an item it has cached and if you falsely
+	 * claim that it is Explorer is likely not to bother looking at your
+	 * item becuase it thinks it already has it.
+	 */
+	virtual int compare_pidls(
+		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
+		int column, bool compare_all_fields, bool canonical) const = 0;
+
+	/**
+	 * The caller is requesting an object associated with the current folder.
+	 *
+	 * The default implementation throws an E_NOINTERFACE exception which
+	 * indicates to the caller that the object doesn't exist.  You almost 
+	 * certainly want to override this method in your folder.
+	 *
+	 * Examples of the type of object that Explorer may request include 
+	 *  - IShellView, the GUI representation of your folder
+	 *  - IDropTarget, in order to support drag-and-drop into your GUI window
+	 *  - IContextMenu, if your folder has a context menu
+	 *
+	 * This method corresponds roughly to CreateViewObject() but also
+	 * deals with the unusual case where GetUIObjectOf() is called without 
+	 * any PIDLs.
+	 */
+	virtual ATL::CComPtr<IUnknown> folder_object(HWND hwnd, REFIID riid) = 0;
+
+	/**
+	 * The caller is requesting an object associated with one of more items
+	 * in the current folder.
+	 *
+	 * The default implementation throws an E_NOINTERFACE exception which
+	 * indicates to the caller that the object doesn't exist.  You almost 
+	 * certainly want to override this method in your folder to return
+	 * associated objects for @b non-folder item.  It is also common to
+	 * handle some objects for sub-folder items too.  For example, handling
+	 * IDropTarget requests here avoids the need to bind to an instance of
+	 * the subfolder implementation first.
+	 *
+	 * If a request isn't handled here (this method throws E_NOINTERFACE)
+	 * and it's possible to bind to the item's IShellFolder interface then 
+	 * the request is delegated to the folder's CreateViewObject method and, 
+	 * assuming that folder is implemented with this class, will end up at 
+	 * the subfolder's folder_object() method.  However if this method throws
+	 * a different error, the request is not delegated.
+	 *
+	 * This method corresponds roughly to GetUIObjectOf().
+	 */
+	virtual ATL::CComPtr<IUnknown> folder_item_object(
+		HWND hwnd, REFIID riid, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl) = 0;
+
+	/**
+	 * The caller is asking for an IShellFolder handler for a subfolder.
+	 *
+	 * The pidl passed to this method will be the @b absolute PIDL that
+	 * the folder is root.  It may not end in one of our own PIDLs if this
+	 * is the root folder of our own hierarchy.  In that case it will be
+	 * the PIDL of the external hosting folder such as 'Desktop' or
+	 * 'My Computer'
+	 *
+	 * Respond to the request by creating an instance of the subfolder
+	 * handler object (which may well be another instance of your folder
+	 * class) and initialise it with the PIDL.
+	 *
+	 * This method corresonds to BindToFolder() where the item is directly
+	 * in the current folder (not a grandchild).
+	 */
+	virtual ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl)
+		const = 0;
+
 
 private:
-	PIDLIST_ABSOLUTE m_pidlRoot;
+	ATL::CComPtr<IUnknown> _delegate_object_lookup_to_subfolder(
+		HWND hwnd, REFIID riid, PCUITEMID_CHILD pidl);
+
+	PIDLIST_ABSOLUTE m_root_pidl;
 };
+
+}}} // namespace swish::shell_folder::folder

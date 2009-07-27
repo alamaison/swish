@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "swish/CoFactory.hpp" // CoObject factory mixin
+
 #include "swish/atl.hpp"  // Common ATL setup
 #include <atlstr.h>     // CString
 
@@ -36,7 +38,8 @@
 class ATL_NO_VTABLE CIconExtractor :
 	public IExtractIconW,
 	public IExtractIconA,
-	public ATL::CComObjectRoot
+	public ATL::CComObjectRoot,
+	public swish::CCoFactory<CIconExtractor>
 {
 public:
 
@@ -47,6 +50,8 @@ public:
 
 	CIconExtractor() : m_fForFolder(false) {}
 
+	static ATL::CComPtr<IExtractIcon> Create(
+		PCTSTR szFilename, bool fIsFolder);
 	void Initialize(PCTSTR szFilename, bool fIsFolder);
 
 	// IExtractIconW

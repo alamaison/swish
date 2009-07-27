@@ -1,7 +1,7 @@
 /**
     @file
 
-	Explorer folder to handle SFTP connection items.
+    Explorer folder to handle SFTP connection items.
 
     @if licence
 
@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "Folder.h"              // Superclass
+#include "SwishFolder.hpp"       // Superclass
 
 #include "resource.h"            // main symbols
 #include "swish.h"               // For CHostFolder UUID
@@ -42,29 +42,36 @@
 
 class ATL_NO_VTABLE CHostFolder :
 	public IExtractIcon,
-	public CFolder
+	public swish::shell_folder::folder::CSwishFolder
 {
 public:
 
 	BEGIN_COM_MAP(CHostFolder)
 		COM_INTERFACE_ENTRY(IExtractIcon)
-		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
 	END_COM_MAP()
 
 protected:
 
-	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
-	__override CLSID GetCLSID() const;
-	__override ATL::CComPtr<IShellFolder> CreateSubfolder(
-		PCIDLIST_ABSOLUTE pidlRoot)
-		const throw(...);
-	__override int ComparePIDLs(
-		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2,
-		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
-		const throw(...);
+	CLSID clsid() const;
 
-	__override ATL::CComPtr<IShellFolderViewCB> GetFolderViewCallback()
-		const throw(...);
+	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
+	int compare_pidls(
+		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
+		int column, bool compare_all_fields, bool canonical) const;
+
+	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
+
+	ATL::CComPtr<IExtractIconW> extract_icon_w(
+		HWND hwnd, PCUITEMID_CHILD pidl);
+	ATL::CComPtr<IQueryAssociations> query_associations(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+	ATL::CComPtr<IContextMenu> context_menu(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+	ATL::CComPtr<IDataObject> data_object(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+
+	ATL::CComPtr<IShellFolderViewCB> folder_view_callback(HWND hwnd);
 
 public: // IShellFolder methods
 
@@ -74,8 +81,6 @@ public: // IShellFolder methods
 		__deref_out_opt IEnumIDList **ppenumIDList);
 
 	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
-    STDMETHOD(GetUIObjectOf)
-		( HWND, UINT, PCUITEMID_CHILD_ARRAY, REFIID, LPUINT, void** );
 	IFACEMETHODIMP GetDisplayNameOf( 
 		__in PCUITEMID_CHILD pidl, __in SHGDNF uFlags, __out STRRET *pName);
 	IFACEMETHODIMP ParseDisplayName( 
@@ -87,7 +92,6 @@ public: // IShellFolder methods
         { return E_NOTIMPL; }
 
 	// IShellFolder2
-	STDMETHOD(GetDefaultColumn)( DWORD, ULONG *pSort, ULONG *pDisplay );
 	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );
 	STDMETHOD(GetDetailsEx)( PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, 
 							 VARIANT *pv );
@@ -125,8 +129,6 @@ private:
 	HRESULT OnMergeContextMenu(
 		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	// @}
-
-	HRESULT _FillDetailsVariant( PCWSTR szDetail, VARIANT *pv );
 };
 
 // Host column property IDs

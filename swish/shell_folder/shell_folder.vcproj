@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -94,7 +94,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -166,7 +166,7 @@
 		<Configuration
 			Name="PREfast|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -381,6 +381,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SwishFolder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\UserInteraction.cpp"
 				>
 			</File>
@@ -499,6 +503,10 @@
 			</File>
 			<File
 				RelativePath=".\ShellDataObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SwishFolder.hpp"
 				>
 			</File>
 			<File

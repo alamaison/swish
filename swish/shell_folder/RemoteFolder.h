@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Folder.h"             // Superclass
+#include "SwishFolder.hpp"      // Superclass
 
 #include "resource.h"           // main symbols
 #include "swish.h"              // For CRemoteFolder UUID
@@ -32,14 +32,14 @@
 #include <vector>
 
 class ATL_NO_VTABLE CRemoteFolder :
-	public CFolder,
+	public swish::shell_folder::folder::CSwishFolder,
 	private swish::CCoFactory<CRemoteFolder>
 {
 public:
 
 	BEGIN_COM_MAP(CRemoteFolder)
 		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
 	END_COM_MAP()
 
 	/*
@@ -72,26 +72,32 @@ public:
 
 protected:
 
-	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
-	__override CLSID GetCLSID() const;
-	__override ATL::CComPtr<IShellFolder> CreateSubfolder(
-		PCIDLIST_ABSOLUTE pidlRoot)
-		const throw(...);
-	__override int ComparePIDLs(
-		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2,
-		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
-		const throw(...);
+	CLSID clsid() const;
 
-	__override ATL::CComPtr<IShellFolderViewCB> GetFolderViewCallback()
-		const throw(...);
+	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
+	int compare_pidls(
+		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
+		int column, bool compare_all_fields, bool canonical) const;
+
+	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
+
+	ATL::CComPtr<IExtractIconW> extract_icon_w(
+		HWND hwnd, PCUITEMID_CHILD pidl);
+	ATL::CComPtr<IQueryAssociations> query_associations(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+	ATL::CComPtr<IContextMenu> context_menu(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+	ATL::CComPtr<IDataObject> data_object(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+	ATL::CComPtr<IDropTarget> drop_target(HWND hwnd);
+
+	ATL::CComPtr<IShellFolderViewCB> folder_view_callback(HWND hwnd);
 
 public:
 
 	// IShellFolder
 	STDMETHOD(EnumObjects)( HWND, SHCONTF, IEnumIDList** );
 	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
-    STDMETHOD(GetUIObjectOf)
-		( HWND, UINT, PCUITEMID_CHILD_ARRAY, REFIID, LPUINT, void** );
 	IFACEMETHODIMP GetDisplayNameOf( 
 		__in PCUITEMID_CHILD pidl, __in SHGDNF uFlags, __out STRRET *pName);
 	IFACEMETHODIMP ParseDisplayName( 
