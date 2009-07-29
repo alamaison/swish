@@ -53,15 +53,15 @@ CComPtr<IUnknown> CSwishFolder::folder_object(HWND hwnd, REFIID riid)
 
 	if (riid == __uuidof(IShellView))
 	{
-		object = folder_view(hwnd).p;
+		object = folder_view(hwnd);
 	}
 	else if (riid == __uuidof(IShellDetails))
 	{
-		object = shell_details(hwnd).p;
+		object = shell_details(hwnd);
 	}
 	else if (riid == __uuidof(IDropTarget))
 	{
-		object = drop_target(hwnd).p;
+		object = drop_target(hwnd);
 	}
 
 	// QueryInterface could fail at any point above and it *doesn't* throw
@@ -96,23 +96,23 @@ CComPtr<IUnknown> CSwishFolder::folder_item_object(
 	}
 	else if (riid == __uuidof(IDataObject))
 	{
-		object = data_object(hwnd, cpidl, apidl).p;
+		object = data_object(hwnd, cpidl, apidl);
 	}
 	else if (riid == __uuidof(IQueryAssociations))
 	{
-		object = query_associations(hwnd, cpidl, apidl).p;
+		object = query_associations(hwnd, cpidl, apidl);
 	}
 	else if (riid == __uuidof(IExtractIconW))
 	{
 		assert(cpidl == 1);
 		if (cpidl == 1)
-			object = extract_icon_w(hwnd, apidl[0]).p;
+			object = extract_icon_w(hwnd, apidl[0]);
 	}
 	else if (riid == __uuidof(IExtractIconA))
 	{
 		assert(cpidl == 1);
 		if (cpidl == 1)
-			object = extract_icon_a(hwnd, apidl[0]).p;
+			object = extract_icon_a(hwnd, apidl[0]);
 	}
 	
 	// QueryInterface could fail at any point above and it *doesn't* throw

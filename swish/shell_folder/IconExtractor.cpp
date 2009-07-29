@@ -24,7 +24,7 @@
 
 using ATL::CComPtr;
 
-/*static*/ CComPtr<IExtractIcon> CIconExtractor::Create(
+/*static*/ CComPtr<IExtractIconW> CIconExtractor::Create(
 	PCTSTR szFilename, bool fIsFolder)
 {
 	CComPtr<CIconExtractor> sp = CIconExtractor::CreateCoObject();

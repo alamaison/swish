@@ -41,13 +41,13 @@
 #include <vector>
 
 class ATL_NO_VTABLE CHostFolder :
-	public IExtractIcon,
+	public IExtractIconW,
 	public swish::shell_folder::folder::CSwishFolder
 {
 public:
 
 	BEGIN_COM_MAP(CHostFolder)
-		COM_INTERFACE_ENTRY(IExtractIcon)
+		COM_INTERFACE_ENTRY(IExtractIconW)
 		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
 	END_COM_MAP()
 
@@ -97,7 +97,7 @@ public: // IShellFolder methods
 							 VARIANT *pv );
 	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
 
-	// IExtractIcon
+	// IExtractIconW
 	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
 						HICON *phiconSmall, UINT nIconSize );
 	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 

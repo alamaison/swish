@@ -377,7 +377,7 @@ STDMETHODIMP CFolder::CreateViewObject(HWND hwnd, REFIID riid, void **ppv)
 	try
 	{
 		CComPtr<IUnknown> object = folder_object(hwnd, riid);
-		*ppv = object.Detach();
+		return object->QueryInterface(riid, ppv);
 	}
 	catchCom()
 	return S_OK;
@@ -453,7 +453,7 @@ STDMETHODIMP CFolder::GetUIObjectOf(
 			}
 		}
 
-		*ppv = object.Detach();
+		return object->QueryInterface(riid, ppv);
 	}
 	catchCom()
 	return S_OK;

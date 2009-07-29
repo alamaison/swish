@@ -50,7 +50,7 @@ public:
 
 	CIconExtractor() : m_fForFolder(false) {}
 
-	static ATL::CComPtr<IExtractIcon> Create(
+	static ATL::CComPtr<IExtractIconW> Create(
 		PCTSTR szFilename, bool fIsFolder);
 	void Initialize(PCTSTR szFilename, bool fIsFolder);
 
