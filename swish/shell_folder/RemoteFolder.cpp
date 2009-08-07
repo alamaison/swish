@@ -747,13 +747,13 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 
 	try
 	{
-		CShellDataObject shdo(pDataObj);
+		ShellDataObject shdo(pDataObj);
 		CAbsolutePidl pidlFolder = shdo.GetParentFolder();
 		ATLASSERT(::ILIsEqual(root_pidl(), pidlFolder));
 
 		// Build up a list of PIDLs for all the items to be deleted
 		RemotePidls vecDeathRow;
-		for (UINT i = 0; i < shdo.GetPidlCount(); i++)
+		for (UINT i = 0; i < shdo.pidl_count(); i++)
 		{
 			CRemoteItemList pidlFile = shdo.GetRelativeFile(i);
 

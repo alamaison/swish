@@ -93,7 +93,7 @@ namespace { // private
 
 		PIDLIST_ABSOLUTE pidl;
 		SFGAOF sfgao;
-		hr = ::SHParseDisplayName(
+		hr = SHParseDisplayName(
 			local.file_string().c_str(), NULL, &pidl, 0, &sfgao);
 		if (SUCCEEDED(hr))
 		{

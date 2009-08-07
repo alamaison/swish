@@ -145,6 +145,19 @@ private:
 class CStorageMedium : public STGMEDIUM
 {
 public:
+	CStorageMedium() throw()
+	{
+		tymed = TYMED_NULL;
+		hBitmap = 0;
+		hMetaFilePict = 0;
+		hEnhMetaFile = 0;
+		hGlobal = 0;
+		lpszFileName = NULL;
+		pstm = NULL;
+		pstg = NULL;
+		pUnkForRelease = NULL;
+	}
+
 	~CStorageMedium() throw()
 	{
 		::ReleaseStgMedium(this);

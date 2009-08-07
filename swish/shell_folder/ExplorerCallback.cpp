@@ -289,8 +289,8 @@ bool CExplorerCallback::_ShouldEnableRemove()
 {
 	try
 	{
-		CShellDataObject data_object = _GetSelectionDataObject();
-		return data_object.GetPidlCount() == 1;
+		ShellDataObject data_object = _GetSelectionDataObject();
+		return data_object.pidl_count() == 1;
 	}
 	catch (com_exception)
 	{
@@ -304,8 +304,8 @@ bool CExplorerCallback::_ShouldEnableRemove()
  */
 CAbsolutePidl CExplorerCallback::_GetSelectedItem()
 {
-	CShellDataObject data_object = _GetSelectionDataObject();
-	if (data_object.GetPidlCount() != 1)
+	ShellDataObject data_object = _GetSelectionDataObject();
+	if (data_object.pidl_count() != 1)
 		AtlThrow(E_FAIL);
 	return data_object.GetFile(0);
 }

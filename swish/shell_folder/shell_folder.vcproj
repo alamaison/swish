@@ -418,6 +418,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GlobalLocker.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.hpp"
 				>
 			</File>

@@ -57,8 +57,8 @@ namespace { // private
 	{
 		if (pdo)
 		{
-			CShellDataObject data_object(pdo);
-			if (data_object.GetPidlCount() > 0)
+			ShellDataObject data_object(pdo);
+			if (data_object.pidl_count() > 0)
 			{
 				if (allowed_effects & DROPEFFECT_COPY)
 					return DROPEFFECT_COPY;
@@ -120,8 +120,8 @@ namespace { // private
 	{
 		HRESULT hr;
 
-		CShellDataObject data_object(pdo);
-		for (unsigned int i = 0; i < data_object.GetPidlCount(); ++i)
+		ShellDataObject data_object(pdo);
+		for (unsigned int i = 0; i < data_object.pidl_count(); ++i)
 		{
 			CAbsolutePidl pidl = data_object.GetFile(i);
 			

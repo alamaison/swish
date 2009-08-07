@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\global_lock_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\module.cpp"
 				>
 			</File>
@@ -208,6 +212,10 @@
 			</File>
 			<File
 				RelativePath=".\pool_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shell_data_object_test.cpp"
 				>
 			</File>
 			<File
