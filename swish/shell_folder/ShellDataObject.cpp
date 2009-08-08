@@ -83,7 +83,7 @@ namespace { // private
 		};
 
 		StorageMedium medium;
-		HRESULT hr = pdo->GetData(&fetc, &medium);
+		HRESULT hr = pdo->GetData(&fetc, medium.out());
 		if (FAILED(hr))
 			throw com_exception(hr);
 

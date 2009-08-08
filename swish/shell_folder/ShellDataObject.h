@@ -53,8 +53,11 @@ public:
 	 *
 	 * This should only be used on an empty STGMEDIUM as modifying a
 	 * STGMEDIUM with allocated resources can lead to memory leaks.
+	 *
+	 * @todo  Instead of asserting on non-empty, release previous to make 
+	 *        empty.
 	 */
-	STGMEDIUM* operator&()
+	STGMEDIUM* out()
 	{
 		assert(empty() || "Taking address of non-empty STGMEDIUM");
 		return &m_medium;
