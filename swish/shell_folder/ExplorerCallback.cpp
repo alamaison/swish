@@ -27,7 +27,7 @@
 #include "ExplorerCallback.h"
 
 #include "NewConnDialog.h"
-#include "ShellDataObject.h"
+#include "data_object/ShellDataObject.hpp"  // ShellDataObject
 #include "Registry.h"
 #include "host_management.hpp"
 #include "swish/debug.hpp"
@@ -50,6 +50,7 @@ using swish::host_management::AddConnectionToRegistry;
 using swish::host_management::RemoveConnectionFromRegistry;
 using swish::host_management::ConnectionExists;
 using swish::exception::com_exception;
+using swish::shell_folder::data_object::ShellDataObject;
 
 #define SFVM_SELECTIONCHANGED 8
 

@@ -26,7 +26,7 @@
 
 #include "DropTarget.hpp"
 
-#include "ShellDataObject.h"  // CSftpDataObject
+#include "data_object/ShellDataObject.hpp"  // ShellDataObject
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
 
@@ -35,6 +35,7 @@
 
 #include <string>
 
+using swish::shell_folder::data_object::ShellDataObject;
 using swish::exception::com_exception;
 
 using ATL::CComPtr;

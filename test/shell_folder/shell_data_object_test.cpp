@@ -26,7 +26,7 @@
 
 #include "swish/atl.hpp"
 
-#include "swish/shell_folder/ShellDataObject.h"  // Test subject
+#include "swish/shell_folder/data_object/ShellDataObject.hpp"  // Test subject
 #include "swish/exception.hpp"  // com_exception
 
 #include "test/common_boost/fixtures.hpp"
@@ -34,6 +34,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 
+using swish::shell_folder::data_object::ShellDataObject;
+using swish::shell_folder::data_object::StorageMedium;
 using swish::exception::com_exception;
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;

@@ -373,10 +373,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\ShellDataObject.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Swish.idl"
 				>
 			</File>
@@ -415,10 +411,6 @@
 			</File>
 			<File
 				RelativePath=".\Folder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\GlobalLocker.hpp"
 				>
 			</File>
 			<File
@@ -503,10 +495,6 @@
 			</File>
 			<File
 				RelativePath=".\SftpDirectory.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShellDataObject.h"
 				>
 			</File>
 			<File
@@ -693,6 +681,32 @@
 					/>
 				</FileConfiguration>
 			</File>
+		</Filter>
+		<Filter
+			Name="data_object"
+			>
+			<Filter
+				Name="Header Files"
+				Filter="h;hpp;hxx;hm;inl;inc"
+				>
+				<File
+					RelativePath=".\data_object\GlobalLocker.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\data_object\ShellDataObject.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+				>
+				<File
+					RelativePath=".\data_object\ShellDataObject.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

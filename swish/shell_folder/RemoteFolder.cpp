@@ -31,7 +31,7 @@
 #include "IconExtractor.h"
 #include "ExplorerCallback.h"      // Interaction with Explorer window
 #include "UserInteraction.h"       // Implementation of ISftpConsumer
-#include "ShellDataObject.h"
+#include "data_object/ShellDataObject.hpp"  // ShellDataObject
 #include "DropTarget.hpp"          // CDropTarget
 #include "Registry.h"
 #include "properties/properties.h" // File properties handler
@@ -42,6 +42,7 @@
 #include <string>
 
 using swish::shell_folder::CDropTarget;
+using swish::shell_folder::data_object::ShellDataObject;
 using swish::exception::com_exception;
 
 using ATL::CComObject;

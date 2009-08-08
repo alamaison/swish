@@ -1,6 +1,11 @@
-/*  Wrapper class for Shell Data Objects containing lists of PIDLs.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Classes to handle the typical Explorer 'Shell DataObject'.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,13 +20,19 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #pragma once
 
-#include "Pidl.h"
+#include "swish/shell_folder/Pidl.h"
 
 #include "swish/exception.hpp"  // com_exception
+
+namespace swish {
+namespace shell_folder {
+namespace data_object {
 
 class StorageMedium
 {
@@ -84,7 +95,6 @@ private:
 	STGMEDIUM m_medium;
 };
 
-
 class ShellDataObject
 {
 public:
@@ -100,3 +110,5 @@ public:
 private:
 	ATL::CComPtr<IDataObject> m_spDataObj;
 };
+
+}}} // namespace swish::shell_folder::data_object

@@ -1,6 +1,11 @@
-/*  Wrapper class for Shell Data Objects containing lists of PIDLs.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Classes to handle the typical Explorer 'Shell DataObject'.
+
+    @if licence
+
+    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,20 +20,24 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
-#include "ShellDataObject.h"
+#include "ShellDataObject.hpp"
 
-#include "DataObject.h"
-
+#include "GlobalLocker.hpp" // GlobalLocker
 #include "swish/exception.hpp"  // com_exception
-#include "swish/shell_folder/GlobalLocker.hpp" // GlobalLocker
 
 #include "boost/shared_ptr.hpp"  // share_ptr
 
 using swish::exception::com_exception;
 using swish::shell_folder::data_object::GlobalLocker;
 using boost::shared_ptr;
+
+namespace swish {
+namespace shell_folder {
+namespace data_object {
 
 namespace { // private
 
@@ -92,6 +101,7 @@ namespace { // private
 	}
 
 #pragma region CIDA Accessors
+
 	/**
 	 * Return a pointer to the ith PIDL in the CIDA.
 	 */
@@ -119,6 +129,7 @@ namespace { // private
 	{
 		return pidl_from_cida(cida, i + 1);
 	}
+
 #pragma endregion
 }
 
@@ -180,3 +191,5 @@ UINT ShellDataObject::pidl_count()
 	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_spDataObj));
 	return global_cida.get().cidl;
 }
+
+}}} // namespace swish::shell_folder::data_object
