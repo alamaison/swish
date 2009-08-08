@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -106,7 +106,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -194,7 +194,7 @@
 		<Configuration
 			Name="PREfast|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
