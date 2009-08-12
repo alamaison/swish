@@ -12,12 +12,14 @@
 
 #include "swish/provider/SftpStream.hpp"
 #include "swish/provider/SessionFactory.hpp"
+#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
+
+#include <boost/shared_ptr.hpp>  // shared_ptr
 
 #include <memory>  // auto_ptr
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
-
 using namespace ATL;
+using boost::shared_ptr;
 using std::auto_ptr;
 
 static const char *szTestFile = 
@@ -94,7 +96,7 @@ protected:
 
 	void testCreateUsingFactory()
 	{
-		auto_ptr<CSession> session = _CreateSession();
+		shared_ptr<CSession> session(_CreateSession());
 		session->Connect(config.GetHost(), config.GetPort());
 
 		CComPtr<CSftpStream> pStream = pStream->Create(
@@ -473,7 +475,7 @@ private:
 
 	CComPtr<CMockSftpConsumer> m_spCoConsumer;
 	CComPtr<ISftpConsumer> m_spConsumer;
-	auto_ptr<CSession> m_spSession;
+	shared_ptr<CSession> m_spSession;
 
 	auto_ptr<CSession> _CreateSession()
 	{

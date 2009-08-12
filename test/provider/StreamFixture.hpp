@@ -42,6 +42,8 @@
 #include "swish/provider/SessionFactory.hpp"  // CSessionFactory
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
+#include <boost/shared_ptr.hpp>  // shared_ptr
+
 #include <memory>  // auto_ptr
 
 namespace test {
@@ -81,7 +83,7 @@ public:
 	ATL::CComPtr<IStream> GetStream(
 		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
 	{
-		std::auto_ptr<CSession> session(_GetSession());
+		boost::shared_ptr<CSession> session(_GetSession());
 
 		ATL::CComPtr<IStream> stream = CSftpStream::Create(
 			session, m_remote_path, flags);
@@ -93,15 +95,15 @@ protected:
 	/**
 	 * Return a new CSession instance connected to the fixture SSH server.
 	 */
-	std::auto_ptr<CSession> _GetSession()
+	boost::shared_ptr<CSession> _GetSession()
 	{
 		ATL::CComPtr<test::common_boost::CConsumerStub> spConsumer = 
 			test::common_boost::CConsumerStub::CreateCoObject();
 		spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
-		return CSessionFactory::CreateSftpSession(
+		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
 			swish::utils::Utf8StringToWideString(GetHost()).c_str(),
-			GetPort(), swish::utils::GetCurrentUser().c_str(), spConsumer);
+			GetPort(), swish::utils::GetCurrentUser().c_str(), spConsumer));
 	}
 };
 
