@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -89,7 +89,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
