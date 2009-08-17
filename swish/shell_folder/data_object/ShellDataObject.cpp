@@ -43,6 +43,10 @@ namespace { // private
 
 	const CLIPFORMAT CF_SHELLIDLIST = 
 		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_SHELLIDLIST));
+	const CLIPFORMAT CF_FILEDESCRIPTORA = 
+		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORA));
+	const CLIPFORMAT CF_FILEDESCRIPTORW = 
+		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW));
 
 	/**
 	 * Lifetime-management class for a CIDA held in global memory in a
@@ -147,11 +151,79 @@ ShellDataObject::~ShellDataObject()
  *
  * This must not call GetData() on the data object in order to make this
  * operation cheap and to prevent premature rendering of delay-rendered data.
+ * We require the format to be in an HGLOBAL for a positive result.  No other
+ * storage medium is allowed.
  */
 bool ShellDataObject::has_pidl_format() const
 {
 	FORMATETC fetc = {
 		CF_SHELLIDLIST, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+	};
+
+	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+}
+
+/**
+ * Does the data object have the CF_HDROP format?
+ *
+ * This must not call GetData() on the data object in order to make this
+ * operation cheap and to prevent premature rendering of delay-rendered data.
+ * We require the format to be in an HGLOBAL for a positive result.  No other
+ * storage medium is allowed.
+ */
+bool ShellDataObject::has_hdrop_format() const
+{
+	FORMATETC fetc = {
+		CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+	};
+
+	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+}
+
+/**
+ * Does the data object have a CFSTR_FILEDESCRIPTORA or CFSTR_FILEDESCRIPTORW 
+ * format?
+ *
+ * This must not call GetData() on the data object in order to make this
+ * operation cheap and to prevent premature rendering of delay-rendered data.
+ * We require the format to be in an HGLOBAL for a positive result.  No other
+ * storage medium is allowed.
+ */
+bool ShellDataObject::has_file_group_descriptor_format() const
+{
+	return has_unicode_file_group_descriptor_format() || 
+		has_ansi_file_group_descriptor_format();
+}
+
+/**
+ * Does the data object have the CFSTR_FILEDESCRIPTORW format?
+ *
+ * This must not call GetData() on the data object in order to make this
+ * operation cheap and to prevent premature rendering of delay-rendered data.
+ * We require the format to be in an HGLOBAL for a positive result.  No other
+ * storage medium is allowed.
+ */
+bool ShellDataObject::has_unicode_file_group_descriptor_format() const
+{
+	FORMATETC fetc = {
+		CF_FILEDESCRIPTORW, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+	};
+
+	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+}
+
+/**
+ * Does the data object have the CFSTR_FILEDESCRIPTORA format?
+ *
+ * This must not call GetData() on the data object in order to make this
+ * operation cheap and to prevent premature rendering of delay-rendered data.
+ * We require the format to be in an HGLOBAL for a positive result.  No other
+ * storage medium is allowed.
+ */
+bool ShellDataObject::has_ansi_file_group_descriptor_format() const
+{
+	FORMATETC fetc = {
+		CF_FILEDESCRIPTORA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
 	};
 
 	return m_spDataObj->QueryGetData(&fetc) == S_OK;

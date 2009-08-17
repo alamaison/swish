@@ -106,6 +106,10 @@ public:
 	CAbsolutePidl GetFile(UINT i);
 	UINT pidl_count();
 	bool has_pidl_format() const;
+	bool has_hdrop_format() const;
+	bool has_file_group_descriptor_format() const;
+	bool has_unicode_file_group_descriptor_format() const;
+	bool has_ansi_file_group_descriptor_format() const;
 
 private:
 	ATL::CComPtr<IDataObject> m_spDataObj;
