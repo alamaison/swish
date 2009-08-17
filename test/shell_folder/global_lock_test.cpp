@@ -26,7 +26,7 @@
 
 #include "swish/atl.hpp"
 
-#include "swish/shell_folder/GlobalLocker.hpp"  // Test subject
+#include "swish/shell_folder/data_object/GlobalLocker.hpp"  // Test subject
 
 #include "test/common_boost/fixtures.hpp"
 
