@@ -7,7 +7,7 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\thirdparty\boost.process"
+		AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\thirdparty\boost.process;$(SolutionDir)\thirdparty\Comet\include"
 		PreprocessorDefinitions="WIN32;_WINDOWS;_WIN32_WINNT=_WIN32_WINNT_NT4;WIN32_LEAN_AND_MEAN;ISOLATION_AWARE_ENABLED;USING_PRECOMPILED_HEADERS"
 		UsePrecompiledHeader="2"
 		PrecompiledHeaderThrough="swish/pch.h"
