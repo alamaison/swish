@@ -373,6 +373,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\shell.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Swish.idl"
 				>
 			</File>
@@ -495,6 +499,10 @@
 			</File>
 			<File
 				RelativePath=".\SftpDirectory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shell.hpp"
 				>
 			</File>
 			<File

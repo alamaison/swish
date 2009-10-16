@@ -219,6 +219,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shell_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utils_test.cpp"
 				>
 			</File>
