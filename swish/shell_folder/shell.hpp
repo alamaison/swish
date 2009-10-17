@@ -108,8 +108,8 @@ boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
 template<typename It>
 comet::com_ptr<IDataObject> data_object_for_files(It begin, It end)
 {
-	std::vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
-	std::transform(begin, end, back_inserter(pidls), pidl_from_path);
+	std::vector<boost::shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
+	transform(begin, end, back_inserter(pidls), pidl_from_path);
 
 	return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
 }
