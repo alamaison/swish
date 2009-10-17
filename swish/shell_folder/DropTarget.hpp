@@ -85,4 +85,8 @@ private:
 	ATL::CComPtr<IDataObject> m_spDataObject;
 };
 
+void copy_data_to_provider(
+	IDataObject* pdo, ISftpProvider* pProvider, 
+	boost::filesystem::wpath remote_path);
+
 }} // namespace swish::shell_folder

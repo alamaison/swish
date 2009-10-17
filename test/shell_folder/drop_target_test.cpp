@@ -27,7 +27,7 @@
 #include "swish/atl.hpp"
 
 #include "swish/shell_folder/DropTarget.hpp"  // Test subject
-#include "swish/exception.hpp"  // com_exception
+#include "swish/shell_folder/shell.hpp"  // shell helper functions
 
 #include "test/shell_folder/ProviderFixture.hpp"  // ProviderFixture
 
@@ -38,112 +38,159 @@
 #include <shlobj.h>
 
 #include <string>
+#include <vector>
+#include <iterator>
+#include <algorithm>
 
 using swish::shell_folder::CDropTarget;
-using swish::exception::com_exception;
-
+using swish::shell_folder::copy_data_to_provider;
+using swish::shell_folder::data_object_for_files;
 using test::provider::ProviderFixture;
-
-using ATL::CComPtr;
-
+using comet::com_ptr;
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
-
+using boost::filesystem::ifstream;
+using boost::test_tools::predicate_result;
 using std::string;
+using std::vector;
+using std::istreambuf_iterator;
 
 namespace { // private
 
-	/**
-	 * Implementation of SHParseDisplayName() missing from pre-XP Windows.
-	 */
-	HRESULT SHParseDisplayName(
-		LPCWSTR pszName, IBindCtx* pbc, PIDLIST_ABSOLUTE* ppidl, 
-		SFGAOF sfgaoIn, SFGAOF* psfgaoOut)
-	{
-		IShellFolder* psfDesktop;
-		HRESULT hr = E_FAIL;
-		ULONG dwAttr = sfgaoIn;
-
-		if (!pszName || !ppidl || !psfgaoOut)
-			return E_INVALIDARG;
-
-		hr = ::SHGetDesktopFolder(&psfDesktop);
-		if (FAILED(hr))
-			return hr;
-
-		hr = psfDesktop->ParseDisplayName(
-			NULL, pbc, const_cast<LPWSTR>(pszName), NULL, 
-			reinterpret_cast<PIDLIST_RELATIVE*>(ppidl), &dwAttr);
-
-		psfDesktop->Release();
-
-		if (SUCCEEDED(hr))
-			*psfgaoOut = dwAttr;
-
-		return hr;
-	}
-
-	/**
-	 * Return an IDataObject representing a file on the local filesystem.
-	 */
-	CComPtr<IDataObject> GetDataObjectOfLocalFile(wpath local)
-	{
-		HRESULT hr;
-		CComPtr<IDataObject> spdo;
-
-		PIDLIST_ABSOLUTE pidl;
-		SFGAOF sfgao;
-		hr = SHParseDisplayName(
-			local.file_string().c_str(), NULL, &pidl, 0, &sfgao);
-		if (SUCCEEDED(hr))
-		{
-			CComPtr<IShellFolder> spsf;
-			PCUITEMID_CHILD pidlChild; // TODO: free this?
-			hr = ::SHBindToParent(
-				pidl, __uuidof(IShellFolder), (void**)&spsf, &pidlChild);
-			if (SUCCEEDED(hr))
-			{
-				hr = spsf->GetUIObjectOf(
-					NULL, 1, &pidlChild, __uuidof(IDataObject), NULL, 
-					(void**)&spdo);
-			}
-
-			::CoTaskMemFree(pidl);
-		}
-
-		if (FAILED(hr))
-			throw com_exception(hr);
-
-		return spdo;
-	}
-
 	const string TEST_DATA = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
+
+	
+	/**
+	 * Write some data to a collection of local files and return them in
+	 * a DataObject created by the shell.
+	 * 
+	 * The files must all be in the same filesystem folder.
+	 */
+	template<typename It>
+	com_ptr<IDataObject> create_multifile_data_object(It begin, It end)
+	{
+		for_each(begin, end, fill_file);
+		return data_object_for_files(begin, end);
+	}
 
 	/**
 	 * Write some data to a local file and return it as a DataObject.
 	 */
-	CComPtr<IDataObject> GetTestDataObject(wpath local)
+	com_ptr<IDataObject> create_data_object(const wpath& local)
 	{
-		ofstream test_stream(local);
-		test_stream << TEST_DATA;
-		return GetDataObjectOfLocalFile(local);
+		return create_multifile_data_object(&local, &local + 1);
+	}
+
+	/**
+	 * Fill a file with the test data.
+	 */
+	void fill_file(const wpath& file)
+	{
+		ofstream stream(file);
+		stream << TEST_DATA;
+	}
+	
+	/**
+	 * Check if a file's contents is our test data.
+	 */
+	predicate_result file_contents_correct(const wpath& file)
+	{
+		ifstream stream(file);
+		string contents = string(
+			istreambuf_iterator<char>(stream),
+			istreambuf_iterator<char>());
+		BOOST_REQUIRE_EQUAL(contents, TEST_DATA);
+
+		if (contents != TEST_DATA)
+		{
+			predicate_result res(false);
+			res.message()
+				<< "File contents is not as expected [" << contents
+				<< " != " << TEST_DATA << "]";
+			return res;
+		}
+
+		return true;
 	}
 }
 
-BOOST_FIXTURE_TEST_SUITE(DropTarget, ProviderFixture)
+#pragma region SFTP folder Drop Target tests
+BOOST_FIXTURE_TEST_SUITE(drop_target_tests, ProviderFixture)
 
 /**
  * Create an instance.
  */
 BOOST_AUTO_TEST_CASE( create )
 {
-	CComPtr<ISftpProvider> spProvider = Provider();
-	BOOST_REQUIRE(spProvider);
+	com_ptr<ISftpProvider> provider = Provider();
+	BOOST_REQUIRE(provider);
 
-	CComPtr<IDropTarget> sp = CDropTarget::Create(
-		spProvider, ToRemotePath(Sandbox()));
+	com_ptr<IDropTarget> sp = CDropTarget::Create(
+		provider.in(), ToRemotePath(Sandbox()));
 	BOOST_REQUIRE(sp);
 }
+
+#pragma region DataObject copy tests
+BOOST_FIXTURE_TEST_SUITE(drop_target_copy_tests, ProviderFixture)
+
+/**
+ * Copy single regular file.
+ *
+ * Test our ability to handle a DataObject produced by the shell for a 
+ * single, regular file (real file in the filesystem).
+ */
+BOOST_AUTO_TEST_CASE( copy_single )
+{
+	wpath local = NewFileInSandbox();
+	com_ptr<IDataObject> spdo = create_data_object(local);
+
+	wpath destination = Sandbox() / L"copy-destination";
+	create_directory(destination);
+
+	copy_data_to_provider(spdo.in(), Provider(), ToRemotePath(destination));
+
+	wpath expected = destination / local.filename();
+
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
+}
+
+/**
+ * Copy several regular files.
+ *
+ * Test our ability to handle a DataObject produced by the shell for
+ * more than one regular file (real files in the filesystem).
+ */
+BOOST_AUTO_TEST_CASE( copy_many )
+{
+	vector<wpath> locals;
+	locals.push_back(NewFileInSandbox());
+	locals.push_back(NewFileInSandbox());
+	locals.push_back(NewFileInSandbox());
+
+	com_ptr<IDataObject> spdo = create_multifile_data_object(
+		locals.begin(), locals.end());
+
+	wpath destination = Sandbox() / L"copy-destination";
+	create_directory(destination);
+
+	copy_data_to_provider(spdo.in(), Provider(), ToRemotePath(destination));
+
+	vector<wpath>::const_iterator it;
+	for (it = locals.begin(); it != locals.end(); ++it)
+	{
+		wpath expected = destination / (*it).filename();
+
+		BOOST_REQUIRE(exists(expected));
+		BOOST_REQUIRE(file_contents_correct(expected));
+	}
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+#pragma endregion
+
+#pragma region Drag-n-Drop behaviour tests
+BOOST_FIXTURE_TEST_SUITE(drop_target_dnd_tests, ProviderFixture)
 
 /**
  * Drag enter.  
@@ -155,14 +202,14 @@ BOOST_AUTO_TEST_CASE( create )
 BOOST_AUTO_TEST_CASE( drag_enter )
 {
 	wpath local = NewFileInSandbox();
-	CComPtr<IDataObject> spdo = GetTestDataObject(local);
+	com_ptr<IDataObject> spdo = create_data_object(local);
 
-	CComPtr<IDropTarget> spdt = CDropTarget::Create(
+	com_ptr<IDropTarget> spdt = CDropTarget::Create(
 		Provider(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_LINK;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo, MK_LBUTTON, pt, &dwEffect));
+	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 }
 
@@ -176,14 +223,14 @@ BOOST_AUTO_TEST_CASE( drag_enter )
 BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 {
 	wpath local = NewFileInSandbox();
-	CComPtr<IDataObject> spdo = GetTestDataObject(local);
+	com_ptr<IDataObject> spdo = create_data_object(local);
 
-	CComPtr<IDropTarget> spdt = CDropTarget::Create(
+	com_ptr<IDropTarget> spdt = CDropTarget::Create(
 		Provider(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_LINK;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo, MK_LBUTTON, pt, &dwEffect));
+	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 }
 
@@ -200,16 +247,16 @@ BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 BOOST_AUTO_TEST_CASE( drag_over )
 {
 	wpath local = NewFileInSandbox();
-	CComPtr<IDataObject> spdo = GetTestDataObject(local);
+	com_ptr<IDataObject> spdo = create_data_object(local);
 
-	CComPtr<IDropTarget> spdt = CDropTarget::Create(
+	com_ptr<IDropTarget> spdt = CDropTarget::Create(
 		Provider(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 
 	// Do enter with link which should be declined (DROPEFFECT_NONE)
 	DWORD dwEffect = DROPEFFECT_LINK;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo, MK_LBUTTON, pt, &dwEffect));
+	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 
 	// Change request to copy which sould be accepted
@@ -229,16 +276,16 @@ BOOST_AUTO_TEST_CASE( drag_over )
 BOOST_AUTO_TEST_CASE( drag_leave )
 {
 	wpath local = NewFileInSandbox();
-	CComPtr<IDataObject> spdo = GetTestDataObject(local);
+	com_ptr<IDataObject> spdo = create_data_object(local);
 
-	CComPtr<IDropTarget> spdt = CDropTarget::Create(
+	com_ptr<IDropTarget> spdt = CDropTarget::Create(
 		Provider(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 
 	// Do enter with copy which sould be accepted
 	DWORD dwEffect = DROPEFFECT_COPY;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo, MK_LBUTTON, pt, &dwEffect));
+	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
 	// Continue drag
@@ -270,15 +317,15 @@ BOOST_AUTO_TEST_CASE( drop )
 	wpath drop_target_directory = Sandbox() / L"drop-target";
 	create_directory(drop_target_directory);
 
-	CComPtr<IDataObject> spdo = GetTestDataObject(local);
-	CComPtr<IDropTarget> spdt = CDropTarget::Create(
+	com_ptr<IDataObject> spdo = create_data_object(local);
+	com_ptr<IDropTarget> spdt = CDropTarget::Create(
 		Provider(), ToRemotePath(drop_target_directory));
 
 	POINTL pt = {0, 0};
 
 	// Do enter with copy which sould be accepted
 	DWORD dwEffect = DROPEFFECT_COPY;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo, MK_LBUTTON, pt, &dwEffect));
+	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
 	// Continue drag
@@ -286,7 +333,7 @@ BOOST_AUTO_TEST_CASE( drop )
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
 	// Drop onto DropTarget
-	BOOST_REQUIRE_OK(spdt->Drop(spdo, MK_LBUTTON, pt, &dwEffect));
+	BOOST_REQUIRE_OK(spdt->Drop(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
 	// Decline any further queries until next DragEnter()
@@ -295,3 +342,7 @@ BOOST_AUTO_TEST_CASE( drop )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+#pragma endregion
+
+BOOST_AUTO_TEST_SUITE_END()
+#pragma endregion

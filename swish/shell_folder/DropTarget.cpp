@@ -107,61 +107,61 @@ namespace { // private
 		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
 		return name.get();
 	}
-
-	/**
-	 * Copy the items in the DataObject to the remote target.
-	 *
-	 * @param pdo  IDataObject holding the items to be copied.
-	 * @param pProvider  SFTP connection to copy data over.
-	 * @param remote_path  Path on the target filesystem to copy items into.
-	 *                     This must be a path to a @b directory.
-	 */
-	void copy_data_to_provider(
-		IDataObject* pdo, ISftpProvider* pProvider, wpath remote_path)
-	{
-		HRESULT hr;
-
-		ShellDataObject data_object(pdo);
-		for (unsigned int i = 0; i < data_object.pidl_count(); ++i)
-		{
-			CAbsolutePidl pidl = data_object.GetFile(i);
-			
-			CComPtr<IStream> spStream = stream_from_shell_pidl(pidl);
-
-			wpath destination = remote_path / filename_from_stream(spStream);
-
-			CComBSTR bstrPath = destination.string().c_str();
-
-			CComPtr<IStream> spRemoteStream;
-			hr = pProvider->GetFile(bstrPath, &spRemoteStream);
-			if (FAILED(hr))
-				throw com_exception(hr);
-
-			LARGE_INTEGER move = {0};
-			hr = spStream->Seek(move, SEEK_SET, NULL);
-			if (FAILED(hr))
-				throw com_exception(hr);
-
-			hr = spRemoteStream->Seek(move, SEEK_SET, NULL);
-			if (FAILED(hr))
-				throw com_exception(hr);
-
-			ULARGE_INTEGER cbRead = {0};
-			ULARGE_INTEGER cbWritten = {0};
-			ULARGE_INTEGER cb;
-			cb.QuadPart = integer_traits<ULONGLONG>::const_max;
-			// TODO: make our own CopyTo that propagates errors
-			hr = spStream->CopyTo(
-				spRemoteStream, cb,	&cbRead, &cbWritten);
-			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
-			if (FAILED(hr))
-				throw com_exception(hr);
-		}
-	}
 }
 
 namespace swish {
 namespace shell_folder {
+
+/**
+ * Copy the items in the DataObject to the remote target.
+ *
+ * @param pdo  IDataObject holding the items to be copied.
+ * @param pProvider  SFTP connection to copy data over.
+ * @param remote_path  Path on the target filesystem to copy items into.
+ *                     This must be a path to a @b directory.
+ */
+void copy_data_to_provider(
+	IDataObject* pdo, ISftpProvider* pProvider, wpath remote_path)
+{
+	HRESULT hr;
+
+	ShellDataObject data_object(pdo);
+	for (unsigned int i = 0; i < data_object.pidl_count(); ++i)
+	{
+		CAbsolutePidl pidl = data_object.GetFile(i);
+		
+		CComPtr<IStream> spStream = stream_from_shell_pidl(pidl);
+
+		wpath destination = remote_path / filename_from_stream(spStream);
+
+		CComBSTR bstrPath = destination.string().c_str();
+
+		CComPtr<IStream> spRemoteStream;
+		hr = pProvider->GetFile(bstrPath, &spRemoteStream);
+		if (FAILED(hr))
+			throw com_exception(hr);
+
+		LARGE_INTEGER move = {0};
+		hr = spStream->Seek(move, SEEK_SET, NULL);
+		if (FAILED(hr))
+			throw com_exception(hr);
+
+		hr = spRemoteStream->Seek(move, SEEK_SET, NULL);
+		if (FAILED(hr))
+			throw com_exception(hr);
+
+		ULARGE_INTEGER cbRead = {0};
+		ULARGE_INTEGER cbWritten = {0};
+		ULARGE_INTEGER cb;
+		cb.QuadPart = integer_traits<ULONGLONG>::const_max;
+		// TODO: make our own CopyTo that propagates errors
+		hr = spStream->CopyTo(
+			spRemoteStream, cb,	&cbRead, &cbWritten);
+		assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
+		if (FAILED(hr))
+			throw com_exception(hr);
+	}
+}
 
 /**
  * Create an instance of the DropTarget initialised with a data provider.
