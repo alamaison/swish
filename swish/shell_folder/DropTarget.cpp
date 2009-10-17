@@ -32,6 +32,7 @@
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/integer_traits.hpp>
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <string>
 
@@ -83,13 +84,13 @@ namespace { // private
 			pidl, __uuidof(IShellFolder), reinterpret_cast<void**>(&spFolder),
 			&pidl_child);
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		CComPtr<IStream> spStream;
 		hr = spFolder->BindToStorage(pidl_child, NULL, __uuidof(IStream),
 			reinterpret_cast<void**>(&spStream));
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		return spStream;
 	}
@@ -102,7 +103,7 @@ namespace { // private
 		STATSTG statstg;
 		HRESULT hr = pstream->Stat(&statstg, STATFLAG_DEFAULT);
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
 		return name.get();
@@ -139,16 +140,16 @@ void copy_data_to_provider(
 		CComPtr<IStream> spRemoteStream;
 		hr = pProvider->GetFile(bstrPath, &spRemoteStream);
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		LARGE_INTEGER move = {0};
 		hr = spStream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		hr = spRemoteStream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		ULARGE_INTEGER cbRead = {0};
 		ULARGE_INTEGER cbWritten = {0};
@@ -159,7 +160,7 @@ void copy_data_to_provider(
 			spRemoteStream, cb,	&cbRead, &cbWritten);
 		assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 }
 
