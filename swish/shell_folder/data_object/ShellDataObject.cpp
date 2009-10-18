@@ -29,11 +29,13 @@
 #include "GlobalLocker.hpp" // GlobalLocker
 #include "swish/exception.hpp"  // com_exception
 
-#include "boost/shared_ptr.hpp"  // share_ptr
+#include <boost/shared_ptr.hpp>  // share_ptr
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
 using swish::shell_folder::data_object::GlobalLocker;
 using boost::shared_ptr;
+using comet::com_ptr;
 
 namespace swish {
 namespace shell_folder {
@@ -89,16 +91,17 @@ namespace { // private
 	/**
 	 * Return a STGMEDIUM with a list of PIDLs in global memory.
 	 */
-	StorageMedium cfstr_shellidlist_from_data_object(IDataObject* pdo)
+	StorageMedium cfstr_shellidlist_from_data_object(
+		const com_ptr<IDataObject> data_object)
 	{
 		FORMATETC fetc = {
 			CF_SHELLIDLIST, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
 		};
 
 		StorageMedium medium;
-		HRESULT hr = pdo->GetData(&fetc, medium.out());
+		HRESULT hr = data_object->GetData(&fetc, medium.out());
 		if (FAILED(hr))
-			throw com_exception(hr);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		assert(medium.get().hGlobal);
 		return medium;
@@ -136,6 +139,8 @@ namespace { // private
 
 #pragma endregion
 }
+
+#pragma region ShellDataObject implementation
 
 ShellDataObject::ShellDataObject( IDataObject *pDataObj ) :
 	m_spDataObj(pDataObj)
@@ -229,39 +234,61 @@ bool ShellDataObject::has_ansi_file_group_descriptor_format() const
 	return m_spDataObj->QueryGetData(&fetc) == S_OK;
 }
 
-CAbsolutePidl ShellDataObject::GetParentFolder()
+#pragma endregion
+
+#pragma region PidlFormat implementation
+
+PidlFormat::PidlFormat(const com_ptr<IDataObject>& data_object) :
+	m_data_object(data_object)
+{}
+
+PidlFormat::~PidlFormat() {}
+
+/**
+ * The absolute PIDL to the common parent of the items in the SHELLIDLIST 
+ * format.
+ */
+CAbsolutePidl PidlFormat::parent_folder()
 {
-	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_spDataObj));
+	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 
 	CAbsolutePidl pidl = parent_from_cida(global_cida.get());
 	return pidl;
 }
 
-CRelativePidl ShellDataObject::GetRelativeFile(UINT i)
+/**
+ * The absolute PIDL of the ith item in the SHELLIDLIST format.
+ */
+CAbsolutePidl PidlFormat::file(UINT i)
 {
-	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_spDataObj));
+	return CAbsolutePidl(parent_folder(), relative_file(i));
+}
+
+/**
+ * The ith relative PIDL in the SHELLIDLIST format.
+ */
+CRelativePidl PidlFormat::relative_file(UINT i)
+{
+	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 	if (i >= global_cida.get().cidl)
-		throw std::range_error(
-			"The index is greater than the number of PIDLs in the Data Object");
+		BOOST_THROW_EXCEPTION(std::range_error(
+			"The index is greater than the number of PIDLs in the "
+			"Data Object"));
 
 	CRelativePidl pidl = child_from_cida(global_cida.get(), i);
 	return pidl;
-}
-
-CAbsolutePidl ShellDataObject::GetFile(UINT i)
-{
-	CAbsolutePidl pidlFolder(GetParentFolder(), GetRelativeFile(i));
-	return pidlFolder;
 }
 
 /**
  * Return the number of PIDLs in the CFSTR_SHELLIDLIST format of the data
  * object.
  */
-UINT ShellDataObject::pidl_count()
+UINT PidlFormat::pidl_count()
 {
-	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_spDataObj));
+	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 	return global_cida.get().cidl;
 }
+
+#pragma endregion
 
 }}} // namespace swish::shell_folder::data_object

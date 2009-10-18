@@ -27,7 +27,7 @@
 #include "swish/shell_folder/shell.hpp"  // Test subject
 #include "swish/exception.hpp"  // com_exception
 
-// use to inspect DataObjects produces by the Windows Shell
+// use PidlFormat to inspect DataObjects produces by the Windows Shell
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
 
 #include "test/common_boost/fixtures.hpp"
@@ -52,7 +52,7 @@ using swish::shell_folder::path_from_pidl;
 using swish::shell_folder::data_object_for_files;
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
-using swish::shell_folder::data_object::ShellDataObject;
+using swish::shell_folder::data_object::PidlFormat;
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;
 using comet::com_ptr;
@@ -149,13 +149,13 @@ BOOST_AUTO_TEST_CASE( single_item_dataobject )
 {
 	wpath source = NewFileInSandbox();
 	
-	ShellDataObject data_object(data_object_for_file(source).get());
+	PidlFormat format(data_object_for_file(source));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 1U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
 	BOOST_REQUIRE(
-		pidl_path_equivalence(data_object.GetParentFolder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(data_object.GetFile(0), source));
+		pidl_path_equivalence(format.parent_folder(), Sandbox()));
+	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), source));
 }
 
 
@@ -175,15 +175,15 @@ BOOST_AUTO_TEST_CASE( multi_item_dataobject )
 	sources.push_back(NewFileInSandbox());
 	sources.push_back(NewFileInSandbox());
 	
-	ShellDataObject data_object(
-		data_object_for_files(sources.begin(), sources.end()).get());
+	PidlFormat format(
+		data_object_for_files(sources.begin(), sources.end()));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 2U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 2U);
 
 	BOOST_REQUIRE(
-		pidl_path_equivalence(data_object.GetParentFolder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(data_object.GetFile(0), sources[0]));
-	BOOST_REQUIRE(pidl_path_equivalence(data_object.GetFile(1), sources[1]));
+		pidl_path_equivalence(format.parent_folder(), Sandbox()));
+	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
+	BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
 }
 
 /**
@@ -197,20 +197,20 @@ BOOST_AUTO_TEST_CASE( single_item_ui_object )
 {
 	wpath source = NewFileInSandbox();
 	
-	ShellDataObject data_object(
-		ui_object_of_item<IDataObject>(pidl_from_path(source).get()).get());
+	PidlFormat format(
+		ui_object_of_item<IDataObject>(pidl_from_path(source).get()));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 1U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
 	BOOST_REQUIRE(
-		pidl_path_equivalence(data_object.GetParentFolder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(data_object.GetFile(0), source));
+		pidl_path_equivalence(format.parent_folder(), Sandbox()));
+	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), source));
 }
 
 /**
- * Ask for an associated object of two files in the same folder.  In this case we ask for a 
- * DataObject because then we can subject it to the same tests as the
- * data_object_for_files test above.
+ * Ask for an associated object of two files in the same folder.  In this case
+ * we ask for a DataObject because then we can subject it to the same tests 
+ * as the data_object_for_files test above.
  *
  * Tests ui_object_of_items().
  */
@@ -225,15 +225,15 @@ BOOST_AUTO_TEST_CASE( multi_item_ui_object )
 		sources.begin(), sources.end(), back_inserter(pidls), 
 		pidl_from_path);
 	
-	ShellDataObject data_object(
-		ui_object_of_items<IDataObject>(pidls.begin(), pidls.end()).get());
+	PidlFormat format(
+		ui_object_of_items<IDataObject>(pidls.begin(), pidls.end()));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 2U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 2U);
 
 	BOOST_REQUIRE(
-		pidl_path_equivalence(data_object.GetParentFolder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(data_object.GetFile(0), sources[0]));
-	BOOST_REQUIRE(pidl_path_equivalence(data_object.GetFile(1), sources[1]));
+		pidl_path_equivalence(format.parent_folder(), Sandbox()));
+	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
+	BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
 }
 
 /**

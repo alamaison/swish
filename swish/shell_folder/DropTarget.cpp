@@ -37,6 +37,7 @@
 #include <string>
 
 using swish::shell_folder::data_object::ShellDataObject;
+using swish::shell_folder::data_object::PidlFormat;
 using swish::exception::com_exception;
 
 using ATL::CComPtr;
@@ -59,8 +60,8 @@ namespace { // private
 	{
 		if (pdo)
 		{
-			ShellDataObject data_object(pdo);
-			if (data_object.pidl_count() > 0)
+			PidlFormat format(pdo);
+			if (format.pidl_count() > 0)
 			{
 				if (allowed_effects & DROPEFFECT_COPY)
 					return DROPEFFECT_COPY;
@@ -127,40 +128,48 @@ void copy_data_to_provider(
 	HRESULT hr;
 
 	ShellDataObject data_object(pdo);
-	for (unsigned int i = 0; i < data_object.pidl_count(); ++i)
+	if (data_object.has_pidl_format())
 	{
-		CAbsolutePidl pidl = data_object.GetFile(i);
-		
-		CComPtr<IStream> spStream = stream_from_shell_pidl(pidl);
+		PidlFormat format(pdo);
+		for (unsigned int i = 0; i < format.pidl_count(); ++i)
+		{
+			CAbsolutePidl pidl = format.file(i);
+			
+			CComPtr<IStream> spStream = stream_from_shell_pidl(pidl);
 
-		wpath destination = remote_path / filename_from_stream(spStream);
+			wpath destination = remote_path / filename_from_stream(spStream);
 
-		CComBSTR bstrPath = destination.string().c_str();
+			CComBSTR bstrPath = destination.string().c_str();
 
-		CComPtr<IStream> spRemoteStream;
-		hr = pProvider->GetFile(bstrPath, &spRemoteStream);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			CComPtr<IStream> spRemoteStream;
+			hr = pProvider->GetFile(bstrPath, &spRemoteStream);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		LARGE_INTEGER move = {0};
-		hr = spStream->Seek(move, SEEK_SET, NULL);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			LARGE_INTEGER move = {0};
+			hr = spStream->Seek(move, SEEK_SET, NULL);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		hr = spRemoteStream->Seek(move, SEEK_SET, NULL);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			hr = spRemoteStream->Seek(move, SEEK_SET, NULL);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		ULARGE_INTEGER cbRead = {0};
-		ULARGE_INTEGER cbWritten = {0};
-		ULARGE_INTEGER cb;
-		cb.QuadPart = integer_traits<ULONGLONG>::const_max;
-		// TODO: make our own CopyTo that propagates errors
-		hr = spStream->CopyTo(
-			spRemoteStream, cb,	&cbRead, &cbWritten);
-		assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			ULARGE_INTEGER cbRead = {0};
+			ULARGE_INTEGER cbWritten = {0};
+			ULARGE_INTEGER cb;
+			cb.QuadPart = integer_traits<ULONGLONG>::const_max;
+			// TODO: make our own CopyTo that propagates errors
+			hr = spStream->CopyTo(
+				spRemoteStream, cb,	&cbRead, &cbWritten);
+			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+		}
+	}
+	else
+	{
+		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
 	}
 }
 

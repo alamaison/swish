@@ -31,7 +31,7 @@
 #include "IconExtractor.h"
 #include "ExplorerCallback.h"      // Interaction with Explorer window
 #include "UserInteraction.h"       // Implementation of ISftpConsumer
-#include "data_object/ShellDataObject.hpp"  // ShellDataObject
+#include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "DropTarget.hpp"          // CDropTarget
 #include "Registry.h"
 #include "properties/properties.h" // File properties handler
@@ -42,7 +42,7 @@
 #include <string>
 
 using swish::shell_folder::CDropTarget;
-using swish::shell_folder::data_object::ShellDataObject;
+using swish::shell_folder::data_object::PidlFormat;
 using swish::exception::com_exception;
 
 using ATL::CComObject;
@@ -748,15 +748,15 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 
 	try
 	{
-		ShellDataObject shdo(pDataObj);
-		CAbsolutePidl pidlFolder = shdo.GetParentFolder();
+		PidlFormat format(pDataObj);
+		CAbsolutePidl pidlFolder = format.parent_folder();
 		ATLASSERT(::ILIsEqual(root_pidl(), pidlFolder));
 
 		// Build up a list of PIDLs for all the items to be deleted
 		RemotePidls vecDeathRow;
-		for (UINT i = 0; i < shdo.pidl_count(); i++)
+		for (UINT i = 0; i < format.pidl_count(); i++)
 		{
-			CRemoteItemList pidlFile = shdo.GetRelativeFile(i);
+			CRemoteItemList pidlFile = format.relative_file(i);
 
 			// May be overkill (it should always be a child) but check anyway
 			// because we don't want to accidentally recursively delete the root

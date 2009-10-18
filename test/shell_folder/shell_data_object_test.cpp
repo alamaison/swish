@@ -43,8 +43,9 @@
 #include <vector>
 #include <string>
 
-using swish::shell_folder::data_object::ShellDataObject;
-using swish::shell_folder::data_object::StorageMedium;
+using swish::shell_folder::data_object::ShellDataObject;  // test subject
+using swish::shell_folder::data_object::PidlFormat;  // test subject
+using swish::shell_folder::data_object::StorageMedium;  // test subject
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::ui_object_of_item;
 using swish::shell_folder::ui_object_of_items;
@@ -331,6 +332,12 @@ BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format_virtual )
 	BOOST_REQUIRE(data_object.has_file_group_descriptor_format());
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+#pragma endregion
+
+#pragma region PidlFormat tests
+BOOST_FIXTURE_TEST_SUITE(pidl_format_tests, DataObjectFixture)
+
 /**
  * Get a PIDL from a shell data object.
  *
@@ -341,11 +348,11 @@ BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format_virtual )
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
 {
 	wpath file = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_file(file).get());
+	PidlFormat format(data_object_for_file(file));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 1U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	CAbsolutePidl pidl = data_object.GetFile(0);
+	CAbsolutePidl pidl = format.file(0);
 
 	BOOST_REQUIRE(pidl_path_equivalence(pidl, file));
 }
@@ -360,11 +367,11 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
 {
 	wpath file = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_file(file).get());
+	PidlFormat format(data_object_for_file(file));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 1U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	CAbsolutePidl folder_pidl = data_object.GetParentFolder();
+	CAbsolutePidl folder_pidl = format.parent_folder();
 
 	BOOST_REQUIRE(pidl_path_equivalence(folder_pidl, file.parent_path()));
 }
@@ -379,10 +386,10 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item_fail )
 {
 	wpath file = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_file(file).get());
+	PidlFormat format(data_object_for_file(file));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 1U);
-	BOOST_REQUIRE_THROW(data_object.GetFile(1), std::range_error)
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
+	BOOST_REQUIRE_THROW(format.file(1), std::range_error)
 }
 
 /**
@@ -397,19 +404,19 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_multiple_items )
 	wpath file1 = NewFileInSandbox();
 	wpath file2 = NewFileInSandbox();
 	wpath file3 = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_directory(Sandbox()).get());
+	PidlFormat format(data_object_for_directory(Sandbox()));
 
-	BOOST_REQUIRE_EQUAL(data_object.pidl_count(), 3U);
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 3U);
 
-	CAbsolutePidl pidl1 = data_object.GetFile(0);
-	CAbsolutePidl pidl2 = data_object.GetFile(1);
-	CAbsolutePidl pidl3 = data_object.GetFile(2);
+	CAbsolutePidl pidl1 = format.file(0);
+	CAbsolutePidl pidl2 = format.file(1);
+	CAbsolutePidl pidl3 = format.file(2);
 
 	BOOST_REQUIRE(pidl_path_equivalence(pidl1, file1));
 	BOOST_REQUIRE(pidl_path_equivalence(pidl2, file2));
 	BOOST_REQUIRE(pidl_path_equivalence(pidl3, file3));
 
-	BOOST_REQUIRE_THROW(data_object.GetFile(4), std::range_error)
+	BOOST_REQUIRE_THROW(format.file(4), std::range_error)
 }
 
 BOOST_AUTO_TEST_SUITE_END()

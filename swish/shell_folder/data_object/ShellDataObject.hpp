@@ -30,6 +30,8 @@
 
 #include "swish/exception.hpp"  // com_exception
 
+#include <comet/ptr.h>  // com_ptr
+
 namespace swish {
 namespace shell_folder {
 namespace data_object {
@@ -95,16 +97,16 @@ private:
 	STGMEDIUM m_medium;
 };
 
+/**
+ * Wrapper around an IDataObject pointer providing access to the usual
+ * shell formats.
+ */
 class ShellDataObject
 {
 public:
 	ShellDataObject(__in IDataObject *pDataObj);
 	~ShellDataObject();
 
-	CAbsolutePidl GetParentFolder();
-	CRelativePidl GetRelativeFile(UINT i);
-	CAbsolutePidl GetFile(UINT i);
-	UINT pidl_count();
 	bool has_pidl_format() const;
 	bool has_hdrop_format() const;
 	bool has_file_group_descriptor_format() const;
@@ -113,6 +115,24 @@ public:
 
 private:
 	ATL::CComPtr<IDataObject> m_spDataObj;
+};
+
+/**
+ * Access wrapper for the items in a DataObject's SHELL_IDLIST format.
+ */
+class PidlFormat
+{
+public:
+	PidlFormat(const comet::com_ptr<IDataObject>& data_object);
+	~PidlFormat();
+
+	CAbsolutePidl parent_folder();
+	CAbsolutePidl file(UINT i);
+	CRelativePidl relative_file(UINT i);
+	UINT pidl_count();
+
+private:
+	comet::com_ptr<IDataObject> m_data_object;
 };
 
 }}} // namespace swish::shell_folder::data_object

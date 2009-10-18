@@ -27,7 +27,7 @@
 #include "ExplorerCallback.h"
 
 #include "NewConnDialog.h"
-#include "data_object/ShellDataObject.hpp"  // ShellDataObject
+#include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
 #include "host_management.hpp"
 #include "swish/debug.hpp"
@@ -50,7 +50,7 @@ using swish::host_management::AddConnectionToRegistry;
 using swish::host_management::RemoveConnectionFromRegistry;
 using swish::host_management::ConnectionExists;
 using swish::exception::com_exception;
-using swish::shell_folder::data_object::ShellDataObject;
+using swish::shell_folder::data_object::PidlFormat;
 
 #define SFVM_SELECTIONCHANGED 8
 
@@ -290,8 +290,8 @@ bool CExplorerCallback::_ShouldEnableRemove()
 {
 	try
 	{
-		ShellDataObject data_object = _GetSelectionDataObject();
-		return data_object.pidl_count() == 1;
+		PidlFormat format(_GetSelectionDataObject().p);
+		return format.pidl_count() == 1;
 	}
 	catch (com_exception)
 	{
@@ -305,10 +305,10 @@ bool CExplorerCallback::_ShouldEnableRemove()
  */
 CAbsolutePidl CExplorerCallback::_GetSelectedItem()
 {
-	ShellDataObject data_object = _GetSelectionDataObject();
-	if (data_object.pidl_count() != 1)
+	PidlFormat format(_GetSelectionDataObject().p);
+	if (format.pidl_count() != 1)
 		AtlThrow(E_FAIL);
-	return data_object.GetFile(0);
+	return format.file(0);
 }
 
 /**
