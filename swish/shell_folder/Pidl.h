@@ -271,13 +271,11 @@ public:
 	/**
 	 * Return raw address of PIDL to allow use as an out-parameter.
 	 *
-	 * @warning It's incorrect to use this if the PIDL is not NULL as doing
-	 * so will bypass the lifetime management causing a memory leak.  Therefore,
-	 * thefore we ASSERT in DEBUG builds.
+	 * Any existing PIDL will first be destroyed.
 	 */
 	PidlType* operator&() throw()
 	{
-		ATLASSERT(m_pidl == NULL);
+		Delete();
 		return &m_pidl;
 	}
 
