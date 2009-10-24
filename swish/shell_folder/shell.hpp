@@ -201,6 +201,11 @@ comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
  * Analogous to BindToObject().
  *
  * @templateparam T  Type of handler to return.
+ *
+ * @param pidl  The item for which the handler is being requested.  Usually a
+ *              PIDL for a folder when T is IShellFolder.
+ *              If pidl is NULL or is the empty PIDL, the item is the Desktop
+ *              folder.
  */
 template<typename T>
 comet::com_ptr<T> bind_to_handler_object(PCIDLIST_ABSOLUTE pidl)
@@ -208,8 +213,11 @@ comet::com_ptr<T> bind_to_handler_object(PCIDLIST_ABSOLUTE pidl)
 	comet::com_ptr<IShellFolder> desktop = desktop_folder();
 	comet::com_ptr<T> handler;
 
+	if (::ILIsEmpty(pidl)) // get handler via QI
+		return try_cast(desktop);
+
 	HRESULT hr = desktop->BindToObject(
-		pidl, NULL, comet::uuidof<T>(), 
+		(::ILIsEmpty(pidl)) ? NULL : pidl, NULL, comet::uuidof<T>(), 
 		reinterpret_cast<void**>(handler.out()));
 
 	if (FAILED(hr))

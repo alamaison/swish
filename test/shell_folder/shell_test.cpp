@@ -44,6 +44,7 @@
 #include <string>
 #include <algorithm>  // transform
 
+using swish::shell_folder::desktop_folder;
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::ui_object_of_item;
 using swish::shell_folder::ui_object_of_items;
@@ -267,6 +268,37 @@ BOOST_AUTO_TEST_CASE( handler_object )
 
 	BOOST_REQUIRE(pidl_path_equivalence(pidl.get(), file));
 	BOOST_REQUIRE_NE(enum_items->Next(1, &child_pidl, NULL), S_OK);
+}
+
+/**
+ * Ask for an IShellFolder handler using a NULL PIDL.  This should return
+ * the handler of the Desktop folder.
+ *
+ * Tests bind_to_handler_object().
+ */
+BOOST_AUTO_TEST_CASE( handler_object_null_pidl )
+{
+	com_ptr<IShellFolder> desktop = desktop_folder();
+	com_ptr<IShellFolder> folder = bind_to_handler_object<IShellFolder>(NULL);
+
+	BOOST_REQUIRE(folder == desktop);
+}
+
+/**
+ * Ask for an IShellFolder handler using an empty PIDL.  This should return
+ * the handler of the Desktop folder.
+ *
+ * Tests bind_to_handler_object().
+ */
+BOOST_AUTO_TEST_CASE( handler_object_empty_pidl )
+{
+	com_ptr<IShellFolder> desktop = desktop_folder();
+	SHITEMID empty = {0, {0}};
+	PCIDLIST_ABSOLUTE pidl = reinterpret_cast<PCIDLIST_ABSOLUTE>(&empty);
+
+	com_ptr<IShellFolder> folder = bind_to_handler_object<IShellFolder>(pidl);
+
+	BOOST_REQUIRE(folder == desktop);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
