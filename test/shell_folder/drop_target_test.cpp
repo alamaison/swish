@@ -59,6 +59,14 @@ namespace { // private
 
 	const string TEST_DATA = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
 
+	/**
+	 * The test data which will be written and read from files to
+	 * check correct transmission.
+	 */
+	string test_data()
+	{
+		return TEST_DATA;
+	}
 	
 	/**
 	 * Write some data to a collection of local files and return them in
@@ -87,7 +95,7 @@ namespace { // private
 	void fill_file(const wpath& file)
 	{
 		ofstream stream(file);
-		stream << TEST_DATA;
+		stream << test_data();
 	}
 	
 	/**
@@ -99,18 +107,32 @@ namespace { // private
 		string contents = string(
 			istreambuf_iterator<char>(stream),
 			istreambuf_iterator<char>());
-		BOOST_REQUIRE_EQUAL(contents, TEST_DATA);
+		BOOST_REQUIRE_EQUAL(contents, test_data());
 
-		if (contents != TEST_DATA)
+		if (contents != test_data())
 		{
 			predicate_result res(false);
 			res.message()
 				<< "File contents is not as expected [" << contents
-				<< " != " << TEST_DATA << "]";
+				<< " != " << test_data() << "]";
 			return res;
 		}
 
 		return true;
+	}
+	
+	/**
+	 * Create a new empty file at the given absolute path.
+	 */
+	void create_empty_file(wpath name)
+	{
+		BOOST_CHECK(name.is_complete());
+
+		ofstream file(name, std::ios_base::out|std::ios_base::trunc);
+		file.close();
+		
+		BOOST_CHECK(exists(name));
+		BOOST_CHECK(is_regular_file(name));
 	}
 }
 
@@ -146,11 +168,9 @@ BOOST_AUTO_TEST_CASE( copy_single )
 
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
-
 	copy_data_to_provider(spdo.in(), Provider(), ToRemotePath(destination));
 
 	wpath expected = destination / local.filename();
-
 	BOOST_REQUIRE(exists(expected));
 	BOOST_REQUIRE(file_contents_correct(expected));
 }
@@ -173,17 +193,103 @@ BOOST_AUTO_TEST_CASE( copy_many )
 
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
-
 	copy_data_to_provider(spdo.in(), Provider(), ToRemotePath(destination));
 
 	vector<wpath>::const_iterator it;
 	for (it = locals.begin(); it != locals.end(); ++it)
 	{
 		wpath expected = destination / (*it).filename();
-
 		BOOST_REQUIRE(exists(expected));
 		BOOST_REQUIRE(file_contents_correct(expected));
 	}
+}
+
+/**
+ * Recursively copy a folder hierarchy.
+ *
+ * Our test hierarchy look like this:
+ * Sandbox - file0
+ *         \ file1
+ *         \ empty_folder
+ *         \ non_empty_folder - second_level_file
+ *                            \ second_level_folder - third_level_file
+ *
+ * We could just make a DataObject by passing the sandbox dir to the shell
+ * function but instead we pass the four items directly within it to
+ * test how we handle a mix of recursive dirs and simple files.
+ */
+BOOST_AUTO_TEST_CASE( copy_recursively )
+{
+	vector<wpath> top_level;
+
+	// Build top-level - these are the only items stored in the vector
+
+	top_level.push_back(NewFileInSandbox());
+	top_level.push_back(NewFileInSandbox());
+
+	wpath empty_folder = Sandbox() / L"empty";
+	wpath non_empty_folder = Sandbox() / L"non-empty";
+	create_directory(empty_folder);
+	create_directory(non_empty_folder);
+	top_level.push_back(empty_folder);
+	top_level.push_back(non_empty_folder);
+
+	// Build lower levels
+
+	wpath second_level_folder = non_empty_folder / L"second-level-folder";
+	create_directory(second_level_folder);
+
+	wpath second_level_file = non_empty_folder / L"second-level-file";
+	create_empty_file(second_level_file);
+	fill_file(second_level_file);
+
+	wpath third_level_file = second_level_folder / L"third-level-file";
+	create_empty_file(third_level_file);
+	fill_file(third_level_file);
+
+	com_ptr<IDataObject> spdo = create_multifile_data_object(
+		top_level.begin(), top_level.end());
+
+
+	wpath destination = Sandbox() / L"copy-destination";
+	create_directory(destination);
+	copy_data_to_provider(spdo.in(), Provider(), ToRemotePath(destination));
+
+	wpath expected;
+
+	expected = destination / top_level[0].filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
+
+	expected = destination / top_level[0].filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
+
+	expected = destination / empty_folder.filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_directory(expected));
+	BOOST_REQUIRE(is_empty(expected));
+
+	expected = destination / non_empty_folder.filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_directory(expected));
+	BOOST_REQUIRE(!is_empty(expected));
+	
+	expected = destination / non_empty_folder.filename() /
+		second_level_file.filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
+
+	expected = destination / non_empty_folder.filename() / 
+		second_level_folder.filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_directory(expected));
+	BOOST_REQUIRE(!is_empty(expected));
+
+	expected = destination / non_empty_folder.filename() /
+		second_level_folder.filename() / third_level_file.filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

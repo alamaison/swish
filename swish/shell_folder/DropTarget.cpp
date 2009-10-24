@@ -27,6 +27,7 @@
 #include "DropTarget.hpp"
 
 #include "data_object/ShellDataObject.hpp"  // ShellDataObject
+#include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
 
@@ -34,10 +35,16 @@
 #include <boost/integer_traits.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
+#include <comet/interface.h>  // uuidof, comtype
+#include <comet/ptr.h>  // com_ptr
+#include <comet/bstr.h> // bstr_t
+
 #include <string>
+#include <vector>
 
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::bind_to_handler_object;
 using swish::exception::com_exception;
 
 using ATL::CComPtr;
@@ -47,7 +54,12 @@ using boost::filesystem::wpath;
 using boost::shared_ptr;
 using boost::integer_traits;
 
-using std::string;
+using comet::com_ptr;
+using comet::uuidof;
+using comet::bstr_t;
+
+using std::wstring;
+using std::vector;
 
 namespace { // private
 
@@ -75,39 +87,177 @@ namespace { // private
 	 * Given a PIDL to a *real* file in the filesystem, return an IStream 
 	 * to it.
 	 */
-	CComPtr<IStream> stream_from_shell_pidl(const CAbsolutePidl& pidl)
+	com_ptr<IStream> stream_from_shell_pidl(const CAbsolutePidl& pidl)
 	{
 		PCUITEMID_CHILD pidl_child;
 		HRESULT hr;
-		CComPtr<IShellFolder> spFolder;
+		com_ptr<IShellFolder> folder;
 		
 		hr = ::SHBindToParent(
-			pidl, __uuidof(IShellFolder), reinterpret_cast<void**>(&spFolder),
+			pidl, __uuidof(IShellFolder), 
+			reinterpret_cast<void**>(folder.out()),
 			&pidl_child);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		CComPtr<IStream> spStream;
-		hr = spFolder->BindToStorage(pidl_child, NULL, __uuidof(IStream),
-			reinterpret_cast<void**>(&spStream));
+		com_ptr<IStream> stream;
+		hr = folder->BindToStorage(pidl_child, NULL, __uuidof(IStream),
+			reinterpret_cast<void**>(stream.out()));
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		return spStream;
+		return stream;
 	}
 
 	/**
 	 * Return the stream name from an IStream.
 	 */
-	wpath filename_from_stream(IStream* pstream)
+	wpath filename_from_stream(const com_ptr<IStream>& stream)
 	{
 		STATSTG statstg;
-		HRESULT hr = pstream->Stat(&statstg, STATFLAG_DEFAULT);
+		HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
 		return name.get();
+	}
+
+	/**
+	 * Convert a STRRET structure to a string.
+	 *
+	 * If the STRRET is using its pOleStr member to store the data (rather
+	 * than holding it directly or extracting it from the PIDL offset)
+	 * the data will be freed.  In other words, this function destroys
+	 * the STRRET passed to it.
+	 */
+	wstring strret_to_string(STRRET& strret, const CChildPidl& pidl)
+	{
+		vector<wchar_t> buffer(MAX_PATH);
+		HRESULT hr = ::StrRetToBufW(
+			&strret, pidl, &buffer[0], buffer.size());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		buffer[buffer.size() - 1] = L'\0';
+
+		return wstring(&buffer[0]);
+	}
+
+	/**
+	 * Query an item's parent folder for the item's display name relative
+	 * to that folder.
+	 */
+	wstring display_name_of_item(
+		const com_ptr<IShellFolder>& parent_folder,
+		const CChildPidl& pidl)
+	{
+		STRRET strret;
+		HRESULT hr = parent_folder->GetDisplayNameOf(
+			pidl, SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		return strret_to_string(strret, pidl);
+	}
+
+	/**
+	 * Return the folder name from a folder PIDL.
+	 */
+	wpath folder_name_from_pidl(
+		const CChildPidl& item, const CAbsolutePidl parent)
+	{
+		com_ptr<IShellFolder> parent_folder = 
+			bind_to_handler_object<IShellFolder>(parent);
+
+		return display_name_of_item(parent_folder, item);
+	}
+
+	void copy_stream_to_remote_destination(
+		const com_ptr<IStream>& local_stream, 
+		const com_ptr<ISftpProvider>& provider, wpath destination)
+	{
+		CComBSTR bstrPath = destination.string().c_str();
+
+		com_ptr<IStream> remote_stream;
+		HRESULT hr = provider->GetFile(bstrPath, remote_stream.out());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		LARGE_INTEGER move = {0};
+		hr = local_stream->Seek(move, SEEK_SET, NULL);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		hr = remote_stream->Seek(move, SEEK_SET, NULL);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		ULARGE_INTEGER cbRead = {0};
+		ULARGE_INTEGER cbWritten = {0};
+		ULARGE_INTEGER cb;
+		cb.QuadPart = integer_traits<ULONGLONG>::const_max;
+		// TODO: make our own CopyTo that propagates errors
+		hr = local_stream->CopyTo(
+			remote_stream.get(), cb, &cbRead, &cbWritten);
+		assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+	}
+
+	void copy_folder_to_remote_destination(
+		const CAbsolutePidl& folder_pidl,
+		const com_ptr<ISftpProvider>& provider, wpath destination)
+	{
+		com_ptr<IShellFolder> folder = 
+			bind_to_handler_object<IShellFolder>(folder_pidl);
+
+		bstr_t path = destination.string();
+
+		HRESULT hr = provider->CreateNewDirectory(path.get_raw());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		// Copy non-folders
+
+		com_ptr<IEnumIDList> e;
+		hr = folder->EnumObjects(
+			NULL, SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		CChildPidl item;
+		while (e->Next(1, &item, NULL) == S_OK)
+		{
+			com_ptr<IStream> stream;
+			hr = folder->BindToStorage(
+				item, NULL, __uuidof(IStream), 
+				reinterpret_cast<void**>(stream.out()));
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+
+			copy_stream_to_remote_destination(
+				stream, provider, 
+				destination / filename_from_stream(stream));
+		}
+
+		// Copy folders recursively
+
+		hr = folder->EnumObjects(
+			NULL, SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		while (e->Next(1, &item, NULL) == S_OK)
+		{
+			wpath subfolder_name = folder_name_from_pidl(
+				item, folder_pidl);
+
+			copy_folder_to_remote_destination(
+				CAbsolutePidl(folder_pidl, item), provider, 
+				destination / subfolder_name);
+		}
+
 	}
 }
 
@@ -125,46 +275,42 @@ namespace shell_folder {
 void copy_data_to_provider(
 	IDataObject* pdo, ISftpProvider* pProvider, wpath remote_path)
 {
-	HRESULT hr;
-
 	ShellDataObject data_object(pdo);
 	if (data_object.has_pidl_format())
 	{
 		PidlFormat format(pdo);
 		for (unsigned int i = 0; i < format.pidl_count(); ++i)
 		{
-			CAbsolutePidl pidl = format.file(i);
-			
-			CComPtr<IStream> spStream = stream_from_shell_pidl(pidl);
+			CRelativePidl pidl = format.relative_file(i);
+			if (!::ILIsChild(pidl))
+				BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
 
-			wpath destination = remote_path / filename_from_stream(spStream);
+			com_ptr<IStream> stream;
+			try
+			{
+				stream = stream_from_shell_pidl(format.file(i));
+			}
+			catch (com_exception)
+			{
+				// Treating the item as something with an IStream has failed
+				// Now we try to treat it as an IShellFolder and hope we
+				// have more success
 
-			CComBSTR bstrPath = destination.string().c_str();
+				wpath directory_name = folder_name_from_pidl(
+					static_cast<PCITEMID_CHILD>(
+						static_cast<PCUIDLIST_RELATIVE>(pidl)),
+					format.parent_folder());
 
-			CComPtr<IStream> spRemoteStream;
-			hr = pProvider->GetFile(bstrPath, &spRemoteStream);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
+				copy_folder_to_remote_destination(
+					format.file(i), pProvider, 
+					remote_path / directory_name);
 
-			LARGE_INTEGER move = {0};
-			hr = spStream->Seek(move, SEEK_SET, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
+				continue;
+			}
 
-			hr = spRemoteStream->Seek(move, SEEK_SET, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-
-			ULARGE_INTEGER cbRead = {0};
-			ULARGE_INTEGER cbWritten = {0};
-			ULARGE_INTEGER cb;
-			cb.QuadPart = integer_traits<ULONGLONG>::const_max;
-			// TODO: make our own CopyTo that propagates errors
-			hr = spStream->CopyTo(
-				spRemoteStream, cb,	&cbRead, &cbWritten);
-			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
+			copy_stream_to_remote_destination(
+				stream, pProvider,
+				remote_path / filename_from_stream(stream));
 		}
 	}
 	else
