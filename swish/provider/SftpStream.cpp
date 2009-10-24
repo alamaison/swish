@@ -490,8 +490,13 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 	cbRead = rc;
 }
 
+#define WRITE_CHUNK 1024 ///< Maximum size of any single write operation.
+
 /**
  * Write cb bytes from buffer pbuf onto the stream.
+ *
+ * @todo  Remove piecemeal writing when the libssh2 project fixes
+ *        the write problems in the library.
  *
  * @returns  Number of bytes actually written in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
@@ -500,15 +505,35 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
  */
 void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 {
+	ULONG cbChunk;
+	ULONG rc;
+	
+	cbWritten = 0;
+	do {
+		cbChunk = min(cb - cbWritten, WRITE_CHUNK);
+		rc = _WriteOne(pbuf + cbWritten, cbChunk);
+		if (rc < 0)
+		{
+			TRACE("libssh2_sftp_write() failed: %ws", 
+				GetLastErrorMessage(*m_session));
+			AtlThrow(STG_E_CANTSAVE);
+		}
+		cbWritten += rc;
+	}
+	while (rc == cbChunk && cbWritten < cb);
+}
+
+
+ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
+{
 	ssize_t rc = libssh2_sftp_write(m_handle.get(), pbuf, cb);
 	if (rc < 0)
 	{
-		cbWritten = 0;
 		TRACE("libssh2_sftp_write() failed: %ws", 
 			GetLastErrorMessage(*m_session));
 		AtlThrow(STG_E_CANTSAVE);
 	}
-	cbWritten = rc;
+	return rc;
 }
 
 #define COPY_CHUNK ULONG_MAX ///< Maximum size of any single copy operation.

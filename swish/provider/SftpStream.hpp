@@ -140,6 +140,7 @@ private:
 	void _Write(
 		__out_bcount_part(cb, cbWritten) const char *pbuf, __in ULONG cb,
 		__out ULONG& cbWritten);
+	ULONG _WriteOne(const char *pbuf, ULONG cb);
 	void _CopyTo(
 		__in IStream *pstm, __in ULONGLONG cb, 
 		__out ULONGLONG& cbRead, __out ULONGLONG& cbWritten) throw(...);

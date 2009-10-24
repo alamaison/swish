@@ -127,6 +127,35 @@ BOOST_AUTO_TEST_CASE( write_a_string )
 }
 
 /**
+ * Write a large buffer.
+ */
+BOOST_AUTO_TEST_CASE( write_large )
+{
+	CComPtr<IStream> spStream = GetStream();
+
+	vector<char> in(1000000); // Doesn't need to be initialised
+
+	ULONG cbWritten = 0;
+	BOOST_REQUIRE_OK(spStream->Write(&in[0], in.size(), &cbWritten));
+	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
+
+	// Reset seek pointer to beginning and read back
+	LARGE_INTEGER move = {0};
+	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
+
+	vector<char> out(in.size());
+	ULONG cbRead = 0;
+	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
+	BOOST_REQUIRE_EQUAL(cbRead, out.size());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(
+		out.begin(), out.end(), in.begin(), in.end());
+	
+	// Trying to read more should succeed but return 0 bytes read
+	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
+	BOOST_REQUIRE_EQUAL(cbRead, 0U);
+}
+
+/**
  * Try to write to a locked file.
  * This tests how we deal with a failure in a write case.  In order to
  * force a failure we open the stream but then lock the first 30 bytes
