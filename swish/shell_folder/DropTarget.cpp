@@ -27,13 +27,15 @@
 #include "DropTarget.hpp"
 
 #include "data_object/ShellDataObject.hpp"  // ShellDataObject
-#include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
+#include "shell.hpp"  // bind_to_handler_object
+#include "resource.h" // IDS_COPYING_TITLE
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/integer_traits.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+#include <boost/system/system_error.hpp> // system_error
 
 #include <comet/interface.h>  // uuidof, comtype
 #include <comet/ptr.h>  // com_ptr
@@ -53,6 +55,8 @@ using ATL::CComBSTR;
 using boost::filesystem::wpath;
 using boost::shared_ptr;
 using boost::integer_traits;
+using boost::system::system_error;
+using boost::system::system_category;
 
 using comet::com_ptr;
 using comet::uuidof;
@@ -370,6 +374,25 @@ namespace { // private
 		const com_ptr<IProgressDialog> m_progress;
 	};
 
+	/**
+	 * Load a string from a resource.
+	 *
+	 * The string may contain embedded NULLs.
+	 */
+	wstring load_string(
+		unsigned int uid, HINSTANCE hinstance=::GetModuleHandleW(NULL))
+	{
+		const wchar_t* read_only_resource;
+
+		int cch = ::LoadStringW(
+			hinstance, uid, 
+			reinterpret_cast<wchar_t*>(&read_only_resource), 0);
+		if (cch < 1)
+			BOOST_THROW_EXCEPTION(
+				system_error(::GetLastError(), system_category));
+
+		return wstring(read_only_resource, cch);
+	}
 }
 
 namespace swish {
@@ -384,13 +407,14 @@ namespace shell_folder {
  *                     This must be a path to a @b directory.
  */
 void copy_format_to_provider(
-	PidlFormat format, ISftpProvider* provider, wpath remote_path,
-)
+	PidlFormat format, ISftpProvider* provider, wpath remote_path)
 {
 	vector<CopylistEntry> copy_list;
 	build_copy_list(format, copy_list);
 
 	com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
+	progress->SetTitle(load_string(IDS_COPYING_TITLE).c_str());
+
 	AutoStartProgressDialog auto_progress(
 		progress, NULL, PROGDLG_AUTOTIME);
 
