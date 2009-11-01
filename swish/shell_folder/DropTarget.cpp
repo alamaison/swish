@@ -61,6 +61,16 @@ using comet::bstr_t;
 using std::wstring;
 using std::vector;
 
+namespace comet {
+
+template<> struct comtype<IProgressDialog>
+{
+	static const IID& uuid() throw() { return IID_IProgressDialog; }
+	typedef IUnknown base;
+};
+
+}
+
 namespace { // private
 
 	/**
@@ -162,15 +172,33 @@ namespace { // private
 	}
 
 	/**
-	 * Return the folder name from a folder PIDL.
+	 * Return the parsing name of an item.
 	 */
-	wpath folder_name_from_pidl(
-		const CChildPidl& item, const CAbsolutePidl parent)
+	wpath display_name_from_pidl(
+		const CAbsolutePidl& parent, const CChildPidl& item)
 	{
 		com_ptr<IShellFolder> parent_folder = 
 			bind_to_handler_object<IShellFolder>(parent);
 
 		return display_name_of_item(parent_folder, item);
+	}
+
+	/**
+	 * Return the parsing path name for a PIDL relative the the given parent.
+	 */
+	wpath parsing_path_from_pidl(
+		const CAbsolutePidl& parent, const CRelativePidl& pidl)
+	{
+		if (pidl.IsEmpty())
+			return wpath();
+
+		CChildPidl item;
+		item.Attach(::ILCloneFirst(pidl));
+
+		return display_name_from_pidl(parent, item) / 
+			parsing_path_from_pidl(
+				CAbsolutePidl(parent, item), ::ILNext(pidl.m_pidl));
+
 	}
 
 	void copy_stream_to_remote_destination(
@@ -205,60 +233,143 @@ namespace { // private
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 
-	void copy_folder_to_remote_destination(
-		const CAbsolutePidl& folder_pidl,
-		const com_ptr<ISftpProvider>& provider, wpath destination)
+	void create_remote_directory(
+		ISftpProvider* provider, wpath remote_path)
 	{
-		com_ptr<IShellFolder> folder = 
-			bind_to_handler_object<IShellFolder>(folder_pidl);
-
-		bstr_t path = destination.string();
+		bstr_t path = remote_path.string();
 
 		HRESULT hr = provider->CreateNewDirectory(path.get_raw());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
+	}
 
-		// Copy non-folders
+	/**
+	 * Storage structure for an item in the copy list built by 
+	 * build_copy_list().
+	 */
+	struct CopylistEntry
+	{
+		CopylistEntry(
+			const CRelativePidl& pidl, wpath relative_path, bool is_folder)
+		{
+			this->pidl = pidl;
+			this->relative_path = relative_path;
+			this->is_folder = is_folder;
+		}
+
+		CRelativePidl pidl;
+		wpath relative_path;
+		bool is_folder;
+	};
+
+
+	void build_copy_list_recursively(
+		const CAbsolutePidl& parent, const CRelativePidl& folder_pidl,
+		vector<CopylistEntry>& copy_list_out)
+	{
+		wpath folder_path = parsing_path_from_pidl(parent, folder_pidl);
+
+		copy_list_out.push_back(
+			CopylistEntry(folder_pidl, folder_path, true));
+
+		com_ptr<IShellFolder> folder = 
+			bind_to_handler_object<IShellFolder>(
+				CAbsolutePidl(parent, folder_pidl));	
+
+		// Add non-folder contents
 
 		com_ptr<IEnumIDList> e;
-		hr = folder->EnumObjects(
+		HRESULT hr = folder->EnumObjects(
 			NULL, SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		CChildPidl item;
-		while (e->Next(1, &item, NULL) == S_OK)
+		while (hr == S_OK && e->Next(1, &item, NULL) == S_OK)
 		{
-			com_ptr<IStream> stream;
-			hr = folder->BindToStorage(
-				item, NULL, __uuidof(IStream), 
-				reinterpret_cast<void**>(stream.out()));
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-
-			copy_stream_to_remote_destination(
-				stream, provider, 
-				destination / filename_from_stream(stream));
+			CRelativePidl pidl(folder_pidl, item);
+			copy_list_out.push_back(
+				CopylistEntry(
+					pidl, parsing_path_from_pidl(parent, pidl), false));
 		}
 
-		// Copy folders recursively
+		// Recursively add folders
 
 		hr = folder->EnumObjects(
 			NULL, SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		while (e->Next(1, &item, NULL) == S_OK)
+		while (hr == S_OK && e->Next(1, &item, NULL) == S_OK)
 		{
-			wpath subfolder_name = folder_name_from_pidl(
-				item, folder_pidl);
+			CRelativePidl pidl(folder_pidl, item);
+			build_copy_list_recursively(parent, pidl, copy_list_out);
+		}
+	}
 
-			copy_folder_to_remote_destination(
-				CAbsolutePidl(folder_pidl, item), provider, 
-				destination / subfolder_name);
+	/**
+	 * Expand the top-level PIDLs into a list of all items in the hierarchy.
+	 */
+	void build_copy_list(PidlFormat format, vector<CopylistEntry>& copy_list)
+	{
+		for (unsigned int i = 0; i < format.pidl_count(); ++i)
+		{
+			if (!::ILIsChild(format.relative_file(i)))
+				BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+
+			CRelativePidl pidl = format.relative_file(i);
+			try
+			{
+				// Test if streamable
+				com_ptr<IStream> stream;
+				stream = stream_from_shell_pidl(format.file(i));
+				
+				CopylistEntry entry(
+					pidl, filename_from_stream(stream), false);
+				copy_list.push_back(entry);
+			}
+			catch (com_exception)
+			{
+				// Treating the item as something with an IStream has failed
+				// Now we try to treat it as an IShellFolder and hope we
+				// have more success
+
+				build_copy_list_recursively(
+					format.parent_folder(), pidl, copy_list);
+			}
+		}
+	}
+
+
+	/**
+	 * Exception-safe lifetime manager for an IProgressDialog object.
+	 *
+	 * Calls StartProgressDialog when created and StopProgressDialog when
+	 * destroyed.
+	 */
+	class AutoStartProgressDialog
+	{
+	public:
+		AutoStartProgressDialog(
+			const com_ptr<IProgressDialog>& progress, HWND hwnd, DWORD flags)
+			: m_progress(progress)
+		{
+			m_progress->StartProgressDialog(hwnd, NULL, flags, NULL);
 		}
 
-	}
+		~AutoStartProgressDialog()
+		{
+			m_progress->StopProgressDialog();
+		}
+
+	private:
+		// disable copying
+		AutoStartProgressDialog(const AutoStartProgressDialog&);
+		AutoStartProgressDialog& operator=(const AutoStartProgressDialog&);
+
+		const com_ptr<IProgressDialog> m_progress;
+	};
+
 }
 
 namespace swish {
@@ -272,46 +383,70 @@ namespace shell_folder {
  * @param remote_path  Path on the target filesystem to copy items into.
  *                     This must be a path to a @b directory.
  */
+void copy_format_to_provider(
+	PidlFormat format, ISftpProvider* provider, wpath remote_path,
+)
+{
+	vector<CopylistEntry> copy_list;
+	build_copy_list(format, copy_list);
+
+	com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
+	AutoStartProgressDialog auto_progress(
+		progress, NULL, PROGDLG_AUTOTIME);
+
+	for (unsigned int i = 0; i < copy_list.size(); ++i)
+	{
+		if (progress->HasUserCancelled())
+			BOOST_THROW_EXCEPTION(com_exception(E_ABORT));
+
+		wpath from_path = copy_list[i].relative_path;
+		wpath to_path = remote_path / copy_list[i].relative_path;
+
+		if (copy_list[i].is_folder)
+		{
+			progress->SetLine(
+				1, from_path.string().c_str(), TRUE, NULL);
+			progress->SetLine(
+				2, to_path.string().c_str(), TRUE, NULL);
+
+			create_remote_directory(provider, to_path);
+			
+			progress->SetProgress64(i, copy_list.size());
+		}
+		else
+		{
+			com_ptr<IStream> stream;
+
+			stream = stream_from_shell_pidl(
+				CAbsolutePidl(format.parent_folder(), copy_list[i].pidl));
+
+			progress->SetLine(
+				1, from_path.string().c_str(), TRUE, NULL);
+			progress->SetLine(
+				2, to_path.string().c_str(), TRUE, NULL);
+
+			copy_stream_to_remote_destination(stream, provider, to_path);
+
+			progress->SetProgress64(i, copy_list.size());
+		}
+	}
+}
+
+/**
+ * Copy the items in the DataObject to the remote target.
+ *
+ * @param pdo  IDataObject holding the items to be copied.
+ * @param pProvider  SFTP connection to copy data over.
+ * @param remote_path  Path on the target filesystem to copy items into.
+ *                     This must be a path to a @b directory.
+ */
 void copy_data_to_provider(
-	IDataObject* pdo, ISftpProvider* pProvider, wpath remote_path)
+	IDataObject* pdo, ISftpProvider* provider, wpath remote_path)
 {
 	ShellDataObject data_object(pdo);
 	if (data_object.has_pidl_format())
 	{
-		PidlFormat format(pdo);
-		for (unsigned int i = 0; i < format.pidl_count(); ++i)
-		{
-			CRelativePidl pidl = format.relative_file(i);
-			if (!::ILIsChild(pidl))
-				BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
-
-			com_ptr<IStream> stream;
-			try
-			{
-				stream = stream_from_shell_pidl(format.file(i));
-			}
-			catch (com_exception)
-			{
-				// Treating the item as something with an IStream has failed
-				// Now we try to treat it as an IShellFolder and hope we
-				// have more success
-
-				wpath directory_name = folder_name_from_pidl(
-					static_cast<PCITEMID_CHILD>(
-						static_cast<PCUIDLIST_RELATIVE>(pidl)),
-					format.parent_folder());
-
-				copy_folder_to_remote_destination(
-					format.file(i), pProvider, 
-					remote_path / directory_name);
-
-				continue;
-			}
-
-			copy_stream_to_remote_destination(
-				stream, pProvider,
-				remote_path / filename_from_stream(stream));
-		}
+		copy_format_to_provider(PidlFormat(pdo), provider, remote_path);
 	}
 	else
 	{
