@@ -39,6 +39,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
+#include <boost/system/system_error.hpp>  // system_error, system_category
 
 #include <vector>
 #include <string>
@@ -62,6 +64,9 @@ using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::test_tools::predicate_result;
 using boost::shared_ptr;
+using boost::numeric_cast;
+using boost::system::system_error;
+using boost::system::system_category;
 using std::vector;
 using std::wstring;
 
@@ -130,19 +135,19 @@ namespace { // private
 	}
 
 	/**
-	 * Create an empty zip archive in the PK format.
-	 *
-	 * An 'empty' archive contains 22 bytes of data: the letters 'PK' follow by
-	 * the bytes 5, 6 and the 18 bytes of 0.
+	 * Return the path of the currently running executable.
 	 */
-	void create_empty_zip_archive(const wpath& name)
+	wpath get_module_path(HMODULE hmodule=NULL)
 	{
-		char empty_zip_data[] = {'P', 'K', '\x05', '\x06', 
-			'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
-			'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
-		ofstream zip_stream(name, std::ios::binary);
-		zip_stream.write(empty_zip_data, sizeof(empty_zip_data));
-		zip_stream.close();
+		vector<wchar_t> buffer(MAX_PATH);
+		unsigned long len = ::GetModuleFileNameW(
+			hmodule, &buffer[0], numeric_cast<unsigned long>(buffer.size()));
+		
+		if (len == 0)
+			BOOST_THROW_EXCEPTION(
+				system_error(::GetLastError(), system_category));
+
+		return wstring(&buffer[0], len);
 	}
 
 	class DataObjectFixture : public ComFixture, public SandboxFixture
@@ -161,57 +166,13 @@ namespace { // private
 		 */
 		wpath create_test_zip_file()
 		{
-			wpath file = NewFileInSandbox();
-			wpath zip_file = file;
-			zip_file.replace_extension(L"zip");
-			rename(file, zip_file);
-			create_empty_zip_archive(zip_file);
+			wpath source = get_module_path().parent_path()
+				/ L"test_zip_file.zip";
+			wpath destination = Sandbox() / L"test_zip_file.zip";
 
-			//
-			// We're sneakily going to use the zip folder's own DropTarget to
-			// add files to the empty archive.
-			//
+			copy_file(source, destination);
 
-			shared_ptr<ITEMIDLIST_ABSOLUTE> zip_file_pidl = pidl_from_path(
-				zip_file);
-
-			vector<wpath> zip_contents;
-			zip_contents.push_back(NewFileInSandbox());
-			zip_contents.push_back(NewFileInSandbox());
-
-			com_ptr<IDataObject> data_object = data_object_for_files(
-				zip_contents.begin(), zip_contents.end());
-
-			com_ptr<IDropTarget> drop_target = ui_object_of_item<IDropTarget>(
-				zip_file_pidl.get());
-
-			POINTL pt = {0, 0};
-			DWORD dwEffect = DROPEFFECT_COPY;
-			HRESULT hr = drop_target->DragEnter(
-				data_object.get(), MK_LBUTTON, pt, &dwEffect);
-			if (hr != S_OK)
-			{
-				drop_target->DragLeave();
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-			}
-			if (!dwEffect)
-				BOOST_THROW_EXCEPTION(com_exception(E_UNEXPECTED));
-
-			hr = drop_target->Drop(
-				data_object.get(), MK_LBUTTON, pt, &dwEffect);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-
-			// HACK:  Shell extensions are meant to call SHCreateThread with
-			// the CTF_PROCESS_REF flag so that their 'host' process (usally
-			// Explorer but in this case us) is forced to stay alive.  Zipfldr
-			// doesn't bother so we have no idea when its safe to continue.
-			// Hence this sleep here.
-			// An alternative is to enumerate the zip folder until the files
-			// appear
-			Sleep(700);
-
-			return zip_file;
+			return destination;
 		}
 	};
 }

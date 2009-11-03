@@ -23,6 +23,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="xcopy &quot;$(ProjectDir)test_zip_file.zip&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -97,6 +98,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="xcopy &quot;$(ProjectDir)test_zip_file.zip&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
