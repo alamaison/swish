@@ -30,6 +30,7 @@
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
 #include "test/shell_folder/ProviderFixture.hpp"  // ProviderFixture
+#include "test/shell_folder/data_object_utils.hpp"  // DataObjects on zip
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -46,6 +47,7 @@ using swish::shell_folder::CDropTarget;
 using swish::shell_folder::copy_data_to_provider;
 using swish::shell_folder::data_object_for_files;
 using test::provider::ProviderFixture;
+using namespace test::shell_folder::data_object_utils;
 using comet::com_ptr;
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
@@ -273,7 +275,6 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 	expected = destination / non_empty_folder.filename();
 	BOOST_REQUIRE(exists(expected));
 	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(!is_empty(expected));
 	
 	expected = destination / non_empty_folder.filename() /
 		second_level_file.filename();
@@ -290,6 +291,61 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 		second_level_folder.filename() / third_level_file.filename();
 	BOOST_REQUIRE(exists(expected));
 	BOOST_REQUIRE(file_contents_correct(expected));
+}
+
+/**
+ * Recursively copy a virtual hierarchy from a ZIP file.
+ *
+ * Our test hierarchy look like this:
+ * Sandbox - file1.txt
+ *         \ file2.txt
+ *         \ empty_folder
+ *         \ non_empty_folder - second_level_file
+ *                            \ second_level_folder - third_level_file
+ *
+ * We could just make a DataObject by passing the sandbox dir to the shell
+ * function but instead we pass the four items directly within it to
+ * test how we handle a mix of recursive dirs and simple files.
+ */
+BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
+{
+	wpath local = create_test_zip_file(Sandbox());
+	com_ptr<IDataObject> spdo = data_object_for_zipfile(local);
+
+	wpath destination = Sandbox() / L"copy-destination";
+	create_directory(destination);
+	copy_data_to_provider(spdo.in(), Provider(), ToRemotePath(destination));
+
+	wpath expected;
+
+	expected = destination / L"file1.txt";
+	BOOST_REQUIRE(exists(expected));
+
+	expected = destination / L"file2.txt";
+	BOOST_REQUIRE(exists(expected));
+
+	expected = destination / L"empty";
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_directory(expected));
+	BOOST_REQUIRE(is_empty(expected));
+
+	expected = destination / L"non-empty";
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_directory(expected));
+
+	expected = destination / L"non-empty" / 
+		L"second-level-file";
+	BOOST_REQUIRE(exists(expected));
+
+	expected = destination / L"non-empty" / 
+		L"second-level-folder";
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_directory(expected));
+	BOOST_REQUIRE(!is_empty(expected));
+
+	expected = destination / L"non-empty" / 
+		L"second-level-folder" / L"third-level-file";
+	BOOST_REQUIRE(exists(expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
