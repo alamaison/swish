@@ -25,22 +25,14 @@
 */
 
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // Test subject
-#include "swish/exception.hpp"  // com_exception
 #include "swish/shell_folder/shell.hpp"  // shell helper function
 
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
-
-#include <comet/interface.h>  // uuidof
-#include <comet/ptr.h>  // com_ptr
+#include "test/shell_folder/data_object_utils.hpp"  // DataObject zip stuff
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
-#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
-#include <boost/system/system_error.hpp>  // system_error, system_category
 
 #include <vector>
 #include <string>
@@ -48,33 +40,15 @@
 using swish::shell_folder::data_object::ShellDataObject;  // test subject
 using swish::shell_folder::data_object::PidlFormat;  // test subject
 using swish::shell_folder::data_object::StorageMedium;  // test subject
-using swish::shell_folder::bind_to_handler_object;
-using swish::shell_folder::ui_object_of_item;
-using swish::shell_folder::ui_object_of_items;
-using swish::shell_folder::pidl_from_path;
-using swish::shell_folder::data_object_for_files;
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
-using swish::exception::com_exception;
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;
-using comet::comtype;
-using comet::com_ptr;
+using namespace test::shell_folder::data_object_utils;
 using boost::filesystem::wpath;
-using boost::filesystem::ofstream;
 using boost::test_tools::predicate_result;
-using boost::shared_ptr;
-using boost::numeric_cast;
-using boost::system::system_error;
-using boost::system::system_category;
 using std::vector;
 using std::wstring;
-
-template<> struct comtype<IDropTarget>
-{
-	static const IID& uuid() throw() { return IID_IDropTarget; }
-	typedef ::IUnknown base;
-};
 
 namespace { // private
 
@@ -98,82 +72,8 @@ namespace { // private
 		return true;
 	}
 
-	/**
-	 * Return a DataObject with the contents of a zip file.
-	 */
-	com_ptr<IDataObject> data_object_for_zipfile(const wpath& zip_file)
-	{
-		shared_ptr<ITEMIDLIST_ABSOLUTE> zip_pidl = pidl_from_path(zip_file);
-		com_ptr<IShellFolder> zip_folder = 
-			bind_to_handler_object<IShellFolder>(zip_pidl.get());
-
-		com_ptr<IEnumIDList> enum_items;
-		HRESULT hr = zip_folder->EnumObjects(
-			NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, enum_items.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-
-		enum_items->Reset();
-
-		vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
-		while (hr == S_OK)
-		{
-			PITEMID_CHILD pidl;
-			hr = enum_items->Next(1, &pidl, NULL);
-			if (hr == S_OK)
-			{
-				shared_ptr<ITEMID_CHILD> child_pidl(pidl, ::ILFree);
-
-				pidls.push_back(
-					shared_ptr<ITEMIDLIST_ABSOLUTE>(
-						::ILCombine(zip_pidl.get(), child_pidl.get()),
-						::ILFree));
-			}
-		}
-
-		return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
-	}
-
-	/**
-	 * Return the path of the currently running executable.
-	 */
-	wpath get_module_path(HMODULE hmodule=NULL)
-	{
-		vector<wchar_t> buffer(MAX_PATH);
-		unsigned long len = ::GetModuleFileNameW(
-			hmodule, &buffer[0], numeric_cast<unsigned long>(buffer.size()));
-		
-		if (len == 0)
-			BOOST_THROW_EXCEPTION(
-				system_error(::GetLastError(), system_category));
-
-		return wstring(&buffer[0], len);
-	}
-
 	class DataObjectFixture : public ComFixture, public SandboxFixture
 	{
-	public:
-		/**
-		 * Create a zip archive containing two files that we can use as a source
-		 * of 'virtual' namespace items.
-		 *
-		 * Virtual namespace items are not real files on disk and instead are
-		 * simulated by an IShellFolder implementation.  This is how Swish 
-		 * itself presents its 'files' to Explorer.  The ZIP-file browser in 
-		 * Windows 2000 and later does the same thing to give access to the 
-		 * files inside a .zip.  We're going to use one of these to test our 
-		 * shell data object wrapper with virtual items.
-		 */
-		wpath create_test_zip_file()
-		{
-			wpath source = get_module_path().parent_path()
-				/ L"test_zip_file.zip";
-			wpath destination = Sandbox() / L"test_zip_file.zip";
-
-			copy_file(source, destination);
-
-			return destination;
-		}
 	};
 }
 
@@ -227,7 +127,7 @@ BOOST_AUTO_TEST_CASE( cf_hdrop_format )
  */
 BOOST_AUTO_TEST_CASE( cf_hdrop_format_virtual )
 {
-	wpath zip_file = create_test_zip_file();
+	wpath zip_file = create_test_zip_file(Sandbox());
 	ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
 	BOOST_REQUIRE(!data_object.has_hdrop_format());
@@ -259,7 +159,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format_virtual )
 {
-	wpath zip_file = create_test_zip_file();
+	wpath zip_file = create_test_zip_file(Sandbox());
 	ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
 	BOOST_REQUIRE(data_object.has_pidl_format());
@@ -287,7 +187,7 @@ BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format )
  */
 BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format_virtual )
 {
-	wpath zip_file = create_test_zip_file();
+	wpath zip_file = create_test_zip_file(Sandbox());
 	ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
 	BOOST_REQUIRE(data_object.has_file_group_descriptor_format());
