@@ -38,11 +38,16 @@
 
 #include "swish/debug.hpp"                   // Debug macros
 #include "swish/catch_com.hpp"               // COM Exception handler
+#include "swish/exception.hpp"               // com_exception
+
+#include <boost/throw_exception.hpp>         // BOOST_THROW_EXCEPTION
 
 #include <atlstr.h>                          // CString
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
+
+using swish::exception::com_exception;
 
 using ATL::CComPtr;
 using ATL::CA2W;
@@ -133,6 +138,89 @@ CString GetLastErrorMessage(const CSession& session)
 		return CString(pszErr);
 }
 
+
+/**
+ * Translate an SFTP error code returned by libssh2 into a COM 
+ * FACILITY_STORAGE error as expected to be returned by IStreams.
+ *
+ * Explorer turns these error codes into messages which it displays to
+ * the user.
+ */
+HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
+{
+	switch (sftp_error)
+	{
+	case LIBSSH2_FX_OK:
+		return S_OK;
+
+	case LIBSSH2_FX_EOF:
+	case LIBSSH2_FX_FAILURE:
+	case LIBSSH2_FX_BAD_MESSAGE:
+		return STG_E_CANTSAVE;
+		
+	case LIBSSH2_FX_NO_CONNECTION:
+	case LIBSSH2_FX_CONNECTION_LOST:
+		return STG_E_INCOMPLETE;
+
+	case LIBSSH2_FX_NO_SUCH_FILE:
+		return STG_E_FILENOTFOUND;
+
+	case LIBSSH2_FX_PERMISSION_DENIED:
+		return STG_E_ACCESSDENIED;
+
+	case LIBSSH2_FX_OP_UNSUPPORTED:
+		return STG_E_UNIMPLEMENTEDFUNCTION;
+
+	case LIBSSH2_FX_INVALID_HANDLE:
+		return STG_E_INVALIDHANDLE;
+
+	case LIBSSH2_FX_NO_SUCH_PATH:
+		return STG_E_PATHNOTFOUND;
+
+	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+		return STG_E_FILEALREADYEXISTS;
+
+	case LIBSSH2_FX_WRITE_PROTECT:
+		return STG_E_DISKISWRITEPROTECTED;
+
+	case LIBSSH2_FX_NO_MEDIA:
+	case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
+	case LIBSSH2_FX_QUOTA_EXCEEDED:
+		return STG_E_MEDIUMFULL;
+
+	case LIBSSH2_FX_LOCK_CONFLICT:
+		return STG_E_LOCKVIOLATION;
+
+	case LIBSSH2_FX_INVALID_FILENAME:
+		return STG_E_INVALIDNAME;
+
+	case LIBSSH2_FX_UNKNOWN_PRINCIPAL:
+	case LIBSSH2_FX_DIR_NOT_EMPTY:
+	case LIBSSH2_FX_NOT_A_DIRECTORY:
+	case LIBSSH2_FX_LINK_LOOP:
+	default:
+		return STG_E_INVALIDFUNCTION;
+	}
+}
+
+/**
+ * Return last session SFTP error as a COM FACILITY_STORAGE error code.
+ */
+HRESULT last_storage_error(CSession& session)
+{
+	switch (libssh2_session_last_error(session, NULL, NULL, false))
+	{
+	case LIBSSH2_ERROR_NONE:
+		return S_OK;
+	case LIBSSH2_ERROR_SFTP_PROTOCOL:
+		return sftp_error_to_storage_error(libssh2_sftp_last_error(session));
+	case LIBSSH2_ERROR_ALLOC:
+		return STG_E_INSUFFICIENTMEMORY;
+	default:
+		return STG_E_INVALIDFUNCTION;
+	}
+}
+
 int safe_libssh2_sftp_close_handle(LIBSSH2_SFTP_HANDLE* handle)
 {
 	return (handle) ? libssh2_sftp_close_handle(handle) : 0;
@@ -195,7 +283,9 @@ void CSftpStream::Initialize(
 	{
 		TRACE("libssh2_sftp_open(%s) failed: %ws",
 			file.c_str(), GetLastErrorMessage(*m_session));
-		AtlThrow(E_UNEXPECTED);
+		
+		HRESULT hr = last_storage_error(*m_session);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 
 	m_strFilename = file.substr(file.find_last_of('/')+1);
@@ -485,7 +575,7 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 		cbRead = 0;
 		TRACE("libssh2_sftp_read() failed: %ws", 
 			GetLastErrorMessage(*m_session));
-		AtlThrow(STG_E_INVALIDFUNCTION);
+		BOOST_THROW_EXCEPTION(com_exception(last_storage_error(*m_session)));
 	}
 	cbRead = rc;
 }
@@ -512,12 +602,6 @@ void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 	do {
 		cbChunk = min(cb - cbWritten, WRITE_CHUNK);
 		rc = _WriteOne(pbuf + cbWritten, cbChunk);
-		if (rc < 0)
-		{
-			TRACE("libssh2_sftp_write() failed: %ws", 
-				GetLastErrorMessage(*m_session));
-			AtlThrow(STG_E_CANTSAVE);
-		}
 		cbWritten += rc;
 	}
 	while (rc == cbChunk && cbWritten < cb);
@@ -531,12 +615,16 @@ ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
 	{
 		TRACE("libssh2_sftp_write() failed: %ws", 
 			GetLastErrorMessage(*m_session));
-		AtlThrow(STG_E_CANTSAVE);
+
+		// XXX: maybe we have to return STG_E_CANTSAVE here (see MSDN)
+		HRESULT hr = last_storage_error(*m_session);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 	return rc;
 }
 
-#define COPY_CHUNK ULONG_MAX ///< Maximum size of any single copy operation.
+static const ULONG COPY_CHUNK = 1024*32; ///< Maximum size of any single copy 
+                                         ///< operation.
 
 /**
  * Copy cb bytes into IStream pstm.
@@ -576,9 +664,12 @@ void CSftpStream::_CopyTo(
 /**
  * Copy one buffer's-worth of bytes into IStream pstm.
  *
- * The IStream Write() method can only operate on a ULONG quantity
- * of bytes but CopyTo() can specify a ULONGLONG quantity.  _CopyTo() must call
- * this function repeatedly with a buffer smaller than COPY_CHUNK.
+ * _CopyTo() will call this function repeatedly with a buffer smaller 
+ * than COPY_CHUNK.  The reasons for this are twofold:
+ * - We must not blindly allocate a single buffer the same size as the file
+ *   as a large file would lead to a large allocation of memory.
+ * - The IStream Write() method can only operate on a ULONG quantity
+ *   of bytes but CopyTo() can specify a ULONGLONG quantity.
  *
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly 
@@ -591,8 +682,6 @@ void CSftpStream::_CopyTo(
 void CSftpStream::_CopyOne(
 	IStream *pstm, ULONG cb, ULONG& cbRead, ULONG& cbWritten) throw(...)
 {
-	// TODO: This buffer size must be limited, otherwise copying, say, a 4GB
-	// file could require 4GB of memory
 	void *pv = new byte[cb]; // Intermediate buffer
 
 	// Read data
@@ -651,7 +740,9 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 		UNREACHABLE;
 		TRACE("libssh2_sftp_fstat() failed: %ws", 
 			GetLastErrorMessage(*m_session));
-		AtlThrow(STG_E_INVALIDFUNCTION);
+
+		HRESULT hr = last_storage_error(*m_session);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 
 	statstg.cbSize.QuadPart = attrs.filesize;
@@ -721,8 +812,11 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
 		LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof attrs);
 		attrs.flags = LIBSSH2_SFTP_ATTR_SIZE;
-		int rc = libssh2_sftp_fstat(m_handle.get(), &attrs);
-		ATLENSURE_THROW(rc == 0, STG_E_INVALIDFUNCTION);
+		if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
+		{		
+			HRESULT hr = last_storage_error(*m_session);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+		}
 
 		nNewPosition = attrs.filesize - nOffset;
 		break;
