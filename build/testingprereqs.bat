@@ -29,9 +29,18 @@ set SEVENZ=..\build\7za\7za.exe
 echo ===- Dowloading Boost.Process ...
 %WGET% "http://www.highscore.de/boost/process.zip" || (
 	echo ===- Error while trying to download Boost.Process. & goto error)
-%SEVEN7% process.zip -oboost.process -aoa || (
+%SEVENZ% x process.zip -oboost.process -aoa || (
 	echo ===- Error while trying to extract Boost.Process. & goto error)
 del process.zip
+
+:: Comet
+
+echo ===- Dowloading Comet ...
+%WGET% "http://downloads.sourceforge.net/project/swish/build-prereqs/comet-1.31beta-vs2005.7z" || (
+	echo ===- Error while trying to download Comet. & goto error)
+%SEVENZ% x comet-1.31beta-vs2005.7z -ocomet -aoa || (
+	echo ===- Error while trying to extract Comet. & goto error)
+del comet-1.31beta-vs2005.7z
 
 echo.
 echo ===- All testing prerequisites successfully created.

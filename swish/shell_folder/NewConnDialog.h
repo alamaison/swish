@@ -114,6 +114,7 @@ private:
 	/** @name Field validity */
 	// @{
 	void _UpdateValidity();
+	bool _IsValidName() const;
 	bool _IsValidUser() const;
 	bool _IsValidHost() const;
 	bool _IsValidPath() const;

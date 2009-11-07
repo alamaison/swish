@@ -22,6 +22,16 @@
 #include <shellapi.h>         // For SHGetFileInfo
 #include <strsafe.h>          // For StringCchCopy
 
+using ATL::CComPtr;
+
+/*static*/ CComPtr<IExtractIconW> CIconExtractor::Create(
+	PCTSTR szFilename, bool fIsFolder)
+{
+	CComPtr<CIconExtractor> sp = CIconExtractor::CreateCoObject();
+	sp->Initialize(szFilename, fIsFolder);
+	return sp.p;
+}
+
 /**
  * Sets file or folder that this IconExtractor is being used for.
  *

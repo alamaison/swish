@@ -77,5 +77,15 @@
                              ///< includes <shtypes.h> via <shlwapi.h> we 
                              ///< need to define this here.
 
+#define _ATL_CUSTOM_THROW
+#include "exception.hpp"
+/**
+ * Custom ATL thrower which throws std::exception derived exceptions.
+ */
+__declspec(noreturn) inline void AtlThrow(HRESULT hr)
+{
+	throw swish::exception::com_exception(hr);
+};
+
 #include <atlbase.h> // base ATL classes
 #include <atlcom.h>

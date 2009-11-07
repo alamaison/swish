@@ -36,12 +36,15 @@
 
 #include "KeyboardInteractive.hpp"
 
+#include <swish/exception.hpp>
+
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-using ATL::CAtlException;
 using ATL::CComBSTR;
 using ATL::CComSafeArray;
+
+using swish::exception::com_exception;
 
 CKeyboardInteractive::CKeyboardInteractive(ISftpConsumer *pConsumer) throw() :
 	m_spConsumer(pConsumer), m_hr(S_OK)
@@ -95,7 +98,7 @@ HRESULT CKeyboardInteractive::GetErrorState() throw()
 		// Pack responses into libssh2 data-structure
 		_ProcessResponses(saResponses, num_prompts, responses);
 	}
-	catch (CAtlException& e)
+	catch (com_exception& e)
 	{
 		pThis->SetErrorState(e);
 		return;

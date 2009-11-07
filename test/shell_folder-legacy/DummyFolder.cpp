@@ -35,8 +35,6 @@ using ATL::CRegKey;
 using std::vector;
 using std::iterator;
 
-#define FUNCTION_TRACE ATLTRACE(__FUNCTION__" called\n");
-
 CDummyFolder::CDummyFolder()
 {
 	::ZeroMemory(&m_apidl[0], sizeof m_apidl[0]);
@@ -72,7 +70,7 @@ STDMETHODIMP CDummyFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 			// get next level, otherwise default to a level of 0
 			PCUITEMID_CHILD pidlEnd = ::ILFindLastID(pidl);
 
-			ValidatePidl(pidlEnd);
+			validate_pidl(pidlEnd);
 
 			level = (reinterpret_cast<const DummyItemId *>(pidlEnd)->level) + 1;
 		}
@@ -100,8 +98,17 @@ STDMETHODIMP CDummyFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 	return hr;
 }
 
-void CDummyFolder::ValidatePidl(PCUIDLIST_RELATIVE pidl)
-const throw(...)
+CLSID CDummyFolder::clsid() const
+{
+	// {708F09A0-FED0-46E8-9C56-55B7AA6AD1B2}
+	static const GUID dummyguid = {
+		0x708F09A0, 0xFED0, 0x46E8, {
+			0x9C, 0x56, 0x55, 0xB7, 0xAA, 0x6A, 0xD1, 0xB2 } };
+
+	return dummyguid;
+}
+
+void CDummyFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 {
 	if (pidl == NULL)
 		AtlThrow(E_POINTER);
@@ -113,22 +120,11 @@ const throw(...)
 		AtlThrow(E_INVALIDARG);
 }
 
-CLSID CDummyFolder::GetCLSID() const
-{
-	// {66A58E89-7EBC-449c-B897-39390F493C4C}
-	// {708F09A0-FED0-46E8-9C56-55B7AA6AD1B2}
-	static const GUID dummyguid = {
-		0x708F09A0, 0xFED0, 0x46E8, {
-			0x9C, 0x56, 0x55, 0xB7, 0xAA, 0x6A, 0xD1, 0xB2 } };
-
-	return dummyguid;
-}
-
 /**
  * Create and initialise new folder object for subfolder.
  */
-CComPtr<IShellFolder> CDummyFolder::CreateSubfolder(PCIDLIST_ABSOLUTE pidlRoot)
-const throw(...)
+CComPtr<IShellFolder> CDummyFolder::subfolder(PCIDLIST_ABSOLUTE pidlRoot)
+const
 {
 	HRESULT hr;
 
@@ -205,10 +201,9 @@ STDMETHODIMP CDummyFolder::EnumObjects(
  * - Positive: pidl1 > pidl2
  * - Zero:     pidl1 == pidl2
  */
-int CDummyFolder::ComparePIDLs(
-	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, USHORT /*uColumn*/,
-	bool /*fCompareAllFields*/, bool /*fCanonical*/)
-const throw(...)
+int CDummyFolder::compare_pidls(
+	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, int /*column*/,
+	bool /*compare_all_fields*/, bool /*canonical*/) const
 {
 	const DummyItemId *pitemid1 = reinterpret_cast<const DummyItemId *>(pidl1);
 	const DummyItemId *pitemid2 = reinterpret_cast<const DummyItemId *>(pidl2);
@@ -237,78 +232,64 @@ STDMETHODIMP CDummyFolder::GetAttributesOf(
 	return S_OK;
 }
 
-STDMETHODIMP CDummyFolder::GetUIObjectOf(
-	HWND hwndOwner, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
-	UINT * /*rgfReserved*/, void **ppv)
+CComPtr<IQueryAssociations> CDummyFolder::query_associations(
+	HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
 {
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(apidl, E_POINTER);
-	ATLENSURE_RETURN_HR(ppv, E_POINTER);
+	TRACE("Request: IQueryAssociations");
 
-	*ppv = NULL;
+	CComPtr<IQueryAssociations> spAssoc;
+	HRESULT hr = ::AssocCreate(
+		CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
+	ATLENSURE_SUCCEEDED(hr);
+	
+	// Initialise default assoc provider for Folders
+	hr = spAssoc->Init(0, L"Folder", NULL, NULL);
+	ATLENSURE_SUCCEEDED(hr);
 
-	HRESULT hr;
+	return spAssoc;
+}
 
-	if (riid == __uuidof(IQueryAssociations))
-	{
-		ATLTRACE("\t\tRequest: IQueryAssociations\n");
-		ATLASSERT(cpidl == 1);
+CComPtr<IContextMenu> CDummyFolder::context_menu(
+	HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IContextMenu");
 
-		CComPtr<IQueryAssociations> spAssoc;
-		hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-		
-		// Initialise default assoc provider for Folders
-		hr = spAssoc->Init(0, L"Folder", NULL, NULL);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
+	// Get keys associated with filetype from registry.
+	HKEY *akeys; UINT ckeys;
+	ATLENSURE_THROW(SUCCEEDED(
+		_GetAssocRegistryKeys(&ckeys, &akeys)),
+		E_UNEXPECTED  // Might fail if registry is corrupted
+	);
 
-		*ppv = spAssoc.Detach();
-	}
-	else if (riid == __uuidof(IContextMenu) || riid == __uuidof(IContextMenu2) ||
-		     riid == __uuidof(IContextMenu3))
-	{
-		ATLTRACE("\t\tRequest: IContextMenu\n");
+	CComPtr<IShellFolder> spThisFolder = this;
+	ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
 
-		// Get keys associated with filetype from registry.
-		HKEY *aKeys; UINT cKeys;
-		ATLENSURE_RETURN_HR(SUCCEEDED(
-			_GetAssocRegistryKeys(&cKeys, &aKeys)),
-			E_UNEXPECTED  // Might fail if registry is corrupted
-		);
+	// Create default context menu from list of PIDLs
+	CComPtr<IContextMenu> spMenu;
+	HRESULT hr = ::CDefFolderMenu_Create2(
+		root_pidl(), hwnd, cpidl, apidl, spThisFolder, 
+		MenuCallback, ckeys, akeys, &spMenu);
+	ATLENSURE_SUCCEEDED(hr);
 
-		CComPtr<IShellFolder> spThisFolder = this;
-		ATLENSURE_RETURN_HR(spThisFolder, E_OUTOFMEMORY);
+	return spMenu;
+}
 
-		// Create default context menu from list of PIDLs
-		CComPtr<IContextMenu> spMenu;
-		hr = ::CDefFolderMenu_Create2(
-			GetRootPIDL(), hwndOwner, cpidl, apidl, spThisFolder, 
-			MenuCallback, cKeys, aKeys, &spMenu);
-		ATLASSERT(SUCCEEDED(hr));
+CComPtr<IDataObject> CDummyFolder::data_object(
+	HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+	TRACE("Request: IDataObject");
 
-		hr = spMenu->QueryInterface(riid, ppv);
-	}
-	else if (riid == __uuidof(IDataObject))
-	{
-		ATLTRACE("\t\tRequest: IDataObject\n");
+	// A DataObject is required in order for the call to 
+	// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
+	// earlier than Vista
 
-		// A DataObject is required in order for the call to 
-		// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
-		// earlier than Vista
+	CComPtr<IDataObject> spdo;
+	HRESULT hr = ::CIDLData_CreateFromIDArray(
+		root_pidl(), cpidl, 
+		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
+	ATLENSURE_SUCCEEDED(hr);
 
-		hr = ::CIDLData_CreateFromIDArray(
-			GetRootPIDL(), cpidl, 
-			reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl),
-			(IDataObject **)ppv);
-		ATLASSERT(SUCCEEDED(hr));
-	}
-	else
-	{
-		ATLTRACE("\t\tRequest: <unknown>\n");
-		hr = E_NOINTERFACE;
-	}
-
-	return hr;
+	return spdo;
 }
 
 STDMETHODIMP CDummyFolder::GetDisplayNameOf( 

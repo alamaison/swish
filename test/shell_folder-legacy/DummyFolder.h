@@ -26,8 +26,9 @@
 
 #pragma once
 
-#include "swish/shell_folder/Folder.h"  // Superclass
-#include "swish/CoFactory.hpp"          // CComObject factory
+#include "swish/shell_folder/SwishFolder.hpp"  // Superclass
+#include "swish/CoFactory.hpp"  // CComObject factory
+#include "swish/debug.hpp"  // TRACE
 
 #include <pshpack1.h>
 struct DummyItemId
@@ -71,21 +72,21 @@ struct _CopyPidl
 };
 
 class ATL_NO_VTABLE CDummyFolder :
-	public CFolder,
+	public swish::shell_folder::folder::CSwishFolder,
 	private swish::CCoFactory<CDummyFolder>
 {
 public:
 
 	BEGIN_COM_MAP(CDummyFolder)
 		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(CFolder)
+		COM_INTERFACE_ENTRY_CHAIN(swish::shell_folder::folder::CFolder)
 	END_COM_MAP()
 	
 	/**
 	 * Create instance of the CDummyFolder class and return IShellFolder.
 	 *
 	 * @returns Smart pointer to the CDummyFolder's IShellFolder interface.
-	 * @throws  CAtlException if creation fails.
+	 * @throws  com_exception if creation fails.
 	 */
 	static ATL::CComPtr<IShellFolder> Create()
 	throw(...)
@@ -96,15 +97,23 @@ public:
 
 protected:
 
-	__override void ValidatePidl(PCUIDLIST_RELATIVE pidl) const throw(...);
-	__override CLSID GetCLSID() const;
-	__override ATL::CComPtr<IShellFolder> CreateSubfolder(
-		PCIDLIST_ABSOLUTE pidlRoot)
-		const throw(...);
-	__override int ComparePIDLs(
-		__in PCUITEMID_CHILD pidl1, __in PCUITEMID_CHILD pidl2,
-		USHORT uColumn, bool fCompareAllFields, bool fCanonical)
-		const throw(...);
+	CLSID clsid() const;
+
+	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
+	int compare_pidls(
+		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
+		int column, bool compare_all_fields, bool canonical) const;
+
+	ATL::CComPtr<IQueryAssociations> query_associations(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+
+	ATL::CComPtr<IContextMenu> context_menu(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+
+	ATL::CComPtr<IDataObject> data_object(
+		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+
+	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
 
 public:
 
@@ -136,14 +145,6 @@ public: // IShellFolder methods
 		UINT cidl,
 		__in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY apidl,
 		__inout SFGAOF *rgfInOut);
-
-	IFACEMETHODIMP GetUIObjectOf( 
-		__in_opt HWND hwndOwner,
-		UINT cidl,
-		__in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY apidl,
-		__in REFIID riid,
-		__reserved  UINT *rgfReserved,
-		__deref_out_opt void **ppv);
 
 	IFACEMETHODIMP GetDisplayNameOf( 
 		__in PCUITEMID_CHILD pidl,

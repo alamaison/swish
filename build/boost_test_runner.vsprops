@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="boost_test_runner"
+	InheritedPropertySheets=".\boost_test_client.vsprops"
 	>
 	<Tool
 		Name="VCPostBuildEventTool"

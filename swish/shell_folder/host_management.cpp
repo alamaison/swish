@@ -32,10 +32,14 @@
 #include <algorithm>
 
 #include <boost/lambda/lambda.hpp>
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
+#pragma warning(push)
+#pragma warning(disable:4180) // qualifier applied to func type has no meaning
 #include <boost/bind.hpp>
+#pragma warning(pop)
 
 using ATL::CRegKey;
-
+using boost::numeric_cast;
 using std::wstring;
 using std::vector;
 
@@ -61,7 +65,7 @@ namespace { // private
 	 * @param label  Friendly name of the connection to load.
 	 *
 	 * @returns  A host PIDL holding the connection details.
-	 * @throws  CAtlException: E_FAIL if the registry key does not exist
+	 * @throws  com_exception: E_FAIL if the registry key does not exist
 	 *          and E_UNEXPECTED if the registry is corrupted.
 	 */
 	CHostItem GetConnectionDetailsFromRegistry(wstring label)
@@ -109,7 +113,9 @@ namespace { // private
 
 		ATLENSURE(host.size() > 0 && user.size() > 0 && path.size() > 0);
 
-		return CHostItem(&user[0], &host[0], &path[0], port, &label[0]);
+		return CHostItem(
+			&user[0], &host[0], &path[0], numeric_cast<USHORT>(port), 
+			&label[0]);
 	}
 }
 
@@ -125,7 +131,7 @@ namespace host_management {
  *
  * @returns  Vector of PIDLs containing the details of all the SFTP
  *           stored in the registry.
- * @throws  CAtlException if something unexpected happens such as corrupt
+ * @throws  com_exception if something unexpected happens such as corrupt
  *          registry structure.
  */
 vector<CHostItem> LoadConnectionsFromRegistry()
@@ -140,9 +146,9 @@ vector<CHostItem> LoadConnectionsFromRegistry()
 	if (rc == ERROR_SUCCESS) // Legal to fail here - may be first ever connection
 	{
 		int iSubKey = 0;
-		wchar_t label[MAX_REGISTRY_LEN]; 
 		do {
-			DWORD cchLabel = MAX_REGISTRY_LEN;
+			wchar_t label[MAX_LABEL_LENZ]; 
+			DWORD cchLabel = MAX_LABEL_LENZ;
 			rc = registry.EnumKey(iSubKey, label, &cchLabel);
 			if (rc == ERROR_SUCCESS)
 			{
@@ -150,7 +156,9 @@ vector<CHostItem> LoadConnectionsFromRegistry()
 					GetConnectionDetailsFromRegistry(label));
 			}
 			iSubKey++;
-		} while (rc == ERROR_SUCCESS);
+			// rc may be an error for corrupted registry entries such 
+			// as a label being too big.  We continue looping regardless.
+		} while (rc != ERROR_NO_MORE_ITEMS);
 
 		ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
 	}
@@ -216,6 +224,7 @@ bool ConnectionExists(wstring label)
 
 	return find_if(connections.begin(), connections.end(), 
 		bind(&CHostItem::GetLabel, _1) == label.c_str()) != connections.end();
+
 }
 
 }} // namespace swish::host_management

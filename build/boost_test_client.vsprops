@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="boost_test_client"
+	InheritedPropertySheets=".\boost_client.vsprops"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		PreprocessorDefinitions="PCH_BOOST_TEST"
+	/>
+</VisualStudioPropertySheet>

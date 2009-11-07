@@ -164,6 +164,10 @@
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 			RelativePathToProject=".\swish\provider\provider.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
+			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -199,12 +203,28 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\stream_create_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stream_read_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stream_write_test.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\StreamFixture.hpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

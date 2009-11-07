@@ -61,7 +61,7 @@ HRESULT CSftpDataObject::FinalConstruct()
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
  * @param pProvider         Backend to communicate with remote server.
  *
- * @throws  CAtlException on error.
+ * @throws  com_exception on error.
  */
 void CSftpDataObject::Initialize(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
@@ -172,7 +172,7 @@ throw(...)
  *
  * @see _DelayRenderCfFileContents()
  *
- * @throws  CAtlException on error.
+ * @throws  com_exception on error.
  */
 void CSftpDataObject::_DelayRenderCfFileGroupDescriptor()
 throw(...)
@@ -217,7 +217,7 @@ throw(...)
  *
  * @see _DelayRenderCfFileGroupDescriptor()
  *
- * @throws  CAtlException on error.
+ * @throws  com_exception on error.
  */
 STGMEDIUM CSftpDataObject::_DelayRenderCfFileContents(long lindex)
 throw(...)

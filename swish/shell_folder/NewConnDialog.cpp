@@ -337,6 +337,26 @@ void CNewConnDialog::_HideStatusIcon()
 }
 
 /**
+ * Checks if the value in the dialog box Name field is valid.
+ *
+ * Criteria:
+ * - The field must not contain more than @ref MAX_LABEL_LEN characters.
+ *
+ * @pre the dialog must have been initialised by calling DoModal() or
+ *      Create() before this function is called.  The fields must exist in
+ *      order to check them.
+ *
+ * @see _UpdateValidity()
+ */
+bool CNewConnDialog::_IsValidName() const
+{
+	ATLASSERT(m_hWnd); // Must call DoModal() or Create() first
+
+	CString strUser = GetName();
+	return strUser.GetLength() <= MAX_LABEL_LEN;
+}
+
+/**
  * Checks if the value in the dialog box User field is valid.
  *
  * Criteria:
@@ -452,7 +472,12 @@ void CNewConnDialog::_UpdateValidity()
 
 	bool enableOK = false;
 
-	if (!_IsValidHost())
+	if (!_IsValidName())
+	{
+		_ShowStatus(IDS_HOSTDLG_INVALID_NAME);
+		_ShowStatusErrorIcon();
+	}
+	else if (!_IsValidHost())
 	{
 		_ShowStatus(IDS_HOSTDLG_INVALID_HOST);
 		_ShowStatusErrorIcon();

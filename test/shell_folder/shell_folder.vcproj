@@ -23,6 +23,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="xcopy &quot;$(ProjectDir)test_zip_file.zip&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -56,6 +57,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="shell_folder.res"
+				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -95,6 +98,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="xcopy &quot;$(ProjectDir)test_zip_file.zip&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -125,7 +129,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -175,6 +181,22 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\data_object_utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\drop_target_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\exception_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\global_lock_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\module.cpp"
 				>
 			</File>
@@ -203,6 +225,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shell_data_object_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shell_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utils_test.cpp"
 				>
 			</File>
@@ -212,6 +242,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\data_object_utils.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ProviderFixture.hpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

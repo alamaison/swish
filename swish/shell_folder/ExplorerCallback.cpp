@@ -27,18 +27,18 @@
 #include "ExplorerCallback.h"
 
 #include "NewConnDialog.h"
-#include "ShellDataObject.h"
+#include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
 #include "host_management.hpp"
 #include "swish/debug.hpp"
 #include "swish/catch_com.hpp"
+#include "swish/exception.hpp"
 
 #include <strsafe.h>          // For StringCchCopy
 
 #include <string>
 #include <vector>
 
-using ATL::CAtlException;
 using ATL::CComPtr;
 using ATL::CComQIPtr;
 using ATL::CString;
@@ -49,6 +49,8 @@ using std::vector;
 using swish::host_management::AddConnectionToRegistry;
 using swish::host_management::RemoveConnectionFromRegistry;
 using swish::host_management::ConnectionExists;
+using swish::exception::com_exception;
+using swish::shell_folder::data_object::PidlFormat;
 
 #define SFVM_SELECTIONCHANGED 8
 
@@ -288,10 +290,10 @@ bool CExplorerCallback::_ShouldEnableRemove()
 {
 	try
 	{
-		CShellDataObject data_object = _GetSelectionDataObject();
-		return data_object.GetPidlCount() == 1;
+		PidlFormat format(_GetSelectionDataObject().p);
+		return format.pidl_count() == 1;
 	}
-	catch (CAtlException)
+	catch (com_exception)
 	{
 		return false;
 	}
@@ -303,10 +305,10 @@ bool CExplorerCallback::_ShouldEnableRemove()
  */
 CAbsolutePidl CExplorerCallback::_GetSelectedItem()
 {
-	CShellDataObject data_object = _GetSelectionDataObject();
-	if (data_object.GetPidlCount() != 1)
+	PidlFormat format(_GetSelectionDataObject().p);
+	if (format.pidl_count() != 1)
 		AtlThrow(E_FAIL);
-	return data_object.GetFile(0);
+	return format.file(0);
 }
 
 /**

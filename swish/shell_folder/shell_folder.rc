@@ -139,6 +139,8 @@ BEGIN
     IDS_HOSTDLG_COMPLETE_ALL "All fields must be completed."
     IDS_HOSTDLG_CONNECTION_EXISTS 
                             "A connection with that name already exists. Please try another name."
+    IDS_COPYING_TITLE       "Copying..."
+    IDS_HOSTDLG_INVALID_NAME "The name cannot be longer than 30 characters."
 END
 
 #endif    // English (U.K.) resources
@@ -151,8 +153,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

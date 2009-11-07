@@ -38,14 +38,22 @@
 
 #include "swish/debug.hpp"                   // Debug macros
 #include "swish/catch_com.hpp"               // COM Exception handler
+#include "swish/exception.hpp"               // com_exception
+
+#include <boost/throw_exception.hpp>         // BOOST_THROW_EXCEPTION
 
 #include <atlstr.h>                          // CString
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
+using swish::exception::com_exception;
+
+using ATL::CComPtr;
 using ATL::CA2W;
 using ATL::CString;
+
+using boost::shared_ptr;
 
 using std::string;
 
@@ -116,18 +124,106 @@ CString GetSftpErrorMessage(ULONG uError)
  * In the case that the last SSH error is an SFTP error it returns the SFTP
  * error message in preference.
  */
-CString GetLastErrorMessage(LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp)
+CString GetLastErrorMessage(const CSession& session)
 {
 	int nErr; PSTR pszErr; int cchErr;
 
 	nErr = libssh2_session_last_error(session, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
-		ULONG uErr = libssh2_sftp_last_error(sftp);
+		ULONG uErr = libssh2_sftp_last_error(session);
 		return GetSftpErrorMessage(uErr);
 	}
 	else // A non-SFTP error occurred
 		return CString(pszErr);
+}
+
+
+/**
+ * Translate an SFTP error code returned by libssh2 into a COM 
+ * FACILITY_STORAGE error as expected to be returned by IStreams.
+ *
+ * Explorer turns these error codes into messages which it displays to
+ * the user.
+ */
+HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
+{
+	switch (sftp_error)
+	{
+	case LIBSSH2_FX_OK:
+		return S_OK;
+
+	case LIBSSH2_FX_EOF:
+	case LIBSSH2_FX_FAILURE:
+	case LIBSSH2_FX_BAD_MESSAGE:
+		return STG_E_CANTSAVE;
+		
+	case LIBSSH2_FX_NO_CONNECTION:
+	case LIBSSH2_FX_CONNECTION_LOST:
+		return STG_E_INCOMPLETE;
+
+	case LIBSSH2_FX_NO_SUCH_FILE:
+		return STG_E_FILENOTFOUND;
+
+	case LIBSSH2_FX_PERMISSION_DENIED:
+		return STG_E_ACCESSDENIED;
+
+	case LIBSSH2_FX_OP_UNSUPPORTED:
+		return STG_E_UNIMPLEMENTEDFUNCTION;
+
+	case LIBSSH2_FX_INVALID_HANDLE:
+		return STG_E_INVALIDHANDLE;
+
+	case LIBSSH2_FX_NO_SUCH_PATH:
+		return STG_E_PATHNOTFOUND;
+
+	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+		return STG_E_FILEALREADYEXISTS;
+
+	case LIBSSH2_FX_WRITE_PROTECT:
+		return STG_E_DISKISWRITEPROTECTED;
+
+	case LIBSSH2_FX_NO_MEDIA:
+	case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
+	case LIBSSH2_FX_QUOTA_EXCEEDED:
+		return STG_E_MEDIUMFULL;
+
+	case LIBSSH2_FX_LOCK_CONFLICT:
+		return STG_E_LOCKVIOLATION;
+
+	case LIBSSH2_FX_INVALID_FILENAME:
+		return STG_E_INVALIDNAME;
+
+	case LIBSSH2_FX_UNKNOWN_PRINCIPAL:
+	case LIBSSH2_FX_DIR_NOT_EMPTY:
+	case LIBSSH2_FX_NOT_A_DIRECTORY:
+	case LIBSSH2_FX_LINK_LOOP:
+	default:
+		return STG_E_INVALIDFUNCTION;
+	}
+}
+
+/**
+ * Return last session SFTP error as a COM FACILITY_STORAGE error code.
+ */
+HRESULT last_storage_error(CSession& session)
+{
+	switch (libssh2_session_last_error(session, NULL, NULL, false))
+	{
+	case LIBSSH2_ERROR_NONE:
+		return S_OK;
+	case LIBSSH2_ERROR_SFTP_PROTOCOL:
+		return sftp_error_to_storage_error(libssh2_sftp_last_error(session));
+	case LIBSSH2_ERROR_ALLOC:
+		return STG_E_INSUFFICIENTMEMORY;
+	default:
+		return STG_E_INVALIDFUNCTION;
+	}
+}
+
+int safe_libssh2_sftp_close_handle(LIBSSH2_SFTP_HANDLE* handle)
+{
+	return (handle) ? libssh2_sftp_close_handle(handle) : 0;
 }
 
 } // namespace
@@ -137,7 +233,6 @@ CString GetLastErrorMessage(LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp)
  * Construct a new CSftpStream instance with NULL filehandle.
  */
 CSftpStream::CSftpStream()
-	: m_pHandle(NULL), m_pSftp(NULL), m_pSession(NULL)
 {
 }
 
@@ -146,10 +241,15 @@ CSftpStream::CSftpStream()
  */
 CSftpStream::~CSftpStream()
 {
-	if (m_pHandle)
-	{
-		ATLVERIFY(libssh2_sftp_close(m_pHandle) == 0);
-	}
+}
+
+/* static */ CComPtr<CSftpStream> CSftpStream::Create(
+	shared_ptr<CSession> session, const string& file, OpenFlags flags)
+{
+	CComPtr<CSftpStream> stream = CSftpStream::CreateCoObject();
+
+	stream->Initialize(session, file, flags);
+	return stream;
 }
 
 /**
@@ -158,29 +258,38 @@ CSftpStream::~CSftpStream()
  * The file is opened using SFTP and the CSftpStream provides access to it
  * via the IStream interface.
  */
-HRESULT CSftpStream::Initialize(CSession& session, PCSTR pszFilePath)
+void CSftpStream::Initialize(
+	shared_ptr<CSession> session, const string& file, OpenFlags flags)
 {
-	m_pSftp = session;
-	m_pSession = session;
+	m_session = session;
 
-#pragma warning (push)
-#pragma warning (disable: 4267) // size_t to unsigned int
-	m_pHandle = libssh2_sftp_open(session, pszFilePath, LIBSSH2_FXF_READ, NULL);
-#pragma warning (pop)
+	// Map between CSftpStream flags and libssh2 flags
+	unsigned long libssh2_flags = 0;
+	if (flags & read)
+		libssh2_flags |= LIBSSH2_FXF_READ;
+	if (flags & write)
+		libssh2_flags |= LIBSSH2_FXF_WRITE;
+	if (flags & create)
+		libssh2_flags |= LIBSSH2_FXF_CREAT;
 
-	if (m_pHandle == NULL)
+	long mode = // rw-r--r--
+		LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR | LIBSSH2_SFTP_S_IRGRP |
+		LIBSSH2_SFTP_S_IROTH;
+
+	m_handle = shared_ptr<LIBSSH2_SFTP_HANDLE>(
+		libssh2_sftp_open(*m_session, file.c_str(), libssh2_flags, mode),
+		safe_libssh2_sftp_close_handle);
+	if (!m_handle)
 	{
-		UNREACHABLE;
 		TRACE("libssh2_sftp_open(%s) failed: %ws",
-			pszFilePath, GetLastErrorMessage(m_pSession, m_pSftp));
-		return E_UNEXPECTED;
+			file.c_str(), GetLastErrorMessage(*m_session));
+		
+		HRESULT hr = last_storage_error(*m_session);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 
-	string strFilePath(pszFilePath);
-	m_strFilename = strFilePath.substr(strFilePath.find_last_of('/')+1);
-	m_strDirectory = strFilePath.substr(0, strFilePath.find_last_of('/'));
-
-	return S_OK;
+	m_strFilename = file.substr(file.find_last_of('/')+1);
+	m_strDirectory = file.substr(0, file.find_last_of('/'));
 }
 
 
@@ -208,16 +317,18 @@ HRESULT CSftpStream::Initialize(CSession& session, PCSTR pszFilePath)
  * @return S_OK if successful or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pv is NULL.
  */
-STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
+STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
 {
+	if (pcbRead)
+		*pcbRead = 0;
 	ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
 
 	try
 	{
-		ULONG cbRead = 0;
-		if (!pcbRead) // Either return count directly or into local temp
-			pcbRead = &cbRead;
-		_Read(static_cast<char *>(pv), cb, *pcbRead);
+		ULONG cbTemp = 0; // Either return count directly or discard in cbTemp
+		if (!pcbRead)
+			pcbRead = &cbTemp;
+		_Read(static_cast<char*>(pv), cb, *pcbRead);
 	}
 	catchCom()
 
@@ -236,13 +347,25 @@ STDMETHODIMP CSftpStream::Read(void *pv, ULONG cb, ULONG *pcbRead)
  *                         even if the call results in a failure.  Optional.
  *
  * @return S_OK if successful or an STG_E_* error code if an error occurs.
- *
- * @warning Not yet implemented.
+ * @retval STG_E_INVALIDPOINTER if pv is NULL.
  */
 STDMETHODIMP CSftpStream::Write(
-	const void * /*pv*/, ULONG /*cb*/, ULONG * /*pcbWritten*/)
+	const void* pv, ULONG cb, ULONG* pcbWritten)
 {
-	return E_NOTIMPL;
+	if (pcbWritten)
+		*pcbWritten = 0;
+	ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
+
+	try
+	{
+		ULONG cbTemp = 0; // Either return count directly or discard in cbTemp
+		if (!pcbWritten)
+			pcbWritten = &cbTemp;
+		_Write(static_cast<const char*>(pv), cb, *pcbWritten);
+	}
+	catchCom()
+
+	return S_OK;
 }
 
 /**
@@ -437,30 +560,71 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  *----------------------------------------------------------------------------*
 
 /**
- * Read cb bytes into buffer pbuf.  Perform the read operation in chunks
- * less than THRESHOLD to avoid libssh2_sftp_read() failure with buffers
- * greater than 39992 bytes.
+ * Read cb bytes into buffer pbuf.  
  *
  * @returns  Number of bytes actually read in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
-void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG& cbRead) throw(...)
+void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
-	cbRead = libssh2_sftp_read(m_pHandle, pbuf, cb);
-
-	if (cbRead < 0)
+	ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
+	if (rc < 0)
 	{
 		cbRead = 0;
-		UNREACHABLE;
 		TRACE("libssh2_sftp_read() failed: %ws", 
-			GetLastErrorMessage(m_pSession, m_pSftp));
-		AtlThrow(STG_E_INVALIDFUNCTION);
+			GetLastErrorMessage(*m_session));
+		BOOST_THROW_EXCEPTION(com_exception(last_storage_error(*m_session)));
 	}
+	cbRead = rc;
 }
 
-#define COPY_CHUNK ULONG_MAX ///< Maximum size of any single copy operation.
+#define WRITE_CHUNK 1024 ///< Maximum size of any single write operation.
+
+/**
+ * Write cb bytes from buffer pbuf onto the stream.
+ *
+ * @todo  Remove piecemeal writing when the libssh2 project fixes
+ *        the write problems in the library.
+ *
+ * @returns  Number of bytes actually written in out-parameter cbRead.  This
+ *           should contain the correct value even if the call fails (throws 
+ *           an exception).
+ * @throws   com_exception with STG_E_* code if an error occurs.
+ */
+void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
+{
+	ULONG cbChunk;
+	ULONG rc;
+	
+	cbWritten = 0;
+	do {
+		cbChunk = min(cb - cbWritten, WRITE_CHUNK);
+		rc = _WriteOne(pbuf + cbWritten, cbChunk);
+		cbWritten += rc;
+	}
+	while (rc == cbChunk && cbWritten < cb);
+}
+
+
+ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
+{
+	ssize_t rc = libssh2_sftp_write(m_handle.get(), pbuf, cb);
+	if (rc < 0)
+	{
+		TRACE("libssh2_sftp_write() failed: %ws", 
+			GetLastErrorMessage(*m_session));
+
+		// XXX: maybe we have to return STG_E_CANTSAVE here (see MSDN)
+		HRESULT hr = last_storage_error(*m_session);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
+	}
+	return rc;
+}
+
+static const ULONG COPY_CHUNK = 1024*32; ///< Maximum size of any single copy 
+                                         ///< operation.
 
 /**
  * Copy cb bytes into IStream pstm.
@@ -468,7 +632,7 @@ void CSftpStream::_Read(char *pbuf, ULONG cb, ULONG& cbRead) throw(...)
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly
  *           even if the call fails (throws an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
 void CSftpStream::_CopyTo(
 	IStream *pstm, ULONGLONG cb, 
@@ -500,14 +664,17 @@ void CSftpStream::_CopyTo(
 /**
  * Copy one buffer's-worth of bytes into IStream pstm.
  *
- * The IStream Write() method can only operate on a ULONG quantity
- * of bytes but CopyTo() can specify a ULONGLONG quantity.  _CopyTo() must call
- * this function repeatedly with a buffer smaller than COPY_CHUNK.
+ * _CopyTo() will call this function repeatedly with a buffer smaller 
+ * than COPY_CHUNK.  The reasons for this are twofold:
+ * - We must not blindly allocate a single buffer the same size as the file
+ *   as a large file would lead to a large allocation of memory.
+ * - The IStream Write() method can only operate on a ULONG quantity
+ *   of bytes but CopyTo() can specify a ULONGLONG quantity.
  *
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly 
  *           even if the call fails (throws an exception).
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  *
  * @todo  Performance could be improved by continuing the _Read() operation
  *        in the background while writing the buffer to the target stream.
@@ -515,8 +682,6 @@ void CSftpStream::_CopyTo(
 void CSftpStream::_CopyOne(
 	IStream *pstm, ULONG cb, ULONG& cbRead, ULONG& cbWritten) throw(...)
 {
-	// TODO: This buffer size must be limited, otherwise copying, say, a 4GB
-	// file could require 4GB of memory
 	void *pv = new byte[cb]; // Intermediate buffer
 
 	// Read data
@@ -542,13 +707,13 @@ void CSftpStream::_CopyOne(
  * Move the seek pointer by nMove bytes (may be negative).
  *
  * @returns  New location of seek pointer.
- * @throws   CAtlException with STG_E_* code if an error occurs.
+ * @throws   com_exception with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
 	ULONGLONG uNewPosition = _CalculateNewFilePosition(nMove, dwOrigin);
 
-	libssh2_sftp_seek64(m_pHandle, uNewPosition);
+	libssh2_sftp_seek64(m_handle.get(), uNewPosition);
 
 	return uNewPosition;
 }
@@ -556,7 +721,7 @@ ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 /**
  * Create STATSTG structure for the stream.
  *
- * @throws  CAtlException with STG_E_* code if an error occurs.
+ * @throws  com_exception with STG_E_* code if an error occurs.
  */
 STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 {	
@@ -570,12 +735,14 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 	::ZeroMemory(&attrs, sizeof attrs);
 	attrs.flags = LIBSSH2_SFTP_ATTR_SIZE | LIBSSH2_SFTP_ATTR_ACMODTIME;
 
-	if (libssh2_sftp_fstat(m_pHandle, &attrs) != 0)
+	if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
 	{
 		UNREACHABLE;
 		TRACE("libssh2_sftp_fstat() failed: %ws", 
-			GetLastErrorMessage(m_pSession, m_pSftp));
-		AtlThrow(STG_E_INVALIDFUNCTION);
+			GetLastErrorMessage(*m_session));
+
+		HRESULT hr = last_storage_error(*m_session);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 
 	statstg.cbSize.QuadPart = attrs.filesize;
@@ -619,7 +786,7 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 /**
  * Calculate new position of the seek pointer.
  *
- * @throws  CAtlException with STG_E_* code if an error occurs.
+ * @throws  com_exception with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_CalculateNewFilePosition(
 	LONGLONG nMove, DWORD dwOrigin) throw(...)
@@ -633,7 +800,7 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
 		break;
 	case STREAM_SEEK_CUR: // Relative to current position
 	{
-		nNewPosition = libssh2_sftp_tell64(m_pHandle);
+		nNewPosition = libssh2_sftp_tell64(m_handle.get());
 		nNewPosition += nMove;
 		break;
 	}
@@ -645,8 +812,11 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
 		LIBSSH2_SFTP_ATTRIBUTES attrs;
 		::ZeroMemory(&attrs, sizeof attrs);
 		attrs.flags = LIBSSH2_SFTP_ATTR_SIZE;
-		int rc = libssh2_sftp_fstat(m_pHandle, &attrs);
-		ATLENSURE_THROW(rc == 0, STG_E_INVALIDFUNCTION);
+		if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
+		{		
+			HRESULT hr = last_storage_error(*m_session);
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+		}
 
 		nNewPosition = attrs.filesize - nOffset;
 		break;

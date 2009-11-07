@@ -16,12 +16,12 @@ class CSftpDirectory_test;
 #undef private
 
 #include "swish/shell_folder/HostPidl.h"
+#include "swish/exception.hpp"
 
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
 
 using ATL::CComObject;
-using ATL::CAtlException;
 using ATL::CComPtr;
 using ATL::CComBSTR;
 using ATL::CString;
@@ -282,7 +282,7 @@ protected:
 			"Rename() failed to throw an exception despite overwrite "
 			"confirmation being rejected",
 			m_pDirectory->Rename(pidl, L"renamed"),
-			CAtlException
+			swish::exception::com_exception
 		);
 
 		// Change consumer behaviour and retest
@@ -291,7 +291,7 @@ protected:
 			"Rename() failed to throw an exception despite overwrite "
 			"confirmation being rejected with S_FALSE",
 			m_pDirectory->Rename(pidl, L"renamed"),
-			CAtlException
+			swish::exception::com_exception
 		);
 	}
 
@@ -318,7 +318,7 @@ protected:
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite forced error",
 			m_pDirectory->Rename(pidl, L"renamed"),
-			CAtlException
+			swish::exception::com_exception
 		);
 	}
 
@@ -335,7 +335,7 @@ protected:
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite forced E_ABORT",
 			m_pDirectory->Rename(pidl, L"renamed"),
-			CAtlException
+			swish::exception::com_exception
 		);
 
 		// Test E_FAIL failure
@@ -343,7 +343,7 @@ protected:
 		CPPUNIT_ASSERT_THROW_MESSAGE(
 			"Rename() failed to throw an exception despite forced E_FAIL",
 			m_pDirectory->Rename(pidl, L"renamed"),
-			CAtlException
+			swish::exception::com_exception
 		);
 	}
 

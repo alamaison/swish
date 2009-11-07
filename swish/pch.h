@@ -68,11 +68,23 @@
 #include <atltypes.h>
 #include <atlctl.h>
 
-#include <shlobj.h>
-
 #include <vector>
 #include <string>
 
-#endif
+// Conditional PCH section for projects using common Boost headers
+#ifdef PCH_BOOST
+#include <boost/shared_ptr.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/system/system_error.hpp>
+#endif // PCH_BOOST
+
+// Conditional PCH section for projects using Boost.Test
+#ifdef PCH_BOOST_TEST
+
+#endif // PCH_BOOST_TEST
+
+#endif // __cplusplus
+
+#include <shlobj.h>
 
 #endif // USING_PRECOMPILED_HEADERS - do not add anything below this line

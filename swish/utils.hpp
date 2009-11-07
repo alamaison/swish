@@ -34,14 +34,16 @@
     @endif
 */
 
+#pragma once
+
+#include <boost/system/system_error.hpp>
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
+
 #include <WinNls.h>
 
 #include <string>
 #include <vector>
 #include <cassert>
-
-#include <boost/system/system_error.hpp>
-#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 
 namespace {
 
@@ -111,7 +113,7 @@ inline typename T::ToType ConvertString(const typename T::FromType& from)
 
 	throw boost::system::system_error(
 		::GetLastError(), boost::system::system_category);
-};
+}
 
 /**
  * Convert a Windows wide string to a UTF-8 (multi-byte) string.

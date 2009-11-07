@@ -12,12 +12,14 @@
 
 #include "swish/provider/SftpStream.hpp"
 #include "swish/provider/SessionFactory.hpp"
+#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
+
+#include <boost/shared_ptr.hpp>  // shared_ptr
 
 #include <memory>  // auto_ptr
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
-
 using namespace ATL;
+using boost::shared_ptr;
 using std::auto_ptr;
 
 static const char *szTestFile = 
@@ -31,7 +33,6 @@ class CSftpStream_test : public CPPUNIT_NS::TestFixture
 	CPPUNIT_TEST_SUITE( CSftpStream_test );
 		CPPUNIT_TEST( testCreate );
 		CPPUNIT_TEST( testCreateUsingFactory );
-		CPPUNIT_TEST( testInitialize );
 		CPPUNIT_TEST( testStat );
 		CPPUNIT_TEST( testStatExcludeName );
 		CPPUNIT_TEST( testStatExact ); // Likely to fail on other machine
@@ -95,19 +96,12 @@ protected:
 
 	void testCreateUsingFactory()
 	{
-		CComPtr<CSftpStream> pStream = pStream->Create();
+		shared_ptr<CSession> session(_CreateSession());
+		session->Connect(config.GetHost(), config.GetPort());
+
+		CComPtr<CSftpStream> pStream = pStream->Create(
+			session, "/var/log/messages", CSftpStream::read);
 		CPPUNIT_ASSERT(pStream);
-	}
-
-	void testInitialize()
-	{
-		CComPtr<CSftpStream> pStream = pStream->Create();
-
-		auto_ptr<CSession> spSession = _CreateSession();
-		spSession->Connect(config.GetHost(), config.GetPort());
-
-		HRESULT hr = pStream->Initialize(*spSession, "/var/log/messages");
-		CPPUNIT_ASSERT_OK(hr);
 	}
 
 	void testStat()
@@ -481,7 +475,7 @@ private:
 
 	CComPtr<CMockSftpConsumer> m_spCoConsumer;
 	CComPtr<ISftpConsumer> m_spConsumer;
-	auto_ptr<CSession> m_spSession;
+	shared_ptr<CSession> m_spSession;
 
 	auto_ptr<CSession> _CreateSession()
 	{
@@ -499,10 +493,9 @@ private:
 
 	CComPtr<CSftpStream> _CreateConnectInit(PCSTR pszFilePath)
 	{
-		CComPtr<CSftpStream> pStream = pStream->Create();
-
-		HRESULT hr = pStream->Initialize(*m_spSession, pszFilePath);
-		CPPUNIT_ASSERT_OK(hr);
+		CComPtr<CSftpStream> pStream = pStream->Create(
+			m_spSession, pszFilePath, CSftpStream::read);
+		CPPUNIT_ASSERT(pStream);
 
 		return pStream;
 	}

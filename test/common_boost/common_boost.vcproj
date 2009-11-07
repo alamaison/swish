@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;..\..\build\boost_test_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -73,13 +73,13 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying OpenSSH /etc files ..."
-				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;..\..\build\boost_test_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -132,7 +132,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying OpenSSH /etc files ..."
-				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul"
 			/>
 		</Configuration>
 	</Configurations>

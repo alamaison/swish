@@ -316,7 +316,7 @@ public:
 	 * @param[in] dateModified   Date that file was last modified.
 	 * @param[in] fIsLink        Is file a symlink?
 	 * 
-	 * @throws CAtlException if error.
+	 * @throws com_exception if error.
 	 */
 	explicit CRemotePidl(
 		PCWSTR pwszFilename, bool fIsFolder=false, PCWSTR pwszOwner=L"", 
@@ -400,7 +400,7 @@ private:
 	 * @param[in]  cchDest   Length of destination buffer in @b wide-chars.
 	 * @param[in]  pwszSrc   Source string.  Must be NULL-terminated.
 	 *
-	 * @throws CAtlException if an error occurs while copying.
+	 * @throws com_exception if an error occurs while copying.
 	 */
 	static void CopyWSZString(
 		__out_ecount(cchDest) PWSTR pwszDest, __in size_t cchDest,

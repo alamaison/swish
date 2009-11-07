@@ -19,6 +19,11 @@
 
 #include "SftpDirectory.h"
 
+#include "swish/exception.hpp"
+
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+
+using swish::exception::com_exception;
 using ATL::CComObject;
 using ATL::CComPtr;
 using ATL::CComBSTR;
@@ -124,7 +129,7 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
  * @param grfFlags  Flags specifying nature of files to fetch.
  *
  * @returns  Smart pointer to the IEnumIDList.
- * @throws  CAtlException if an error occurs.
+ * @throws  com_exception if an error occurs.
  */
 CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 {
@@ -138,7 +143,7 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 	// Fetch listing and cache in m_vecPidls
 	hr = _Fetch(grfFlags);
 	if (FAILED(hr))
-		AtlThrow(hr);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 
 	// Create holder for the collection of PIDLs the enumerator will enumerate
 	CComPidlHolder *pHolder;
@@ -168,7 +173,7 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
  * @param pidl  Child PIDL of directory within this directory.
  *
  * @returns  Instance of the subdirectory.
- * @throws  CAtlException if error.
+ * @throws  com_exception if error.
  */
 CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle pidl)
 throw(...)
@@ -189,14 +194,16 @@ throw(...)
  * @param pidl  Child PIDL of item within this directory.
  *
  * @returns  Smart pointer of an IStream interface to the file.
- * @throws  CAtlException if error.
+ * @throws  com_exception if error.
  */
 CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
 throw(...)
 {
 	CComPtr<IStream> spStream;
-	m_spProvider->GetFile(
+	HRESULT hr = m_spProvider->GetFile(
 		CComBSTR(m_strDirectory + pidl.GetFilename()), &spStream);
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	return spStream;
 }
 
@@ -210,14 +217,16 @@ throw(...)
  *              below this directory).
  *
  * @returns  Smart pointer of an IStream interface to the file.
- * @throws  CAtlException if error.
+ * @throws  com_exception if error.
  */
 CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
 throw(...)
 {
 	CComPtr<IStream> spStream;
-	m_spProvider->GetFile(
+	HRESULT hr = m_spProvider->GetFile(
 		CComBSTR(m_strDirectory + pwszPath), &spStream);
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	return spStream;
 }
 

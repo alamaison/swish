@@ -1,6 +1,11 @@
-/*  Wrapper class for Shell Data Objects containing lists of PIDLs.
+/**
+    @file
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Helper functions for tests that involve DataObjects.
+
+    @if licence
+
+    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,26 +20,24 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
-#pragma once
+#include <boost/filesystem.hpp>  // wpath
 
-#include "DataObject.h"
-#include "Pidl.h"
+#include <comet/ptr.h>  // com_ptr
 
-class CShellDataObject
-{
-public:
-	CShellDataObject(__in IDataObject *pDataObj);
-	~CShellDataObject();
+#include <ObjIdl.h>  // IDataObject
 
-	CAbsolutePidl GetParentFolder() throw(...);
-	CRelativePidl GetRelativeFile(UINT i) throw(...);
-	CAbsolutePidl GetFile(UINT i) throw(...);
-	UINT GetPidlCount() throw(...);
+namespace test {
+namespace shell_folder {
+namespace data_object_utils {
 
-private:
-	ATL::CComPtr<IDataObject> m_spDataObj;
-	CStorageMedium m_medium;
-	CGlobalLock m_glock;
-};
+boost::filesystem::wpath create_test_zip_file(
+	const boost::filesystem::wpath& in_directory);
+
+comet::com_ptr<IDataObject> data_object_for_zipfile(
+	const boost::filesystem::wpath& zip_file);
+
+}}} // namespace test::shell_folder::data_object_utils

@@ -43,6 +43,8 @@
 #include "swish/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
 
+#include <boost/shared_ptr.hpp>
+
 #include <list>
 
 namespace swish {
@@ -93,7 +95,7 @@ public:
 private:
 	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
-	std::auto_ptr<CSession> m_spSession; ///< SSH/SFTP session
+	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
 	ATL::CString m_strUser;        ///< Holds username for remote connection
 	ATL::CString m_strHost;        ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to

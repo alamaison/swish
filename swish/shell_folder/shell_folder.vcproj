@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -94,7 +94,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -166,7 +166,7 @@
 		<Configuration
 			Name="PREfast|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -249,6 +249,10 @@
 			>
 			<File
 				RelativePath=".\DataObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DropTarget.cpp"
 				>
 			</File>
 			<File
@@ -369,11 +373,15 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\ShellDataObject.cpp"
+				RelativePath=".\shell.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\Swish.idl"
+				>
+			</File>
+			<File
+				RelativePath=".\SwishFolder.cpp"
 				>
 			</File>
 			<File
@@ -391,6 +399,10 @@
 			</File>
 			<File
 				RelativePath=".\DataObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DropTarget.hpp"
 				>
 			</File>
 			<File
@@ -490,7 +502,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ShellDataObject.h"
+				RelativePath=".\shell.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SwishFolder.hpp"
 				>
 			</File>
 			<File
@@ -673,6 +689,32 @@
 					/>
 				</FileConfiguration>
 			</File>
+		</Filter>
+		<Filter
+			Name="data_object"
+			>
+			<Filter
+				Name="Header Files"
+				Filter="h;hpp;hxx;hm;inl;inc"
+				>
+				<File
+					RelativePath=".\data_object\GlobalLocker.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\data_object\ShellDataObject.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+				>
+				<File
+					RelativePath=".\data_object\ShellDataObject.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

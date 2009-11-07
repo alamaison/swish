@@ -56,14 +56,17 @@ using std::wstring;
 
 namespace { // private
 
-	class SessionFixture : public ComFixture<OpenSshFixture>
+	/**
+	 * Fixture that returns backend connections from the connection pool.
+	 */
+	class PoolFixture : public ComFixture, OpenSshFixture
 	{
 	public:
 		CComPtr<ISftpProvider> GetSession()
 		{
 			CPool pool;
 			CComPtr<CConsumerStub> consumer = CConsumerStub::CreateCoObject();
-			consumer->SetKeyPaths(GetPrivateKey(), GetPublicKey());
+			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 			return pool.GetSession(
 				consumer, Utf8StringToWideString(GetHost()).c_str(), 
 				GetCurrentUser().c_str(), GetPort());
@@ -81,7 +84,7 @@ namespace { // private
 	}
 }
 
-BOOST_FIXTURE_TEST_SUITE(Pool, SessionFixture)
+BOOST_FIXTURE_TEST_SUITE(Pool, PoolFixture)
 
 /**
  * Test a single call to GetSession().
