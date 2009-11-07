@@ -88,6 +88,7 @@ public:
 		if (m_hglobal)
 		{
 			BOOL result = ::GlobalUnlock(m_hglobal);
+			(void) result;
 			assert(result || ::GetLastError() == NO_ERROR); // Too many unlocks
 		}
 		m_hglobal = NULL;

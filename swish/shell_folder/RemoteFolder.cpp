@@ -537,7 +537,7 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 	HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
 {
 	TRACE("Request: IQueryAssociations");
-	assert(cpidl > 0);
+	ATLENSURE(cpidl > 0);
 
 	CComPtr<IQueryAssociations> spAssoc;
 	HRESULT hr = ::AssocCreate(
