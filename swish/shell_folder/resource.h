@@ -25,6 +25,7 @@
 #define IDS_HOSTDLG_COMPLETE_ALL        115
 #define IDS_HOSTDLG_CONNECTION_EXISTS   116
 #define IDS_COPYING_TITLE               117
+#define IDS_HOSTDLG_INVALID_NAME        118
 #define IDD_HOSTINFO_DIALOG             201
 #define IDC_HOST_GROUP                  1002
 #define IDC_USER                        1003

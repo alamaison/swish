@@ -140,9 +140,9 @@ vector<CHostItem> LoadConnectionsFromRegistry()
 	if (rc == ERROR_SUCCESS) // Legal to fail here - may be first ever connection
 	{
 		int iSubKey = 0;
-		wchar_t label[MAX_REGISTRY_LEN]; 
 		do {
-			DWORD cchLabel = MAX_REGISTRY_LEN;
+			wchar_t label[MAX_LABEL_LENZ]; 
+			DWORD cchLabel = MAX_LABEL_LENZ;
 			rc = registry.EnumKey(iSubKey, label, &cchLabel);
 			if (rc == ERROR_SUCCESS)
 			{
@@ -150,7 +150,9 @@ vector<CHostItem> LoadConnectionsFromRegistry()
 					GetConnectionDetailsFromRegistry(label));
 			}
 			iSubKey++;
-		} while (rc == ERROR_SUCCESS);
+			// rc may be an error for corrupted registry entries such 
+			// as a label being too big.  We continue looping regardless.
+		} while (rc != ERROR_NO_MORE_ITEMS);
 
 		ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
 	}
