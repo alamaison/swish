@@ -19,6 +19,11 @@
 
 #include "SftpDirectory.h"
 
+#include "swish/exception.hpp"
+
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+
+using swish::exception::com_exception;
 using ATL::CComObject;
 using ATL::CComPtr;
 using ATL::CComBSTR;
@@ -138,7 +143,7 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 	// Fetch listing and cache in m_vecPidls
 	hr = _Fetch(grfFlags);
 	if (FAILED(hr))
-		AtlThrow(hr);
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 
 	// Create holder for the collection of PIDLs the enumerator will enumerate
 	CComPidlHolder *pHolder;
@@ -195,8 +200,10 @@ CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
 throw(...)
 {
 	CComPtr<IStream> spStream;
-	m_spProvider->GetFile(
+	HRESULT hr = m_spProvider->GetFile(
 		CComBSTR(m_strDirectory + pidl.GetFilename()), &spStream);
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	return spStream;
 }
 
@@ -216,8 +223,10 @@ CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
 throw(...)
 {
 	CComPtr<IStream> spStream;
-	m_spProvider->GetFile(
+	HRESULT hr = m_spProvider->GetFile(
 		CComBSTR(m_strDirectory + pwszPath), &spStream);
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 	return spStream;
 }
 
