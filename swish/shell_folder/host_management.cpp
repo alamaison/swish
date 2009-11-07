@@ -32,10 +32,14 @@
 #include <algorithm>
 
 #include <boost/lambda/lambda.hpp>
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
+#pragma warning(push)
+#pragma warning(disable:4180) // qualifier applied to func type has no meaning
 #include <boost/bind.hpp>
+#pragma warning(pop)
 
 using ATL::CRegKey;
-
+using boost::numeric_cast;
 using std::wstring;
 using std::vector;
 
@@ -109,7 +113,9 @@ namespace { // private
 
 		ATLENSURE(host.size() > 0 && user.size() > 0 && path.size() > 0);
 
-		return CHostItem(&user[0], &host[0], &path[0], port, &label[0]);
+		return CHostItem(
+			&user[0], &host[0], &path[0], numeric_cast<USHORT>(port), 
+			&label[0]);
 	}
 }
 
@@ -218,6 +224,7 @@ bool ConnectionExists(wstring label)
 
 	return find_if(connections.begin(), connections.end(), 
 		bind(&CHostItem::GetLabel, _1) == label.c_str()) != connections.end();
+
 }
 
 }} // namespace swish::host_management
