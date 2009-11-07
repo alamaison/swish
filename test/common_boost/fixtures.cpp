@@ -330,7 +330,8 @@ wpath SandboxFixture::Sandbox()
 }
 
 /**
- * Create a new empty file in the fixture sandbox and return the path.
+ * Create a new empty file in the fixture sandbox with a random name
+ * and return the path.
  */
 wpath SandboxFixture::NewFileInSandbox()
 {
