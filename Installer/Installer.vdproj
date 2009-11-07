@@ -15,6 +15,30 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_039CE278DB090B2FB6958BA5A8540FD5"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_123C276A44964BA194E7A20D5C08B767"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_123C276A44964BA194E7A20D5C08B767"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_44D75F4D3DEC3BFAC0128BE5E80B989E"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_4B39578D087A4ABCB09B86004A96A6DE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -69,6 +93,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_DD9EC8BF892543A986E433212AE24D19"
+        "OwnerKey" = "8:_123C276A44964BA194E7A20D5C08B767"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_E855C84F58774ED08DAD1E53554A1B17"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -93,7 +123,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\swish-0.2.1.13-debug.msi"
+        "OutputFilename" = "8:Debug\\swish-0.3.0.0-debug.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -120,7 +150,7 @@
         "DisplayName" = "8:PREfast"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:PREfast\\swish-0.2.1.msi"
+        "OutputFilename" = "8:PREfast\\swish-0.3.0.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -147,7 +177,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\swish-0.2.1.13.msi"
+        "OutputFilename" = "8:Release\\swish-0.3.0.0.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -199,6 +229,46 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_039CE278DB090B2FB6958BA5A8540FD5"
+            {
+            "SourcePath" = "8:zlib1.dll"
+            "TargetName" = "8:zlib1.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_44D75F4D3DEC3BFAC0128BE5E80B989E"
+            {
+            "SourcePath" = "8:urlmon.dll"
+            "TargetName" = "8:urlmon.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:4"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4B39578D087A4ABCB09B86004A96A6DE"
             {
             "SourcePath" = "8:..\\README"
@@ -441,7 +511,7 @@
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.2.1"
+        "ProductVersion" = "8:0.3.0"
         "Manufacturer" = "8:Alexander Lamaison"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://sourceforge.net/projects/swish"
@@ -1044,6 +1114,34 @@
         }
         "MergeModule"
         {
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_123C276A44964BA194E7A20D5C08B767"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "SourcePath" = "8:Microsoft_VC80_DebugCRT_x86.msm"
+                "Properties"
+                {
+                }
+            "LanguageId" = "3:0"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_DD9EC8BF892543A986E433212AE24D19"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "SourcePath" = "8:policy_8_0_microsoft_vc80_debugcrt_x86.msm"
+                "Properties"
+                {
+                }
+            "LanguageId" = "3:0"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
         }
         "ProjectOutput"
         {
@@ -1077,7 +1175,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_4B42AC5F4BDE4461843EF135AD4F6CC9"
             {
-            "SourcePath" = "8:..\\release\\shell_folder-com_dll.dll"
+            "SourcePath" = "8:..\\bin\\Debug\\shell_folder-com_dll.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1161,7 +1259,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_8AE030F171114ACF95FF33409DFA9B61"
             {
-            "SourcePath" = "8:..\\release\\provider.lib"
+            "SourcePath" = "8:..\\bin\\Debug\\provider.lib"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
@@ -1189,7 +1287,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_983A937A8ABA42269182B9CED8AE4DBC"
             {
-            "SourcePath" = "8:..\\release\\libssh2.dll"
+            "SourcePath" = "8:..\\bin\\Debug\\libssh2.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
