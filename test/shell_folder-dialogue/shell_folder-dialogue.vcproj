@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -90,7 +90,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
