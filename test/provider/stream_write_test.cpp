@@ -35,6 +35,7 @@
 */
 
 #include "swish/provider/SftpStream.hpp"  // Test subject
+#include "swish/exception.hpp"  // com_exception
 
 #include "test/provider/StreamFixture.hpp"
 #include "test/common_boost/helpers.hpp"
@@ -44,9 +45,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <string>
 #include <vector>
+
+#include <sys/stat.h>  // _S_IREAD
+
+using swish::exception::com_exception;
 
 using test::provider::StreamFixture;
 
@@ -68,6 +74,18 @@ BOOST_AUTO_TEST_CASE( get )
 {
 	CComPtr<IStream> spStream = GetStream();
 	BOOST_REQUIRE(spStream);
+}
+
+/**
+ * Try to get a writable stream to a read-only file.
+ * This how we deal with opening failures.
+ */
+BOOST_AUTO_TEST_CASE( get_readonly )
+{
+	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+		BOOST_THROW_EXCEPTION(system_error(errno, system_category));
+
+	BOOST_REQUIRE_THROW(GetStream(), com_exception);
 }
 
 /**
@@ -161,7 +179,6 @@ BOOST_AUTO_TEST_CASE( write_large )
  * force a failure we open the stream but then lock the first 30 bytes
  * of the file that's under it before trying to write to the stream.
  */
-
 BOOST_AUTO_TEST_CASE( write_fail )
 {
 	CComPtr<IStream> spStream = GetStream();
