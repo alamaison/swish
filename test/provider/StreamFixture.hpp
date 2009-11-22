@@ -102,8 +102,9 @@ protected:
 		spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
 		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
-			swish::utils::Utf8StringToWideString(GetHost()).c_str(),
-			GetPort(), swish::utils::GetCurrentUser().c_str(), spConsumer));
+			swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+			swish::utils::Utf8StringToWideString(GetUser()).c_str(),
+			spConsumer));
 	}
 };
 

@@ -47,6 +47,7 @@
 #include <cstdio>
 
 using swish::utils::Utf8StringToWideString;
+using swish::utils::current_user_a;
 
 using boost::system::system_error;
 using boost::system::system_category;
@@ -246,6 +247,11 @@ int OpenSshFixture::StopServer()
 string OpenSshFixture::GetHost() const
 {
 	return SSHD_LISTEN_ADDRESS;
+}
+
+string OpenSshFixture::GetUser() const
+{
+	return current_user_a();
 }
 
 int OpenSshFixture::GetPort() const

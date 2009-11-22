@@ -90,6 +90,7 @@ public:
 	int StopServer();
 
 	std::string GetHost() const;
+	std::string GetUser() const;
 	int GetPort() const;
 	boost::filesystem::path PrivateKeyPath() const;
 	boost::filesystem::path PublicKeyPath() const;

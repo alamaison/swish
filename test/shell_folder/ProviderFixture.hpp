@@ -56,7 +56,8 @@ public:
 				test::common_boost::CConsumerStub::CreateCoObject();
 			spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
-			ATL::CComBSTR bstrUser = swish::utils::current_user().c_str();
+			ATL::CComBSTR bstrUser = 
+				swish::utils::Utf8StringToWideString(GetUser()).c_str();
 			ATL::CComBSTR bstrHost = 
 				swish::utils::Utf8StringToWideString(GetHost()).c_str();
 
