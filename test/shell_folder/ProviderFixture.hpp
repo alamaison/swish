@@ -49,26 +49,32 @@ public:
 	 */
 	ATL::CComPtr<ISftpProvider> ProviderFixture::Provider()
 	{
-		// Create args
-		ATL::CComPtr<test::common_boost::CConsumerStub> spConsumer = 
-			test::common_boost::CConsumerStub::CreateCoObject();
-		spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
+		if (!m_provider)
+		{
+			// Create args
+			ATL::CComPtr<test::common_boost::CConsumerStub> spConsumer = 
+				test::common_boost::CConsumerStub::CreateCoObject();
+			spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
 		ATL::CComBSTR bstrUser = swish::utils::GetCurrentUser().c_str();
-		ATL::CComBSTR bstrHost = 
-			swish::utils::Utf8StringToWideString(GetHost()).c_str();
+			ATL::CComBSTR bstrHost = 
+				swish::utils::Utf8StringToWideString(GetHost()).c_str();
 
-		// Create Provider from Progid and initialise
-		ATL::CComPtr<ISftpProvider> spProvider;
-		spProvider.CoCreateInstance(OLESTR("Provider.Provider"));
-		BOOST_REQUIRE(spProvider);
+			// Create Provider from Progid and initialise
+			m_provider.CoCreateInstance(OLESTR("Provider.Provider"));
+			BOOST_REQUIRE(m_provider);
 
-		HRESULT hr = spProvider->Initialize(
-			spConsumer, bstrUser, bstrHost, GetPort());
+			HRESULT hr = m_provider->Initialize(
+				spConsumer, bstrUser, bstrHost, GetPort());
 
-		BOOST_REQUIRE_OK(hr);
-		return spProvider.p;
+			BOOST_REQUIRE_OK(hr);
+		}
+
+		return m_provider.p;
 	}
+
+private:
+	ATL::CComPtr<ISftpProvider> m_provider;
 };
 
 }} // namespace test::provider
