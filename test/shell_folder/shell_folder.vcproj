@@ -221,6 +221,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\pidl_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pool_test.cpp"
 				>
 			</File>

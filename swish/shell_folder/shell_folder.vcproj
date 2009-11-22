@@ -474,6 +474,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pidl.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pidl_array.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Pool.h"
 				>
 			</File>
