@@ -38,12 +38,15 @@
 
 #include <boost/system/system_error.hpp>
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <WinNls.h>
 
 #include <string>
 #include <vector>
 #include <cassert>
+
+#pragma region WideCharToMultiByte/MultiByteToWideChar wrappers
 
 namespace {
 
@@ -131,38 +134,94 @@ inline std::wstring Utf8StringToWideString(const std::string& narrow)
 	return swish::utils::ConvertString<Widen>(narrow);
 }
 
+}} // namespace swish::utils
+
+#pragma endregion
+
+#pragma region GetUserName wrapper
+
+namespace {
+
+	struct NarrowUserTraits
+	{
+		typedef char element_type;
+		typedef std::basic_string<element_type> return_type;
+
+		inline static BOOL get_user_name(
+			element_type* out_buffer, DWORD* pcb_buffer)
+		{
+			return ::GetUserNameA(out_buffer, pcb_buffer);
+		}
+	};
+
+	struct WideUserTraits
+	{
+		typedef wchar_t element_type;
+		typedef std::basic_string<element_type> return_type;
+
+		inline static BOOL get_user_name(
+			element_type* out_buffer, DWORD* pcb_buffer)
+		{
+			return ::GetUserNameW(out_buffer, pcb_buffer);
+		}
+	};
+}
+
+namespace swish {
+namespace utils {
+
+namespace detail {
+
 /**
  * Get the current user's username.
  */
-inline std::wstring GetCurrentUser()
+template<typename T>
+inline typename T::return_type current_user()
 {
 	// Calculate required size of output buffer
 	DWORD len = 0;
-	if (::GetUserNameW(NULL, &len))
-		return std::wstring();
+	if (typename T::get_user_name(NULL, &len))
+		return typename T::return_type();
 
 	DWORD err = ::GetLastError();
 	if (err != ERROR_INSUFFICIENT_BUFFER)
 	{
-		throw boost::system::system_error(err, boost::system::system_category);
+		BOOST_THROW_EXCEPTION(
+			boost::system::system_error(
+				err, boost::system::system_category));
 	}
 
 	// Repeat call with a buffer of required size
 	if (len > 0)
 	{
-		std::vector<wchar_t> buffer(len);
-		if (::GetUserName(&buffer[0], &len))
+		std::vector<T::element_type> buffer(len);
+		if (typename T::get_user_name(&buffer[0], &len))
 		{
-			return std::wstring(&buffer[0], buffer.size());
+			return typename T::return_type(&buffer[0], buffer.size());
 		}
 		else
 		{
-			throw boost::system::system_error(
-				::GetLastError(), boost::system::system_category);
+			BOOST_THROW_EXCEPTION(
+				boost::system::system_error(
+					::GetLastError(), boost::system::system_category));
 		}
 	}
 
-	return std::wstring();
+	return typename T::return_type();
+}
+
+} // detail
+
+inline WideUserTraits::return_type current_user()
+{
+	return detail::current_user<WideUserTraits>();
+}
+
+inline NarrowUserTraits::return_type current_user_a()
+{
+	return detail::current_user<NarrowUserTraits>();
 }
 
 }} // namespace swish::utils
+
+#pragma endregion
