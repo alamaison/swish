@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\knownhost.c"
+				>
+			</File>
+			<File
 				RelativePath="src\mac.c"
 				>
 			</File>
@@ -240,6 +244,10 @@
 			</File>
 			<File
 				RelativePath="src\userauth.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\version.c"
 				>
 			</File>
 		</Filter>
