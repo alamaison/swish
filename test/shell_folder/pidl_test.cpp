@@ -49,7 +49,7 @@ using boost::numeric_cast;
 
 namespace {
 
-	const char* const data = "Lorem ipsum dolor sit amet.";
+	const std::string data = "Lorem ipsum dolor sit amet.";
 
 	class PidlFixture
 	{
@@ -70,7 +70,7 @@ namespace {
 			m_pidl.get()->mkid.cb = numeric_cast<USHORT>(
 				fake_pidl_size() - sizeof(USHORT));
 
-			std::memcpy(m_pidl.get()->mkid.abID, data, sizeof(data));
+			std::memcpy(m_pidl.get()->mkid.abID, data.c_str(), data.size());
 		}
 
 		/**
@@ -87,7 +87,7 @@ namespace {
 		 */
 		size_t fake_pidl_size() const
 		{
-			return sizeof(data) + 2 * sizeof(USHORT);
+			return data.size() + 2 * sizeof(USHORT);
 		}
 
 	private:
