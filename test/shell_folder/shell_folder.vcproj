@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\file_group_descriptor_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\global_lock_test.cpp"
 				>
 			</File>

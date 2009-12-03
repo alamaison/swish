@@ -22,8 +22,22 @@
 #include "HostPidl.h"
 #include "RemotePidl.h"
 #include "SftpDirectory.h"
+#include "data_object/StorageMedium.hpp"  // StorageMedium
+
+#pragma warning(push)
+#pragma warning(disable:4244) // conversion from uint64_t to uint32_t
+#include <boost/date_time/posix_time/conversion.hpp> // from_ftime
+#pragma warning(pop)
+#include <boost/iterator/transform_iterator.hpp> // transform_iterator
+#include <boost/mem_fn.hpp> // mem_fn
 
 using ATL::CComPtr;
+using swish::shell_folder::data_object::FileGroupDescriptor;
+using swish::shell_folder::data_object::Descriptor;
+using swish::shell_folder::data_object::StorageMedium;
+using swish::shell_folder::data_object::group_descriptor_from_range;
+using boost::make_transform_iterator;
+using boost::mem_fn;
 
 CSftpDataObject::CSftpDataObject() :
 	m_fExpandedPidlList(false),
@@ -180,14 +194,17 @@ throw(...)
 	if (!m_fRenderedDescriptor && !m_pidls.empty())
 	{
 		// Create FILEGROUPDESCRIPTOR format from the cached PIDL list
-		CFileGroupDescriptor fgd = _CreateFileGroupDescriptor();
-		ATLASSERT(fgd.GetSize() > 0);
+		HGLOBAL hglobal = _CreateFileGroupDescriptor();
+#ifdef DEBUG
+		FileGroupDescriptor fgd(hglobal);
+		ATLASSERT(fgd.size() > 0);
+#endif
 
 		// Insert the descriptor into the IDataObject
 		CFormatEtc fetc(m_cfFileDescriptor);
 		STGMEDIUM stg;
 		stg.tymed = TYMED_HGLOBAL;
-		stg.hGlobal = fgd.Detach();
+		stg.hGlobal = hglobal;
 		stg.pUnkForRelease = NULL;
 		HRESULT hr = SetData(&fetc, &stg, true);
 		if (FAILED(hr))
@@ -246,21 +263,18 @@ throw(...)
 /**
  * Create CFSTR_FILEDESCRIPTOR format from cached PIDLs.
  */
-CFileGroupDescriptor CSftpDataObject::_CreateFileGroupDescriptor()
-throw(...)
+HGLOBAL CSftpDataObject::_CreateFileGroupDescriptor()
 {
 	ExpandedList descriptors;
 	_ExpandPidlsInto(descriptors);
 
-	CFileGroupDescriptor fgd(static_cast<UINT>(descriptors.size()));
+	typedef ExpandedList::value_type descriptor_type;
 
-	for (UINT i = 0; i < descriptors.size(); ++i)
-	{
-		fgd.SetDescriptor(i, descriptors[i]);
-	}
-
-	ATLASSERT(descriptors.size() == fgd.GetSize());
-	return fgd;
+	return group_descriptor_from_range(
+		make_transform_iterator(
+			descriptors.begin(), mem_fn(&descriptor_type::get)),
+		make_transform_iterator(
+			descriptors.end(), mem_fn(&descriptor_type::get)));
 }
 
 /**
@@ -279,22 +293,18 @@ throw(...)
 
 	// Pull the FILEGROUPDESCRIPTOR we made earlier out of the DataObject
 	CFormatEtc fetc(m_cfFileDescriptor);
-	STGMEDIUM stg;
-	HRESULT hr = GetData(&fetc, &stg);
+	StorageMedium medium;
+	HRESULT hr = GetData(&fetc, medium.out());
 	ATLENSURE_SUCCEEDED(hr);
-	CFileGroupDescriptor fgd(stg.hGlobal);
+	FileGroupDescriptor fgd(medium.get().hGlobal);
 
 	// Get stream from relative path stored in the lindexth FILEDESCRIPTOR
-	CFileDescriptor fd = fgd.GetDescriptor(lindex);
-	fgd.Detach();
-
 	CSftpDirectory dir(m_pidlCommonParent, m_spProvider);
-	return dir.GetFileByPath(fd.GetPath());
+	return dir.GetFileByPath(fgd[lindex].path().string().c_str());
 }
 
 /**
- * Expand all top-level PIDLs into a list of CFileDescriptors with relative 
- * paths.
+ * Expand all top-level PIDLs into a list of Descriptors with relative paths.
  *
  * There should be a file descriptor for every item in the directory 
  * heirarchies.  Once expanded, this should not need to be done again for this
@@ -313,6 +323,55 @@ const throw(...)
 	}
 }
 
+namespace {
+
+	using namespace boost::posix_time;
+
+	const int SHOW_PROGRESS_THRESHOLD = 10000;
+
+	Descriptor make_descriptor(const CRemoteItemList& pidl, bool dialogue)
+	{
+		Descriptor d;
+
+		// Filename
+		d.path(pidl.GetFilePath().GetString());
+
+		// The PIDL we have been passed may be multilevel, representing a
+		// path to the file.  Get last item in PIDL to get properties of the
+		// file itself.
+		CRemoteItemHandle pidlEnd = pidl.GetLast();
+
+		// Size
+		d.file_size(pidlEnd.GetFileSize());
+
+		// Date
+		SYSTEMTIME st;
+		ATLVERIFY(pidlEnd.GetDateModified().GetAsSystemTime(st));
+		FILETIME ftLastWriteTime;
+		ATLVERIFY(::SystemTimeToFileTime(&st, &ftLastWriteTime));
+		d.last_write_time(from_ftime<ptime>(ftLastWriteTime));
+
+		// Show progress UI?
+		if (d.file_size() > SHOW_PROGRESS_THRESHOLD || dialogue)
+			d.want_progress(true);
+
+		// Attributes
+		DWORD dwFileAttributes = 0;
+		if (pidlEnd.IsFolder())
+			dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		else
+			dwFileAttributes |= FILE_ATTRIBUTE_NORMAL;
+
+		if (pidlEnd.GetFilename()[0] == L'.')
+			dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+
+		d.attributes(dwFileAttributes);
+
+		return d;
+	}
+
+}
+
 /**
  * Expand one of the selected PIDLs to include any descendents.
  *
@@ -327,7 +386,7 @@ const throw(...)
 	// Add file descriptor from PIDL - common case
 	ATLENSURE_THROW(
 		descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
-	descriptors.push_back(CFileDescriptor(pidl, _WantProgressDialogue()));
+	descriptors.push_back(make_descriptor(pidl, _WantProgressDialogue()));
 
 	// Explode the contents of subfolders into the list
 	if (pidl.IsFolder())
@@ -394,7 +453,7 @@ const throw(...)
 		// Add simple item - common case
 		ATLENSURE_THROW(
 			descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
-		descriptors.push_back(CFileDescriptor(pidlRelative, true));
+		descriptors.push_back(make_descriptor(pidlRelative, true));
 
 		// Explode the contents of subfolders into the list
 		if (pidl.IsFolder())
