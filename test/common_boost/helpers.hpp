@@ -32,6 +32,7 @@
 #pragma warning (pop)
 #include <boost/system/error_code.hpp>
 #include <boost/test/test_tools.hpp>
+#include <boost/filesystem.hpp>
 
 #include <string>
 #include <ostream>
@@ -55,6 +56,17 @@ namespace std {
 		std::ostream& out, const wchar_t* wide_in)
 	{
 		std::wstring wstr_in(wide_in);
+		std::string narrow_out(
+			converter(wstr_in.begin()), converter(wstr_in.end()));
+		
+		out << narrow_out;
+		return out;
+	}
+
+	inline std::ostream& operator<<(
+		std::ostream& out, const boost::filesystem::wpath& path)
+	{
+		std::wstring wstr_in(path.string());
 		std::string narrow_out(
 			converter(wstr_in.begin()), converter(wstr_in.end()));
 		
