@@ -25,6 +25,7 @@
 */
 
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // Test subject
+#include "swish/shell_folder/data_object/StorageMedium.hpp"  // Test subject
 #include "swish/shell_folder/shell.hpp"  // shell helper function
 
 #include "test/common_boost/fixtures.hpp"
