@@ -178,7 +178,8 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 }
 
 
-STDMETHODIMP CMockSftpProvider::GetFile(BSTR bstrFilePath, IStream **ppStream)
+STDMETHODIMP CMockSftpProvider::GetFile(
+	BSTR bstrFilePath, BOOL, IStream **ppStream)
 {
 	CPPUNIT_ASSERT( ppStream );
 	CPPUNIT_ASSERT( CComBSTR(bstrFilePath).Length() > 0 );

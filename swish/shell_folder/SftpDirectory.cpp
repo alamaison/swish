@@ -196,12 +196,13 @@ throw(...)
  * @returns  Smart pointer of an IStream interface to the file.
  * @throws  com_exception if error.
  */
-CComPtr<IStream> CSftpDirectory::GetFile(CRemoteItemHandle pidl)
+CComPtr<IStream> CSftpDirectory::GetFile(
+	CRemoteItemHandle pidl, bool writeable)
 throw(...)
 {
 	CComPtr<IStream> spStream;
 	HRESULT hr = m_spProvider->GetFile(
-		CComBSTR(m_strDirectory + pidl.GetFilename()), &spStream);
+		CComBSTR(m_strDirectory + pidl.GetFilename()), writeable, &spStream);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
 	return spStream;
@@ -219,12 +220,13 @@ throw(...)
  * @returns  Smart pointer of an IStream interface to the file.
  * @throws  com_exception if error.
  */
-CComPtr<IStream> CSftpDirectory::GetFileByPath(PCWSTR pwszPath)
+CComPtr<IStream> CSftpDirectory::GetFileByPath(
+	PCWSTR pwszPath, bool writeable)
 throw(...)
 {
 	CComPtr<IStream> spStream;
 	HRESULT hr = m_spProvider->GetFile(
-		CComBSTR(m_strDirectory + pwszPath), &spStream);
+		CComBSTR(m_strDirectory + pwszPath), writeable, &spStream);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
 	return spStream;

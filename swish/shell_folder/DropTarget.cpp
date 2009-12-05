@@ -212,7 +212,7 @@ namespace { // private
 		CComBSTR bstrPath = destination.string().c_str();
 
 		com_ptr<IStream> remote_stream;
-		HRESULT hr = provider->GetFile(bstrPath, remote_stream.out());
+		HRESULT hr = provider->GetFile(bstrPath, true, remote_stream.out());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
