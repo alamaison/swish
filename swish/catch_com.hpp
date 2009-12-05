@@ -56,7 +56,7 @@ inline void trace_diagnostic_info(const T& e)
 {
 	std::string info = boost::diagnostic_information(e);
 	if (!info.empty())
-		ATLTRACE(info.c_str());
+		ATLTRACE("%s", info.c_str());
 }
 
 #define catchCom()                  \
