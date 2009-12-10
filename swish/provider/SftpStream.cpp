@@ -163,6 +163,7 @@ HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
 		return STG_E_INCOMPLETE;
 
 	case LIBSSH2_FX_NO_SUCH_FILE:
+	case LIBSSH2_FX_NO_SUCH_PATH:
 		return STG_E_FILENOTFOUND;
 
 	case LIBSSH2_FX_PERMISSION_DENIED:
@@ -173,9 +174,6 @@ HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
 
 	case LIBSSH2_FX_INVALID_HANDLE:
 		return STG_E_INVALIDHANDLE;
-
-	case LIBSSH2_FX_NO_SUCH_PATH:
-		return STG_E_PATHNOTFOUND;
 
 	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
 		return STG_E_FILEALREADYEXISTS;
@@ -192,7 +190,7 @@ HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
 		return STG_E_LOCKVIOLATION;
 
 	case LIBSSH2_FX_INVALID_FILENAME:
-		return STG_E_INVALIDNAME;
+		return STG_E_INVALIDPARAMETER;
 
 	case LIBSSH2_FX_UNKNOWN_PRINCIPAL:
 	case LIBSSH2_FX_DIR_NOT_EMPTY:
