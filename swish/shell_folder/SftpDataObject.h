@@ -20,7 +20,7 @@
 #pragma once
 
 #include "DataObject.h"
-#include "FileGroupDescriptor.h"
+#include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
 #include "RemotePidl.h"
 
 #include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
@@ -114,7 +114,7 @@ private:
 	 * entire directory trees in an IDataObject.
 	 */
 	// @{
-	typedef CFileDescriptor ExpandedItem;
+	typedef swish::shell_folder::data_object::Descriptor ExpandedItem;
 	typedef std::vector<ExpandedItem> ExpandedList;
 	// @}
 
@@ -143,7 +143,7 @@ private:
 	void _DelayRenderCfFileGroupDescriptor() throw(...);
 	STGMEDIUM _DelayRenderCfFileContents(long lindex) throw(...);
 
-	CFileGroupDescriptor _CreateFileGroupDescriptor() throw(...);
+	HGLOBAL _CreateFileGroupDescriptor();
 	ATL::CComPtr<IStream> _CreateFileContentsStream(long lindex) throw(...);
 
 	void _ExpandPidlsInto(__inout ExpandedList& descriptors) const throw(...);

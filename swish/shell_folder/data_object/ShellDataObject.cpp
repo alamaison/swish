@@ -27,13 +27,13 @@
 #include "ShellDataObject.hpp"
 
 #include "GlobalLocker.hpp" // GlobalLocker
+#include "StorageMedium.hpp" // StorageMedium
 #include "swish/exception.hpp"  // com_exception
 
 #include <boost/shared_ptr.hpp>  // share_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
-using swish::shell_folder::data_object::GlobalLocker;
 using boost::shared_ptr;
 using comet::com_ptr;
 

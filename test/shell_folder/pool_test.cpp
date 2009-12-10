@@ -42,7 +42,6 @@ using ATL::CComBSTR;
 using ATL::CComPtr;
 
 using swish::utils::Utf8StringToWideString;
-using swish::utils::GetCurrentUser;
 
 using test::common_boost::ComFixture;
 using test::common_boost::OpenSshFixture;
@@ -69,7 +68,7 @@ namespace { // private
 			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 			return pool.GetSession(
 				consumer, Utf8StringToWideString(GetHost()).c_str(), 
-				GetCurrentUser().c_str(), GetPort());
+				Utf8StringToWideString(GetUser()).c_str(), GetPort());
 		}
 	};
 

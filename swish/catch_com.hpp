@@ -34,6 +34,8 @@
     @endif
 */
 
+#pragma once
+
 #include "atl.hpp"        // For CAtlException, com_exception
 
 #include <ComDef.h>       // For _com_error
@@ -41,6 +43,22 @@
 #include <exception>      // For std::exception and std::bad_alloc
 
 #ifdef _DEBUG
+
+#pragma warning(push)
+#pragma warning(disable:4996) // strerror unsafe
+#include <boost/exception.hpp>
+#pragma warning(pop)
+
+#include <string>
+
+template<typename T>
+inline void trace_diagnostic_info(const T& e)
+{
+	std::string info = boost::diagnostic_information(e);
+	if (!info.empty())
+		ATLTRACE("%s", info.c_str());
+}
+
 #define catchCom()                  \
 catch (const _com_error& e)         \
 {                                   \
@@ -50,16 +68,19 @@ catch (const _com_error& e)         \
 catch (const swish::exception::com_exception& e) \
 {                                   \
 	ATLTRACE("Caught com_exception %s\n", e.what()); \
+	trace_diagnostic_info(e);       \
 	return e;                       \
 }                                   \
-catch (const std::bad_alloc&)       \
+catch (const std::bad_alloc& e)       \
 {                                   \
 	ATLTRACE("Caught std::bad_alloc\n"); \
+	trace_diagnostic_info(e);       \
 	return E_OUTOFMEMORY;           \
 }                                   \
 catch (const std::exception& e)     \
 {                                   \
 	ATLTRACE("Caught std::exception: %hs\n", e.what()); \
+	trace_diagnostic_info(e);       \
 	return E_UNEXPECTED;            \
 }                                   \
 catch (const ATL::CAtlException& e) \

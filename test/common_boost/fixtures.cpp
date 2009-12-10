@@ -27,8 +27,12 @@
 #include "fixtures.hpp"
 
 #include "swish/utils.hpp"
+#include "swish/exception.hpp"
+
+#include "test/common_boost/helpers.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
@@ -40,6 +44,9 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/mersenne_twister.hpp>  // mt19937
 
+#include <comet/ptr.h> // com_ptr
+#include <comet/interface.h>  // uuidof, comtype
+
 #include <string>
 #include <vector>
 #include <map>
@@ -47,11 +54,16 @@
 #include <cstdio>
 
 using swish::utils::Utf8StringToWideString;
+using swish::utils::WideStringToUtf8String;
+using swish::utils::current_user_a;
+using swish::exception::com_exception;
 
 using boost::system::system_error;
 using boost::system::system_category;
 using boost::filesystem::path;
 using boost::filesystem::wpath;
+using boost::filesystem::ofstream;
+using boost::filesystem::ifstream;
 using boost::process::environment;
 using boost::process::context;
 using boost::process::child;
@@ -63,11 +75,25 @@ using boost::shared_ptr;
 using boost::uniform_int;
 using boost::variate_generator;
 using boost::mt19937;
+using boost::filesystem::wpath;
+
+using comet::com_ptr;
 
 using std::string;
 using std::wstring;
 using std::vector;
 using std::map;
+
+
+namespace comet {
+
+template<> struct comtype<IShellLink>
+{
+	static const IID& uuid() throw() { return IID_IShellLink; }
+	typedef IUnknown base;
+};
+
+}
 
 namespace { // private
 
@@ -153,7 +179,7 @@ namespace { // private
 	child StartSshd(vector<string> args)
 	{
 		string sshd_path = GetSshdPath().string();
-		vector<string> full_args = list_of(sshd_path);
+		vector<string> full_args = list_of(sshd_path); //("-ddd");
 		copy(args.begin(), args.end(), back_inserter(full_args));
 
 		context ctx; 
@@ -173,9 +199,10 @@ namespace { // private
 	int GenerateRandomPort()
 	{
 		static mt19937 rndgen;
-		static uniform_int<> distribution(10000, 65535);
+		static uniform_int<> distribution(10000, 60000);
 		static variate_generator<mt19937, uniform_int<> > gen(
 			rndgen, distribution);
+		rndgen.seed(static_cast<unsigned int>(std::time(0)));
 		return gen();
 	}
 
@@ -248,6 +275,11 @@ string OpenSshFixture::GetHost() const
 	return SSHD_LISTEN_ADDRESS;
 }
 
+string OpenSshFixture::GetUser() const
+{
+	return current_user_a();
+}
+
 int OpenSshFixture::GetPort() const
 {
 	return m_port;
@@ -277,6 +309,124 @@ wpath OpenSshFixture::ToRemotePath(wpath local_path) const
 	return Cygdriveify(local_path).string();
 }
 
+namespace {
+
+	/**
+	 * Windows shortcut header structure from Cygwin's path.cc.
+	 */
+	struct win_shortcut_hdr
+	{
+		DWORD size;		/* Header size in bytes.  Must contain 0x4c. */
+		GUID magic;		/* GUID of shortcut files. */
+		DWORD flags;	/* Content flags.  See above. */
+
+		/* The next fields from attr to icon_no are always set to 0 in Cygwin
+		   and U/Win shortcuts. */
+		DWORD attr;	/* Target file attributes. */
+		FILETIME ctime;	/* These filetime items are never touched by the */
+		FILETIME mtime;	/* system, apparently. Values don't matter. */
+		FILETIME atime;
+		DWORD filesize;	/* Target filesize. */
+		DWORD icon_no;	/* Icon number. */
+
+		DWORD run;		/* Values defined in winuser.h. Use SW_NORMAL. */
+		DWORD hotkey;	/* Hotkey value. Set to 0.  */
+		DWORD dummy[2];	/* Future extension probably. Always 0. */
+	};
+
+	static const GUID GUID_shortcut
+		= { 0x00021401L, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
+}
+
+/**
+ * Create a symbolic link to given file in the same directory.
+ *
+ * The the Cygwin-based OpenSSH server, this is done by creating a shortcut
+ * with the .lnk extension added.  The shortcut has to have a *very* specific
+ * structure to get Cygwin to recognise it.
+ */
+path OpenSshFixture::create_link(const wpath& file, const wpath& shortcut_name)
+const
+{
+	wpath link_path = file.parent_path() / shortcut_name;
+	wpath link_shortcut = link_path.string() + L".lnk";
+
+	path target_path = WideStringToUtf8String(file.string());
+	size_t target_path_len = target_path.string().size();
+	path posix_target_path = ToRemotePath(target_path);
+	size_t posix_target_path_len = posix_target_path.string().size();
+
+	size_t len = sizeof(win_shortcut_hdr) + 2 + target_path_len + 
+		2 + posix_target_path_len;
+	vector<char> buf(len);
+
+	win_shortcut_hdr* header = reinterpret_cast<win_shortcut_hdr*>(&buf[0]);
+	std::memset(header, 0, sizeof(*header));
+	header->size = 0x4c;
+	std::memcpy(&(header->magic), &GUID_shortcut, sizeof(header->magic));
+	header->flags = 0x08 | 0x04; // description | relative path
+	header->run = SW_NORMAL;
+
+	char* p = &buf[sizeof(win_shortcut_hdr)];
+
+#pragma warning(push)
+#pragma warning(disable:4996)
+	// Description
+	*reinterpret_cast<unsigned short*>(p) = static_cast<unsigned short>(
+		posix_target_path_len);
+	posix_target_path.string().copy(p += 2, posix_target_path_len);
+	p += posix_target_path_len;
+
+	// Relative path
+	*reinterpret_cast<unsigned short*>(p) = static_cast<unsigned short>(
+		target_path_len);
+	target_path.string().copy(p += 2, target_path_len);
+	p += target_path_len;
+#pragma warning(pop)
+
+	ofstream s(link_shortcut, std::ios::binary);
+	s.write(&buf[0], buf.size());
+	s.close();
+
+	// must be readonly for Cygwin to recognise as shortcut
+	BOOST_REQUIRE(::SetFileAttributes(
+		link_shortcut.file_string().c_str(), 
+		::GetFileAttributes(
+			link_shortcut.file_string().c_str()) | FILE_ATTRIBUTE_READONLY));
+
+	return WideStringToUtf8String(ToRemotePath(link_path).string());
+}
+
+/**
+ * Return the real file on the local filesystem that is represented by the
+ * given file.
+ *
+ * For instance, a symlink called 'foo' would resolve to the file that the
+ * symlink points to (i.e. the file that foo.lnk points to - not foo.lnk
+ * itself).
+ */
+wpath OpenSshFixture::resolve(const wpath& file) const
+{
+	wpath shortcut = file.string() + L".lnk";
+	if (exists(shortcut))
+	{
+		ifstream s(shortcut, std::ios::binary);
+		
+		// Skip to relative path part
+		s.seekg(sizeof(win_shortcut_hdr));
+		unsigned short len;
+		s.read(reinterpret_cast<char*>(&len), 2);
+		s.seekg(len, std::ios::cur);
+		s.read(reinterpret_cast<char*>(&len), 2);
+
+		// Read and return relative path
+		vector<char> buf(MAX_PATH);
+		s.read(&buf[0], min(len, buf.size()));
+		return Utf8StringToWideString(string(&buf[0]));
+	}
+	else
+		return file;
+}
 
 namespace { // private
 

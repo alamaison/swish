@@ -108,9 +108,19 @@ BOOST_AUTO_TEST_CASE( widening_empty_string )
  */
 BOOST_AUTO_TEST_CASE( get_current_user )
 {
-	wstring name = swish::utils::GetCurrentUser();
+	wstring name = swish::utils::current_user();
 
 	BOOST_REQUIRE_GE(name.size(), wstring(L"a").size());
+}
+
+/**
+ * Test getting current user's username (ANSI version).
+ */
+BOOST_AUTO_TEST_CASE( get_current_user_a )
+{
+	string name = swish::utils::current_user_a();
+
+	BOOST_REQUIRE_GE(name.size(), string("a").size());
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -410,10 +410,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\FileGroupDescriptor.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Folder.h"
 				>
 			</File>
@@ -471,6 +467,14 @@
 			</File>
 			<File
 				RelativePath=".\Pidl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pidl.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pidl_array.hpp"
 				>
 			</File>
 			<File
@@ -697,6 +701,10 @@
 				Name="Header Files"
 				Filter="h;hpp;hxx;hm;inl;inc"
 				>
+				<File
+					RelativePath=".\data_object\FileGroupDescriptor.hpp"
+					>
+				</File>
 				<File
 					RelativePath=".\data_object\GlobalLocker.hpp"
 					>

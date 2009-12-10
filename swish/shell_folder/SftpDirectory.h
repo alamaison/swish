@@ -48,8 +48,10 @@ public:
 
 	ATL::CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
 	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
-	ATL::CComPtr<IStream> GetFile(__in CRemoteItemHandle pidl) throw(...);
-	ATL::CComPtr<IStream> GetFileByPath(PCWSTR pwszPath) throw(...);
+	ATL::CComPtr<IStream> GetFile(
+		__in CRemoteItemHandle pidl, bool writeable) throw(...);
+	ATL::CComPtr<IStream> GetFileByPath(
+		PCWSTR pwszPath, bool writeable) throw(...);
 
 	bool Rename(
 		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)

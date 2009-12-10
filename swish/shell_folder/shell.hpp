@@ -233,6 +233,6 @@ comet::com_ptr<T> bind_to_handler_object(PCIDLIST_ABSOLUTE pidl)
  *
  * For filesystem items this will be the absolute path.
  */
-std::wstring parsing_name_from_pidl(PIDLIST_ABSOLUTE pidl);
+std::wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl);
 
 }} // namespace swish::shell_folder

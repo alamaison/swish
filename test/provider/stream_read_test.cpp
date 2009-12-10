@@ -46,15 +46,19 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <string>
 #include <vector>
+
+#include <sys/stat.h>  // _S_IREAD
 
 using test::provider::StreamFixture;
 
 using ATL::CComPtr;
 
 using boost::filesystem::ofstream;
+using boost::filesystem::path;
 using boost::system::system_error;
 using boost::system::system_category;
 using boost::shared_ptr;
@@ -74,16 +78,21 @@ namespace { // private
 	public:
 
 		/**
+		 * Put test data into a file in our sandbox.
+		 */
+		StreamReadFixture() : StreamFixture()
+		{
+			ofstream file(m_local_path, std::ios::binary);
+			file << ExpectedData() << std::flush;
+		}
+
+		/**
 		 * Create an IStream instance open for reading on a temporary file 
 		 * in our sandbox.  The file contained the same data that 
 		 * ExpectedData() returns.
 		 */
 		CComPtr<IStream> GetReadStream()
 		{
-			// Put some data in the test file
-			ofstream file(m_local_path, std::ios::binary);
-			file << ExpectedData() << std::flush;
-
 			return GetStream(CSftpStream::read);
 		}
 
@@ -109,6 +118,20 @@ BOOST_AUTO_TEST_CASE( get )
 }
 
 /**
+ * Get a read stream to a read-only file.
+ * This tests that we aren't inadvertently asking for more permissions than
+ * we need.
+ */
+BOOST_AUTO_TEST_CASE( get_readonly )
+{
+	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+		BOOST_THROW_EXCEPTION(system_error(errno, system_category));
+
+	CComPtr<IStream> spStream = GetReadStream();
+	BOOST_REQUIRE(spStream);
+}
+
+/**
  * Read a sequence of characters.
  */
 BOOST_AUTO_TEST_CASE( read_a_string )
@@ -128,6 +151,45 @@ BOOST_AUTO_TEST_CASE( read_a_string )
 	// Trying to read more should succeed but return 0 bytes read
 	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
 	BOOST_REQUIRE_EQUAL(cbRead, 0U);
+}
+
+/**
+ * Read a sequence of characters from a read-only file.
+ */
+BOOST_AUTO_TEST_CASE( read_a_string_readonly )
+{
+	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+		BOOST_THROW_EXCEPTION(system_error(errno, system_category));
+
+	CComPtr<IStream> spStream = GetReadStream();
+
+	string expected = ExpectedData();
+	ULONG cbRead = 0;
+	vector<char> buf(expected.size());
+	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
+
+	// Test that the bytes we read match
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(
+		buf.begin(), buf.end(), expected.begin(), expected.end());
+}
+
+/**
+ * Read a sequence of characters via a symbolic link.
+ */
+BOOST_AUTO_TEST_CASE( read_via_symlink )
+{
+	path link = create_link(m_local_path, L"test-link");
+
+	CComPtr<IStream> spStream = GetStream(link, CSftpStream::read);
+
+	string expected = ExpectedData();
+	ULONG cbRead = 0;
+	vector<char> buf(expected.size());
+	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
+
+	// Test that the bytes we read match
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(
+		buf.begin(), buf.end(), expected.begin(), expected.end());
 }
 
 /**

@@ -87,7 +87,7 @@ com_ptr<IDataObject> data_object_for_directory(const wpath& directory)
 		wdirectory_iterator(directory), wdirectory_iterator());
 }
 
-wstring parsing_name_from_pidl(PIDLIST_ABSOLUTE pidl)
+wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
 {
 	com_ptr<IShellFolder> folder;
 	PCUITEMID_CHILD child_pidl;

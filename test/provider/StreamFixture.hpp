@@ -76,6 +76,20 @@ public:
 	}
 
 	/**
+	 * Create an IStream instance open on a file with the given path.
+	 */
+	ATL::CComPtr<IStream> GetStream(
+		boost::filesystem::path remote_path,
+		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
+	{
+		boost::shared_ptr<CSession> session(_GetSession());
+
+		ATL::CComPtr<IStream> stream = CSftpStream::Create(
+			session, remote_path.string(), flags);
+		return stream;
+	}
+
+	/**
 	 * Create an IStream instance open on a temporary file in our sandbox.
 	 * By default the stream is open for reading and writing but different
 	 * flags can be passed to change this.
@@ -83,11 +97,7 @@ public:
 	ATL::CComPtr<IStream> GetStream(
 		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
 	{
-		boost::shared_ptr<CSession> session(_GetSession());
-
-		ATL::CComPtr<IStream> stream = CSftpStream::Create(
-			session, m_remote_path, flags);
-		return stream;
+		return GetStream(m_remote_path, flags);
 	}
 
 protected:
@@ -102,8 +112,9 @@ protected:
 		spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
 		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
-			swish::utils::Utf8StringToWideString(GetHost()).c_str(),
-			GetPort(), swish::utils::GetCurrentUser().c_str(), spConsumer));
+			swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+			swish::utils::Utf8StringToWideString(GetUser()).c_str(),
+			spConsumer));
 	}
 };
 

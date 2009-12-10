@@ -86,6 +86,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="&quot;$(TargetPath)&quot; --result_code=no --report_level=confirm --log_level=test_suite  --run_tests=sftp_data_object_tests"
 			/>
 		</Configuration>
 		<Configuration
@@ -193,6 +194,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\file_group_descriptor_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\global_lock_test.cpp"
 				>
 			</File>
@@ -221,7 +226,15 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\pidl_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pool_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sftp_data_object_test.cpp"
 				>
 			</File>
 			<File

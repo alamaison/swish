@@ -133,6 +133,7 @@ public:
 	);
 	IFACEMETHODIMP GetFile(
 		__in BSTR bstrFilePath,
+		__in BOOL fWriteable,
 		__out IStream **ppStream
 	);
 	IFACEMETHODIMP Rename(

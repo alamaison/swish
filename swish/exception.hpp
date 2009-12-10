@@ -50,7 +50,7 @@ namespace { // private
 	 * @warning LocalFree is not exception-safe according to 
 	 *          boost/libs/system/src/error_code.cpp.
 	 */
-	std::string message_from_hresult(::HRESULT hr)
+	static std::string message_from_hresult(::HRESULT hr)
 	{
 		char* pszMessage = NULL;
 		unsigned long len = ::FormatMessageA(

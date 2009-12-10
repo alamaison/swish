@@ -131,6 +131,7 @@ interface ISftpProvider : IUnknown
 	);
 	HRESULT GetFile(
 		[in] BSTR bstrFilePath,
+		[in] BOOL fWriteable,
 		[out, retval] IStream **ppStream
 	);
 	HRESULT Rename(

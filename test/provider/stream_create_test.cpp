@@ -45,6 +45,8 @@
 using swish::exception::com_exception;
 using test::provider::StreamFixture;
 
+using boost::filesystem::path;
+
 BOOST_FIXTURE_TEST_SUITE(StreamCreate, StreamFixture)
 
 /**
@@ -78,6 +80,29 @@ BOOST_AUTO_TEST_CASE( new_file_fail )
 	BOOST_REQUIRE_THROW(GetStream(), com_exception);
 
 	BOOST_REQUIRE(!exists(m_local_path));
+}
+
+/**
+ * Open a stream to a file via a symbolic link.
+ */
+BOOST_AUTO_TEST_CASE( symbolic_link )
+{
+	path link = create_link(m_local_path, L"test-link");
+
+	GetStream(link.string().c_str());
+}
+
+/**
+ * Opening a stream to a broken symbolic link should fail.
+ */
+BOOST_AUTO_TEST_CASE( broken_symbolic_link )
+{
+	path link = create_link(m_local_path, L"test-link");
+	remove(m_local_path); // break link
+
+	BOOST_REQUIRE(!exists(m_local_path));
+
+	BOOST_REQUIRE_THROW(GetStream(link.string().c_str()), com_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

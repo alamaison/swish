@@ -78,7 +78,8 @@ public:
 	IFACEMETHODIMP GetListing(
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 	IFACEMETHODIMP GetFile(
-		__in BSTR bstrFilePath, __out IStream **ppStream );
+		__in BSTR bstrFilePath, __in BOOL fWriteable,
+		__out IStream **ppStream );
 	IFACEMETHODIMP Rename(
 		__in BSTR bstrFromPath, __in BSTR bstrToPath,
 		__deref_out VARIANT_BOOL *pfWasTargetOverwritten );

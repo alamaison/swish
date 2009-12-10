@@ -90,6 +90,7 @@ public:
 	int StopServer();
 
 	std::string GetHost() const;
+	std::string GetUser() const;
 	int GetPort() const;
 	boost::filesystem::path PrivateKeyPath() const;
 	boost::filesystem::path PublicKeyPath() const;
@@ -97,6 +98,11 @@ public:
 		boost::filesystem::path local_path) const;
 	boost::filesystem::wpath ToRemotePath(
 		boost::filesystem::wpath local_path) const;
+	boost::filesystem::path create_link(
+		const boost::filesystem::wpath& file,
+		const boost::filesystem::wpath& shortcut_name) const;
+	boost::filesystem::wpath resolve(
+		const boost::filesystem::wpath& file) const;
 
 private:
 	int m_port;
