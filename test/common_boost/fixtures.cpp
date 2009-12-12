@@ -173,7 +173,7 @@ namespace { // private
 
 	int GenerateRandomPort()
 	{
-		static mt19937 rndgen;
+		static mt19937 rndgen(std::time(0));
 		static uniform_int<> distribution(10000, 65535);
 		static variate_generator<mt19937, uniform_int<> > gen(
 			rndgen, distribution);
