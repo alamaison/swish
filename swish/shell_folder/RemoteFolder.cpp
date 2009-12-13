@@ -931,7 +931,7 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
  * Gets connection for given SFTP session parameters.
  */
 CComPtr<ISftpProvider> CRemoteFolder::_GetConnection(
-	HWND hwnd, PCWSTR szHost, PCWSTR szUser, UINT uPort ) throw(...)
+	HWND hwnd, PCWSTR szHost, PCWSTR szUser, int port ) throw(...)
 {
 	// Create SFTP Consumer for SftpProvider (used for password reqs etc)
 	CComPtr<CUserInteraction> spConsumer = CUserInteraction::CreateCoObject();
@@ -940,7 +940,7 @@ CComPtr<ISftpProvider> CRemoteFolder::_GetConnection(
 	// Get SFTP Provider from session pool
 	CPool pool;
 	CComPtr<ISftpProvider> spProvider = pool.GetSession(
-		spConsumer, CComBSTR(szHost), CComBSTR(szUser), uPort);
+		spConsumer.p, szHost, szUser, port).get();
 
 	return spProvider;
 }

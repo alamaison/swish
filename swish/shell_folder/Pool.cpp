@@ -26,14 +26,145 @@
 
 #include "Pool.h"
 
-#include "swish/remotelimits.h"  // Text field limits
+#include "swish/remotelimits.h" // Text field limits
+#include "swish/exception.hpp" // com_exception
 
-#include <atlstr.h>  // CString
+#include <comet/bstr.h> // bstr_t
+#include <comet/interface.h>  // uuidof, comtype
 
-using ATL::CComPtr;
-using ATL::CComQIPtr;
-using ATL::CString;
-using ATL::CComBSTR;
+#include <boost/lexical_cast.hpp> // lexical_cast
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
+using swish::exception::com_exception;
+
+using boost::lexical_cast;
+
+using comet::com_ptr;
+using comet::bstr_t;
+
+using std::wstring;
+
+
+namespace comet {
+
+template<> struct comtype<ISftpProvider>
+{
+	static const IID& uuid() throw() { return IID_ISftpProvider; }
+	typedef IUnknown base;
+};
+
+
+template<> struct comtype<ISftpConsumer>
+{
+	static const IID& uuid() throw() { return IID_ISftpConsumer; }
+	typedef IUnknown base;
+};
+
+} // namespace comet
+
+namespace {
+
+	/**
+	 * Create an item moniker for the session with the given parameters.
+	 *
+	 * e.g. !user@host:port
+	 */
+	com_ptr<IMoniker> create_item_moniker(
+		const wstring& host, const wstring& user, int port)
+	{
+		wstring moniker_name = 
+			user + L'@' + host + L':' + lexical_cast<wstring>(port);
+
+		com_ptr<IMoniker> moniker;
+		HRESULT hr = ::CreateItemMoniker(
+			OLESTR("!"), moniker_name.c_str(), moniker.out());
+		assert(SUCCEEDED(hr));
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		return moniker;
+	}
+
+	/**
+	 * Get the local Winstation Running Object Table.
+	 */
+	com_ptr<IRunningObjectTable> running_object_table()
+	{
+		com_ptr<IRunningObjectTable> rot;
+
+		HRESULT hr = ::GetRunningObjectTable(0, rot.out());
+		assert(SUCCEEDED(hr));
+		assert(rot);
+
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		return rot;
+	}
+
+	/**
+	 * Fetch a session from the Running Object Table.
+	 *
+	 * If there is no session in the ROT that matches the given paramters,
+	 * return NULL.
+	 */
+	com_ptr<ISftpProvider> session_from_rot(
+		const wstring& host, const wstring& user, int port)
+	{
+		com_ptr<IMoniker> moniker = create_item_moniker(host, user, port);
+		com_ptr<IRunningObjectTable> rot = running_object_table();
+
+		com_ptr<IUnknown> unknown;
+		// We don't care if this fails - return NULL to indicate not found
+		rot->GetObject(moniker.in(), unknown.out());
+
+		com_ptr<ISftpProvider> provider = com_cast(unknown);
+		assert(provider || !unknown); // failure should not be due to QI
+		return provider;
+	}
+
+	void store_session_in_rot(
+		const com_ptr<ISftpProvider>& provider, const wstring& host,
+		const wstring& user, int port)
+	{
+		HRESULT hr;
+
+		com_ptr<IMoniker> moniker = create_item_moniker(host, user, port);
+		com_ptr<IRunningObjectTable> rot = running_object_table();
+
+		DWORD dwCookie;
+		com_ptr<IUnknown> unknown = provider;
+		hr = rot->Register(
+			ROTFLAGS_REGISTRATIONKEEPSALIVE, unknown.in(), moniker.in(), 
+			&dwCookie);
+		assert(hr == S_OK);
+		if (hr == MK_S_MONIKERALREADYREGISTERED)
+		{
+			// This should never get called.  In case it does, we revoke 
+			// the duplicate.  
+			rot->Revoke(dwCookie);
+		}
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+		// TODO: find way to revoke normal case when finished with them
+	}
+
+	com_ptr<ISftpProvider> create_new_session(
+		const com_ptr<ISftpConsumer>& consumer, const bstr_t& host,
+		const bstr_t& user, int port)
+	{
+		HRESULT hr;
+
+		// Create SFTP Provider from ProgID and initialise
+
+		com_ptr<ISftpProvider> provider(L"Provider.Provider");
+		hr = provider->Initialize(consumer.in(), user.in(), host.in(), port);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		return provider;
+	}
+}
 
 /**
  * Retrieves an SFTP session for a global pool or creates it if none exists.
@@ -52,107 +183,32 @@ using ATL::CComBSTR;
  *
  * @returns pointer to the session (ISftpProvider).
  */
-CComPtr<ISftpProvider> CPool::GetSession(
-	ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
-	throw(...)
+com_ptr<ISftpProvider> CPool::GetSession(
+	const com_ptr<ISftpConsumer>& consumer, const wstring& host, 
+	const wstring& user, int port)
 {
-	ATLENSURE_THROW(pConsumer, E_POINTER);
-	ATLENSURE_THROW(pszHost[0] != '\0', E_INVALIDARG);
-	ATLENSURE_THROW(pszUser[0] != '\0', E_INVALIDARG);
-	ATLENSURE_THROW(uPort < MAX_PORT, E_INVALIDARG);
+	if (!consumer) BOOST_THROW_EXCEPTION(com_exception(E_POINTER));
+	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
+	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
+	if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
 
-	// Try to get the session from the global pol
-	CComPtr<ISftpProvider> spProvider = 
-		_GetSessionFromROT(pszHost, pszUser, uPort);
+	// Try to get the session from the global pool
+	com_ptr<ISftpProvider> provider = session_from_rot(host, user, port);
 
-	if (spProvider == NULL)
+	if (!provider)
 	{
 		// No existing session; create new one and add to the pool
-		spProvider = _CreateNewSession(pConsumer, pszHost, pszUser, uPort);
-		_StoreSessionInROT(spProvider, pszHost, pszUser, uPort);
+		provider = create_new_session(consumer, host, user, port);
+		store_session_in_rot(provider, host, user, port);
 	}
 	else
 	{
 		// Existing session found; switch it to use new SFTP consumer
-		spProvider->SwitchConsumer(pConsumer);
+		HRESULT hr = provider->SwitchConsumer(consumer.in());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
 
-	ATLENSURE(spProvider);
-	return spProvider;
-}
-
-CComPtr<IMoniker> CPool::_CreateMoniker(
-	PCWSTR pszHost, PCWSTR pszUser, UINT uPort ) throw(...)
-{
-	CString strMonikerName;
-	strMonikerName.Format(L"%ls@%ls:%d", pszUser, pszHost, uPort);
-
-	CComPtr<IMoniker> spMoniker;
-	ATLENSURE_SUCCEEDED(
-		::CreateItemMoniker(OLESTR("!"), strMonikerName, &spMoniker));
-
-	return spMoniker;
-}
-
-CComPtr<ISftpProvider> CPool::_GetSessionFromROT(
-	PCWSTR pszHost, PCWSTR pszUser, UINT uPort ) throw(...)
-{
-	CComPtr<IMoniker> spMoniker = _CreateMoniker(pszHost, pszUser, uPort);
-	CComPtr<IRunningObjectTable> spROT;
-	ATLENSURE_SUCCEEDED(::GetRunningObjectTable(NULL, &spROT));
-
-	CComPtr<IUnknown> spUnk;
-	if (spROT->GetObject(spMoniker, &spUnk) == S_OK)
-	{
-		CComQIPtr<ISftpProvider> spProvider = spUnk;
-		ATLENSURE_THROW(spProvider, E_NOINTERFACE);
-
-		return spProvider;
-	}
-	else
-		return NULL;
-}
-
-void CPool::_StoreSessionInROT(
-	ISftpProvider *pProvider, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
-	throw(...)
-{
-	HRESULT hr;
-
-	CComPtr<IMoniker> spMoniker = _CreateMoniker(pszHost, pszUser, uPort);
-	CComPtr<IRunningObjectTable> spROT;
-	ATLENSURE_SUCCEEDED(::GetRunningObjectTable(NULL, &spROT));
-
-	DWORD dwCookie;
-	CComPtr<IUnknown> spUnk = pProvider;
-	hr = spROT->Register(
-		ROTFLAGS_REGISTRATIONKEEPSALIVE, spUnk, spMoniker, &dwCookie);
-	ATLASSERT(hr == S_OK);
-	if (hr == MK_S_MONIKERALREADYREGISTERED)
-	{
-		// This should never get called.  In case it does, we revoke 
-		// the duplicate.  
-		spROT->Revoke(dwCookie);
-	}
-	ATLENSURE_SUCCEEDED(hr);
-	// TODO: find way to revoke normal case when finished with them
-}
-
-CComPtr<ISftpProvider> CPool::_CreateNewSession(
-	ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort )
-	throw(...)
-{
-	HRESULT hr;
-
-	// Create SFTP Provider from ProgID and initialise
-
-	CComPtr<ISftpProvider> spProvider;
-	hr = spProvider.CoCreateInstance(OLESTR("Provider.Provider"));
-	ATLENSURE_SUCCEEDED(hr);
-
-	hr = spProvider->Initialize(
-		pConsumer, CComBSTR(pszUser), CComBSTR(pszHost), uPort);
-	ATLENSURE_SUCCEEDED(hr);
-
-	return spProvider;
+	assert(provider);
+	return provider;
 }

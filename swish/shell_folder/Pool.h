@@ -28,29 +28,15 @@
 
 #include "SftpProvider.h" // ISftpProvider/ISftpConsumer interfaces
 
-#include "swish/atl.hpp"  // Common ATL setup
+#include <comet/ptr.h>  // com_ptr
+
+#include <string>
 
 class CPool
 {
 public:
 
-	ATL::CComPtr<ISftpProvider> GetSession(
-		__in ISftpConsumer *pConsumer, __in PCWSTR pszHost, __in PCWSTR pszUser, 
-		UINT uPort) throw(...);
-
-private:
-
-	ATL::CComPtr<IMoniker> _CreateMoniker(
-		__in PCWSTR pszHost, __in PCWSTR pszUser, UINT uPort) throw(...);
-
-	__checkReturn ATL::CComPtr<ISftpProvider> _GetSessionFromROT(
-		__in PCWSTR pszHost, __in PCWSTR pszUser, UINT uPort) throw(...);
-
-	void _StoreSessionInROT(
-		__in ISftpProvider *pProvider, __in PCWSTR pszHost, __in PCWSTR pszUser, 
-		UINT uPort) throw(...);
-
-	ATL::CComPtr<ISftpProvider> _CreateNewSession(
-		ISftpConsumer *pConsumer, PCWSTR pszHost, PCWSTR pszUser, UINT uPort)
-		throw(...);
+	comet::com_ptr<ISftpProvider> GetSession(
+		const comet::com_ptr<ISftpConsumer>& consumer,
+		const std::wstring& host, const std::wstring& user, int port);
 };

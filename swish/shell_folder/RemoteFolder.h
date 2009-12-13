@@ -126,7 +126,7 @@ private:
 
 	ATL::CComPtr<ISftpProvider> _GetConnection(
 		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
-		UINT uPort ) throw(...);
+		int port ) throw(...);
 	ATL::CComPtr<ISftpProvider> _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
