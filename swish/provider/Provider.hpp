@@ -100,6 +100,7 @@ private:
 	ATL::CString m_strUser;        ///< Holds username for remote connection
 	ATL::CString m_strHost;        ///< Hold name of remote host
 	UINT m_uPort;                  ///< Holds remote port to connect to
+	DWORD m_dwCookie;              ///< Running Object Table registration
 
 	HRESULT _Connect();
 	void _Disconnect();

@@ -1,7 +1,7 @@
 /**
     @file
 
-    Miscellanious utility code.
+    Miscellanious Windows API utility code.
 
     @if licence
 
@@ -40,7 +40,9 @@
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
+#include <comet/ptr.h> // com_ptr
 #include <WinNls.h>
+#include <Objbase.h> // GetRunningObjectTable
 
 #include <string>
 #include <vector>
@@ -221,6 +223,27 @@ inline NarrowUserTraits::return_type current_user_a()
 {
 	return detail::current_user<NarrowUserTraits>();
 }
+
+namespace com {
+
+/**
+ * Get the local Winstation Running Object Table.
+ */
+inline comet::com_ptr<IRunningObjectTable> running_object_table()
+{
+	comet::com_ptr<IRunningObjectTable> rot;
+
+	HRESULT hr = ::GetRunningObjectTable(0, rot.out());
+	assert(SUCCEEDED(hr));
+	assert(rot);
+
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+
+	return rot;
+}
+
+} // namespace swish::utils::com
 
 }} // namespace swish::utils
 

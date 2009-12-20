@@ -42,11 +42,25 @@
 
 #include "swish/remotelimits.h"
 #include "swish/catch_com.hpp"   // COM exception handler
+#include "swish/exception.hpp"   // com_exception
+#include "swish/utils.hpp" // running_object_table
+
+#include <comet/ptr.h> // com_ptr
+
+#include <boost/lexical_cast.hpp> // lexical_cast
+
+#include <string>
 
 #include <ws2tcpip.h>            // Winsock
 #include <wspiapi.h>             // Winsock
 
 using namespace swish::provider;
+using swish::exception::com_exception;
+using swish::utils::com::running_object_table;
+
+using comet::com_ptr;
+
+using boost::lexical_cast;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -55,6 +69,7 @@ using ATL::CComBSTR;
 using ATL::CString;
 
 using std::string;
+using std::wstring;
 using std::list;
 
 #pragma warning (push)
@@ -69,7 +84,8 @@ using std::list;
  */
 CProvider::CProvider() :
 	m_fInitialized(false),
-	m_pConsumer(NULL)
+	m_pConsumer(NULL),
+	m_dwCookie(0)
 {
 }
 
@@ -91,12 +107,94 @@ HRESULT CProvider::FinalConstruct()
 	return S_OK;
 }
 
+namespace {
+
+	/**
+	 * Create an item moniker for the session with the given parameters.
+	 *
+	 * e.g. !user@host:port
+	 */
+	com_ptr<IMoniker> create_item_moniker(
+		const wstring& user, const wstring& host, int port)
+	{
+		wstring moniker_name = 
+			user + L'@' + host + L':' + lexical_cast<wstring>(port);
+
+		com_ptr<IMoniker> moniker;
+		HRESULT hr = ::CreateItemMoniker(
+			OLESTR("!"), moniker_name.c_str(), moniker.out());
+		assert(SUCCEEDED(hr));
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		return moniker;
+	}
+
+	/**
+	 * Register a session with the Running Object Table.
+	 *
+	 *
+	 * The connection is registered with a moniker of the form 
+	 * !sftp://user@host:port.  By default, the ROT will hold a strong 
+	 * reference to this instance preventing it from being released unless 
+	 * explicitly revoked.
+	 *
+	 * @note  The connection doesn't actually have to be connected to the 
+	 * remote server to be registered.  This object instance, connection or 
+	 * otherwise, is the connection as far as clients are concerned.
+	 *
+	 * @returns  A cookie identifying the registration.
+	 */
+	DWORD register_in_rot(
+		const com_ptr<ISftpProvider>& provider, const wstring& user,
+		const wstring& host, int port,
+		DWORD flags=ROTFLAGS_REGISTRATIONKEEPSALIVE)
+	{
+		com_ptr<IMoniker> moniker = create_item_moniker(user, host, port);
+		com_ptr<IRunningObjectTable> rot = running_object_table();
+		com_ptr<IUnknown> unknown = provider;
+
+		DWORD cookie = 0;
+		HRESULT hr = rot->Register(flags, unknown.in(), moniker.in(), &cookie);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+
+		return cookie;
+	}
+
+	/**
+	 * Remove this connection instance from the Running Object Table.
+	 *
+	 * The target instance will be registered with a moniker of the form 
+	 * !sftp://user@host:port.  The ROT will release its strong reference to
+	 * this instance and, if that was the last one, this object will be freed.
+	 */
+	void revoke_from_rot(DWORD cookie)
+	{
+		com_ptr<IRunningObjectTable> rot = running_object_table();
+
+		HRESULT hr = rot->Revoke(cookie);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_exception(hr));
+	}
+}
+
 /**
  * Free libssh2 and shutdown Winsock
  */
 void CProvider::FinalRelease()
 {
 	_Disconnect(); // Destroy session before shutting down Winsock
+
+	try
+	{
+		if (m_dwCookie)
+			revoke_from_rot(m_dwCookie);
+	}
+	catch (const std::exception& e)
+	{
+		ATLTRACE("revoke_from_rot THREW IN DESTRUCTOR: %s", e.what());
+	}
 
 	ATLVERIFY( !::WSACleanup() );
 
@@ -148,6 +246,12 @@ STDMETHODIMP CProvider::Initialize(
 	ATLASSUME( !m_strHost.IsEmpty() );
 	ATLASSUME( m_uPort >= MIN_PORT );
 	ATLASSUME( m_uPort <= MAX_PORT );
+
+	try
+	{
+		m_dwCookie = register_in_rot(this, bstrUser, bstrHost, uPort);
+	}
+	catchCom()
 
 	m_fInitialized = true;
 	return S_OK;

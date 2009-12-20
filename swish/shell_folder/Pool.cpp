@@ -28,6 +28,7 @@
 
 #include "swish/remotelimits.h" // Text field limits
 #include "swish/exception.hpp" // com_exception
+#include "swish/utils.hpp" // running_object_table
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <comet/bstr.h> // bstr_t
@@ -37,11 +38,14 @@
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
+using swish::utils::com::running_object_table;
 
 using boost::lexical_cast;
 
 using comet::com_ptr;
 using comet::bstr_t;
+using comet::critical_section;
+using comet::auto_cs;
 
 using std::wstring;
 
@@ -87,23 +91,6 @@ namespace {
 	}
 
 	/**
-	 * Get the local Winstation Running Object Table.
-	 */
-	com_ptr<IRunningObjectTable> running_object_table()
-	{
-		com_ptr<IRunningObjectTable> rot;
-
-		HRESULT hr = ::GetRunningObjectTable(0, rot.out());
-		assert(SUCCEEDED(hr));
-		assert(rot);
-
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-
-		return rot;
-	}
-
-	/**
 	 * Fetch a session from the Running Object Table.
 	 *
 	 * If there is no session in the ROT that matches the given paramters,
@@ -117,37 +104,11 @@ namespace {
 
 		com_ptr<IUnknown> unknown;
 		// We don't care if this fails - return NULL to indicate not found
-		rot->GetObject(moniker.in(), unknown.out());
+		HRESULT hr = rot->GetObject(moniker.in(), unknown.out());
 
 		com_ptr<ISftpProvider> provider = com_cast(unknown);
 		assert(provider || !unknown); // failure should not be due to QI
 		return provider;
-	}
-
-	void store_session_in_rot(
-		const com_ptr<ISftpProvider>& provider, const wstring& host,
-		const wstring& user, int port)
-	{
-		HRESULT hr;
-
-		com_ptr<IMoniker> moniker = create_item_moniker(host, user, port);
-		com_ptr<IRunningObjectTable> rot = running_object_table();
-
-		DWORD dwCookie;
-		com_ptr<IUnknown> unknown = provider;
-		hr = rot->Register(
-			ROTFLAGS_REGISTRATIONKEEPSALIVE, unknown.in(), moniker.in(), 
-			&dwCookie);
-		assert(hr == S_OK);
-		if (hr == MK_S_MONIKERALREADYREGISTERED)
-		{
-			// This should never get called.  In case it does, we revoke 
-			// the duplicate.  
-			rot->Revoke(dwCookie);
-		}
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-		// TODO: find way to revoke normal case when finished with them
 	}
 
 	com_ptr<ISftpProvider> create_new_session(
@@ -166,6 +127,8 @@ namespace {
 		return provider;
 	}
 }
+
+critical_section CPool::m_cs;
 
 /**
  * Retrieves an SFTP session for a global pool or creates it if none exists.
@@ -193,6 +156,8 @@ com_ptr<ISftpProvider> CPool::GetSession(
 	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
 	if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
 
+	auto_cs lock(m_cs);
+
 	// Try to get the session from the global pool
 	com_ptr<ISftpProvider> provider = session_from_rot(host, user, port);
 
@@ -200,7 +165,6 @@ com_ptr<ISftpProvider> CPool::GetSession(
 	{
 		// No existing session; create new one and add to the pool
 		provider = create_new_session(consumer, host, user, port);
-		store_session_in_rot(provider, host, user, port);
 	}
 	else
 	{

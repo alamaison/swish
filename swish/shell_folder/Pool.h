@@ -27,6 +27,7 @@
 #pragma once
 
 #include <comet/ptr.h> // com_ptr
+#include <comet/threading.h> // critical_section
 
 #include <string>
 
@@ -40,4 +41,7 @@ public:
 	comet::com_ptr<ISftpProvider> GetSession(
 		const comet::com_ptr<ISftpConsumer>& consumer,
 		const std::wstring& host, const std::wstring& user, int port);
+
+private:
+	static comet::critical_section m_cs;
 };
