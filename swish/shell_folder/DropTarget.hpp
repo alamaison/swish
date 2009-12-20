@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider
-
 #include "swish/CoFactory.hpp"  // CCoObject factory mixin
 #include "swish/atl.hpp"  // Common ATL setup
 
 #include <boost/filesystem.hpp>  // wpath
+
+struct ISftpProvider;
 
 namespace swish {
 namespace shell_folder {

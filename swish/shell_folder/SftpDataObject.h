@@ -22,8 +22,7 @@
 #include "DataObject.h"
 #include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
 #include "RemotePidl.h"
-
-#include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <vector>
 

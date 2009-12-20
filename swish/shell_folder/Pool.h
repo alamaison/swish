@@ -26,11 +26,12 @@
 
 #pragma once
 
-#include "SftpProvider.h" // ISftpProvider/ISftpConsumer interfaces
-
-#include <comet/ptr.h>  // com_ptr
+#include <comet/ptr.h> // com_ptr
 
 #include <string>
+
+struct ISftpProvider;
+struct ISftpConsumer;
 
 class CPool
 {

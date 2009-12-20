@@ -37,6 +37,8 @@
 #include "SessionFactory.hpp"
 
 #include "KeyboardInteractive.hpp"
+
+#include "swish/interfaces/SftpProvider.h" // ISftpConsumer
 #include "swish/debug.hpp"
 #include "swish/utils.hpp"
 #include "swish/catch_com.hpp"

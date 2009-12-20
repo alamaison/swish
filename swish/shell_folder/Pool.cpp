@@ -28,6 +28,7 @@
 
 #include "swish/remotelimits.h" // Text field limits
 #include "swish/exception.hpp" // com_exception
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/interface.h>  // uuidof, comtype

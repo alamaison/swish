@@ -62,6 +62,7 @@ struct testFILEDATA
 class CProvider_test : public CPPUNIT_NS::TestFixture
 {
 	CPPUNIT_TEST_SUITE( CProvider_test );
+		CPPUNIT_TEST( testProgid );
 		CPPUNIT_TEST( testQueryInterface );
 		CPPUNIT_TEST( testInitialize );
 		CPPUNIT_TEST( testGetListing );
@@ -89,38 +90,7 @@ public:
 	CProvider_test() : 
 	    m_pProvider(NULL), m_pConsumer(NULL),
 		m_bstrHomeDir(CComBSTR("/home/")+config.GetUser()+CComBSTR("/"))
-	{
-		HRESULT hr;
-
-		// Start up COM
-		hr = ::CoInitialize(NULL);
-		CPPUNIT_ASSERT_OK(hr);
-
-		// One-off tests
-
-		// Store Provider CLSID
-		CLSID CLSID_CProvider;
-		hr = ::CLSIDFromProgID(
-			OLESTR("Provider.Provider"),
-			&CLSID_CProvider
-		);
-		CPPUNIT_ASSERT_OK(hr);
-
-		// Check that CLSID was correctly constructed from ProgID
-		LPOLESTR pszUuid = NULL;
-		hr = ::StringFromCLSID( CLSID_CProvider, &pszUuid );
-		CPPUNIT_ASSERT_OK(hr);
-		CString strExpectedUuid = _T("{b816a862-5022-11dc-9153-0090f5284f85}");
-		CString strActualUuid = pszUuid;
-		CPPUNIT_ASSERT_EQUAL(
-			strExpectedUuid.MakeLower(),
-			strActualUuid.MakeLower()
-		);
-		::CoTaskMemFree(pszUuid);
-
-		// Shut down COM
-		::CoUninitialize();
-	}
+	{}
 
 	void setUp()
 	{
@@ -143,25 +113,56 @@ public:
 
 	void tearDown()
 	{
-		if (m_pProvider) // Possible for test to fail before initialised
+		try
 		{
-			ULONG cRefs = m_pProvider->Release();
-			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
-		}
-		m_pProvider = NULL;
+			if (m_pProvider) // Possible for test to fail before initialised
+			{
+				ULONG cRefs = m_pProvider->Release();
+				CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+			}
+			m_pProvider = NULL;
 
-		if (m_pConsumer) // Same again for mock consumer
+			if (m_pConsumer) // Same again for mock consumer
+			{
+				ULONG cRefs = m_pConsumer->Release();
+				//CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+			}
+			m_pConsumer = NULL;
+		}
+		catch (...)
 		{
-			ULONG cRefs = m_pConsumer->Release();
-			CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
+			// Shut down COM
+			::CoUninitialize();
+			throw;
 		}
-		m_pConsumer = NULL;
-
-		// Shut down COM
+		
 		::CoUninitialize();
 	}
 
 protected:
+
+	void testProgid()
+	{
+		// Store Provider CLSID
+		CLSID CLSID_CProvider;
+		HRESULT hr = ::CLSIDFromProgID(
+			OLESTR("Provider.Provider"),
+			&CLSID_CProvider
+		);
+		CPPUNIT_ASSERT_OK(hr);
+
+		// Check that CLSID was correctly constructed from ProgID
+		LPOLESTR pszUuid = NULL;
+		hr = ::StringFromCLSID( CLSID_CProvider, &pszUuid );
+		CPPUNIT_ASSERT_OK(hr);
+		CString strExpectedUuid = _T("{b816a862-5022-11dc-9153-0090f5284f85}");
+		CString strActualUuid = pszUuid;
+		CPPUNIT_ASSERT_EQUAL(
+			strExpectedUuid.MakeLower(),
+			strActualUuid.MakeLower()
+		);
+		::CoTaskMemFree(pszUuid);
+	}
 
 	/**
 	 * Test that the class responds to IUnknown::QueryInterface correctly.

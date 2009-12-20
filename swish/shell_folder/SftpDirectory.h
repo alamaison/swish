@@ -31,9 +31,9 @@
 #include "swish/catch_com.hpp"  // COM catch block
 #include "swish/ComSTLContainer.hpp"  // CComSTLContainer
 
-#include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
-
 #include <vector>
+
+struct ISftpProvider;
 
 typedef ATL::CComObject<
         swish::CComSTLContainer< std::vector<CChildPidl> > >

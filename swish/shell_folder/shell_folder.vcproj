@@ -38,8 +38,6 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
 				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
@@ -47,7 +45,6 @@
 				InterfaceIdentifierFileName="Swish_i.c"
 				ProxyFileName="Swish_p.c"
 				EnableErrorChecks="2"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -114,15 +111,12 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
 				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="Swish_i.c"
 				ProxyFileName="Swish_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -186,15 +180,12 @@
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
 				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="Swish_i.c"
 				ProxyFileName="Swish_p.c"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -334,43 +325,6 @@
 			<File
 				RelativePath=".\SftpDirectory.cpp"
 				>
-			</File>
-			<File
-				RelativePath=".\SftpProvider.idl"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCMIDLTool"
-						GenerateTypeLibrary="false"
-						HeaderFileName="SftpProvider.h"
-						InterfaceIdentifierFileName="SftpProvider_i.c"
-						ProxyFileName="SftpProvider_p.c"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCMIDLTool"
-						GenerateTypeLibrary="false"
-						HeaderFileName="SftpProvider.h"
-						InterfaceIdentifierFileName="SftpProvider_i.c"
-						ProxyFileName="SftpProvider_p.c"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
-					>
-					<Tool
-						Name="VCMIDLTool"
-						GenerateTypeLibrary="false"
-						HeaderFileName="SftpProvider.h"
-						InterfaceIdentifierFileName="SftpProvider_i.c"
-						ProxyFileName="SftpProvider_p.c"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\shell.cpp"
@@ -630,11 +584,7 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\SftpProvider.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpProvider_i.c"
+				RelativePath="..\interfaces\SftpProvider_i.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

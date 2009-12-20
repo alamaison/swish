@@ -36,14 +36,14 @@
 
 #pragma once
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider interfaces
-
 #include "swish/atl.hpp"  // Common ATL setup
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
 #include <string>
+
+struct Listing;
 
 namespace swish {
 namespace provider {

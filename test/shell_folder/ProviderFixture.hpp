@@ -29,7 +29,7 @@
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture/ComFixture
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider
+#include "swish/interfaces/SftpProvider.h"  // ISftpProvider
 #include "swish/utils.hpp"  // string conversion functions, GetCurrentUser
 
 #include "swish/atl.hpp"

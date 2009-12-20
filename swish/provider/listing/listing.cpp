@@ -36,6 +36,8 @@
 
 #include "listing.hpp"
 
+#include "swish/interfaces/SftpProvider.h" // Listing
+
 #include <ATLComTime.h>    // COleDateTime
 
 #include <boost/regex.hpp> // Regular expressions

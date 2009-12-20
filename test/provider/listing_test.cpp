@@ -35,6 +35,7 @@
 */
 
 #include "swish/provider/listing/listing.hpp"
+#include "swish/interfaces/SftpProvider.h" // Listing
 
 #include "test/common_boost/helpers.hpp"
 

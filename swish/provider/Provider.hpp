@@ -37,7 +37,7 @@
 #pragma once
 
 #include "SessionFactory.hpp"                // CSession
-#include "swish/shell_folder/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/ComSTLContainer.hpp"        // CComSTLContainer
 
 #include "swish/atl.hpp"                    // Common ATL setup

@@ -20,6 +20,7 @@
 #include "SftpDirectory.h"
 
 #include "swish/exception.hpp"
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 

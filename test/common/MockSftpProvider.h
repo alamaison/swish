@@ -13,7 +13,7 @@
 
 #include "swish/atl.hpp"  // Common ATL setup
 
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
+#include "swish/interfaces/SftpProvider.h"  // ISftpProvider/Consumer
 
 #include <vector>
 #include <string>

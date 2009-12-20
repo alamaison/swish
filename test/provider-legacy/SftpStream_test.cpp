@@ -12,7 +12,7 @@
 
 #include "swish/provider/SftpStream.hpp"
 #include "swish/provider/SessionFactory.hpp"
-#include "swish/shell_folder/SftpProvider.h"  // ISftpProvider/Consumer
+#include "swish/interfaces/SftpProvider.h"  // ISftpProvider/Consumer
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 

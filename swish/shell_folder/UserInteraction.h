@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "SftpProvider.h"   // ISftpProvider/ISftpConsumer interfaces
+#include "swish/interfaces/SftpProvider.h" // ISftpConsumer
 
 #include "swish/atl.hpp"  // Common ATL setup
 

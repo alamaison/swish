@@ -31,6 +31,7 @@
 #include "resource.h" // IDS_COPYING_TITLE
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/integer_traits.hpp>
