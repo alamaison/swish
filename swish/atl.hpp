@@ -48,14 +48,14 @@
 
 #pragma once
 
-#define _ATL_APARTMENT_THREADED
+#define _ATL_FREE_THREADED
 
 #ifdef _ATL_SINGLE_THREADED
-#error "_ATL_SINGLE_THREADED conflicts with _ATL_APARTMENT_THREADED"
+#error "_ATL_SINGLE_THREADED conflicts with _ATL_FREE_THREADED"
 #endif
 
-#ifdef _ATL_FREE_THREADED
-#error "_ATL_FREE_THREADED conflicts with _ATL_APARTMENT_THREADED"
+#ifdef _ATL_APARTMENT_THREADED
+#error "_ATL_APARTMENT_THREADED conflicts with _ATL_FREE_THREADED"
 #endif
 
 

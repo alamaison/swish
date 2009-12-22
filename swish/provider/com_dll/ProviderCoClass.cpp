@@ -38,6 +38,8 @@
 #include "com_dll.h"                   // provider UUIDs (generated header)
 
 #include "swish/provider/Provider.hpp" // CProvider
+#include "swish/provider/dispenser/Dispenser.hpp" // CDispenser
+#include "swish/provider/dispenser/DelegateDispenser.hpp" // CDelegateDispenser
 
 #include "swish/atl.hpp"               // Common ATL setup
 
@@ -62,5 +64,40 @@ public:
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(Provider), CProviderCoClass)
+
+
+class ATL_NO_VTABLE CRealDispenserCoClass :
+	public swish::provider::dispenser::CDispenser,
+	public CComCoClass<CRealDispenserCoClass, &CLSID_RealDispenser>
+{
+public:
+
+	DECLARE_REGISTRY_RESOURCEID(IDR_REALDISPENSER)
+
+	BEGIN_COM_MAP(CRealDispenserCoClass)
+		COM_INTERFACE_ENTRY(IUnknown)
+		COM_INTERFACE_ENTRY_CHAIN(swish::provider::dispenser::CDispenser)
+	END_COM_MAP()
+};
+
+OBJECT_ENTRY_AUTO(__uuidof(RealDispenser), CRealDispenserCoClass)
+
+
+class ATL_NO_VTABLE CDispenserCoClass :
+	public swish::provider::dispenser::CDelegateDispenser,
+	public CComCoClass<CDispenserCoClass, &CLSID_Dispenser>
+{
+public:
+
+	DECLARE_CLASSFACTORY_EX(CDispenserCoClass)
+	DECLARE_REGISTRY_RESOURCEID(IDR_DISPENSER)
+
+	BEGIN_COM_MAP(CDispenserCoClass)
+		COM_INTERFACE_ENTRY(IUnknown)
+		COM_INTERFACE_ENTRY_CHAIN(swish::provider::dispenser::CDelegateDispenser)
+	END_COM_MAP()
+};
+
+OBJECT_ENTRY_AUTO(__uuidof(Dispenser), CDispenserCoClass)
 
 }}} // namespace swish::provider::com_dll

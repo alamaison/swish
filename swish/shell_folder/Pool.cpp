@@ -31,21 +31,19 @@
 #include "swish/utils.hpp" // running_object_table
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/interface.h>  // uuidof, comtype
 
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
-using swish::utils::com::running_object_table;
 
 using boost::lexical_cast;
 
 using comet::com_ptr;
-using comet::bstr_t;
 using comet::critical_section;
 using comet::auto_cs;
+using comet::uuidof;
 
 using std::wstring;
 
@@ -70,61 +68,72 @@ template<> struct comtype<ISftpConsumer>
 namespace {
 
 	/**
-	 * Create an item moniker for the session with the given parameters.
+	 * Create an moniker string for the session with the given parameters.
 	 *
-	 * e.g. !user@host:port
+	 * e.g. clsid:b816a864-5022-11dc-9153-0090f5284f85:!user@host:port
 	 */
-	com_ptr<IMoniker> create_item_moniker(
-		const wstring& host, const wstring& user, int port)
+	wstring provider_moniker_name(
+		const wstring& user, const wstring& host, int port)
 	{
-		wstring moniker_name = 
-			user + L'@' + host + L':' + lexical_cast<wstring>(port);
-
-		com_ptr<IMoniker> moniker;
-		HRESULT hr = ::CreateItemMoniker(
-			OLESTR("!"), moniker_name.c_str(), moniker.out());
-		assert(SUCCEEDED(hr));
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-
-		return moniker;
+		wstring item_name = 
+			L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L'@' + 
+			host + L':' + lexical_cast<wstring>(port);
+		return item_name;
 	}
 
 	/**
-	 * Fetch a session from the Running Object Table.
-	 *
-	 * If there is no session in the ROT that matches the given paramters,
-	 * return NULL.
+	 * CoGetObject implementation from the Wine project.
+	 * Makes debugging easier.
+	 * @todo  Remove this when finished debugging.
 	 */
-	com_ptr<ISftpProvider> session_from_rot(
-		const wstring& host, const wstring& user, int port)
+	HRESULT _CoGetObject(
+		LPCWSTR pszName, BIND_OPTS *pBindOptions, REFIID riid, void **ppv)
 	{
-		com_ptr<IMoniker> moniker = create_item_moniker(host, user, port);
-		com_ptr<IRunningObjectTable> rot = running_object_table();
-
-		com_ptr<IUnknown> unknown;
-		// We don't care if this fails - return NULL to indicate not found
-		HRESULT hr = rot->GetObject(moniker.in(), unknown.out());
-
-		com_ptr<ISftpProvider> provider = com_cast(unknown);
-		assert(provider || !unknown); // failure should not be due to QI
-		return provider;
-	}
-
-	com_ptr<ISftpProvider> create_new_session(
-		const com_ptr<ISftpConsumer>& consumer, const bstr_t& host,
-		const bstr_t& user, int port)
-	{
+		IBindCtx *pbc;
 		HRESULT hr;
 
-		// Create SFTP Provider from ProgID and initialise
+		*ppv = NULL;
 
-		com_ptr<ISftpProvider> provider(L"Provider.Provider");
-		hr = provider->Initialize(consumer.in(), user.in(), host.in(), port);
+		hr = ::CreateBindCtx(0, &pbc);
+		if (SUCCEEDED(hr))
+		{
+			if (pBindOptions)
+				hr = pbc->SetBindOptions(pBindOptions);
+
+			if (SUCCEEDED(hr))
+			{
+				ULONG chEaten;
+				IMoniker *pmk;
+
+				hr = ::MkParseDisplayName(pbc, pszName, &chEaten, &pmk);
+				if (SUCCEEDED(hr))
+				{
+					hr = pmk->BindToObject(pbc, NULL, riid, ppv);
+					pmk->Release();
+				}
+			}
+
+			pbc->Release();
+		}
+		return hr;
+	}
+
+	/**
+	 * Get an object instance by its moniker display name.
+	 *
+	 * Corresponds to CoGetObject Windows API function with default BIND_OPTS.
+	 */
+	template<typename T>
+	com_ptr<T> object_from_moniker_name(const wstring& display_name)
+	{
+		com_ptr<T> object;
+		HRESULT hr = _CoGetObject(
+			display_name.c_str(), NULL, 
+			uuidof(object.in()), reinterpret_cast<void**>(object.out()));
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		return provider;
+		return object;
 	}
 }
 
@@ -159,21 +168,14 @@ com_ptr<ISftpProvider> CPool::GetSession(
 	auto_cs lock(m_cs);
 
 	// Try to get the session from the global pool
-	com_ptr<ISftpProvider> provider = session_from_rot(host, user, port);
+	wstring display_name = provider_moniker_name(user, host, port);
+	com_ptr<ISftpProvider> provider;
+	provider = object_from_moniker_name<ISftpProvider>(display_name);
 
-	if (!provider)
-	{
-		// No existing session; create new one and add to the pool
-		provider = create_new_session(consumer, host, user, port);
-	}
-	else
-	{
-		// Existing session found; switch it to use new SFTP consumer
-		HRESULT hr = provider->SwitchConsumer(consumer.in());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-	}
+	// Switch session to use new SFTP consumer
+	HRESULT hr = provider->SwitchConsumer(consumer.in());
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_exception(hr));
 
-	assert(provider);
 	return provider;
 }

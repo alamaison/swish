@@ -314,6 +314,67 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="dispenser"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\dispenser\DelegateDispenser.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\dispenser\Dispenser.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\dispenser\DelegateDispenser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\dispenser\Dispenser.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Generated Files"
+			SourceControlFiles="false"
+			>
+			<File
+				RelativePath="..\interfaces\SftpProvider_i.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PREfast|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

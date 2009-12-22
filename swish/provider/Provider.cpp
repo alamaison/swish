@@ -227,17 +227,13 @@ void CProvider::FinalRelease()
  *   @retval E_FAIL if other error encountered
  */
 STDMETHODIMP CProvider::Initialize(
-	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
+	ISftpConsumer* /*pConsumer*/, BSTR bstrUser, BSTR bstrHost, UINT uPort )
 {
-
-	ATLENSURE_RETURN_HR( pConsumer, E_POINTER );
 	if (::SysStringLen(bstrUser) == 0 || ::SysStringLen(bstrHost) == 0)
 		return E_INVALIDARG;
 	if (uPort < MIN_PORT || uPort > MAX_PORT)
 		return E_INVALIDARG;
 
-	m_pConsumer = pConsumer;
-	m_pConsumer->AddRef();
 	m_strUser = bstrUser;
 	m_strHost = bstrHost;
 	m_uPort = uPort;
@@ -265,7 +261,6 @@ STDMETHODIMP CProvider::Initialize(
 STDMETHODIMP CProvider::SwitchConsumer( ISftpConsumer *pConsumer )
 {
 	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
-	ATLASSERT(m_pConsumer);
 
 	if (m_pConsumer)
 	{

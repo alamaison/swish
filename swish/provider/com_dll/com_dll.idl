@@ -13,10 +13,28 @@ library ProviderLib
 
 	[
 		uuid(b816a862-5022-11dc-9153-0090f5284f85),
-		helpstring("Provider Class")
+		helpstring("Provider Component")
 	]
 	coclass Provider
 	{
 		[default] interface IUnknown;
+	};
+
+	[
+		uuid(b816a863-5022-11dc-9153-0090f5284f85),
+		helpstring("RealDispenser Component")
+	]
+	coclass RealDispenser
+	{
+		[default] interface IOleItemContainer;
+	};
+
+	[
+		uuid(b816a864-5022-11dc-9153-0090f5284f85),
+		helpstring("Dispenser Component")
+	]
+	coclass Dispenser
+	{
+		[default] interface IOleItemContainer;
 	};
 };

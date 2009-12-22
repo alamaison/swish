@@ -386,7 +386,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dispenser.rgs"
+				>
+			</File>
+			<File
 				RelativePath=".\provider.rgs"
+				>
+			</File>
+			<File
+				RelativePath=".\real_dispenser.rgs"
 				>
 			</File>
 		</Filter>

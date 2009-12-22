@@ -1,0 +1,28 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {b816a863-5022-11dc-9153-0090f5284f85} = s 'RealDispenser Component'
+		{
+			ProgID = s 'Provider.RealDispenser.1'
+			VersionIndependentProgID = s 'Provider.RealDispenser'
+			
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			
+			val AppID = s '%APPID%'
+			TypeLib = s '{b816a861-5022-11dc-9153-0090f5284f85}'
+		}
+	}
+	Provider.RealDispenser.1 = s 'RealDispenser Component'
+	{
+		CLSID = s '{b816a863-5022-11dc-9153-0090f5284f85}'
+	}
+	Provider.RealDispenser = s 'RealDispenser Component'
+	{
+		CLSID = s '{b816a863-5022-11dc-9153-0090f5284f85}'
+		CurVer = s 'Provider.RealDispenser.1'
+	}
+}

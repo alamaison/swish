@@ -34,7 +34,7 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""atlres.h""\r\n"
+    "#include ""winres.h""\r\n"
     "\0"
 END
 
@@ -91,8 +91,10 @@ END
 // REGISTRY
 //
 
-IDR_PROVIDER     REGISTRY                "provider.rgs"
-IDR_PROVIDERDLL  REGISTRY                "com_dll.rgs"
+IDR_PROVIDER            REGISTRY                "provider.rgs"
+IDR_REALDISPENSER       REGISTRY                "real_dispenser.rgs"
+IDR_DISPENSER           REGISTRY                "dispenser.rgs"
+IDR_PROVIDERDLL         REGISTRY                "com_dll.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //
