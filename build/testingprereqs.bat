@@ -33,15 +33,6 @@ echo ===- Dowloading Boost.Process ...
 	echo ===- Error while trying to extract Boost.Process. & goto error)
 del process.zip
 
-:: Comet
-
-echo ===- Dowloading Comet ...
-%WGET% "http://downloads.sourceforge.net/project/swish/build-prereqs/comet-1.31beta-vs2005.7z" || (
-	echo ===- Error while trying to download Comet. & goto error)
-%SEVENZ% x comet-1.31beta-vs2005.7z -ocomet -aoa || (
-	echo ===- Error while trying to extract Comet. & goto error)
-del comet-1.31beta-vs2005.7z
-
 echo.
 echo ===- All testing prerequisites successfully created.
 echo.

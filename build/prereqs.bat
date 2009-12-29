@@ -70,6 +70,17 @@ echo ===- Downloading WTL ...
 	echo ===- Error while trying to extract WTL. & goto error)
 del WTL80_7161_Final.zip
 
+:: comet
+
+echo.
+echo ===- Downloading comet ...
+%WGET% "http://bitbucket.org/sofusmortensen/comet/get/474a0b7eadb8.zip" || (
+	echo ===- Error while trying to download comet. & goto error)
+%SEVENZ% x 474a0b7eadb8.zip -aoa || (
+	echo ===- Error while trying to extract comet. & goto error)
+del 474a0b7eadb8.zip
+
+
 echo.
 echo ===- All build prerequisites successfully created.
 echo.
