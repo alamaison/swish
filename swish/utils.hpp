@@ -100,19 +100,19 @@ inline typename T::ToType ConvertString(const typename T::FromType& from)
 		return T::ToType();
 
 	// Calculate necessary buffer size
-	int len = T()(from.c_str(), size, NULL, 0);
+	int len = T()(from.data(), size, NULL, 0);
 
 	// Perform actual conversion
 	if (len > 0)
 	{
 		std::vector<T::ToElem> buffer(len);
 		len = T()(
-			from.c_str(), size,
+			from.data(), size,
 			&buffer[0], static_cast<int>(buffer.size()));
 		if (len > 0)
 		{
 			assert(len == boost::numeric_cast<int>(buffer.size()));
-			return T::ToType(&buffer[0], buffer.size());
+			return T::ToType(&buffer[0], len);
 		}
 	}
 
@@ -199,7 +199,7 @@ inline typename T::return_type current_user()
 		std::vector<T::element_type> buffer(len);
 		if (typename T::get_user_name(&buffer[0], &len))
 		{
-			return typename T::return_type(&buffer[0], buffer.size());
+			return typename T::return_type(&buffer[0], len - 1);
 		}
 		else
 		{
@@ -241,6 +241,48 @@ inline comet::com_ptr<IRunningObjectTable> running_object_table()
 		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
 
 	return rot;
+}
+
+/**
+ * Look up a CLSID in the registry using the ProgId.
+ */
+inline CLSID clsid_from_progid(const std::wstring& progid)
+{
+	CLSID clsid;
+	HRESULT hr = ::CLSIDFromProgID(progid.c_str(), &clsid);
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+
+	return clsid;
+}
+
+/**
+ * Get the class object of a component by its CLSID.
+ */
+template<typename T>
+inline comet::com_ptr<T> class_object(
+	const CLSID& clsid, DWORD dw_class_context=CLSCTX_ALL)
+{
+	comet::com_ptr<T> object;
+	HRESULT hr = ::CoGetClassObject(
+		clsid, dw_class_context, NULL, comet::uuidof(object.in()),
+		reinterpret_cast<void**>(object.out()));
+	
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+
+	return object;
+}
+
+/**
+ * Get the class object of a component by its ProgId.
+ */
+template<typename T>
+inline comet::com_ptr<T> class_object(
+	const std::wstring& progid, DWORD dw_class_context=CLSCTX_ALL)
+{
+	CLSID clsid = clsid_from_progid(progid);
+	return class_object<T>(clsid, dw_class_context);
 }
 
 } // namespace swish::utils::com
