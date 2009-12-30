@@ -27,18 +27,18 @@ set SEVENZ=..\build\7za\7za.exe
 :: libssh2
 
 echo ===- Dowloading libssh2 ...
-%WGET% "http://www.libssh2.org/download/libssh2-1.2.1.tar.gz" || (
+%WGET% "http://www.libssh2.org/snapshots/libssh2-1.2.2-20091230.tar.gz" || (
 	echo ===- Error while trying to download libssh2 & goto error)
-%SEVENZ% x libssh2-1.2.1.tar.gz -aoa || (
+%SEVENZ% x libssh2-1.2.2-20091230.tar.gz -aoa || (
 	echo ===- Error while trying to extract libssh2 & goto error)
-%SEVENZ% x libssh2-1.2.1.tar -aoa || (
+%SEVENZ% x libssh2-1.2.2-20091230.tar -aoa || (
 	echo ===- Error while trying to extract libssh2 & goto error)
-xcopy /E /Q /Y libssh2-1.2.1 libssh2 || (
+xcopy /E /Q /Y libssh2-1.2.2-20091230 libssh2 || (
 	echo ===- Error while trying to copy libssh2 files & goto error)
-rd /S /Q libssh2-1.2.1 || (
+rd /S /Q libssh2-1.2.2-20091230 || (
 	echo ===- Error while trying to clean up libssh2 files & goto error)
-del libssh2-1.2.1.tar
-del libssh2-1.2.1.tar.gz
+del libssh2-1.2.2-20091230.tar
+del libssh2-1.2.2-20091230.tar.gz
 
 :: zlib
 
@@ -74,11 +74,15 @@ del WTL80_7161_Final.zip
 
 echo.
 echo ===- Downloading comet ...
-%WGET% "http://bitbucket.org/sofusmortensen/comet/get/474a0b7eadb8.zip" || (
+%WGET% "http://bitbucket.org/alamaison/swish_comet/get/98baa6c53f89.zip" || (
 	echo ===- Error while trying to download comet. & goto error)
-%SEVENZ% x 474a0b7eadb8.zip -aoa || (
+%SEVENZ% x 98baa6c53f89.zip -aoa || (
 	echo ===- Error while trying to extract comet. & goto error)
-del 474a0b7eadb8.zip
+xcopy /E /Q /Y swish_comet comet || (
+	echo ===- Error while trying to copy comet files & goto error)
+rd /S /Q swish_comet || (
+	echo ===- Error while trying to clean up comet files & goto error)
+del 98baa6c53f89.zip
 
 
 echo.
