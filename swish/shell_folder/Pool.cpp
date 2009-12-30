@@ -82,43 +82,6 @@ namespace {
 	}
 
 	/**
-	 * CoGetObject implementation from the Wine project.
-	 * Makes debugging easier.
-	 * @todo  Remove this when finished debugging.
-	 */
-	HRESULT _CoGetObject(
-		LPCWSTR pszName, BIND_OPTS *pBindOptions, REFIID riid, void **ppv)
-	{
-		IBindCtx *pbc;
-		HRESULT hr;
-
-		*ppv = NULL;
-
-		hr = ::CreateBindCtx(0, &pbc);
-		if (SUCCEEDED(hr))
-		{
-			if (pBindOptions)
-				hr = pbc->SetBindOptions(pBindOptions);
-
-			if (SUCCEEDED(hr))
-			{
-				ULONG chEaten;
-				IMoniker *pmk;
-
-				hr = ::MkParseDisplayName(pbc, pszName, &chEaten, &pmk);
-				if (SUCCEEDED(hr))
-				{
-					hr = pmk->BindToObject(pbc, NULL, riid, ppv);
-					pmk->Release();
-				}
-			}
-
-			pbc->Release();
-		}
-		return hr;
-	}
-
-	/**
 	 * Get an object instance by its moniker display name.
 	 *
 	 * Corresponds to CoGetObject Windows API function with default BIND_OPTS.
@@ -127,7 +90,7 @@ namespace {
 	com_ptr<T> object_from_moniker_name(const wstring& display_name)
 	{
 		com_ptr<T> object;
-		HRESULT hr = _CoGetObject(
+		HRESULT hr = ::CoGetObject(
 			display_name.c_str(), NULL, 
 			uuidof(object.in()), reinterpret_cast<void**>(object.out()));
 		if (FAILED(hr))
