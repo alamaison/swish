@@ -414,7 +414,10 @@ void copy_format_to_provider(
 	build_copy_list(format, copy_list);
 
 	com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
-	progress->SetTitle(load_string(IDS_COPYING_TITLE).c_str());
+	wstring title = load_string(
+		IDS_COPYING_TITLE,
+		ATL::AtlFindStringResourceInstance(IDS_COPYING_TITLE));
+	progress->SetTitle(title.c_str());
 
 	AutoStartProgressDialog auto_progress(
 		progress, NULL, PROGDLG_AUTOTIME);
