@@ -85,27 +85,6 @@ BEGIN
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// REGISTRY
-//
-
-IDR_PROVIDER            REGISTRY                "provider.rgs"
-IDR_REALDISPENSER       REGISTRY                "real_dispenser.rgs"
-IDR_DISPENSER           REGISTRY                "dispenser.rgs"
-IDR_PROVIDERDLL         REGISTRY                "com_dll.rgs"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE 
-BEGIN
-    IDS_PROJNAME            "provider"
-END
-
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 

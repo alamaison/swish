@@ -40,9 +40,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/mem_fn.hpp>  // mem_fn
 #include <boost/shared_ptr.hpp>  // shared_ptr
-#include <boost/foreach.hpp>  // shared_ptr
+#include <boost/foreach.hpp>  // BOOST_FOREACH
+#include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 
 #include <string>
 #include <vector>
@@ -60,7 +60,6 @@ using comet::thread;
 using comet::auto_coinit;
 
 using boost::filesystem::path;
-using boost::mem_fn;
 using boost::shared_ptr;
 
 using std::string;
@@ -96,7 +95,7 @@ namespace { // private
 		com_ptr<IEnumListing> listing;
 		HRESULT hr = provider->GetListing(
 			bstr_t(L"/home").in(), listing.out());
-		BOOST_WARN(SUCCEEDED(hr));
+		BOOST_CHECK(SUCCEEDED(hr));
 	}
 }
 
@@ -105,7 +104,7 @@ BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
 /**
  * Test a single call to GetSession().
  */
-BOOST_AUTO_TEST_CASE( get_session )
+BOOST_AUTO_TEST_CASE( session )
 {
 	com_ptr<ISftpProvider> provider = GetSession();
 	CheckAlive(provider);
@@ -114,7 +113,7 @@ BOOST_AUTO_TEST_CASE( get_session )
 /**
  * Test that a second call to GetSession() returns the same instance.
  */
-BOOST_AUTO_TEST_CASE( get_session_twice )
+BOOST_AUTO_TEST_CASE( twice )
 {
 	com_ptr<ISftpProvider> first_provider = GetSession();
 	CheckAlive(first_provider);
@@ -123,61 +122,6 @@ BOOST_AUTO_TEST_CASE( get_session_twice )
 	CheckAlive(second_provider);
 
 	BOOST_REQUIRE(second_provider == first_provider);
-}
-
-template <typename T>
-class use_session_thread : public thread
-{
-public:
-	use_session_thread(T* fixture) : thread(), m_fixture(fixture) {}
-
-private:
-	DWORD thread_main()
-	{
-		try
-		{
-			auto_coinit coinit(COINIT_MULTITHREADED);
-
-			{
-				com_ptr<ISftpProvider> first_provider = m_fixture->GetSession();
-				CheckAlive(first_provider);
-
-				com_ptr<ISftpProvider> second_provider = m_fixture->GetSession();
-				CheckAlive(second_provider);
-
-				BOOST_REQUIRE(second_provider == first_provider);
-			}
-		}
-		catch (const std::exception& e)
-		{
-			BOOST_MESSAGE(boost::diagnostic_information(e));
-		}
-
-		return 1;
-	}
-
-	T* m_fixture;
-};
-
-/**
- * Test that a third call to GetSession() returns the same instance
- * despite an intervening sleep.
- */
-BOOST_AUTO_TEST_CASE( get_session_threaded )
-{
-	typedef use_session_thread<PoolFixture> test_thread;
-	vector<shared_ptr<test_thread> > threads(10);
-
-	BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
-	{
-		thread = shared_ptr<test_thread>(new test_thread(this));
-		thread->start();
-	}
-
-	BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
-	{
-		thread->wait();
-	}
 }
 
 /**
@@ -203,5 +147,150 @@ BOOST_AUTO_TEST_CASE( get_session_twice_separately )
 	com_ptr<IUnknown> second_unk(second_provider);
 	BOOST_REQUIRE(first_unk != second_unk.get());
 }
+
+
+#pragma region Threaded tests
+BOOST_AUTO_TEST_SUITE(pool_tests_threaded)
+
+const int THREAD_COUNT = 3;
+
+template <typename T>
+class use_session_thread : public thread
+{
+public:
+	use_session_thread(T* fixture, COINIT ci=COINIT_MULTITHREADED)
+		: thread(), m_fixture(fixture), m_coinit(ci) {}
+
+private:
+	DWORD thread_main()
+	{
+		try
+		{
+			auto_coinit coinit(m_coinit);
+
+			{
+				com_ptr<ISftpProvider> first_provider = 
+					m_fixture->GetSession();
+				CheckAlive(first_provider);
+
+				com_ptr<ISftpProvider> second_provider = 
+					m_fixture->GetSession();
+				CheckAlive(second_provider);
+
+				BOOST_REQUIRE(second_provider == first_provider);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			BOOST_MESSAGE(boost::diagnostic_information(e));
+		}
+
+		return 1;
+	}
+
+	T* m_fixture;
+	const COINIT m_coinit;
+};
+
+typedef use_session_thread<PoolFixture> test_thread;
+
+/**
+ * Retrieve a session with different apartment than the one that created it.
+ *
+ * The thread should be correctly marshalled across the apartments.
+ */
+BOOST_AUTO_TEST_CASE( threaded )
+{
+	vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
+
+	BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
+	{
+		thread = shared_ptr<test_thread>(new test_thread(this));
+		thread->start();
+	}
+
+	BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
+	{
+		thread->wait();
+	}
+}
+
+template <typename T>
+inline void do_thread_test(
+	T* fixture, COINIT starting_thread_type, COINIT retrieving_thread_type)
+{
+	// cycle first type of thread to create session and store for
+	// later clients
+	test_thread creation_thread(fixture, starting_thread_type);
+	creation_thread.start();
+	creation_thread.wait();
+
+	// start other type of threads which should try to retrieve same session
+	vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
+	BOOST_FOREACH(shared_ptr<test_thread>& t, threads)
+	{
+		t = shared_ptr<test_thread>(
+			new test_thread(fixture, retrieving_thread_type));
+		t->start();
+	}
+
+	BOOST_FOREACH(shared_ptr<test_thread>& t, threads)
+	{
+		t->wait();
+	}
+}
+
+/**
+ * Retrieve a session with different apartment than the one that created it.
+ *
+ * In this case, the thread that creates the session is in an STA and has
+ * terminated by the time other (MTA) threads try to reuse the session.
+ */
+BOOST_AUTO_TEST_CASE( threaded_create_sta_use_mta )
+{
+	do_thread_test(this, COINIT_APARTMENTTHREADED, COINIT_MULTITHREADED);
+}
+
+/**
+ * Retrieve a session with different apartment than the one that created it.
+ *
+ * In this case, the thread that creates the session is in an MTA and has
+ * terminated by the time other (STA) threads try to reuse the session.
+ *
+ * @todo  This test hangs.  Why?
+ */
+BOOST_AUTO_TEST_CASE( threaded_create_mta_use_sta )
+{
+	BOOST_MESSAGE("skipping threaded_create_mta_use_sta test");
+	//do_thread_test(this, COINIT_MULTITHREADED, COINIT_APARTMENTTHREADED);
+}
+
+/**
+ * Retrieve a session with different apartment than the one that created it.
+ *
+ * In this case, the thread that creates the session is in an STA and has
+ * terminated by the time other (STA) threads try to reuse the session.
+ *
+ * @todo  This test hangs.  Why?
+ */
+BOOST_AUTO_TEST_CASE( threaded_create_sta_use_sta )
+{
+	BOOST_MESSAGE("skipping threaded_create_sta_use_sta test");
+	//do_thread_test(this, COINIT_APARTMENTTHREADED, COINIT_APARTMENTTHREADED);
+}
+
+/**
+ * Retrieve a session with different apartment than the one that created it.
+ *
+ * In this case, the thread that creates the session is in an MTA and has
+ * terminated by the time other (MTA) threads try to reuse the session.
+ */
+BOOST_AUTO_TEST_CASE( threaded_create_mta_use_mta )
+{
+	do_thread_test(this, COINIT_MULTITHREADED, COINIT_MULTITHREADED);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+#pragma endregion
 
 BOOST_AUTO_TEST_SUITE_END()

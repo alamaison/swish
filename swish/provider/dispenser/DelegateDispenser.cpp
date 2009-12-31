@@ -1,7 +1,7 @@
 /**
     @file
 
-    Singleton wrapper around backend dispenser.
+    Free-threaded wrapper around backend singleton dispenser.
 
     @if licence
 
@@ -37,45 +37,54 @@
 #include "DelegateDispenser.hpp"
 
 #include "swish/catch_com.hpp" // catchCom
+#include "swish/utils.hpp" // class_object
 
-#include <comet/ptr.h> // com_ptr
 #include <comet/error_fwd.h> // com_error
-#include <comet/handle_except.h> // COMET_CATCH_CLASS
 #include <comet/interface.h> // uuidof, comtype
 #include <comet/threading.h> // critical_section, auto_cs
+#include <comet/server.h> // module()
 
-using namespace comet;
+using swish::utils::com::class_object;
 
-template<> struct comtype<IOleItemContainer>
+using comet::critical_section;
+using comet::auto_cs;
+using comet::impl::operator |;
+using comet::raise_exception;
+using comet::module;
+
+template<> struct comet::comtype<IOleItemContainer>
 {
 	static const IID& uuid() throw() { return IID_IOleItemContainer; }
-	typedef IUnknown base;
+	typedef IUnknown IOleContainer;
 };
 
 namespace swish {
 namespace provider {
 namespace dispenser {
 
-static critical_section dispenser_lock; ///< Lock around global dispenser
-static IOleItemContainer* global_dispenser = NULL; ///< Global dispenser
-
 namespace {
 
+	critical_section real_dispenser_lock;
+	IOleItemContainer* real_dispenser = NULL;
+
+	/**
+	 * Return a pointer to the real dispenser.
+	 */
 	IOleItemContainer* dispenser()
 	{
-		if (!global_dispenser) // First run - no dispenser yet
+		if (!real_dispenser) // First run - no dispenser yet
 		{
-			auto_cs cs(dispenser_lock);
+			auto_cs cs(real_dispenser_lock);
 
 			// Check twice: keep common case fast by not locking first
-			if (!global_dispenser)
+			if (!real_dispenser)
 			{
-				com_ptr<IOleItemContainer> real(L"Provider.RealDispenser");
-				global_dispenser = real.detach();
+				real_dispenser = class_object<IOleItemContainer>(
+					L"Provider.RealDispenser").detach();
 			}
 		}
 
-		return global_dispenser;
+		return real_dispenser;
 	}
 }
 
@@ -111,6 +120,10 @@ STDMETHODIMP CDelegateDispenser::LockContainer(BOOL fLock)
 {
 	try
 	{
+		if (fLock)
+			module().lock();
+		else
+			module().unlock();
 		return dispenser()->LockContainer(fLock) | raise_exception;
 	}
 	catchCom()

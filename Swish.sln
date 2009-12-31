@@ -67,6 +67,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{AAB28A
 		swish\pch.cpp = swish\pch.cpp
 		swish\pch.h = swish\pch.h
 		swish\remotelimits.h = swish\remotelimits.h
+		swish\trace.hpp = swish\trace.hpp
 		swish\utils.hpp = swish\utils.hpp
 	EndProjectSection
 EndProject

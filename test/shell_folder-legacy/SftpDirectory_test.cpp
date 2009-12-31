@@ -63,9 +63,10 @@ public:
 		CreateMockSftpConsumer(&m_pCoConsumer, &m_pConsumer);
 
 		m_pProvider->Initialize(
-			m_pConsumer, CComBSTR(config.GetUser()),
+			CComBSTR(config.GetUser()),
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
+		m_pProvider->SwitchConsumer(m_pConsumer);
 
 		m_pidlTestHost = CHostItemAbsolute(
 			L"testuser", L"testhost", L"/tmp", 22);

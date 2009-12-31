@@ -32,7 +32,6 @@ class CSftpStream_test : public CPPUNIT_NS::TestFixture
 {
 	CPPUNIT_TEST_SUITE( CSftpStream_test );
 		CPPUNIT_TEST( testCreate );
-		CPPUNIT_TEST( testCreateUsingFactory );
 		CPPUNIT_TEST( testStat );
 		CPPUNIT_TEST( testStatExcludeName );
 		CPPUNIT_TEST( testStatExact ); // Likely to fail on other machine
@@ -75,38 +74,20 @@ public:
 	}
 
 protected:
+
 	void testCreate()
-	{
-		HRESULT hr;
-		CComObject<CSftpStream> *pStream = NULL;
-
-		hr = pStream->CreateInstance(&pStream);
-		CPPUNIT_ASSERT_OK(hr);
-		pStream->AddRef();
-
-		IStream *p = NULL;
-		hr = pStream->QueryInterface(&p);
-		if (SUCCEEDED(hr))
-		{
-			p->Release();
-		}
-		pStream->Release();
-		CPPUNIT_ASSERT_OK(hr);
-	}
-
-	void testCreateUsingFactory()
 	{
 		shared_ptr<CSession> session(_CreateSession());
 		session->Connect(config.GetHost(), config.GetPort());
 
-		CComPtr<CSftpStream> pStream = pStream->Create(
+		CComPtr<IStream> pStream = new CSftpStream(
 			session, "/var/log/messages", CSftpStream::read);
 		CPPUNIT_ASSERT(pStream);
 	}
 
 	void testStat()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 
 		STATSTG stat;
 		::ZeroMemory(&stat, sizeof stat);
@@ -131,7 +112,7 @@ protected:
 
 	void testStatExcludeName()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 
 		STATSTG stat;
 		::ZeroMemory(&stat, sizeof stat);
@@ -155,7 +136,7 @@ protected:
 
 	void testStatExact()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/boot/grub/default");
+		CComPtr<IStream> pStream = _CreateConnectInit("/boot/grub/default");
 
 		STATSTG stat;
 		::ZeroMemory(&stat, sizeof stat);
@@ -175,7 +156,7 @@ protected:
 
 	void testSeekNoOp()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		// Move by 0 relative to current position
@@ -197,7 +178,7 @@ protected:
 
 	void testSeekRelative()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		// Move by 7 relative to current position: absolute pos 7
@@ -231,7 +212,7 @@ protected:
 
 	void testSeekRelativeFail()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		// Move by 7 relative to current position: absolute pos 7
@@ -255,7 +236,7 @@ protected:
 
 	void testSeekAbsolute()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		// Move to absolute position 7
@@ -288,7 +269,7 @@ protected:
 
 	void testSeekAbsoluteFail()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		// Move to absolute position -3
@@ -303,7 +284,7 @@ protected:
 
 	void testSeekGetCurrentPos()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		// Move to absolute position 7
@@ -327,7 +308,7 @@ protected:
 
 	void testSeekRelativeToEnd()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/var/log/messages");
+		CComPtr<IStream> pStream = _CreateConnectInit("/var/log/messages");
 		HRESULT hr;
 
 		ULONGLONG uSize;
@@ -370,7 +351,7 @@ protected:
 
 	void testReadABit()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/proc/cpuinfo");
+		CComPtr<IStream> pStream = _CreateConnectInit("/proc/cpuinfo");
 		HRESULT hr;
 
 		char buf[10];
@@ -386,7 +367,7 @@ protected:
 
 	void testReadFile()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/proc/cpuinfo");
+		CComPtr<IStream> pStream = _CreateConnectInit("/proc/cpuinfo");
 		HRESULT hr;
 
 		CStringA strFile;
@@ -403,7 +384,7 @@ protected:
 
 	void testReadFileSmallBuffer()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/proc/cpuinfo");
+		CComPtr<IStream> pStream = _CreateConnectInit("/proc/cpuinfo");
 		HRESULT hr;
 
 		CStringA strFile;
@@ -420,7 +401,7 @@ protected:
 
 	void testReadFileLargeBuffer()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/proc/cpuinfo");
+		CComPtr<IStream> pStream = _CreateConnectInit("/proc/cpuinfo");
 		HRESULT hr;
 
 		CStringA strFile;
@@ -437,7 +418,7 @@ protected:
 
 	void testReadFileMassiveBuffer()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit(
+		CComPtr<IStream> pStream = _CreateConnectInit(
 			"/usr/share/example-content/GIMP_Ubuntu_splash_screen.xcf");
 		HRESULT hr;
 
@@ -455,7 +436,7 @@ protected:
 
 	void testReadFileExact()
 	{
-		CComPtr<CSftpStream> pStream = _CreateConnectInit("/boot/grub/default");
+		CComPtr<IStream> pStream = _CreateConnectInit("/boot/grub/default");
 		HRESULT hr;
 
 		CStringA strFile;
@@ -491,9 +472,9 @@ private:
 			config.GetHost(), config.GetPort(), config.GetUser(), m_spConsumer);
 	}
 
-	CComPtr<CSftpStream> _CreateConnectInit(PCSTR pszFilePath)
+	CComPtr<IStream> _CreateConnectInit(PCSTR pszFilePath)
 	{
-		CComPtr<CSftpStream> pStream = pStream->Create(
+		CComPtr<IStream> pStream = new CSftpStream(
 			m_spSession, pszFilePath, CSftpStream::read);
 		CPPUNIT_ASSERT(pStream);
 

@@ -85,7 +85,7 @@ public:
 	{
 		boost::shared_ptr<CSession> session(_GetSession());
 
-		ATL::CComPtr<IStream> stream = CSftpStream::Create(
+		ATL::CComPtr<IStream> stream = new CSftpStream(
 			session, m_remote_path, flags);
 		return stream;
 	}

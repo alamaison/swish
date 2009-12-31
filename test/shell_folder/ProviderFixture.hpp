@@ -29,10 +29,15 @@
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture/ComFixture
 
+#include "swish/shell_folder/Pool.h" // CPool
 #include "swish/interfaces/SftpProvider.h"  // ISftpProvider
-#include "swish/utils.hpp"  // string conversion functions, GetCurrentUser
+#include "swish/utils.hpp"  // string conversion functions
 
 #include "swish/atl.hpp"
+
+#include <comet/ptr.h> // com_ptr
+
+#include <string>
 
 namespace test {
 namespace provider {
@@ -47,35 +52,30 @@ public:
 	/**
 	 * Get a CProvider instance connected to the fixture SSH server.
 	 */
-	ATL::CComPtr<ISftpProvider> ProviderFixture::Provider()
+	comet::com_ptr<ISftpProvider> ProviderFixture::Provider()
 	{
 		if (!m_provider)
 		{
 			// Create args
-			ATL::CComPtr<test::common_boost::CConsumerStub> spConsumer = 
+			comet::com_ptr<test::common_boost::CConsumerStub> consumer = 
 				test::common_boost::CConsumerStub::CreateCoObject();
-			spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
+			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
-			ATL::CComBSTR bstrUser = 
-				swish::utils::Utf8StringToWideString(GetUser()).c_str();
-			ATL::CComBSTR bstrHost = 
-				swish::utils::Utf8StringToWideString(GetHost()).c_str();
+			std::wstring user = 
+				swish::utils::Utf8StringToWideString(GetUser());
+			std::wstring host = 
+				swish::utils::Utf8StringToWideString(GetHost());
 
-			// Create Provider from Progid and initialise
-			m_provider.CoCreateInstance(OLESTR("Provider.Provider"));
-			BOOST_REQUIRE(m_provider);
-
-			HRESULT hr = m_provider->Initialize(
-				spConsumer, bstrUser, bstrHost, GetPort());
-
-			BOOST_REQUIRE_OK(hr);
+			// Create Provider instance
+			CPool pool;
+			m_provider = pool.GetSession(consumer, host, user, GetPort());
 		}
 
-		return m_provider.p;
+		return m_provider;
 	}
 
 private:
-	ATL::CComPtr<ISftpProvider> m_provider;
+	comet::com_ptr<ISftpProvider> m_provider;
 };
 
 }} // namespace test::provider

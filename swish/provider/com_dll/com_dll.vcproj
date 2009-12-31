@@ -294,6 +294,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\coclasses.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\com_dll.def"
 				>
 			</File>
@@ -328,14 +332,6 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\ProviderCoClass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ProviderModule.cpp"
-				>
 			</File>
 		</Filter>
 		<Filter
@@ -380,22 +376,6 @@
 						Culture="2057"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\com_dll.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\dispenser.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\provider.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\real_dispenser.rgs"
-				>
 			</File>
 		</Filter>
 		<Filter

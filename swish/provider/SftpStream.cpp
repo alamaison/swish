@@ -37,6 +37,7 @@
 #include "SftpStream.hpp"
 
 #include "swish/debug.hpp"                   // Debug macros
+#include "swish/trace.hpp" // trace_f: Debug trace function
 #include "swish/catch_com.hpp"               // COM Exception handler
 #include "swish/exception.hpp"               // com_exception
 
@@ -48,8 +49,8 @@
 #include <libssh2_sftp.h>
 
 using swish::exception::com_exception;
+using swish::tracing::trace_f;
 
-using ATL::CComPtr;
 using ATL::CA2W;
 using ATL::CString;
 
@@ -228,39 +229,15 @@ int safe_libssh2_sftp_close_handle(LIBSSH2_SFTP_HANDLE* handle)
 
 
 /**
- * Construct a new CSftpStream instance with NULL filehandle.
- */
-CSftpStream::CSftpStream()
-{
-}
-
-/**
- * Close handle to file and destroy CStfpStream instance.
- */
-CSftpStream::~CSftpStream()
-{
-}
-
-/* static */ CComPtr<CSftpStream> CSftpStream::Create(
-	shared_ptr<CSession> session, const string& file, OpenFlags flags)
-{
-	CComPtr<CSftpStream> stream = CSftpStream::CreateCoObject();
-
-	stream->Initialize(session, file, flags);
-	return stream;
-}
-
-/**
- * Initialise the CSftpStream instance with a file path and an SFTP session.
+ * Construct a new CSftpStream instance with a file path and an SFTP session.
  *
  * The file is opened using SFTP and the CSftpStream provides access to it
  * via the IStream interface.
  */
-void CSftpStream::Initialize(
+CSftpStream::CSftpStream(
 	shared_ptr<CSession> session, const string& file, OpenFlags flags)
+	: m_session(session)
 {
-	m_session = session;
-
 	// Map between CSftpStream flags and libssh2 flags
 	unsigned long libssh2_flags = 0;
 	if (flags & read)
@@ -279,7 +256,7 @@ void CSftpStream::Initialize(
 		safe_libssh2_sftp_close_handle);
 	if (!m_handle)
 	{
-		TRACE("libssh2_sftp_open(%s) failed: %ws",
+		trace_f("libssh2_sftp_open(%s) failed: %ws",
 			file.c_str(), GetLastErrorMessage(*m_session));
 		
 		HRESULT hr = last_storage_error(*m_session);
@@ -290,6 +267,12 @@ void CSftpStream::Initialize(
 	m_strDirectory = file.substr(0, file.find_last_of('/'));
 }
 
+/**
+ * Close handle to file and destroy CStfpStream instance.
+ */
+CSftpStream::~CSftpStream()
+{
+}
 
 /*----------------------------------------------------------------------------*
  * COM Interface Functions

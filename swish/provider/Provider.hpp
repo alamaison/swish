@@ -38,40 +38,26 @@
 
 #include "SessionFactory.hpp"                // CSession
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
-#include "swish/ComSTLContainer.hpp"        // CComSTLContainer
 
 #include "swish/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
 
-#include <boost/shared_ptr.hpp>
-
-#include <list>
+#include <boost/shared_ptr.hpp> // shared_ptr
 
 namespace swish {
 namespace provider {
 
-class ATL_NO_VTABLE CProvider :
-	public ISftpProvider,
-	public ATL::CComObjectRoot
+class ATL_NO_VTABLE CProvider : public ISftpProvider
 {
 public:
+	typedef ISftpProvider interface_is;
 
-	BEGIN_COM_MAP(CProvider)
-		COM_INTERFACE_ENTRY(ISftpProvider)
-	END_COM_MAP()
-
-	/** @name ATL Constructors */
-	// @{
 	CProvider();
-	DECLARE_PROTECT_FINAL_CONSTRUCT();
-	HRESULT FinalConstruct();
-	void FinalRelease();
-	// @}
+	~CProvider() throw();
 
 	/** @name ISftpProvider methods */
 	// @{
 	IFACEMETHODIMP Initialize(
-		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
 	IFACEMETHODIMP SwitchConsumer(
 		__in ISftpConsumer *pConsumer );
@@ -127,48 +113,4 @@ private:
 		__in_z const char *szPath, __out ATL::CString& strError );
 };
 
-typedef ATL::CComObject<swish::CComSTLContainer< std::list<Listing> > >
-	CComListingHolder;
-
 }} // namespace swish::provider
-
-/**
- * Copy-policy for use by enumerators of Listing items.
- */
-template<>
-class ATL::_Copy<Listing>
-{
-public:
-	static HRESULT copy(Listing* p1, const Listing* p2)
-	{
-		p1->bstrFilename = SysAllocStringLen(
-			p2->bstrFilename, ::SysStringLen(p2->bstrFilename));
-		p1->uPermissions = p2->uPermissions;
-		p1->bstrOwner = SysAllocStringLen(
-			p2->bstrOwner, ::SysStringLen(p2->bstrOwner));
-		p1->bstrGroup = SysAllocStringLen(
-			p2->bstrGroup, ::SysStringLen(p2->bstrGroup));
-		p1->uUid = p2->uUid;
-		p1->uGid = p2->uGid;
-		p1->uSize = p2->uSize;
-		p1->cHardLinks = p2->cHardLinks;
-		p1->dateModified = p2->dateModified;
-		p1->dateAccessed = p2->dateAccessed;
-
-		return S_OK;
-	}
-	static void init(Listing* p)
-	{
-		::ZeroMemory(p, sizeof(Listing));
-	}
-	static void destroy(Listing* p)
-	{
-		::SysFreeString(p->bstrFilename);
-		::SysFreeString(p->bstrOwner);
-		::SysFreeString(p->bstrGroup);
-		::ZeroMemory(p, sizeof(Listing));
-	}
-};
-
-typedef ATL::CComEnumOnSTL<IEnumListing, &__uuidof(IEnumListing), Listing, 
-	ATL::_Copy<Listing>, std::list<Listing> > CComEnumListing;

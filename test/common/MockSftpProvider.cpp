@@ -53,19 +53,8 @@ void CMockSftpProvider::SetRenameBehaviour( RenameBehaviour enumBehaviour )
 }
 
 STDMETHODIMP CMockSftpProvider::Initialize(
-	ISftpConsumer *pConsumer, BSTR bstrUser, BSTR bstrHost, UINT uPort )
+	BSTR bstrUser, BSTR bstrHost, UINT uPort )
 {
-	// Test ISftpConsumer pointer
-	CPPUNIT_ASSERT( pConsumer );
-	CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-		"AddRef failed for ISftpConsumer",
-		pConsumer->AddRef()
-	);
-	CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-		"AddRef failed for ISftpConsumer",
-		pConsumer->Release()
-	);
-
 	// Test strings
 	CPPUNIT_ASSERT( CComBSTR(bstrUser).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrUser).Length() <= MAX_USERNAME_LEN );
@@ -75,10 +64,6 @@ STDMETHODIMP CMockSftpProvider::Initialize(
 	// Test port number
 	CPPUNIT_ASSERT( uPort >= MIN_PORT );
 	CPPUNIT_ASSERT( uPort <= MAX_PORT ); 
-
-	// Save pointer for later use
-	m_spConsumer = pConsumer;
-	CPPUNIT_ASSERT( m_spConsumer );
 
 	return S_OK;
 }

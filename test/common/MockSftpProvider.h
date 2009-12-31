@@ -119,7 +119,6 @@ public:
 	/** @name ISftpProvider methods */
 	// @{
 	IFACEMETHODIMP Initialize(
-		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrUser,
 		__in BSTR bstrHost,
 		__in UINT uPort

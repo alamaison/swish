@@ -38,40 +38,27 @@
 
 #include "Session.hpp"
 
-#include "swish/atl.hpp"  // Common ATL setup
-#include "swish/CoFactory.hpp"
-
 #include <boost/shared_ptr.hpp>
 
 #include <string>
 
+#include <comet/server.h> // simple_object
+
 typedef struct _LIBSSH2_SFTP_HANDLE LIBSSH2_SFTP_HANDLE; // Forward-decl
 
-class ATL_NO_VTABLE CSftpStream :
-	public ATL::CComObjectRoot,
-	public IStream,
-	public swish::CCoFactory<CSftpStream>
+class CSftpStream : public comet::simple_object<IStream>
 {
 public:
-	BEGIN_COM_MAP(CSftpStream)
-		COM_INTERFACE_ENTRY(IStream)
-		COM_INTERFACE_ENTRY(ISequentialStream)
-	END_COM_MAP()
-
-	CSftpStream();
-	~CSftpStream();
 
 	typedef int OpenFlags;
 	static const OpenFlags read = 0x01;
 	static const OpenFlags write = 0x02;
 	static const OpenFlags create = 0x04;
 
-	static ATL::CComPtr<CSftpStream> Create(
+	CSftpStream(
 		boost::shared_ptr<CSession> session, const std::string& file,
 		OpenFlags flags);
-	void Initialize(
-		boost::shared_ptr<CSession> session, const std::string& file,
-		OpenFlags flags);
+	~CSftpStream();
 
 	// ISequentialStream methods
 	IFACEMETHODIMP Read( 

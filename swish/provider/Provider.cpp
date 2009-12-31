@@ -44,12 +44,18 @@
 #include "swish/catch_com.hpp"   // COM exception handler
 #include "swish/exception.hpp"   // com_exception
 #include "swish/utils.hpp" // running_object_table
+#include "swish/trace.hpp" // trace
 
 #include <comet/ptr.h> // com_ptr
+#include <comet/enum.h> // stl_enumeration
+#include <comet/server.h> // simple_object for STL holder with AddRef lifetime
 
 #include <boost/lexical_cast.hpp> // lexical_cast
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+#include <boost/system/system_error.hpp> // system_error, system_category
 
 #include <string>
+#include <vector> // to hold listing
 
 #include <ws2tcpip.h>            // Winsock
 #include <wspiapi.h>             // Winsock
@@ -57,20 +63,23 @@
 using namespace swish::provider;
 using swish::exception::com_exception;
 using swish::utils::com::running_object_table;
+using swish::tracing::trace;
 
 using comet::com_ptr;
+using comet::stl_enumeration;
 
 using boost::lexical_cast;
+using boost::system::system_error;
+using boost::system::system_category;
+using boost::shared_ptr;
 
-using ATL::CComObject;
-using ATL::CComPtr;
 using ATL::CW2A;
 using ATL::CComBSTR;
 using ATL::CString;
 
 using std::string;
 using std::wstring;
-using std::list;
+using std::vector;
 
 #pragma warning (push)
 #pragma warning (disable: 4267) // ssize_t to unsigned int
@@ -81,30 +90,19 @@ using std::list;
  * @warning
  *   The Initialize() method must be called before the other methods
  *   of the object can be used.
+ *
+ * @todo  Examine wsadata to verify Winsock version is acceptable.
  */
 CProvider::CProvider() :
 	m_fInitialized(false),
 	m_pConsumer(NULL),
 	m_dwCookie(0)
 {
-}
-
-/**
- * Returns constructor success or failure.
- *
- * As various parts of the initialisation can potentially fail, they
- * are done here rather than in the constructor.
- */
-HRESULT CProvider::FinalConstruct()
-{
 	// Start up Winsock
 	WSADATA wsadata;
 	int rc = ::WSAStartup(WINSOCK_VERSION, &wsadata);
-	ATLENSURE_RETURN_HR(!rc, E_UNEXPECTED);
-
-	// TODO: examine wsadata to verify Winsock version is acceptable
-
-	return S_OK;
+	if (rc != 0)
+		BOOST_THROW_EXCEPTION(system_error(rc, system_category));
 }
 
 namespace {
@@ -166,7 +164,7 @@ namespace {
 	 * Remove this connection instance from the Running Object Table.
 	 *
 	 * The target instance will be registered with a moniker of the form 
-	 * !sftp://user@host:port.  The ROT will release its strong reference to
+	 * !sftp://user@host:port.  The ROT will release its reference to
 	 * this instance and, if that was the last one, this object will be freed.
 	 */
 	void revoke_from_rot(DWORD cookie)
@@ -182,24 +180,27 @@ namespace {
 /**
  * Free libssh2 and shutdown Winsock
  */
-void CProvider::FinalRelease()
+CProvider::~CProvider() throw()
 {
-	_Disconnect(); // Destroy session before shutting down Winsock
-
 	try
 	{
+		_Disconnect(); // Destroy session before shutting down Winsock
+
 		if (m_dwCookie)
 			revoke_from_rot(m_dwCookie);
+
+		int rc = ::WSACleanup();
+		if (rc != 0)
+			BOOST_THROW_EXCEPTION(
+				system_error(::WSAGetLastError(), system_category));
+
+		if (m_pConsumer)
+			m_pConsumer->Release();
 	}
 	catch (const std::exception& e)
 	{
-		ATLTRACE("revoke_from_rot THREW IN DESTRUCTOR: %s", e.what());
+		trace("EXCEPTION THROWN IN DESTRUCTOR: %s") % e.what();
 	}
-
-	ATLVERIFY( !::WSACleanup() );
-
-	if (m_pConsumer)
-		m_pConsumer->Release();
 }
 
 /**
@@ -226,8 +227,7 @@ void CProvider::FinalRelease()
  *   @retval E_POINTER is pConsumer is invalid
  *   @retval E_FAIL if other error encountered
  */
-STDMETHODIMP CProvider::Initialize(
-	ISftpConsumer* /*pConsumer*/, BSTR bstrUser, BSTR bstrHost, UINT uPort )
+STDMETHODIMP CProvider::Initialize(BSTR bstrUser, BSTR bstrHost, UINT uPort )
 {
 	if (::SysStringLen(bstrUser) == 0 || ::SysStringLen(bstrHost) == 0)
 		return E_INVALIDARG;
@@ -306,6 +306,62 @@ void CProvider::_Disconnect()
 	m_session.reset();
 }
 
+
+template<> struct comet::comtype<IEnumListing>
+{
+	static const IID& uuid() throw() { return IID_IEnumListing; }
+	typedef IUnknown base;
+};
+
+template<> struct comet::enumerated_type_of<IEnumListing> { typedef Listing is; };
+
+/**
+ * Copy-policy for use by enumerators of Listing items.
+ */
+template<> struct comet::impl::type_policy<Listing>
+{
+	template<typename S>
+	static void init(Listing& t, const S& s) 
+	{
+		::ZeroMemory(&t, sizeof(t));
+
+		t.bstrFilename = SysAllocStringLen(
+			s.bstrFilename, ::SysStringLen(s.bstrFilename));
+		t.uPermissions = s.uPermissions;
+		t.bstrOwner = SysAllocStringLen(
+			s.bstrOwner, ::SysStringLen(s.bstrOwner));
+		t.bstrGroup = SysAllocStringLen(
+			s.bstrGroup, ::SysStringLen(s.bstrGroup));
+		t.uUid = s.uUid;
+		t.uGid = s.uGid;
+		t.uSize = s.uSize;
+		t.cHardLinks = s.cHardLinks;
+		t.dateModified = s.dateModified;
+		t.dateAccessed = s.dateAccessed;
+	}
+
+	static void clear(Listing& t)
+	{
+		::SysFreeString(t.bstrFilename);
+		::SysFreeString(t.bstrOwner);
+		::SysFreeString(t.bstrGroup);
+		::ZeroMemory(&t, sizeof(t));
+	}	
+};
+
+namespace {
+
+template<typename Collection>
+class stl_enum_holder : public comet::simple_object<> //<IUnknown>
+{
+public:
+	stl_enum_holder(shared_ptr<Collection> collection)
+		: m_collection(collection) {}
+	shared_ptr<Collection> m_collection;
+};
+
+}
+
 /**
 * Retrieves a file listing, @c ls, of a given directory.
 *
@@ -336,6 +392,9 @@ STDMETHODIMP CProvider::GetListing(
 
 	HRESULT hr;
 
+	try
+	{
+
 	// Connect to server
 	hr = _Connect();
 	if (FAILED(hr))
@@ -350,7 +409,7 @@ STDMETHODIMP CProvider::GetListing(
 		return E_FAIL;
 
 	// Read entries from directory until we fail
-	list<Listing> files;
+	shared_ptr<vector<Listing> > files(new vector<Listing>);
     do {
 		// Read filename and attributes. Returns length of filename retrieved.
 		char szFilename[MAX_FILENAME_LENZ];
@@ -383,44 +442,21 @@ STDMETHODIMP CProvider::GetListing(
 
 		string strFilename(szFilename);
 		string strLongEntry(szLongEntry);
-		files.push_back(
+		files->push_back(
 			listing::FillListingEntry(strFilename, strLongEntry, attrs));
 	} while (true);
 
     ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);
 
 	// Create copy of our list of Listings and put into an AddReffed 'holder'
-	CComListingHolder *pHolder = NULL;
-	hr = pHolder->CreateInstance(&pHolder);
-	ATLASSERT(SUCCEEDED(hr));
-	if (SUCCEEDED(hr))
-	{
-		pHolder->AddRef();
-
-		hr = pHolder->Copy(files);
-		ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-
-		// Create enumerator
-		CComObject<CComEnumListing> *pEnum;
-		hr = pEnum->CreateInstance(&pEnum);
-		ATLASSERT(SUCCEEDED(hr));
-		if (SUCCEEDED(hr))
-		{
-			pEnum->AddRef();
-
-			// Give enumerator back-reference to holder of our copied collection
-			hr = pEnum->Init( pHolder->GetUnknown(), pHolder->m_coll );
-			ATLASSERT(SUCCEEDED(hr));
-			if (SUCCEEDED(hr))
-			{
-				hr = pEnum->QueryInterface(ppEnum);
-				ATLASSERT(SUCCEEDED(hr));
-			}
-
-			pEnum->Release();
-		}
-		pHolder->Release();
+	com_ptr<stl_enum_holder<vector<Listing> > > holder = 
+		new stl_enum_holder<vector<Listing> >(files);
+	IUnknown* unknown = holder->get_unknown();
+	com_ptr<IEnumListing> listing = stl_enumeration<IEnumListing>::create(
+		*holder->m_collection, unknown);
+	*ppEnum = listing.detach();
 	}
+	catchCom()
 
 	return hr;
 }
@@ -449,9 +485,9 @@ STDMETHODIMP CProvider::GetFile(
 		if (fWriteable)
 			flags |= CSftpStream::write;
 
-		CComPtr<CSftpStream> spStream = CSftpStream::Create(
+		com_ptr<IStream> stream = new CSftpStream(
 			m_session, CW2A(bstrFilePath).m_psz, flags);
-		*ppStream = spStream.Detach();
+		*ppStream = stream.detach();
 	}
 	catchCom()
 

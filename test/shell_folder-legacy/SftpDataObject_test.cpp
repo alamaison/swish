@@ -48,9 +48,10 @@ public:
 		_CreateMockSftpConsumer(&m_pCoConsumer, &m_pConsumer);
 
 		m_pProvider->Initialize(
-			m_pConsumer, CComBSTR(config.GetUser()),
+			CComBSTR(config.GetUser()),
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
+		m_pProvider->SwitchConsumer(m_pConsumer);
 	}
 
 	void tearDown()

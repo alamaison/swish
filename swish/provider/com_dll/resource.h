@@ -2,11 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by com_dll.rc
 //
-#define IDS_PROJNAME                    100
-#define IDR_PROVIDER                    101
-#define IDR_PROVIDERDLL                 201
-#define IDR_REALDISPENSER               209
-#define IDR_DISPENSER                   210
 
 // Next default values for new objects
 // 

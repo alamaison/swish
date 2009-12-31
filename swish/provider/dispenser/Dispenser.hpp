@@ -36,30 +36,16 @@
 
 #pragma once
 
-#include <swish/atl.hpp>
-
-#include <comet/server.h>
-
 #include <OleIdl.h> // IOleItemContainer
 
 namespace swish {
 namespace provider {
 namespace dispenser {
 
-class CDispenser :
-	public IOleItemContainer,
-	public ATL::CComObjectRoot
+class CDispenser : public IOleItemContainer
 {
-
-	BEGIN_COM_MAP(CDispenser)
-		COM_INTERFACE_ENTRY(IParseDisplayName)
-		COM_INTERFACE_ENTRY(IOleContainer)
-		COM_INTERFACE_ENTRY(IOleItemContainer)
-	END_COM_MAP()
-
-	CDispenser() {}
-	HRESULT FinalConstruct() { return S_OK; }
-	void FinalRelease() {}
+public:
+    typedef IOleItemContainer interface_is;
 
 public: // IParseDisplayName
 

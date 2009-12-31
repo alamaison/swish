@@ -109,7 +109,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("1F8343E4-71DB-466a-A08D-B517DFBB38FF"),
+	object, uuid("35108EAD-3D48-4076-A238-2D429131D333"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface")
@@ -117,7 +117,6 @@ interface ISftpConsumer : IUnknown
 interface ISftpProvider : IUnknown
 {
 	HRESULT Initialize(
-		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrUser,
 		[in] BSTR bstrHost,
 		[in] UINT uPort

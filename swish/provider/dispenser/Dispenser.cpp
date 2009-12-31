@@ -39,11 +39,11 @@
 #include "swish/utils.hpp" // running_object_table
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider
 #include "swish/catch_com.hpp" // catchCom
+#include "swish/trace.hpp" // trace
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/bstr.h> // bstr_t
 #include <comet/error_fwd.h> // com_error
-#include <comet/handle_except.h> // COMET_CATCH_CLASS
 #include <comet/interface.h> // uuidof, comtype
 #include <comet/threading.h> // critical_section, auto_cs
 
@@ -53,6 +53,7 @@
 #include <string>
 
 using swish::utils::com::running_object_table;
+using swish::tracing::trace;
 
 using comet::com_ptr;
 using comet::bstr_t;
@@ -88,9 +89,9 @@ namespace swish {
 namespace provider {
 namespace dispenser {
 
-critical_section lock; ///< Critical section around global sessions
-
 namespace {
+
+	critical_section lock; ///< Critical section around global sessions
 
 	/**
 	 * Create an item moniker with the given name and a '!' delimeter.
@@ -138,18 +139,19 @@ namespace {
 		if (regex_match(name, match, item_moniker_regex) &&
 			match.size() == 4)
 		{
-			bstr_t user = match[USER_MATCH].str();
-			bstr_t host = match[HOST_MATCH].str();
+			bstr_t user = match[USER_MATCH];
+			bstr_t host = match[HOST_MATCH];
 			unsigned int port = lexical_cast<unsigned int>(
 				match[PORT_MATCH].str());
 
 			// Create SFTP Provider from ProgID and initialise
 			com_ptr<ISftpProvider> provider(L"Provider.Provider");
 			HRESULT hr;
-			hr = provider->Initialize(NULL, user.in(), host.in(), port);
+			hr = provider->Initialize(user.in(), host.in(), port);
 			if (FAILED(hr))
 				throw com_error("Couldn't initialise Provider", hr);
 
+			trace("Created new session: %ls") % name;
 			return provider;
 		}
 		else
@@ -167,6 +169,8 @@ namespace {
 		}
 		catch (const com_error& e)
 		{
+			trace("No existing session: %s") % e.what();
+
 			if (dw_speed_needed != BINDSPEED_INDEFINITE)
 				throw com_error("Object not running", MK_E_EXCEEDEDDEADLINE);
 
