@@ -36,16 +36,15 @@
 
 #pragma once
 
-#include <basetsd.h>   // Sized Windows datatypes
+#include <boost/asio/ip/tcp.hpp> // Boost sockets
 
 typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
 typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
-typedef UINT_PTR SOCKET;
 
 class CSession
 {
 public:
-	CSession() throw(...);
+	CSession();
 	~CSession();
 	operator LIBSSH2_SESSION*() const;
 	operator LIBSSH2_SFTP*() const;
@@ -56,7 +55,8 @@ public:
 
 private:
 	LIBSSH2_SESSION *m_pSession;   ///< SSH session
-	SOCKET m_socket;               ///< TCP/IP socket to the remote host
+	boost::asio::io_service m_io; ///< Boost IO system
+	boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
 	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
 	bool m_bConnected;             ///< Have we already connected to server?
 

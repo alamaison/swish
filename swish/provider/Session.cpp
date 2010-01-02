@@ -38,19 +38,28 @@
 
 #include "swish/remotelimits.h"
 #include "swish/debug.hpp"        // Debug macros
-
-#include "swish/atl.hpp"          // Common ATL setup
-
-#include <ws2tcpip.h>             // Winsock
-#include <wspiapi.h>              // Winsock
+#include "swish/utils.hpp" // WideStringToUtf8String
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-using ATL::CW2A;
+#include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
+#include <boost/lexical_cast.hpp> // lexical_cast: convert port num to string
 
-CSession::CSession() throw(...) : 
-	m_pSession(NULL), m_pSftpSession(NULL), m_socket(INVALID_SOCKET),
+#include <string>
+
+using swish::utils::WideStringToUtf8String;
+
+using boost::asio::ip::tcp;
+using boost::asio::error::host_not_found;
+using boost::system::system_error;
+using boost::system::error_code;
+using boost::lexical_cast;
+
+using std::string;
+
+CSession::CSession() : 
+	m_pSession(NULL), m_io(0), m_socket(m_io), m_pSftpSession(NULL), 
 	m_bConnected(false)
 {
 	_CreateSession();
@@ -82,13 +91,12 @@ void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
 		return;
 	
 	// Connect to host over TCP/IP
-	if (m_socket == INVALID_SOCKET)
-		_OpenSocketToHost(pwszHost, uPort);
+	_OpenSocketToHost(pwszHost, uPort);
 
 	// Start up libssh2 and trade welcome banners, exchange keys,
     // setup crypto, compression, and MAC layers
-	ATLASSERT(m_socket != INVALID_SOCKET);
-	if (libssh2_session_startup(*this, static_cast<int>(m_socket)) != 0)
+	ATLASSERT(m_socket.native() != INVALID_SOCKET);
+	if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
 	{
 #ifdef _DEBUG
 		char *szError;
@@ -203,69 +211,40 @@ void CSession::_DestroySftpChannel() throw()
  * Creates a socket and connects it to the host.
  *
  * The socket is stored as the member variable @c m_socket. The hostname 
- * and port used are passed as parameters.  If the socket has already been 
- * initialised, the function leaves it unchanged (or asserts in a DEBUG build).
- * If any errors occur, the socket is set to @c INVALID_SOCKET and an ATL
- * exception is thrown.
+ * and port used are passed as parameters.
  *
- * @throws a com_exception if there is a failure.
+ * @throws  A com_exception or boost::system::system_error if there is a
+ *          failure.
  *
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c _CloseSocketToHost()
  */
-void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort) throw(...)
+void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 {
 	ATLASSERT(pwszHost[0] != '\0');
 	ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
-	ATLENSURE_THROW(m_socket == INVALID_SOCKET, E_UNEXPECTED); // Already set up
-
-	// The hints address info struct which is passed to getaddrinfo()
-	addrinfo aiHints;
-	::ZeroMemory(&aiHints, sizeof(aiHints));
-	aiHints.ai_family = AF_INET;
-	aiHints.ai_socktype = SOCK_STREAM;
-	aiHints.ai_protocol = IPPROTO_TCP;
-
-	// Convert numeric port to a UTF-8 string
-	char szPort[6];
-	ATLENSURE_THROW(!::_itoa_s(uPort, szPort, 6, 10), E_UNEXPECTED);
 
 	// Convert host address to a UTF-8 string
-	CW2A pszAddress(pwszHost, CP_UTF8);
+	string host_name = WideStringToUtf8String(pwszHost);
 
-	// Call getaddrinfo(). If the call succeeds, paiList will hold a linked list
-	// of addrinfo structures containing response information about the host.
-	addrinfo *paiList = NULL;
-	int rc = ::getaddrinfo(pszAddress, szPort, &aiHints, &paiList);
-	// It is valid to fail here - e.g. unknown host
-	if (rc)
-		AtlThrow(HRESULT_FROM_WIN32(::WSAGetLastError()));
-	ATLASSERT(paiList);
-	ATLASSERT(paiList->ai_addr);
+	tcp::resolver resolver(m_io);
+	tcp::endpoint endpoint;
+	typedef tcp::resolver::query Lookup;
+	Lookup query(
+		endpoint.protocol(), host_name, lexical_cast<string>(uPort), 
+		Lookup::all_matching | Lookup::numeric_service);
 
-	// Create socket and establish connection
-	HRESULT hr;
-	m_socket = ::socket(AF_INET, SOCK_STREAM, 0);
-	ATLASSERT_REPORT(m_socket != INVALID_SOCKET, ::WSAGetLastError());
-	if (m_socket != INVALID_SOCKET)
+	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+	tcp::resolver::iterator end;
+
+	error_code error = host_not_found;
+	while (error && endpoint_iterator != end)
 	{
-		int rc = ::connect(
-			m_socket, paiList->ai_addr, static_cast<int>(paiList->ai_addrlen));
-		if (rc != 0)
-		{
-			hr = HRESULT_FROM_WIN32(::WSAGetLastError());
-			_CloseSocketToHost(); // Clean up socket
-		}
-		else
-			hr = S_OK;
+		m_socket.close();
+		m_socket.connect(*endpoint_iterator++, error);
 	}
-	else
-		hr = E_UNEXPECTED;
-
-	::freeaddrinfo(paiList);
-
-	if (FAILED(hr))
-		AtlThrow(hr);
+	if (error)
+		BOOST_THROW_EXCEPTION(system_error(error));
 }
 
 /**
@@ -273,9 +252,5 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort) throw(...)
  */
 void CSession::_CloseSocketToHost() throw()
 {
-	if (m_socket != INVALID_SOCKET)
-	{
-		ATLVERIFY_REPORT( !::closesocket(m_socket), ::WSAGetLastError() );
-		m_socket = INVALID_SOCKET;
-	}
+	m_socket.close();
 }

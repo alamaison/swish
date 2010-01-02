@@ -57,9 +57,6 @@
 #include <string>
 #include <vector> // to hold listing
 
-#include <ws2tcpip.h>            // Winsock
-#include <wspiapi.h>             // Winsock
-
 using namespace swish::provider;
 using swish::exception::com_exception;
 using swish::utils::com::running_object_table;
@@ -90,19 +87,12 @@ using std::vector;
  * @warning
  *   The Initialize() method must be called before the other methods
  *   of the object can be used.
- *
- * @todo  Examine wsadata to verify Winsock version is acceptable.
  */
 CProvider::CProvider() :
 	m_fInitialized(false),
 	m_pConsumer(NULL),
 	m_dwCookie(0)
 {
-	// Start up Winsock
-	WSADATA wsadata;
-	int rc = ::WSAStartup(WINSOCK_VERSION, &wsadata);
-	if (rc != 0)
-		BOOST_THROW_EXCEPTION(system_error(rc, system_category));
 }
 
 namespace {
@@ -178,7 +168,7 @@ namespace {
 }
 
 /**
- * Free libssh2 and shutdown Winsock
+ * Free libssh2 and remove from ROT.
  */
 CProvider::~CProvider() throw()
 {
@@ -189,10 +179,6 @@ CProvider::~CProvider() throw()
 		if (m_dwCookie)
 			revoke_from_rot(m_dwCookie);
 
-		int rc = ::WSACleanup();
-		if (rc != 0)
-			BOOST_THROW_EXCEPTION(
-				system_error(::WSAGetLastError(), system_category));
 
 		if (m_pConsumer)
 			m_pConsumer->Release();

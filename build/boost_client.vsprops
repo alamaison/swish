@@ -7,7 +7,7 @@
 	<Tool
 		Name="VCCLCompilerTool"
 		AdditionalIncludeDirectories="$(SolutionDir)\thirdparty\boost\"
-		PreprocessorDefinitions="PCH_BOOST"
+		PreprocessorDefinitions="PCH_BOOST;BOOST_ASIO_DISABLE_IOCP"
 	/>
 	<Tool
 		Name="VCLinkerTool"
