@@ -506,7 +506,8 @@ inline typename T::join_pidl operator+(const T& lhs_pidl, const U& rhs_pidl)
  * appropriately.
  */
 template<typename T, typename U>
-inline T& operator+=(T& lhs_pidl, const U& rhs_pidl)
+inline basic_pidl<T>& operator+=(
+	basic_pidl<T>& lhs_pidl, const basic_pidl<U>& rhs_pidl)
 {
 	lhs_pidl = lhs_pidl + rhs_pidl;
 	return lhs_pidl;
