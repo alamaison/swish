@@ -22,4 +22,8 @@
 		Name="VCLinkerTool"
 		AdditionalDependencies="unicows.lib"
 	/>
+	<Tool
+		Name="VCMIDLTool"
+		ValidateParameters="false"
+	/>
 </VisualStudioPropertySheet>

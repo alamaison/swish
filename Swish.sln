@@ -69,6 +69,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{AAB28A
 		swish\remotelimits.h = swish\remotelimits.h
 		swish\trace.hpp = swish\trace.hpp
 		swish\utils.hpp = swish\utils.hpp
+		swish\windows_api.hpp = swish\windows_api.hpp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-legacy", "test\shell_folder-legacy\shell_folder-legacy.vcproj", "{408AB4A6-1F61-4776-AA16-48BD3E981293}"

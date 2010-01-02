@@ -38,6 +38,7 @@
 #include "properties/column.h"     // Column details
 #include "swish/debug.hpp"
 #include "swish/exception.hpp"     // com_exception
+#include "swish/windows_api.hpp" // SHBindToParent
 
 #include <string>
 
@@ -196,7 +197,7 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 				// Bind to parent
 				CComPtr<IShellFolder> spParent;
 				PCUITEMID_CHILD pidlThisFolder = NULL;
-				HRESULT hr = ::SHBindToParent(
+				HRESULT hr = swish::windows_api::SHBindToParent(
 					root_pidl(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
 				ATLASSERT(SUCCEEDED(hr));
 

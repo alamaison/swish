@@ -24,6 +24,8 @@
     @endif
 */
 
+#include "swish/windows_api.hpp" // SHBindToParent
+
 #include <comet/interface.h>  // uuidof, comtype
 #include <comet/ptr.h>  // com_ptr
 
@@ -151,7 +153,8 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 		BOOST_THROW_EXCEPTION(std::invalid_argument("Empty range given"));
 
 	comet::com_ptr<IShellFolder> parent;
-	HRESULT hr = ::SHBindToParent( // &* strips smart pointer, if any
+	HRESULT hr = swish::windows_api::SHBindToParent(
+		// &* strips smart pointer, if any
 		&**begin, comet::uuidof(parent.in()),
 		reinterpret_cast<void**>(parent.out()), NULL);
 	if (FAILED(hr))
@@ -234,5 +237,15 @@ comet::com_ptr<T> bind_to_handler_object(PCIDLIST_ABSOLUTE pidl)
  * For filesystem items this will be the absolute path.
  */
 std::wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl);
+
+/**
+ * Convert a STRRET structure to a string.
+ *
+ * If the STRRET is using its pOleStr member to store the data (rather
+ * than holding it directly or extracting it from the PIDL offset)
+ * the data will be freed.  In other words, this function destroys
+ * the STRRET passed to it.
+ */
+std::wstring strret_to_string(STRRET& strret, PCITEMID_CHILD pidl);
 
 }} // namespace swish::shell_folder

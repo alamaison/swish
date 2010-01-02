@@ -34,10 +34,13 @@
 #include "swish/debug.hpp"
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/exception.hpp"    // com_exception
+#include "swish/windows_api.hpp" // SHBindToParent
+#include "swish/shell_folder/shell.hpp" // strret_to_string
 
 #include <strsafe.h>  // For StringCchCopy
 
 #include <boost/shared_ptr.hpp>
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
 
@@ -51,6 +54,7 @@ using std::wstring;
 
 using swish::host_management::LoadConnectionsFromRegistry;
 using swish::exception::com_exception;
+using swish::shell_folder::strret_to_string;
 
 namespace { // private
 	
@@ -232,7 +236,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 
 	try
 	{
-		CString strName;
+		wstring name;
 		CHostItem hpidl(pidl);
 
 		if (uFlags & SHGDN_FORPARSING)
@@ -242,7 +246,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 				// Bind to parent
 				CComPtr<IShellFolder> spParent;
 				PCUITEMID_CHILD pidlThisFolder;
-				HRESULT hr = ::SHBindToParent(
+				HRESULT hr = swish::windows_api::SHBindToParent(
 					root_pidl(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
 				ATLASSERT(SUCCEEDED(hr));
 
@@ -250,22 +254,21 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 				::ZeroMemory(&strret, sizeof strret);
 				hr = spParent->GetDisplayNameOf(
 					pidlThisFolder, uFlags, &strret);
-				ATLASSERT(SUCCEEDED(hr));
-				ATLASSERT(strret.uType == STRRET_WSTR);
+				if (FAILED(hr))
+					BOOST_THROW_EXCEPTION(com_exception(hr));
 
-				strName += strret.pOleStr;
-				strName += L'\\';
+				name = strret_to_string(strret, pidlThisFolder) + L'\\';
 			}
 
-			strName += hpidl.GetLongName(true);
+			name += hpidl.GetLongName(true);
 		}
 		else if (uFlags == SHGDN_NORMAL || uFlags & SHGDN_FORADDRESSBAR)
 		{
-			strName = hpidl.GetLongName(false);
+			name = hpidl.GetLongName(false);
 		}
 		else if (uFlags == SHGDN_INFOLDER || uFlags & SHGDN_FOREDITING)
 		{
-			strName = hpidl.GetLabel();
+			name = hpidl.GetLabel();
 		}
 		else
 		{
@@ -276,7 +279,7 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 		// Store in a STRRET and return
 		pName->uType = STRRET_WSTR;
 
-		return SHStrDupW( strName, &pName->pOleStr );
+		return SHStrDupW( name.c_str(), &pName->pOleStr );
 	}
 	catchCom()
 }

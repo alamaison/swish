@@ -27,10 +27,11 @@
 #include "DropTarget.hpp"
 
 #include "data_object/ShellDataObject.hpp"  // ShellDataObject
-#include "shell.hpp"  // bind_to_handler_object
+#include "shell.hpp"  // bind_to_handler_object, strret_to_string
 #include "resource.h" // IDS_COPYING_TITLE
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
+#include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
@@ -48,6 +49,7 @@
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
+using swish::shell_folder::strret_to_string;
 using swish::exception::com_exception;
 
 using ATL::CComPtr;
@@ -101,6 +103,8 @@ namespace { // private
 	/**
 	 * Given a PIDL to a *real* file in the filesystem, return an IStream 
 	 * to it.
+	 *
+	 * @note  This fails with E_NOTIMPL on Windows 2000 and below.
 	 */
 	com_ptr<IStream> stream_from_shell_pidl(const CAbsolutePidl& pidl)
 	{
@@ -108,7 +112,7 @@ namespace { // private
 		HRESULT hr;
 		com_ptr<IShellFolder> folder;
 		
-		hr = ::SHBindToParent(
+		hr = swish::windows_api::SHBindToParent(
 			pidl, __uuidof(IShellFolder), 
 			reinterpret_cast<void**>(folder.out()),
 			&pidl_child);
@@ -116,10 +120,16 @@ namespace { // private
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
 		com_ptr<IStream> stream;
-		hr = folder->BindToStorage(pidl_child, NULL, __uuidof(IStream),
+		
+		hr = folder->BindToObject(pidl_child, NULL, __uuidof(IStream),
 			reinterpret_cast<void**>(stream.out()));
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+		{
+			hr = folder->BindToStorage(pidl_child, NULL, __uuidof(IStream),
+				reinterpret_cast<void**>(stream.out()));
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+		}
 
 		return stream;
 	}
@@ -136,27 +146,6 @@ namespace { // private
 
 		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
 		return name.get();
-	}
-
-	/**
-	 * Convert a STRRET structure to a string.
-	 *
-	 * If the STRRET is using its pOleStr member to store the data (rather
-	 * than holding it directly or extracting it from the PIDL offset)
-	 * the data will be freed.  In other words, this function destroys
-	 * the STRRET passed to it.
-	 */
-	wstring strret_to_string(STRRET& strret, const CChildPidl& pidl)
-	{
-		vector<wchar_t> buffer(MAX_PATH);
-		HRESULT hr = ::StrRetToBufW(
-			&strret, pidl, &buffer[0], buffer.size());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-
-		buffer[buffer.size() - 1] = L'\0';
-
-		return wstring(&buffer[0]);
 	}
 
 	/**

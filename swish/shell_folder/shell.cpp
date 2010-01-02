@@ -91,7 +91,7 @@ wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
 {
 	com_ptr<IShellFolder> folder;
 	PCUITEMID_CHILD child_pidl;
-	HRESULT hr = ::SHBindToParent(
+	HRESULT hr = swish::windows_api::SHBindToParent(
 		pidl, uuidof(folder.in()), reinterpret_cast<void**>(folder.out()), 
 		&child_pidl);
 	if (FAILED(hr))
@@ -107,6 +107,19 @@ wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
 	buffer[buffer.size()-1] = L'\0';
+
+	return wstring(&buffer[0]);
+}
+
+wstring strret_to_string(STRRET& strret, PCITEMID_CHILD pidl)
+{
+	vector<wchar_t> buffer(MAX_PATH);
+	HRESULT hr = ::StrRetToBufW(
+		&strret, pidl, &buffer[0], buffer.size());
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_exception(hr));
+
+	buffer[buffer.size() - 1] = L'\0';
 
 	return wstring(&buffer[0]);
 }

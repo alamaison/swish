@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="..\..\build\swish_output_dirs.vsprops"
+			InheritedPropertySheets="..\..\build\swish.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -42,9 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
+				PreprocessorDefinitions="_DEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
@@ -97,7 +96,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="..\..\build\swish_output_dirs.vsprops"
+			InheritedPropertySheets="..\..\build\swish.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -121,7 +120,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
+				PreprocessorDefinitions="NDEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
