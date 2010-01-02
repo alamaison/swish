@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "atlres.h"
-
+#include "atlres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -45,6 +44,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -71,8 +71,8 @@ BEGIN
             VALUE "FileDescription", "Swish ATL module and in-proc COM server"
             VALUE "FileVersion", "0.3.0.0"
             VALUE "InternalName", "swish-com_dll"
-            VALUE "LegalCopyright", "Copyright (C) 2009 Alexander Lamaison <awl03@doc.ic.ac.uk>"
-            VALUE "OriginalFilename", "Swish.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2010 Alexander Lamaison <awl03@doc.ic.ac.uk>"
+            VALUE "OriginalFilename", "shell_folder-com_dll.dll"
             VALUE "ProductName", "Swish"
             VALUE "ProductVersion", "0.3.0.0"
         END
@@ -132,8 +132,7 @@ IDR_REMOTEFOLDER        REGISTRY                "RemoteFolder.rgs"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "shell_folder.rc"
-1 TYPELIB "Swish.tlb"
-
+1 TYPELIB "Swish.tlb"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

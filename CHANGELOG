@@ -1,3 +1,7 @@
+swish-0.3.0.0
+-Full drag-and-drop support in Windows XP and above.  Drag-and-drop files and
+ folders to and from the remote server.
+
 swish-0.2.1.13
 -Enable removal of hosts from Swish folder.
 

@@ -11,19 +11,10 @@ Status:
     ********************************************************************
     In this version, Swish is finally starting to look like a real SFTP 
     client.  As well as management tasks such as renaming and deleting 
-    files on the remote server it can copy the contents of files and 
-    folders from the remote server to the local filesystem.
+    files on the remote server users can drag and drop the contents of files
+    and folders from the remote server to the local filesystem.
     ********************************************************************
-    
-    The architecture of Swish is divided into a back-end and a front-end.  The
-    former deals with the SFTP connection to remote hosts while the latter
-    is concerned with displaying the results to the user and handling 
-    interaction.
-    
-    The current Swish backend is based on libssh2 (http://www.libssh2.org).
-    While the eventual aim is to offer a choice of back-end implementations
-    with different capabilities, this is currently the only one.
-    
+ 
     Currently, Swish only supports simple password and keyboard-interactive
     authentication. Also, as it lacks any ability to authenticate a host's key 
     it will BLINDLY CONNECT TO ANY HOST YOU SPECIFY - *WATCH OUT*!
@@ -31,11 +22,11 @@ Status:
     welcome.
 
 Supported Operating Systems:
-    Windows Vista (works but has connection pool issues)
-    Windows XP    (most tested)
-    Windows 2000  (regularly tested)
-    Windows Me    (rarely tested)
-    Windows 98    (regularly tested)
+    Windows Vista (most testes)
+    Windows XP    (regularly tested)
+    Windows 2000  (regularly tested, no drag-and-drop yet)
+    Windows Me    (rarely tested, no drag-and-drop yet)
+    Windows 98    (regularly tested, no drag-and-drop yet)
     
     Unfortunately, Windows 95 and NT 4 are not immediately supported.  This is
     because the C runtime used when compiling with Visual Studio 2005 is
@@ -50,7 +41,6 @@ Supported Operating Systems:
        so it might not work.
 
 Building:
-
     When building on Windows Vista, make sure you are running Visual
     Studio as an Administrator.  Otherwise it can't register the components
     and later components that depend on earlier ones will fail to build.
@@ -63,9 +53,19 @@ Requirements to run:
         4F0D-80A4-2A7EEAEE17E2&displaylang=en.
 
 Requirements to build:
-    Visual C++ 2005 (Express edition is unlikely to work but feel free to try).
+    The easiest way to set everything up is to run the prereqs.bat script from
+    the build/ directory.  It will fetch all the dependencies except Visual
+    Studio, the Windows SDK and Boost.  These you must install yourself from the
+    links below.
+    
+    Visual C++ 2005
+        Express edition is unlikely to work but feel free to try.
     A recent version of the Windows SDK 
         (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
+    Comet
+        A modern C++ template library for COM.
+	http://bitbucket.org/alamaison/swish_comet/overview/ (custom Swish fork)
+	or http://bitbucket.org/sofusmortensen/comet/overview/.
     WTL 8 which can be obtained from Microsoft or through SourceForge
         Microsoft Permissive Licence: http://www.microsoft.com/downloads/
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
@@ -82,18 +82,12 @@ Requirements to build:
     The directories to put the sourcecode for these dependencies in should
     already exist in the thirdparty/ directory.
     
-    libssh2 can be obtained from http://www.libssh2.org.  Either the latest
-    release (0.18) or the CVS head appear to work.  You can get OpenSSL from
-    http://www.openssl.org and compile it yourself but a much easier option
-    is to download my pre-packaged binary with just the stuff needed for Swish:
+    libssh2 can be obtained from http://www.libssh2.org.  Swish usually requires
+    the latest snapshot.  You can get OpenSSL from http://www.openssl.org and 
+    compile it yourself but a much easier option is to download the Swish
+    pre-packaged binary with just the stuff needed for Swish:
     http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download.
     zlib binaries are available at http://www.zlib.net/.
-    
-    Assuming you have cvs, wget and unzip on your PATH (probably by 
-    installing cygwin), the easiest way to set everything up is to run the 
-    prereqs.bat script in the build/ directory.  This script will fetch
-    all the dependencies except the Windows SDK and Boost.  These two you must
-    install yourself from the links above.
 
 Requirements for testing:
     CppUnit (works with v1.12.0, may work with other versions) must be present
@@ -120,5 +114,15 @@ OpenSSL:
     
     This product includes cryptographic software written by Eric Young 
     (eay@cryptsoft.com)
+
+Architecture:
+    The architecture of Swish is divided into a back-end and a front-end.  The
+    former deals with the SFTP connection to remote hosts while the latter
+    is concerned with displaying the results to the user and handling 
+    interaction.
+    
+    The current Swish backend is based on libssh2 (http://www.libssh2.org).
+    While the eventual aim is to offer a choice of back-end implementations
+    with different capabilities, this is currently the only one.
 
 $Id$
