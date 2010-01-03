@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,9 +27,10 @@
 #pragma once
 
 #include "swish/CoFactory.hpp"  // CCoObject factory mixin
-#include "swish/atl.hpp"  // Common ATL setup
 
 #include <boost/filesystem.hpp>  // wpath
+
+#include <comet/ptr.h> // com_ptr
 
 struct ISftpProvider;
 
@@ -47,9 +48,9 @@ public:
 		COM_INTERFACE_ENTRY(IDropTarget)
 	END_COM_MAP()
 
-	static ATL::CComPtr<IDropTarget> Create(
-		__in ISftpProvider* pProvider,
-		const boost::filesystem::wpath& remote_path);
+	static comet::com_ptr<IDropTarget> Create(
+		const comet::com_ptr<ISftpProvider>& provider,
+		const boost::filesystem::wpath& remote_path, bool show_progress=true);
 	
 	CDropTarget();
 	~CDropTarget();
@@ -80,13 +81,16 @@ public:
 
 private:
 
-	ATL::CComPtr<ISftpProvider> m_spProvider;
+	comet::com_ptr<ISftpProvider> m_provider;
 	boost::filesystem::wpath m_remote_path;
-	ATL::CComPtr<IDataObject> m_spDataObject;
+	comet::com_ptr<IDataObject> m_data_object;
+	bool m_show_progress;
 };
 
 void copy_data_to_provider(
-	IDataObject* pdo, ISftpProvider* pProvider, 
-	boost::filesystem::wpath remote_path);
+	const comet::com_ptr<IDataObject>& data_object,
+	const comet::com_ptr<ISftpProvider>& provider,
+	boost::filesystem::wpath remote_path,
+	const comet::com_ptr<IProgressDialog>& progress=NULL);
 
 }} // namespace swish::shell_folder

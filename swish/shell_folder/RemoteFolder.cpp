@@ -5,7 +5,8 @@
 
     @if licence
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+	Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -638,7 +639,8 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	CComPtr<ISftpProvider> spProvider =
 		_CreateConnectionForFolder(hwnd);
 	CHostItemAbsoluteHandle pidl = root_pidl();
-	return CDropTarget::Create(spProvider, pidl.GetFullPath().GetString());
+	return CDropTarget::Create(
+		spProvider.p, pidl.GetFullPath().GetString()).get();
 }
 
 /**

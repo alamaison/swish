@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE( drop )
 
 	com_ptr<IDataObject> spdo = create_data_object(local);
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider().get(), ToRemotePath(drop_target_directory));
+		Provider().get(), ToRemotePath(drop_target_directory), false);
 
 	POINTL pt = {0, 0};
 

@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -85,7 +85,8 @@ namespace { // private
 	 * which drop effect, if any, should be chosen.  If none are
 	 * appropriate, return DROPEFFECT_NONE.
 	 */
-	DWORD determine_drop_effect(IDataObject* pdo, DWORD allowed_effects)
+	DWORD determine_drop_effect(
+		const com_ptr<IDataObject>& pdo, DWORD allowed_effects)
 	{
 		if (pdo)
 		{
@@ -345,15 +346,74 @@ namespace { // private
 	{
 	public:
 		AutoStartProgressDialog(
-			const com_ptr<IProgressDialog>& progress, HWND hwnd, DWORD flags)
+			const com_ptr<IProgressDialog>& progress, HWND hwnd, DWORD flags,
+			const wstring& title)
 			: m_progress(progress)
 		{
-			m_progress->StartProgressDialog(hwnd, NULL, flags, NULL);
+			if (!m_progress) return;
+
+			HRESULT hr;
+
+			hr = m_progress->SetTitle(title.c_str());
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+
+			hr = m_progress->StartProgressDialog(hwnd, NULL, flags, NULL);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
 		}
 
 		~AutoStartProgressDialog()
 		{
-			m_progress->StopProgressDialog();
+			if (m_progress)
+				m_progress->StopProgressDialog();
+		}
+
+		/**
+		 * Has the user cancelled the operation via the progress dialogue?
+		 */
+		bool user_cancelled() const
+		{
+			return m_progress && m_progress->HasUserCancelled();
+		}
+
+		/**
+		 * Set the indexth line of the display to the given text.
+		 */
+		void line(DWORD index, const wstring& text) const
+		{
+			if (!m_progress) return;
+
+			HRESULT hr = m_progress->SetLine(index, text.c_str(), FALSE, NULL);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+		}
+
+		/**
+		 * Set the indexth line of the display to the given path.
+		 *
+		 * Uses the inbuilt path compression.
+		 */
+		void line_path(DWORD index, const wpath& path) const
+		{
+			if (!m_progress) return;
+
+			HRESULT hr = m_progress->SetLine(
+				index, path.string().c_str(), TRUE, NULL);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+		}
+
+		/**
+		 * Update the indicator to show current progress level.
+		 */
+		void update(ULONGLONG so_far, ULONGLONG out_of)
+		{
+			if (!m_progress) return;
+
+			HRESULT hr = m_progress->SetProgress64(so_far, out_of);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
 		}
 
 	private:
@@ -391,29 +451,29 @@ namespace shell_folder {
 /**
  * Copy the items in the DataObject to the remote target.
  *
- * @param pdo  IDataObject holding the items to be copied.
- * @param pProvider  SFTP connection to copy data over.
+ * @param format  IDataObject wrapper holding the items to be copied.
+ * @param provider  SFTP connection to copy data over.
  * @param remote_path  Path on the target filesystem to copy items into.
  *                     This must be a path to a @b directory.
+ * @param progress  Optional progress dialogue.
  */
 void copy_format_to_provider(
-	PidlFormat format, ISftpProvider* provider, wpath remote_path)
+	PidlFormat format, const com_ptr<ISftpProvider>& provider,
+	wpath remote_path, const com_ptr<IProgressDialog>& progress)
 {
 	vector<CopylistEntry> copy_list;
 	build_copy_list(format, copy_list);
 
-	com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
 	wstring title = load_string(
 		IDS_COPYING_TITLE,
 		ATL::AtlFindStringResourceInstance(IDS_COPYING_TITLE));
-	progress->SetTitle(title.c_str());
 
 	AutoStartProgressDialog auto_progress(
-		progress, NULL, PROGDLG_AUTOTIME);
+		progress, NULL, PROGDLG_AUTOTIME, title);
 
 	for (unsigned int i = 0; i < copy_list.size(); ++i)
 	{
-		if (progress->HasUserCancelled())
+		if (auto_progress.user_cancelled())
 			BOOST_THROW_EXCEPTION(com_exception(E_ABORT));
 
 		wpath from_path = copy_list[i].relative_path;
@@ -421,14 +481,12 @@ void copy_format_to_provider(
 
 		if (copy_list[i].is_folder)
 		{
-			progress->SetLine(
-				1, from_path.string().c_str(), TRUE, NULL);
-			progress->SetLine(
-				2, to_path.string().c_str(), TRUE, NULL);
+			auto_progress.line_path(1, from_path);
+			auto_progress.line_path(2, to_path);
 
-			create_remote_directory(provider, to_path);
+			create_remote_directory(provider.get(), to_path);
 			
-			progress->SetProgress64(i, copy_list.size());
+			auto_progress.update(i, copy_list.size());
 		}
 		else
 		{
@@ -437,14 +495,12 @@ void copy_format_to_provider(
 			stream = stream_from_shell_pidl(
 				CAbsolutePidl(format.parent_folder(), copy_list[i].pidl));
 
-			progress->SetLine(
-				1, from_path.string().c_str(), TRUE, NULL);
-			progress->SetLine(
-				2, to_path.string().c_str(), TRUE, NULL);
+			auto_progress.line_path(1, from_path);
+			auto_progress.line_path(2, to_path);
 
 			copy_stream_to_remote_destination(stream, provider, to_path);
-
-			progress->SetProgress64(i, copy_list.size());
+			
+			auto_progress.update(i, copy_list.size());
 		}
 	}
 }
@@ -458,12 +514,15 @@ void copy_format_to_provider(
  *                     This must be a path to a @b directory.
  */
 void copy_data_to_provider(
-	IDataObject* pdo, ISftpProvider* provider, wpath remote_path)
+	const com_ptr<IDataObject>& data_object,
+	const com_ptr<ISftpProvider>& provider, wpath remote_path,
+	const com_ptr<IProgressDialog>& progress)
 {
-	ShellDataObject data_object(pdo);
-	if (data_object.has_pidl_format())
+	ShellDataObject data(data_object.get());
+	if (data.has_pidl_format())
 	{
-		copy_format_to_provider(PidlFormat(pdo), provider, remote_path);
+		copy_format_to_provider(
+			PidlFormat(data_object), provider, remote_path, progress);
 	}
 	else
 	{
@@ -474,13 +533,15 @@ void copy_data_to_provider(
 /**
  * Create an instance of the DropTarget initialised with a data provider.
  */
-/*static*/ CComPtr<IDropTarget> CDropTarget::Create(
-	ISftpProvider* pProvider, const wpath& remote_path)
+/*static*/ com_ptr<IDropTarget> CDropTarget::Create(
+	const com_ptr<ISftpProvider>& provider, const wpath& remote_path,
+	bool show_progress)
 {
-	CComPtr<CDropTarget> sp = sp->CreateCoObject();
-	sp->m_spProvider = pProvider;
+	com_ptr<CDropTarget> sp = sp->CreateCoObject();
+	sp->m_provider = provider;
 	sp->m_remote_path = remote_path;
-	return sp.p;
+	sp->m_show_progress = show_progress;
+	return sp;
 }
 
 CDropTarget::CDropTarget()
@@ -505,7 +566,7 @@ STDMETHODIMP CDropTarget::DragEnter(
 
 	try
 	{
-		m_spDataObject = pdo;
+		m_data_object = pdo;
 
 		*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
 	}
@@ -528,7 +589,7 @@ STDMETHODIMP CDropTarget::DragOver(
 
 	try
 	{
-		*pdwEffect = determine_drop_effect(m_spDataObject, *pdwEffect);
+		*pdwEffect = determine_drop_effect(m_data_object, *pdwEffect);
 	}
 	catchCom()
 	return S_OK;
@@ -541,7 +602,7 @@ STDMETHODIMP CDropTarget::DragLeave()
 {
 	try
 	{
-		m_spDataObject = NULL;
+		m_data_object = NULL;
 	}
 	catchCom()
 	return S_OK;
@@ -560,16 +621,25 @@ STDMETHODIMP CDropTarget::Drop(
 		return E_INVALIDARG;
 
 	*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
-	m_spDataObject = pdo;
+	m_data_object = pdo;
 
 	try
 	{
 		if (pdo && *pdwEffect == DROPEFFECT_COPY)
-			copy_data_to_provider(pdo, m_spProvider, m_remote_path);
+		{
+			if (m_show_progress)
+			{
+				com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
+				copy_data_to_provider(
+					pdo, m_provider, m_remote_path, progress);
+			}
+			else
+				copy_data_to_provider(pdo, m_provider, m_remote_path, NULL);
+		}
 	}
 	catchCom()
 
-	m_spDataObject = NULL;
+	m_data_object = NULL;
 	return S_OK;
 }
 
