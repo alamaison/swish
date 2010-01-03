@@ -1,6 +1,6 @@
 :: Script to fetch Swish unit testing build prerequisites
 :: 
-:: Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+:: Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 :: 
 :: This program is free software; you can redistribute it and/or modify
 :: it under the terms of the GNU General Public License as published by
@@ -36,10 +36,10 @@ del process.zip
 echo.
 echo ===- All testing prerequisites successfully created.
 echo.
-pause
-exit /B
+if [%1]==[] pause
+exit /B 0
 
 :error
 echo.
-pause
+if [%1]==[] pause
 exit /B 1
