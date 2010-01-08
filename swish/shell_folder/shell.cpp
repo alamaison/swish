@@ -34,6 +34,7 @@
 #include <string>
 
 using swish::exception::com_exception;
+using swish::shell_folder::pidl::cpidl_t;
 using comet::com_ptr;
 using comet::uuidof;
 using boost::filesystem::wpath;
@@ -111,11 +112,11 @@ wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
 	return wstring(&buffer[0]);
 }
 
-wstring strret_to_string(STRRET& strret, PCITEMID_CHILD pidl)
+wstring strret_to_string(STRRET& strret, const cpidl_t& pidl)
 {
 	vector<wchar_t> buffer(MAX_PATH);
 	HRESULT hr = ::StrRetToBufW(
-		&strret, pidl, &buffer[0], buffer.size());
+		&strret, pidl.get(), &buffer[0], buffer.size());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
 

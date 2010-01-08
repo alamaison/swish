@@ -50,6 +50,9 @@ using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::strret_to_string;
+using swish::shell_folder::pidl::pidl_t;
+using swish::shell_folder::pidl::apidl_t;
+using swish::shell_folder::pidl::cpidl_t;
 using swish::exception::com_exception;
 
 using ATL::CComPtr;
@@ -107,14 +110,14 @@ namespace { // private
 	 *
 	 * @note  This fails with E_NOTIMPL on Windows 2000 and below.
 	 */
-	com_ptr<IStream> stream_from_shell_pidl(const CAbsolutePidl& pidl)
+	com_ptr<IStream> stream_from_shell_pidl(const apidl_t& pidl)
 	{
 		PCUITEMID_CHILD pidl_child;
 		HRESULT hr;
 		com_ptr<IShellFolder> folder;
 		
 		hr = swish::windows_api::SHBindToParent(
-			pidl, __uuidof(IShellFolder), 
+			pidl.get(), __uuidof(IShellFolder), 
 			reinterpret_cast<void**>(folder.out()),
 			&pidl_child);
 		if (FAILED(hr))
@@ -122,11 +125,13 @@ namespace { // private
 
 		com_ptr<IStream> stream;
 		
-		hr = folder->BindToObject(pidl_child, NULL, __uuidof(IStream),
+		hr = folder->BindToObject(
+			pidl_child, NULL, __uuidof(IStream),
 			reinterpret_cast<void**>(stream.out()));
 		if (FAILED(hr))
 		{
-			hr = folder->BindToStorage(pidl_child, NULL, __uuidof(IStream),
+			hr = folder->BindToStorage(
+				pidl_child, NULL, __uuidof(IStream),
 				reinterpret_cast<void**>(stream.out()));
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(com_exception(hr));
@@ -154,12 +159,11 @@ namespace { // private
 	 * to that folder.
 	 */
 	wstring display_name_of_item(
-		const com_ptr<IShellFolder>& parent_folder,
-		const CChildPidl& pidl)
+		const com_ptr<IShellFolder>& parent_folder, const cpidl_t& pidl)
 	{
 		STRRET strret;
 		HRESULT hr = parent_folder->GetDisplayNameOf(
-			pidl, SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
+			pidl.get(), SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
@@ -169,8 +173,7 @@ namespace { // private
 	/**
 	 * Return the parsing name of an item.
 	 */
-	wpath display_name_from_pidl(
-		const CAbsolutePidl& parent, const CChildPidl& item)
+	wpath display_name_from_pidl(const apidl_t& parent, const cpidl_t& item)
 	{
 		com_ptr<IShellFolder> parent_folder = 
 			bind_to_handler_object<IShellFolder>(parent);
@@ -181,19 +184,16 @@ namespace { // private
 	/**
 	 * Return the parsing path name for a PIDL relative the the given parent.
 	 */
-	wpath parsing_path_from_pidl(
-		const CAbsolutePidl& parent, const CRelativePidl& pidl)
+	wpath parsing_path_from_pidl(const apidl_t& parent, const pidl_t& pidl)
 	{
-		if (pidl.IsEmpty())
+		if (pidl.empty())
 			return wpath();
 
-		CChildPidl item;
-		item.Attach(::ILCloneFirst(pidl));
+		cpidl_t item;
+		item.attach(::ILCloneFirst(pidl.get()));
 
 		return display_name_from_pidl(parent, item) / 
-			parsing_path_from_pidl(
-				CAbsolutePidl(parent, item), ::ILNext(pidl.m_pidl));
-
+			parsing_path_from_pidl(parent + item, ::ILNext(pidl.get()));
 	}
 
 	void copy_stream_to_remote_destination(
@@ -245,21 +245,21 @@ namespace { // private
 	struct CopylistEntry
 	{
 		CopylistEntry(
-			const CRelativePidl& pidl, wpath relative_path, bool is_folder)
+			const pidl_t& pidl, wpath relative_path, bool is_folder)
 		{
 			this->pidl = pidl;
 			this->relative_path = relative_path;
 			this->is_folder = is_folder;
 		}
 
-		CRelativePidl pidl;
+		pidl_t pidl;
 		wpath relative_path;
 		bool is_folder;
 	};
 
 
 	void build_copy_list_recursively(
-		const CAbsolutePidl& parent, const CRelativePidl& folder_pidl,
+		const apidl_t& parent, const pidl_t& folder_pidl,
 		vector<CopylistEntry>& copy_list_out)
 	{
 		wpath folder_path = parsing_path_from_pidl(parent, folder_pidl);
@@ -268,8 +268,7 @@ namespace { // private
 			CopylistEntry(folder_pidl, folder_path, true));
 
 		com_ptr<IShellFolder> folder = 
-			bind_to_handler_object<IShellFolder>(
-				CAbsolutePidl(parent, folder_pidl));	
+			bind_to_handler_object<IShellFolder>(parent + folder_pidl);
 
 		// Add non-folder contents
 
@@ -279,10 +278,10 @@ namespace { // private
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		CChildPidl item;
-		while (hr == S_OK && e->Next(1, &item, NULL) == S_OK)
+		cpidl_t item;
+		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{
-			CRelativePidl pidl(folder_pidl, item);
+			pidl_t pidl = folder_pidl + item;
 			copy_list_out.push_back(
 				CopylistEntry(
 					pidl, parsing_path_from_pidl(parent, pidl), false));
@@ -295,9 +294,9 @@ namespace { // private
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		while (hr == S_OK && e->Next(1, &item, NULL) == S_OK)
+		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{
-			CRelativePidl pidl(folder_pidl, item);
+			pidl_t pidl = folder_pidl + item;
 			build_copy_list_recursively(parent, pidl, copy_list_out);
 		}
 	}
@@ -309,10 +308,7 @@ namespace { // private
 	{
 		for (unsigned int i = 0; i < format.pidl_count(); ++i)
 		{
-			if (!::ILIsChild(format.relative_file(i)))
-				BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
-
-			CRelativePidl pidl = format.relative_file(i);
+			pidl_t pidl = format.relative_file(i);
 			try
 			{
 				// Test if streamable
@@ -493,7 +489,7 @@ void copy_format_to_provider(
 			com_ptr<IStream> stream;
 
 			stream = stream_from_shell_pidl(
-				CAbsolutePidl(format.parent_folder(), copy_list[i].pidl));
+				format.parent_folder() + copy_list[i].pidl);
 
 			auto_progress.line_path(1, from_path);
 			auto_progress.line_path(2, to_path);

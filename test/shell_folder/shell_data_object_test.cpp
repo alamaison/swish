@@ -43,6 +43,7 @@ using swish::shell_folder::data_object::PidlFormat;  // test subject
 using swish::shell_folder::data_object::StorageMedium;  // test subject
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
+using swish::shell_folder::pidl::apidl_t;
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;
 using namespace test::shell_folder::data_object_utils;
@@ -56,10 +57,10 @@ namespace { // private
 	/**
 	 * Check that a PIDL and a filesystem path refer to the same item.
 	 */
-	predicate_result pidl_path_equivalence(PCIDLIST_ABSOLUTE pidl, wpath path)
+	predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
 	{
 		vector<wchar_t> name(MAX_PATH);
-		::SHGetPathFromIDListW(pidl, &name[0]);
+		::SHGetPathFromIDListW(pidl.get(), &name[0]);
 
 		if (!equivalent(path, &name[0]))
 		{
@@ -214,7 +215,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
 
 	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	CAbsolutePidl pidl = format.file(0);
+	apidl_t pidl = format.file(0);
 
 	BOOST_REQUIRE(pidl_path_equivalence(pidl, file));
 }
@@ -233,7 +234,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
 
 	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	CAbsolutePidl folder_pidl = format.parent_folder();
+	apidl_t folder_pidl = format.parent_folder();
 
 	BOOST_REQUIRE(pidl_path_equivalence(folder_pidl, file.parent_path()));
 }
@@ -270,9 +271,9 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_multiple_items )
 
 	BOOST_REQUIRE_EQUAL(format.pidl_count(), 3U);
 
-	CAbsolutePidl pidl1 = format.file(0);
-	CAbsolutePidl pidl2 = format.file(1);
-	CAbsolutePidl pidl3 = format.file(2);
+	apidl_t pidl1 = format.file(0);
+	apidl_t pidl2 = format.file(1);
+	apidl_t pidl3 = format.file(2);
 
 	BOOST_REQUIRE(pidl_path_equivalence(pidl1, file1));
 	BOOST_REQUIRE(pidl_path_equivalence(pidl2, file2));

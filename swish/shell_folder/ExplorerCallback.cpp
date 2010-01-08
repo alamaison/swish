@@ -308,7 +308,7 @@ CAbsolutePidl CExplorerCallback::_GetSelectedItem()
 	PidlFormat format(_GetSelectionDataObject().p);
 	if (format.pidl_count() != 1)
 		AtlThrow(E_FAIL);
-	return format.file(0);
+	return format.file(0).get();
 }
 
 /**

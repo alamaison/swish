@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,11 @@
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
+using swish::shell_folder::pidl::pidl_t;
+using swish::shell_folder::pidl::apidl_t;
+
 using boost::shared_ptr;
+
 using comet::com_ptr;
 
 namespace swish {
@@ -112,7 +116,7 @@ namespace { // private
 	/**
 	 * Return a pointer to the ith PIDL in the CIDA.
 	 */
-	PCIDLIST_RELATIVE pidl_from_cida(const CIDA& cida, int i)
+	pidl_t pidl_from_cida(const CIDA& cida, int i)
 	{
 		unsigned int offset = cida.aoffset[i];
 		const BYTE* position = reinterpret_cast<const BYTE*>(&cida) + offset;
@@ -124,15 +128,15 @@ namespace { // private
 	 * Return a pointer to the PIDL corresponding to the parent folder of the 
 	 * other PIDLs.
 	 */
-	PCIDLIST_ABSOLUTE parent_from_cida(const CIDA& cida)
+	apidl_t parent_from_cida(const CIDA& cida)
 	{
-		return static_cast<PCIDLIST_ABSOLUTE>(pidl_from_cida(cida, 0));
+		return swish::shell_folder::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
 	}
 
 	/**
 	 * Return a pointer to the ith child PIDL in the CIDA (i+1th PIDL).
 	 */
-	PCIDLIST_RELATIVE child_from_cida(const CIDA& cida, int i)
+	pidl_t child_from_cida(const CIDA& cida, int i)
 	{
 		return pidl_from_cida(cida, i + 1);
 	}
@@ -248,26 +252,26 @@ PidlFormat::~PidlFormat() {}
  * The absolute PIDL to the common parent of the items in the SHELLIDLIST 
  * format.
  */
-CAbsolutePidl PidlFormat::parent_folder()
+apidl_t PidlFormat::parent_folder()
 {
 	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 
-	CAbsolutePidl pidl = parent_from_cida(global_cida.get());
+	apidl_t pidl = parent_from_cida(global_cida.get());
 	return pidl;
 }
 
 /**
  * The absolute PIDL of the ith item in the SHELLIDLIST format.
  */
-CAbsolutePidl PidlFormat::file(UINT i)
+apidl_t PidlFormat::file(UINT i)
 {
-	return CAbsolutePidl(parent_folder(), relative_file(i));
+	return parent_folder() + relative_file(i);
 }
 
 /**
  * The ith relative PIDL in the SHELLIDLIST format.
  */
-CRelativePidl PidlFormat::relative_file(UINT i)
+pidl_t PidlFormat::relative_file(UINT i)
 {
 	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 	if (i >= global_cida.get().cidl)
@@ -275,7 +279,7 @@ CRelativePidl PidlFormat::relative_file(UINT i)
 			"The index is greater than the number of PIDLs in the "
 			"Data Object"));
 
-	CRelativePidl pidl = child_from_cida(global_cida.get(), i);
+	pidl_t pidl = child_from_cida(global_cida.get(), i);
 	return pidl;
 }
 

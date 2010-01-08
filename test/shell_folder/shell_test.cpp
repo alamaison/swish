@@ -54,6 +54,7 @@ using swish::shell_folder::data_object_for_files;
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::pidl::apidl_t;
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;
 using comet::com_ptr;
@@ -68,10 +69,10 @@ namespace { // private
 	/**
 	 * Check that a PIDL and a filesystem path refer to the same item.
 	 */
-	predicate_result pidl_path_equivalence(PCIDLIST_ABSOLUTE pidl, wpath path)
+	predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
 	{
 		vector<wchar_t> name(MAX_PATH);
-		::SHGetPathFromIDListW(pidl, &name[0]);
+		::SHGetPathFromIDListW(pidl.get(), &name[0]);
 
 		if (!equivalent(path, &name[0]))
 		{

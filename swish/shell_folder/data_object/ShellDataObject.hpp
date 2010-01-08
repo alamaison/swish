@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "swish/shell_folder/Pidl.h"
+#include "swish/shell_folder/pidl.hpp" // pidl_t, PIDL wrapper types
 
 #include <comet/ptr.h>  // com_ptr
 
@@ -63,9 +63,9 @@ public:
 	PidlFormat(const comet::com_ptr<IDataObject>& data_object);
 	~PidlFormat();
 
-	CAbsolutePidl parent_folder();
-	CAbsolutePidl file(UINT i);
-	CRelativePidl relative_file(UINT i);
+	swish::shell_folder::pidl::apidl_t parent_folder();
+	swish::shell_folder::pidl::apidl_t file(UINT i);
+	swish::shell_folder::pidl::pidl_t relative_file(UINT i);
 	UINT pidl_count();
 
 private:

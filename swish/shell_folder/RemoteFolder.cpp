@@ -752,14 +752,14 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 	try
 	{
 		PidlFormat format(pDataObj);
-		CAbsolutePidl pidlFolder = format.parent_folder();
+		CAbsolutePidl pidlFolder = format.parent_folder().get();
 		ATLASSERT(::ILIsEqual(root_pidl(), pidlFolder));
 
 		// Build up a list of PIDLs for all the items to be deleted
 		RemotePidls vecDeathRow;
 		for (UINT i = 0; i < format.pidl_count(); i++)
 		{
-			CRemoteItemList pidlFile = format.relative_file(i);
+			CRemoteItemList pidlFile = format.relative_file(i).get();
 
 			// May be overkill (it should always be a child) but check anyway
 			// because we don't want to accidentally recursively delete the root
