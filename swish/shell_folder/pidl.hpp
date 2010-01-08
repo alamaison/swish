@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -327,7 +327,7 @@ namespace raw_pidl {
  * than the COM allocator (the usual allocator for PIDLs) when testing so that
  * we can detect memory leaks.
  */
-template<typename T, typename Alloc=newdelete_alloc<T> >
+template<typename T, typename Alloc>
 class basic_pidl
 {
 public:
@@ -386,6 +386,17 @@ public:
 	bool operator!() const
 	{
 		return !m_pidl;
+	}
+
+	/**
+	 * Upcast operator.
+	 * Will fail to compile unless it is legal to upcasting the underlying raw
+	 * PIDL type to this PIDL's type.
+	 */
+	template<typename U, typename AllocU>
+	operator basic_pidl<U, AllocU>() const
+	{
+		return m_pidl;
 	}
 
 	/**
@@ -475,6 +486,8 @@ private:
 };
 
 /**
+ * @name Concatenation
+ *
  * Join two PIDLs with the + operator.
  *
  * The template will fail to compile if used with an absolute PIDL as the
@@ -484,17 +497,41 @@ private:
  * @returns  A new PIDL with the contents of the second operand appended to
  *           the first and the null-terminator adjusted appropriately.
  */
-template<typename T, typename U>
-inline typename T::join_pidl operator+(const T& lhs_pidl, const U& rhs_pidl)
+// @{
+template<typename T, typename U, typename Alloc, typename AllocU>
+inline typename basic_pidl<T, Alloc>::join_pidl operator+(
+	const basic_pidl<T, Alloc>& lhs, const basic_pidl<U, AllocU>& rhs)
 {
-	typename T::join_pidl pidl;
+	typedef basic_pidl<T, Alloc>::join_pidl result_type;
+
+	typename result_type pidl;
 	pidl.attach(
-		raw_pidl::combine<typename T::join_allocator>(
-			lhs_pidl.get(), rhs_pidl.get()));
+		raw_pidl::combine<result_type::allocator>(lhs.get(), rhs.get()));
 	return pidl;
 }
 
+template<typename T, typename U, typename Alloc>
+inline typename basic_pidl<T, Alloc>::join_pidl operator+(
+	const basic_pidl<T, Alloc>& lhs, const U* rhs)
+{
+	typedef basic_pidl<U, basic_pidl<T, Alloc>::allocator::rebind<U>::other>
+		wrapped_type;
+	return lhs + wrapped_type(rhs);
+}
+
+template<typename T, typename U, typename Alloc>
+inline typename basic_pidl<T, Alloc>::join_pidl operator+(
+	const U* lhs, const basic_pidl<T, Alloc>& rhs)
+{
+	typedef basic_pidl<U, basic_pidl<T, Alloc>::allocator::rebind<U>::other>
+		wrapped_type;
+	return wrapped_type(lhs) + rhs;
+}
+// @}
+
 /**
+ * @name Appending
+ *
  * Append one PIDL to another with the += operator.
  *
  * The template will fail to compile if used with an absolute PIDL as the
@@ -505,21 +542,50 @@ inline typename T::join_pidl operator+(const T& lhs_pidl, const U& rhs_pidl)
  * that contains the contents of both PIDLs with the null-terminator adjusted
  * appropriately.
  */
-template<typename T, typename U>
-inline basic_pidl<T>& operator+=(
-	basic_pidl<T>& lhs_pidl, const basic_pidl<U>& rhs_pidl)
+//@{
+template<typename T, typename U, typename Alloc, typename AllocU>
+inline basic_pidl<T, Alloc>& operator+=(
+	basic_pidl<T, Alloc>& lhs, const basic_pidl<U, AllocU>& rhs)
 {
-	lhs_pidl = lhs_pidl + rhs_pidl;
-	return lhs_pidl;
+	lhs = lhs + rhs;
+	return lhs;
 }
+
+template<typename T, typename U, typename Alloc>
+inline basic_pidl<T, Alloc>& operator+=(
+	basic_pidl<T, Alloc>& lhs, const U* rhs)
+{
+	lhs = lhs + rhs;
+	return lhs;
+}
+//@}
 
 /**
  * No-fail swap.
  */
-template<typename T>
-inline void swap(basic_pidl<T>& pidl1, basic_pidl<T>& pidl2) throw()
+template<typename T, typename Alloc>
+inline void swap(
+	basic_pidl<T, Alloc>& pidl1, basic_pidl<T, Alloc>& pidl2) throw()
 {
 	pidl1.swap(pidl2);
+}
+
+/**
+ * Explicit downcast.
+ */
+template<typename T, typename U, typename Alloc>
+inline T pidl_cast(const basic_pidl<U, Alloc>& pidl)
+{
+	return pidl_cast<T>(pidl.get());
+}
+
+/**
+ * Explicit downcast from raw pointer to basic_pidl.
+ */
+template<typename T, typename U>
+inline T pidl_cast(const U* raw_pidl)
+{
+	return static_cast<T::const_pointer>(raw_pidl);
 }
 
 /**

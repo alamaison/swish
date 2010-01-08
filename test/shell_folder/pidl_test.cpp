@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,10 +37,6 @@
 #include <string>
 #include <cstring>  // memset, memcpy
 
-typedef boost::mpl::list<
-	ITEMIDLIST_RELATIVE, ITEMIDLIST_ABSOLUTE, ITEMID_CHILD> pidl_types;
-typedef boost::mpl::list<
-	ITEMIDLIST_RELATIVE, ITEMID_CHILD> relative_pidl_types;
 
 using namespace swish::shell_folder::pidl;
 using boost::shared_ptr;
@@ -48,6 +44,46 @@ using boost::test_tools::predicate_result;
 using boost::numeric_cast;
 
 namespace {
+
+	/**
+	 * @name Convenience types for testing.
+	 */
+	// @{
+
+	typedef ITEMIDLIST_RELATIVE IDRELATIVE;
+	typedef ITEMIDLIST_ABSOLUTE IDABSOLUTE;
+	typedef ITEMID_CHILD IDCHILD;
+
+	template<typename T>
+	struct heap_pidl
+	{
+		typedef basic_pidl<T, newdelete_alloc<T> > type;
+	};
+
+	typedef heap_pidl<IDRELATIVE>::type hpidl_t;
+	typedef heap_pidl<IDABSOLUTE>::type ahpidl_t;
+	typedef heap_pidl<IDCHILD>::type chpidl_t;
+
+	typedef boost::mpl::list<IDRELATIVE, IDABSOLUTE, IDCHILD> pidl_types;
+	typedef boost::mpl::list<IDRELATIVE, IDCHILD> relative_pidl_types;
+
+	// @}
+
+	/**
+	 * @name Getters
+	 *
+	 * Getters so that test helper functions can operate on wrapped and raw
+	 * PIDLs alike.
+	 */
+	// @{
+
+	template<typename T, typename A>
+	const T* get(const basic_pidl<T, A>& pidl) { return pidl.get(); }
+	
+	template<typename T>
+	const T* get(const T* raw_pidl) { return raw_pidl; }
+
+	// @}
 
 	const std::string data = "Lorem ipsum dolor sit amet.";
 
@@ -118,7 +154,7 @@ BOOST_FIXTURE_TEST_SUITE(basic_pidl_creation_tests, PidlFixture)
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( create, T, pidl_types )
 {
-	basic_pidl<T> pidl;
+	heap_pidl<T>::type pidl;
     BOOST_CHECK(!pidl.get());
 	BOOST_CHECK(!pidl);
 	BOOST_REQUIRE(pidl.empty());
@@ -129,7 +165,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( create, T, pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( create_null, T, pidl_types )
 {
-	basic_pidl<T> pidl(NULL);
+	heap_pidl<T>::type pidl(NULL);
     BOOST_CHECK(!pidl.get());
 	BOOST_CHECK(!pidl);
 	BOOST_REQUIRE(pidl.empty());
@@ -140,7 +176,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( create_null, T, pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( create_non_null, T, pidl_types )
 {
-	basic_pidl<T> pidl(fake_pidl<T>());
+	heap_pidl<T>::type pidl(fake_pidl<T>());
     BOOST_CHECK(pidl.get());
 	BOOST_CHECK(!!pidl);
 	BOOST_REQUIRE(!pidl.empty());
@@ -153,7 +189,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( create_non_null, T, pidl_types )
 BOOST_AUTO_TEST_CASE_TEMPLATE( create_empty, T, pidl_types )
 {
 	SHITEMID empty = {0, {0}};
-	basic_pidl<T> pidl(reinterpret_cast<const T*>(&empty));
+	heap_pidl<T>::type pidl(reinterpret_cast<const T*>(&empty));
     BOOST_CHECK(pidl.get());
 	BOOST_CHECK(!!pidl);
 	BOOST_REQUIRE(pidl.empty());
@@ -196,15 +232,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( size_raw_empty, T, pidl_types )
 template<typename T, typename U>
 inline void do_combine_test(const T* pidl1, const U* pidl2)
 {
-	shared_ptr<ITEMIDLIST_RELATIVE> combined_pidl(
-		raw_pidl::combine<newdelete_alloc<ITEMIDLIST_RELATIVE> >(pidl1, pidl2));
-	shared_ptr<ITEMIDLIST_RELATIVE> expected_combined_pidl(
+	shared_ptr<IDRELATIVE> combined_pidl(
+		raw_pidl::combine<newdelete_alloc<IDRELATIVE> >(pidl1, pidl2));
+
+	shared_ptr<IDRELATIVE> expected(
 		reinterpret_cast<PIDLIST_RELATIVE>(::ILCombine(
 			reinterpret_cast<PCUIDLIST_ABSOLUTE>(pidl1), pidl2)),
 		::ILFree);
 
-	BOOST_REQUIRE(binary_equal_pidls(
-		combined_pidl.get(), expected_combined_pidl.get()));
+	BOOST_REQUIRE(binary_equal_pidls(combined_pidl.get(), expected.get()));
 }
 
 /**
@@ -212,7 +248,7 @@ inline void do_combine_test(const T* pidl1, const U* pidl2)
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( combine_abs, T, relative_pidl_types )
 {
-	const ITEMIDLIST_ABSOLUTE* pidl1 = fake_pidl<ITEMIDLIST_ABSOLUTE>();
+	const IDABSOLUTE* pidl1 = fake_pidl<IDABSOLUTE>();
 	const T* pidl2 = fake_pidl<T>();
 	do_combine_test(pidl1, pidl2);
 }
@@ -222,7 +258,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( combine_abs, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( combine_rel, T, relative_pidl_types )
 {
-	const ITEMIDLIST_RELATIVE* pidl1 = fake_pidl<ITEMIDLIST_RELATIVE>();
+	const IDRELATIVE* pidl1 = fake_pidl<IDRELATIVE>();
 	const T* pidl2 = fake_pidl<T>();
 	do_combine_test(pidl1, pidl2);
 }
@@ -232,7 +268,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( combine_rel, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( combine_child, T, relative_pidl_types )
 {
-	const ITEMID_CHILD* pidl1 = fake_pidl<ITEMID_CHILD>();
+	const IDCHILD* pidl1 = fake_pidl<IDCHILD>();
 	const T* pidl2 = fake_pidl<T>();
 	do_combine_test(pidl1, pidl2);
 }
@@ -292,7 +328,7 @@ BOOST_FIXTURE_TEST_SUITE(basic_pidl_tests, PidlFixture)
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( initialise, T, pidl_types )
 {
-	basic_pidl<T> pidl(fake_pidl<T>());
+	heap_pidl<T>::type pidl(fake_pidl<T>());
 
 	BOOST_REQUIRE(binary_equal_pidls(pidl.get(), fake_pidl<T>()));
 
@@ -308,7 +344,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( initialise_empty, T, pidl_types )
 {
 	SHITEMID empty = {0, {0}};
 	const T* empty_pidl = reinterpret_cast<const T*>(&empty);
-	basic_pidl<T> pidl(empty_pidl);
+	heap_pidl<T>::type pidl(empty_pidl);
 
 	BOOST_REQUIRE(binary_equal_pidls(pidl.get(), empty_pidl));
 
@@ -322,7 +358,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( initialise_empty, T, pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( assign, T, pidl_types )
 {
-	basic_pidl<T> pidl;
+	heap_pidl<T>::type pidl;
 	pidl = fake_pidl<T>();
 
 	BOOST_REQUIRE(binary_equal_pidls(pidl.get(), fake_pidl<T>()));
@@ -337,8 +373,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( assign, T, pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( copy_construct, T, pidl_types )
 {
-	basic_pidl<T> pidl(fake_pidl<T>());
-	basic_pidl<T> pidl_copy(pidl);
+	heap_pidl<T>::type pidl(fake_pidl<T>());
+	heap_pidl<T>::type pidl_copy(pidl);
 
 	BOOST_REQUIRE(binary_equal_pidls(pidl.get(), pidl_copy.get()));
 
@@ -352,8 +388,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( copy_construct, T, pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( copy_assign, T, pidl_types )
 {
-	basic_pidl<T> pidl(fake_pidl<T>());
-	basic_pidl<T> pidl_copy;
+	heap_pidl<T>::type pidl(fake_pidl<T>());
+	heap_pidl<T>::type pidl_copy;
 	pidl_copy = pidl;
 
 	BOOST_REQUIRE(binary_equal_pidls(pidl.get(), pidl_copy.get()));
@@ -367,7 +403,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( copy_assign, T, pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( attach, T, pidl_types )
 {
-	basic_pidl<T> pidl;
+	heap_pidl<T>::type pidl;
 	
 	T* raw = raw_pidl::clone<newdelete_alloc<T>>(fake_pidl<T>());
 	pidl.attach(raw);
@@ -376,25 +412,24 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( attach, T, pidl_types )
 }
 
 template<typename T, typename U>
-void do_join_test(const basic_pidl<T>& pidl1, const basic_pidl<U>& pidl2)
+void do_join_test(const T& pidl1, const U& pidl2)
 {
-	typedef typename basic_pidl<T>::join_type join_type;
-	typedef typename basic_pidl<T>::join_pidl join_pidl;
+	typedef typename T::join_type join_type;
+	typedef typename T::join_pidl join_pidl;
 
-	shared_ptr<join_type> expected_joined_pidl(
+	shared_ptr<join_type> expected(
 		reinterpret_cast<join_type*>(::ILCombine(
-			reinterpret_cast<PCUIDLIST_ABSOLUTE>(pidl1.get()), pidl2.get())),
+			reinterpret_cast<PCUIDLIST_ABSOLUTE>(get(pidl1)), get(pidl2))),
 		::ILFree);
 
 	join_pidl joined_pidl = pidl1 + pidl2;
 
-	BOOST_REQUIRE(binary_equal_pidls(
-		joined_pidl.get(), expected_joined_pidl.get()));
+	BOOST_REQUIRE(binary_equal_pidls(joined_pidl.get(), expected.get()));
 	BOOST_REQUIRE_NE(
-		reinterpret_cast<const void*>(pidl1.get()), 
+		reinterpret_cast<const void*>(get(pidl1)), 
 		reinterpret_cast<const void*>(joined_pidl.get()));
 	BOOST_REQUIRE_NE(
-		reinterpret_cast<const void*>(pidl2.get()), 
+		reinterpret_cast<const void*>(get(pidl2)), 
 		reinterpret_cast<const void*>(joined_pidl.get()));
 }
 
@@ -405,8 +440,8 @@ void do_join_test(const basic_pidl<T>& pidl1, const basic_pidl<U>& pidl2)
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_rel, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_RELATIVE> pidl1(fake_pidl<ITEMIDLIST_RELATIVE>());
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	hpidl_t pidl1(fake_pidl<IDRELATIVE>());
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_join_test(pidl1, pidl2);
 }
@@ -416,8 +451,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( join_rel, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_child, T, relative_pidl_types )
 {
-	basic_pidl<ITEMID_CHILD> pidl1(fake_pidl<ITEMID_CHILD>());
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	chpidl_t pidl1(fake_pidl<IDCHILD>());
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_join_test(pidl1, pidl2);
 }
@@ -427,8 +462,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( join_child, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_abs, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_ABSOLUTE> pidl1(fake_pidl<ITEMIDLIST_ABSOLUTE>());
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	typename heap_pidl<IDABSOLUTE>::type pidl1(fake_pidl<IDABSOLUTE>());
+	typename heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_join_test(pidl1, pidl2);
 }
@@ -438,8 +473,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( join_abs, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_null_pidl, T, relative_pidl_types )
 {
-	basic_pidl<T> pidl1(NULL);
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	heap_pidl<T>::type pidl1(NULL);
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_join_test(pidl1, pidl2);
 }
@@ -449,8 +484,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( join_null_pidl, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_pidl_null, T, relative_pidl_types )
 {
-	basic_pidl<T> pidl1(fake_pidl<T>());
-	basic_pidl<T> pidl2(NULL);
+	heap_pidl<T>::type pidl1(fake_pidl<T>());
+	heap_pidl<T>::type pidl2(NULL);
 
 	do_join_test(pidl1, pidl2);
 }
@@ -461,8 +496,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( join_pidl_null, T, relative_pidl_types )
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_empty_pidl, T, relative_pidl_types )
 {
 	SHITEMID empty = {0, {0}};
-	basic_pidl<T> pidl1 = reinterpret_cast<const T*>(&empty);
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	heap_pidl<T>::type pidl1 = reinterpret_cast<const T*>(&empty);
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_join_test(pidl1, pidl2);
 }
@@ -472,29 +507,35 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( join_empty_pidl, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( join_pidl_empty, T, relative_pidl_types )
 {
-	basic_pidl<T> pidl1(fake_pidl<T>());
+	heap_pidl<T>::type pidl1(fake_pidl<T>());
 	SHITEMID empty = {0, {0}};
-	basic_pidl<T> pidl2 = reinterpret_cast<const T*>(&empty);
+	heap_pidl<T>::type pidl2 = reinterpret_cast<const T*>(&empty);
 
 	do_join_test(pidl1, pidl2);
 }
 
-
-template<typename T, typename U>
-void do_append_test(basic_pidl<T> pidl1, const basic_pidl<U>& pidl2)
+/**
+ * Join different types of raw PIDL to a relative basic_pidl.
+ * The result should be a newly allocated pidl with the data from both.
+ */
+BOOST_AUTO_TEST_CASE_TEMPLATE( join_raw, T, relative_pidl_types )
 {
-	typedef typename basic_pidl<T>::join_type join_type;
-	typedef typename basic_pidl<T>::join_pidl join_pidl;
+	pidl_t pidl1(fake_pidl<IDRELATIVE>());
 
-	shared_ptr<T> expected_appended_pidl(
+	do_join_test(pidl1, fake_pidl<T>());
+}
+
+template<typename T, typename U, typename Alloc>
+void do_append_test(basic_pidl<T, Alloc>& pidl1, const U& pidl2)
+{
+	shared_ptr<T> expected(
 		reinterpret_cast<T*>(::ILCombine(
-			reinterpret_cast<PCUIDLIST_ABSOLUTE>(pidl1.get()), pidl2.get())),
+			reinterpret_cast<PCUIDLIST_ABSOLUTE>(get(pidl1)), get(pidl2))),
 		::ILFree);
 
 	pidl1 += pidl2;
 
-	BOOST_REQUIRE(binary_equal_pidls(
-		pidl1.get(), expected_appended_pidl.get()));
+	BOOST_REQUIRE(binary_equal_pidls(get(pidl1), expected.get()));
 }
 
 /**
@@ -504,8 +545,8 @@ void do_append_test(basic_pidl<T> pidl1, const basic_pidl<U>& pidl2)
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_rel, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_RELATIVE> pidl1(fake_pidl<ITEMIDLIST_RELATIVE>());
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	hpidl_t pidl1(fake_pidl<IDRELATIVE>());
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_append_test(pidl1, pidl2);
 }
@@ -517,8 +558,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( append_rel, T, relative_pidl_types )
 /*
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_child, T, relative_pidl_types )
 {
-	basic_pidl<ITEMID_CHILD> pidl1(fake_pidl<ITEMID_CHILD>());
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	chpidl_t pidl1(fake_pidl<IDCHILD>());
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_append_test(pidl1, pidl2);
 }
@@ -529,8 +570,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( append_child, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_abs, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_ABSOLUTE> pidl1(fake_pidl<ITEMIDLIST_ABSOLUTE>());
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	ahpidl_t pidl1(fake_pidl<IDABSOLUTE>());
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_append_test(pidl1, pidl2);
 }
@@ -540,8 +581,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( append_abs, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_null_pidl, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_RELATIVE> pidl1(NULL);
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	hpidl_t pidl1(NULL);
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_append_test(pidl1, pidl2);
 }
@@ -551,8 +592,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( append_null_pidl, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_pidl_null, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_RELATIVE> pidl1(fake_pidl<T>());
-	basic_pidl<T> pidl2(NULL);
+	hpidl_t pidl1(fake_pidl<T>());
+	heap_pidl<T>::type pidl2(NULL);
 
 	do_append_test(pidl1, pidl2);
 }
@@ -563,9 +604,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( append_pidl_null, T, relative_pidl_types )
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_empty_pidl, T, relative_pidl_types )
 {
 	SHITEMID empty = {0, {0}};
-	basic_pidl<ITEMIDLIST_RELATIVE> pidl1 = 
-		reinterpret_cast<const T*>(&empty);
-	basic_pidl<T> pidl2(fake_pidl<T>());
+	hpidl_t pidl1 = reinterpret_cast<const T*>(&empty);
+	heap_pidl<T>::type pidl2(fake_pidl<T>());
 
 	do_append_test(pidl1, pidl2);
 }
@@ -575,11 +615,105 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( append_empty_pidl, T, relative_pidl_types )
  */
 BOOST_AUTO_TEST_CASE_TEMPLATE( append_pidl_empty, T, relative_pidl_types )
 {
-	basic_pidl<ITEMIDLIST_RELATIVE> pidl1(fake_pidl<T>());
+	hpidl_t pidl1(fake_pidl<T>());
 	SHITEMID empty = {0, {0}};
-	basic_pidl<T> pidl2 = reinterpret_cast<const T*>(&empty);
+	heap_pidl<T>::type pidl2 = reinterpret_cast<const T*>(&empty);
 
 	do_append_test(pidl1, pidl2);
+}
+
+/**
+ * Append a raw PIDL to a relative basic_pidl.
+ * The basic_pidl should end up holding newly-allocated memory
+ * with the data from both PIDLs.
+ */
+BOOST_AUTO_TEST_CASE_TEMPLATE( append_raw, T, relative_pidl_types )
+{
+	hpidl_t pidl1(fake_pidl<IDRELATIVE>());
+
+	do_append_test(pidl1, fake_pidl<T>());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+#pragma endregion
+
+#pragma region basic_pidl tests related to pidl types
+BOOST_FIXTURE_TEST_SUITE(basic_pidl_type_tests, PidlFixture)
+
+/**
+ * Casting wrappers should work as it would for the underlying raw PIDLs.
+ */
+BOOST_AUTO_TEST_CASE( cast_wrapped_to_wrapped  )
+{
+	hpidl_t rpidl;
+	ahpidl_t apidl;
+	chpidl_t cpidl;
+
+	// Upcast
+	rpidl = apidl;
+	rpidl = cpidl;
+
+	// Implicit downcasts - should give a compile-time ERROR
+	// apidl = rpidl;
+	// cpidl = rpidl;
+
+	// Implicit crosscasts - should give a compile-time ERROR
+	// apidl = cpidl;
+	// cpidl = apidl;
+
+	// Explicit downcasts with static_cast - should give a compile-time ERROR
+	// apidl = static_cast<ahpidl_t>(rpidl);
+	// cpidl = static_cast<chpidl_t>(rpidl);
+
+	// Explicit downcasts with pidl_cast
+	apidl = pidl_cast<ahpidl_t>(rpidl);
+	cpidl = pidl_cast<chpidl_t>(rpidl);
+
+	// Explicit crosscasts - should give a compile-time ERROR
+	// apidl = static_cast<ahpidl_t>(cpidl);
+	// cpidl = static_cast<chpidl_t>(apidl);
+	// apidl = pidl_cast<ahpidl_t>(cpidl);
+	// cpidl = pidl_cast<chpidl_t>(apidl);
+}
+
+/**
+ * Casting wrappers should work as it would for the underlying raw PIDLs.
+ */
+BOOST_AUTO_TEST_CASE( cast_raw_to_wrapped  )
+{
+	heap_pidl<IDRELATIVE>::type rpidl;
+	heap_pidl<IDABSOLUTE>::type apidl;
+	heap_pidl<IDCHILD>::type cpidl;
+
+	IDRELATIVE* raw_rpidl = NULL;
+	IDABSOLUTE* raw_apidl = NULL;
+	IDCHILD* raw_cpidl = NULL;
+
+	// Upcast
+	rpidl = raw_apidl;
+	rpidl = raw_cpidl;
+
+	// Implicit downcasts - should give a compile-time ERROR
+	// apidl = raw_rpidl;
+	// cpidl = raw_rpidl;
+
+	// Implicit crosscasts - should give a compile-time ERROR
+	// apidl = raw_cpidl;
+	// cpidl = raw_apidl;
+
+	// Explicit downcasts with static_cast - should give a compile-time ERROR
+	// apidl = static_cast<heap_pidl<IDABSOLUTE>::type >(raw_rpidl);
+	// cpidl = static_cast<heap_pidl<IDCHILD>::type >(raw_rpidl);
+
+	// Explicit downcasts with pidl_cast
+	apidl = pidl_cast<heap_pidl<IDABSOLUTE>::type >(raw_rpidl);
+	cpidl = pidl_cast<heap_pidl<IDCHILD>::type >(raw_rpidl);
+
+	// Explicit crosscasts - should give a compile-time ERROR
+	// apidl = static_cast<heap_pidl<IDABSOLUTE>::type>(raw_cpidl);
+	// cpidl = static_cast<heap_pidl<IDCHILD>::type >(raw_apidl);
+	// apidl = pidl_cast<heap_pidl<IDABSOLUTE>::type >(raw_cpidl);
+	// cpidl = pidl_cast<heap_pidl<IDCHILD>::type >(raw_apidl);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
