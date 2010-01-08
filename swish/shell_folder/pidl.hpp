@@ -161,49 +161,6 @@ inline bool operator!=(const cotaskmem_alloc<T>&, const cotaskmem_alloc<U>&)
 namespace raw_pidl {
 
 	/**
-	 * Traits governing operations on raw PIDLs.
-	 */
-	template<typename T>
-	struct traits
-	{
-		typedef T idlist_type; ///< Type of IDLIST
-
-		typedef idlist_type* pidl_type; ///< Type of pointer to ITEMID
-
-		typedef idlist_type combine_type; ///< Type of IDLIST that results
-		                                  ///< from appending to one of type
-		                                  ///< T*
-
-		typedef pidl_type combine_pidl_type; ///< Type that results from 
-		                                     ///< appending a PIDL to one of
-		                                     ///< type T*
-		
-		static const bool is_appendable = true; ///< Can this type of PIDL be
-		                                        ///< appended to other pidls
-	};
-
-	template<>
-	struct traits<ITEMID_CHILD>
-	{
-		typedef ITEMID_CHILD idlist_type;
-		typedef idlist_type* pidl_type;
-		typedef ITEMIDLIST_RELATIVE combine_type;
-		typedef ITEMIDLIST_RELATIVE* combine_pidl_type;
-		static const bool is_appendable = true;
-	};
-
-	template<>
-	struct traits<ITEMIDLIST_ABSOLUTE>
-	{
-		typedef ITEMIDLIST_ABSOLUTE idlist_type;
-		typedef idlist_type* pidl_type;
-		typedef idlist_type combine_type;
-		typedef pidl_type combine_pidl_type;
-		static const bool is_appendable = false;
-	};
-
-
-	/**
 	 * Return address of the PIDL offset by the given amount in bytes.
 	 */
 	template<typename T>
@@ -227,6 +184,72 @@ namespace raw_pidl {
 	{
 		return skip(pidl, pidl->mkid.cb);
 	}
+
+	/**
+	 * Return if PIDL is considered empty (aka. desktop folder).
+	 */
+	template<typename T>
+	inline bool empty(const T* pidl)
+	{
+		return (pidl == NULL) || (pidl->mkid.cb == 0);
+	}
+
+	/**
+	 * Traits governing operations on raw PIDLs.
+	 */
+	template<typename T>
+	struct traits
+	{
+		typedef T idlist_type; ///< Type of IDLIST
+
+		typedef idlist_type* pidl_type; ///< Type of pointer to ITEMID
+		typedef const idlist_type* const_pidl_type; ///< Type of const pointer
+		                                            ///< to ITEMID
+
+		typedef idlist_type combine_type; ///< Type of IDLIST that results
+		                                  ///< from appending to one of type
+		                                  ///< T*
+
+		typedef pidl_type combine_pidl_type; ///< Type that results from 
+		                                     ///< appending a PIDL to one of
+		                                     ///< type T*
+		
+		static const bool is_appendable = true; ///< Can this type of PIDL be
+		                                        ///< appended to other pidls
+
+		static void type_check(const_pidl_type) {} ///< Check PIDLs are what
+		                                           ///< they say they are
+	};
+
+	template<>
+	struct traits<ITEMID_CHILD>
+	{
+		typedef ITEMID_CHILD idlist_type;
+		typedef idlist_type* pidl_type;
+		typedef const idlist_type* const_pidl_type;
+		typedef ITEMIDLIST_RELATIVE combine_type;
+		typedef ITEMIDLIST_RELATIVE* combine_pidl_type;
+		static const bool is_appendable = true;
+		static const void type_check(const_pidl_type pidl)
+		{
+			if (!empty(pidl) && !empty(next(pidl)))
+				BOOST_THROW_EXCEPTION(
+					std::invalid_argument(
+						"type violation, encountered non-child pidl"));
+		}
+	};
+
+	template<>
+	struct traits<ITEMIDLIST_ABSOLUTE>
+	{
+		typedef ITEMIDLIST_ABSOLUTE idlist_type;
+		typedef idlist_type* pidl_type;
+		typedef const idlist_type* const_pidl_type;
+		typedef idlist_type combine_type;
+		typedef pidl_type combine_pidl_type;
+		static const bool is_appendable = false;
+		static const void type_check(const_pidl_type) {}
+	};
 
 	/**
 	 * Return size of a raw PIDL in bytes.
@@ -265,6 +288,21 @@ namespace raw_pidl {
 		std::memcpy(mem, pidl, len);
 
 		return mem;
+	}
+
+	/**
+	 * Clone a raw PIDL after a type check that throws on failure.
+	 *
+	 * Applies the type_check from the PIDL traits class before cloning the PIDL.
+	 * This catches the case where a non-child PIDL masquerades as a child (as
+	 * well as any other type policy the caller chooses to mandate).
+	 */
+	template<typename Alloc, typename T>
+	inline T* type_checked_clone(const T* pidl)
+	{
+		traits<T>::type_check(pidl);
+
+		return clone<Alloc>(pidl);
 	}
 
 	/**
@@ -358,7 +396,7 @@ public:
 	 * Construct by copying a raw PIDL.
 	 */
 	basic_pidl(const T* raw_pidl) : 
-		m_pidl(typename raw_pidl::clone<Alloc>(raw_pidl)) {}
+		m_pidl(typename raw_pidl::type_checked_clone<Alloc>(raw_pidl)) {}
 
 	/**
 	 * Copy assignment.
@@ -437,6 +475,8 @@ public:
 	{
 		assert(m_pidl != raw_pidl);
 
+		raw_pidl::traits<T>::type_check(raw_pidl);
+
 		m_allocator.deallocate(m_pidl);
 		m_pidl = raw_pidl;
 		return *this;
@@ -461,7 +501,7 @@ public:
 	 */
 	bool empty() const
 	{
-		return (m_pidl == NULL) || (m_pidl->mkid.cb == 0);
+		return raw_pidl::empty(m_pidl);
 	}
 
 	/**

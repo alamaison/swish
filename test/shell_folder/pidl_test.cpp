@@ -66,6 +66,7 @@ namespace {
 
 	typedef boost::mpl::list<IDRELATIVE, IDABSOLUTE, IDCHILD> pidl_types;
 	typedef boost::mpl::list<IDRELATIVE, IDCHILD> relative_pidl_types;
+	typedef boost::mpl::list<IDRELATIVE, IDABSOLUTE> adult_pidl_types;
 
 	// @}
 
@@ -639,6 +640,37 @@ BOOST_AUTO_TEST_SUITE_END()
 
 #pragma region basic_pidl tests related to pidl types
 BOOST_FIXTURE_TEST_SUITE(basic_pidl_type_tests, PidlFixture)
+
+/**
+ * Test type violation detection.
+ *
+ * The test creates a raw non-child PIDL (one with more than one segment) that
+ * masquerades as a child.  The type_checking in the child pidl constructor
+ * should detect that the incoming raw pidl is a fraud.
+ */
+BOOST_AUTO_TEST_CASE( type_check_catch_violation )
+{
+	shared_ptr<IDCHILD> invalid_child(
+		reinterpret_cast<IDCHILD*>(
+			::ILCombine(fake_pidl<IDABSOLUTE>(), fake_pidl<IDRELATIVE>())),
+		::ILFree);
+
+	BOOST_REQUIRE_THROW(chpidl_t pidl(invalid_child.get()), std::invalid_argument);
+}
+
+/**
+ * Test type violation detection for non-child PIDL types don't give false
+ * positives.
+ */
+BOOST_AUTO_TEST_CASE_TEMPLATE( type_check_no_false_pos, T, adult_pidl_types )
+{
+	shared_ptr<T> double_pidl(
+		reinterpret_cast<T*>(
+			::ILCombine(fake_pidl<IDABSOLUTE>(), fake_pidl<IDRELATIVE>())),
+		::ILFree);
+
+	heap_pidl<T>::type pidl(double_pidl.get());
+}
 
 /**
  * Casting wrappers should work as it would for the underlying raw PIDLs.
