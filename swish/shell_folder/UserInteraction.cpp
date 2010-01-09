@@ -70,7 +70,7 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 
 	CPasswordDialog dlgPassword;
 	dlgPassword.SetPrompt( strPrompt ); // Pass text through from backend
-	if (dlgPassword.DoModal() == IDOK)
+	if (dlgPassword.DoModal(m_hwnd) == IDOK)
 	{
 		CString strPassword;
 		strPassword = dlgPassword.GetPassword();
@@ -107,7 +107,7 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 
 	// Show dialogue and fetch responses when user clicks OK
 	CKbdInteractiveDialog dlg(bstrName, bstrInstruction, vecPrompts, vecEcho);
-	if (dlg.DoModal() == IDCANCEL)
+	if (dlg.DoModal(m_hwnd) == IDCANCEL)
 		return E_ABORT;
 	ResponseList vecResponses = dlg.GetResponses();
 
