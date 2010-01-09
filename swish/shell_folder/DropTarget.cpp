@@ -196,9 +196,13 @@ namespace { // private
 			parsing_path_from_pidl(parent + item, ::ILNext(pidl.get()));
 	}
 
+	const size_t COPY_CHUNK_SIZE = 1024 * 32;
+
+	template<typename Predicate>
 	void copy_stream_to_remote_destination(
 		const com_ptr<IStream>& local_stream, 
-		const com_ptr<ISftpProvider>& provider, wpath destination)
+		const com_ptr<ISftpProvider>& provider, wpath destination,
+		Predicate cancelled)
 	{
 		CComBSTR bstrPath = destination.string().c_str();
 
@@ -207,6 +211,7 @@ namespace { // private
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
+		// Set both streams back to the start
 		LARGE_INTEGER move = {0};
 		hr = local_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
@@ -216,17 +221,41 @@ namespace { // private
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		ULARGE_INTEGER cbRead = {0};
-		ULARGE_INTEGER cbWritten = {0};
+		// Do the copy in chunks allowing us to cancel the operation
 		ULARGE_INTEGER cb;
-		cb.QuadPart = integer_traits<ULONGLONG>::const_max;
-		// TODO: make our own CopyTo that propagates errors
-		hr = local_stream->CopyTo(
-			remote_stream.get(), cb, &cbRead, &cbWritten);
-		assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+		cb.QuadPart = COPY_CHUNK_SIZE;
+		while (!cancelled())
+		{
+			ULARGE_INTEGER cbRead = {0};
+			ULARGE_INTEGER cbWritten = {0};
+			// TODO: make our own CopyTo that propagates errors
+			hr = local_stream->CopyTo(
+				remote_stream.get(), cb, &cbRead, &cbWritten);
+			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_exception(hr));
+			if (cbRead.QuadPart == 0)
+				break; // finished
+		}
 	}
+
+	/**
+	 * Predicate functor checking status of progress dialogue.
+	 */
+	class cancel_check
+	{
+	public:
+		cancel_check(const com_ptr<IProgressDialog>& dialog)
+			: m_dialog(dialog) {}
+
+		/**
+		 * Returns if the user cancelled the operation.
+		 */
+		bool operator()() { return m_dialog && m_dialog->HasUserCancelled(); }
+
+	private:
+		com_ptr<IProgressDialog> m_dialog;
+	};
 
 	void create_remote_directory(
 		ISftpProvider* provider, wpath remote_path)
@@ -494,7 +523,8 @@ void copy_format_to_provider(
 			auto_progress.line_path(1, from_path);
 			auto_progress.line_path(2, to_path);
 
-			copy_stream_to_remote_destination(stream, provider, to_path);
+			copy_stream_to_remote_destination(
+				stream, provider, to_path, cancel_check(progress));
 			
 			auto_progress.update(i, copy_list.size());
 		}
