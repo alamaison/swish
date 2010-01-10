@@ -48,7 +48,7 @@ public:
 	ComFixture()
 	{
 		HRESULT hr = ::CoInitialize(NULL);
-		BOOST_WARN_EQUAL(hr, S_OK);
+		BOOST_WARN_MESSAGE(SUCCEEDED(hr), "::CoInitialize failed");
 	}
 
 	~ComFixture()
