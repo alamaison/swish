@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -233,7 +233,7 @@ protected:
 		// Fetch listing enumerator
 		IEnumListing *pEnum;
 		CComBSTR bstrDirectory(_T("/tmp"));
-		hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
+		hr = m_pProvider->GetListing(m_pConsumer, bstrDirectory, &pEnum);
 		if (FAILED(hr))
 			pEnum = NULL;
 		CPPUNIT_ASSERT_OK(hr);
@@ -256,13 +256,12 @@ protected:
 
 		CPPUNIT_ASSERT_OK(
 			m_pProvider->Initialize(bstrUser, bstrHost, config.GetPort()));
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->SwitchConsumer(m_pConsumer));
 
 		// Fetch listing enumerator
 		IEnumListing *pEnum;
 		CComBSTR bstrDirectory(_T("/tmp"));
-		HRESULT hr = m_pProvider->GetListing(bstrDirectory, &pEnum);
+		HRESULT hr = m_pProvider->GetListing(
+			m_pConsumer, bstrDirectory, &pEnum);
 		if (FAILED(hr))
 			pEnum = NULL;
 		CPPUNIT_ASSERT_FAILED(hr);
@@ -279,7 +278,8 @@ protected:
 		CComBSTR bstrDirectory(_T("/tmp"));
 		for (int i = 0; i < 5; i++)
 		{
-			hr = m_pProvider->GetListing(bstrDirectory, &apEnum[i]);
+			hr = m_pProvider->GetListing(
+				m_pConsumer, bstrDirectory, &apEnum[i]);
 			if (FAILED(hr))
 				apEnum[i] = NULL;
 			CPPUNIT_ASSERT_OK(hr);
@@ -304,21 +304,22 @@ protected:
 		CComBSTR bstrOne(_TestArea(L"GetListingIndependence1"));
 		CComBSTR bstrTwo(_TestArea(L"GetListingIndependence2"));
 		CComBSTR bstrThree(_TestArea(L"GetListingIndependence3"));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrOne));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTwo));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrThree));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(m_pConsumer, bstrOne));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(m_pConsumer, bstrTwo));
+		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(m_pConsumer, bstrThree));
 
 		// Fetch first listing enumerator
 		IEnumListing *pEnumBefore;
-		hr = m_pProvider->GetListing(bstrDirectory, &pEnumBefore);
+		hr = m_pProvider->GetListing(
+			m_pConsumer, bstrDirectory, &pEnumBefore);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Delete one of the files
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTwo));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrTwo));
 
 		// Fetch second listing enumerator
 		IEnumListing *pEnumAfter;
-		hr = m_pProvider->GetListing(bstrDirectory, &pEnumAfter);
+		hr = m_pProvider->GetListing(m_pConsumer, bstrDirectory, &pEnumAfter);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// The first listing should still show the file. The second should not.
@@ -336,8 +337,8 @@ protected:
 			L"GetListingIndependence3", pEnumAfter));
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrOne));
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrThree));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrOne));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrThree));
 		
 		ULONG cRefs = pEnumBefore->Release();
 		CPPUNIT_ASSERT_EQUAL( (ULONG)0, cRefs );
@@ -356,18 +357,21 @@ protected:
 		CComBSTR bstrTarget(_TestArea(L"Rename_Passed"));
 
 		// Create our test subject and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrSubject));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming file back
-		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
@@ -375,7 +379,7 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrSubject));
 	}
 
 	void testRenameWithObstruction()
@@ -395,8 +399,10 @@ protected:
 			_TestArea(L"RenameWithObstruction_Obstruction.swish_rename_temp"));
 
 		// Create our test subjects and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTarget));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrTarget));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_EXISTS(bstrTarget);
 
@@ -405,7 +411,8 @@ protected:
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_TRUE);
 
@@ -417,7 +424,7 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrSwishTemp);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTarget));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrTarget));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
@@ -435,21 +442,24 @@ protected:
 
 		CComBSTR bstrSubject(L"RenameNoDirectory");
 		CComBSTR bstrTarget(L"RenameNoDirectory_Passed");
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrSubject));
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming file back
-		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrSubject));
 	}
 
 	void testRenameFolder()
@@ -462,18 +472,21 @@ protected:
 		CComBSTR bstrTarget(_TestArea(L"RenameFolder_Passed/"));
 
 		// Create our test subject and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewDirectory(m_pConsumer, bstrSubject));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming directory
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming directory back
-		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
@@ -481,7 +494,8 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(
+			m_pConsumer, bstrSubject));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 	}
 
@@ -504,13 +518,16 @@ protected:
 			L"RenameFolderWithObstruction_Obstruction.swish_rename_temp"));
 
 		// Create our test subjects and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrSubject));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrTarget));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewDirectory(m_pConsumer, bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewDirectory(m_pConsumer, bstrTarget));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Add a file in the obstructing directory to make it harder to delete
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTargetContents));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrTargetContents));
 		CHECK_PATH_EXISTS(bstrTargetContents);
 
 		// Check that the non-atomic overwrite temp does not already exists
@@ -518,7 +535,8 @@ protected:
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_TRUE);
 
@@ -530,7 +548,8 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrSwishTemp);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrTarget));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->DeleteDirectory(m_pConsumer, bstrTarget));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
@@ -550,14 +569,17 @@ protected:
 			_TestArea(L"RenameWithRefusedConfirmation_Obstruction"));
 
 		// Create our test subjects and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrTarget));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrTarget));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_FAILED(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
@@ -566,8 +588,8 @@ protected:
 		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrTarget));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrTarget));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
@@ -588,14 +610,17 @@ protected:
 			_TestArea(L"RenameFolderWithRefusedConfirmation_Obstruction/"));
 
 		// Create our test subjects and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrSubject));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrTarget));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewDirectory(m_pConsumer, bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewDirectory(m_pConsumer, bstrTarget));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Test renaming directory
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_FAILED(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
@@ -604,8 +629,10 @@ protected:
 		CHECK_PATH_EXISTS(bstrTarget);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrSubject));
-		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrTarget));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->DeleteDirectory(m_pConsumer, bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->DeleteDirectory(m_pConsumer, bstrTarget));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
@@ -620,18 +647,21 @@ protected:
 		CComBSTR bstrTarget(L"/tmp/swishRenameInNonHomeFolder_Passed");
 
 		// Create our test subjects and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrSubject));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming file back
-		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
@@ -639,7 +669,7 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->Delete(bstrSubject));
+		CPPUNIT_ASSERT_OK(m_pProvider->Delete(m_pConsumer, bstrSubject));
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 	}
@@ -657,19 +687,23 @@ protected:
 			L"/tmp/swishSubfolder/RenameInNonHomeSubfolder_Passed");
 
 		// Create our test subjects and check existence
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(bstrFolder));
-		CPPUNIT_ASSERT_OK(m_pProvider->CreateNewFile(bstrSubject));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewDirectory(m_pConsumer, bstrFolder));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->CreateNewFile(m_pConsumer, bstrSubject));
 		CHECK_PATH_EXISTS(bstrSubject);
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 
 		// Test renaming file
 		VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-		hr = m_pProvider->Rename(bstrSubject, bstrTarget, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrSubject, bstrTarget, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
 		// Test renaming file back
-		hr = m_pProvider->Rename(bstrTarget, bstrSubject, &fWasOverwritten);
+		hr = m_pProvider->Rename(
+			m_pConsumer, bstrTarget, bstrSubject, &fWasOverwritten);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(fWasOverwritten == VARIANT_FALSE);
 
@@ -677,7 +711,8 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrTarget);
 		
 		// Cleanup
-		CPPUNIT_ASSERT_OK(m_pProvider->DeleteDirectory(bstrFolder));
+		CPPUNIT_ASSERT_OK(
+			m_pProvider->DeleteDirectory(m_pConsumer, bstrFolder));
 		CHECK_PATH_NOT_EXISTS(bstrFolder);
 	}
 
@@ -693,11 +728,11 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 
 		// Test creating file
-		hr = m_pProvider->CreateNewFile(bstrSubject);
+		hr = m_pProvider->CreateNewFile(m_pConsumer, bstrSubject);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Test deleting file
-		hr = m_pProvider->Delete(bstrSubject);
+		hr = m_pProvider->Delete(m_pConsumer, bstrSubject);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Check that the file does not still exist
@@ -716,11 +751,11 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrSubject);
 
 		// Test creating directory
-		hr = m_pProvider->CreateNewDirectory(bstrSubject);
+		hr = m_pProvider->CreateNewDirectory(m_pConsumer, bstrSubject);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Test deleting directory
-		hr = m_pProvider->DeleteDirectory(bstrSubject);
+		hr = m_pProvider->DeleteDirectory(m_pConsumer, bstrSubject);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Check that the directory does not still exist
@@ -741,15 +776,15 @@ protected:
 		CHECK_PATH_NOT_EXISTS(bstrFile);
 
 		// Create directory
-		hr = m_pProvider->CreateNewDirectory(bstrDir);
+		hr = m_pProvider->CreateNewDirectory(m_pConsumer, bstrDir);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Add file to directory
-		hr = m_pProvider->CreateNewFile(bstrFile);
+		hr = m_pProvider->CreateNewFile(m_pConsumer, bstrFile);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Test deleting directory
-		hr = m_pProvider->DeleteDirectory(bstrDir);
+		hr = m_pProvider->DeleteDirectory(m_pConsumer, bstrDir);
 		CPPUNIT_ASSERT_OK(hr);
 
 		// Check that the directory does not still exist
@@ -769,15 +804,14 @@ protected:
 
 		CPPUNIT_ASSERT_OK(
 			m_pProvider->Initialize(bstrUser, bstrHost, config.GetPort()));
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->SwitchConsumer(m_pConsumer));
 
 		// Fetch 5 listing enumerators
 		IEnumListing *apEnum[5];
 		CComBSTR bstrDirectory(_T("/tmp"));
 		for (int i = 0; i < 5; i++)
 		{
-			HRESULT hr = m_pProvider->GetListing(bstrDirectory, &apEnum[i]);
+			HRESULT hr = m_pProvider->GetListing(
+				m_pConsumer, bstrDirectory, &apEnum[i]);
 			if (FAILED(hr))
 				apEnum[i] = NULL;
 			CPPUNIT_ASSERT_OK(hr);
@@ -804,15 +838,14 @@ protected:
 
 		CPPUNIT_ASSERT_OK(
 			m_pProvider->Initialize(bstrUser, bstrHost, config.GetPort()));
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->SwitchConsumer(m_pConsumer));
 
 		// Fetch 5 listing enumerators
 		IEnumListing *apEnum[5];
 		CComBSTR bstrDirectory(_T("/tmp"));
 		for (int i = 0; i < 5; i++)
 		{
-			HRESULT hr = m_pProvider->GetListing(bstrDirectory, &apEnum[i]);
+			HRESULT hr = m_pProvider->GetListing(
+				m_pConsumer, bstrDirectory, &apEnum[i]);
 			if (FAILED(hr))
 				apEnum[i] = NULL;
 			CPPUNIT_ASSERT_OK(hr);
@@ -836,8 +869,6 @@ protected:
 
 		CPPUNIT_ASSERT_OK(
 			m_pProvider->Initialize(bstrUser, bstrHost, config.GetPort()));
-		CPPUNIT_ASSERT_OK(
-			m_pProvider->SwitchConsumer(m_pConsumer));
 
 		// Choose mock behaviours to simulate a user cancelling authentication
 		m_pCoConsumer->SetPasswordBehaviour(CMockSftpConsumer::AbortPassword);
@@ -847,7 +878,8 @@ protected:
 		// Try to fetch a listing enumerator - it should fail
 		CComPtr<IEnumListing> spEnum;
 		CComBSTR bstrDirectory(_T("/tmp"));
-		HRESULT hr = m_pProvider->GetListing(bstrDirectory, &spEnum);
+		HRESULT hr = m_pProvider->GetListing(
+			m_pConsumer, bstrDirectory, &spEnum);
 		CPPUNIT_ASSERT(FAILED(hr));
 
 		// Choose mock behaviours so that authentication succeeds
@@ -858,7 +890,7 @@ protected:
 
 		// Try to fetch a listing again - this time is should succeed
 		CPPUNIT_ASSERT( spEnum == NULL );
-		hr = m_pProvider->GetListing(bstrDirectory, &spEnum);
+		hr = m_pProvider->GetListing(m_pConsumer, bstrDirectory, &spEnum);
 		CPPUNIT_ASSERT_OK(hr);
 	}
 
@@ -894,13 +926,11 @@ private:
 		hr = m_pProvider->Initialize(bstrUser, bstrHost, config.GetPort());
 		CPPUNIT_ASSERT_OK(hr);
 
-		hr = m_pProvider->SwitchConsumer(m_pConsumer);
-		CPPUNIT_ASSERT_OK(hr);
-
 		// Create test area (not used by all tests)
 		if (!_FileExists(CString(_TestArea())))
 		{
-			CPPUNIT_ASSERT_OK(m_pProvider->CreateNewDirectory(_TestArea()));
+			CPPUNIT_ASSERT_OK(
+				m_pProvider->CreateNewDirectory(m_pConsumer, _TestArea()));
 		}
 	}
 
@@ -1021,7 +1051,8 @@ private:
 
 		// Fetch listing enumerator
 		CComPtr<IEnumListing> spEnum;
-		hr = m_pProvider->GetListing(CComBSTR(strDirectory), &spEnum);
+		hr = m_pProvider->GetListing(
+			m_pConsumer, CComBSTR(strDirectory), &spEnum);
 		if (FAILED(hr))
 			return false;
 

@@ -51,7 +51,6 @@ public:
 			CComBSTR(config.GetUser()),
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
-		m_pProvider->SwitchConsumer(m_pConsumer);
 	}
 
 	void tearDown()
@@ -104,7 +103,8 @@ protected:
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+			1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -139,7 +139,8 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(3, aPidl, pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+				3, aPidl, pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		m_pDo = spDo.p;
@@ -170,7 +171,7 @@ protected:
 	void testQueryFormatsEmpty()
 	{
 		CComPtr<IDataObject> spDo = CSftpDataObject::Create(
-			0, NULL, NULL, m_pProvider);
+			0, NULL, NULL, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -186,7 +187,7 @@ protected:
 	void testEnumFormatsEmpty()
 	{
 		CComPtr<IDataObject> spDo = CSftpDataObject::Create(
-			0, NULL, NULL, m_pProvider);
+			0, NULL, NULL, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -206,7 +207,8 @@ protected:
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+				1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -226,7 +228,8 @@ protected:
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+				1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -257,7 +260,8 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(3, aPidl, pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+				3, aPidl, pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -288,7 +292,8 @@ protected:
 		aPidl[2] = pidl3;
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(3, aPidl, pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+				3, aPidl, pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -312,7 +317,8 @@ protected:
 			false, 0677, 1024);
 
 		CComPtr<IDataObject> spDo =
-			CSftpDataObject::Create(1, &(pidl.m_pidl), pidlRoot, m_pProvider);
+			CSftpDataObject::Create(
+				1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		m_pDo = spDo.p;

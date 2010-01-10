@@ -1,6 +1,6 @@
 /*  DataObject creating FILE_DESCRIPTOR/FILE_CONTENTS formats from remote data.
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -79,7 +79,8 @@ HRESULT CSftpDataObject::FinalConstruct()
  */
 void CSftpDataObject::Initialize(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-	PCIDLIST_ABSOLUTE pidlCommonParent, ISftpProvider *pProvider)
+	PCIDLIST_ABSOLUTE pidlCommonParent, ISftpProvider *pProvider,
+	ISftpConsumer* pConsumer)
 throw(...)
 {
 	ATLENSURE_THROW(!m_pidlCommonParent, E_UNEXPECTED); // Initialised twice
@@ -110,6 +111,7 @@ throw(...)
 
 	// Save backend session instance
 	m_spProvider = pProvider;
+	m_spConsumer = pConsumer;
 }
 
 /*----------------------------------------------------------------------------*
@@ -299,7 +301,7 @@ throw(...)
 	FileGroupDescriptor fgd(medium.get().hGlobal);
 
 	// Get stream from relative path stored in the lindexth FILEDESCRIPTOR
-	CSftpDirectory dir(m_pidlCommonParent, m_spProvider);
+	CSftpDirectory dir(m_pidlCommonParent, m_spProvider, m_spConsumer);
 	return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
 }
 
@@ -468,7 +470,7 @@ const throw(...)
 CComPtr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
 const throw(...)
 {
-	CSftpDirectory dir(pidl, m_spProvider);
+	CSftpDirectory dir(pidl, m_spProvider, m_spConsumer);
 	return dir.GetEnum(
 		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 }

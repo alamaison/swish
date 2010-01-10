@@ -6,7 +6,7 @@
     @if licence
 
     Copyright (C) 2007, 2008, 2009, 2010
-	Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,6 +46,8 @@
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::exception::com_exception;
+
+using comet::com_ptr;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -92,7 +94,7 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 			_CreateConnectionForFolder(hwndOwner);
 
 		// Create directory handler and get listing as PIDL enumeration
-		CSftpDirectory directory(root_pidl(), spProvider);
+		CSftpDirectory directory(root_pidl(), spProvider, m_consumer.get());
 		*ppEnumIDList = directory.GetEnum(grfFlags).Detach();
 	}
 	catchCom()
@@ -253,7 +255,7 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder(hwnd);
 
 		// Rename file
-		CSftpDirectory directory(root_pidl(), spProvider);
+		CSftpDirectory directory(root_pidl(), spProvider, m_consumer.get());
 		bool fOverwritten = directory.Rename(pidl, pwszName);
 
 		// Create new PIDL from old one
@@ -623,7 +625,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 		_CreateConnectionForFolder(hwnd);
 
 	return CSftpDataObject::Create(
-		cpidl, apidl, root_pidl(), spProvider);
+		cpidl, apidl, root_pidl(), spProvider, m_consumer.get());
 }
 
 /**
@@ -636,11 +638,10 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	TRACE("Request: IDropTarget");
 
 	// Create connection for this folder with hwnd for UI
-	CComPtr<ISftpProvider> spProvider =
-		_CreateConnectionForFolder(hwnd);
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 	CHostItemAbsoluteHandle pidl = root_pidl();
 	return CDropTarget::Create(
-		spProvider.p, pidl.GetFullPath().GetString()).get();
+		provider, m_consumer, pidl.GetFullPath().GetString()).get();
 }
 
 /**
@@ -846,7 +847,7 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 	CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder( hwnd );
 
 	// Create instance of our directory handler class
-	CSftpDirectory directory(root_pidl(), spProvider);
+	CSftpDirectory directory(root_pidl(), spProvider, m_consumer.get());
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();
@@ -930,22 +931,20 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
 	return (ret == IDYES);
 }
 
-/**
- * Gets connection for given SFTP session parameters.
- */
-CComPtr<ISftpProvider> CRemoteFolder::_GetConnection(
-	HWND hwnd, PCWSTR szHost, PCWSTR szUser, int port ) throw(...)
-{
-	// Create SFTP Consumer for SftpProvider (used for password reqs etc)
-	CComPtr<CUserInteraction> spConsumer = CUserInteraction::CreateCoObject();
-	spConsumer->SetHWND(hwnd);
+namespace {
 
-	// Get SFTP Provider from session pool
-	CPool pool;
-	CComPtr<ISftpProvider> spProvider = pool.GetSession(
-		spConsumer.p, szHost, szUser, port).get();
+	/**
+	 * Gets connection for given SFTP session parameters.
+	 */
+	CComPtr<ISftpProvider> connection(PCWSTR szHost, PCWSTR szUser, int port)
+	{
+		// Get SFTP Provider from session pool
+		CPool pool;
+		CComPtr<ISftpProvider> spProvider = 
+			pool.GetSession(szHost, szUser, port).get();
 
-	return spProvider;
+		return spProvider;
+	}
 }
 
 /**
@@ -965,9 +964,14 @@ CComPtr<ISftpProvider> CRemoteFolder::_GetConnection(
 CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 	HWND hwndUserInteraction )
 {
+	// Create SFTP Consumer for this HWNDs lifetime
+	CComPtr<CUserInteraction> spConsumer = CUserInteraction::CreateCoObject();
+	spConsumer->SetHWND(hwndUserInteraction);
+	m_consumer = spConsumer;
 
 	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-	CHostItemListHandle pidlHost(CHostItemListHandle(root_pidl()).FindHostPidl());
+	CHostItemListHandle pidlHost(
+		CHostItemListHandle(root_pidl()).FindHostPidl());
 	ATLASSERT(pidlHost.IsValid());
 
 	// Extract connection info from PIDL
@@ -980,5 +984,5 @@ CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 	ATLASSERT(!strHost.IsEmpty());
 
 	// Return connection from session pool
-	return _GetConnection(hwndUserInteraction, strHost, strUser, uPort);
+	return connection(strHost, strUser, uPort);
 }

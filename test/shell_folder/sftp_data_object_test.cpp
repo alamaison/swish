@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -139,7 +139,8 @@ namespace { // private
 		 */
 		vector<cpidl_t> pidls_in_sandbox()
 		{
-			CSftpDirectory dir(sandbox_pidl().get(), Provider().get());
+			CSftpDirectory dir(
+				sandbox_pidl().get(), Provider().get(), Consumer().get());
 			com_ptr<IEnumIDList> pidl_enum = dir.GetEnum(
 				SHCONTF_FOLDERS | SHCONTF_NONFOLDERS);
 
@@ -192,7 +193,7 @@ namespace { // private
 
 			com_ptr<IDataObject> data_object = CSftpDataObject::Create(
 				array.size(), array.as_array(), 
-				sandbox_pidl().get(), Provider().get());
+				sandbox_pidl().get(), Provider().get(), Consumer().get());
 			BOOST_REQUIRE(data_object);
 			return data_object;
 		}
@@ -270,7 +271,7 @@ BOOST_FIXTURE_TEST_SUITE(sftp_data_object_tests, DataObjectFixture)
 BOOST_AUTO_TEST_CASE( create )
 {
 	com_ptr<IDataObject> data_object = CSftpDataObject::Create(
-		0, NULL, sandbox_pidl().get(), Provider().get());
+		0, NULL, sandbox_pidl().get(), Provider().get(), Consumer().get());
 	BOOST_REQUIRE(data_object);
 }
 

@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,28 +59,32 @@ public:
 	// @{
 	IFACEMETHODIMP Initialize(
 		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
-	IFACEMETHODIMP SwitchConsumer(
-		__in ISftpConsumer *pConsumer );
 	IFACEMETHODIMP GetListing(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
 	IFACEMETHODIMP GetFile(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrFilePath, __in BOOL fWriteable,
 		__out IStream **ppStream );
 	IFACEMETHODIMP Rename(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrFromPath, __in BSTR bstrToPath,
 		__deref_out VARIANT_BOOL *pfWasTargetOverwritten );
 	IFACEMETHODIMP Delete(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrPath );
 	IFACEMETHODIMP DeleteDirectory(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrPath );
 	IFACEMETHODIMP CreateNewFile(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrPath );
 	IFACEMETHODIMP CreateNewDirectory(
+		__in ISftpConsumer *pConsumer,
 		__in BSTR bstrPath );
 	// @}
 
 private:
-	ISftpConsumer *m_pConsumer;    ///< Callback to consuming object
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
 	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
 	ATL::CString m_strUser;        ///< Holds username for remote connection
@@ -88,7 +92,7 @@ private:
 	UINT m_uPort;                  ///< Holds remote port to connect to
 	DWORD m_dwCookie;              ///< Running Object Table registration
 
-	HRESULT _Connect();
+	HRESULT _Connect(__in ISftpConsumer *pConsumer);
 	void _Disconnect();
 
 	ATL::CString _GetLastErrorMessage();
@@ -96,6 +100,7 @@ private:
 
 	HRESULT _RenameSimple( __in_z const char* szFrom, __in_z const char* szTo );
 	HRESULT _RenameRetryWithOverwrite(
+		__in ISftpConsumer *pConsumer,
 		__in ULONG uPreviousError,
 		__in_z const char* szFrom, __in_z const char* szTo, 
 		__out ATL::CString& strError );

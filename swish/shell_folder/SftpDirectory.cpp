@@ -1,6 +1,7 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,9 +43,11 @@ using ATL::CString;
  * @param conn           SFTP connection container.
  */
 CSftpDirectory::CSftpDirectory(
-	CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider) 
+	CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider,
+	__in ISftpConsumer* pConsumer) 
 throw(...) : 
 	m_spProvider(pProvider), 
+	m_spConsumer(pConsumer), 
 	m_pidlDirectory(pidlDirectory),
 	m_strDirectory( // Trim trailing slashes and append single slash
 		CHostItemAbsoluteHandle(
@@ -71,7 +74,8 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 
 	// Get listing enumerator
 	CComPtr<IEnumListing> spEnum;
-	hr = m_spProvider->GetListing(CComBSTR(m_strDirectory), &spEnum);
+	hr = m_spProvider->GetListing(
+		m_spConsumer, CComBSTR(m_strDirectory), &spEnum);
 	if (SUCCEEDED(hr))
 	{
 		m_vecPidls.clear();
@@ -183,7 +187,7 @@ throw(...)
 		AtlThrow(E_INVALIDARG);
 
 	CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
-	return CSftpDirectory(pidlSub, m_spProvider);
+	return CSftpDirectory(pidlSub, m_spProvider, m_spConsumer);
 }
 
 /**
@@ -203,6 +207,7 @@ throw(...)
 {
 	CComPtr<IStream> spStream;
 	HRESULT hr = m_spProvider->GetFile(
+		m_spConsumer,
 		CComBSTR(m_strDirectory + pidl.GetFilename()), writeable, &spStream);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
@@ -227,6 +232,7 @@ throw(...)
 {
 	CComPtr<IStream> spStream;
 	HRESULT hr = m_spProvider->GetFile(
+		m_spConsumer, 
 		CComBSTR(m_strDirectory + pwszPath), writeable, &spStream);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
@@ -240,6 +246,7 @@ throw(...)
 	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
 
 	HRESULT hr = m_spProvider->Rename(
+		m_spConsumer, 
 		CComBSTR(m_strDirectory+pidlOldFile.GetFilename()),
 		CComBSTR(m_strDirectory+pwszNewFilename),
 		&fWasTargetOverwritten
@@ -257,9 +264,9 @@ throw(...)
 	
 	HRESULT hr;
 	if (pidl.IsFolder())
-		hr = m_spProvider->DeleteDirectory(strPath);
+		hr = m_spProvider->DeleteDirectory(m_spConsumer, strPath);
 	else
-		hr = m_spProvider->Delete(strPath);
+		hr = m_spProvider->Delete(m_spConsumer, strPath);
 	if (hr != S_OK)
 		AtlThrow(hr);
 }

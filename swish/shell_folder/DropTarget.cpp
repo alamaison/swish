@@ -201,13 +201,15 @@ namespace { // private
 	template<typename Predicate>
 	void copy_stream_to_remote_destination(
 		const com_ptr<IStream>& local_stream, 
-		const com_ptr<ISftpProvider>& provider, wpath destination,
+		const com_ptr<ISftpProvider>& provider,
+		const com_ptr<ISftpConsumer>& consumer, wpath destination,
 		Predicate cancelled)
 	{
 		CComBSTR bstrPath = destination.string().c_str();
 
 		com_ptr<IStream> remote_stream;
-		HRESULT hr = provider->GetFile(bstrPath, true, remote_stream.out());
+		HRESULT hr = provider->GetFile(
+			consumer.get(), bstrPath, true, remote_stream.out());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
@@ -258,11 +260,13 @@ namespace { // private
 	};
 
 	void create_remote_directory(
-		ISftpProvider* provider, wpath remote_path)
+		const com_ptr<ISftpProvider>& provider, 
+		const com_ptr<ISftpConsumer>& consumer, const wpath& remote_path)
 	{
 		bstr_t path = remote_path.string();
 
-		HRESULT hr = provider->CreateNewDirectory(path.get_raw());
+		HRESULT hr = provider->CreateNewDirectory(
+			consumer.get(), path.get_raw());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
@@ -484,6 +488,7 @@ namespace shell_folder {
  */
 void copy_format_to_provider(
 	PidlFormat format, const com_ptr<ISftpProvider>& provider,
+	const com_ptr<ISftpConsumer>& consumer, 
 	wpath remote_path, const com_ptr<IProgressDialog>& progress)
 {
 	vector<CopylistEntry> copy_list;
@@ -509,7 +514,7 @@ void copy_format_to_provider(
 			auto_progress.line_path(1, from_path);
 			auto_progress.line_path(2, to_path);
 
-			create_remote_directory(provider.get(), to_path);
+			create_remote_directory(provider, consumer, to_path);
 			
 			auto_progress.update(i, copy_list.size());
 		}
@@ -524,7 +529,7 @@ void copy_format_to_provider(
 			auto_progress.line_path(2, to_path);
 
 			copy_stream_to_remote_destination(
-				stream, provider, to_path, cancel_check(progress));
+				stream, provider, consumer, to_path, cancel_check(progress));
 			
 			auto_progress.update(i, copy_list.size());
 		}
@@ -541,14 +546,16 @@ void copy_format_to_provider(
  */
 void copy_data_to_provider(
 	const com_ptr<IDataObject>& data_object,
-	const com_ptr<ISftpProvider>& provider, wpath remote_path,
+	const com_ptr<ISftpProvider>& provider, 
+	const com_ptr<ISftpConsumer>& consumer, wpath remote_path,
 	const com_ptr<IProgressDialog>& progress)
 {
 	ShellDataObject data(data_object.get());
 	if (data.has_pidl_format())
 	{
 		copy_format_to_provider(
-			PidlFormat(data_object), provider, remote_path, progress);
+			PidlFormat(data_object), provider, consumer, remote_path,
+			progress);
 	}
 	else
 	{
@@ -560,11 +567,13 @@ void copy_data_to_provider(
  * Create an instance of the DropTarget initialised with a data provider.
  */
 /*static*/ com_ptr<IDropTarget> CDropTarget::Create(
-	const com_ptr<ISftpProvider>& provider, const wpath& remote_path,
+	const com_ptr<ISftpProvider>& provider,
+	const com_ptr<ISftpConsumer>& consumer, const wpath& remote_path,
 	bool show_progress)
 {
 	com_ptr<CDropTarget> sp = sp->CreateCoObject();
 	sp->m_provider = provider;
+	sp->m_consumer = consumer;
 	sp->m_remote_path = remote_path;
 	sp->m_show_progress = show_progress;
 	return sp;
@@ -657,10 +666,11 @@ STDMETHODIMP CDropTarget::Drop(
 			{
 				com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
 				copy_data_to_provider(
-					pdo, m_provider, m_remote_path, progress);
+					pdo, m_provider, m_consumer, m_remote_path, progress);
 			}
 			else
-				copy_data_to_provider(pdo, m_provider, m_remote_path, NULL);
+				copy_data_to_provider(
+					pdo, m_provider, m_consumer, m_remote_path, NULL);
 		}
 	}
 	catchCom()

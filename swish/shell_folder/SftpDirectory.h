@@ -5,7 +5,8 @@
 
     @if licence
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@
 #include <vector>
 
 struct ISftpProvider;
+struct ISftpConsumer;
 
 typedef ATL::CComObject<
         swish::CComSTLContainer< std::vector<CChildPidl> > >
@@ -43,8 +45,8 @@ class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		__in CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider)
-		throw(...);
+		__in CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider,
+		__in ISftpConsumer* pConsumer);
 
 	ATL::CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
 	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
@@ -60,6 +62,7 @@ public:
 
 private:
 	ATL::CComPtr<ISftpProvider> m_spProvider;  ///< Backend data provider
+	ATL::CComPtr<ISftpConsumer> m_spConsumer;  ///< UI callback
 	ATL::CString m_strDirectory;         ///< Absolute path to this directory.
 	CAbsolutePidl m_pidlDirectory;       ///< Absolute PIDL to this directory.
 	std::vector<CChildPidl> m_vecPidls;  ///< Directory contents as PIDLs.

@@ -68,15 +68,8 @@ STDMETHODIMP CMockSftpProvider::Initialize(
 	return S_OK;
 }
 
-
-STDMETHODIMP CMockSftpProvider::SwitchConsumer( ISftpConsumer *pConsumer )
-{
-	m_spConsumer = pConsumer;
-	return S_OK;
-}
-
 STDMETHODIMP CMockSftpProvider::GetListing(
-	BSTR bstrDirectory, IEnumListing **ppEnum )
+	ISftpConsumer* /*pConsumer*/, BSTR bstrDirectory, IEnumListing **ppEnum )
 {
 	// Test directory name
 	CPPUNIT_ASSERT( CComBSTR(bstrDirectory).Length() > 0 );
@@ -164,7 +157,7 @@ STDMETHODIMP CMockSftpProvider::GetListing(
 
 
 STDMETHODIMP CMockSftpProvider::GetFile(
-	BSTR bstrFilePath, BOOL, IStream **ppStream)
+	ISftpConsumer* /*pConsumer*/, BSTR bstrFilePath, BOOL, IStream **ppStream)
 {
 	CPPUNIT_ASSERT( ppStream );
 	CPPUNIT_ASSERT( CComBSTR(bstrFilePath).Length() > 0 );
@@ -196,7 +189,8 @@ STDMETHODIMP CMockSftpProvider::GetFile(
 }
 
 STDMETHODIMP CMockSftpProvider::Rename(
-	BSTR bstrFromPath, BSTR bstrToPath, VARIANT_BOOL *fWasTargetOverwritten )
+	ISftpConsumer* pConsumer, BSTR bstrFromPath, BSTR bstrToPath,
+	VARIANT_BOOL *fWasTargetOverwritten )
 {
 	// Test filenames
 	CPPUNIT_ASSERT( CComBSTR(bstrFromPath).Length() > 0 );
@@ -219,7 +213,7 @@ STDMETHODIMP CMockSftpProvider::Rename(
 		return S_OK;
 
 	case ConfirmOverwrite:
-		hr = m_spConsumer->OnConfirmOverwrite(bstrFromPath, bstrToPath);
+		hr = pConsumer->OnConfirmOverwrite(bstrFromPath, bstrToPath);
 		if (SUCCEEDED(hr))
 			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
@@ -236,14 +230,14 @@ STDMETHODIMP CMockSftpProvider::Rename(
 			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
 		};
 
-		hr = m_spConsumer->OnConfirmOverwriteEx(ltOld, ltExisting);
+		hr = pConsumer->OnConfirmOverwriteEx(ltOld, ltExisting);
 		if (SUCCEEDED(hr))
 			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
 		}
 
 	case ReportError:
-		hr = m_spConsumer->OnReportError(
+		hr = pConsumer->OnReportError(
 			CComBSTR("Mock error message \"CMockSftpProvider::Rename\"")
 		);
 		return E_FAIL;
@@ -260,7 +254,8 @@ STDMETHODIMP CMockSftpProvider::Rename(
 	}
 }
 
-STDMETHODIMP CMockSftpProvider::Delete( BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::Delete(
+	ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
 {
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
@@ -270,7 +265,8 @@ STDMETHODIMP CMockSftpProvider::Delete( BSTR bstrPath )
 	return S_OK;
 }
 
-STDMETHODIMP CMockSftpProvider::DeleteDirectory( BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::DeleteDirectory(
+	ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
 {
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
@@ -280,7 +276,8 @@ STDMETHODIMP CMockSftpProvider::DeleteDirectory( BSTR bstrPath )
 	return S_OK;
 }
 
-STDMETHODIMP CMockSftpProvider::CreateNewFile( BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::CreateNewFile(
+	ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
 {
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
@@ -290,7 +287,8 @@ STDMETHODIMP CMockSftpProvider::CreateNewFile( BSTR bstrPath )
 	return S_OK;
 }
 
-STDMETHODIMP CMockSftpProvider::CreateNewDirectory( BSTR bstrPath )
+STDMETHODIMP CMockSftpProvider::CreateNewDirectory(
+	ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
 {
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
 	CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );

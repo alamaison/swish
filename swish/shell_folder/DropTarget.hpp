@@ -33,6 +33,7 @@
 #include <comet/ptr.h> // com_ptr
 
 struct ISftpProvider;
+struct ISftpConsumer;
 
 namespace swish {
 namespace shell_folder {
@@ -50,6 +51,7 @@ public:
 
 	static comet::com_ptr<IDropTarget> Create(
 		const comet::com_ptr<ISftpProvider>& provider,
+		const comet::com_ptr<ISftpConsumer>& consumer,
 		const boost::filesystem::wpath& remote_path, bool show_progress=true);
 	
 	CDropTarget();
@@ -82,6 +84,7 @@ public:
 private:
 
 	comet::com_ptr<ISftpProvider> m_provider;
+	comet::com_ptr<ISftpConsumer> m_consumer;
 	boost::filesystem::wpath m_remote_path;
 	comet::com_ptr<IDataObject> m_data_object;
 	bool m_show_progress;
@@ -90,6 +93,7 @@ private:
 void copy_data_to_provider(
 	const comet::com_ptr<IDataObject>& data_object,
 	const comet::com_ptr<ISftpProvider>& provider,
+	const comet::com_ptr<ISftpConsumer>& consumer,
 	boost::filesystem::wpath remote_path,
 	const comet::com_ptr<IProgressDialog>& progress=NULL);
 

@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,11 +56,6 @@ public:
 	{
 		if (!m_provider)
 		{
-			// Create args
-			comet::com_ptr<test::common_boost::CConsumerStub> consumer = 
-				test::common_boost::CConsumerStub::CreateCoObject();
-			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
-
 			std::wstring user = 
 				swish::utils::Utf8StringToWideString(GetUser());
 			std::wstring host = 
@@ -68,10 +63,21 @@ public:
 
 			// Create Provider instance
 			CPool pool;
-			m_provider = pool.GetSession(consumer, host, user, GetPort());
+			m_provider = pool.GetSession(host, user, GetPort());
 		}
 
 		return m_provider;
+	}
+
+	/**
+	 * Get a dummy consumer to use in calls to provider.
+	 */
+	comet::com_ptr<ISftpConsumer> ProviderFixture::Consumer()
+	{
+		comet::com_ptr<test::common_boost::CConsumerStub> consumer = 
+			test::common_boost::CConsumerStub::CreateCoObject();
+		consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
+		return consumer;
 	}
 
 private:

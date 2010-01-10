@@ -5,7 +5,8 @@
 
     @if licence
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,14 +33,12 @@
 #include <string>
 
 struct ISftpProvider;
-struct ISftpConsumer;
 
 class CPool
 {
 public:
 
 	comet::com_ptr<ISftpProvider> GetSession(
-		const comet::com_ptr<ISftpConsumer>& consumer,
 		const std::wstring& host, const std::wstring& user, int port);
 
 private:

@@ -146,11 +146,8 @@ BOOST_FIXTURE_TEST_SUITE(drop_target_tests, ProviderFixture)
  */
 BOOST_AUTO_TEST_CASE( create )
 {
-	com_ptr<ISftpProvider> provider = Provider();
-	BOOST_REQUIRE(provider);
-
 	com_ptr<IDropTarget> sp = CDropTarget::Create(
-		provider.in(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()));
 	BOOST_REQUIRE(sp);
 }
 
@@ -171,7 +168,7 @@ BOOST_AUTO_TEST_CASE( copy_single )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo.in(), Provider().get(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination));
 
 	wpath expected = destination / local.filename();
 	BOOST_REQUIRE(exists(expected));
@@ -197,7 +194,7 @@ BOOST_AUTO_TEST_CASE( copy_many )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo.in(), Provider().get(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination));
 
 	vector<wpath>::const_iterator it;
 	for (it = locals.begin(); it != locals.end(); ++it)
@@ -258,7 +255,7 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo.in(), Provider().get(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination));
 
 	wpath expected;
 
@@ -318,7 +315,7 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo.in(), Provider().get(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination));
 
 	wpath expected;
 
@@ -371,7 +368,7 @@ BOOST_AUTO_TEST_CASE( drag_enter )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider().get(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_LINK;
@@ -392,7 +389,7 @@ BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider().get(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_LINK;
@@ -416,7 +413,7 @@ BOOST_AUTO_TEST_CASE( drag_over )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider().get(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 
@@ -445,7 +442,7 @@ BOOST_AUTO_TEST_CASE( drag_leave )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider().get(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()));
 
 	POINTL pt = {0, 0};
 
@@ -485,7 +482,7 @@ BOOST_AUTO_TEST_CASE( drop )
 
 	com_ptr<IDataObject> spdo = create_data_object(local);
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider().get(), ToRemotePath(drop_target_directory), false);
+		Provider(), Consumer(), ToRemotePath(drop_target_directory), false);
 
 	POINTL pt = {0, 0};
 

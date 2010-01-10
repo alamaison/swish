@@ -1,6 +1,7 @@
 /*  Explorer folder handling remote files and folders in a directory.
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,8 +27,11 @@
 #include "RemotePidl.h"         // RemoteItemId handling
 #include "Pool.h"               // Access to SFTP global session pool
 #include "swish/CoFactory.hpp"  // CComObject factory
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include "swish/atl.hpp"        // Common ATL setup
+
+#include <comet/ptr.h> // com_ptr
 
 #include <vector>
 
@@ -121,12 +125,10 @@ public:
 	IFACEMETHODIMP MapColumnToSCID(UINT iColumn, __out SHCOLUMNID* pscid);
 
 private:
+	comet::com_ptr<ISftpConsumer> m_consumer;
 
 	typedef std::vector<CRemoteItem> RemotePidls;
 
-	ATL::CComPtr<ISftpProvider> _GetConnection(
-		__in_opt HWND hwnd, __in_z PCWSTR szHost, __in_z PCWSTR szUser, 
-		int port ) throw(...);
 	ATL::CComPtr<ISftpProvider> _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )

@@ -5,7 +5,8 @@
 
     @if licence
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -120,10 +121,8 @@ critical_section CPool::m_cs;
  * @returns pointer to the session (ISftpProvider).
  */
 com_ptr<ISftpProvider> CPool::GetSession(
-	const com_ptr<ISftpConsumer>& consumer, const wstring& host, 
-	const wstring& user, int port)
+	const wstring& host, const wstring& user, int port)
 {
-	if (!consumer) BOOST_THROW_EXCEPTION(com_exception(E_POINTER));
 	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
 	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
 	if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
@@ -133,12 +132,5 @@ com_ptr<ISftpProvider> CPool::GetSession(
 	// Try to get the session from the global pool
 	wstring display_name = provider_moniker_name(user, host, port);
 	com_ptr<ISftpProvider> provider;
-	provider = object_from_moniker_name<ISftpProvider>(display_name);
-
-	// Switch session to use new SFTP consumer
-	HRESULT hr = provider->SwitchConsumer(consumer.in());
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
-
-	return provider;
+	return object_from_moniker_name<ISftpProvider>(display_name);
 }

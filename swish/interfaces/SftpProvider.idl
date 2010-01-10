@@ -1,6 +1,6 @@
 /*  Declaration of the ISftpProvider and ISftpConsumer interfaces.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("35108EAD-3D48-4076-A238-2D429131D333"),
+	object, uuid("CC3D4BAA-1BF8-4a34-848E-6D00A6EA09C3"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface")
@@ -121,19 +121,19 @@ interface ISftpProvider : IUnknown
 		[in] BSTR bstrHost,
 		[in] UINT uPort
 	);
-	HRESULT SwitchConsumer(
-		[in] ISftpConsumer *pConsumer
-	);
 	HRESULT GetListing(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrDirectory,
 		[out, retval] IEnumListing **ppEnum
 	);
 	HRESULT GetFile(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrFilePath,
 		[in] BOOL fWriteable,
 		[out, retval] IStream **ppStream
 	);
 	HRESULT Rename(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrFromPath,
 		[in] BSTR bstrToPath,
 		[out, retval] VARIANT_BOOL *fWasTargetOverwritten
@@ -149,9 +149,11 @@ interface ISftpProvider : IUnknown
 	 */
 	// @{
 	HRESULT Delete(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrPath
 	);
 	HRESULT DeleteDirectory(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrPath
 	);
 	// @}
@@ -164,9 +166,11 @@ interface ISftpProvider : IUnknown
 	 */
 	// @{
 	HRESULT CreateNewFile(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrPath
 	);
 	HRESULT CreateNewDirectory(
+		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrPath
 	);
 	// @}

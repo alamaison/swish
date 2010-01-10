@@ -57,7 +57,6 @@ public:
 			CComBSTR(config.GetUser()),
 			CComBSTR(config.GetHost()), config.GetPort()
 		);
-		m_pProvider->SwitchConsumer(m_pConsumer);
 	}
 
 	void tearDown()

@@ -1,6 +1,6 @@
 /*  DataObject creating FILE_DESCRIPTOR/FILE_CONTENTS formats from remote data.
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,12 +69,14 @@ public:
 
 	static ATL::CComPtr<IDataObject> Create(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in ISftpProvider *pProvider)
+		__in PCIDLIST_ABSOLUTE pidlCommonParent,
+		__in ISftpProvider *pProvider, __in ISftpConsumer* pConsumer)
 	throw(...)
 	{
 		ATL::CComPtr<CSftpDataObject> spObject = spObject->CreateCoObject();
 		
-		spObject->Initialize(cPidl, aPidl, pidlCommonParent, pProvider);
+		spObject->Initialize(
+			cPidl, aPidl, pidlCommonParent, pProvider, pConsumer);
 
 		return spObject.p;
 	}
@@ -87,7 +89,8 @@ public:
 
 	void Initialize(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent, __in ISftpProvider *pProvider)
+		__in PCIDLIST_ABSOLUTE pidlCommonParent,
+		__in ISftpProvider *pProvider, __in ISftpConsumer *pConsumer)
 	throw(...);
 
 public: // IDataObject methods
@@ -118,6 +121,7 @@ private:
 	// @}
 
 	ATL::CComPtr<ISftpProvider> m_spProvider; ///< Connection to backend
+	ATL::CComPtr<ISftpConsumer> m_spConsumer; ///< UI callback
 
 	/** @name Cached PIDLs */
 	// @{

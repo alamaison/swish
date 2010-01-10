@@ -66,8 +66,6 @@ private:
 	ListingBehaviour m_enumListingBehaviour;
 	RenameBehaviour m_enumRenameBehaviour;
 
-	ATL::CComPtr<ISftpConsumer> m_spConsumer;
-
 	/** @name Filesystem
 	 * Mock filesystem holding dummy file heirarchy as an n-ary tree.
 	 */
@@ -123,30 +121,34 @@ public:
 		__in BSTR bstrHost,
 		__in UINT uPort
 	);
-	IFACEMETHODIMP SwitchConsumer (
-		__in ISftpConsumer *pConsumer
-	);
 	IFACEMETHODIMP GetListing(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrDirectory,
 		__out IEnumListing **ppEnum
 	);
 	IFACEMETHODIMP GetFile(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrFilePath,
 		__in BOOL fWriteable,
 		__out IStream **ppStream
 	);
 	IFACEMETHODIMP Rename(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrFromPath,
 		__in BSTR bstrToPath,
 		__deref_out VARIANT_BOOL *fWasTargetOverwritten
 	);
 	IFACEMETHODIMP Delete(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrPath );
 	IFACEMETHODIMP DeleteDirectory(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrPath );
 	IFACEMETHODIMP CreateNewFile(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrPath );
 	IFACEMETHODIMP CreateNewDirectory(
+		__in ISftpConsumer* pConsumer,
 		__in BSTR bstrPath );
 	// @}
 

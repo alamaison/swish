@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,26 +77,31 @@ namespace { // private
 		com_ptr<ISftpProvider> GetSession()
 		{
 			CPool pool;
-			com_ptr<CConsumerStub> consumer = CConsumerStub::CreateCoObject();
-			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 			return pool.GetSession(
-				consumer, Utf8StringToWideString(GetHost()).c_str(), 
+				Utf8StringToWideString(GetHost()).c_str(), 
 				Utf8StringToWideString(GetUser()).c_str(), GetPort()).get();
 		}
+
+		com_ptr<ISftpConsumer> Consumer()
+		{
+			com_ptr<CConsumerStub> consumer = CConsumerStub::CreateCoObject();
+			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
+			return consumer;
+		}
+
+		/**
+		 * Check that the given provider responds sensibly to a request.
+		 */
+		void CheckAlive(const com_ptr<ISftpProvider>& provider)
+		{
+			BOOST_REQUIRE(provider);
+
+			com_ptr<IEnumListing> listing;
+			HRESULT hr = provider->GetListing(
+				Consumer().in(), bstr_t(L"/home").in(), listing.out());
+			BOOST_CHECK(SUCCEEDED(hr));
+		}
 	};
-
-	/**
-	 * Check that the given provider responds sensibly to a request.
-	 */
-	void CheckAlive(const com_ptr<ISftpProvider>& provider)
-	{
-		BOOST_REQUIRE(provider);
-
-		com_ptr<IEnumListing> listing;
-		HRESULT hr = provider->GetListing(
-			bstr_t(L"/home").in(), listing.out());
-		BOOST_CHECK(SUCCEEDED(hr));
-	}
 }
 
 BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
@@ -171,11 +176,11 @@ private:
 			{
 				com_ptr<ISftpProvider> first_provider = 
 					m_fixture->GetSession();
-				CheckAlive(first_provider);
+				m_fixture->CheckAlive(first_provider);
 
 				com_ptr<ISftpProvider> second_provider = 
 					m_fixture->GetSession();
-				CheckAlive(second_provider);
+				m_fixture->CheckAlive(second_provider);
 
 				BOOST_REQUIRE(second_provider == first_provider);
 			}
