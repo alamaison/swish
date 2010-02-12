@@ -247,6 +247,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\explorer_command.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ExplorerCallback.cpp"
 				>
 			</File>
@@ -357,6 +361,10 @@
 			</File>
 			<File
 				RelativePath=".\DropTarget.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\explorer_command.hpp"
 				>
 			</File>
 			<File

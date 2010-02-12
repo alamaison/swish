@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\explorer_command_tests.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\file_group_descriptor_test.cpp"
 				>
 			</File>
