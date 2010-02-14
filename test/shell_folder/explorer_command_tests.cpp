@@ -24,7 +24,9 @@
     @endif
 */
 
-#include "swish/shell_folder/explorer_command.hpp"  // test subject
+#include "swish/shell_folder/explorer_command.hpp" // test subject
+
+#include "swish/shell_folder/commands/Command.hpp" // Command
 
 #include "test/common_boost/helpers.hpp"
 #include <boost/test/unit_test.hpp>
@@ -34,8 +36,11 @@
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
+#include <string>
+
 using swish::shell_folder::explorer_command::CExplorerCommandProvider;
-using swish::shell_folder::explorer_command::CExplorerCommand;
+using swish::shell_folder::explorer_command::make_explorer_command;
+using swish::shell_folder::commands::Command;
 
 using comet::com_ptr;
 using comet::uuidof;
@@ -43,21 +48,49 @@ using comet::uuid_t;
 
 using boost::shared_ptr;
 
+using std::wstring;
+
 namespace {
 
-	const uuid_t DUMMY_COMMAND_1("002F9D5D-DB85-4224-9097-B1D06E681252");
+	struct TestCommand : public Command
+	{
+		TestCommand(
+			const wstring& title, const uuid_t& guid,
+			const wstring& tool_tip=wstring(),
+			const wstring& icon_descriptor=wstring())
+		: Command(title, guid, tool_tip, icon_descriptor) {}
 
-	const uuid_t DUMMY_COMMAND_2("3BDC0E76-2D94-43c3-AC33-ED629C24AA70");
+		bool disabled(const com_ptr<IDataObject>&, bool) const
+		{ return false; }
 
-	void no_op(const com_ptr<IShellItemArray>&, const com_ptr<IBindCtx>&) {}
+		bool hidden(const com_ptr<IDataObject>&, bool) const
+		{ return false; }
+
+		void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+		const
+		{} // noop	
+	};
+
+	const uuid_t DUMMY_GUID_1("002F9D5D-DB85-4224-9097-B1D06E681252");
+	const uuid_t DUMMY_GUID_2("3BDC0E76-2D94-43c3-AC33-ED629C24AA70");
+
+	struct DummyCommand1 : public TestCommand
+	{
+		DummyCommand1() : TestCommand(
+			L"command_1", DUMMY_GUID_1, L"tool-tip-1") {}
+	};
+
+	struct DummyCommand2 : public TestCommand
+	{
+		DummyCommand2() : TestCommand(
+			L"command_2", DUMMY_GUID_2, L"tool-tip-2") {}
+	};
 
 	CExplorerCommandProvider::ordered_commands dummy_commands()
 	{
 		CExplorerCommandProvider::ordered_commands commands;
-		commands.push_back(new CExplorerCommand(
-			L"command_1", DUMMY_COMMAND_1, no_op, L"tool-tip-1"));
-		commands.push_back(new CExplorerCommand(
-			L"command_2", DUMMY_COMMAND_2, no_op, L"tool-tip-2"));
+		commands.push_back(make_explorer_command(DummyCommand1()));
+		commands.push_back(make_explorer_command(DummyCommand2()));
 		return commands;
 	}
 }
@@ -106,28 +139,28 @@ BOOST_AUTO_TEST_CASE( commands )
 
 	BOOST_REQUIRE_OK(enum_commands->Next(1, command.out(), NULL));
 	BOOST_REQUIRE_OK(command->GetCanonicalName(guid.out()));
-	BOOST_REQUIRE_EQUAL(guid, DUMMY_COMMAND_1);
+	BOOST_REQUIRE_EQUAL(guid, DUMMY_GUID_1);
 
 	BOOST_REQUIRE_OK(enum_commands->Next(1, command.out(), NULL));
 	BOOST_REQUIRE_OK(command->GetCanonicalName(guid.out()));
-	BOOST_REQUIRE_EQUAL(guid, DUMMY_COMMAND_2);
+	BOOST_REQUIRE_EQUAL(guid, DUMMY_GUID_2);
 
 	BOOST_REQUIRE_EQUAL(enum_commands->Next(1, command.out(), NULL), S_FALSE);
 
 	// Test GetCommand
 	BOOST_REQUIRE_OK(
 		commands->GetCommand(
-			DUMMY_COMMAND_2, uuidof(command.in()),
+			DUMMY_GUID_2, uuidof(command.in()),
 			reinterpret_cast<void**>(command.out())));
 	BOOST_REQUIRE_OK(command->GetCanonicalName(guid.out()));
-	BOOST_REQUIRE_EQUAL(guid, DUMMY_COMMAND_2);
+	BOOST_REQUIRE_EQUAL(guid, DUMMY_GUID_2);
 
 	BOOST_REQUIRE_OK(
 		commands->GetCommand(
-			DUMMY_COMMAND_1, uuidof(command.in()),
+			DUMMY_GUID_1, uuidof(command.in()),
 			reinterpret_cast<void**>(command.out())));
 	BOOST_REQUIRE_OK(command->GetCanonicalName(guid.out()));
-	BOOST_REQUIRE_EQUAL(guid, DUMMY_COMMAND_1);
+	BOOST_REQUIRE_EQUAL(guid, DUMMY_GUID_1);
 
 	BOOST_REQUIRE_EQUAL(
 		commands->GetCommand(
@@ -142,16 +175,27 @@ namespace {
 		{ 0x1621a875, 0x1252, 0x4bde, 
 		{ 0xb7, 0x69, 0x70, 0xa9, 0x5f, 0x49, 0x7c, 0x5f } };
 
-	void throwing_func(
-		const com_ptr<IShellItemArray>&, const com_ptr<IBindCtx>&)
+	struct HostCommand : public Command
 	{
-		throw swish::exception::com_exception(E_ABORT);
-	}
+		HostCommand() : Command(L"title", TEST_GUID, L"tool-tip") {}
+
+		bool disabled(const com_ptr<IDataObject>&, bool) const
+		{ return false; }
+
+		bool hidden(const com_ptr<IDataObject>&, bool) const
+		{ return false; }
+
+		void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+		const
+		{
+			throw swish::exception::com_exception(E_ABORT);
+		}
+	};
 
 	com_ptr<IExplorerCommand> host_command()
 	{
-		com_ptr<IExplorerCommand> command = new CExplorerCommand(
-			L"title", TEST_GUID, throwing_func, L"tool-tip");
+		com_ptr<IExplorerCommand> command = make_explorer_command(
+			HostCommand());
 
 		BOOST_REQUIRE(command);
 		return command;

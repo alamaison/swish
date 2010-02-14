@@ -37,6 +37,7 @@
 #include <boost/foreach.hpp> // BOOST_FOREACH
 
 using swish::exception::com_exception;
+using swish::shell_folder::commands::Command;
 
 using comet::uuid_t;
 using comet::stl_enumeration;
@@ -249,7 +250,7 @@ STDMETHODIMP CExplorerCommandImpl::GetState(
 
 	try
 	{
-		*pCmdState = state(psiItemArray, fOkToBeSlow);
+		*pCmdState = state(psiItemArray, (fOkToBeSlow) ? true : false);
 	}
 	catchCom();
 
@@ -306,99 +307,6 @@ STDMETHODIMP CExplorerCommandImpl::EnumSubCommands(
 	catchCom();
 
 	return S_OK;
-}
-
-#pragma endregion
-
-
-#pragma region CExplorerCommand implementation
-
-CExplorerCommand::CExplorerCommand(
-	const wstring& title, const uuid_t& guid, const command& func,
-	const wstring& tool_tip, const wstring& icon)
-	: m_title(title), m_guid(guid), m_func(func), m_tool_tip(tool_tip),
-	  m_icon(icon)
-{}
-
-/**
- * Return command's title string.
- *
- * @param items  Optional array of PIDLs that command would be executed upon.
- */
-wstring CExplorerCommand::title(const com_ptr<IShellItemArray>& /*items*/)
-const
-{
-	return m_title;
-}
-
-/**
- * Return command's icon descriptor.
- *
- * This takes the form "shell32.dll,-249" where 249 is the icon's resource ID.
- *
- * @param items  Optional array of PIDLs that command would be executed upon.
- */
-wstring CExplorerCommand::icon(const com_ptr<IShellItemArray>& /*items*/)
-const
-{
-	return m_icon;
-}
-
-/**
- * Return command's tool tip.
- *
- * @param items  Optional array of PIDLs that command would be executed upon.
- */
-wstring CExplorerCommand::tool_tip(const com_ptr<IShellItemArray>& /*items*/)
-const
-{
-	return m_tool_tip;
-}
-
-/**
- * Return command's unique GUID.
- */
-const uuid_t& CExplorerCommand::canonical_name() const
-{
-	return m_guid;
-}
-
-/**
- * Return the command's state given array of PIDLs.
- *
- * @param items          Optional array of PIDLs that command would be 
- *                       executed upon.
- * @param ok_to_be_slow  Indicates whether slow operations can be used
- *                       when calculating the state.  If false and slow
- *                       operations are required, throw E_PENDING.
- */
-EXPCMDSTATE CExplorerCommand::state(
-	const com_ptr<IShellItemArray>& /*items*/, bool /*ok_to_be_slow*/) const
-{
-	return ECS_ENABLED;
-}
-
-/**
- * Execute the code associated with this command.
- *
- * @param items     Optional array of PIDLs that command is executed upon.
- * @param bind_ctx  Optional bind context.
- */
-void CExplorerCommand::invoke(
-	const com_ptr<IShellItemArray>& items, const com_ptr<IBindCtx>& bind_ctx)
-const
-{
-	m_func(items, bind_ctx);
-}
-
-EXPCMDFLAGS CExplorerCommand::flags() const
-{
-	return 0;
-}
-
-com_ptr<IEnumExplorerCommand> CExplorerCommand::subcommands() const
-{
-	BOOST_THROW_EXCEPTION(com_exception(E_NOTIMPL));
 }
 
 #pragma endregion

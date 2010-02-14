@@ -52,18 +52,41 @@ public:
 
 	virtual ~Command() {}
 
-	virtual void operator()(
-		const comet::com_ptr<IShellItemArray>& items,
-		const comet::com_ptr<IBindCtx>& bind_ctx);
-
+	/**
+	 * Invoke to perform the command.
+	 *
+	 * Concrete commands will provide their implementation by overriding
+	 * this method.
+	 *
+	 * @param data_object  DataObject holding items on which to perform the
+	 *                     command.  This may be NULL in which case the
+	 *                     command should only execute if it makes sense to
+	 *                     do so regardless of selected items.
+	 */
 	virtual void operator()(
 		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx) = 0;
+		const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
 
-	std::wstring title() const;
-	comet::uuid_t guid() const;
-	std::wstring tool_tip() const;
-	std::wstring icon_descriptor() const;
+	/** @name Attributes. */
+	// @{
+	const comet::uuid_t& guid() const;
+	std::wstring title(
+		const comet::com_ptr<IDataObject>& data_object) const;
+	std::wstring tool_tip(
+		const comet::com_ptr<IDataObject>& data_object) const;
+	std::wstring icon_descriptor(
+		const comet::com_ptr<IDataObject>& data_object) const;
+	// @}
+
+	/** @name State. */
+	// @{
+	virtual bool disabled(
+		const comet::com_ptr<IDataObject>& data_object,
+		bool ok_to_be_slow) const = 0;
+	virtual bool hidden(
+		const comet::com_ptr<IDataObject>& data_object,
+		bool ok_to_be_slow) const = 0;
+	// @}
 
 private:
 	std::wstring m_title;

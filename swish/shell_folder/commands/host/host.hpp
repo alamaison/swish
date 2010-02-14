@@ -43,11 +43,16 @@ class Add : public swish::shell_folder::commands::Command
 {
 public:
 	Add(HWND hwnd, const swish::shell_folder::pidl::apidl_t& folder_pidl);
+	
+	bool disabled(const comet::com_ptr<IDataObject>& data_object,
+		bool ok_to_be_slow) const;
+	bool hidden(const comet::com_ptr<IDataObject>& data_object,
+		bool ok_to_be_slow) const;
 
-	using swish::shell_folder::commands::Command::operator();
-	void operator ()(
+	void operator()(
 		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx);
+		const comet::com_ptr<IBindCtx>& bind_ctx) const;
+
 private:
 	HWND m_hwnd;
 	swish::shell_folder::pidl::apidl_t m_folder_pidl;
@@ -57,11 +62,17 @@ class Remove : public swish::shell_folder::commands::Command
 {
 public:
 	Remove(HWND hwnd, const swish::shell_folder::pidl::apidl_t& folder_pidl);
-
-	using swish::shell_folder::commands::Command::operator();
-	void operator ()(
+	
+	bool disabled(
 		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx);
+		bool ok_to_be_slow) const;
+	bool hidden(const comet::com_ptr<IDataObject>& data_object,
+		bool ok_to_be_slow) const;
+
+	void operator()(
+		const comet::com_ptr<IDataObject>& data_object,
+		const comet::com_ptr<IBindCtx>& bind_ctx) const;
+
 private:
 	HWND m_hwnd;
 	swish::shell_folder::pidl::apidl_t m_folder_pidl;

@@ -27,7 +27,7 @@
 #include "host.hpp"
 
 #include "swish/shell_folder/NewConnDialog.h" // CNewConnDialog
-#include "swish/shell_folder/explorer_command.hpp" // CExplorerCommand
+#include "swish/shell_folder/explorer_command.hpp" // CExplorerCommandProvider
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/host_management.hpp" // AddConnectionToRegistry
 #include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
@@ -41,7 +41,7 @@
 #include <string>
 
 using swish::shell_folder::explorer_command::CExplorerCommandProvider;
-using swish::shell_folder::explorer_command::CExplorerCommand;
+using swish::shell_folder::explorer_command::make_explorer_command;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::pidl::apidl_t;
 using swish::shell_folder::commands::Command;
@@ -55,16 +55,6 @@ using comet::com_ptr;
 using comet::uuidof;
 
 using std::wstring;
-
-namespace comet {
-
-template<> struct comtype<IDataObject>
-{
-	static const IID& uuid() throw() { return IID_IDataObject; }
-	typedef IUnknown base;
-};
-
-}
 
 namespace swish {
 namespace shell_folder {
@@ -89,19 +79,6 @@ namespace {
 			SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
 			folder_pidl.get(), NULL);
 	}
-	
-
-	/**
-	 * Create an IExplorerCommand implementation from a Command instance.
-	 */
-	template<typename F>
-	com_ptr<IExplorerCommand> explorer_command_from_command(F command)
-	{
-		CExplorerCommandProvider::ordered_commands commands;
-		return new CExplorerCommand(
-			command.title(), command.guid(), command,
-			command.tool_tip(), command.icon_descriptor());
-	}
 }
 
 Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
@@ -111,8 +88,18 @@ Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
 		L"shell32.dll,-258"),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
-void Add::operator()(
-	const com_ptr<IDataObject>& /*data_object*/, const com_ptr<IBindCtx>&)
+bool Add::disabled(
+	const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+const
+{ return false; }
+
+bool Add::hidden(
+	const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+const
+{ return false; }
+
+void Add::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+const
 {
 	// Display dialog to get connection info from user
 	wstring label, user, host, path;
@@ -145,8 +132,24 @@ Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
 		L"shell32.dll,-240"),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
+bool Remove::disabled(
+	const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
+const
+{
+	PidlFormat format(data_object);
+	return format.pidl_count() != 1;
+}
+
+bool Remove::hidden(
+	const comet::com_ptr<IDataObject>& data_object, bool ok_to_be_slow)
+const
+{
+	return disabled(data_object, ok_to_be_slow);
+}
+
 void Remove::operator()(
 	const com_ptr<IDataObject>& data_object, const com_ptr<IBindCtx>&)
+const
 {
 	PidlFormat format(data_object);
 	// XXX: for the moment we only allow removing one item.
@@ -168,10 +171,8 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
 	HWND hwnd, const apidl_t& folder_pidl)
 {
 	CExplorerCommandProvider::ordered_commands commands;
-	commands.push_back(explorer_command_from_command(
-		Add(hwnd, folder_pidl)));
-	commands.push_back(explorer_command_from_command(
-		Remove(hwnd, folder_pidl)));
+	commands.push_back(make_explorer_command(Add(hwnd, folder_pidl)));
+	commands.push_back(make_explorer_command(Remove(hwnd, folder_pidl)));
 	return new CExplorerCommandProvider(commands);
 }
 

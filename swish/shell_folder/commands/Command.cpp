@@ -41,16 +41,6 @@ using comet::uuid_t;
 
 using std::wstring;
 
-namespace comet {
-
-template<> struct comtype<IDataObject>
-{
-	static const IID& uuid() throw() { return IID_IDataObject; }
-	typedef IUnknown base;
-};
-
-}
-
 namespace swish {
 namespace shell_folder {
 namespace commands {
@@ -61,27 +51,16 @@ Command::Command(
 : m_title(title), m_guid(guid), m_tool_tip(tool_tip),
   m_icon_descriptor(icon_descriptor) {}
 
-void Command::operator()(
-	const com_ptr<IShellItemArray>& items, const com_ptr<IBindCtx>& bind_ctx)
-{
-	com_ptr<IDataObject> data_object;
-	if (items)
-	{
-		items->BindToHandler(
-			bind_ctx.get(), BHID_DataObject, uuidof(data_object.in()),
-			reinterpret_cast<void**>(data_object.out()));
-	}
+wstring Command::title(const comet::com_ptr<IDataObject>&) const
+{ return m_title; }
 
-	// We don't care if binding succeeded - if it did, great; we pass the
-	// DataObject.  If not, the data_object pointer will be NULL and we can
-	// assume that no items were selected
+const uuid_t& Command::guid() const
+{ return m_guid; }
 
-	this->operator()(data_object, bind_ctx);
-}
+wstring Command::tool_tip(const comet::com_ptr<IDataObject>&) const
+{ return m_tool_tip; }
 
-wstring Command::title() const { return m_title; }
-uuid_t Command::guid() const { return m_guid; }
-wstring Command::tool_tip() const { return m_tool_tip; }
-wstring Command::icon_descriptor() const { return m_icon_descriptor; }
+wstring Command::icon_descriptor(const comet::com_ptr<IDataObject>&) const 
+{ return m_icon_descriptor; }
 
 }}} // namespace swish::shell_folder::commands

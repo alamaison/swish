@@ -119,7 +119,8 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 						::InsertMenu(
 							m_hToolsMenu, 2, MF_BYPOSITION, 
 							m_idCmdFirst + MENUIDOFFSET_ADD,
-							add.title().c_str()),
+							add.title(
+								_GetSelectionDataObject().p).c_str()),
 						::GetLastError());
 					
 					Remove remove(m_hwndView, m_pidl);
@@ -127,7 +128,8 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 						::InsertMenu(
 							m_hToolsMenu, 3, MF_BYPOSITION | MF_GRAYED, 
 							m_idCmdFirst + MENUIDOFFSET_REMOVE,
-							remove.title().c_str()),
+							remove.title(
+								_GetSelectionDataObject().p).c_str()),
 						::GetLastError());
 				}
 				catchCom()
@@ -145,10 +147,24 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 		// Update the menus to match the current selection.
 		if (m_hToolsMenu)
 		{
-			UINT flags = (_ShouldEnableRemove()) ? MF_ENABLED : MF_GRAYED;
-			ATLVERIFY(::EnableMenuItem(
-				m_hToolsMenu, m_idCmdFirst + MENUIDOFFSET_REMOVE,
-				MF_BYCOMMAND | flags) >= 0);
+			UINT flags;
+			try
+			{
+				Add add(m_hwndView, m_pidl);
+				flags = add.disabled(_GetSelectionDataObject().p, false) ? 
+					MF_GRAYED : MF_ENABLED;
+				ATLVERIFY(::EnableMenuItem(
+					m_hToolsMenu, m_idCmdFirst + MENUIDOFFSET_ADD,
+					MF_BYCOMMAND | flags) >= 0);
+
+				Remove remove(m_hwndView, m_pidl);
+				flags = remove.disabled(_GetSelectionDataObject().p, false) ?
+					MF_GRAYED : MF_ENABLED;
+				ATLVERIFY(::EnableMenuItem(
+					m_hToolsMenu, m_idCmdFirst + MENUIDOFFSET_REMOVE,
+					MF_BYCOMMAND | flags) >= 0);
+			}
+			catchCom()
 
 			return S_OK;
 		}
@@ -191,13 +207,15 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 				{
 					Add command(m_hwndView, m_pidl);
 					return ::StringCchCopy(
-						pszText, cchMax, command.tool_tip().c_str());
+						pszText, cchMax, command.tool_tip(
+							_GetSelectionDataObject().p).c_str());
 				}
 				else if (idCmd == MENUIDOFFSET_REMOVE)
 				{
 					Remove command(m_hwndView, m_pidl);
 					return ::StringCchCopy(
-						pszText, cchMax, command.tool_tip().c_str());
+						pszText, cchMax, command.tool_tip(
+							_GetSelectionDataObject().p).c_str());
 				}
 			}
 			catchCom()
