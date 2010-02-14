@@ -124,14 +124,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
 
 #pragma endregion
 
-#pragma region CExplorerCommand implementation
-
-CExplorerCommand::CExplorerCommand(
-	const wstring& title, const uuid_t& guid, const command& func,
-	const wstring& tool_tip, const wstring& icon)
-	: m_title(title), m_guid(guid), m_func(func), m_tool_tip(tool_tip),
-	  m_icon(icon)
-{}
+#pragma region CExplorerCommandImpl implementation
 
 /**
  * Return command's title string.
@@ -141,8 +134,8 @@ CExplorerCommand::CExplorerCommand(
  * @param[out] ppszName      Location in which to return character buffer
  *                           allocated with CoTakMemAlloc.
  */
-STDMETHODIMP CExplorerCommand::GetTitle(
-	IShellItemArray* /*psiItemArray*/, wchar_t** ppszName)
+STDMETHODIMP CExplorerCommandImpl::GetTitle(
+	IShellItemArray* psiItemArray, wchar_t** ppszName)
 {
 	if (ppszName)
 		*ppszName = NULL;
@@ -151,7 +144,7 @@ STDMETHODIMP CExplorerCommand::GetTitle(
 
 	try
 	{
-		HRESULT hr = ::SHStrDup(m_title.c_str(), ppszName);
+		HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
@@ -170,8 +163,8 @@ STDMETHODIMP CExplorerCommand::GetTitle(
  * @param[out] ppszIcon      Location in which to return character buffer
  *                           allocated with CoTakMemAlloc.
  */
-STDMETHODIMP CExplorerCommand::GetIcon(
-	IShellItemArray* /*psiItemArray*/, wchar_t** ppszIcon)
+STDMETHODIMP CExplorerCommandImpl::GetIcon(
+	IShellItemArray* psiItemArray, wchar_t** ppszIcon)
 {
 	if (ppszIcon)
 		*ppszIcon = NULL;
@@ -180,7 +173,7 @@ STDMETHODIMP CExplorerCommand::GetIcon(
 
 	try
 	{
-		HRESULT hr = ::SHStrDup(m_icon.c_str(), ppszIcon);
+		HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
@@ -197,8 +190,8 @@ STDMETHODIMP CExplorerCommand::GetIcon(
  * @param[out] ppszInfotip   Location in which to return character buffer
  *                           allocated with CoTakMemAlloc.
  */
-STDMETHODIMP CExplorerCommand::GetToolTip(
-	IShellItemArray* /*psiItemArray*/, wchar_t** ppszInfotip)
+STDMETHODIMP CExplorerCommandImpl::GetToolTip(
+	IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
 {
 	if (ppszInfotip)
 		*ppszInfotip = NULL;
@@ -207,7 +200,7 @@ STDMETHODIMP CExplorerCommand::GetToolTip(
 
 	try
 	{
-		HRESULT hr = ::SHStrDup(m_tool_tip.c_str(), ppszInfotip);
+		HRESULT hr = ::SHStrDup(tool_tip(psiItemArray).c_str(), ppszInfotip);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 	}
@@ -221,7 +214,7 @@ STDMETHODIMP CExplorerCommand::GetToolTip(
  *
  * @param[out] pguidCommandName   Location in which to return GUID.
  */
-STDMETHODIMP CExplorerCommand::GetCanonicalName(GUID* pguidCommandName)
+STDMETHODIMP CExplorerCommandImpl::GetCanonicalName(GUID* pguidCommandName)
 {
 	if (pguidCommandName)
 		*pguidCommandName = GUID_NULL;
@@ -230,7 +223,7 @@ STDMETHODIMP CExplorerCommand::GetCanonicalName(GUID* pguidCommandName)
 
 	try
 	{
-		*pguidCommandName = m_guid;
+		*pguidCommandName = canonical_name();
 	}
 	catchCom();
 
@@ -246,9 +239,8 @@ STDMETHODIMP CExplorerCommand::GetCanonicalName(GUID* pguidCommandName)
  *                           when calculating the state.
  * @param[out] pCmdState     Location in which to return the state flags.
  */
-STDMETHODIMP CExplorerCommand::GetState(
-	IShellItemArray* /*psiItemArray*/, BOOL /*fOkToBeSlow*/,
-	EXPCMDSTATE* pCmdState)
+STDMETHODIMP CExplorerCommandImpl::GetState(
+	IShellItemArray* psiItemArray, BOOL fOkToBeSlow, EXPCMDSTATE* pCmdState)
 {
 	if (pCmdState)
 		*pCmdState = 0;
@@ -257,7 +249,7 @@ STDMETHODIMP CExplorerCommand::GetState(
 
 	try
 	{
-		*pCmdState = ECS_ENABLED;
+		*pCmdState = state(psiItemArray, fOkToBeSlow);
 	}
 	catchCom();
 
@@ -271,18 +263,19 @@ STDMETHODIMP CExplorerCommand::GetState(
  *                          executed upon.
  * @param[in] pbc           Optional bind context.
  */
-STDMETHODIMP CExplorerCommand::Invoke(IShellItemArray* psiItemArray, IBindCtx* pbc)
+STDMETHODIMP CExplorerCommandImpl::Invoke(
+	IShellItemArray* psiItemArray, IBindCtx* pbc)
 {
 	try
 	{
-		m_func(psiItemArray, pbc);
+		invoke(psiItemArray, pbc);
 	}
 	catchCom();
 
 	return S_OK;
 }
 
-STDMETHODIMP CExplorerCommand::GetFlags(EXPCMDFLAGS* pFlags)
+STDMETHODIMP CExplorerCommandImpl::GetFlags(EXPCMDFLAGS* pFlags)
 {
 	if (pFlags)
 		*pFlags = 0;
@@ -291,14 +284,15 @@ STDMETHODIMP CExplorerCommand::GetFlags(EXPCMDFLAGS* pFlags)
 
 	try
 	{
-		*pFlags = 0;
+		*pFlags = flags();
 	}
 	catchCom();
 
 	return S_OK;
 }
 
-STDMETHODIMP CExplorerCommand::EnumSubCommands(IEnumExplorerCommand** ppEnum)
+STDMETHODIMP CExplorerCommandImpl::EnumSubCommands(
+	IEnumExplorerCommand** ppEnum)
 {
 	if (ppEnum)
 		*ppEnum = NULL;
@@ -307,11 +301,104 @@ STDMETHODIMP CExplorerCommand::EnumSubCommands(IEnumExplorerCommand** ppEnum)
 
 	try
 	{
-		BOOST_THROW_EXCEPTION(com_exception(E_NOTIMPL));
+		*ppEnum = subcommands().detach();
 	}
 	catchCom();
 
 	return S_OK;
+}
+
+#pragma endregion
+
+
+#pragma region CExplorerCommand implementation
+
+CExplorerCommand::CExplorerCommand(
+	const wstring& title, const uuid_t& guid, const command& func,
+	const wstring& tool_tip, const wstring& icon)
+	: m_title(title), m_guid(guid), m_func(func), m_tool_tip(tool_tip),
+	  m_icon(icon)
+{}
+
+/**
+ * Return command's title string.
+ *
+ * @param items  Optional array of PIDLs that command would be executed upon.
+ */
+wstring CExplorerCommand::title(const com_ptr<IShellItemArray>& /*items*/)
+const
+{
+	return m_title;
+}
+
+/**
+ * Return command's icon descriptor.
+ *
+ * This takes the form "shell32.dll,-249" where 249 is the icon's resource ID.
+ *
+ * @param items  Optional array of PIDLs that command would be executed upon.
+ */
+wstring CExplorerCommand::icon(const com_ptr<IShellItemArray>& /*items*/)
+const
+{
+	return m_icon;
+}
+
+/**
+ * Return command's tool tip.
+ *
+ * @param items  Optional array of PIDLs that command would be executed upon.
+ */
+wstring CExplorerCommand::tool_tip(const com_ptr<IShellItemArray>& /*items*/)
+const
+{
+	return m_tool_tip;
+}
+
+/**
+ * Return command's unique GUID.
+ */
+const uuid_t& CExplorerCommand::canonical_name() const
+{
+	return m_guid;
+}
+
+/**
+ * Return the command's state given array of PIDLs.
+ *
+ * @param items          Optional array of PIDLs that command would be 
+ *                       executed upon.
+ * @param ok_to_be_slow  Indicates whether slow operations can be used
+ *                       when calculating the state.  If false and slow
+ *                       operations are required, throw E_PENDING.
+ */
+EXPCMDSTATE CExplorerCommand::state(
+	const com_ptr<IShellItemArray>& /*items*/, bool /*ok_to_be_slow*/) const
+{
+	return ECS_ENABLED;
+}
+
+/**
+ * Execute the code associated with this command.
+ *
+ * @param items     Optional array of PIDLs that command is executed upon.
+ * @param bind_ctx  Optional bind context.
+ */
+void CExplorerCommand::invoke(
+	const com_ptr<IShellItemArray>& items, const com_ptr<IBindCtx>& bind_ctx)
+const
+{
+	m_func(items, bind_ctx);
+}
+
+EXPCMDFLAGS CExplorerCommand::flags() const
+{
+	return 0;
+}
+
+com_ptr<IEnumExplorerCommand> CExplorerCommand::subcommands() const
+{
+	BOOST_THROW_EXCEPTION(com_exception(E_NOTIMPL));
 }
 
 #pragma endregion

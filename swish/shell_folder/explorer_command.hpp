@@ -101,27 +101,17 @@ private:
 	command_map m_guid_mapping;
 };
 
-
-class CExplorerCommand : public comet::simple_object<IExplorerCommand>
+/**
+ * Abstract IExplorerCommand implementation wrapper.
+ *
+ * Wraps a C++ implementation of IExplorerCommand with code to convert it
+ * to the external COM interface.  This is an NVI style approach.
+ */
+class CExplorerCommandImpl : public comet::simple_object<IExplorerCommand>
 {
 public:
 
-	/**
-	 * Signature for functions invoked by CExplorerCommands.
-	 */
-	typedef boost::function<
-		void(
-			const comet::com_ptr<IShellItemArray>&,
-			const comet::com_ptr<IBindCtx>&) >
-		command;
-
-	CExplorerCommand(
-		const std::wstring& title, const comet::uuid_t& guid,
-		const command& func,
-		const std::wstring& tool_tip=std::wstring(),
-		const std::wstring& icon=std::wstring());
-
-	/** @name IExplorerCommand methods. */
+	/** @name IExplorerCommand external COM methods. */
 	// @{
 
 	IFACEMETHODIMP GetTitle(
@@ -150,8 +140,69 @@ public:
 
 private:
 
+	/** @name NVI internal interface.
+	 *
+	 * Implement this to create IExplorerCommand instances.
+	 */
+	// @{
+	virtual const comet::uuid_t& canonical_name() const = 0;
+	virtual std::wstring title(
+		const comet::com_ptr<IShellItemArray>& items) const = 0;
+	virtual std::wstring tool_tip(
+		const comet::com_ptr<IShellItemArray>& items) const = 0;
+	virtual std::wstring icon(
+		const comet::com_ptr<IShellItemArray>& items) const = 0;
+	virtual EXPCMDSTATE state(
+		const comet::com_ptr<IShellItemArray>& items,
+		bool ok_to_be_slow) const = 0;
+	virtual EXPCMDFLAGS flags() const = 0;
+	virtual comet::com_ptr<IEnumExplorerCommand> subcommands() const = 0;
+	virtual void invoke(
+		const comet::com_ptr<IShellItemArray>& items,
+		const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
+	// @}
+};
+
+
+
+class CExplorerCommand : public CExplorerCommandImpl
+{
+public:
+
+	/**
+	 * Signature for functions invoked by CExplorerCommands.
+	 */
+	typedef boost::function<
+		void(
+			const comet::com_ptr<IShellItemArray>&,
+			const comet::com_ptr<IBindCtx>&) >
+		command;
+
+	CExplorerCommand(
+		const std::wstring& title, const comet::uuid_t& guid,
+		const command& func,
+		const std::wstring& tool_tip=std::wstring(),
+		const std::wstring& icon=std::wstring());
+
+private:
+
+	/** @name IExplorerCommand C++ implementation */
+	// @{
+	const comet::uuid_t& canonical_name() const;
+	std::wstring title(const comet::com_ptr<IShellItemArray>& items) const;
+	std::wstring tool_tip(const comet::com_ptr<IShellItemArray>& items) const;
+	std::wstring icon(const comet::com_ptr<IShellItemArray>& items) const;
+	EXPCMDSTATE state(
+		const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow) const;
+	EXPCMDFLAGS flags() const;
+	comet::com_ptr<IEnumExplorerCommand> subcommands() const;
+	void invoke(
+		const comet::com_ptr<IShellItemArray>& items,
+		const comet::com_ptr<IBindCtx>& bind_ctx) const;
+	// @}
+
 	std::wstring m_title;
-	GUID m_guid;
+	comet::uuid_t m_guid;
 	command m_func;
 	std::wstring m_tool_tip;
 	std::wstring m_icon;
