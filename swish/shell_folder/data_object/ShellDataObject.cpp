@@ -244,10 +244,7 @@ bool ShellDataObject::has_ansi_file_group_descriptor_format() const
 
 PidlFormat::PidlFormat(const com_ptr<IDataObject>& data_object) :
 	m_data_object(data_object)
-{
-	if (!m_data_object)
-		BOOST_THROW_EXCEPTION(com_exception(E_POINTER));
-}
+{}
 
 PidlFormat::~PidlFormat() {}
 
@@ -257,6 +254,9 @@ PidlFormat::~PidlFormat() {}
  */
 apidl_t PidlFormat::parent_folder()
 {
+	if (!m_data_object)
+		BOOST_THROW_EXCEPTION(std::logic_error("Empty (NULL) Data Object"));
+
 	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 
 	apidl_t pidl = parent_from_cida(global_cida.get());
@@ -268,6 +268,9 @@ apidl_t PidlFormat::parent_folder()
  */
 apidl_t PidlFormat::file(UINT i)
 {
+	if (pidl_count() == 0)
+		BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
+
 	return parent_folder() + relative_file(i);
 }
 
@@ -276,6 +279,9 @@ apidl_t PidlFormat::file(UINT i)
  */
 pidl_t PidlFormat::relative_file(UINT i)
 {
+	if (!m_data_object)
+		BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
+
 	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 	if (i >= global_cida.get().cidl)
 		BOOST_THROW_EXCEPTION(std::range_error(
@@ -292,6 +298,9 @@ pidl_t PidlFormat::relative_file(UINT i)
  */
 UINT PidlFormat::pidl_count()
 {
+	if (!m_data_object)
+		return 0;
+
 	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 	return global_cida.get().cidl;
 }

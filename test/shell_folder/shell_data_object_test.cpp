@@ -282,5 +282,23 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_multiple_items )
 	BOOST_REQUIRE_THROW(format.file(4), std::range_error)
 }
 
+/**
+ * The format should respond sensibly even if created with a NULL pointer.
+ *
+ * The behaviour should act as though this NULL pointer were an empty
+ * DataObject; this is the meaning the shell gives it - for instance when
+ * nothing is selected in a folder a NULL pointer is returned as the
+ * DataObject.
+ */
+BOOST_AUTO_TEST_CASE( null_dataobject )
+{
+	PidlFormat format(NULL);
+
+	BOOST_REQUIRE_EQUAL(format.pidl_count(), 0U);
+	BOOST_REQUIRE_THROW(format.file(0), std::range_error);
+	BOOST_REQUIRE_THROW(format.relative_file(0), std::range_error);
+	BOOST_REQUIRE_THROW(format.parent_folder(), std::logic_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 #pragma endregion
