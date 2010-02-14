@@ -36,6 +36,7 @@
 #include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/shell_folder/shell.hpp" // strret_to_string
+#include "swish/shell_folder/commands/host/host.hpp" // host_folder_commands
 
 #include <strsafe.h>  // For StringCchCopy
 
@@ -55,6 +56,7 @@ using std::wstring;
 using swish::host_management::LoadConnectionsFromRegistry;
 using swish::exception::com_exception;
 using swish::shell_folder::strret_to_string;
+using swish::shell_folder::commands::host::host_folder_command_provider;
 
 namespace { // private
 	
@@ -633,6 +635,17 @@ const throw(...)
 /* These method override the (usually no-op) implementations of some        */
 /* in the CSwishFolder base class                                           */
 /*--------------------------------------------------------------------------*/
+
+
+/**
+ * Create a toolbar command provider for the folder.
+ */
+CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
+	HWND hwnd)
+{
+	TRACE("Request: IExplorerCommandProvider");
+	return host_folder_command_provider(hwnd, root_pidl()).get();
+}
 
 /**
  * Create an icon extraction helper object for the selected item.

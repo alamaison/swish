@@ -54,8 +54,8 @@ protected:
 	// @{
 	virtual ATL::CComPtr<IShellView> folder_view(HWND hwnd);
 	virtual ATL::CComPtr<IShellDetails> shell_details(HWND hwnd);
-
 	virtual ATL::CComPtr<IDropTarget> drop_target(HWND hwnd);
+	virtual ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
 	// @}
 
 

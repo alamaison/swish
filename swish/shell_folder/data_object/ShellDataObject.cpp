@@ -244,7 +244,10 @@ bool ShellDataObject::has_ansi_file_group_descriptor_format() const
 
 PidlFormat::PidlFormat(const com_ptr<IDataObject>& data_object) :
 	m_data_object(data_object)
-{}
+{
+	if (!m_data_object)
+		BOOST_THROW_EXCEPTION(com_exception(E_POINTER));
+}
 
 PidlFormat::~PidlFormat() {}
 

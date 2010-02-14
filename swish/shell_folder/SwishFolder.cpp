@@ -63,6 +63,10 @@ CComPtr<IUnknown> CSwishFolder::folder_object(HWND hwnd, REFIID riid)
 	{
 		object = drop_target(hwnd);
 	}
+	else if (riid == __uuidof(IExplorerCommandProvider))
+	{
+		object = command_provider(hwnd);
+	}
 
 	// QueryInterface could fail at any point above and it *doesn't* throw
 	// an exception.  We have to check for NULL once we are sure it can't
@@ -170,6 +174,14 @@ CComPtr<IShellDetails> CSwishFolder::shell_details(HWND /*hwnd*/)
 CComPtr<IDropTarget> CSwishFolder::drop_target(HWND /*hwnd*/)
 {
 	TRACE("Request: IDropTarget");
+	throw com_exception(E_NOINTERFACE);
+}
+
+/** Create a toolbar command provider for the folder. */
+CComPtr<IExplorerCommandProvider> CSwishFolder::command_provider(
+	HWND /*hwnd*/)
+{
+	TRACE("Request: IExplorerCommandProvider");
 	throw com_exception(E_NOINTERFACE);
 }
 

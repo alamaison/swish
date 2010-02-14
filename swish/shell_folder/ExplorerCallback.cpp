@@ -26,12 +26,11 @@
 
 #include "ExplorerCallback.h"
 
-#include "NewConnDialog.h"
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
-#include "host_management.hpp"
+#include "swish/shell_folder/commands/host/host.hpp" // host commands
 #include "swish/debug.hpp"
-#include "swish/catch_com.hpp"
+#include "swish/catch_com.hpp" // catchCom
 #include "swish/exception.hpp"
 
 #include <strsafe.h>          // For StringCchCopy
@@ -46,11 +45,10 @@ using ATL::CString;
 using std::wstring;
 using std::vector;
 
-using swish::host_management::AddConnectionToRegistry;
-using swish::host_management::RemoveConnectionFromRegistry;
-using swish::host_management::ConnectionExists;
 using swish::exception::com_exception;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::commands::host::Add;
+using swish::shell_folder::commands::host::Remove;
 
 #define SFVM_SELECTIONCHANGED 8
 
@@ -153,21 +151,24 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			// invoked in the Explorer window and is giving us a chance to
 			// react to it
 
-			UINT idCmd = (UINT)wParam;
-			if (idCmd == MENUIDOFFSET_ADD)
+			try
 			{
-				HRESULT hr = _AddNewConnection();
-				if (SUCCEEDED(hr))
-					_RefreshView();
-				return hr;
+				UINT idCmd = (UINT)wParam;
+				if (idCmd == MENUIDOFFSET_ADD)
+				{
+					Add command(m_hwndView, m_pidl);
+					command(_GetSelectionDataObject().p, NULL);
+					return S_OK;
+				}
+				else if (idCmd == MENUIDOFFSET_REMOVE)
+				{
+					
+					Remove command(m_hwndView, m_pidl);
+					command(_GetSelectionDataObject().p, NULL);
+					return S_OK;
+				}
 			}
-			else if (idCmd == MENUIDOFFSET_REMOVE)
-			{
-				HRESULT hr = _RemoveConnection();
-				if (SUCCEEDED(hr))
-					_RefreshView();
-				return hr;
-			}
+			catchCom()
 
 			return E_NOTIMPL;
 		}
@@ -221,68 +222,6 @@ HMENU CExplorerCallback::_GetToolsMenu(HMENU hParentMenu)
 	return (fSucceeded) ? info.hSubMenu : NULL;
 }
 
-HRESULT CExplorerCallback::_RemoveConnection()
-{
-	ATLASSUME(m_hwndView);
-
-	try
-	{
-		CHostItemAbsolute pidl_selected = _GetSelectedItem();
-		wstring label = pidl_selected.FindHostPidl().GetLabel();
-		ATLENSURE_THROW(label.size() > 0, E_UNEXPECTED);
-
-		RemoveConnectionFromRegistry(label);
-	}
-	catchCom()
-
-	return S_OK;
-}
-
-HRESULT CExplorerCallback::_AddNewConnection()
-{
-	ATLASSUME(m_hwndView);
-
-	try
-	{
-		// Display dialog to get connection info from user
-		wstring label, user, host, path;
-		UINT port;
-		CNewConnDialog dlgNewConnection;
-		dlgNewConnection.SetPort( 22 ); // Sensible default
-		if (dlgNewConnection.DoModal(m_hwndView) == IDOK)
-		{
-			label = dlgNewConnection.GetName();
-			user = dlgNewConnection.GetUser();
-			host = dlgNewConnection.GetHost();
-			path = dlgNewConnection.GetPath();
-			port = dlgNewConnection.GetPort();
-		}
-		else
-			AtlThrow(E_FAIL);
-
-		if (ConnectionExists(label))
-			AtlThrow(E_FAIL);
-
-		AddConnectionToRegistry(label, host, port, user, path);
-	}
-	catchCom()
-
-	return S_OK;
-}
-
-/**
- * Cause Explorer to refresh any windows displaying the owning folder.
- */
-void CExplorerCallback::_RefreshView()
-{
-	ATLASSUME(m_pidl);
-
-	// Inform shell that something in our folder changed (we don't know exactly
-	// what the new PIDL is until we reload from the registry, hence UPDATEDIR)
-	::SHChangeNotify( SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 
-		m_pidl, NULL );
-}
-
 /**
  * Return whether the Remove Host menu should be enabled.
  */
@@ -314,16 +253,19 @@ CAbsolutePidl CExplorerCallback::_GetSelectedItem()
 /**
  * Return a DataObject representing the items currently selected.
  *
- * @throw AtlException if interface not found.
+ * @return NULL if nothing is selected.
  */
 CComPtr<IDataObject> CExplorerCallback::_GetSelectionDataObject()
 {
 	CComPtr<IShellView> spView = _GetShellView();
 	CComPtr<IDataObject> spDataObject;
-	HRESULT hr = spView->GetItemObject(
+	spView->GetItemObject(
 		SVGIO_SELECTION, __uuidof(IDataObject), (void **)&spDataObject);
-	if (FAILED(hr))
-		AtlThrow(hr); // Legal to fail here - maybe nothing selected
+
+	// We don't care if getting the DataObject succeded - if it did, great;
+	// return it.  If not we will return a NULL pointer indicating that no
+	// items were selected
+
 	return spDataObject;
 }
 

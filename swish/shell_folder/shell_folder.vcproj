@@ -682,6 +682,30 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="commands"
+			>
+			<File
+				RelativePath=".\commands\Command.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\Command.hpp"
+				>
+			</File>
+			<Filter
+				Name="host"
+				>
+				<File
+					RelativePath=".\commands\host\host.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\commands\host\host.hpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 	</Files>
 	<Globals>
 		<Global

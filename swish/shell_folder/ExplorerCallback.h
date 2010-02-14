@@ -78,10 +78,7 @@ public: // IShellFolderViewCB
 private:
 
 	__checkReturn HMENU _GetToolsMenu(HMENU hParentMenu);
-	void _RefreshView();
 
-	HRESULT _AddNewConnection();
-	HRESULT _RemoveConnection();
 	bool _ShouldEnableRemove();
 
 	ATL::CComPtr<IShellBrowser> _GetShellBrowser();

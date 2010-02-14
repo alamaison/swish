@@ -1,0 +1,164 @@
+/**
+    @file
+
+    Swish host folder commands.
+
+    @if licence
+
+    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
+*/
+
+#include "host.hpp"
+
+#include "swish/shell_folder/NewConnDialog.h" // CNewConnDialog
+#include "swish/shell_folder/explorer_command.hpp" // CExplorerCommand
+#include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
+#include "swish/shell_folder/host_management.hpp" // AddConnectionToRegistry
+#include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
+#include "swish/exception.hpp" // com_exception
+
+#include <comet/uuid_fwd.h> // uuid_t
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
+#include <cassert>
+#include <string>
+
+using swish::shell_folder::explorer_command::CExplorerCommandProvider;
+using swish::shell_folder::explorer_command::CExplorerCommand;
+using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::pidl::apidl_t;
+using swish::shell_folder::commands::Command;
+using swish::host_management::AddConnectionToRegistry;
+using swish::host_management::RemoveConnectionFromRegistry;
+using swish::host_management::ConnectionExists;
+using swish::exception::com_exception;
+
+using comet::uuid_t;
+using comet::com_ptr;
+using comet::uuidof;
+
+using std::wstring;
+
+namespace comet {
+
+template<> struct comtype<IDataObject>
+{
+	static const IID& uuid() throw() { return IID_IDataObject; }
+	typedef IUnknown base;
+};
+
+}
+
+namespace swish {
+namespace shell_folder {
+namespace commands {
+namespace host {
+
+namespace {
+	const uuid_t ADD_COMMAND_ID(L"b816a880-5022-11dc-9153-0090f5284f85");
+	const uuid_t REMOVE_COMMAND_ID("b816a881-5022-11dc-9153-0090f5284f85");
+
+	/**
+     * Cause Explorer to refresh any windows displaying the owning folder.
+	 *
+	 * Inform shell that something in our folder changed (we don't know
+	 * exactly what the new PIDL is until we reload from the registry, hence
+	 * UPDATEDIR).
+	 */
+	void notify_shell(const apidl_t folder_pidl)
+	{
+		assert(folder_pidl);
+		::SHChangeNotify(
+			SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+			folder_pidl.get(), NULL);
+	}
+}
+
+Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
+	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+
+void Add::operator()(
+	const com_ptr<IDataObject>& /*data_object*/, const com_ptr<IBindCtx>&)
+{
+	// Display dialog to get connection info from user
+	wstring label, user, host, path;
+	UINT port;
+	CNewConnDialog dlgNewConnection;
+	dlgNewConnection.SetPort( 22 ); // Sensible default
+	if (dlgNewConnection.DoModal(m_hwnd) == IDOK)
+	{
+		label = dlgNewConnection.GetName();
+		user = dlgNewConnection.GetUser();
+		host = dlgNewConnection.GetHost();
+		path = dlgNewConnection.GetPath();
+		port = dlgNewConnection.GetPort();
+	}
+	else
+		BOOST_THROW_EXCEPTION(com_exception(E_ABORT));
+
+	if (ConnectionExists(label))
+		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+
+	AddConnectionToRegistry(label, host, port, user, path);
+
+	notify_shell(m_folder_pidl);
+}
+
+Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
+	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+
+void Remove::operator()(
+	const com_ptr<IDataObject>& data_object, const com_ptr<IBindCtx>&)
+{
+	PidlFormat format(data_object);
+	// XXX: for the moment we only allow removing one item.
+	//      is this what we want?
+	if (format.pidl_count() != 1)
+		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+
+	CHostItemAbsolute pidl_selected = format.file(0).get();
+	wstring label = pidl_selected.FindHostPidl().GetLabel();
+	assert(!label.empty());
+	if (label.empty())
+		BOOST_THROW_EXCEPTION(com_exception(E_UNEXPECTED));
+
+	RemoveConnectionFromRegistry(label);
+	notify_shell(m_folder_pidl);
+}
+
+com_ptr<IExplorerCommandProvider> host_folder_command_provider(
+	HWND hwnd, const apidl_t& folder_pidl)
+{
+	CExplorerCommandProvider::ordered_commands commands;
+	commands.push_back(
+		new CExplorerCommand(
+			L"Add SFTP Connection", ADD_COMMAND_ID, 
+			Add(hwnd, folder_pidl),
+			L"Create a new SFTP connection with Swish.", L"shell32.dll,-258"));
+	commands.push_back(
+		new CExplorerCommand(
+			L"Remove SFTP Connection", REMOVE_COMMAND_ID,
+			Remove(hwnd, folder_pidl),
+			L"Remove a SFTP connection created with Swish.",
+			L"shell32.dll,-240"));
+	return new CExplorerCommandProvider(commands);
+}
+
+}}}} // namespace swish::shell_folder::commands::host
