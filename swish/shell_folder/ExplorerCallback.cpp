@@ -112,18 +112,25 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			m_hToolsMenu = _GetToolsMenu(pInfo->hmenu);
 			if (m_hToolsMenu)
 			{
-				ATLVERIFY_REPORT(
-					::InsertMenu(
-						m_hToolsMenu, 2, MF_BYPOSITION, 
-						m_idCmdFirst + MENUIDOFFSET_ADD,
-						L"&Add SFTP Connection..."),
-					::GetLastError());
-				ATLVERIFY_REPORT(
-					::InsertMenu(
-						m_hToolsMenu, 3, MF_BYPOSITION | MF_GRAYED, 
-						m_idCmdFirst + MENUIDOFFSET_REMOVE,
-						L"&Remove SFTP Connection..."),
-					::GetLastError());
+				try
+				{
+					Add add(m_hwndView, m_pidl);
+					ATLVERIFY_REPORT(
+						::InsertMenu(
+							m_hToolsMenu, 2, MF_BYPOSITION, 
+							m_idCmdFirst + MENUIDOFFSET_ADD,
+							add.title().c_str()),
+						::GetLastError());
+					
+					Remove remove(m_hwndView, m_pidl);
+					ATLVERIFY_REPORT(
+						::InsertMenu(
+							m_hToolsMenu, 3, MF_BYPOSITION | MF_GRAYED, 
+							m_idCmdFirst + MENUIDOFFSET_REMOVE,
+							remove.title().c_str()),
+						::GetLastError());
+				}
+				catchCom()
 
 				// Return value of last menu ID plus 1
 				pInfo->idCmdFirst += MENUIDOFFSET_LAST+1; // Added 2 items
@@ -174,20 +181,26 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 		}
 	case SFVM_GETHELPTEXT:
 		{
-			UINT idCmd = (UINT)(LOWORD(wParam));
-			UINT cchMax = (UINT)(HIWORD(wParam));
-			LPTSTR pszText = (LPTSTR)lParam;
+			try
+			{
+				UINT idCmd = (UINT)(LOWORD(wParam));
+				UINT cchMax = (UINT)(HIWORD(wParam));
+				LPTSTR pszText = (LPTSTR)lParam;
 
-			if (idCmd == MENUIDOFFSET_ADD)
-			{
-				return ::StringCchCopy(pszText, cchMax, 
-					_T("Create a new SFTP connection with Swish."));
+				if (idCmd == MENUIDOFFSET_ADD)
+				{
+					Add command(m_hwndView, m_pidl);
+					return ::StringCchCopy(
+						pszText, cchMax, command.tool_tip().c_str());
+				}
+				else if (idCmd == MENUIDOFFSET_REMOVE)
+				{
+					Remove command(m_hwndView, m_pidl);
+					return ::StringCchCopy(
+						pszText, cchMax, command.tool_tip().c_str());
+				}
 			}
-			else if (idCmd == MENUIDOFFSET_REMOVE)
-			{
-				return ::StringCchCopy(pszText, cchMax, 
-					_T("Remove a SFTP connection created with Swish."));
-			}
+			catchCom()
 
 			return E_NOTIMPL;
 		}

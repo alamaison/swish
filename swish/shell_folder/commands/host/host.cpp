@@ -89,9 +89,26 @@ namespace {
 			SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
 			folder_pidl.get(), NULL);
 	}
+	
+
+	/**
+	 * Create an IExplorerCommand implementation from a Command instance.
+	 */
+	template<typename F>
+	com_ptr<IExplorerCommand> explorer_command_from_command(F command)
+	{
+		CExplorerCommandProvider::ordered_commands commands;
+		return new CExplorerCommand(
+			command.title(), command.guid(), command,
+			command.tool_tip(), command.icon_descriptor());
+	}
 }
 
 Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
+	Command(
+		L"&Add SFTP Connection", ADD_COMMAND_ID,
+		L"Create a new SFTP connection with Swish.",
+		L"shell32.dll,-258"),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 void Add::operator()(
@@ -122,6 +139,10 @@ void Add::operator()(
 }
 
 Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
+	Command(
+		L"&Remove SFTP Connection", REMOVE_COMMAND_ID,
+		L"Remove a SFTP connection created with Swish.",
+		L"shell32.dll,-240"),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 void Remove::operator()(
@@ -147,17 +168,10 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
 	HWND hwnd, const apidl_t& folder_pidl)
 {
 	CExplorerCommandProvider::ordered_commands commands;
-	commands.push_back(
-		new CExplorerCommand(
-			L"Add SFTP Connection", ADD_COMMAND_ID, 
-			Add(hwnd, folder_pidl),
-			L"Create a new SFTP connection with Swish.", L"shell32.dll,-258"));
-	commands.push_back(
-		new CExplorerCommand(
-			L"Remove SFTP Connection", REMOVE_COMMAND_ID,
-			Remove(hwnd, folder_pidl),
-			L"Remove a SFTP connection created with Swish.",
-			L"shell32.dll,-240"));
+	commands.push_back(explorer_command_from_command(
+		Add(hwnd, folder_pidl)));
+	commands.push_back(explorer_command_from_command(
+		Remove(hwnd, folder_pidl)));
 	return new CExplorerCommandProvider(commands);
 }
 

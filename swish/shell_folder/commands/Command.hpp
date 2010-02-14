@@ -29,11 +29,14 @@
 #include "swish/shell_folder/pidl.hpp" // apidl_t
 
 #include <comet/ptr.h> // com_ptr
+#include <comet/uuid_fwd.h> // uuid_t
 
 #include <boost/function.hpp> // function
 
 #include <ObjIdl.h> // IDataObject, IBindCtx
 #include <shobjidl.h> // IExplorerCommandProvider, IShellItemArray
+
+#include <string>
 
 namespace swish {
 namespace shell_folder {
@@ -42,6 +45,11 @@ namespace commands {
 class Command
 {
 public:
+	Command(
+		const std::wstring& title, const comet::uuid_t& guid,
+		const std::wstring& tool_tip=std::wstring(),
+		const std::wstring& icon_descriptor=std::wstring());
+
 	virtual ~Command() {}
 
 	virtual void operator()(
@@ -51,6 +59,17 @@ public:
 	virtual void operator()(
 		const comet::com_ptr<IDataObject>& data_object,
 		const comet::com_ptr<IBindCtx>& bind_ctx) = 0;
+
+	std::wstring title() const;
+	comet::uuid_t guid() const;
+	std::wstring tool_tip() const;
+	std::wstring icon_descriptor() const;
+
+private:
+	std::wstring m_title;
+	comet::uuid_t m_guid;
+	std::wstring m_tool_tip;
+	std::wstring m_icon_descriptor;
 };
 
 }}} // namespace swish::shell_folder::commands

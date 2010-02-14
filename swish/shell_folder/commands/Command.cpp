@@ -37,6 +37,9 @@ using swish::exception::com_exception;
 
 using comet::com_ptr;
 using comet::uuidof;
+using comet::uuid_t;
+
+using std::wstring;
 
 namespace comet {
 
@@ -51,6 +54,12 @@ template<> struct comtype<IDataObject>
 namespace swish {
 namespace shell_folder {
 namespace commands {
+
+Command::Command(
+	const wstring& title, const uuid_t& guid,
+	const wstring& tool_tip, const wstring& icon_descriptor)
+: m_title(title), m_guid(guid), m_tool_tip(tool_tip),
+  m_icon_descriptor(icon_descriptor) {}
 
 void Command::operator()(
 	const com_ptr<IShellItemArray>& items, const com_ptr<IBindCtx>& bind_ctx)
@@ -69,5 +78,10 @@ void Command::operator()(
 
 	this->operator()(data_object, bind_ctx);
 }
+
+wstring Command::title() const { return m_title; }
+uuid_t Command::guid() const { return m_guid; }
+wstring Command::tool_tip() const { return m_tool_tip; }
+wstring Command::icon_descriptor() const { return m_icon_descriptor; }
 
 }}} // namespace swish::shell_folder::commands
