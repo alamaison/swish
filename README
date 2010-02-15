@@ -22,7 +22,7 @@ Status:
     welcome.
 
 Supported Operating Systems:
-    Windows Vista (most testes)
+    Windows Vista (most tested)
     Windows XP    (regularly tested)
     Windows 2000  (regularly tested, no drag-and-drop yet)
     Windows Me    (rarely tested, no drag-and-drop yet)
@@ -39,11 +39,6 @@ Supported Operating Systems:
        so you will have to compile your own. The instructions that come with
        OpenSSL make it clear how to do this. Again, I haven't tried this myself
        so it might not work.
-
-Building:
-    When building on Windows Vista, make sure you are running Visual
-    Studio as an Administrator.  Otherwise it can't register the components
-    and later components that depend on earlier ones will fail to build.
 
 Requirements to run:
     Internet Explorer 5.5 or greater
@@ -114,6 +109,11 @@ OpenSSL:
     
     This product includes cryptographic software written by Eric Young 
     (eay@cryptsoft.com)
+
+Building on Vista:
+    When building on Windows Vista, make sure you are running Visual
+    Studio as an Administrator.  Otherwise it can't register the components
+    and later components that depend on earlier ones will fail to build.
 
 Architecture:
     The architecture of Swish is divided into a back-end and a front-end.  The
