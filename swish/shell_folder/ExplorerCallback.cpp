@@ -119,8 +119,7 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 						::InsertMenu(
 							m_hToolsMenu, 2, MF_BYPOSITION, 
 							m_idCmdFirst + MENUIDOFFSET_ADD,
-							add.title(
-								_GetSelectionDataObject().p).c_str()),
+							add.title(NULL).c_str()),
 						::GetLastError());
 					
 					Remove remove(m_hwndView, m_pidl);
@@ -128,14 +127,13 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 						::InsertMenu(
 							m_hToolsMenu, 3, MF_BYPOSITION | MF_GRAYED, 
 							m_idCmdFirst + MENUIDOFFSET_REMOVE,
-							remove.title(
-								_GetSelectionDataObject().p).c_str()),
+							remove.title(NULL).c_str()),
 						::GetLastError());
+
+					// Return value of last menu ID plus 1
+					pInfo->idCmdFirst += MENUIDOFFSET_LAST+1; // Added 2 items
 				}
 				catchCom()
-
-				// Return value of last menu ID plus 1
-				pInfo->idCmdFirst += MENUIDOFFSET_LAST+1; // Added 2 items
 			}
 
 			return S_OK;
@@ -243,12 +241,23 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 HMENU CExplorerCallback::_GetToolsMenu(HMENU hParentMenu)
 {
 	MENUITEMINFO info;
+	::ZeroMemory(&info, sizeof(MENUITEMINFO));
 	info.cbSize = sizeof(MENUITEMINFO);
 	info.fMask = MIIM_SUBMENU; // Item we are requesting
 
 	BOOL fSucceeded = ::GetMenuItemInfo(
 		hParentMenu, FCIDM_MENU_TOOLS, FALSE, &info);
 	REPORT(fSucceeded);
+	if (!fSucceeded) // Fall back to using File menu
+	{
+		::ZeroMemory(&info, sizeof(MENUITEMINFO));
+		info.cbSize = sizeof(MENUITEMINFO);
+		info.fMask = MIIM_SUBMENU; // Item we are requesting
+
+		fSucceeded = ::GetMenuItemInfo(
+			hParentMenu, FCIDM_MENU_FILE, FALSE, &info);
+		REPORT(fSucceeded);
+	}
 
 	return (fSucceeded) ? info.hSubMenu : NULL;
 }
