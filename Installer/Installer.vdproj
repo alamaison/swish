@@ -27,8 +27,26 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_0F96288A5F6146329CD8FE48D9EFA7B2"
-        "OwnerKey" = "8:_D9049B51A60A4A7A82A5DA45FEB5CAAC"
+        "MsmKey" = "8:_137CFDB4BDE7440D9A69BDD0ACA77B4D"
+        "OwnerKey" = "8:_0300EE4FA2664E978D39D8C04A22F539"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_137CFDB4BDE7440D9A69BDD0ACA77B4D"
+        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_137CFDB4BDE7440D9A69BDD0ACA77B4D"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_137CFDB4BDE7440D9A69BDD0ACA77B4D"
+        "OwnerKey" = "8:_2C3218BE9366495FB856E6A12BE4AB2E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -69,6 +87,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_70769FF4FE474B29B5B50A70CA35729E"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -87,37 +111,13 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_BECC3A12C274411D9C297189388FD7A1"
+        "OwnerKey" = "8:_137CFDB4BDE7440D9A69BDD0ACA77B4D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_D5BCA5075195446DB2CCDA3D7C881C7A"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D9049B51A60A4A7A82A5DA45FEB5CAAC"
-        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D9049B51A60A4A7A82A5DA45FEB5CAAC"
-        "OwnerKey" = "8:_0300EE4FA2664E978D39D8C04A22F539"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D9049B51A60A4A7A82A5DA45FEB5CAAC"
-        "OwnerKey" = "8:_2C3218BE9366495FB856E6A12BE4AB2E"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D9049B51A60A4A7A82A5DA45FEB5CAAC"
-        "OwnerKey" = "8:_983A937A8ABA42269182B9CED8AE4DBC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E855C84F58774ED08DAD1E53554A1B17"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -125,6 +125,12 @@
         {
         "MsmKey" = "8:_F05B46D19967A193EFD9B2D2BCFD1950"
         "OwnerKey" = "8:_0300EE4FA2664E978D39D8C04A22F539"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F05B46D19967A193EFD9B2D2BCFD1950"
+        "OwnerKey" = "8:_4B42AC5F4BDE4461843EF135AD4F6CC9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -153,7 +159,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\swish-0.3.0.0-debug.msi"
+        "OutputFilename" = "8:Debug\\swish-0.3.0.1-debug.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -207,7 +213,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\swish-0.3.0.0.msi"
+        "OutputFilename" = "8:Release\\swish-0.3.0.1.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -359,6 +365,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_70769FF4FE474B29B5B50A70CA35729E"
+            {
+            "SourcePath" = "8:..\\NEWS"
+            "TargetName" = "8:NEWS"
+            "Tag" = "8:"
+            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AE89F8D5917144E9B10BAE057AE35FFA"
             {
             "SourcePath" = "8:..\\COPYING.rtf"
@@ -403,26 +429,6 @@
             {
             "SourcePath" = "8:..\\thirdparty\\zlib\\zlib1.dll"
             "TargetName" = "8:zlib1.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E855C84F58774ED08DAD1E53554A1B17"
-            {
-            "SourcePath" = "8:..\\CHANGELOG"
-            "TargetName" = "8:CHANGELOG"
             "Tag" = "8:"
             "Folder" = "8:_671B0C18C606484EAC2C2E641DBEB5E0"
             "Condition" = "8:"
@@ -555,7 +561,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Swish"
         "ProductCode" = "8:{08642F3F-A386-4F11-8E5E-8F29E36DDD74}"
-        "PackageCode" = "8:{7B43259B-0860-4098-99F0-CCB9089FF2F5}"
+        "PackageCode" = "8:{5466ABAC-1344-4D75-B4CA-15BB61CCE1D0}"
         "UpgradeCode" = "8:{97CF376F-FFDE-472A-946B-E3F5D45229DA}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
@@ -1164,11 +1170,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_0F96288A5F6146329CD8FE48D9EFA7B2"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_137CFDB4BDE7440D9A69BDD0ACA77B4D"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_crt_x86.msm"
+            "SourcePath" = "8:Microsoft_VC80_CRT_x86.msm"
                 "Properties"
                 {
                 }
@@ -1178,11 +1184,11 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_D9049B51A60A4A7A82A5DA45FEB5CAAC"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_BECC3A12C274411D9C297189388FD7A1"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_CRT_x86.msm"
+            "SourcePath" = "8:policy_8_0_microsoft_vc80_crt_x86.msm"
                 "Properties"
                 {
                 }
