@@ -1,3 +1,9 @@
+swish-0.3.0.1
+-Added command buttons to add and remove hosts (Windows Vista and above).
+-Fix bug where password dialogues appear behind the Explorer window.
+-Allow the user to cancel a file transfer mid-file rather than only between
+ files.
+
 swish-0.3.0.0
 -Full drag-and-drop support in Windows XP and above.  Drag-and-drop files and
  folders to and from the remote server.
