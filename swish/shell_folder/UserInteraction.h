@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -85,6 +85,16 @@ public:
 	);
 	IFACEMETHODIMP OnReportError(
 		__in BSTR bstrMessage
+	);
+	IFACEMETHODIMP OnHostkeyMismatch(
+		__in BSTR bstrHostName,
+		__in BSTR bstrHostKey,
+		__in BSTR bstrHostKeyType
+	);
+	IFACEMETHODIMP OnHostkeyUnknown(
+		__in BSTR bstrHostName,
+		__in BSTR bstrHostKey,
+		__in BSTR bstrHostKeyType
 	);
 	/* @} */
 

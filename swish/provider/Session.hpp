@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #pragma once
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
+#include <boost/shared_ptr.hpp> // shared_ptr
 
 typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
 typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
@@ -53,10 +54,11 @@ public:
 	void Disconnect();
 	void StartSftp() throw(...);
 
+	boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
 private:
-	LIBSSH2_SESSION *m_pSession;   ///< SSH session
 	boost::asio::io_service m_io; ///< Boost IO system
 	boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
+	boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
 	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
 	bool m_bConnected;             ///< Have we already connected to server?
 

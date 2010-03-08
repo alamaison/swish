@@ -105,6 +105,16 @@ interface ISftpConsumer : IUnknown
 	HRESULT OnReportError(
 		[in]          BSTR bstrMessage
 	);
+	HRESULT OnHostkeyMismatch(
+		[in]          BSTR bstrHostName,
+		[in]          BSTR bstrHostKey,
+		[in]          BSTR bstrHostKeyType
+	);
+	HRESULT OnHostkeyUnknown(
+		[in]          BSTR bstrHostName,
+		[in]          BSTR bstrHostKey,
+		[in]          BSTR bstrHostKeyType
+	);
 };
 
 // ISftpProvider

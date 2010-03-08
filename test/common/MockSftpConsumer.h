@@ -168,4 +168,14 @@ public:
 	IFACEMETHODIMP OnReportError(
 		__in BSTR bstrMessage
 	);
+	IFACEMETHODIMP OnHostkeyMismatch(
+		__in BSTR bstrHostName,
+		__in BSTR bstrHostKey,
+		__in BSTR bstrHostKeyType
+	);
+	IFACEMETHODIMP OnHostkeyUnknown(
+		__in BSTR bstrHostName,
+		__in BSTR bstrHostKey,
+		__in BSTR bstrHostKeyType
+	);
 };

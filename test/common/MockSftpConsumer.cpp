@@ -299,3 +299,15 @@ STDMETHODIMP CMockSftpConsumer::OnReportError( BSTR bstrMessage )
 		return E_FAIL;
 	}
 }
+
+STDMETHODIMP CMockSftpConsumer::OnHostkeyMismatch(
+	BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
+{
+	return S_FALSE;
+}
+
+STDMETHODIMP CMockSftpConsumer::OnHostkeyUnknown(
+	BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
+{
+	return S_FALSE;
+}

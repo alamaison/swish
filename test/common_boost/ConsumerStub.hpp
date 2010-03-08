@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -148,6 +148,18 @@ public:
 		BOOST_ERROR(
 			std::wstring(L"Unexpected call to "__FUNCTIONW__) + message);
 		return S_OK;
+	}
+
+	IFACEMETHODIMP OnHostkeyMismatch(
+		BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
+	{
+		return S_FALSE;
+	}
+
+	IFACEMETHODIMP OnHostkeyUnknown(
+		BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
+	{
+		return S_FALSE;
 	}
 
 private:

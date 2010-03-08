@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,8 +40,16 @@
 
 #include "swish/interfaces/SftpProvider.h" // ISftpConsumer
 #include "swish/debug.hpp"
+#include "swish/trace.hpp"
 #include "swish/utils.hpp"
 #include "swish/catch_com.hpp"
+
+#include <ssh/knownhost.hpp> // openssh_knownhost_collection
+#include <ssh/session.hpp> // session
+
+#include <comet/bstr.h> // bstr_t;
+
+#include <boost/filesystem.hpp> // path
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
@@ -50,13 +58,24 @@
 
 #include <string>
 
+using swish::tracing::trace;
 using swish::utils::WideStringToUtf8String;
+using swish::utils::home_directory;
+
+using ssh::host_key::hexify;
+using ssh::host_key::host_key;
+using ssh::knownhost::find_result;
+using ssh::knownhost::openssh_knownhost_collection;
+
+using comet::bstr_t;
+
+using boost::filesystem::path;
 
 using ATL::CT2A;
 using ATL::CComBSTR;
 
-using std::string;
 using std::auto_ptr;
+using std::string;
 
 #pragma warning (push)
 #pragma warning (disable: 4267) // ssize_t to unsigned int
@@ -86,7 +105,7 @@ using std::auto_ptr;
 	spSession->Connect(pwszHost, uPort);
 
     // Check the hostkey against our known hosts
-	_VerifyHostKey(*spSession, pConsumer);
+	_VerifyHostKey(pwszHost, *spSession, pConsumer);
 	// Legal to fail here, e.g. user refused to accept host key
 
     // Authenticate the user with the remote server
@@ -98,27 +117,53 @@ using std::auto_ptr;
 	return spSession;
 }
 
+const path known_hosts_path = home_directory<path>() / ".ssh" / "known_hosts";
+
 void CSessionFactory::_VerifyHostKey(
-	CSession& session, ISftpConsumer *pConsumer) throw(...)
+	PCWSTR pwszHost, CSession& session, ISftpConsumer *pConsumer)
 {
-	ATLASSUME(pConsumer); UNREFERENCED_PARAMETER(pConsumer);
+	ATLASSUME(pConsumer);
 
-	TRACE("Verifying host key:");
-	const char *fingerprint = 
-		libssh2_hostkey_hash(session, LIBSSH2_HOSTKEY_HASH_MD5);
-	(void)fingerprint;
-	const char *key_type = 
-		libssh2_session_methods(session, LIBSSH2_METHOD_HOSTKEY);
-	(void)key_type;
+	ssh::session::session sess(session.get());
+
+	bstr_t host = pwszHost;
+	host_key key = sess.hostkey();
+	bstr_t hostkey_algorithm = key.algorithm_name();
+	bstr_t hostkey_hash = hexify(key.md5_hash());
+
+	assert(!hostkey_hash.empty());
+	assert(!hostkey_algorithm.empty());
 	
-	TRACE("Fingerprint (%s)", key_type);
+	trace("host-key fingerprint: %1%\t(%2%)")
+		% hostkey_algorithm % hostkey_hash;
 
-	// TODO: check the key is known here
-	ATLTRACE("\t");
-	for (int i = 0; i < 16; i++) {
-		ATLTRACE("%02X ", (unsigned char)fingerprint[i]);
+	openssh_knownhost_collection hosts(session.get(), known_hosts_path);
+
+	find_result result = hosts.find(host.s_str(), key);
+	if (result.mismatch())
+	{
+		HRESULT hr = pConsumer->OnHostkeyMismatch(
+			host.in(), hostkey_hash.in(), hostkey_algorithm.in());
+		if (hr == S_OK)
+			update(hosts, host, key, result); // update known_hosts
+		else if (hr == S_FALSE)
+			return; // continue but don't add
+		else
+			AtlThrow(E_ABORT); // screech to a halt
 	}
-	ATLTRACE("\n");
+	else if (result.not_found())
+	{
+		HRESULT hr = pConsumer->OnHostkeyUnknown(
+			host.in(), hostkey_hash.in(), hostkey_algorithm.in());
+		if (hr == S_OK)
+			add(hosts, host, key); // add to known_hosts
+		else if (hr == S_FALSE)
+			return; // continue but don't add
+		else
+			AtlThrow(E_ABORT); // screech to a halt
+	}
+
+	hosts.save(known_hosts_path);
 }
 
 /**

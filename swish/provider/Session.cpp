@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ using swish::utils::WideStringToUtf8String;
 
 using boost::asio::ip::tcp;
 using boost::asio::error::host_not_found;
+using boost::shared_ptr;
 using boost::system::system_error;
 using boost::system::error_code;
 using boost::lexical_cast;
@@ -59,11 +60,11 @@ using boost::lexical_cast;
 using std::string;
 
 CSession::CSession() : 
-	m_pSession(NULL), m_io(0), m_socket(m_io), m_pSftpSession(NULL), 
+	m_io(0), m_socket(m_io), m_pSftpSession(NULL), 
 	m_bConnected(false)
 {
 	_CreateSession();
-	ATLASSUME(m_pSession);
+	ATLASSUME(m_session);
 }
 
 CSession::~CSession()
@@ -74,8 +75,8 @@ CSession::~CSession()
 
 CSession::operator LIBSSH2_SESSION*() const
 {
-	ATLASSUME(m_pSession);
-	return m_pSession;
+	ATLASSUME(m_session);
+	return m_session.get();
 }
 
 CSession::operator LIBSSH2_SFTP*() const
@@ -121,7 +122,7 @@ void CSession::Disconnect()
 	if (!m_bConnected)
 		return;
 
-	libssh2_session_disconnect(m_pSession, "Swish says goodbye.");
+	libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
 	m_bConnected = false;
 }
 
@@ -141,8 +142,9 @@ void CSession::StartSftp() throw(...)
 void CSession::_CreateSession() throw(...)
 {
 	// Create a session instance
-	m_pSession = libssh2_session_init();
-	ATLENSURE_THROW( m_pSession, E_FAIL );
+	m_session = shared_ptr<LIBSSH2_SESSION>(
+		libssh2_session_init(), libssh2_session_free);
+	ATLENSURE_THROW( m_session, E_FAIL );
 }
 
 /**
@@ -150,12 +152,10 @@ void CSession::_CreateSession() throw(...)
  */
 void CSession::_DestroySession() throw()
 {
-	ATLASSUME(m_pSession);
-	if (m_pSession)	// dual of libssh2_session_init()
+	ATLASSUME(m_session);
+	if (m_session)
 	{
 		Disconnect();
-		libssh2_session_free(m_pSession);
-		m_pSession = NULL;
 	}
 }
 

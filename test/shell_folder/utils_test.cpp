@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,16 +38,16 @@
 
 #include "test/common_boost/helpers.hpp"
 
+#include <boost/filesystem.hpp> // path, wpath
 #include <boost/test/unit_test.hpp>
 
 #include <string>
 
+using boost::filesystem::path;
+using boost::filesystem::wpath;
+
 using std::string;
 using std::wstring;
-
-namespace { // private
-
-}
 
 BOOST_AUTO_TEST_SUITE(SwishUtils)
 
@@ -121,6 +121,28 @@ BOOST_AUTO_TEST_CASE( get_current_user_a )
 	string name = swish::utils::current_user_a();
 
 	BOOST_REQUIRE_GE(name.size(), string("a").size());
+}
+
+/**
+ * Test getting current user's home directory (ANSI).
+ */
+BOOST_AUTO_TEST_CASE( get_homedir )
+{
+	path home = swish::utils::home_directory<path>();
+
+	BOOST_CHECK(!home.empty());
+	BOOST_CHECK(is_directory(home));
+}
+
+/**
+ * Test getting current user's home directory (Unicode).
+ */
+BOOST_AUTO_TEST_CASE( get_homedir_w )
+{
+	wpath home = swish::utils::home_directory<wpath>();
+
+	BOOST_CHECK(!home.empty());
+	BOOST_CHECK(is_directory(home));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

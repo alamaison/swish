@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ public:
 
 private:
 	static void _VerifyHostKey(
-		CSession& session, __in ISftpConsumer *pConsumer);
+		PCWSTR pwszHost, CSession& session, __in ISftpConsumer *pConsumer);
 
 	static void _AuthenticateUser(
 		const wchar_t* pwszUser, CSession& session, 

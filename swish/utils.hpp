@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp> // basic_path
 #include <boost/system/system_error.hpp>
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -222,6 +223,70 @@ inline WideUserTraits::return_type current_user()
 inline NarrowUserTraits::return_type current_user_a()
 {
 	return detail::current_user<NarrowUserTraits>();
+}
+
+namespace detail {
+
+	inline DWORD get_environment_variable(
+		const char* key, char* buffer, DWORD size)
+	{
+		return ::GetEnvironmentVariableA(key, buffer, size);
+	}
+
+	inline DWORD get_environment_variable(
+		const wchar_t* key, wchar_t* buffer, DWORD size)
+	{
+		return ::GetEnvironmentVariableW(key, buffer, size);
+	}
+}
+
+/**
+ * Fetch string value from an environment variable.
+ * Returns empty string if the variable isn't present in the enviroment.
+ */
+template<typename T>
+inline T environment_variable(const T& key)
+{
+	DWORD len = detail::get_environment_variable(key.c_str(), NULL, 0);
+	if (len == 0)
+		return T();
+
+	std::vector<T::value_type> buf(len);
+	len = detail::get_environment_variable(key.c_str(), &buf[0], buf.size());
+	if (len == 0)
+		BOOST_THROW_EXCEPTION(
+			boost::system::system_error(
+				::GetLastError(), boost::system::system_category));
+
+	return T(buf.begin(), buf.begin() + len);
+}
+
+/**
+ * Find home directory path.
+ *
+ * @throws std::exception if path can't be found.
+ * @todo  Try other means to find directory including NetUserGetInfo.
+ */
+template<typename T>
+inline T home_directory()
+{
+	const T::value_type home_key[] = {'H', 'O', 'M', 'E', '\0'};
+	T home = environment_variable(T::string_type(home_key));
+	if (!home.empty())
+		return home;
+
+	const T::value_type home_drive_key[] =
+		{'H', 'O', 'M', 'E', 'D', 'R', 'I', 'V', 'E', '\0'};
+	const T::value_type home_path_key[] =
+		{'H', 'O', 'M', 'E', 'P', 'A', 'T', 'H', '\0'};
+
+	T home_drive = environment_variable(T::string_type(home_drive_key));
+	T home_path = environment_variable(T::string_type(home_path_key));
+	home = home_drive / home_path;
+	if (home.empty())
+		BOOST_THROW_EXCEPTION(
+			std::exception("Can't find home directory"));
+	return home;
 }
 
 namespace com {

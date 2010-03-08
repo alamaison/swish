@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,9 +32,13 @@
 
 #include <atlsafe.h>              // CComSafeArray
 
+#include <string>
+
 using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
+
+using std::string;
 
 CUserInteraction::CUserInteraction() : m_hwnd(NULL) {}
 
@@ -63,7 +67,6 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 {
 	if (m_hwnd == NULL)
 		return E_FAIL;
-	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	CString strPrompt = bstrRequest;
 	ATLASSERT(strPrompt.GetLength() > 0);
@@ -88,7 +91,6 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 {
 	if (m_hwnd == NULL)
 		return E_FAIL;
-	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	CComSafeArray<BSTR> saPrompts(psaPrompts);
 	CComSafeArray<VARIANT_BOOL> saShowPrompts(psaShowResponses);
@@ -178,7 +180,6 @@ STDMETHODIMP CUserInteraction::OnYesNoCancel(
 {
 	if (m_hwnd == NULL)
 		return E_FAIL;
-	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	// Construct unknown key information message
 	CString strMessage = bstrMessage;
@@ -227,7 +228,6 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
 {
 	if (m_hwnd == NULL)
 		return E_FAIL;
-	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	CString strMessage = _T("The folder already contains a file named '");
 	strMessage += bstrExistingFile;
@@ -257,9 +257,71 @@ STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 {
 	if (m_hwnd == NULL)
 		return E_FAIL;
-	ATLENSURE_RETURN(::IsWindowVisible(m_hwnd));
 
 	::IsolationAwareMessageBox(m_hwnd, CComBSTR(bstrMessage), NULL,
 		MB_OK | MB_ICONERROR);
 	return S_OK;
+}
+
+STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
+	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
+{
+	string message = "WARNING: KEY MISMATCH\n\n"
+		"The host-key provided by " + bstr_t(bstrHostName) + 
+		" doesn't match the key recorded for this server.  This "
+		"could indicate that a third-party is pretending to be "
+		"the computer you are connecting to.  On the other hand, it could "
+		"just mean that the system administrator has changed the key.  "
+		"It is important to check that this is the right key.\n\n"
+		"Key fingerprint:\n     " + bstrHostKeyType + 
+		"  " + bstrHostKey + "\n\n"
+		"To update the record for this host press Yes.\n"
+		"To connect once without updating the recorded key press No.\n"
+		"If you are not sure that it is safe to connect to this host, press "
+		"Cancel now.";
+
+	int rc = ::MessageBoxA(
+		m_hwnd, message.c_str(), "Host-key mismatch",
+		MB_YESNOCANCEL | MB_ICONWARNING);
+	switch (rc)
+	{
+	case IDYES:
+		return S_OK;
+	case IDNO:
+		return S_FALSE;
+	case IDCANCEL:
+	default:
+		return E_ABORT;
+	}
+}
+
+STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
+	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
+{
+	string message = "The host-key provided by " + bstr_t(bstrHostName) + 
+		" hasn't been previously recorded as a known key for that "
+		"server.  It is important to check that this is the right key "
+		"to prevent a third-party from pretending to be "
+		"the server you are connecting to.\n\n"
+		"Key fingerprint:\n     " + bstrHostKeyType + 
+		"  " + bstrHostKey + "\n\n"
+		"To record this as the known key for this server press Yes.\n"
+		"To connect to the server once without recording the key as known "
+		"press No.\n"
+		"If you are not sure that it is safe to connect to this host, press "
+		"Cancel now.";
+
+	int rc = ::MessageBoxA(
+		m_hwnd, message.c_str(), "Unknown host-key",
+		MB_YESNOCANCEL | MB_ICONQUESTION);
+	switch (rc)
+	{
+	case IDYES:
+		return S_OK;
+	case IDNO:
+		return S_FALSE;
+	case IDCANCEL:
+	default:
+		return E_ABORT;
+	}
 }
