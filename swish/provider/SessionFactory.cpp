@@ -145,7 +145,10 @@ void CSessionFactory::_VerifyHostKey(
 		HRESULT hr = pConsumer->OnHostkeyMismatch(
 			host.in(), hostkey_hash.in(), hostkey_algorithm.in());
 		if (hr == S_OK)
+		{
 			update(hosts, host, key, result); // update known_hosts
+			hosts.save(known_hosts_path);
+		}
 		else if (hr == S_FALSE)
 			return; // continue but don't add
 		else
@@ -156,14 +159,15 @@ void CSessionFactory::_VerifyHostKey(
 		HRESULT hr = pConsumer->OnHostkeyUnknown(
 			host.in(), hostkey_hash.in(), hostkey_algorithm.in());
 		if (hr == S_OK)
+		{
 			add(hosts, host, key); // add to known_hosts
+			hosts.save(known_hosts_path);
+		}
 		else if (hr == S_FALSE)
 			return; // continue but don't add
 		else
 			AtlThrow(E_ABORT); // screech to a halt
 	}
-
-	hosts.save(known_hosts_path);
 }
 
 /**
