@@ -30,6 +30,13 @@
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 #include "swish/debug.hpp"
 
+#include <winapi/gui/task_dialog.hpp> // task_dialog
+#include <winapi/gui/message_box.hpp> // message_box
+
+#include <comet/bstr.h> // bstr_t
+
+#include <boost/bind.hpp> // bind
+
 #include <atlsafe.h>              // CComSafeArray
 
 #include <string>
@@ -38,7 +45,12 @@ using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
 
+using namespace winapi::gui;
+
+using comet::bstr_t;
+
 using std::string;
+using std::wstring;
 
 CUserInteraction::CUserInteraction() : m_hwnd(NULL) {}
 
@@ -73,6 +85,7 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 
 	CPasswordDialog dlgPassword;
 	dlgPassword.SetPrompt( strPrompt ); // Pass text through from backend
+	assert(m_hwnd);
 	if (dlgPassword.DoModal(m_hwnd) == IDOK)
 	{
 		CString strPassword;
@@ -263,65 +276,123 @@ STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 	return S_OK;
 }
 
+namespace {
+
+	/** Click handler callback. */
+	HRESULT return_hr(HRESULT hr) { return hr; }
+
+}
+
 STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
 	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
 {
-	string message = "WARNING: KEY MISMATCH\n\n"
-		"The host-key provided by " + bstr_t(bstrHostName) + 
-		" doesn't match the key recorded for this server.  This "
-		"could indicate that a third-party is pretending to be "
-		"the computer you are connecting to.  On the other hand, it could "
-		"just mean that the system administrator has changed the key.  "
-		"It is important to check that this is the right key.\n\n"
-		"Key fingerprint:\n     " + bstrHostKeyType + 
-		"  " + bstrHostKey + "\n\n"
-		"To update the record for this host press Yes.\n"
-		"To connect once without updating the recorded key press No.\n"
-		"If you are not sure that it is safe to connect to this host, press "
-		"Cancel now.";
+	wstring title = L"Mismatched host-key";
+	wstring instruction = L"WARNING: the SSH host-key has changed!";
 
-	int rc = ::MessageBoxA(
-		m_hwnd, message.c_str(), "Host-key mismatch",
-		MB_YESNOCANCEL | MB_ICONWARNING);
-	switch (rc)
+	wstring message = 
+		L"The SSH host-key sent by '" + bstr_t(bstrHostName) + "' to identify "
+		"itself doesn't match the known key for this server.  This "
+		"could mean a third-party is pretending to be the computer you're "
+		"trying to connect to or the system administrator may have just "
+		"changed the key.\n\n"
+		"It is important to check this is the right key fingerprint:\n\n"
+		"        " + bstrHostKeyType + "    " + bstrHostKey;
+	
+	wstring choices = L"\n\n"
+		L"To update the known key for this host click Yes.\n"
+		L"To connect to the server without updating the key click No.\n"
+		L"Click Cancel unless you are sure the key is correct.";
+
+	try
 	{
-	case IDYES:
-		return S_OK;
-	case IDNO:
-		return S_FALSE;
-	case IDCANCEL:
-	default:
-		return E_ABORT;
+		task_dialog::task_dialog<HRESULT> td(
+			m_hwnd, instruction, message, title,
+			winapi::gui::task_dialog::icon_type::warning, true,
+			boost::bind(return_hr, E_ABORT));
+		td.add_button(
+			L"I trust this key: &update and connect\n"
+			L"You won't have to verify this key again unless it changes",
+			boost::bind(return_hr, S_OK));
+		td.add_button(
+			L"I trust this key: &just connect\n"
+			L"You will be warned about this key again next time you connect",
+			boost::bind(return_hr, S_FALSE));
+		td.add_button(
+			L"&Cancel\n"
+			L"Choose this option unless you are sure the key is correct",
+			boost::bind(return_hr, E_ABORT), true);
+		return td.show();
+	}
+	catch (std::exception)
+	{
+		message_box::button_type::type button = message_box::message_box(
+			m_hwnd, instruction + L"\n\n" + message + choices, title,
+			message_box::box_type::yes_no_cancel,
+			message_box::icon_type::warning);
+		switch (button)
+		{
+		case message_box::button_type::yes:
+			return S_OK;
+		case message_box::button_type::no:
+			return S_FALSE;
+		case message_box::button_type::cancel:
+		default:
+			return E_ABORT;
+		}
 	}
 }
+
 
 STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
 	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
 {
-	string message = "The host-key provided by " + bstr_t(bstrHostName) + 
-		" hasn't been previously recorded as a known key for that "
-		"server.  It is important to check that this is the right key "
-		"to prevent a third-party from pretending to be "
-		"the server you are connecting to.\n\n"
-		"Key fingerprint:\n     " + bstrHostKeyType + 
-		"  " + bstrHostKey + "\n\n"
-		"To record this as the known key for this server press Yes.\n"
-		"To connect to the server once without recording the key as known "
-		"press No.\n"
-		"If you are not sure that it is safe to connect to this host, press "
-		"Cancel now.";
+	wstring title = L"Unknown host-key";
+	wstring message = L"The server '" + bstr_t(bstrHostName) + "' has "
+		"identified itself with an SSH host-key whose fingerprint is:\n\n"
+		"        " + bstrHostKeyType + "    " + bstrHostKey + "\n\n"
+		"If you are not expecting this key, a third-party may be pretending "
+		"to be the computer you're trying to connect to.";
 
-	int rc = ::MessageBoxA(
-		m_hwnd, message.c_str(), "Unknown host-key",
-		MB_YESNOCANCEL | MB_ICONQUESTION);
-	switch (rc)
+	try
 	{
-	case IDYES:
-		return S_OK;
-	case IDNO:
-		return S_FALSE;
-	case IDCANCEL:
-	default:
-		return E_ABORT;
+		wstring instruction = L"Verify unknown SSH host-key";
+		task_dialog::task_dialog<HRESULT> td(
+			m_hwnd, instruction, message, title,
+			winapi::gui::task_dialog::icon_type::information, true,
+			boost::bind(return_hr, E_ABORT));
+		td.add_button(
+			L"I trust this key: &store and connect\n"
+			L"You won't have to verify this key again unless it changes",
+			boost::bind(return_hr, S_OK));
+		td.add_button(
+			L"I trust this key: &just connect\n"
+			L"You will be asked to verify the key again next time you connect",
+			boost::bind(return_hr, S_FALSE));
+		td.add_button(
+			L"&Cancel\n"
+			L"Choose this option unless you are sure the key is correct",
+			boost::bind(return_hr, E_ABORT), true);
+		return td.show();
+	}
+	catch (std::exception)
+	{
+		wstring choices = L"\n\n"
+			L"To store this as the known key for this server click Yes.\n"
+			L"To connect to the server without storing the key click No.\n"
+			L"Click Cancel unless you are sure the key is correct.";
+		message_box::button_type::type button = message_box::message_box(
+			m_hwnd, message + choices, title,
+			message_box::box_type::yes_no_cancel,
+			message_box::icon_type::information);
+		switch (button)
+		{
+		case message_box::button_type::yes:
+			return S_OK;
+		case message_box::button_type::no:
+			return S_FALSE;
+		case message_box::button_type::cancel:
+		default:
+			return E_ABORT;
+		}
 	}
 }
