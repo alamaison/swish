@@ -62,7 +62,7 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("644740CC-9490-4243-A4EA-23F2006E626A"),
+	object, uuid("9AFE19BE-CA14-43fd-9454-59E0BE6AE928"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
 	helpstring("ISftpConsumer Interface")
