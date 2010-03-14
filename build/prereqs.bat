@@ -27,18 +27,15 @@ set SEVENZ=..\build\7za\7za.exe
 :: libssh2
 
 echo ===- Dowloading libssh2 ...
-%WGET% "http://www.libssh2.org/download/libssh2-1.2.4.tar.gz" || (
+%WGET% -O libssh2.tar.gz "http://git.stuge.se/?p=libssh2.git;a=snapshot;h=9abf81de97f5496e904eb855170026dd9fd1a4b8;sf=tgz" || (
 	echo ===- Error while trying to download libssh2 & goto error)
-%SEVENZ% x libssh2-1.2.4.tar.gz -aoa || (
+%SEVENZ% x libssh2.tar.gz -aoa || (
 	echo ===- Error while trying to extract libssh2 & goto error)
-%SEVENZ% x libssh2-1.2.4.tar -aoa || (
+%SEVENZ% x libssh2.tar -aoa || (
 	echo ===- Error while trying to extract libssh2 & goto error)
-xcopy /E /Q /Y libssh2-1.2.4 libssh2 || (
-	echo ===- Error while trying to copy libssh2 files & goto error)
-rd /S /Q libssh2-1.2.4 || (
-	echo ===- Error while trying to clean up libssh2 files & goto error)
-del libssh2-1.2.4.tar
-del libssh2-1.2.4.tar.gz
+del pax_global_header
+del libssh2.tar
+del libssh2.tar.gz
 
 :: zlib
 

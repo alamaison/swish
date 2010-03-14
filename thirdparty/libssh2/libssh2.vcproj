@@ -195,6 +195,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\keepalive.c"
+				>
+			</File>
+			<File
 				RelativePath="src\kex.c"
 				>
 			</File>
