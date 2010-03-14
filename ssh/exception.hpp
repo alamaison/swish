@@ -58,17 +58,31 @@ class ssh_error :
 public:
 
 	ssh_error(const char* message, int error_code)
-		: boost::exception(), std::exception(message), m_error_code(error_code)
+		: boost::exception(), std::exception(),
+		  m_message(message), m_error_code(error_code)
 	{
 	}
 
 	ssh_error(const char* message, int len, int error_code)
 		: boost::exception(), std::exception(message, len),
-		  m_error_code(error_code)
+		  m_message(message, len), m_error_code(error_code)
 	{
 	}
 
+	virtual const char* what() const
+	{
+		try
+		{
+			return m_message.c_str();
+		}
+		catch (std::exception&)
+		{
+			return "Unknown SSH error";
+		}
+	}
+
 private:
+	std::string m_message;
 	int m_error_code;
 };
 
