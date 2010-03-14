@@ -52,6 +52,7 @@
 #undef min
 #include <algorithm> // for_each, transform
 #include <cassert> // assert
+#include <iterator> // iterator_traits
 #include <stdexcept> // invalid_argument, logic_error
 #include <string>
 #include <vector>
@@ -277,6 +278,11 @@ public:
 			return k;
 	}
 
+	/**
+	 * Return the optional comment attached to the host entry.
+	 *
+	 * @todo Fetch comment properly once libssh2 API allows it.
+	 */
 	std::string comment() const
 	{
 		std::string k = detail::internal_key(m_pos);
@@ -455,16 +461,6 @@ private:
 	boost::shared_ptr<LIBSSH2_SESSION> m_session;
 	boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
 	libssh2_knownhost* m_pos;
-};
-
-class check_failure : public std::exception
-{
-public:
-	check_failure(const std::string& host, const std::string& key)
-		: m_host(host), m_key(key) {}
-private:
-	std::string m_host;
-	std::string m_key;
 };
 
 /**
@@ -656,12 +652,13 @@ protected:
 	 *               unhashed).
 	 * @param It     InputIterator to range of entries in known_hosts format.
 	 */
-	template<int TYPE, typename It>
-	void load_entries(const It& begin, const It& end)
+	template<int TYPE, typename InputIt>
+	void load_entries(const InputIt& begin, const InputIt& end)
 	{
+		typedef std::iterator_traits<InputIt>::value_type value_t;
+
 		std::for_each(
-			begin, end,
-			detail::read_entry<TYPE, It::value_type>(m_session, m_hosts));
+			begin, end, detail::read_entry<TYPE, value_t>(m_session, m_hosts));
 	}
 
 	/**
@@ -721,16 +718,20 @@ knownhost update(
 
 /**
  * Collection of known-host entries stored in OpenSSH known_hosts format.
+ *
+ * In the absence of changes, entries are written back exactly as they
+ * were read, with the following exceptions:
+ *  - ip,hostname combinations are split onto two lines, ip first
+ *  - tabs in seperators are replaced by a single space
  */
 class openssh_knownhost_collection : public knownhost_collection
 {
 public:
 
 	/** Initialise collection from a range of OpenSSH known_hosts lines. */
-	template<typename It>
+	template<typename InputIt>
 	openssh_knownhost_collection(
-		boost::shared_ptr<LIBSSH2_SESSION> session,
-		const It& begin, const It& end)
+		boost::shared_ptr<LIBSSH2_SESSION> session, InputIt begin, InputIt end)
 		: knownhost_collection(session)
 	{
 		load_entries<LIBSSH2_KNOWNHOST_FILE_OPENSSH>(begin, end);
@@ -752,6 +753,8 @@ public:
 	/**
 	 * Save range of entries to an output iterator in OpenSSH known_hosts
 	 * format.
+	 *
+	 * Entries do @b not end in a newline character.
 	 */
 	template<typename OutputIt>
 	OutputIt save(
@@ -767,7 +770,7 @@ public:
 	{
 		boost::filesystem::ofstream file(filename);
 
-		save_entries<LIBSSH2_KNOWNHOST_FILE_OPENSSH>(
+		save(
 			begin(), end(), std::ostream_iterator<std::string>(file, "\n"));
 	}
 };
