@@ -73,6 +73,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="shell"
+			>
+			<File
+				RelativePath=".\shell\shell.hpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\dynamic_link.hpp"
 			>
