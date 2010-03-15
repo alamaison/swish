@@ -44,12 +44,12 @@ namespace message_box {
 namespace detail {
 	namespace native {
 
-		int message_box(
+		inline int message_box(
 			HWND hwnd, const char* text, const char* caption,
 			unsigned int type)
 		{ return ::MessageBoxA(hwnd, text, caption, type); }
 		
-		int message_box(
+		inline int message_box(
 			HWND hwnd, const wchar_t* text, const wchar_t* caption,
 			unsigned int type)
 		{ return ::MessageBoxW(hwnd, text, caption, type); }
@@ -108,7 +108,7 @@ namespace button_type
 
 namespace detail {
 
-	button_type::type mb_button_to_button_type(int button)
+	inline button_type::type mb_button_to_button_type(int button)
 	{
 		switch(button)
 		{
@@ -144,7 +144,7 @@ namespace detail {
 		}
 	}
 
-	long box_type_to_mb_box(box_type::type type)
+	inline long box_type_to_mb_box(box_type::type type)
 	{
 		switch (type)
 		{
@@ -170,7 +170,51 @@ namespace detail {
 		}
 	}
 
-	long icon_type_to_mb_icon(icon_type::type type)
+	inline unsigned int button_count_from_box_type(box_type::type type)
+	{
+		switch (type)
+		{
+		case box_type::ok:
+			return 1;
+		case box_type::ok_cancel:
+			return 2;
+		case box_type::abort_retry_ignore:
+			return 3;
+#if(WINVER >= 0x0500)
+		case box_type::cancel_try_continue:
+			return 3;
+#endif
+		case box_type::yes_no_cancel:
+			return 3;
+		case box_type::yes_no:
+			return 2;
+		case box_type::retry_cancel:
+			return 2;
+		default:
+			BOOST_THROW_EXCEPTION(
+				std::invalid_argument("Unknown message box type"));
+		}
+	}
+
+	inline unsigned int default_to_mb_default(unsigned int button)
+	{
+		switch (button)
+		{
+		case 1:
+			return MB_DEFBUTTON1;
+		case 2:
+			return MB_DEFBUTTON2;
+		case 3:
+			return MB_DEFBUTTON3;
+		case 4:
+			return MB_DEFBUTTON4;
+		default:
+			BOOST_THROW_EXCEPTION(
+				std::invalid_argument("Impossible default button index"));
+		}
+	}
+
+	inline long icon_type_to_mb_icon(icon_type::type type)
 	{
 		switch (type)
 		{
@@ -194,13 +238,23 @@ namespace detail {
 	inline button_type::type message_box(
 		HWND hwnd, const std::basic_string<T>& message, 
 		const std::basic_string<T>& title, box_type::type box,
-		icon_type::type icon, bool show_help)
+		icon_type::type icon, unsigned int default_button, bool show_help)
 	{
 		unsigned int type = 0;
 		type |= detail::box_type_to_mb_box(box);
 		type |= detail::icon_type_to_mb_icon(icon);
+
+		unsigned int max_default_button = button_count_from_box_type(box);
 		if (show_help)
+		{
 			type |= MB_HELP;
+			max_default_button++;
+		}
+
+		if (default_button > max_default_button)
+			BOOST_THROW_EXCEPTION(
+				std::invalid_argument("Default button out-of-range"));
+		type |= default_to_mb_default(default_button);
 
 		int rc = native::message_box(
 			hwnd, message.c_str(), title.c_str(), type);
@@ -217,39 +271,45 @@ namespace detail {
 /**
  * Display a message to the user.
  *
- * @param hwnd       Handle to the parent window. 
- * @param message    Message text. 
- * @param title      Window title.
- * @param box        Button configuration for this box.
- * @param icon       Type of icon to display or none. 
- * @param show_help	 true to show, false to hide the help button. 
+ * @param hwnd            Handle to the parent window. 
+ * @param message         Message text. 
+ * @param title           Window title.
+ * @param box             Button configuration for this box.
+ * @param icon            Type of icon to display or none. 
+ * @param show_help	      true to show, false to hide the help button.
+ * @param default_button  Index of default button.
  *
  * @returns which button the user clicked.
  */
 inline button_type::type message_box(
 	HWND hwnd, const std::string& message, const std::string& title,
-	box_type::type box, icon_type::type icon, bool show_help=false)
+	box_type::type box, icon_type::type icon,
+	unsigned int default_button=1, bool show_help=false)
 {
-	return detail::message_box(hwnd, message, title, box, icon, show_help);
+	return detail::message_box(
+		hwnd, message, title, box, icon, default_button, show_help);
 }
 
 /**
  * Display a message to the user.
  *
- * @param hwnd       Handle to the parent window. 
- * @param message    Message text. 
- * @param title      Window title.
- * @param box        Button configuration for this box.
- * @param icon       Type of icon to display or none. 
- * @param show_help	 true to show, false to hide the help button. 
+ * @param hwnd            Handle to the parent window. 
+ * @param message         Message text. 
+ * @param title           Window title.
+ * @param box             Button configuration for this box.
+ * @param icon            Type of icon to display or none. 
+ * @param show_help	      true to show, false to hide the help button.
+ * @param default_button  Index of default button.
  *
  * @returns which button the user clicked.
  */
 inline button_type::type message_box(
 	HWND hwnd, const std::wstring& message, const std::wstring& title,
-	box_type::type box, icon_type::type icon, bool show_help=false)
+	box_type::type box, icon_type::type icon,
+	unsigned int default_button=1, bool show_help=false)
 {
-	return detail::message_box(hwnd, message, title, box, icon, show_help);
+	return detail::message_box(
+		hwnd, message, title, box, icon, default_button, show_help);
 }
 
 }}} // namespace winapi::gui::message_box

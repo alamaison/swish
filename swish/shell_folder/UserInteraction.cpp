@@ -328,7 +328,7 @@ STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
 		message_box::button_type::type button = message_box::message_box(
 			m_hwnd, instruction + L"\n\n" + message + choices, title,
 			message_box::box_type::yes_no_cancel,
-			message_box::icon_type::warning);
+			message_box::icon_type::warning, 3);
 		switch (button)
 		{
 		case message_box::button_type::yes:
@@ -383,7 +383,7 @@ STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
 		message_box::button_type::type button = message_box::message_box(
 			m_hwnd, message + choices, title,
 			message_box::box_type::yes_no_cancel,
-			message_box::icon_type::information);
+			message_box::icon_type::information, 3);
 		switch (button)
 		{
 		case message_box::button_type::yes:
