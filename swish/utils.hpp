@@ -36,12 +36,15 @@
 
 #pragma once
 
+#include <winapi/shell/shell.hpp> // known_folder_path
+
+#include <comet/ptr.h> // com_ptr
+
 #include <boost/filesystem.hpp> // basic_path
 #include <boost/system/system_error.hpp>
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
-#include <comet/ptr.h> // com_ptr
 #include <WinNls.h>
 #include <Objbase.h> // GetRunningObjectTable
 
@@ -270,11 +273,25 @@ inline T environment_variable(const T& key)
 template<typename T>
 inline T home_directory()
 {
-	const T::value_type home_key[] = {'H', 'O', 'M', 'E', '\0'};
-	T home = environment_variable(T::string_type(home_key));
+	// try SHGetKnowFolderPath
+	T home = winapi::shell::special_folder_path<T::value_type>(CSIDL_PROFILE);
 	if (!home.empty())
 		return home;
 
+	// fall back to %HOME%
+	const T::value_type home_key[] = {'H', 'O', 'M', 'E', '\0'};
+	home = environment_variable(T::string_type(home_key));
+	if (!home.empty())
+		return home;
+
+	// fall back to %USERPROFILE%
+	const T::value_type userprofile[] =
+		{'U', 'S', 'E', 'R', 'P', 'R', 'O', 'F', 'I', 'L', 'E', '\0'};
+	home = environment_variable(T::string_type(userprofile));
+	if (!home.empty())
+		return home;
+
+	// fall back to %HOMEDRIVE%/%HOMEPATH%
 	const T::value_type home_drive_key[] =
 		{'H', 'O', 'M', 'E', 'D', 'R', 'I', 'V', 'E', '\0'};
 	const T::value_type home_path_key[] =
