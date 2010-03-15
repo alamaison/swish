@@ -50,6 +50,7 @@
 #include <comet/bstr.h> // bstr_t;
 
 #include <boost/filesystem.hpp> // path
+#include <boost/filesystem/fstream.hpp> // ofstream
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
@@ -70,6 +71,7 @@ using ssh::knownhost::openssh_knownhost_collection;
 using comet::bstr_t;
 
 using boost::filesystem::path;
+using boost::filesystem::ofstream;
 
 using ATL::CT2A;
 using ATL::CComBSTR;
@@ -136,6 +138,10 @@ void CSessionFactory::_VerifyHostKey(
 	
 	trace("host-key fingerprint: %1%\t(%2%)")
 		% hostkey_algorithm % hostkey_hash;
+
+	// make sure known_hosts file exists
+	create_directories(known_hosts_path.parent_path());
+	ofstream(known_hosts_path, std::ios::app);
 
 	openssh_knownhost_collection hosts(session.get(), known_hosts_path);
 
