@@ -176,6 +176,19 @@ BOOST_AUTO_TEST_CASE( init_from_hashed_file )
 }
 
 /**
+ * Initialise with a file that doesn't exist.
+ */
+BOOST_AUTO_TEST_CASE( init_fail )
+{
+	path bad_path = "i-dont-exist";
+	BOOST_REQUIRE(!exists(bad_path));
+	BOOST_CHECK_THROW(
+		openssh_knownhost_collection(new_session(), bad_path),
+		std::runtime_error);
+	BOOST_CHECK(!exists(bad_path));
+}
+
+/**
  * Saved file lines should match original except with each entry on its
  * own line.  I.e.:
  *     host3.example.com,192.168.1.1 ssh-dss <key>

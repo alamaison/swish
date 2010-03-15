@@ -42,7 +42,8 @@
 #include "host_key.hpp" // host_key
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
-#include <boost/exception/info.hpp> // errinfo_api_function
+#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
+#include <boost/exception/info.hpp> // errinfo
 #include <boost/filesystem.hpp> // path
 #include <boost/filesystem/fstream.hpp> // path-enabled fstream
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
@@ -744,6 +745,12 @@ public:
 		: knownhost_collection(session)
 	{
 		boost::filesystem::ifstream file(filename);
+		if (!file)
+			BOOST_THROW_EXCEPTION(
+				boost::enable_error_info(
+					std::runtime_error(
+						"Could not read from known-hosts file")) <<
+				boost::errinfo_file_name(filename.external_file_string()));
 
 		load_entries<LIBSSH2_KNOWNHOST_FILE_OPENSSH>(
 			std::istream_iterator<detail::line>(file),
@@ -769,6 +776,12 @@ public:
 	void save(const boost::filesystem::path& filename) const
 	{
 		boost::filesystem::ofstream file(filename);
+		if (!file)
+			BOOST_THROW_EXCEPTION(
+				boost::enable_error_info(
+					std::runtime_error(
+						"Could not write to known-hosts file")) <<
+				boost::errinfo_file_name(filename.external_file_string()));
 
 		save(
 			begin(), end(), std::ostream_iterator<std::string>(file, "\n"));
