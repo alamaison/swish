@@ -4,8 +4,8 @@ import "shobjidl.idl";
 
 [
 	uuid(b816a838-5022-11dc-9153-0090f5284f85),
-	version(0.2),
-	helpstring("Swish 0.2 Type Library")
+	version(0.3),
+	helpstring("Swish 0.3 Type Library")
 ]
 library SwishLib
 {

@@ -3,8 +3,8 @@ import "ocidl.idl";
 
 [
 	uuid(b816a861-5022-11dc-9153-0090f5284f85),
-	version(1.0),
-	helpstring("Provider 1.0 Type Library")
+	version(0.1),
+	helpstring("Provider 0.1 Type Library")
 ]
 library ProviderLib
 {
