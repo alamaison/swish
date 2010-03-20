@@ -19,9 +19,11 @@ Status:
 Supported Operating Systems:
     Windows Vista (most tested)
     Windows XP    (regularly tested)
-    Windows 2000  (regularly tested, no drag-and-drop yet)
-    Windows Me    (rarely tested, no drag-and-drop yet)
-    Windows 98    (regularly tested, no drag-and-drop yet)
+    Windows 2000  (regularly tested)
+    Windows Me    (rarely tested)
+
+    Windows 98 support is on hold for the time being - as of version 0.3.1.0
+    the backend DLL seems to have problem (maybe related to MSVCRT versions).
     
     Unfortunately, Windows 95 and NT 4 are not immediately supported.  This is
     because the C runtime used when compiling with Visual Studio 2005 is
@@ -45,8 +47,8 @@ Requirements to run:
 Requirements to build:
     The easiest way to set everything up is to run the prereqs.bat script from
     the build/ directory.  It will fetch all the dependencies except Visual
-    Studio, the Windows SDK and Boost.  These you must install yourself from the
-    links below.
+    Studio, the Windows SDK, Boost and Wix.  These you must install yourself 
+    from the links below.
     
     Visual C++ 2005
         Express edition is unlikely to work but feel free to try.
@@ -64,6 +66,9 @@ Requirements to build:
         The recommended method is to use the installer from BoostPro Computing:
         http://www.boostpro.com/products/free.  For more information see
         http://www.boost.org.
+    Wix 3 with Votive
+        Not required to build Swish itself but needed if you want to build
+	the installer. http://wix.sourceforge.net/
     
     For the Provider backend:
      - libssh2

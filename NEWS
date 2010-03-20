@@ -1,5 +1,6 @@
 swish-0.3.1.0
 -Added host-key verification.
+-New WIX-based installer
 
 swish-0.3.0.1
 -Added command buttons to add and remove hosts (Windows Vista and above).
