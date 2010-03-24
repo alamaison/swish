@@ -35,6 +35,7 @@
 
 #include <comet/uuid_fwd.h> // uuid_t
 
+#include <boost/locale.hpp> // translate
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert>
@@ -53,6 +54,8 @@ using swish::exception::com_exception;
 using comet::uuid_t;
 using comet::com_ptr;
 using comet::uuidof;
+
+using boost::locale::translate;
 
 using std::wstring;
 
@@ -83,8 +86,8 @@ namespace {
 
 Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
 	Command(
-		L"&Add SFTP Connection", ADD_COMMAND_ID,
-		L"Create a new SFTP connection with Swish.",
+		translate("&Add SFTP Connection"), ADD_COMMAND_ID,
+		translate("Create a new SFTP connection with Swish."),
 		L"shell32.dll,-258"),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
@@ -127,8 +130,8 @@ const
 
 Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
 	Command(
-		L"&Remove SFTP Connection", REMOVE_COMMAND_ID,
-		L"Remove a SFTP connection created with Swish.",
+		translate("&Remove SFTP Connection"), REMOVE_COMMAND_ID,
+		translate("Remove a SFTP connection created with Swish."),
 		L"shell32.dll,-240"),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 

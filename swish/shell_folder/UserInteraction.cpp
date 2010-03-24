@@ -31,12 +31,10 @@
 #include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
 
-#include <winapi/dynamic_link.hpp> // module_path
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 #include <winapi/gui/message_box.hpp> // message_box
 
 #include <boost/bind.hpp> // bind
-#include <boost/filesystem.hpp> // filesystem
 #include <boost/format.hpp> // format
 #include <boost/locale.hpp> // translate
 
@@ -51,11 +49,9 @@ using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
 
-using winapi::module_path;
 using namespace winapi::gui;
 
 using boost::locale::translate;
-using boost::filesystem::path;
 using boost::wformat;
 
 using std::wstringstream;
@@ -64,13 +60,6 @@ using std::wstring;
 
 CUserInteraction::CUserInteraction() : m_hwnd(NULL)
 {
-	boost::locale::generator gen;
-
-	path module_directory = module_path<char>(
-		ATL::_AtlBaseModule.GetModuleInstance()).parent_path();
-	gen.add_messages_path(module_directory.external_directory_string());
-	gen.add_messages_domain("swish");
-	std::locale::global(gen(""));
 }
 
 void CUserInteraction::SetHWND(HWND hwnd)

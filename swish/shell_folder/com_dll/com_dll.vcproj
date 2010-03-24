@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -104,7 +104,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
