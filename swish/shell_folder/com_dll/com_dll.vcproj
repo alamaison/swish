@@ -184,97 +184,15 @@
 				CommandLine=""
 			/>
 		</Configuration>
-		<Configuration
-			Name="PREfast|Win32"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\..\build\boost_client.vsprops"
-			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				ValidateParameters="false"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions="/analyze"
-				Optimization="0"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)..\..\shell_folder\$(ConfigurationName)"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				RegisterOutput="true"
-				IgnoreImportLibrary="true"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;"
-				ModuleDefinitionFile="com_dll.def"
-				MergedIDLBaseFileName="_$(TargetName).idl"
-				SubSystem="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine=""
-			/>
-		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
 			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
+			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
 		/>
 	</References>
 	<Files>
@@ -299,14 +217,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

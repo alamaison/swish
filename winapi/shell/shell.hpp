@@ -28,6 +28,8 @@
 #define WINAPI_SHELL_SHELL_HPP
 #pragma once
 
+#include <winapi/detail/path_traits.hpp> // choose_path
+
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo
 #include <boost/filesystem/path.hpp> // basic_path
@@ -55,19 +57,6 @@ namespace detail {
 	}
 }
 
-template<typename T>
-struct path_traits_chooser;
-
-template<> struct path_traits_chooser<char>
-{
-	typedef boost::filesystem::path_traits trait;
-};
-
-template<> struct path_traits_chooser<wchar_t>
-{
-	typedef boost::filesystem::wpath_traits trait;
-};
-
 /**
  * Common system folder path by CSIDL.
  *
@@ -76,9 +65,8 @@ template<> struct path_traits_chooser<wchar_t>
  *   @code C:\\Users\\Username @endcode
  */
 template<typename T>
-inline boost::filesystem::basic_path<
-	std::basic_string<T>, typename path_traits_chooser<T>::trait>
-special_folder_path(int folder, bool create_if_missing=false)
+inline typename winapi::detail::choose_path<T>::type special_folder_path(
+	int folder, bool create_if_missing=false)
 {
 	std::vector<T> buffer(MAX_PATH);
 	BOOL found = detail::native::special_folder_path(
@@ -92,9 +80,7 @@ special_folder_path(int folder, bool create_if_missing=false)
 
 	buffer[buffer.size() - 1] = T(); // null-terminate
 
-	return boost::filesystem::basic_path<
-		std::basic_string<T>, typename path_traits_chooser<T>::trait>(
-		&buffer[0]);
+	return typename winapi::detail::choose_path<T>::type(&buffer[0]);
 }
 
 }} // namespace winapi::shell

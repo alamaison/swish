@@ -116,26 +116,9 @@ public:
 		return S_OK;
 	}
 
-	IFACEMETHODIMP OnYesNoCancel(
-		__in BSTR /*bstrMessage*/, __in_opt BSTR /*bstrYesInfo*/, 
-		__in_opt BSTR /*bstrNoInfo*/, __in_opt BSTR /*bstrCancelInfo*/,
-		__in BSTR /*bstrTitle*/, __out int * /*piResult*/)
-	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
-		return E_NOTIMPL;
-	}
-
 	IFACEMETHODIMP OnConfirmOverwrite(
 		__in BSTR /*bstrOldFile*/,
 		__in BSTR /*bstrNewFile*/)
-	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
-		return E_NOTIMPL;
-	}
-
-	IFACEMETHODIMP OnConfirmOverwriteEx(
-		__in Listing /*ltOldFile*/,
-		__in Listing /*ltNewFile*/)
 	{
 		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;

@@ -67,21 +67,9 @@ public:
 	IFACEMETHODIMP OnPublicKeyFileRequest(
 		__out BSTR *pbstrPublicKeyFile
 	);
-	IFACEMETHODIMP OnYesNoCancel(
-		__in BSTR bstrMessage,
-		__in_opt BSTR bstrYesInfo,
-		__in_opt BSTR bstrNoInfo,
-		__in_opt BSTR bstrCancelInfo,
-		__in_opt BSTR bstrTitle,
-		__out int *piResult
-	);
 	IFACEMETHODIMP OnConfirmOverwrite(
 		__in BSTR bstrOldFile,
-		__in BSTR bstrExistingFile
-	);
-	IFACEMETHODIMP OnConfirmOverwriteEx(
-		__in Listing ltOldFile,
-		__in Listing ltExistingFile
+		__in BSTR bstrNewFile
 	);
 	IFACEMETHODIMP OnReportError(
 		__in BSTR bstrMessage

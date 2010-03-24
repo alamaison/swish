@@ -62,7 +62,7 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("9AFE19BE-CA14-43fd-9454-59E0BE6AE928"),
+	object, uuid("F01E103A-6C4B-4f70-9FC7-6E79B2A3F99F"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
 	helpstring("ISftpConsumer Interface")
@@ -86,21 +86,9 @@ interface ISftpConsumer : IUnknown
 	HRESULT OnPublicKeyFileRequest(
 		[out]         BSTR *pbstrPublicKeyFile
 	);
-	HRESULT OnYesNoCancel(
-		[in]          BSTR bstrMessage,
-		[in]          BSTR bstrYesInfo,
-		[in]          BSTR bstrNoInfo,
-		[in]          BSTR bstrCancelInfo,
-		[in]          BSTR bstrTitle,
-		[out, retval] int *pnResult
-	);
 	HRESULT OnConfirmOverwrite(
 		[in]          BSTR bstrOldFile,
-		[in]          BSTR bstrExistingFile
-	);
-	HRESULT OnConfirmOverwriteEx(
-		[in]          struct Listing ltOldFile,
-		[in]          struct Listing ltExistingFile
+		[in]          BSTR bstrNewFile
 	);
 	HRESULT OnReportError(
 		[in]          BSTR bstrMessage

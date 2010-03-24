@@ -73,18 +73,8 @@ END_COM_MAP()
 	} KeyboardInteractiveBehaviour;
 
 	/**
-	 * Possible behaviours of mock Yes/No/Cancel handler OnYesNoCancel.
-	 */
-	typedef enum tagYesNoCancelBehaviour {
-		Yes,     ///< Return yes (1)
-		No,      ///< Return no (0)
-		Cancel,  ///< Return cancel (-1)
-		ThrowYNC ///< Throw exception if OnYesNoCancel called
-	} YesNoCancelBehaviour;
-
-	/**
 	 * Possible behaviours of file overwrite confirmation handlers
-	 * OnConfirmOverwrite and OnConfirmOverwriteEx.
+	 * OnConfirmOverwrite.
 	 */
 	typedef enum tagConfirmOverwriteBehaviour {
 		AllowOverwrite,         ///< Return S_OK
@@ -110,7 +100,6 @@ private:
 	UINT m_cKbdAttempts;    ///< Number of kbd-interactive requests so far
 	UINT m_nMaxKbdAttempts; ///< Max kbd-interactive requests before auto-fail
 	KeyboardInteractiveBehaviour m_enumKeyboardInteractiveBehaviour;
-	YesNoCancelBehaviour m_enumYesNoCancelBehaviour;
 	ConfirmOverwriteBehaviour m_enumConfirmOverwriteBehaviour;
 	ReportErrorBehaviour m_enumReportErrorBehaviour;
 
@@ -121,7 +110,6 @@ public:
 		m_cKbdAttempts(0), m_nMaxKbdAttempts(1),
 		m_enumPasswordBehaviour(ThrowPassword),
 		m_enumKeyboardInteractiveBehaviour(ThrowResponse),
-		m_enumYesNoCancelBehaviour(ThrowYNC),
 		m_enumConfirmOverwriteBehaviour(ThrowOverwrite),
 		m_enumReportErrorBehaviour(ThrowReport) {}
 
@@ -131,7 +119,6 @@ public:
 		KeyboardInteractiveBehaviour enumBehaviour );
 	void SetMaxPasswordAttempts( UINT nAttempts );
 	void SetMaxKeyboardAttempts( UINT nAttempts );
-	void SetYesNoCancelBehaviour( YesNoCancelBehaviour enumBehaviour );
 	void SetConfirmOverwriteBehaviour( 
 		ConfirmOverwriteBehaviour enumBehaviour );
 	void SetReportErrorBehaviour( ReportErrorBehaviour enumBehaviour );
@@ -152,18 +139,9 @@ public:
 	IFACEMETHODIMP OnPublicKeyFileRequest(
 		__out BSTR *pbstrPublicKeyFile
 	);
-	IFACEMETHODIMP OnYesNoCancel(
-		__in BSTR bstrMessage, __in_opt BSTR bstrYesInfo, 
-		__in_opt BSTR bstrNoInfo, __in_opt BSTR bstrCancelInfo,
-		__in BSTR bstrTitle, __out int *piResult
-	);
 	IFACEMETHODIMP OnConfirmOverwrite(
 		__in BSTR bstrOldFile,
 		__in BSTR bstrNewFile
-	);
-	IFACEMETHODIMP OnConfirmOverwriteEx(
-		__in Listing ltOldFile,
-		__in Listing ltNewFile
 	);
 	IFACEMETHODIMP OnReportError(
 		__in BSTR bstrMessage

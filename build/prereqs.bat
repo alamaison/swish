@@ -81,6 +81,30 @@ rd /S /Q swish_comet || (
 	echo ===- Error while trying to clean up comet files & goto error)
 del 98baa6c53f89.zip
 
+:: Boost.Locale
+
+echo.
+echo ===- Dowloading Boost.Locale ...
+%WGET% -O boost_locale.zip "http://downloads.sourceforge.net/project/cppcms/boost_locale/boost_locale-svn_r1112.zip" || (
+	echo ===- Error while trying to download Boost.Locale & goto error)
+%SEVENZ% x boost_locale.zip -aoa || (
+	echo ===- Error while trying to extract Boost.Locale & goto error)
+xcopy /E /Q /Y boost_locale-svn_r1112 boost.locale || (
+	echo ===- Error while trying to copy Boost.Locale files & goto error)
+rd /S /Q boost_locale-svn_r1112 || (
+	echo ===- Error while trying to clean up Boost.Locale files & goto error)
+del boost_locale.zip
+
+:: ICU
+
+echo.
+echo ===- Downloading ICU ...
+%WGET% -O icu.zip "http://download.icu-project.org/files/icu4c/4.2.1/icu4c-4_2_1-Win32-msvc9.zip" || (
+	echo ===- Error while trying to download ICU. & goto error)
+%SEVENZ% x icu.zip -aoa || (
+	echo ===- Error while trying to extract ICU. & goto error)
+del icu.zip
+
 echo.
 echo ===- All build prerequisites successfully created.
 echo.

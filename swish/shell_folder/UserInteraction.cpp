@@ -28,31 +28,50 @@
 
 #include "PasswordDialog.h"       // Password dialog box
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
+#include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
 
+#include <winapi/dynamic_link.hpp> // module_path
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 #include <winapi/gui/message_box.hpp> // message_box
 
-#include <comet/bstr.h> // bstr_t
-
 #include <boost/bind.hpp> // bind
+#include <boost/filesystem.hpp> // filesystem
+#include <boost/format.hpp> // format
+#include <boost/locale.hpp> // translate
 
-#include <atlsafe.h>              // CComSafeArray
+#include <atlsafe.h> // CComSafeArray
+#include <atlcore.h> // _AtlBaseModule
 
+#include <cassert> // assert
+#include <sstream> // wstringstream
 #include <string>
 
 using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
 
+using winapi::module_path;
 using namespace winapi::gui;
 
-using comet::bstr_t;
+using boost::locale::translate;
+using boost::filesystem::path;
+using boost::wformat;
 
+using std::wstringstream;
 using std::string;
 using std::wstring;
 
-CUserInteraction::CUserInteraction() : m_hwnd(NULL) {}
+CUserInteraction::CUserInteraction() : m_hwnd(NULL)
+{
+	boost::locale::generator gen;
+
+	path module_directory = module_path<char>(
+		ATL::_AtlBaseModule.GetModuleInstance()).parent_path();
+	gen.add_messages_path(module_directory.external_directory_string());
+	gen.add_messages_domain("swish");
+	std::locale::global(gen(""));
+}
 
 void CUserInteraction::SetHWND(HWND hwnd)
 {
@@ -173,98 +192,52 @@ STDMETHODIMP CUserInteraction::OnPublicKeyFileRequest(
 	return E_NOTIMPL;
 }
 
-/**
- * Display Yes/No/Cancel dialog to the user with given message.
- *
- * @param [in]  bstrMessage    The prompt to display to the user.
- * @param [in]  bstrYesInfo    The explanation of the Yes option.
- * @param [in]  bstrNoInfo     The explanation of the No option.
- * @param [in]  bstrCancelInfo The explanation of the Cancel option.
- * @param [in]  bstrTitle      The title of the dialog.
- * @param [out] pnResult       The user's choice.
- *
- * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
- *         forbidden and S_OK otherwise.
-*/
-STDMETHODIMP CUserInteraction::OnYesNoCancel(
-	BSTR bstrMessage, BSTR bstrYesInfo, BSTR bstrNoInfo, BSTR bstrCancelInfo,
-	BSTR bstrTitle, int *pnResult
-)
+namespace {
+
+HRESULT on_confirm_overwrite(
+	const wstring& old_file, const wstring& new_file, HWND hwnd)
 {
-	if (m_hwnd == NULL)
+	assert(hwnd);
+	if (!hwnd)
 		return E_FAIL;
 
-	// Construct unknown key information message
-	CString strMessage = bstrMessage;
-	CString strTitle = bstrTitle;
-	if (bstrYesInfo && ::SysStringLen(bstrYesInfo) > 0)
-	{
-		strMessage += _T("\r\n");
-		strMessage += bstrYesInfo;
-	}
-	if (bstrNoInfo && ::SysStringLen(bstrNoInfo) > 0)
-	{
-		strMessage += _T("\r\n");
-		strMessage += bstrNoInfo;
-	}
-	if (bstrCancelInfo && ::SysStringLen(bstrCancelInfo) > 0)
-	{
-		strMessage += _T("\r\n");
-		strMessage += bstrCancelInfo;
-	}
+	wstringstream message;
+	
+	message << wformat(
+		translate("The folder already contains a file named '%1%'"))
+		% old_file;
+	message << L"\n\n";
+	message << wformat(
+		translate(
+			"Would you like to replace the existing file\n\n\t%1%\n\n"
+			"with this one?\n\n\t%2%")) % old_file % new_file;
 
-	// Display message box
-	int msgboxID = ::MessageBox(
-		NULL, strMessage, strTitle, 
-		MB_ICONWARNING | MB_YESNOCANCEL | MB_DEFBUTTON3 );
+	message_box::button_type::type button_clicked = message_box::message_box(
+		hwnd, message.str(), translate("File already exists"),
+		message_box::box_type::yes_no, message_box::icon_type::question, 2);
 
-	// Process user choice
-	switch (msgboxID)
+	switch (button_clicked)
 	{
-	case IDYES:
-		*pnResult = 1; return S_OK;
-	case IDNO:
-		*pnResult = 0; return S_OK;
-	case IDCANCEL:
-		*pnResult = -1; return E_ABORT;
+	case message_box::button_type::yes:
+		return S_OK;
+	case message_box::button_type::no:
 	default:
-		*pnResult = -2;
-		UNREACHABLE;
+		return E_ABORT;
 	}
-
-	return E_ABORT;
 }
 
+}
 
 STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
-	BSTR bstrOldFile, BSTR bstrExistingFile )
+	BSTR bstrOldFile, BSTR bstrNewFile )
 {
-	if (m_hwnd == NULL)
-		return E_FAIL;
-
-	CString strMessage = _T("The folder already contains a file named '");
-	strMessage += bstrExistingFile;
-	strMessage += _T("'\r\n\r\nWould you like to replace the existing ");
-	strMessage += _T("file\r\n\r\n\t");
-	strMessage += bstrExistingFile;
-	strMessage += _T("\r\n\r\nwith this one?\r\n\r\n\t");
-	strMessage += bstrOldFile;
-
-	int ret = ::IsolationAwareMessageBox(m_hwnd, strMessage, NULL, 
-		MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2);
-
-	if (ret == IDYES)
-		return S_OK;
-	else
-		return E_ABORT;
+	try
+	{
+		return on_confirm_overwrite(bstrOldFile, bstrNewFile, m_hwnd);
+	}
+	catchCom()
 }
 
-STDMETHODIMP CUserInteraction::OnConfirmOverwriteEx(
-	Listing /*ltOldFile*/, Listing /*ltExistingFile*/ )
-{
-	// Add your function implementation here.
-	return E_NOTIMPL;
-}
 
 STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 {
@@ -278,56 +251,70 @@ STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
 
 namespace {
 
-	/** Click handler callback. */
-	HRESULT return_hr(HRESULT hr) { return hr; }
+/** Click handler callback. */
+HRESULT return_hr(HRESULT hr) { return hr; }
 
-}
-
-STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
-	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
+HRESULT on_hostkey_mismatch(
+	const wstring& host, const wstring& key, const wstring& key_type,
+	HWND hwnd)
 {
-	wstring title = L"Mismatched host-key";
-	wstring instruction = L"WARNING: the SSH host-key has changed!";
+	wstring title = translate("Mismatched host-key");
+	wstring instruction = translate("WARNING: the SSH host-key has changed!");
 
-	wstring message = 
-		L"The SSH host-key sent by '" + bstr_t(bstrHostName) + "' to identify "
-		"itself doesn't match the known key for this server.  This "
-		"could mean a third-party is pretending to be the computer you're "
-		"trying to connect to or the system administrator may have just "
-		"changed the key.\n\n"
-		"It is important to check this is the right key fingerprint:\n\n"
-		"        " + bstrHostKeyType + "    " + bstrHostKey;
+	wstringstream message;
 	
-	wstring choices = L"\n\n"
-		L"To update the known key for this host click Yes.\n"
-		L"To connect to the server without updating the key click No.\n"
-		L"Click Cancel unless you are sure the key is correct.";
+	message << wformat(
+		translate(
+			"The SSH host-key sent by '%1%' to identify itself doesn't match "
+			"the known key for this server.  This could mean a third-party "
+			"is pretending to be the computer you're trying to connect to "
+			"or the system administrator may have just changed the key."))
+		% host;
+	message << L"\n\n";
+	message << translate(
+		"It is important to check this is the right key fingerprint:");
+	message << wformat(L"\n\n        %1%    %2%") % key_type % key;
 
 	try
 	{
 		task_dialog::task_dialog<HRESULT> td(
-			m_hwnd, instruction, message, title,
+			hwnd, instruction, message.str(), title,
 			winapi::gui::task_dialog::icon_type::warning, true,
 			boost::bind(return_hr, E_ABORT));
 		td.add_button(
-			L"I trust this key: &update and connect\n"
-			L"You won't have to verify this key again unless it changes",
+			translate(
+				"I trust this key: &update and connect\n"
+				"You won't have to verify this key again unless it changes"),
 			boost::bind(return_hr, S_OK));
 		td.add_button(
-			L"I trust this key: &just connect\n"
-			L"You will be warned about this key again next time you connect",
+			translate(
+				"I trust this key: &just connect\n"
+				"You will be warned about this key again next time you "
+				"connect"),
 			boost::bind(return_hr, S_FALSE));
 		td.add_button(
-			L"&Cancel\n"
-			L"Choose this option unless you are sure the key is correct",
+			translate(
+				"&Cancel\n"
+				"Choose this option unless you are sure the key is correct"),
 			boost::bind(return_hr, E_ABORT), true);
 		return td.show();
 	}
 	catch (std::exception)
 	{
+		wformat choices(L"\n\n%1%\n%2%\n%3%");
+		choices
+			% translate(
+				"To update the known key for this host click Yes.")
+			% translate(
+				"To connect to the server without updating the key click No.")
+			% translate(
+				"Click Cancel unless you are sure the key is correct.");
+
+		wstring text = (wformat(L"%1%\n\n%2%%3%")
+			% instruction % message % choices).str();
+
 		message_box::button_type::type button = message_box::message_box(
-			m_hwnd, instruction + L"\n\n" + message + choices, title,
-			message_box::box_type::yes_no_cancel,
+			hwnd, text, title, message_box::box_type::yes_no_cancel,
 			message_box::icon_type::warning, 3);
 		switch (button)
 		{
@@ -342,46 +329,60 @@ STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
 	}
 }
 
-
-STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
-	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
+HRESULT on_hostkey_unknown(
+	const wstring& host, const wstring& key, const wstring& key_type,
+	HWND hwnd)
 {
-	wstring title = L"Unknown host-key";
-	wstring message = L"The server '" + bstr_t(bstrHostName) + "' has "
-		"identified itself with an SSH host-key whose fingerprint is:\n\n"
-		"        " + bstrHostKeyType + "    " + bstrHostKey + "\n\n"
+	wstring title = translate("Unknown host-key");
+
+	wstringstream message;
+	
+	message << wformat(
+		translate(
+			"The server '%1%' has identified itself with an SSH host-key "
+			"whose fingerprint is:")) % host;
+	message << wformat(L"\n\n        %1%    %2%\n\n") % key_type % key;
+	message << translate(
 		"If you are not expecting this key, a third-party may be pretending "
-		"to be the computer you're trying to connect to.";
+		"to be the computer you're trying to connect to.");
 
 	try
 	{
-		wstring instruction = L"Verify unknown SSH host-key";
+		wstring instruction = translate("Verify unknown SSH host-key");
 		task_dialog::task_dialog<HRESULT> td(
-			m_hwnd, instruction, message, title,
+			hwnd, instruction, message.str(), title,
 			winapi::gui::task_dialog::icon_type::information, true,
 			boost::bind(return_hr, E_ABORT));
 		td.add_button(
-			L"I trust this key: &store and connect\n"
-			L"You won't have to verify this key again unless it changes",
+			translate(
+				"I trust this key: &store and connect\n"
+				"You won't have to verify this key again unless it changes"),
 			boost::bind(return_hr, S_OK));
 		td.add_button(
-			L"I trust this key: &just connect\n"
-			L"You will be asked to verify the key again next time you connect",
+			translate(
+				"I trust this key: &just connect\n"
+				"You will be asked to verify the key again next time you "
+				"connect"),
 			boost::bind(return_hr, S_FALSE));
 		td.add_button(
-			L"&Cancel\n"
-			L"Choose this option unless you are sure the key is correct",
+			translate(
+				"&Cancel\n"
+				"Choose this option unless you are sure the key is correct"),
 			boost::bind(return_hr, E_ABORT), true);
 		return td.show();
 	}
 	catch (std::exception)
 	{
-		wstring choices = L"\n\n"
-			L"To store this as the known key for this server click Yes.\n"
-			L"To connect to the server without storing the key click No.\n"
-			L"Click Cancel unless you are sure the key is correct.";
+		wformat choices(L"\n\n%1%\n%2%\n%3%");
+		choices
+			% translate(
+				"To store this as the known key for this server click Yes.")
+			% translate(
+				"To connect to the server without storing the key click No.")
+			% translate(
+				"Click Cancel unless you are sure the key is correct.");
 		message_box::button_type::type button = message_box::message_box(
-			m_hwnd, message + choices, title,
+			hwnd, message.str() + choices.str(), title,
 			message_box::box_type::yes_no_cancel,
 			message_box::icon_type::information, 3);
 		switch (button)
@@ -395,4 +396,27 @@ STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
 			return E_ABORT;
 		}
 	}
+}
+}
+
+STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
+	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
+{
+	try
+	{
+		return on_hostkey_mismatch(
+			bstrHostName, bstrHostKey, bstrHostKeyType, m_hwnd);
+	}
+	catchCom()
+}
+
+STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
+	BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
+{
+	try
+	{
+		return on_hostkey_unknown(
+			bstrHostName, bstrHostKey, bstrHostKeyType, m_hwnd);
+	}
+	catchCom()
 }

@@ -218,24 +218,6 @@ STDMETHODIMP CMockSftpProvider::Rename(
 			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
 
-	case ConfirmOverwriteEx:
-		{
-		// TODO: Lookup Listing from collection we returned in GetListing()
-		Listing ltOld = {
-			bstrFromPath, 0666, CComBSTR("mockowner"), 
-			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
-		};
-		Listing ltExisting =  {
-			bstrToPath, 0666, CComBSTR("mockowner"), 
-			CComBSTR("mockgroup"), 1001, 1002, 1024, 12, COleDateTime()
-		};
-
-		hr = pConsumer->OnConfirmOverwriteEx(ltOld, ltExisting);
-		if (SUCCEEDED(hr))
-			*fWasTargetOverwritten = VARIANT_TRUE;
-		return hr;
-		}
-
 	case ReportError:
 		hr = pConsumer->OnReportError(
 			CComBSTR("Mock error message \"CMockSftpProvider::Rename\"")

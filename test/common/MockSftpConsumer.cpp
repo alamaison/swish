@@ -38,12 +38,6 @@ void CMockSftpConsumer::SetMaxKeyboardAttempts( UINT nAttempts )
 	m_nMaxKbdAttempts = nAttempts;
 }
 
-void CMockSftpConsumer::SetYesNoCancelBehaviour(
-	YesNoCancelBehaviour enumBehaviour )
-{
-	m_enumYesNoCancelBehaviour = enumBehaviour;
-}
-
 void CMockSftpConsumer::SetConfirmOverwriteBehaviour(
 	ConfirmOverwriteBehaviour enumBehaviour )
 {
@@ -196,40 +190,6 @@ STDMETHODIMP CMockSftpConsumer::OnPublicKeyFileRequest(
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP CMockSftpConsumer::OnYesNoCancel(
-	BSTR bstrMessage, BSTR bstrYesInfo, 
-	BSTR bstrNoInfo, BSTR bstrCancelInfo,
-	BSTR bstrTitle, int *piResult )
-{
-	UNREFERENCED_PARAMETER( bstrYesInfo );
-	UNREFERENCED_PARAMETER( bstrNoInfo );
-	UNREFERENCED_PARAMETER( bstrCancelInfo );
-	UNREFERENCED_PARAMETER( bstrTitle );
-
-	CPPUNIT_ASSERT( CComBSTR(bstrMessage).Length() > 0 );
-	CPPUNIT_ASSERT( piResult );
-
-	// Perform chosen test behaviour
-	switch (m_enumYesNoCancelBehaviour)
-	{
-	case Yes:
-		*piResult = 1;
-		return S_OK;
-	case No:
-		*piResult = 0;
-		return S_OK;
-	case Cancel:
-		*piResult = -1;
-		return E_ABORT;
-	case ThrowYNC:
-		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
-		return E_FAIL;
-	default:
-		CPPUNIT_FAIL("Unreachable: Unrecognised OnYesNoCancel() behaviour");
-		return E_UNEXPECTED;
-	}
-}
-
 STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
 	BSTR bstrOldFile, BSTR bstrNewFile )
 {
@@ -251,31 +211,6 @@ STDMETHODIMP CMockSftpConsumer::OnConfirmOverwrite(
 	default:
 		CPPUNIT_FAIL("Unreachable: Unrecognised "
 			"OnConfirmOverwrite() behaviour");
-		return E_UNEXPECTED;
-	}
-}
-
-STDMETHODIMP CMockSftpConsumer::OnConfirmOverwriteEx(
-	Listing ltOldFile, Listing ltNewFile )
-{
-	CPPUNIT_ASSERT( CComBSTR(ltOldFile.bstrFilename).Length() > 0 );
-	CPPUNIT_ASSERT( CComBSTR(ltNewFile.bstrFilename).Length() > 0 );
-
-	// Perform chosen test behaviour
-	switch (m_enumConfirmOverwriteBehaviour)
-	{
-	case AllowOverwrite:
-		return S_OK;
-	case PreventOverwrite:
-		return E_ABORT;
-	case PreventOverwriteSFalse:
-		return S_FALSE;
-	case ThrowOverwrite:
-		CPPUNIT_FAIL("Unexpected call to " __FUNCTION__);
-		return E_FAIL;
-	default:
-		CPPUNIT_FAIL("Unreachable: Unrecognised "
-			"OnConfirmOverwriteEx() behaviour");
 		return E_UNEXPECTED;
 	}
 }

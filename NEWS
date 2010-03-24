@@ -1,3 +1,6 @@
+swish-0.3.2.0
+-Internationalisation (English, Dutch)
+
 swish-0.3.1.0
 -Added host-key verification.
 -New WIX-based installer

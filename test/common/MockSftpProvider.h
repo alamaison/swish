@@ -50,8 +50,6 @@ public:
 		RenameOK,           ///< Return S_OK - rename unconditionally succeeded.
 		ConfirmOverwrite,   ///< Call ISftpConsumer's OnConfirmOverwrite and
 		                    ///< return its return value.
-		ConfirmOverwriteEx, ///< Call ISftpConsumer's OnConfirmOverwriteEx and
-		                    ///< return its return value.
 		ReportError,        ///< Call ISftpConsumer's OnReportError and return
 		                    ///< E_FAIL.
 		AbortRename,        ///< Return E_ABORT.

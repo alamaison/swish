@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -91,7 +91,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -121,79 +121,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_LIB"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(IntDir)"
-				ResourceOutputFileName="$(OutDir)/$(InputName).res"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				AdditionalOptions="/IGNORE:4221"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="PREfast|Win32"
-			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\swish.vsprops;..\..\build\boost_client.vsprops"
-			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(IntDir)/Swish.tlb"
-				HeaderFileName="Swish.h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="Swish_i.c"
-				ProxyFileName="Swish_p.c"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions="/analyze"
-				Optimization="0"
-				PreprocessorDefinitions="NDEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -232,6 +159,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
+			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -295,14 +226,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -392,14 +315,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						AdditionalDependencies="HostFolder.rgs"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -544,14 +459,6 @@
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
-					<FileConfiguration
-						Name="PREfast|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\properties\Mode.cpp"
@@ -566,14 +473,6 @@
 					</FileConfiguration>
 					<FileConfiguration
 						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="PREfast|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -610,14 +509,6 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Swish.h"
@@ -636,14 +527,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="PREfast|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

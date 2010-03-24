@@ -71,6 +71,53 @@ BOOST_AUTO_TEST_CASE( load_library_fail_w )
 }
 
 /**
+ * module_handle<char> returns hinstance
+ */
+BOOST_AUTO_TEST_CASE( module_handle )
+{
+	HMODULE hinst = winapi::module_handle("kernel32.dll");
+	BOOST_CHECK(hinst);
+}
+
+/**
+ * module_handle<wchar_t> returns hinstance
+ */
+BOOST_AUTO_TEST_CASE( module_handle_w )
+{
+	HMODULE hinst = winapi::module_handle(L"kernel32.dll");
+	BOOST_CHECK(hinst);
+}
+
+/**
+ * module_handle on unknown DLL should throw.
+ */
+BOOST_AUTO_TEST_CASE( module_handle_fail )
+{
+	BOOST_CHECK_THROW(
+		winapi::module_handle("idontexist.dll"),
+		boost::system::system_error);
+}
+
+/**
+ * module_handle on unknown DLL should throw.
+ */
+BOOST_AUTO_TEST_CASE( module_handle_fail_w )
+{
+	BOOST_CHECK_THROW(
+		winapi::module_handle(L"idontexist.dll"),
+		boost::system::system_error);
+}
+
+/**
+ * Current module handle must always succeed.
+ */
+BOOST_AUTO_TEST_CASE( current_module_handle )
+{
+	HMODULE hinst = winapi::module_handle();
+	BOOST_CHECK(hinst);
+}
+
+/**
  * Call known function using dynamic binding.
  */
 BOOST_AUTO_TEST_CASE( proc_address )

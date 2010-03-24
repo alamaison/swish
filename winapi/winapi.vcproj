@@ -81,6 +81,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="detail"
+			>
+			<File
+				RelativePath=".\detail\path_traits.hpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\dynamic_link.hpp"
 			>

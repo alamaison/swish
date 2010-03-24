@@ -462,8 +462,8 @@ STDMETHODIMP CProvider::GetFile(
  * directory) and may be dangerous.
  *
  * If a file or folder already exists at the target path, @a bstrToPath, 
- * we inform the front-end consumer through a call to OnConfirmOverwrite or
- * OnConfirmOverwriteEx.  If confirmation is given, we attempt to overwrite the
+ * we inform the front-end consumer through a call to OnConfirmOverwrite.
+ * If confirmation is given, we attempt to overwrite the
  * obstruction with the source path, @a bstrFromPath, and if successful we
  * @c VARIANT_TRUE in @a pfWasTargetOverwritten.  This can be used by the 
  * caller to decide whether or not to update a directory view.
@@ -595,8 +595,6 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
 
 	if (uPreviousError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
 	{
-		// TODO: use OnConfirmOverwriteEx for extra details.
-		// fill this here: Listing ltOldfile, Listing ltNewfile
 		hr = pConsumer->OnConfirmOverwrite(CComBSTR(szFrom), CComBSTR(szTo));
 		if (FAILED(hr))
 			return E_ABORT; // User disallowed overwrite
@@ -620,9 +618,6 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
 		if (!libssh2_sftp_stat(*m_session, szTo, &attrsTarget))
 		{
 			// File already exists
-
-			// TODO: use OnConfirmOverwriteEx for extra details.
-			// fill this here: Listing ltOldfile, Listing ltNewfile
 			hr = pConsumer->OnConfirmOverwrite(
 				CComBSTR(szFrom), CComBSTR(szTo));
 			if (FAILED(hr))

@@ -1,0 +1,122 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish 0.3.2.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-03-23 14:37-0000\n"
+"PO-Revision-Date: 2010-03-23 20:49-0000\n"
+"Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
+"Language-Team:  <swish@lammy.co.uk>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: translate\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: swish\n"
+
+#: swish/shell_folder/UserInteraction.cpp:225
+#, boost-format
+msgid "The folder already contains a file named '%1%'"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:230
+#, boost-format
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:234
+msgid "File already exists"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:279
+msgid "Mismatched host-key"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:280
+msgid "WARNING: the SSH host-key has changed!"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:286
+#, boost-format
+msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:293
+msgid "It is important to check this is the right key fingerprint:"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:304
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:315
+#: swish/shell_folder/UserInteraction.cpp:387
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:325
+msgid "To update the known key for this host click Yes."
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:327
+msgid "To connect to the server without updating the key click No."
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:329
+#: swish/shell_folder/UserInteraction.cpp:401
+msgid "Click Cancel unless you are sure the key is correct."
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:354
+msgid "Unknown host-key"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:360
+#, boost-format
+msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:364
+msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:369
+msgid "Verify unknown SSH host-key"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:376
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:381
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:397
+msgid "To store this as the known key for this server click Yes."
+msgstr ""
+
+#: swish/shell_folder/UserInteraction.cpp:399
+msgid "To connect to the server without storing the key click No."
+msgstr ""
+
