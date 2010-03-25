@@ -4,7 +4,7 @@
     <ComponentGroup Id="NLTrans">
       <Component Id="cmp511A28F2E00CFD6DC8F4A912F20D6E5F" Directory="dirF629E0AFCE18F01A695741A51021A805" Guid="A5ABE41E-4261-4844-9910-182679AEEC8F">
         <File Id="filC803C0EA9CA83B1E02FDF0E131A2038B" KeyPath="yes"
-              Name="swish.mo" Source="$(var.SolutionDir)\po\nl.mo" />
+              Source="$(var.SolutionDir)\po\nl\swish.mo" />
       </Component>
     </ComponentGroup>
   </Fragment>
