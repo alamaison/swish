@@ -70,12 +70,17 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 // Conditional PCH section for projects using common Boost headers
 #ifdef PCH_BOOST
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/system/system_error.hpp>
+#include <boost/function.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/errinfo_api_function.hpp>
 #endif // PCH_BOOST
 
 // Conditional PCH section for projects using Boost.Test
