@@ -7,7 +7,6 @@
 #define IDR_SWISH                       100
 #define IDS_COLUMN_FILENAME             101
 #define IDD_HOSTPASSWORD_DIALOG         102
-#define IDD_PASSWORD_DIALOG             102
 #define IDS_COLUMN_SIZE                 102
 #define IDS_COLUMN_TYPE                 103
 #define IDS_COLUMN_PERMISSIONS          104
@@ -38,8 +37,6 @@
 #define IDC_PATH                        1010
 #define IDC_LABEL_NAME                  1011
 #define IDC_NAME                        1012
-#define IDC_PASSWORD                    1013
-#define IDC_PASSWORD_LABEL              1014
 #define IDC_ERROR_NEWCONNECTION         1015
 #define IDC_HOSTDLG_STATUS              1015
 #define IDC_SEPARATOR                   1017
@@ -55,9 +52,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        206
+#define _APS_NEXT_RESOURCE_VALUE        207
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

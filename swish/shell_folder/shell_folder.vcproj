@@ -210,10 +210,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PasswordDialog.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
@@ -335,11 +331,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog.h"
+				RelativePath=".\locale_setup.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\PasswordDialog.h"
+				RelativePath=".\NewConnDialog.h"
 				>
 			</File>
 			<File
@@ -588,6 +584,18 @@
 					>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="forms"
+			>
+			<File
+				RelativePath=".\forms\password.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\forms\password.hpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

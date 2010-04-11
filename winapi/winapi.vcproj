@@ -65,13 +65,69 @@
 			Name="gui"
 			>
 			<File
+				RelativePath=".\gui\commands.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gui\form.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gui\hooks.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\gui\message_box.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gui\messages.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\gui\task_dialog.hpp"
 				>
 			</File>
+			<Filter
+				Name="controls"
+				>
+				<File
+					RelativePath=".\gui\controls\button.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\controls\checkbox.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\controls\control.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\controls\edit.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\controls\label.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="detail"
+				>
+				<File
+					RelativePath=".\gui\detail\dialog_template.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\detail\hwnd_linking.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\detail\window_impl.hpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="shell"
@@ -95,6 +151,14 @@
 		</File>
 		<File
 			RelativePath=".\error.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\hwnd.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\trace.hpp"
 			>
 		</File>
 	</Files>

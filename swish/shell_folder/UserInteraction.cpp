@@ -26,13 +26,15 @@
 
 #include "UserInteraction.h"
 
-#include "PasswordDialog.h"       // Password dialog box
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 #include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
+#include <swish/shell_folder/forms/password.hpp> // password_prompt
 
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 #include <winapi/gui/message_box.hpp> // message_box
+
+#include <comet/bstr.h> // bstr_t
 
 #include <boost/bind.hpp> // bind
 #include <boost/format.hpp> // format
@@ -49,7 +51,11 @@ using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
 
+using swish::shell_folder::forms::password_prompt;
+
 using namespace winapi::gui;
+
+using comet::bstr_t;
 
 using boost::locale::translate;
 using boost::wformat;
@@ -88,21 +94,14 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 	if (m_hwnd == NULL)
 		return E_FAIL;
 
-	CString strPrompt = bstrRequest;
-	ATLASSERT(strPrompt.GetLength() > 0);
-
-	CPasswordDialog dlgPassword;
-	dlgPassword.SetPrompt( strPrompt ); // Pass text through from backend
-	assert(m_hwnd);
-	if (dlgPassword.DoModal(m_hwnd) == IDOK)
+	try
 	{
-		CString strPassword;
-		strPassword = dlgPassword.GetPassword();
-		*pbstrPassword = strPassword.AllocSysString();
-		return S_OK;
+		wstring password = password_prompt(m_hwnd, bstrRequest);
+		*pbstrPassword = bstr_t::detach(bstr_t(password));
 	}
-	else
-		return E_ABORT;
+	catchCom()
+		
+	return S_OK;
 }
 
 STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
