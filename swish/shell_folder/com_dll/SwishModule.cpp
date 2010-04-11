@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,13 +25,10 @@
 */
 
 #include "resource.h"                  // main symbols
+#include <swish/shell_folder/locale_setup.hpp> // LocaleSetup lifetime manager
 #include "swish/shell_folder/Swish.h"  // Swish type-library
 
 #include "swish/atl.hpp"
-
-#include <winapi/dynamic_link.hpp> // module_path
-
-#include <boost/locale.hpp> // translate
 
 namespace swish {
 namespace shell_folder {
@@ -60,21 +57,8 @@ swish::shell_folder::com_dll::CSwishModule _Module;
 extern "C" BOOL WINAPI DllMain(
 	HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	try
-	{
-		// Initialise Boost.Locale translation mechanism
-		boost::locale::generator gen;
-
-		boost::filesystem::path module_directory = winapi::module_path<char>(
-			ATL::_AtlBaseModule.GetModuleInstance()).parent_path();
-		gen.add_messages_path(module_directory.external_directory_string());
-
-		gen.add_messages_domain("swish");
-		std::locale::global(gen(""));
-	}
-	catch (std::exception) { /* ignore */ }
-
-	hInstance;
+	static swish::shell_folder::LocaleSetup m_locale; ///< Boost.Locale manager
+	(void)hInstance;
     return _Module.DllMain(dwReason, lpReserved); 
 }
 
