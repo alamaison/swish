@@ -28,7 +28,6 @@
 
 #include "data_object/ShellDataObject.hpp"  // ShellDataObject
 #include "shell.hpp"  // bind_to_handler_object, strret_to_string
-#include "resource.h" // IDS_COPYING_TITLE
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
@@ -36,6 +35,7 @@
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/integer_traits.hpp>
+#include <boost/locale.hpp> // translate
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error
 
@@ -61,6 +61,7 @@ using ATL::CComBSTR;
 using boost::filesystem::wpath;
 using boost::shared_ptr;
 using boost::integer_traits;
+using boost::locale::translate;
 using boost::system::system_error;
 using boost::system::system_category;
 
@@ -452,26 +453,6 @@ namespace { // private
 
 		const com_ptr<IProgressDialog> m_progress;
 	};
-
-	/**
-	 * Load a string from a resource.
-	 *
-	 * The string may contain embedded NULLs.
-	 */
-	wstring load_string(
-		unsigned int uid, HINSTANCE hinstance=::GetModuleHandleW(NULL))
-	{
-		const wchar_t* read_only_resource;
-
-		int cch = ::LoadStringW(
-			hinstance, uid, 
-			reinterpret_cast<wchar_t*>(&read_only_resource), 0);
-		if (cch < 1)
-			BOOST_THROW_EXCEPTION(
-				system_error(::GetLastError(), system_category));
-
-		return wstring(read_only_resource, cch);
-	}
 }
 
 namespace swish {
@@ -494,12 +475,8 @@ void copy_format_to_provider(
 	vector<CopylistEntry> copy_list;
 	build_copy_list(format, copy_list);
 
-	wstring title = load_string(
-		IDS_COPYING_TITLE,
-		ATL::AtlFindStringResourceInstance(IDS_COPYING_TITLE));
-
 	AutoStartProgressDialog auto_progress(
-		progress, NULL, PROGDLG_AUTOTIME, title);
+		progress, NULL, PROGDLG_AUTOTIME, translate("#Progress#Copying..."));
 
 	for (unsigned int i = 0; i < copy_list.size(); ++i)
 	{
