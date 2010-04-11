@@ -83,7 +83,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying Boost.Locale dependencies to the target directory..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icudt42.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuin42.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuuc42.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icudt40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuin40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuuc40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 		<Configuration
@@ -161,7 +161,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying Boost.Locale dependencies to the target directory..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icudt42.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuin42.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuuc42.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icudt40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuin40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuuc40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 	</Configurations>

@@ -99,7 +99,7 @@ del boost_locale.zip
 
 echo.
 echo ===- Downloading ICU ...
-%WGET% -O icu.zip "http://download.icu-project.org/files/icu4c/4.2.1/icu4c-4_2_1-Win32-msvc9.zip" || (
+%WGET% -O icu.zip "http://download.icu-project.org/files/icu4c/4.0.1/icu4c-4_0_1-Win32-msvc8.zip" || (
 	echo ===- Error while trying to download ICU. & goto error)
 %SEVENZ% x icu.zip -aoa || (
 	echo ===- Error while trying to extract ICU. & goto error)
