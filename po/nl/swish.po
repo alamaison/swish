@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Swish 0.3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-03-24 00:56-0000\n"
-"PO-Revision-Date: 2010-03-24 01:23-0000\n"
+"PO-Revision-Date: 2010-04-11 11:56-0000\n"
 "Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: Swish project\n"
 "Language: nl\n"
@@ -47,7 +47,7 @@ msgstr "Bestand bestaat al"
 
 #: swish/shell_folder/UserInteraction.cpp:250
 msgid "Mismatched host-key"
-msgstr "Host-sleutel komt niet over"
+msgstr "Host-sleutel komt niet overeen"
 
 #: swish/shell_folder/UserInteraction.cpp:251
 msgid "WARNING: the SSH host-key has changed!"
