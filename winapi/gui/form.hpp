@@ -33,12 +33,14 @@
 #include <winapi/gui/controls/control.hpp> // control
 #include <winapi/gui/detail/dialog_template.hpp>
                                    // build_in_memory_dialog_template
+#include <winapi/gui/detail/hooks.hpp> // creation_hooks
 #include <winapi/gui/detail/hwnd_linking.hpp> // fetch_user_window_data
 #include <winapi/gui/detail/window_impl.hpp> // window_impl
 #include <winapi/gui/messages.hpp> // message
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo
+#include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -85,22 +87,42 @@ namespace detail {
 			m_controls.push_back(control);
 		}
 
+		void hook_window_creation()
+		{
+			m_hooks = boost::make_shared<creation_hooks<wchar_t> >();
+		}
+
+		void unhook_window_creation()
+		{
+			m_hooks.reset();
+		}
+
 		void show(HWND hwnd_owner)
 		{
 			std::vector<byte> buffer = build_dialog_template_in_memory(
 				L"MS Shell Dlg", 8, text(), width(), height(), left(), top(),
 				m_controls);
 
-			INT_PTR rc = ::DialogBoxIndirectParamW(
-				winapi::module_handle(),
-				(buffer.empty()) ?
-					NULL : reinterpret_cast<DLGTEMPLATE*>(&buffer[0]),
-				hwnd_owner, dialog_message_handler,
-				reinterpret_cast<LPARAM>(this));
-			if (rc < 1)
-				BOOST_THROW_EXCEPTION(
-					boost::enable_error_info(winapi::last_error()) << 
-					boost::errinfo_api_function("DialogBoxIndirectParamW"));
+			hook_window_creation();
+			try
+			{
+				INT_PTR rc = ::DialogBoxIndirectParamW(
+					winapi::module_handle(),
+					(buffer.empty()) ?
+						NULL : reinterpret_cast<DLGTEMPLATE*>(&buffer[0]),
+					hwnd_owner, dialog_message_handler,
+					reinterpret_cast<LPARAM>(this));
+				if (rc < 1)
+					BOOST_THROW_EXCEPTION(
+						boost::enable_error_info(winapi::last_error()) << 
+						boost::errinfo_api_function(
+							"DialogBoxIndirectParamW"));
+			}
+			catch (...)
+			{
+				unhook_window_creation();
+				throw;
+			}
 		}
 
 		void end()
@@ -157,6 +179,11 @@ namespace detail {
 
 		BOOL on(const message<WM_INITDIALOG>& /*message*/)
 		{
+			// All our controls should have been created by now so stop
+			// monitoring window creation.  This prevents problems with
+			// the system menu which is created later.
+			unhook_window_creation();
+
 			return TRUE; // give default control focus
 		}
 		
@@ -193,6 +220,7 @@ namespace detail {
 		 * as the form, regardless of how they are passed to add_control.
 		 */
 		std::vector<boost::shared_ptr<window_impl> > m_controls;
+		boost::shared_ptr<creation_hooks<wchar_t> > m_hooks;
 	};
 
 	/**

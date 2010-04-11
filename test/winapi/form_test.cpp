@@ -32,7 +32,6 @@
 #include <winapi/gui/controls/checkbox.hpp> // checkbox
 #include <winapi/gui/controls/edit.hpp> // edit
 #include <winapi/gui/controls/label.hpp> // label
-#include <winapi/gui/hooks.hpp> // creation_hooks
 
 #include <boost/bind.hpp> // bind
 #include <boost/foreach.hpp> // BOOST_FOREACH
@@ -181,7 +180,5 @@ BOOST_AUTO_TEST_CASE( one_control_updates_another )
 
 	BOOST_CHECK_EQUAL(lab.text(), L"I got new!");
 }
-
-static winapi::gui::creation_hooks<wchar_t> hooks;
 
 BOOST_AUTO_TEST_SUITE_END();

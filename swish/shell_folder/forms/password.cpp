@@ -30,7 +30,6 @@
 #include <winapi/gui/controls/edit.hpp> // edit
 #include <winapi/gui/controls/label.hpp> // label
 #include <winapi/gui/form.hpp> // form
-#include <winapi/gui/hooks.hpp> // creation_hooks
 
 #include <boost/bind.hpp> // bind
 #include <boost/locale.hpp> // translate
@@ -90,7 +89,6 @@ namespace {
 		{ return m_password_box.text(); }
 
 	private:
-		winapi::gui::creation_hooks<wchar_t> m_hooks;
 		form m_form;
 		bool m_cancelled;
 		edit m_password_box;

@@ -73,10 +73,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gui\hooks.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\gui\message_box.hpp"
 				>
 			</File>
@@ -117,6 +113,10 @@
 				>
 				<File
 					RelativePath=".\gui\detail\dialog_template.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\detail\hooks.hpp"
 					>
 				</File>
 				<File
