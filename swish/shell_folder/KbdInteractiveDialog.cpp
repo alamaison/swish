@@ -19,8 +19,12 @@
 
 #include "KbdInteractiveDialog.h"
 
+#include <boost/locale.hpp> // translate
+
 #include "wtl.hpp"          // WTL
 #include <atlctrls.h>       // WTL control wrappers
+
+using boost::locale::translate;
 
 using WTL::CStatic;
 using WTL::CEdit;
@@ -59,7 +63,8 @@ LRESULT CKbdInteractiveDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	if (!m_strName.IsEmpty())
 		this->SetWindowText(m_strName);
 	else
-		this->SetWindowText(L"Keyboard-interactive request");
+		this->SetWindowText(
+			translate("Keyboard-interactive request").str<wchar_t>().c_str());
 
 	// Get size of this dialogue box
 	CRect rectDialog;
