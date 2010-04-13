@@ -34,6 +34,7 @@
 
 #include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/signal.hpp> // signal
 
 #include <string>
 
@@ -49,10 +50,10 @@ public:
 
 	button_impl(
 		const std::wstring& title, short width, short height, short left,
-		short top, on_click_callback click_callback, bool default)
+		short top, bool default)
 		:
 		winapi::gui::detail::window_impl(title, width, height, left, top),
-		m_on_click(click_callback), m_default(default) {}
+		m_default(default) {}
 
 	std::wstring window_class() const { return L"button"; }
 
@@ -65,10 +66,12 @@ public:
 		return style;
 	}
 
+	boost::signal<void ()>& on_click() { return m_on_click; }
+
 	void on(command<BN_CLICKED>) { m_on_click(); }
 
 private:
-	on_click_callback m_on_click;
+	boost::signal<void ()> m_on_click;
 	bool m_default;
 };
 
@@ -77,13 +80,13 @@ class button : public control<button_impl>
 public:
 	button(
 		const std::wstring& title, short width, short height, short left,
-		short top, on_click_callback click_callback, bool default=false)
+		short top, bool default=false)
 		:
 		control<button_impl>(
 			boost::shared_ptr<button_impl>(
-				new button_impl(
-					title, width, height, left, top, click_callback,
-					default))) {}
+				new button_impl(title, width, height, left, top, default))) {}
+
+	boost::signal<void ()>& on_click() { return impl()->on_click(); }
 
 	std::wstring text() const { return impl()->text(); }
 	short width() const { return impl()->width(); }

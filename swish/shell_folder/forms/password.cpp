@@ -62,17 +62,14 @@ namespace {
 			m_form.add_control(m_password_box);
 			m_form.add_control(label(prompt, 149, 8, 7, 7));
 
-			m_form.add_control(
-				button(
-					translate("OK"), 50, 16, 162, 7,
-					bind(&form::end, boost::ref(m_form)), true));
+			button ok(translate("OK"), 50, 16, 162, 7, true);
+			ok.on_click().connect(bind(&form::end, boost::ref(m_form)));
+			m_form.add_control(ok);
 
-			m_form.add_control(
-				button(
-					translate("Cancel"), 50, 16, 162, 26, 
-					bind(&PasswordForm::on_cancel, boost::ref(*this))));
+			button cancel(translate("Cancel"), 50, 16, 162, 26);
+			cancel.on_click().connect(bind(&PasswordForm::on_cancel, this));
+			m_form.add_control(cancel);
 			
-
 			m_form.show(hwnd_owner);
 		}
 
