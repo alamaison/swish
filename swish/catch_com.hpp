@@ -46,7 +46,7 @@
 
 #pragma warning(push)
 #pragma warning(disable:4996) // strerror unsafe
-#include <boost/exception.hpp>
+#include <boost/exception/all.hpp>
 #pragma warning(pop)
 
 #include <string>
