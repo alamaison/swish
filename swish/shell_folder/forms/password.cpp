@@ -63,7 +63,7 @@ namespace {
 			m_form.add_control(label(prompt, 149, 8, 7, 7));
 
 			button ok(translate("OK"), 50, 16, 162, 7, true);
-			ok.on_click().connect(bind(&form::end, boost::ref(m_form)));
+			ok.on_click().connect(m_form.killer());
 			m_form.add_control(ok);
 
 			button cancel(translate("Cancel"), 50, 16, 162, 26);

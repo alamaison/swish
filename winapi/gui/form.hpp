@@ -38,11 +38,14 @@
 #include <winapi/gui/detail/window_impl.hpp> // window_impl
 #include <winapi/gui/messages.hpp> // message
 
+#include <boost/bind.hpp> // bind
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo
+#include <boost/function.hpp> // function
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+#include <boost/weak_ptr.hpp> // weak_ptr
 
 #include <cassert> // assert
 #include <string>
@@ -85,16 +88,6 @@ namespace detail {
 		void add_control(boost::shared_ptr<window_impl> control)
 		{
 			m_controls.push_back(control);
-		}
-
-		void hook_window_creation()
-		{
-			m_hooks = boost::make_shared<creation_hooks<wchar_t> >();
-		}
-
-		void unhook_window_creation()
-		{
-			m_hooks.reset();
 		}
 
 		void show(HWND hwnd_owner)
@@ -142,6 +135,16 @@ namespace detail {
 		friend void catch_form_destruction(HWND hwnd, unsigned int msg);
 		friend INT_PTR CALLBACK dialog_message_handler(
 			HWND hwnd, unsigned int msg, WPARAM wparam, LPARAM lparam);
+
+		void hook_window_creation()
+		{
+			m_hooks = boost::make_shared<creation_hooks<wchar_t> >();
+		}
+
+		void unhook_window_creation()
+		{
+			m_hooks.reset();
+		}
 
 		/// @name Message handlers
 		// @{
@@ -358,6 +361,29 @@ public:
 	void end()
 	{
 		m_impl->end();
+	}
+
+	/**
+	 * A functor that can be called to destroy the form instance.
+	 *
+	 * This allows users to write :
+	 * @code btn.on_click().connect(frm.killer()) @endcode
+	 * instead of
+	 * @code btn.on_click().connect(bind(&form::end, ref(frm))) @endcode
+	 *
+	 * The functor holds a *weak* reference to the form to prevent circular
+	 * references.  If it held a strong reference, when the functor is passed
+	 * to a control owned by the form, the form would indirectly hold a
+	 * reference and would never be destroyed.
+	 */
+	boost::function<void ()> killer()
+	{
+		typedef boost::weak_ptr<detail::form_impl> weak_form_reference;
+		weak_form_reference weak_ref = m_impl;
+
+		return boost::bind(
+			&detail::form_impl::end, boost::bind(
+				&weak_form_reference::lock, weak_ref));
 	}
 
 	std::wstring text() const { return m_impl->text(); }

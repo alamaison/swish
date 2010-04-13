@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( form_with_button )
 	form frm(L"my title", 100, 50, 30, 40);
 	
 	button hello(L"Hello", 30, 20, 0, 0);
-	hello.on_click().connect(bind(&form::end, boost::ref(frm)));
+	hello.on_click().connect(frm.killer());
 	frm.add_control(hello);
 
 	frm.show();
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE( form_with_two_controls )
 	form frm(L"Pick one", 200, 50, 30, 40);
 	
 	button hello(L"Oh noes!", 50, 20, 10, 10, true);
-	hello.on_click().connect(bind(&form::end, boost::ref(frm)));
+	hello.on_click().connect(frm.killer());
 
 	button parp(L"Parp", 50, 20, 70, 10);
 	parp.on_click().connect(beep);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE( form_with_different_controls )
 	form frm(L"A button and a box went to tea", 200, 50, 30, 40);
 	
 	button hello(L"Hello", 30, 20, 10, 10, true);
-	hello.on_click().connect(bind(&form::end, boost::ref(frm)));
+	hello.on_click().connect(frm.killer());
 	frm.add_control(hello);
 
 	edit text_box(L"Some text", 70, 14, 70, 10, false, beep);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE( four_different_alignments )
 		form frm(L"You'll see me four times", 200, 50, 30, 40);
 		
 		button hello(title, 60, 20, 10, 10);
-		hello.on_click().connect(bind(&form::end, boost::ref(frm)));
+		hello.on_click().connect(frm.killer());
 
 		label lab(L"press the button to exit", 50, 20, 70, 10);
 		frm.add_control(hello);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE( form_with_button_inline_contructor )
 	form frm(L"my title", 100, 50, 30, 40);
 	
 	button close(L"Close", 60, 20, 40, 25, true);
-	close.on_click().connect(bind(&form::end, boost::ref(frm)));
+	close.on_click().connect(frm.killer());
 	frm.add_control(close);
 	
 	frm.add_control(button(L"I do nothing", 75, 20, 0, 0));
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE( one_control_updates_another )
 	form frm(L"Multipass", 220, 50, 30, 40);
 	
 	button close(L"Close", 30, 20, 10, 10);
-	close.on_click().connect(bind(&form::end, boost::ref(frm)));
+	close.on_click().connect(frm.killer());
 
 	label lab(L"My old text", 50, 20, 160, 15);
 	button change(L"Click me to change him", 100, 20, 50, 10, true);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE( chain_events )
 	button ping(L"Ping!", 100, 50, 0, 0);
 
 	ping.on_click().connect(beep);
-	ping.on_click().connect(bind(&form::end, boost::ref(frm)));
+	ping.on_click().connect(frm.killer());
 
 	frm.add_control(ping);
 
