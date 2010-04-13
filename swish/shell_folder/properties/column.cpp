@@ -19,19 +19,22 @@
 
 #include "column.h"
 
-#include "../resource.h"
-
 #include "properties.h" // GetProperty() etc.
 
 #include <ATLComTime.h> // COleDateTime
 #include <atlstr.h>     // CString
 #include <CommCtrl.h>   // For LVCFMT_* list view constants
 
+#include <boost/locale.hpp> // translate
+
 #include <vector>
 
 using ATL::CComVariant;
 using ATL::CString;
 using ATL::COleDateTime;
+
+using boost::locale::message;
+using boost::locale::translate;
 
 using std::vector;
 
@@ -44,38 +47,48 @@ namespace column {
  */
 namespace { // private
 
+#pragma warning(push)
+#pragma warning(disable: 4510 4610) // Cannot generate default constructor
+
 	/**
 	 * Static column information.
 	 * Order of entries must correspond to the indices in columnIndices.
 	 */
 	const struct {
-		int colnameid;
+		const message column_name;
 		PROPERTYKEY pkey;
 		int pcsFlags;
 		int fmt;
 		int cxChar;
 	} aColumns[] = {
-		{ IDS_COLUMN_FILENAME, PKEY_ItemNameDisplay,   // Display name (Label)
+		{ translate("#Property (filename/label)#Name"), // Display name (Label)
+		  PKEY_ItemNameDisplay,
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 }, 
-		{ IDS_COLUMN_SIZE, PKEY_Size,                  // Size
+		{ translate("#Property#Size"), PKEY_Size,       // Size
 		  SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15 },
-		{ IDS_COLUMN_TYPE, PKEY_ItemTypeText,          // Friendly type
+		{ translate("#Property#Type"),                  // Friendly type
+		  PKEY_ItemTypeText,
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
-		{ IDS_COLUMN_MODIFIED, PKEY_DateModified,      // Modified date
+		{ translate("#Property#Date Modified"),         // Modified date
+		  PKEY_DateModified,
 		  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
-		{ IDS_COLUMN_ACCESSED, PKEY_DateAccessed,      // Accessed date
+		{ translate("#Property#Date Accessed"),         // Accessed date
+		  PKEY_DateAccessed,
 		  SHCOLSTATE_TYPE_DATE, LVCFMT_LEFT, 20 },
-		{ IDS_COLUMN_PERMISSIONS, PKEY_Permissions,    // Permissions
+		{ translate("#Property#Permissions"),           // Permissions
+		  PKEY_Permissions,
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 },
-		{ IDS_COLUMN_OWNER, PKEY_FileOwner,            // Owner
+		{ translate("#Property#Owner"), PKEY_FileOwner, // Owner
 		  SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
-		{ IDS_COLUMN_GROUP, PKEY_Group,                // Group
+		{ translate("#Property#Group"), PKEY_Group,     // Group
 		  SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
-		{ IDS_COLUMN_OWNER_ID, PKEY_OwnerId,           // Owner ID (UID)
+		{ translate("#Property#Owner ID"), PKEY_OwnerId,// Owner ID (UID)
 		  SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 },
-		{ IDS_COLUMN_GROUP_ID, PKEY_GroupId,           // Group ID (GID)
+		{ translate("#Property#Group ID"), PKEY_GroupId,// Group ID (GID)
 		  SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 }
 	};
+
+#pragma warning(pop)
 
 	/**
 	 * Return number of columns.
@@ -90,7 +103,7 @@ namespace { // private
 	 */
 	CString Header(UINT iColumn)
 	{
-		return CString(MAKEINTRESOURCE(aColumns[iColumn].colnameid));
+		return aColumns[iColumn].column_name.str<wchar_t>().c_str();
 	}
 }
 

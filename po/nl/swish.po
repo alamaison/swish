@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish 0.3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-04-11 19:16-0000\n"
-"PO-Revision-Date: 2010-04-11 19:38-0000\n"
+"POT-Creation-Date: 2010-04-13 15:39-0000\n"
+"PO-Revision-Date: 2010-04-13 15:53-0000\n"
 "Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: Swish project\n"
 "Language: nl\n"
@@ -165,15 +165,55 @@ msgstr "SFTP Verbinding &Verwijderen"
 msgid "Remove a SFTP connection created with Swish."
 msgstr "Verwijder een SFTP verbinding gemaakt met Swish."
 
-#: ../../swish/shell_folder/forms/password.cpp:60
+#: ../../swish/shell_folder/forms/password.cpp:59
 msgid "Password"
 msgstr "Wachtwoord"
 
-#: ../../swish/shell_folder/forms/password.cpp:68
+#: ../../swish/shell_folder/forms/password.cpp:65
 msgid "OK"
 msgstr "OK"
 
-#: ../../swish/shell_folder/forms/password.cpp:73
+#: ../../swish/shell_folder/forms/password.cpp:69
 msgid "Cancel"
 msgstr "Annuleren"
+
+#: ../../swish/shell_folder/properties/column.cpp:60
+msgid "#Property (filename/label)#Name"
+msgstr "Naam"
+
+#: ../../swish/shell_folder/properties/column.cpp:63
+msgid "#Property#Size"
+msgstr "Grootte"
+
+#: ../../swish/shell_folder/properties/column.cpp:65
+msgid "#Property#Type"
+msgstr "Bestandsformaat"
+
+#: ../../swish/shell_folder/properties/column.cpp:67
+msgid "#Property#Date Modified"
+msgstr "Gewijzigd op"
+
+#: ../../swish/shell_folder/properties/column.cpp:69
+msgid "#Property#Date Accessed"
+msgstr "Geraadpleegd op"
+
+#: ../../swish/shell_folder/properties/column.cpp:71
+msgid "#Property#Permissions"
+msgstr "Toegangsrechten"
+
+#: ../../swish/shell_folder/properties/column.cpp:73
+msgid "#Property#Owner"
+msgstr "Eigenaar"
+
+#: ../../swish/shell_folder/properties/column.cpp:75
+msgid "#Property#Group"
+msgstr "Groep"
+
+#: ../../swish/shell_folder/properties/column.cpp:77
+msgid "#Property#Owner ID"
+msgstr "Eigenaar ID"
+
+#: ../../swish/shell_folder/properties/column.cpp:79
+msgid "#Property#Group ID"
+msgstr "Groep ID"
 

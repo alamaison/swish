@@ -107,16 +107,6 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_COLUMN_FILENAME     "Name"
-    IDS_COLUMN_SIZE         "Size"
-    IDS_COLUMN_TYPE         "Type"
-    IDS_COLUMN_PERMISSIONS  "Permissions"
-    IDS_COLUMN_MODIFIED     "Date Modified"
-    IDS_COLUMN_OWNER        "Owner"
-    IDS_COLUMN_GROUP        "Group"
-    IDS_COLUMN_OWNER_ID     "Owner ID"
-    IDS_COLUMN_GROUP_ID     "Group ID"
-    IDS_COLUMN_ACCESSED     "Date Accessed"
     IDS_HOSTDLG_INVALID_PORT "The port is not valid (between 0 and 65535)."
 END
 
@@ -141,7 +131,8 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
