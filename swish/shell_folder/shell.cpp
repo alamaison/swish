@@ -28,12 +28,16 @@
 
 #include "swish/exception.hpp"  // com_exception
 
+#include <winapi/shell/shell.hpp> // strret_to_string
+
 #include <shlobj.h>  // SHGetDesktopFolder, SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
 #include <string>
 
 using swish::exception::com_exception;
+
+using winapi::shell::strret_to_string;
 
 using comet::com_ptr;
 using comet::uuidof;
@@ -105,13 +109,7 @@ wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
 
-	vector<wchar_t> buffer(MAX_PATH);
-	hr = ::StrRetToBufW(&str, child_pidl, &buffer[0], buffer.size());
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
-	buffer[buffer.size()-1] = L'\0';
-
-	return wstring(&buffer[0]);
+	return strret_to_string<wchar_t>(str, child_pidl);
 }
 
 }} // namespace swish::shell_folder
