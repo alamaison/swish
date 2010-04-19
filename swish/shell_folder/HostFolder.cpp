@@ -31,7 +31,10 @@
 #include "ExplorerCallback.h"     // For interaction with Explorer window
 #include "Registry.h"             // For saved connection details
 #include "host_management.hpp"
+#include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
+#include "swish/host_folder/properties.hpp" // property_from_pidl
+#include "swish/host_folder/columns.hpp" // host-folder columns
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
@@ -40,40 +43,34 @@
 
 #include <strsafe.h>  // For StringCchCopy
 
-#include <boost/shared_ptr.hpp>
+#include <boost/locale.hpp> // translate
+#include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <cassert> // assert
+#include <cstring> // memset
 #include <string>
 
-using ATL::CString;
 using ATL::CComPtr;
 using ATL::CComObject;
 
+using comet::variant_t;
+
+using boost::locale::translate;
 using boost::shared_ptr;
 
 using std::wstring;
 
 using swish::host_management::LoadConnectionsFromRegistry;
 using swish::exception::com_exception;
+using swish::host_folder::column_state_from_column_index;
+using swish::host_folder::detail_from_property_key;
+using swish::host_folder::header_from_column_index;
+using swish::host_folder::property_from_pidl;
+using swish::host_folder::property_key_from_column_index;
+using winapi::shell::property_key;
 using swish::shell_folder::strret_to_string;
 using swish::shell_folder::commands::host::host_folder_command_provider;
-
-namespace { // private
-	
-	/**
-	 * Initialise the VARIANT whose pointer is passed and fill with string 
-	 * data. The string data can be passed in as a wchar array or a CString.
-	 * We allocate a new BSTR and store it in the VARIANT.
-	 */
-	HRESULT FillDetailsVariant(__in PCWSTR pszDetail, __out VARIANT* pv)
-	{
-		::VariantInit(pv);
-		pv->vt = VT_BSTR;
-		pv->bstrVal = ::SysAllocString(pszDetail);
-
-		return pv->bstrVal ? S_OK : E_OUTOFMEMORY;
-	}
-}
 
 /*--------------------------------------------------------------------------*/
 /*                     Remaining IShellFolder functions.                    */
@@ -313,25 +310,17 @@ STDMETHODIMP CHostFolder::GetAttributesOf(
  *
  * @implementing IShellFolder2
  */
-STDMETHODIMP CHostFolder::GetDefaultColumnState( __in UINT iColumn, 
-												 __out SHCOLSTATEF *pcsFlags )
+STDMETHODIMP CHostFolder::GetDefaultColumnState(
+	UINT iColumn, SHCOLSTATEF* pcsFlags)
 {
-	ATLTRACE("CHostFolder::GetDefaultColumnState called\n");
+	if (!pcsFlags) return E_POINTER;
+	*pcsFlags = 0;
 
-	switch (iColumn)
+	try
 	{
-	case 0: // Display name (Label)
-	case 1: // Hostname
-	case 2: // Username
-	case 4: // Remote filesystem path
-		*pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT; break;
-	case 3: // SFTP port
-		*pcsFlags = SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT; break;
-	case 5: // Type
-		*pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_SECONDARYUI; break;
-	default:
-		return E_FAIL;
+		*pcsFlags = column_state_from_column_index(iColumn);
 	}
+	catchCom()
 
 	return S_OK;
 }
@@ -340,77 +329,29 @@ STDMETHODIMP CHostFolder::GetDefaultColumnState( __in UINT iColumn,
  * Get property of an item as a VARIANT.
  *
  * @implementing IShellFolder2
+ *
+ * If pidl: Request is for an item detail.  Retrieve from pidl.
+ * Else:    Request is for a column heading.
+ *
+ * The work is delegated to the properties functions in the swish::host_folder
+ * namespace.
  */
-STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl, 
-										 __in const SHCOLUMNID *pscid,
-										 __out VARIANT *pv )
+STDMETHODIMP CHostFolder::GetDetailsEx(
+	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
 {
-	ATLTRACE("CHostFolder::GetDetailsEx called\n");
+	if (!pv) return E_POINTER;
+	::VariantClear(pv);
+	if (!pscid) return E_POINTER;
+	if (::ILIsEmpty(pidl)) return E_INVALIDARG;
 
-	bool fHeader = (pidl == NULL);
-
-	CHostItemHandle hpidl(pidl);
-
-	// If pidl: Request is for an item detail.  Retrieve from pidl and
-	//          return string
-	// Else:    Request is for a column heading.  Return heading as BSTR
-
-	// Display name (Label)
-	if (IsEqualPropertyKey(*pscid, PKEY_ItemNameDisplay))
+	try
 	{
-		TRACE("\t\tRequest: PKEY_ItemNameDisplay\n");
-
-		return FillDetailsVariant(
-			(fHeader) ? L"Name" : hpidl.GetLabel(), pv);
+		variant_t var = property_from_pidl(pidl, *pscid);
+		*pv = var.detach();
 	}
-	// Hostname
-	else if (IsEqualPropertyKey(*pscid, PKEY_ComputerName))
-	{
-		TRACE("\t\tRequest: PKEY_ComputerName\n");
+	catchCom()
 
-		return FillDetailsVariant(
-			(fHeader) ? L"Host" : hpidl.GetHost(), pv);
-	}
-	// Username
-	else if (IsEqualPropertyKey(*pscid, PKEY_SwishHostUser))
-	{
-		TRACE("\t\tRequest: PKEY_SwishHostUser\n");
-
-		return FillDetailsVariant(
-			(fHeader) ? L"Username" : hpidl.GetUser(), pv);
-	}
-	// SFTP port
-	else if (IsEqualPropertyKey(*pscid, PKEY_SwishHostPort))
-	{
-		TRACE("\t\tRequest: PKEY_SwishHostPort\n");
-
-		return FillDetailsVariant(
-			(fHeader) ? L"Port" : hpidl.GetPortStr(), pv);
-	}
-	// Remote filesystem path
-	else if (IsEqualPropertyKey(*pscid, PKEY_ItemPathDisplay))
-	{
-		TRACE("\t\tRequest: PKEY_ItemPathDisplay\n");
-
-		return FillDetailsVariant(
-			(fHeader) ? L"Remote Path" : hpidl.GetPath(), pv);
-	}
-	// Type: always 'Network Drive'
-	else if (IsEqualPropertyKey(*pscid, PKEY_ItemType))
-	{
-		TRACE("\t\tRequest: PKEY_ItemType\n");
-
-		return FillDetailsVariant(
-			(fHeader) ? L"Type" : L"Network Drive", pv);
-	}
-
-	TRACE("\t\tRequest: <unknown>\n");
-
-	// Assert unless request is one of the supported properties
-	// TODO: System.FindData tiggers this
-	// UNREACHABLE;
-
-	return E_FAIL;
+	return S_OK;
 }
 
 /**
@@ -418,32 +359,60 @@ STDMETHODIMP CHostFolder::GetDetailsEx( __in PCUITEMID_CHILD pidl,
  *
  * @implementing IShellFolder2
  *
- * IMPORTANT:  This function defines which details are supported as
- * GetDetailsOf() just forwards the columnID here.  The first column that we
- * return E_FAIL for marks the end of the supported details.
+ * @note   The first column for which we return an error, marks the end of the
+ *         columns in this folder.
  */
-STDMETHODIMP CHostFolder::MapColumnToSCID( __in UINT iColumn, 
-										    __out PROPERTYKEY *pscid )
+STDMETHODIMP CHostFolder::MapColumnToSCID(UINT iColumn, PROPERTYKEY* pscid)
 {
-	ATLTRACE("CHostFolder::MapColumnToSCID called\n");
+	if (!pscid) return E_POINTER;
+	std::memset(pscid, 0, sizeof(PROPERTYKEY));
 
-	switch (iColumn)
+	try
 	{
-	case 0: // Display name (Label)
-		*pscid = PKEY_ItemNameDisplay; break;
-	case 1: // Hostname
-		*pscid = PKEY_ComputerName; break;
-	case 2: // Username
-		*pscid = PKEY_SwishHostUser; break;
-	case 3: // SFTP port
-		*pscid= PKEY_SwishHostPort; break;
-	case 4: // Remote filesystem path
-		*pscid = PKEY_ItemPathDisplay; break;
-	case 5: // Type: always 'Network Drive'
-		*pscid = PKEY_ItemType; break;
-	default:
-		return E_FAIL;
+		*pscid = property_key_from_column_index(iColumn).get();
 	}
+	catchCom()
+
+	return S_OK;
+}
+
+/**
+ * Returns detailed information on the items in a folder.
+ *
+ * @implementing IShellDetails
+ *
+ * This function operates in two distinctly different ways:
+ * If pidl is NULL:
+ *     Retrieves the information on the view columns, i.e., the names of
+ *     the columns themselves.  The index of the desired column is given
+ *     in iColumn.  If this column does not exist we return E_FAIL.
+ * If pidl is not NULL:
+ *     Retrieves the specific item information for the given pidl and the
+ *     requested column.
+ * The information is returned in the SHELLDETAILS structure.
+ *
+ * @note   The first column for which we return an error, marks the end of the
+ *         columns in this folder.
+ */
+STDMETHODIMP CHostFolder::GetDetailsOf(
+	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* pDetails)
+{
+	if (!pDetails) return E_POINTER;
+	std::memset(pDetails, 0, sizeof(SHELLDETAILS));
+
+	try
+	{
+		if (!pidl)
+		{
+			*pDetails = header_from_column_index(iColumn);
+		}
+		else
+		{
+			property_key pkey = property_key_from_column_index(iColumn);
+			*pDetails = detail_from_property_key(pkey, pidl);
+		}
+	}
+	catchCom()
 
 	return S_OK;
 }
@@ -481,64 +450,6 @@ STDMETHODIMP CHostFolder::GetIconLocation(
 	*pwFlags = GIL_DONTCACHE;
 
 	return S_OK;
-}
-
-/**
- * Returns detailed information on the items in a folder.
- *
- * @implementing IShellDetails
- *
- * This function operates in two distinctly different ways:
- * If pidl is NULL:
- *     Retrieves the information on the view columns, i.e., the names of
- *     the columns themselves.  The index of the desired column is given
- *     in iColumn.  If this column does not exist we return E_FAIL.
- * If pidl is not NULL:
- *     Retrieves the specific item information for the given pidl and the
- *     requested column.
- * The information is returned in the SHELLDETAILS structure.
- *
- * Most of the work is delegated to GetDetailsEx by converting the column
- * index to a PKEY with MapColumnToSCID.  This function also now determines
- * what the index of the last supported detail is.
- */
-STDMETHODIMP CHostFolder::GetDetailsOf( __in_opt PCUITEMID_CHILD pidl, 
-										 __in UINT iColumn, 
-										 __out LPSHELLDETAILS pDetails )
-{
-	ATLTRACE("CHostFolder::GetDetailsOf called, iColumn=%u\n", iColumn);
-
-	PROPERTYKEY pkey;
-
-	// Lookup PKEY and use it to call GetDetailsEx
-	HRESULT hr = MapColumnToSCID(iColumn, &pkey);
-	if (SUCCEEDED(hr))
-	{
-		CString strSrc;
-		VARIANT pv;
-
-		// Get details and convert VARIANT result to SHELLDETAILS for return
-		hr = GetDetailsEx(pidl, &pkey, &pv);
-		if (SUCCEEDED(hr))
-		{
-			ATLASSERT(pv.vt == VT_BSTR);
-			strSrc = pv.bstrVal;
-			::SysFreeString(pv.bstrVal);
-
-			pDetails->str.uType = STRRET_WSTR;
-			SHStrDup(strSrc, &pDetails->str.pOleStr);
-		}
-
-		VariantClear( &pv );
-
-		if(!pidl) // Header requested
-		{
-			pDetails->fmt = LVCFMT_LEFT;
-			pDetails->cxChar = strSrc.GetLength();
-		}
-	}
-
-	return hr;
 }
 
 /*--------------------------------------------------------------------------*/

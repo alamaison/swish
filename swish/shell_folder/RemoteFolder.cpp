@@ -430,6 +430,9 @@ STDMETHODIMP CRemoteFolder::GetDefaultColumnState(
  * Convert column to appropriate property set ID (FMTID) and property ID (PID).
  *
  * @implementing IShellFolder2
+ *
+ * @note   The first column for which we return an error, marks the end of the
+ *         columns in this folder.
  */
 STDMETHODIMP CRemoteFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID* pscid)
 {

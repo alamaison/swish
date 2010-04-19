@@ -133,6 +133,10 @@
 			Name="shell"
 			>
 			<File
+				RelativePath=".\shell\property_key.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\shell\shell.hpp"
 				>
 			</File>

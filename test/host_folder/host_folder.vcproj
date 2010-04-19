@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-winapi"
-	ProjectGUID="{36EA4E3E-0F4C-41DB-B771-3475078C01F9}"
-	RootNamespace="testwinapi"
+	Name="test-host_folder"
+	ProjectGUID="{8A568667-2A19-4485-BF3D-7E0D0B02C872}"
+	RootNamespace="host_folder"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_test_runner.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -57,7 +57,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				AdditionalManifestDependencies=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -90,7 +89,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_test_runner.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -127,7 +126,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalManifestDependencies=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -161,6 +159,14 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{3341C8C4-01AB-4A6B-A0BF-22CFB0FE5F17}"
+			RelativePathToProject=".\swish\host_folder\host_folder.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
+			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -169,19 +175,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\dynamic_link_test.cpp"
+				RelativePath=".\columns_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\form_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\module.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\pch.cpp"
+				RelativePath="..\..\swish\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -201,11 +199,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\shell_test.cpp"
+				RelativePath=".\properties_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\task_dialog_test.cpp"
+				RelativePath=".\test.cpp"
 				>
 			</File>
 		</Filter>

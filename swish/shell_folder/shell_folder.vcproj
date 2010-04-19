@@ -163,6 +163,10 @@
 			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
 			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{3341C8C4-01AB-4A6B-A0BF-22CFB0FE5F17}"
+			RelativePathToProject=".\swish\host_folder\host_folder.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

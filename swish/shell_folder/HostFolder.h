@@ -35,9 +35,6 @@
 
 #include "swish/atl.hpp"         // Common ATL setup
 
-#include <initguid.h>  // Make DEFINE_PROPERTYKEY() actually define a key
-#include <propkey.h>   // For DEFINE_PROPERTYKEY
-
 #include <vector>
 
 class ATL_NO_VTABLE CHostFolder :
@@ -132,19 +129,3 @@ private:
 		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	// @}
 };
-
-// Host column property IDs
-enum PID_SWISH_HOST {
-	PID_SWISH_HOST_USER = PID_FIRST_USABLE,
-	PID_SWISH_HOST_PORT
-};
-
-// PKEYs for custom swish details/properties
-// Swish Host FMTID GUID {b816a850-5022-11dc-9153-0090f5284f85}
-DEFINE_PROPERTYKEY(PKEY_SwishHostUser, 0xb816a850, 0x5022, 0x11dc, \
-				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-				   PID_SWISH_HOST_USER);
-DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
-				   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-				   PID_SWISH_HOST_PORT);
-

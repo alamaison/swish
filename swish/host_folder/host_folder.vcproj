@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-winapi"
-	ProjectGUID="{36EA4E3E-0F4C-41DB-B771-3475078C01F9}"
-	RootNamespace="testwinapi"
+	Name="host_folder"
+	ProjectGUID="{3341C8C4-01AB-4A6B-A0BF-22CFB0FE5F17}"
+	RootNamespace="host_folder"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_test_runner.vsprops"
+			ConfigurationType="4"
+			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -55,18 +55,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="2"
-				AdditionalManifestDependencies=""
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -78,19 +70,13 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_test_runner.vsprops"
+			ConfigurationType="4"
+			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -111,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -125,20 +111,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="1"
-				AdditionalManifestDependencies=""
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -148,12 +124,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -169,19 +139,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\dynamic_link_test.cpp"
+				RelativePath=".\columns.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\form_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\module.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\pch.cpp"
+				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -201,11 +163,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\shell_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\task_dialog_test.cpp"
+				RelativePath=".\properties.cpp"
 				>
 			</File>
 		</Filter>
@@ -214,6 +172,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\columns.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\properties.hpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
