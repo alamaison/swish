@@ -241,15 +241,4 @@ comet::com_ptr<T> bind_to_handler_object(
  */
 std::wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl);
 
-/**
- * Convert a STRRET structure to a string.
- *
- * If the STRRET is using its pOleStr member to store the data (rather
- * than holding it directly or extracting it from the PIDL offset)
- * the data will be freed.  In other words, this function destroys
- * the STRRET passed to it.
- */
-std::wstring strret_to_string(
-	STRRET& strret, const winapi::shell::pidl::cpidl_t& pidl);
-
 }} // namespace swish::shell_folder

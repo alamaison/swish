@@ -27,11 +27,13 @@
 #include "DropTarget.hpp"
 
 #include "data_object/ShellDataObject.hpp"  // ShellDataObject
-#include "shell.hpp"  // bind_to_handler_object, strret_to_string
+#include "shell.hpp"  // bind_to_handler_object
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+
+#include <winapi/shell/shell.hpp> // strret_to_string
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/integer_traits.hpp>
@@ -49,12 +51,12 @@
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
-using swish::shell_folder::strret_to_string;
 using swish::exception::com_exception;
 
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
+using winapi::shell::strret_to_string;
 
 using ATL::CComPtr;
 using ATL::CComBSTR;
@@ -169,7 +171,7 @@ namespace { // private
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
-		return strret_to_string(strret, pidl);
+		return strret_to_string<wchar_t>(strret, pidl);
 	}
 
 	/**

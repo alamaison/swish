@@ -38,8 +38,9 @@
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
-#include "swish/shell_folder/shell.hpp" // strret_to_string
 #include "swish/shell_folder/commands/host/host.hpp" // host_folder_commands
+
+#include <winapi/shell/shell.hpp> // strret_to_string
 
 #include <strsafe.h>  // For StringCchCopy
 
@@ -68,9 +69,10 @@ using swish::host_folder::detail_from_property_key;
 using swish::host_folder::header_from_column_index;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
-using winapi::shell::property_key;
-using swish::shell_folder::strret_to_string;
 using swish::shell_folder::commands::host::host_folder_command_provider;
+
+using winapi::shell::property_key;
+using winapi::shell::strret_to_string;
 
 /*--------------------------------------------------------------------------*/
 /*                     Remaining IShellFolder functions.                    */
@@ -256,7 +258,8 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 				if (FAILED(hr))
 					BOOST_THROW_EXCEPTION(com_exception(hr));
 
-				name = strret_to_string(strret, pidlThisFolder) + L'\\';
+				name = strret_to_string<wchar_t>(
+					strret, pidlThisFolder) + L'\\';
 			}
 
 			name += hpidl.GetLongName(true);

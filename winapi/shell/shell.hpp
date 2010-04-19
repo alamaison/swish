@@ -29,6 +29,7 @@
 #pragma once
 
 #include <winapi/detail/path_traits.hpp> // choose_path
+#include <winapi/shell/pidl.hpp> // cpidl_t
 
 #include <comet/error.h> // com_error
 
@@ -133,13 +134,17 @@ inline typename winapi::detail::choose_path<T>::type special_folder_path(
  * than holding it directly or extracting it from the PIDL offset)
  * the data will be freed.  In other words, this function destroys
  * the STRRET passed to it.
+ *
+ * @param strret  STRRET to convert into string.  Its contents are destroyed
+ *                by this function if using STRRET_WSTR type.
+ * @param pidl    PIDL in which the string data may be embedded (optional).
  */
 template<typename T>
 inline std::basic_string<T> strret_to_string(
-	STRRET& strret, const ITEMID_CHILD* pidl=NULL)
+	STRRET& strret, const pidl::cpidl_t& pidl=pidl::cpidl_t())
 {
 	T* str = NULL;
-	HRESULT hr = detail::native::str_ret_to_str(&strret, pidl, &str);
+	HRESULT hr = detail::native::str_ret_to_str(&strret, pidl.get(), &str);
 
 	// RAII for CoTaskMemAlloced string
 	boost::shared_ptr<T> str_lifetime(str, ::CoTaskMemFree);
