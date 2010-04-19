@@ -40,9 +40,9 @@
 #include <Propkey.h> // PKEY_ *
 
 using swish::host_folder::property_from_pidl;
-using winapi::shell::property_key;
-using swish::shell_folder::pidl::cpidl_t;
 
+using winapi::shell::pidl::cpidl_t;
+using winapi::shell::property_key;
 using winapi::shell::string_to_strret;
 
 using boost::array;

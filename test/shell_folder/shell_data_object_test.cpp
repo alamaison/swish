@@ -43,12 +43,16 @@ using swish::shell_folder::data_object::PidlFormat;  // test subject
 using swish::shell_folder::data_object::StorageMedium;  // test subject
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
-using swish::shell_folder::pidl::apidl_t;
+
+using winapi::shell::pidl::apidl_t;
+
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;
 using namespace test::shell_folder::data_object_utils;
+
 using boost::filesystem::wpath;
 using boost::test_tools::predicate_result;
+
 using std::vector;
 using std::wstring;
 

@@ -28,8 +28,7 @@
 #define SWISH_HOST_FOLDER_COLUMNS_HPP
 #pragma once
 
-#include <swish/shell_folder/pidl.hpp> // cpidl_t
-
+#include <winapi/shell/pidl.hpp> // cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 
 #include <comet/variant.h> // variant_t
@@ -46,7 +45,7 @@ SHCOLSTATEF column_state_from_column_index(size_t index);
 
 SHELLDETAILS detail_from_property_key(
 	const winapi::shell::property_key& key,
-	const swish::shell_folder::pidl::cpidl_t& pidl);
+	const winapi::shell::pidl::cpidl_t& pidl);
 
 }} // namespace swish::host_folder
 

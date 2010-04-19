@@ -34,12 +34,16 @@
 #include <string>
 
 using swish::exception::com_exception;
-using swish::shell_folder::pidl::cpidl_t;
+
+using winapi::shell::pidl::cpidl_t;
+
 using comet::com_ptr;
 using comet::uuidof;
+
 using boost::filesystem::wpath;
 using boost::filesystem::wdirectory_iterator;
 using boost::shared_ptr;
+
 using std::invalid_argument;
 using std::wstring;
 using std::vector;

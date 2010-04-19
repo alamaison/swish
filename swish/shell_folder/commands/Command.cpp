@@ -32,8 +32,9 @@
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-using swish::shell_folder::pidl::apidl_t;
 using swish::exception::com_exception;
+
+using winapi::shell::pidl::apidl_t;
 
 using comet::com_ptr;
 using comet::uuidof;

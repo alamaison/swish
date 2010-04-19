@@ -50,10 +50,11 @@ using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::strret_to_string;
-using swish::shell_folder::pidl::pidl_t;
-using swish::shell_folder::pidl::apidl_t;
-using swish::shell_folder::pidl::cpidl_t;
 using swish::exception::com_exception;
+
+using winapi::shell::pidl::pidl_t;
+using winapi::shell::pidl::apidl_t;
+using winapi::shell::pidl::cpidl_t;
 
 using ATL::CComPtr;
 using ATL::CComBSTR;

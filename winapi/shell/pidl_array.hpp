@@ -24,16 +24,18 @@
     @endif
 */
 
+#ifndef WINAPI_SHELL_PIDL_ARRAY_HPP
+#define WINAPI_SHELL_PIDL_ARRAY_HPP
 #pragma once
 
 #include <algorithm>  // swap, transform
 #include <vector>
 
-namespace swish {
-namespace shell_folder {
+namespace winapi {
+namespace shell {
 namespace pidl {
 
-namespace {
+namespace detail {
 
 	template<typename T>
 	typename T::const_pointer raw_pidl_from_wrapper(const T& wrapped_pidl)
@@ -71,7 +73,7 @@ public:
 
 	template<typename It>
 	pidl_array(It begin, It end) :
-		m_array(raw_pidls_from_wrappers(begin, end)) {}
+		m_array(detail::raw_pidls_from_wrappers(begin, end)) {}
 
 	~pidl_array() throw() {}
 
@@ -113,4 +115,6 @@ private:
 	std::vector<value_type> m_array;
 };
 
-}}} // namespace swish::shell_folder::pidl
+}}} // namespace winapi::shell::pidl
+
+#endif

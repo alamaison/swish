@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "swish/shell_folder/pidl.hpp" // apidl_t
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/uuid_fwd.h> // uuid_t

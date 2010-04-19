@@ -40,12 +40,13 @@
 #include "swish/shell_folder/SftpDirectory.h"  // listing pidls in a folder
 #include "swish/shell_folder/shell.hpp"  // shell utility functions
 #include "swish/shell_folder/HostPidl.h"  // Host PIDL wrapper
-#include "swish/shell_folder/pidl.hpp"  // PIDL wrapper
-#include "swish/shell_folder/pidl_array.hpp"  // PIDL array wrapper
 #include "swish/utils.hpp"  // character conversion
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 #include "test/shell_folder/ProviderFixture.hpp"  // ProviderFixture
+
+#include <winapi/shell/pidl.hpp>  // PIDL wrapper
+#include <winapi/shell/pidl_array.hpp>  // PIDL array wrapper
 
 #include <comet/ptr.h>  // com_ptr
 
@@ -69,9 +70,13 @@ using swish::shell_folder::desktop_folder;
 using swish::shell_folder::parsing_name_from_pidl;
 using swish::utils::Utf8StringToWideString;
 using namespace swish::shell_folder::data_object;
-using namespace swish::shell_folder::pidl;
+
 using test::provider::ProviderFixture;
+
+using namespace winapi::shell::pidl;
+
 using comet::com_ptr;
+
 using boost::filesystem::wpath;
 using boost::filesystem::ifstream;
 using boost::filesystem::ofstream;
@@ -79,6 +84,7 @@ using boost::system::system_error;
 using boost::system::system_category;
 using boost::posix_time::from_time_t;
 using boost::test_tools::predicate_result;
+
 using std::string;
 using std::wstring;
 using std::vector;

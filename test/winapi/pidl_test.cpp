@@ -24,7 +24,7 @@
     @endif
 */
 
-#include "swish/shell_folder/pidl.hpp"  // test subject
+#include <winapi/shell/pidl.hpp>  // test subject
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -38,7 +38,8 @@
 #include <cstring>  // memset, memcpy
 
 
-using namespace swish::shell_folder::pidl;
+using namespace winapi::shell::pidl;
+
 using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 using boost::numeric_cast;

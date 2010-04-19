@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "swish/shell_folder/pidl.hpp" // pidl_t, PIDL wrapper types
+#include <winapi/shell/pidl.hpp> // pidl_t, PIDL wrapper types
 
 #include <comet/ptr.h>  // com_ptr
 
@@ -63,9 +63,9 @@ public:
 	PidlFormat(const comet::com_ptr<IDataObject>& data_object);
 	~PidlFormat();
 
-	swish::shell_folder::pidl::apidl_t parent_folder();
-	swish::shell_folder::pidl::apidl_t file(UINT i);
-	swish::shell_folder::pidl::pidl_t relative_file(UINT i);
+	winapi::shell::pidl::apidl_t parent_folder();
+	winapi::shell::pidl::apidl_t file(UINT i);
+	winapi::shell::pidl::pidl_t relative_file(UINT i);
 	UINT pidl_count();
 
 private:

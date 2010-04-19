@@ -24,22 +24,24 @@
     @endif
 */
 
+#ifndef WINAPI_SHELL_PIDL_HPP
+#define WINAPI_SHELL_PIDL_HPP
 #pragma once
 
-#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
-#include <boost/utility/enable_if.hpp>  // conditional specsation of combine
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+#include <boost/utility/enable_if.hpp> // conditional specsation of combine
 
-#include <exception>  // bad_alloc
-#include <algorithm>  // swap
-#include <cstring>  // memcpy
+#include <exception> // bad_alloc
+#include <algorithm> // swap
+#include <cstring> // memcpy
 
+#include <Objbase.h> // CoTaskMemAlloc/Free
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
-#include <ShTypes.h>  // Raw PIDL types
-#include <Objbase.h>  // CoTaskMemAlloc/Free
+#include <ShTypes.h> // Raw PIDL types
 
-namespace swish {
-namespace shell_folder {
+namespace winapi {
+namespace shell {
 namespace pidl {
 
 /**
@@ -113,7 +115,7 @@ struct cotaskmem_alloc
 	{
 		T* mem = reinterpret_cast<T*>(::CoTaskMemAlloc(size));
 		if (!mem)
-			BOOST_THROW_EXCEPTION(std::bad_alloc("Not enough memory."));
+			BOOST_THROW_EXCEPTION(std::bad_alloc("not enough memory"));
 		return mem;
 	}
 
@@ -641,4 +643,6 @@ typedef basic_pidl<
 typedef basic_pidl<ITEMID_CHILD, cotaskmem_alloc<ITEMID_CHILD> > cpidl_t;
 // @}
 
-}}} // namespace swish::shell_folder::pidl
+}}} // namespace winapi::shell::pidl
+
+#endif

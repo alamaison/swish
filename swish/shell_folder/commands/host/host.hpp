@@ -26,8 +26,9 @@
 
 #pragma once
 
-#include "swish/shell_folder/pidl.hpp" // apidl_t
 #include "swish/shell_folder/commands/Command.hpp" // Command
+
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -42,7 +43,7 @@ namespace host {
 class Add : public swish::shell_folder::commands::Command
 {
 public:
-	Add(HWND hwnd, const swish::shell_folder::pidl::apidl_t& folder_pidl);
+	Add(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 	
 	bool disabled(const comet::com_ptr<IDataObject>& data_object,
 		bool ok_to_be_slow) const;
@@ -55,13 +56,13 @@ public:
 
 private:
 	HWND m_hwnd;
-	swish::shell_folder::pidl::apidl_t m_folder_pidl;
+	winapi::shell::pidl::apidl_t m_folder_pidl;
 };
 
 class Remove : public swish::shell_folder::commands::Command
 {
 public:
-	Remove(HWND hwnd, const swish::shell_folder::pidl::apidl_t& folder_pidl);
+	Remove(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 	
 	bool disabled(
 		const comet::com_ptr<IDataObject>& data_object,
@@ -75,10 +76,10 @@ public:
 
 private:
 	HWND m_hwnd;
-	swish::shell_folder::pidl::apidl_t m_folder_pidl;
+	winapi::shell::pidl::apidl_t m_folder_pidl;
 };
 	
 comet::com_ptr<IExplorerCommandProvider> host_folder_command_provider(
-	HWND hwnd, const swish::shell_folder::pidl::apidl_t& folder_pidl);
+	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 
 }}}} // namespace swish::shell_folder::commands::host

@@ -17,7 +17,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -91,7 +91,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\boost_test_runner.vsprops;$(SolutionDir)\build\libssh2_client.vsprops;$(SolutionDir)\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -227,10 +227,6 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\pidl_test.cpp"
-				>
 			</File>
 			<File
 				RelativePath=".\pool_test.cpp"

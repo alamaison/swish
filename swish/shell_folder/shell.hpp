@@ -25,7 +25,6 @@
 */
 
 #include "swish/windows_api.hpp" // SHBindToParent
-#include "pidl.hpp" // pidl_t, PIDL wrapper types
 
 #include <comet/interface.h>  // uuidof, comtype
 #include <comet/ptr.h>  // com_ptr
@@ -34,6 +33,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/iterator/indirect_iterator.hpp>
+
+#include <winapi/shell/pidl.hpp> // pidl_t, PIDL wrapper types
 
 #include <shobjidl.h>  // IShellFolder
 #include <ObjIdl.h>  // IDataObject
@@ -213,7 +214,7 @@ comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
  */
 template<typename T>
 comet::com_ptr<T> bind_to_handler_object(
-	const swish::shell_folder::pidl::pidl_t& pidl)
+	const winapi::shell::pidl::pidl_t& pidl)
 {
 	comet::com_ptr<IShellFolder> desktop = desktop_folder();
 	comet::com_ptr<T> handler;
@@ -249,6 +250,6 @@ std::wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl);
  * the STRRET passed to it.
  */
 std::wstring strret_to_string(
-	STRRET& strret, const swish::shell_folder::pidl::cpidl_t& pidl);
+	STRRET& strret, const winapi::shell::pidl::cpidl_t& pidl);
 
 }} // namespace swish::shell_folder

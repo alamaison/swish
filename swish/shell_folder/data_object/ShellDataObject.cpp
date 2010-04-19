@@ -34,8 +34,9 @@
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
-using swish::shell_folder::pidl::pidl_t;
-using swish::shell_folder::pidl::apidl_t;
+
+using winapi::shell::pidl::pidl_t;
+using winapi::shell::pidl::apidl_t;
 
 using boost::shared_ptr;
 
@@ -130,7 +131,7 @@ namespace { // private
 	 */
 	apidl_t parent_from_cida(const CIDA& cida)
 	{
-		return swish::shell_folder::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
+		return winapi::shell::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
 	}
 
 	/**

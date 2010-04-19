@@ -48,19 +48,24 @@ using swish::shell_folder::desktop_folder;
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::ui_object_of_item;
 using swish::shell_folder::ui_object_of_items;
-using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::path_from_pidl;
+using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::data_object_for_files;
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::pidl::apidl_t;
+
+using winapi::shell::pidl::apidl_t;
+
 using test::common_boost::ComFixture;
 using test::common_boost::SandboxFixture;
+
 using comet::com_ptr;
+
 using boost::filesystem::wpath;
 using boost::test_tools::predicate_result;
 using boost::shared_ptr;
+
 using std::vector;
 using std::wstring;
 

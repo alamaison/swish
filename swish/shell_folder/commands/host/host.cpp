@@ -44,12 +44,13 @@
 using swish::shell_folder::explorer_command::CExplorerCommandProvider;
 using swish::shell_folder::explorer_command::make_explorer_command;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::pidl::apidl_t;
 using swish::shell_folder::commands::Command;
 using swish::host_management::AddConnectionToRegistry;
 using swish::host_management::RemoveConnectionFromRegistry;
 using swish::host_management::ConnectionExists;
 using swish::exception::com_exception;
+
+using winapi::shell::pidl::apidl_t;
 
 using comet::uuid_t;
 using comet::com_ptr;

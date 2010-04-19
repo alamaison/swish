@@ -37,16 +37,19 @@
 #include <string>
 #include <vector>
 
-using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::bind_to_handler_object;
+using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::ui_object_of_items;
 using swish::exception::com_exception;
+
 using boost::filesystem::wpath;
 using boost::shared_ptr;
 using boost::numeric_cast;
 using boost::system::system_error;
 using boost::system::system_category;
+
 using comet::com_ptr;
+
 using std::wstring;
 using std::vector;
 

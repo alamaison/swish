@@ -36,8 +36,8 @@
 
 #include <map>
 
+using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
-using swish::shell_folder::pidl::cpidl_t;
 
 using comet::variant_t;
 
