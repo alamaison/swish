@@ -46,6 +46,7 @@ using winapi::shell::property_key;
 using winapi::shell::string_to_strret;
 
 using boost::array;
+using boost::locale::message;
 using boost::locale::translate;
 
 using std::pair;
@@ -58,7 +59,7 @@ namespace {
 
 	struct column {
 		property_key key;
-		wstring title;
+		message title;
 		SHCOLSTATEF flags;
 		int format;
 		int avg_char_width;
@@ -98,7 +99,8 @@ SHELLDETAILS header_from_column_index(size_t index)
 
 	details.cxChar = column_key_index.at(index).avg_char_width;
 	details.fmt = column_key_index.at(index).format;
-	details.str = string_to_strret(column_key_index.at(index).title);
+	wstring title = column_key_index.at(index).title;
+	details.str = string_to_strret(title);
 
 	return details;
 }
