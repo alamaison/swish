@@ -58,6 +58,10 @@ protected:
 		int column, bool compare_all_fields, bool canonical) const;
 
 	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
+	
+	comet::variant_t property(
+		const winapi::shell::property_key& key,
+		const winapi::shell::pidl::cpidl_t& pidl);
 
 	ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
 
@@ -92,8 +96,6 @@ public: // IShellFolder methods
 
 	// IShellFolder2
 	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );
-	STDMETHOD(GetDetailsEx)( PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, 
-							 VARIANT *pv );
 	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
 
 	// IExtractIconW

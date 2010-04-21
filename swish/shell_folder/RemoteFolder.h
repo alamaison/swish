@@ -85,6 +85,10 @@ protected:
 
 	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
 
+	comet::variant_t property(
+		const winapi::shell::property_key& key,
+		const winapi::shell::pidl::cpidl_t& pidl);
+
 	ATL::CComPtr<IExtractIconW> extract_icon_w(
 		HWND hwnd, PCUITEMID_CHILD pidl);
 	ATL::CComPtr<IQueryAssociations> query_associations(
@@ -119,9 +123,6 @@ public:
 	// IShellFolder2
 	IFACEMETHODIMP GetDefaultColumnState( 
 		UINT iColumn, __out SHCOLSTATEF* pcsFlags);
-	IFACEMETHODIMP GetDetailsEx(
-		__in PCUITEMID_CHILD pidl, __in const SHCOLUMNID* pscid,
-		__out VARIANT* pv);
 	IFACEMETHODIMP MapColumnToSCID(UINT iColumn, __out SHCOLUMNID* pscid);
 
 private:

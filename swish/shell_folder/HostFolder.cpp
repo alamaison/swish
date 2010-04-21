@@ -71,6 +71,7 @@ using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::shell_folder::commands::host::host_folder_command_provider;
 
+using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
 using winapi::shell::strret_to_string;
 
@@ -329,35 +330,6 @@ STDMETHODIMP CHostFolder::GetDefaultColumnState(
 }
 
 /**
- * Get property of an item as a VARIANT.
- *
- * @implementing IShellFolder2
- *
- * If pidl: Request is for an item detail.  Retrieve from pidl.
- * Else:    Request is for a column heading.
- *
- * The work is delegated to the properties functions in the swish::host_folder
- * namespace.
- */
-STDMETHODIMP CHostFolder::GetDetailsEx(
-	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
-{
-	if (!pv) return E_POINTER;
-	::VariantClear(pv);
-	if (!pscid) return E_POINTER;
-	if (::ILIsEmpty(pidl)) return E_INVALIDARG;
-
-	try
-	{
-		variant_t var = property_from_pidl(pidl, *pscid);
-		*pv = var.detach();
-	}
-	catchCom()
-
-	return S_OK;
-}
-
-/**
  * Convert column to appropriate property set ID (FMTID) and property ID (PID).
  *
  * @implementing IShellFolder2
@@ -543,6 +515,13 @@ const throw(...)
 	}
 }
 
+/**
+ * Return a property, specified by PROERTYKEY, of an item in this folder.
+ */
+variant_t CHostFolder::property(const property_key& key, const cpidl_t& pidl)
+{
+	return property_from_pidl(pidl, key);
+}
 
 /*--------------------------------------------------------------------------*/
 /*                    CSwishFolder internal interface.                      */

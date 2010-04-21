@@ -115,6 +115,9 @@ protected:
 
 	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
 
+	comet::variant_t property(
+		const winapi::shell::property_key& key,
+		const winapi::shell::pidl::cpidl_t& pidl);
 public:
 
 	CDummyFolder();
@@ -166,11 +169,6 @@ public: // IShellFolder2 methods
 		__out ULONG *pDisplay);
 
 	IFACEMETHODIMP GetDefaultColumnState(UINT iColumn, __out SHCOLSTATEF *pcsFlags);
-
-	IFACEMETHODIMP GetDetailsEx(
-		__in PCUITEMID_CHILD pidl,
-		__in const SHCOLUMNID *pscid,
-		__out VARIANT *pv);
 
 	IFACEMETHODIMP GetDetailsOf(
 		__in_opt PCUITEMID_CHILD pidl,

@@ -47,11 +47,14 @@ using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::exception::com_exception;
 
+using winapi::shell::pidl::cpidl_t;
+using winapi::shell::property_key;
+
 using comet::com_ptr;
+using comet::variant_t;
 
 using ATL::CComObject;
 using ATL::CComPtr;
-using ATL::CComVariant;
 using ATL::CComBSTR;
 using ATL::CString;
 
@@ -380,35 +383,6 @@ STDMETHODIMP CRemoteFolder::GetDetailsOf(
 }
 
 /**
- * Get property of an item as a VARIANT.
- *
- * @implementing IShellFolder2
- *
- * The work is delegated to the properties functions in the swish::properties
- * namespace
- */
-STDMETHODIMP CRemoteFolder::GetDetailsEx(
-	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
-{
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(pscid, E_POINTER);
-	ATLENSURE_RETURN_HR(pv, E_POINTER);
-	ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
-
-	try
-	{
-		::VariantInit(pv);
-
-		CComVariant var = properties::GetProperty(pidl, *pscid);
-
-		HRESULT hr = var.Detach(pv);
-		ATLENSURE_SUCCEEDED(hr);
-	}
-	catchCom()
-	return S_OK;
-}
-
-/**
  * Returns the default state for the column specified by index.
  * @implementing IShellFolder2
  */
@@ -514,6 +488,14 @@ const
 		pidl1, pidl2, column, compare_all_fields, canonical);
 }
 
+
+/**
+ * Return a property, specified by PROERTYKEY, of an item in this folder.
+ */
+variant_t CRemoteFolder::property(const property_key& key, const cpidl_t& pidl)
+{
+	return variant_t(properties::GetProperty(pidl.get(), key.get()).vt);
+}
 
 /*--------------------------------------------------------------------------*/
 /*                    CSwishFolder internal interface.                      */

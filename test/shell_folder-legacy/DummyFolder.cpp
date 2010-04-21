@@ -139,6 +139,16 @@ const
 	return spFolder;
 }
 
+/**
+ * Get property for item.
+ *
+ * Equivalent to GetDetailEx.
+ */
+comet::variant_t CDummyFolder::property(
+	const winapi::shell::property_key& /*key*/,
+	const winapi::shell::pidl::cpidl_t& /*pidl*/)
+{ AtlThrow(E_NOTIMPL); }
+
 STDMETHODIMP CDummyFolder::ParseDisplayName(
 	HWND /*hwnd*/, IBindCtx * /*pbc*/, PWSTR pwszDisplayName, ULONG *pchEaten, 
 	PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
@@ -383,19 +393,6 @@ STDMETHODIMP CDummyFolder::GetDetailsOf(
 	// Store in STRRET and return
 	psd->str.uType = STRRET_WSTR;
 	return ::SHStrDup(str, &(psd->str.pOleStr));
-}
-
-STDMETHODIMP CDummyFolder::GetDetailsEx(
-	PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
-{
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pidl, E_POINTER);
-	ATLENSURE_RETURN_HR(pscid, E_POINTER);
-	ATLENSURE_RETURN_HR(pv, E_POINTER);
-
-	//::VariantClear(pv);
-
-	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
 STDMETHODIMP CDummyFolder::MapColumnToSCID(UINT /*iColumn*/, SHCOLUMNID *pscid)

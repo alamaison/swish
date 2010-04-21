@@ -34,6 +34,8 @@ using ATL::CComPtr;
 
 using swish::exception::com_exception;
 
+using comet::variant_t;
+
 namespace { // private
 
 	/**
@@ -515,6 +517,31 @@ STDMETHODIMP CFolder::GetDefaultColumn(
 
 	*pSort = 0;
 	*pDisplay = 0;
+
+	return S_OK;
+}
+
+/**
+ * Get property of an item as a VARIANT.
+ *
+ * @implementing IShellFolder2
+ *
+ * The work is delegated to the subclass.
+ */
+STDMETHODIMP CFolder::GetDetailsEx(
+	PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
+{
+	if (!pv) return E_POINTER;
+	::VariantClear(pv);
+	if (!pscid) return E_POINTER;
+	if (::ILIsEmpty(pidl)) return E_INVALIDARG;
+
+	try
+	{
+		variant_t var = property(*pscid, pidl);
+		*pv = var.detach();
+	}
+	catchCom()
 
 	return S_OK;
 }

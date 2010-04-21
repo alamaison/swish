@@ -28,6 +28,11 @@
 
 #include "Pidl.h"
 
+#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <winapi/shell/property_key.hpp> // property_key
+
+#include <comet/variant.h> // variant_t
+
 #include "swish/atl.hpp"  // Common ATL setup
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
@@ -156,6 +161,9 @@ public: // IShellFolder2 methods
 		DWORD dwReserved,
 		__out ULONG* pSort,
 		__out ULONG* pDisplay);
+	
+	IFACEMETHODIMP GetDetailsEx(
+		PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv);
 
 protected:
 
@@ -260,6 +268,18 @@ protected:
 	virtual ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl)
 		const = 0;
 
+	/**
+	 * The caller is asking for some property of an item in this folder.
+	 *
+	 * Which property is indicated by the given PROPERTYKEY (a GUID, aka
+	 * SHCOLUMNID).  Common PROPERTYKEYs are in Propkey.h.
+	 *
+	 * The return value is a variant so can be any type that VARIANTs
+	 * support.
+	 */
+	virtual comet::variant_t property(
+		const winapi::shell::property_key& key,
+		const winapi::shell::pidl::cpidl_t& pidl) = 0;
 
 private:
 	ATL::CComPtr<IUnknown> _delegate_object_lookup_to_subfolder(
