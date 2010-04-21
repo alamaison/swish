@@ -107,10 +107,10 @@
           </Component>
 
           <Component Id="ICU" Guid="15BE6904-2BA4-4855-AE49-9A77F297414D">
-            <File Id="icudtDLL" Source="$(var.IcuDllDir)icudt42.dll" KeyPath="yes" />
-            <File Id="icuinDLL" Source="$(var.IcuDllDir)icuin42.dll" />
-            <File Id="icuioDLL" Source="$(var.IcuDllDir)icuio42.dll" />
-            <File Id="icuucDLL" Source="$(var.IcuDllDir)icuuc42.dll" />
+            <File Id="icudtDLL" Source="$(var.IcuDllDir)icudt40.dll" KeyPath="yes" />
+            <File Id="icuinDLL" Source="$(var.IcuDllDir)icuin40.dll" />
+            <File Id="icuioDLL" Source="$(var.IcuDllDir)icuio40.dll" />
+            <File Id="icuucDLL" Source="$(var.IcuDllDir)icuuc40.dll" />
           </Component>
 
           <Component Id="AUTHORS" Guid="DF4C428D-E23A-48ea-BE08-F30E6EB2E756">
