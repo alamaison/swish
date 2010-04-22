@@ -190,10 +190,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Folder.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\host_management.cpp"
 				>
 			</File>
@@ -259,10 +255,6 @@
 			</File>
 			<File
 				RelativePath=".\Swish.idl"
-				>
-			</File>
-			<File
-				RelativePath=".\SwishFolder.cpp"
 				>
 			</File>
 			<File
