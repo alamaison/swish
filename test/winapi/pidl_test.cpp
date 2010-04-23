@@ -400,6 +400,25 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( copy_assign, T, pidl_types )
 }
 
 /**
+ * Copy basic_pidl to a raw PIDL.
+ * The data in both pidls must be the same but their addresses should
+ * be different (i.e. a copy).
+ */
+BOOST_AUTO_TEST_CASE_TEMPLATE( copy_to, T, pidl_types )
+{
+	heap_pidl<T>::type pidl(fake_pidl<T>());
+	T* raw;
+
+	pidl.copy_to(raw);
+
+	shared_ptr<T> scope(raw);
+
+	BOOST_REQUIRE(binary_equal_pidls(pidl.get(), raw));
+
+	BOOST_REQUIRE_NE(pidl.get(), raw);
+}
+
+/**
  * Attach a basic_pidl to a raw PIDL.
  * The wrapped PIDL should have the same address as the orginal.
  */

@@ -467,6 +467,28 @@ public:
 	}
 
 	/**
+	 * Clone internal PIDL as a raw PIDL.
+	 *
+	 * This is needed when returning a PIDL through a COM interface where the
+	 * caller takes ownership.  I.e. where the parameter is PIDLIST rather
+	 * than PCIDLIST.
+	 *
+	 * The output pidl type is a template parameter to allow upcasting.  This
+	 * will fail to compile unless it is legal to upcasting the underlying raw
+	 * PIDL type to this PIDL's type.
+	 *
+	 * @param[out] raw_pidl  Location in which to return the address of the
+	 *                       cloned PIDL.
+	 */
+	template<typename U>
+	void copy_to(U*& raw_pidl) const
+	{
+		assert(&m_pidl != &raw_pidl);
+
+		raw_pidl = typename raw_pidl::clone<Alloc>(m_pidl);
+	}
+
+	/**
 	 * Attach wrapper to a raw PIDL without copying.
 	 *
 	 * @warning  The raw PIDL must have been allocated with the SAME ALLOCATOR

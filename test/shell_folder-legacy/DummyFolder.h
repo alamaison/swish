@@ -113,7 +113,8 @@ protected:
 	ATL::CComPtr<IDataObject> data_object(
 		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
 
-	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
+	ATL::CComPtr<IShellFolder> subfolder(
+		const winapi::shell::pidl::apidl_t& root) const;
 
 	comet::variant_t property(
 		const winapi::shell::property_key& key,

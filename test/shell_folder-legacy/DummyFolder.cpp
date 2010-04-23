@@ -123,14 +123,15 @@ void CDummyFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 /**
  * Create and initialise new folder object for subfolder.
  */
-CComPtr<IShellFolder> CDummyFolder::subfolder(PCIDLIST_ABSOLUTE pidlRoot)
+CComPtr<IShellFolder> CDummyFolder::subfolder(
+	const winapi::shell::pidl::apidl_t& root)
 const
 {
 	HRESULT hr;
 
 	// Create and initialise new folder object for subfolder
 	CComPtr<CDummyFolder> spDummyFolder = spDummyFolder->CreateCoObject();
-	hr = spDummyFolder->Initialize(pidlRoot);
+	hr = spDummyFolder->Initialize(root.get());
 	ATLENSURE_THROW(SUCCEEDED(hr), hr);
 
 	CComQIPtr<IShellFolder> spFolder = spDummyFolder;
@@ -277,7 +278,7 @@ CComPtr<IContextMenu> CDummyFolder::context_menu(
 	// Create default context menu from list of PIDLs
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
-		root_pidl(), hwnd, cpidl, apidl, spThisFolder, 
+		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
 		MenuCallback, ckeys, akeys, &spMenu);
 	ATLENSURE_SUCCEEDED(hr);
 
@@ -295,7 +296,7 @@ CComPtr<IDataObject> CDummyFolder::data_object(
 
 	CComPtr<IDataObject> spdo;
 	HRESULT hr = ::CIDLData_CreateFromIDArray(
-		root_pidl(), cpidl, 
+		root_pidl().get(), cpidl, 
 		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
 	ATLENSURE_SUCCEEDED(hr);
 

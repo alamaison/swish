@@ -33,7 +33,7 @@
 #include "swish/debug.hpp" // METHOD_TRACE
 #include "swish/exception.hpp"  // com_exception
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 
 #include <comet/variant.h> // variant_t
@@ -122,23 +122,11 @@ public:
 		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)
 	END_COM_MAP()
 
-	CFolder() : m_root_pidl(NULL) {}
+	CFolder() {}
 
-	virtual ~CFolder()
-	{
-		if (m_root_pidl)
-		{
-			::ILFree(m_root_pidl);
-			m_root_pidl = NULL;
-		}
-	}
+	virtual ~CFolder() {}
 
-	CAbsolutePidl clone_root_pidl() const
-	{
-		return root_pidl();
-	}
-
-	PCIDLIST_ABSOLUTE root_pidl() const
+	const winapi::shell::pidl::apidl_t& root_pidl() const	
 	{
 		return m_root_pidl;
 	}
@@ -180,12 +168,9 @@ public: // IPersistFolder methods
 	{
 		METHOD_TRACE;
 		ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
-		ATLENSURE_RETURN_HR(m_root_pidl == NULL, E_UNEXPECTED);
-		                                         // Multiple init
+		ATLENSURE_RETURN_HR(!m_root_pidl, E_UNEXPECTED); // Multiple init
 
-		m_root_pidl = ::ILCloneFull(pidl);
-		ATLENSURE_RETURN_HR(!::ILIsEmpty(m_root_pidl), E_OUTOFMEMORY);
-
+		m_root_pidl = pidl;
 		return S_OK;
 	}
 
@@ -210,12 +195,15 @@ public: // IPersistFolder2 methods
 
 		*ppidl = NULL;
 
-		if (root_pidl() == NULL) // Legal to call this before Initialize()
-			return S_FALSE;
+		try
+		{
+			if (!root_pidl()) // Legal to call this before Initialize()
+				return S_FALSE;
 
-		// Copy the PIDL that was passed to us in Initialize()
-		*ppidl = ::ILCloneFull(root_pidl());
-		ATLENSURE_RETURN_HR(*ppidl, E_OUTOFMEMORY);
+			// Copy the PIDL that was passed to us in Initialize()
+			root_pidl().copy_to(*ppidl);
+		}
+		catchCom()
 		
 		return S_OK;
 	}
@@ -315,12 +303,8 @@ public: // IShellFolder methods
 			{
 				// Create absolute PIDL to the subfolder by combining with 
 				// our root
-				CAbsolutePidl pidl_sub_root;
-				pidl_sub_root.Attach(::ILCombine(root_pidl(), pidl));
-				if (!pidl_sub_root)
-					throw swish::exception::com_exception(E_OUTOFMEMORY);
-
-				ATL::CComPtr<IShellFolder> folder = subfolder(pidl_sub_root);
+				ATL::CComPtr<IShellFolder> folder =
+					subfolder(root_pidl() + pidl);
 
 				return folder->QueryInterface(riid, ppv);
 			}
@@ -714,8 +698,8 @@ protected:
 	 * This method corresonds to BindToFolder() where the item is directly
 	 * in the current folder (not a grandchild).
 	 */
-	virtual ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl)
-		const = 0;
+	virtual ATL::CComPtr<IShellFolder> subfolder(
+		const winapi::shell::pidl::apidl_t& pidl) const = 0;
 
 	/**
 	 * The caller is asking for some property of an item in this folder.
@@ -756,7 +740,8 @@ private:
 
 		return object;
 	}
-	PIDLIST_ABSOLUTE m_root_pidl;
+
+	winapi::shell::pidl::apidl_t m_root_pidl;
 };
 
 }}} // namespace swish::shell_folder::folder

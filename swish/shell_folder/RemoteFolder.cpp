@@ -47,6 +47,7 @@ using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::exception::com_exception;
 
+using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
 
@@ -97,7 +98,8 @@ STDMETHODIMP CRemoteFolder::EnumObjects(
 			_CreateConnectionForFolder(hwndOwner);
 
 		// Create directory handler and get listing as PIDL enumeration
-		CSftpDirectory directory(root_pidl(), spProvider, m_consumer.get());
+		CSftpDirectory directory(
+			root_pidl().get(), spProvider, m_consumer.get());
 		*ppEnumIDList = directory.GetEnum(grfFlags).Detach();
 	}
 	catchCom()
@@ -204,7 +206,7 @@ STDMETHODIMP CRemoteFolder::GetDisplayNameOf(
 				CComPtr<IShellFolder> spParent;
 				PCUITEMID_CHILD pidlThisFolder = NULL;
 				HRESULT hr = swish::windows_api::SHBindToParent(
-					root_pidl(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+					root_pidl().get(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
 				ATLASSERT(SUCCEEDED(hr));
 
 				STRRET strret;
@@ -258,7 +260,8 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder(hwnd);
 
 		// Rename file
-		CSftpDirectory directory(root_pidl(), spProvider, m_consumer.get());
+		CSftpDirectory directory(
+			root_pidl().get(), spProvider, m_consumer.get());
 		bool fOverwritten = directory.Rename(pidl, pwszName);
 
 		// Create new PIDL from old one
@@ -267,8 +270,8 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		pidlNewFile.SetFilename(pwszName);
 
 		// Make PIDLs absolute
-		CAbsolutePidl pidlOld(root_pidl(), pidl);
-		CAbsolutePidl pidlNew(root_pidl(), pidlNewFile);
+		apidl_t old_pidl = root_pidl() + pidl;
+		apidl_t new_pidl = root_pidl() + pidlNewFile.m_pidl;
 
 		// Return new child pidl if requested else dispose of it
 		if (ppidlOut)
@@ -278,13 +281,13 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 		if (fOverwritten)
 		{
 			::SHChangeNotify(
-				SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, pidlNew, NULL
+				SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, new_pidl.get(), NULL
 			);
 		}
 		CRemoteItemHandle rpidl(pidl);
 		::SHChangeNotify(
 			(rpidl.IsFolder()) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-			SHCNF_IDLIST | SHCNF_FLUSH, pidlOld, pidlNew
+			SHCNF_IDLIST | SHCNF_FLUSH, old_pidl.get(), new_pidl.get()
 		);
 
 		return S_OK;
@@ -459,10 +462,10 @@ void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
  * Create new CRemoteFolder initialised with its root PIDL.  CRemoteFolder
  * only have instances of themselves as subfolders.
  */
-CComPtr<IShellFolder> CRemoteFolder::subfolder(PCIDLIST_ABSOLUTE pidl) const
+CComPtr<IShellFolder> CRemoteFolder::subfolder(const apidl_t& pidl) const
 {
 	// Create CRemoteFolder initialised with its root PIDL
-	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl);
+	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl.get());
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;
@@ -586,7 +589,7 @@ CComPtr<IContextMenu> CRemoteFolder::context_menu(
 	// Create default context menu from list of PIDLs
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
-		root_pidl(), hwnd, cpidl, apidl, spThisFolder, 
+		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
 		MenuCallback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
 		throw com_exception(hr);
@@ -610,7 +613,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 		_CreateConnectionForFolder(hwnd);
 
 	return CSftpDataObject::Create(
-		cpidl, apidl, root_pidl(), spProvider, m_consumer.get());
+		cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
 }
 
 /**
@@ -624,7 +627,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
 	// Create connection for this folder with hwnd for UI
 	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
-	CHostItemAbsoluteHandle pidl = root_pidl();
+	CHostItemAbsoluteHandle pidl = root_pidl().get();
 	return CDropTarget::Create(
 		provider, m_consumer, pidl.GetFullPath().GetString()).get();
 }
@@ -634,7 +637,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
  */
 CComPtr<IShellFolderViewCB> CRemoteFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return CExplorerCallback::Create(root_pidl());
+	return CExplorerCallback::Create(root_pidl().get());
 }
 
 
@@ -832,7 +835,7 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 	CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder( hwnd );
 
 	// Create instance of our directory handler class
-	CSftpDirectory directory(root_pidl(), spProvider, m_consumer.get());
+	CSftpDirectory directory(root_pidl().get(), spProvider, m_consumer.get());
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();
@@ -840,13 +843,11 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 	{
 		directory.Delete( *it );
 
-		// Make PIDL absolute
-		CAbsolutePidl pidlFull(root_pidl(), *it);
-
 		// Notify the shell
 		::SHChangeNotify(
 			((*it).IsFolder()) ? SHCNE_RMDIR : SHCNE_DELETE,
-			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, pidlFull, NULL
+			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+			(root_pidl() + (*it).m_pidl).get(), NULL
 		);
 
 		it++;
@@ -956,7 +957,7 @@ CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 
 	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
 	CHostItemListHandle pidlHost(
-		CHostItemListHandle(root_pidl()).FindHostPidl());
+		CHostItemListHandle(root_pidl().get()).FindHostPidl());
 	ATLASSERT(pidlHost.IsValid());
 
 	// Extract connection info from PIDL

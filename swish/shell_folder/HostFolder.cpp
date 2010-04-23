@@ -72,6 +72,8 @@ using swish::host_folder::property_key_from_column_index;
 using swish::shell_folder::commands::host::host_folder_command_provider;
 
 using winapi::shell::pidl::cpidl_t;
+using winapi::shell::pidl::apidl_t;
+using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::strret_to_string;
 
@@ -162,7 +164,7 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 	wstring strDisplayName(pwszDisplayName);
 	if (strDisplayName.empty())
 	{
-		*ppidl = clone_root_pidl().Detach();
+		root_pidl().copy_to(*ppidl);
 		return S_OK;
 	}
 
@@ -210,12 +212,13 @@ STDMETHODIMP CHostFolder::ParseDisplayName(
 		wchar_t wszPath[MAX_PATH];
 		::StringCchCopyW(wszPath, ARRAYSIZE(wszPath), strPath.c_str());
 
-		CRelativePidl pidlPath;
+		pidl_t pidl_path;
 		hr = spSubfolder->ParseDisplayName(
-			hwnd, pbc, wszPath, pchEaten, &pidlPath, pdwAttributes);
+			hwnd, pbc, wszPath, pchEaten, pidl_path.out(), pdwAttributes);
 		ATLENSURE_SUCCEEDED(hr);
 
-		*ppidl = CRelativePidl(root_pidl(), pidlPath).Detach();
+		pidl_t pidl_out = root_pidl() + pidl_path;
+		pidl_out.copy_to(*ppidl);
 	}
 	catchCom()
 
@@ -249,7 +252,8 @@ STDMETHODIMP CHostFolder::GetDisplayNameOf(
 				CComPtr<IShellFolder> spParent;
 				PCUITEMID_CHILD pidlThisFolder;
 				HRESULT hr = swish::windows_api::SHBindToParent(
-					root_pidl(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
+					root_pidl().get(), IID_PPV_ARGS(&spParent),
+					&pidlThisFolder);
 				ATLASSERT(SUCCEEDED(hr));
 
 				STRRET strret;
@@ -465,9 +469,9 @@ void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
  * Create CRemoteFolder initialised with its root PIDL.  CHostFolders
  * don't have any other types of subfolder.
  */
-CComPtr<IShellFolder> CHostFolder::subfolder(PCIDLIST_ABSOLUTE pidl) const
+CComPtr<IShellFolder> CHostFolder::subfolder(const apidl_t& pidl) const
 {
-	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl);
+	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl.get());
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;
@@ -620,7 +624,7 @@ CComPtr<IContextMenu> CHostFolder::context_menu(
 	// Create default context menu from list of PIDLs
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
-		root_pidl(), hwnd, cpidl, apidl, spThisFolder, 
+		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
 		MenuCallback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
 		throw com_exception(hr);
@@ -645,7 +649,7 @@ CComPtr<IDataObject> CHostFolder::data_object(
 
 	CComPtr<IDataObject> spdo;
 	HRESULT hr = ::CIDLData_CreateFromIDArray(
-		root_pidl(), cpidl, 
+		root_pidl().get(), cpidl, 
 		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
 	if (FAILED(hr))
 		throw com_exception(hr);
@@ -660,7 +664,7 @@ CComPtr<IDataObject> CHostFolder::data_object(
  */
 CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return CExplorerCallback::Create(root_pidl());
+	return CExplorerCallback::Create(root_pidl().get());
 }
 
 

@@ -57,7 +57,8 @@ protected:
 		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
 		int column, bool compare_all_fields, bool canonical) const;
 
-	ATL::CComPtr<IShellFolder> subfolder(PCIDLIST_ABSOLUTE pidl) const;
+	ATL::CComPtr<IShellFolder> subfolder(
+		const winapi::shell::pidl::apidl_t& pidl) const;
 	
 	comet::variant_t property(
 		const winapi::shell::property_key& key,
