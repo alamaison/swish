@@ -26,10 +26,8 @@
 
 #pragma once
 
-#pragma warning (push)
-#pragma warning (disable: 4996) // 'wctomb': This function may be unsafe.
-#include <boost/archive/iterators/mb_from_wchar.hpp>
-#pragma warning (pop)
+#include <swish/utils.hpp>
+
 #include <boost/system/error_code.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
@@ -37,40 +35,26 @@
 #include <string>
 #include <ostream>
 
-typedef boost::archive::iterators::mb_from_wchar<std::wstring::const_iterator>
-	converter;
-
 namespace std {
 
 	inline std::ostream& operator<<(
 		std::ostream& out, const std::wstring& wide_in)
 	{
-		std::string narrow_out(
-			converter(wide_in.begin()), converter(wide_in.end()));
-		
-		out << narrow_out;
+		out << swish::utils::WideStringToUtf8String(wide_in);
 		return out;
 	}
 
 	inline std::ostream& operator<<(
 		std::ostream& out, const wchar_t* wide_in)
 	{
-		std::wstring wstr_in(wide_in);
-		std::string narrow_out(
-			converter(wstr_in.begin()), converter(wstr_in.end()));
-		
-		out << narrow_out;
+		out << std::wstring(wide_in);
 		return out;
 	}
 
 	inline std::ostream& operator<<(
 		std::ostream& out, const boost::filesystem::wpath& path)
 	{
-		std::wstring wstr_in(path.string());
-		std::string narrow_out(
-			converter(wstr_in.begin()), converter(wstr_in.end()));
-		
-		out << narrow_out;
+		out << path.string();
 		return out;
 	}
 }
