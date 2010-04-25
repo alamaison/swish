@@ -483,8 +483,6 @@ public:
 	template<typename U>
 	void copy_to(U*& raw_pidl) const
 	{
-		assert(&m_pidl != &raw_pidl);
-
 		raw_pidl = typename raw_pidl::clone<Alloc>(m_pidl);
 	}
 
