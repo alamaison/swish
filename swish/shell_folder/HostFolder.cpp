@@ -34,7 +34,7 @@
 #include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
 #include "swish/host_folder/properties.hpp" // property_from_pidl
-#include "swish/host_folder/columns.hpp" // host-folder columns
+#include "swish/host_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
@@ -64,9 +64,6 @@ using std::wstring;
 
 using swish::host_management::LoadConnectionsFromRegistry;
 using swish::exception::com_exception;
-using swish::host_folder::column_state_from_column_index;
-using swish::host_folder::detail_from_property_key;
-using swish::host_folder::header_from_column_index;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::shell_folder::commands::host::host_folder_command_provider;
@@ -314,26 +311,6 @@ STDMETHODIMP CHostFolder::GetAttributesOf(
 }
 
 /**
- * Returns the default state for the column specified by index.
- *
- * @implementing IShellFolder2
- */
-STDMETHODIMP CHostFolder::GetDefaultColumnState(
-	UINT iColumn, SHCOLSTATEF* pcsFlags)
-{
-	if (!pcsFlags) return E_POINTER;
-	*pcsFlags = 0;
-
-	try
-	{
-		*pcsFlags = column_state_from_column_index(iColumn);
-	}
-	catchCom()
-
-	return S_OK;
-}
-
-/**
  * Convert column to appropriate property set ID (FMTID) and property ID (PID).
  *
  * @implementing IShellFolder2
@@ -349,47 +326,6 @@ STDMETHODIMP CHostFolder::MapColumnToSCID(UINT iColumn, PROPERTYKEY* pscid)
 	try
 	{
 		*pscid = property_key_from_column_index(iColumn).get();
-	}
-	catchCom()
-
-	return S_OK;
-}
-
-/**
- * Returns detailed information on the items in a folder.
- *
- * @implementing IShellDetails
- *
- * This function operates in two distinctly different ways:
- * If pidl is NULL:
- *     Retrieves the information on the view columns, i.e., the names of
- *     the columns themselves.  The index of the desired column is given
- *     in iColumn.  If this column does not exist we return E_FAIL.
- * If pidl is not NULL:
- *     Retrieves the specific item information for the given pidl and the
- *     requested column.
- * The information is returned in the SHELLDETAILS structure.
- *
- * @note   The first column for which we return an error, marks the end of the
- *         columns in this folder.
- */
-STDMETHODIMP CHostFolder::GetDetailsOf(
-	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* pDetails)
-{
-	if (!pDetails) return E_POINTER;
-	std::memset(pDetails, 0, sizeof(SHELLDETAILS));
-
-	try
-	{
-		if (!pidl)
-		{
-			*pDetails = header_from_column_index(iColumn);
-		}
-		else
-		{
-			property_key pkey = property_key_from_column_index(iColumn);
-			*pDetails = detail_from_property_key(pkey, pidl);
-		}
 	}
 	catchCom()
 
@@ -475,48 +411,6 @@ CComPtr<IShellFolder> CHostFolder::subfolder(const apidl_t& pidl) const
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;
-}
-
-/**
- * Determine the relative order of two file objects or folders.
- *
- * @implementing CFolder
- *
- * Given their PIDLs, compare the two items and return a value
- * indicating the result of the comparison:
- * - Negative: pidl1 < pidl2
- * - Positive: pidl1 > pidl2
- * - Zero:     pidl1 == pidl2
- *
- * @todo  Take account of fCompareAllFields and fCanonical flags.
- */
-int CHostFolder::compare_pidls(
-	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
-	int column, bool /*compare_all_fields*/, bool /*canonical*/)
-const throw(...)
-{
-	CHostItemHandle item1(pidl1);
-	CHostItemHandle item2(pidl2);
-
-	switch (column)
-	{
-	case 0: // Display name (Label)
-			// - also default for fCompareAllFields and fCanonical
-		return wcscmp(item1.GetLabel(), item2.GetLabel());
-	case 1: // Hostname
-		return wcscmp(item1.GetHost(), item2.GetHost());
-	case 2: // Username
-		return wcscmp(item1.GetUser(), item2.GetUser());
-	case 4: // Remote filesystem path
-		return wcscmp(item1.GetPath(), item2.GetPath());
-	case 3: // SFTP port
-		return item1.GetPort() - item2.GetPort();
-	case 5: // Type
-		return 0;
-	default:
-		UNREACHABLE;
-		AtlThrow(E_UNEXPECTED);
-	}
 }
 
 /**

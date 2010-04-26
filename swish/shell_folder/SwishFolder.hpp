@@ -39,7 +39,8 @@ namespace swish {
 namespace shell_folder {
 namespace folder {
 
-class CSwishFolder : public swish::shell_folder::folder::CFolder
+template<typename ColumnType>
+class CSwishFolder : public swish::shell_folder::folder::CFolder<ColumnType>
 {
 public:
 

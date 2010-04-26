@@ -28,6 +28,8 @@
 
 #include "SwishFolder.hpp"       // Superclass
 
+#include <swish/host_folder/columns.hpp> // Column
+
 #include "resource.h"            // main symbols
 #include "swish.h"               // For CHostFolder UUID
 #include "HostPidl.h"            // HostItemId handling
@@ -39,7 +41,8 @@
 
 class ATL_NO_VTABLE CHostFolder :
 	public IExtractIconW,
-	public swish::shell_folder::folder::CSwishFolder
+	public swish::shell_folder::folder::CSwishFolder<
+		swish::host_folder::Column>
 {
 public:
 
@@ -53,9 +56,6 @@ protected:
 	CLSID clsid() const;
 
 	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
-	int compare_pidls(
-		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
-		int column, bool compare_all_fields, bool canonical) const;
 
 	ATL::CComPtr<IShellFolder> subfolder(
 		const winapi::shell::pidl::apidl_t& pidl) const;
@@ -96,7 +96,6 @@ public: // IShellFolder methods
         { return E_NOTIMPL; }
 
 	// IShellFolder2
-	STDMETHOD(GetDefaultColumnState)( UINT iColumn, SHCOLSTATEF *pcsFlags );
 	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
 
 	// IExtractIconW
@@ -104,10 +103,6 @@ public: // IShellFolder methods
 						HICON *phiconSmall, UINT nIconSize );
 	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
 								int *piIndex, UINT *pwFlags );
-
-	// IShellDetails
-	STDMETHOD(GetDetailsOf)( PCUITEMID_CHILD pidl, UINT iColumn, 
-							 LPSHELLDETAILS pDetails );
 
 private:
 	std::vector<CHostItem>  m_vecConnData;

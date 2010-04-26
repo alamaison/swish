@@ -24,7 +24,6 @@
     @endif
 */
 
-#include <initguid.h>  // Make DEFINE_PROPERTYKEY() actually define a key
 #include "properties.hpp"
 
 #include <swish/shell_folder/HostPidl.h> // CHostItemHandle
@@ -34,7 +33,11 @@
 #include <boost/locale.hpp> // translate
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <cassert> // assert
 #include <map>
+
+#include <initguid.h> // Make DEFINE_PROPERTYKEY() actually define a key
+#include <Propkey.h> // PKEY_ *
 
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
@@ -48,6 +51,15 @@ using std::map;
 
 namespace swish {
 namespace host_folder {
+
+// PKEYs for custom swish details/properties
+// Swish Host FMTID GUID {b816a850-5022-11dc-9153-0090f5284f85}
+DEFINE_PROPERTYKEY(PKEY_SwishHostUser, 0xb816a850, 0x5022, 0x11dc, \
+                   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
+                   PID_FIRST_USABLE);
+DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
+                   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
+                   PID_FIRST_USABLE + 1);
 
 namespace {
 
@@ -87,6 +99,12 @@ namespace {
 		(PKEY_ItemType, net_drive_returner); // Type: always 'Network Drive'
 }
 
+/**
+ * Get the requested property for a file based on its PIDL.
+ *
+ * Many of these will be standard system properties but some are custom
+ * to Swish if an appropriate one did not already exist.
+ */
 variant_t property_from_pidl(const cpidl_t& pidl, const property_key& key)
 {
 	host_property_map::const_iterator pos = host_property_getters.find(key);
@@ -94,6 +112,29 @@ variant_t property_from_pidl(const cpidl_t& pidl, const property_key& key)
 		BOOST_THROW_EXCEPTION(unknown_property_error());
 
 	return (pos->second)(pidl.get());
+}
+
+/**
+ * Compare two PIDLs by one of their properties.
+ *
+ * @param left   First PIDL in the comparison.
+ * @param right  Second PIDL in the comparison.
+ * @param key    Property on which to compare the two PIDLs.
+ *
+ * @retval -1 if left < right for chosen property.
+ * @retval  0 if left == right for chosen property.
+ * @retval  1 if left > right for chosen property.
+ */
+int compare_pidls_by_property(
+	const cpidl_t& left, const cpidl_t& right, const property_key& key)
+{
+	if (property_from_pidl(left, key) == property_from_pidl(right, key))
+		return 0;
+	else if (property_from_pidl(left, key) < property_from_pidl(right, key))
+		return -1;
+
+	assert(property_from_pidl(left, key) > property_from_pidl(right, key));
+	return 1;
 }
 
 }} // namespace swish::host_folder

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="host_folder"
-	ProjectGUID="{3341C8C4-01AB-4A6B-A0BF-22CFB0FE5F17}"
-	RootNamespace="host_folder"
+	Name="remote_folder"
+	ProjectGUID="{7F112C5B-3DFD-4FB1-AFF0-4441CBBC0D37}"
+	RootNamespace="remote_folder"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -147,6 +147,30 @@
 				>
 			</File>
 			<File
+				RelativePath=".\filemode.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Mode.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
@@ -178,6 +202,14 @@
 			>
 			<File
 				RelativePath=".\columns.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\filemode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Mode.h"
 				>
 			</File>
 			<File

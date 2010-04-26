@@ -21,9 +21,6 @@
 
 #include "swish/shell_folder/Pidl.h"
 
-#include "swish/atl.hpp"  // Common ATL setup
-#include <atlstr.h>  // CString
-
 #include <vector>
 
 using ATL::CComObject;
@@ -148,7 +145,9 @@ const
 comet::variant_t CDummyFolder::property(
 	const winapi::shell::property_key& /*key*/,
 	const winapi::shell::pidl::cpidl_t& /*pidl*/)
-{ AtlThrow(E_NOTIMPL); }
+{
+	AtlThrow(E_NOTIMPL);
+}
 
 STDMETHODIMP CDummyFolder::ParseDisplayName(
 	HWND /*hwnd*/, IBindCtx * /*pbc*/, PWSTR pwszDisplayName, ULONG *pchEaten, 
@@ -201,25 +200,6 @@ STDMETHODIMP CDummyFolder::EnumObjects(
 	return hr;
 }
 
-/**
- * Determine the relative order of two file objects or folders.
- *
- * @implementing CFolder
- *
- * Given their item identifier lists, compare the two objects and return a value
- * in the HRESULT indicating the result of the comparison:
- * - Negative: pidl1 < pidl2
- * - Positive: pidl1 > pidl2
- * - Zero:     pidl1 == pidl2
- */
-int CDummyFolder::compare_pidls(
-	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2, int /*column*/,
-	bool /*compare_all_fields*/, bool /*canonical*/) const
-{
-	const DummyItemId *pitemid1 = reinterpret_cast<const DummyItemId *>(pidl1);
-	const DummyItemId *pitemid2 = reinterpret_cast<const DummyItemId *>(pidl2);
-	return pitemid1->level - pitemid2->level;
-}
 
 STDMETHODIMP CDummyFolder::GetAttributesOf( 
 	UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY apidl, SFGAOF *rgfInOut)
@@ -337,65 +317,6 @@ STDMETHODIMP CDummyFolder::SetNameOf(
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
 
-STDMETHODIMP CDummyFolder::GetDefaultColumn(
-	DWORD /*dwRes*/, ULONG *pSort, ULONG *pDisplay)
-{
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pSort, E_POINTER);
-	ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
-
-	*pSort = 0;
-	*pDisplay = 0;
-
-	return S_OK;
-}
-
-STDMETHODIMP CDummyFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
-{
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pcsFlags, E_POINTER);
-
-	*pcsFlags = 0;
-
-	if (iColumn != 0)
-		return E_FAIL;
-
-	*pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
-
-	return S_OK;
-}
-
-STDMETHODIMP CDummyFolder::GetDetailsOf(
-	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
-{
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(psd, E_POINTER);
-
-	::ZeroMemory(psd, sizeof SHELLDETAILS);
-
-	if (iColumn != 0)
-		return E_FAIL;
-
-	CString str;
-
-	if (pidl == NULL) // Wants header
-	{
-		str = L"Name";
-	}
-	else              // Wants contents
-	{
-		const DummyItemId *pitemid = reinterpret_cast<const DummyItemId *>(pidl);
-		str.AppendFormat(L"Level %d", pitemid->level);
-	}
-	
-	psd->fmt = LVCFMT_LEFT;
-	psd->cxChar = 4;
-
-	// Store in STRRET and return
-	psd->str.uType = STRRET_WSTR;
-	return ::SHStrDup(str, &(psd->str.pOleStr));
-}
-
 STDMETHODIMP CDummyFolder::MapColumnToSCID(UINT /*iColumn*/, SHCOLUMNID *pscid)
 {
 	FUNCTION_TRACE;
@@ -405,8 +326,6 @@ STDMETHODIMP CDummyFolder::MapColumnToSCID(UINT /*iColumn*/, SHCOLUMNID *pscid)
 
 	ATLTRACENOTIMPL(__FUNCTION__);
 }
-
-
 
 /**
  * Cracks open the @c DFM_* callback messages and dispatched them to handlers.

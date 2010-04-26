@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="host_folder"
-	ProjectGUID="{3341C8C4-01AB-4A6B-A0BF-22CFB0FE5F17}"
-	RootNamespace="host_folder"
+	Name="test-remote_folder"
+	ProjectGUID="{EC130511-8D47-4163-8725-60DF2CE5C231}"
+	RootNamespace="remote_folder"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -55,10 +55,17 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				LinkIncremental="2"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -70,13 +77,19 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -97,7 +110,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -111,10 +124,19 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -126,14 +148,24 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{23FF8881-F180-4389-A903-DFAB308CBF08}"
-			RelativePathToProject=".\swish\nse\nse.vcproj"
+			ReferencedProjectIdentifier="{7F112C5B-3DFD-4FB1-AFF0-4441CBBC0D37}"
+			RelativePathToProject=".\swish\remote_folder\remote_folder.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
+			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
 		/>
 	</References>
 	<Files>
@@ -143,11 +175,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\columns.cpp"
+				RelativePath=".\columns_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\pch.cpp"
+				RelativePath="..\..\swish\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -167,7 +199,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\properties.cpp"
+				RelativePath=".\properties_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test.cpp"
 				>
 			</File>
 		</Filter>
@@ -176,14 +212,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\columns.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\properties.hpp"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

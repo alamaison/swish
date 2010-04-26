@@ -28,6 +28,8 @@
 
 #include <swish/shell_folder/HostPidl.h> // CHostItem
 
+#include <winapi/shell/property_key.hpp> // property_key
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -35,6 +37,9 @@
 #include <Propkey.h> // PKEY_ *
 
 using swish::host_folder::property_from_pidl;
+using swish::host_folder::compare_pidls_by_property;
+
+using winapi::shell::property_key;
 
 using comet::variant_t;
 using std::string;
@@ -64,13 +69,15 @@ BOOST_AUTO_TEST_CASE( prop_host )
 
 BOOST_AUTO_TEST_CASE( prop_user )
 {
-	string prop = property_from_pidl(gimme_pidl(), PKEY_SwishHostUser);
+	string prop = property_from_pidl(
+		gimme_pidl(), swish::host_folder::PKEY_SwishHostUser);
 	BOOST_CHECK_EQUAL(prop, "bobuser");
 }
 
 BOOST_AUTO_TEST_CASE( prop_port )
 {
-	string prop = property_from_pidl(gimme_pidl(), PKEY_SwishHostPort);
+	string prop = property_from_pidl(
+		gimme_pidl(), swish::host_folder::PKEY_SwishHostPort);
 	BOOST_CHECK_EQUAL(prop, "25");
 }
 
@@ -84,6 +91,57 @@ BOOST_AUTO_TEST_CASE( prop_type )
 {
 	string prop = property_from_pidl(gimme_pidl(), PKEY_ItemType);
 	BOOST_CHECK_EQUAL(prop, "Network Drive");
+}
+
+namespace {
+	
+	CHostItem comp_pidl()
+	{
+		return CHostItem(
+			L"boxuser", L"myhost", L"/home/aobuser", 24, L"Your Label");
+		    //  >         ==               <         <     >
+	}
+
+	int compare(const property_key& key)
+	{
+		return compare_pidls_by_property(gimme_pidl(), comp_pidl(), key);
+	}
+}
+
+BOOST_AUTO_TEST_CASE( comp_label )
+{
+	int res = compare(PKEY_ItemNameDisplay);
+	BOOST_CHECK_LT(res, 0);
+}
+
+BOOST_AUTO_TEST_CASE( comp_host )
+{
+	int res = compare(PKEY_ComputerName);
+	BOOST_CHECK_EQUAL(res, 0);
+}
+
+BOOST_AUTO_TEST_CASE( comp_user )
+{
+	int res = compare(swish::host_folder::PKEY_SwishHostUser);
+	BOOST_CHECK_LT(res, 0);
+}
+
+BOOST_AUTO_TEST_CASE( comp_port )
+{
+	int res = compare(swish::host_folder::PKEY_SwishHostPort);
+	BOOST_CHECK_GT(res, 0);
+}
+
+BOOST_AUTO_TEST_CASE( comp_path )
+{
+	int res = compare(PKEY_ItemPathDisplay);
+	BOOST_CHECK_GT(res, 0);
+}
+
+BOOST_AUTO_TEST_CASE( comp_type )
+{
+	int res = compare(PKEY_ItemType);
+	BOOST_CHECK_EQUAL(res, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

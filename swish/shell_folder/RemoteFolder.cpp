@@ -35,17 +35,20 @@
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "DropTarget.hpp"          // CDropTarget
 #include "Registry.h"
-#include "properties/properties.h" // File properties handler
-#include "properties/column.h"     // Column details
 #include "swish/debug.hpp"
 #include "swish/exception.hpp"     // com_exception
+#include "swish/remote_folder/properties.hpp" // property_from_pidl
+#include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/windows_api.hpp" // SHBindToParent
 
+#include <cassert> // assert
 #include <string>
 
+using swish::exception::com_exception;
+using swish::remote_folder::property_from_pidl;
+using swish::remote_folder::property_key_from_column_index;
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::exception::com_exception;
 
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
@@ -354,56 +357,6 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 }
 
 /**
- * Returns detailed information on the items in a folder.
- *
- * @implementing IShellDetails
- *
- * This function operates in two distinctly different ways:
- * If pidl is NULL:
- *     Retrieves the information on the view columns, i.e., the names of
- *     the columns themselves.  The index of the desired column is given
- *     in iColumn.  If this column does not exist we return E_FAIL.
- * If pidl is not NULL:
- *     Retrieves the specific item information for the given pidl and the
- *     requested column.
- * The information is returned in the SHELLDETAILS structure.
- */
-STDMETHODIMP CRemoteFolder::GetDetailsOf(
-	PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* psd)
-{
-	ATLTRACE("CRemoteFolder::GetDetailsOf called, iColumn=%u\n", iColumn);
-	ATLENSURE_RETURN_HR(psd, E_POINTER);
-
-	try
-	{
-		if (!pidl) // Header requested
-			*psd = properties::column::GetHeader(iColumn);
-		else
-			*psd = properties::column::GetDetailsFor(pidl, iColumn);
-	}
-	catchCom()
-	return S_OK;
-}
-
-/**
- * Returns the default state for the column specified by index.
- * @implementing IShellFolder2
- */
-STDMETHODIMP CRemoteFolder::GetDefaultColumnState(
-	UINT iColumn, SHCOLSTATEF* pcsFlags)
-{
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(pcsFlags, E_POINTER);
-
-	try
-	{
-		*pcsFlags = properties::column::GetDefaultState(iColumn);
-	}
-	catchCom()
-	return S_OK;
-}
-
-/**
  * Convert column to appropriate property set ID (FMTID) and property ID (PID).
  *
  * @implementing IShellFolder2
@@ -418,7 +371,7 @@ STDMETHODIMP CRemoteFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID* pscid)
 
 	try
 	{
-		*pscid =  properties::column::MapColumnIndexToSCID(iColumn);
+		*pscid = property_key_from_column_index(iColumn).get();
 	}
 	catchCom()
 	return S_OK;
@@ -472,32 +425,11 @@ CComPtr<IShellFolder> CRemoteFolder::subfolder(const apidl_t& pidl) const
 }
 
 /**
- * Determine the relative order of two file objects or folders.
- *
- * @implementing CFolder
- *
- * Given their PIDLs, compare the two items and return a value
- * indicating the result of the comparison:
- * - Negative: pidl1 < pidl2
- * - Positive: pidl1 > pidl2
- * - Zero:     pidl1 == pidl2
- */
-int CRemoteFolder::compare_pidls(
-	PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
-	int column, bool compare_all_fields, bool canonical)
-const
-{
-	return swish::properties::column::CompareDetailOf(
-		pidl1, pidl2, column, compare_all_fields, canonical);
-}
-
-
-/**
  * Return a property, specified by PROERTYKEY, of an item in this folder.
  */
 variant_t CRemoteFolder::property(const property_key& key, const cpidl_t& pidl)
 {
-	return variant_t(properties::GetProperty(pidl.get(), key.get()).vt);
+	return property_from_pidl(pidl, key);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -741,8 +673,7 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 	try
 	{
 		PidlFormat format(pDataObj);
-		CAbsolutePidl pidlFolder = format.parent_folder().get();
-		ATLASSERT(::ILIsEqual(root_pidl(), pidlFolder));
+		assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
 
 		// Build up a list of PIDLs for all the items to be deleted
 		RemotePidls vecDeathRow;

@@ -22,6 +22,8 @@
 
 #include "SwishFolder.hpp"      // Superclass
 
+#include <swish/remote_folder/columns.hpp> // Column
+
 #include "resource.h"           // main symbols
 #include "swish.h"              // For CRemoteFolder UUID
 #include "RemotePidl.h"         // RemoteItemId handling
@@ -36,7 +38,8 @@
 #include <vector>
 
 class ATL_NO_VTABLE CRemoteFolder :
-	public swish::shell_folder::folder::CSwishFolder,
+	public swish::shell_folder::folder::CSwishFolder<
+		swish::remote_folder::Column>,
 	private swish::CCoFactory<CRemoteFolder>
 {
 public:
@@ -79,9 +82,6 @@ protected:
 	CLSID clsid() const;
 
 	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
-	int compare_pidls(
-		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
-		int column, bool compare_all_fields, bool canonical) const;
 
 	ATL::CComPtr<IShellFolder> subfolder(
 		const winapi::shell::pidl::apidl_t& pidl) const;
@@ -117,13 +117,7 @@ public:
 		__in_opt HWND hwnd, __in PCUITEMID_CHILD pidl, __in LPCWSTR pwszName,
 		SHGDNF uFlags, __deref_out_opt PITEMID_CHILD *ppidlOut);
 
-	// IShellDetails
-	IFACEMETHODIMP GetDetailsOf(
-		__in_opt PCUITEMID_CHILD pidl, UINT iColumn, __out SHELLDETAILS* psd);
-
 	// IShellFolder2
-	IFACEMETHODIMP GetDefaultColumnState( 
-		UINT iColumn, __out SHCOLSTATEF* pcsFlags);
 	IFACEMETHODIMP MapColumnToSCID(UINT iColumn, __out SHCOLUMNID* pscid);
 
 private:

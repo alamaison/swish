@@ -26,30 +26,21 @@
 
 #include "columns.hpp"
 
-#include "properties.hpp" // property_from_pidl
-
-#include <winapi/shell/shell.hpp> // string_to_strret
-
+#pragma warning(push)
+#pragma warning(disable: 4510 4610) // Cannot generate default constructor
 #include <boost/array.hpp> // array
+#pragma warning(pop)
 #include <boost/locale.hpp> // translate
 
-#include <cstring> // memset
 #include <string>
-#include <utility> // pair
 
 #include <Propkey.h> // PKEY_ *
 
-using swish::host_folder::property_from_pidl;
-
-using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
-using winapi::shell::string_to_strret;
 
 using boost::array;
-using boost::locale::message;
 using boost::locale::translate;
 
-using std::pair;
 using std::wstring;
 
 namespace swish {
@@ -57,64 +48,47 @@ namespace host_folder {
 
 namespace {
 
-	struct column {
-		property_key key;
-		message title;
-		SHCOLSTATEF flags;
-		int format;
-		int avg_char_width;
-	};
+	/**
+	 * Static column information.
+	 * Order of entries must correspond to the indices in columnIndices.
+	 */
+	const boost::array<column_entry, 6> column_key_index = { {
 
-	const boost::array<column, 6> column_key_index = { {
 		{ PKEY_ItemNameDisplay, translate("#Property (filename/label)#Name"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
+
 		{ PKEY_ComputerName, translate("#Property#Host"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
+
 		{ PKEY_SwishHostUser, translate("#Property#Username"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
+
 		{ PKEY_SwishHostPort, translate("#Property#Port"),
 		  SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
+
 		{ PKEY_ItemPathDisplay, translate("#Property#Remote path"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
+
 		{ PKEY_ItemType, translate("#Property#Type"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_SECONDARYUI, LVCFMT_LEFT, 30 }
 	} };
 
 }
 
+/**
+ * Return a column entry.
+ */
+const column_entry& HostColumnEntries::entry(size_t index) const
+{
+	return column_key_index.at(index);
+}
+
+/**
+ * Convert index to a corresponding PROPERTYKEY.
+ */
 const property_key& property_key_from_column_index(size_t index)
 {
-	return column_key_index.at(index).key;
-}
-
-SHCOLSTATEF column_state_from_column_index(size_t index)
-{
-	return column_key_index.at(index).flags;
-}
-
-SHELLDETAILS header_from_column_index(size_t index)
-{
-	SHELLDETAILS details;
-	std::memset(&details, 0, sizeof(details));
-
-	details.cxChar = column_key_index.at(index).avg_char_width;
-	details.fmt = column_key_index.at(index).format;
-	wstring title = column_key_index.at(index).title;
-	details.str = string_to_strret(title);
-
-	return details;
-}
-
-SHELLDETAILS detail_from_property_key(
-	const property_key& key, const cpidl_t& pidl)
-{
-	SHELLDETAILS details;
-	std::memset(&details, 0, sizeof(details));
-
-	wstring property = property_from_pidl(pidl, key);
-	details.str = string_to_strret(property);
-
-	return details;
+	return column_key_index.at(index).m_key;
 }
 
 }} // namespace swish::host_folder

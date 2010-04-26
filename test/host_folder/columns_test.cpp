@@ -24,27 +24,19 @@
     @endif
 */
 
-#include <swish/host_folder/columns.hpp> // test subject
+#include <swish/host_folder/columns.hpp> // test subject, Column
 
-#include <swish/host_folder/properties.hpp> // PKEY_Swish*
 #include <swish/shell_folder/HostPidl.h> // CHostItem
 
-#include <winapi/shell/shell.hpp> // strret_to_string
+#include <test/common_boost/helpers.hpp> // wide-string output
 
 #include <boost/test/unit_test.hpp>
 
 #include <string>
 
-#include <Propkey.h> // PKEY_ *
+using swish::host_folder::Column;
 
-using swish::host_folder::detail_from_property_key;
-using swish::host_folder::header_from_column_index;
-
-using winapi::shell::strret_to_string;
-
-using comet::variant_t;
-
-using std::string;
+using std::wstring;
 
 BOOST_AUTO_TEST_SUITE(column_tests)
 
@@ -55,85 +47,62 @@ namespace {
 		return CHostItem(
 			L"bobuser", L"myhost", L"/home/bobuser", 25, L"My Label");
 	}
+
+	wstring header(size_t index)
+	{
+		Column col(index);
+		return col.header();
+	}
+
+	wstring detail(size_t index)
+	{
+		Column col(index);
+		return col.detail(gimme_pidl());
+	}
 }
 
-/**
- * Get first and last header.
- */
-BOOST_AUTO_TEST_CASE( headers )
+BOOST_AUTO_TEST_CASE( label )
 {
-	SHELLDETAILS sd = header_from_column_index(0);
-	// this should free SHELLDETAILS
-	string header = strret_to_string<char>(sd.str);
+	BOOST_CHECK_EQUAL(header(0), L"Name");
+	BOOST_CHECK_EQUAL(detail(0), L"My Label");
+}
 
-	BOOST_CHECK_EQUAL(header, "Name");
+BOOST_AUTO_TEST_CASE( host )
+{
+	BOOST_CHECK_EQUAL(header(1), L"Host");
+	BOOST_CHECK_EQUAL(detail(1), L"myhost");
+}
 
-	sd = header_from_column_index(5); // update this index if columns change
-	header = strret_to_string<char>(sd.str);
+BOOST_AUTO_TEST_CASE( user )
+{
+	BOOST_CHECK_EQUAL(header(2), L"Username");
+	BOOST_CHECK_EQUAL(detail(2), L"bobuser");
+}
 
-	BOOST_CHECK_EQUAL(header, "Type");
+BOOST_AUTO_TEST_CASE( port )
+{
+	BOOST_CHECK_EQUAL(header(3), L"Port");
+	BOOST_CHECK_EQUAL(detail(3), L"25");
+}
+
+BOOST_AUTO_TEST_CASE( path )
+{
+	BOOST_CHECK_EQUAL(header(4), L"Remote path");
+	BOOST_CHECK_EQUAL(detail(4), L"/home/bobuser");
+}
+
+BOOST_AUTO_TEST_CASE( type )
+{
+	BOOST_CHECK_EQUAL(header(5), L"Type");
+	BOOST_CHECK_EQUAL(detail(5), L"Network Drive");
 }
 
 /**
  * Get one header too far.
  */
-BOOST_AUTO_TEST_CASE( header_out_of_bounds )
+BOOST_AUTO_TEST_CASE( out_of_bounds )
 {
-	BOOST_CHECK_THROW(header_from_column_index(6), std::exception);
-}
-
-BOOST_AUTO_TEST_CASE( prop_label )
-{
-	SHELLDETAILS sd = detail_from_property_key(
-		PKEY_ItemNameDisplay, gimme_pidl());
-	string prop = strret_to_string<char>(sd.str);
-
-	BOOST_CHECK_EQUAL(prop, "My Label");
-}
-
-BOOST_AUTO_TEST_CASE( prop_host )
-{
-	SHELLDETAILS sd = detail_from_property_key(
-		PKEY_ComputerName, gimme_pidl());
-	string prop = strret_to_string<char>(sd.str);
-
-	BOOST_CHECK_EQUAL(prop, "myhost");
-}
-
-BOOST_AUTO_TEST_CASE( prop_user )
-{
-	SHELLDETAILS sd = detail_from_property_key(
-		PKEY_SwishHostUser, gimme_pidl());
-	string prop = strret_to_string<char>(sd.str);
-
-	BOOST_CHECK_EQUAL(prop, "bobuser");
-}
-
-BOOST_AUTO_TEST_CASE( prop_port )
-{
-	SHELLDETAILS sd = detail_from_property_key(
-		PKEY_SwishHostPort, gimme_pidl());
-	string prop = strret_to_string<char>(sd.str);
-
-	BOOST_CHECK_EQUAL(prop, "25");
-}
-
-BOOST_AUTO_TEST_CASE( prop_path )
-{
-	SHELLDETAILS sd = detail_from_property_key(
-		PKEY_ItemPathDisplay, gimme_pidl());
-	string prop = strret_to_string<char>(sd.str);
-
-	BOOST_CHECK_EQUAL(prop, "/home/bobuser");
-}
-
-BOOST_AUTO_TEST_CASE( prop_type )
-{
-	SHELLDETAILS sd = detail_from_property_key(
-		PKEY_ItemType, gimme_pidl());
-	string prop = strret_to_string<char>(sd.str);
-
-	BOOST_CHECK_EQUAL(prop, "Network Drive");
+	BOOST_CHECK_THROW(header(6), std::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

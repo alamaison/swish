@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
     @endif
 */
 
-#ifndef SWISH_HOST_FOLDER_COLUMNS_HPP
-#define SWISH_HOST_FOLDER_COLUMNS_HPP
+#ifndef SWISH_REMOTE_FOLDER_COLUMNS_HPP
+#define SWISH_REMOTE_FOLDER_COLUMNS_HPP
 #pragma once
 
 #include "properties.hpp" // property_from_pidl, compare_pidls_by_property
@@ -35,14 +35,17 @@
 #include <winapi/shell/pidl.hpp> // cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 
+#include <comet/variant.h> // variant_t
+
 #include <boost/locale.hpp> // message
+#include <boost/function.hpp> // function
 
 #include <ShTypes.h> // SHCOLSTATEF
 
 #include <string>
 
 namespace swish {
-namespace host_folder {
+namespace remote_folder {
 
 #pragma warning(push)
 #pragma warning(disable: 4510 4610) // Cannot generate default constructor
@@ -60,6 +63,7 @@ struct column_entry
 	SHCOLSTATEF m_flags;
 	int m_format;
 	int m_avg_char_width;
+	boost::function<std::wstring (const comet::variant_t&)> m_stringifier;
 	// @}
 
 	std::wstring title() const { return m_title; }
@@ -75,7 +79,11 @@ struct column_entry
 	 */
 	std::wstring detail(const winapi::shell::pidl::cpidl_t& pidl) const
 	{
-		return property_from_pidl(pidl, m_key);
+		comet::variant_t var = property_from_pidl(pidl, m_key);
+		if (m_stringifier)
+			return m_stringifier(var);
+		else
+			return var;
 	}
 
 	int compare(
@@ -91,17 +99,17 @@ struct column_entry
 /**
  * StaticColumn-compatible interface to the static column data.
  */
-class HostColumnEntries
+class RemoteColumnEntries
 {
 protected:
 	const column_entry& entry(size_t index) const;
 };
 
-typedef swish::nse::StaticColumn<HostColumnEntries> Column;
+typedef swish::nse::StaticColumn<RemoteColumnEntries> Column;
 
 const winapi::shell::property_key& property_key_from_column_index(
 	size_t index);
 
-}} // namespace swish::host_folder
+}} // namespace swish::remote_folder
 
 #endif

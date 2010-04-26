@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
     @endif
 */
 
-#ifndef SWISH_HOST_FOLDER_PROPERTIES_HPP
-#define SWISH_HOST_FOLDER_PROPERTIES_HPP
+#ifndef SWISH_REMOTE_FOLDER_PROPERTIES_HPP
+#define SWISH_REMOTE_FOLDER_PROPERTIES_HPP
 #pragma once
 
 #include <winapi/shell/pidl.hpp> // cpidl_t
@@ -36,7 +36,7 @@
 #include <WTypes.h> // PROPERTYKEY
 
 namespace swish {
-namespace host_folder {
+namespace remote_folder {
 
 comet::variant_t property_from_pidl(
 	const winapi::shell::pidl::cpidl_t& pidl,
@@ -48,7 +48,7 @@ int compare_pidls_by_property(
 	const winapi::shell::property_key& key);
 
 /**
- * @name Custom properties (PKEYs) for Swish remote folder.
+ * Custom properties (PKEYs) for Swish remote folder.
  *
  * Ideally, we want as few of these as possible.  If an appropriate
  * one already exists in propkey.h, that should be used instead.
@@ -57,8 +57,10 @@ int compare_pidls_by_property(
  * properties together is @c {b816a851-5022-11dc-9153-0090f5284f85}.
  */
 // @{
-extern "C" const PROPERTYKEY PKEY_SwishHostUser;
-extern "C" const PROPERTYKEY PKEY_SwishHostPort;
+extern "C" const PROPERTYKEY PKEY_Group;
+extern "C" const PROPERTYKEY PKEY_Permissions;
+extern "C" const PROPERTYKEY PKEY_OwnerId;
+extern "C" const PROPERTYKEY PKEY_GroupId;
 // @}
 
 }} // namespace swish::host_folder

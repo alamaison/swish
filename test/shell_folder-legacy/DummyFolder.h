@@ -26,9 +26,14 @@
 
 #pragma once
 
+#include "swish/atl.hpp"  // Common ATL setup
+#include <atlstr.h>  // CString
+
 #include "swish/shell_folder/SwishFolder.hpp"  // Superclass
 #include "swish/CoFactory.hpp"  // CComObject factory
 #include "swish/debug.hpp"  // TRACE
+
+#include <stdexcept> // range_error
 
 #include <pshpack1.h>
 struct DummyItemId
@@ -71,15 +76,68 @@ struct _CopyPidl
 	}
 };
 
+/**
+ * Minimal class handling folder details.
+ */
+class DummyColumn
+{
+public:
+	DummyColumn(size_t index)
+	{
+		if (index != 0)
+			throw std::range_error("Column out-of-range");
+	}
+
+	std::wstring header() const { return L"Name"; }
+
+	std::wstring detail(const winapi::shell::pidl::cpidl_t& pidl) const
+	{
+		const DummyItemId *pitemid =
+			reinterpret_cast<const DummyItemId *>(pidl.get());
+		ATL::CString str;
+		str.AppendFormat(L"Level %d", pitemid->level);
+		return str.GetString();
+	}
+
+	int average_width_in_chars() const { return 4; }
+
+	SHCOLSTATEF state() const
+	{ return SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT; }
+
+	int format() const { return LVCFMT_LEFT; }
+
+	/**
+	 * Determine the relative order of two file objects or folders.
+	 *
+	 * @implementing CFolder
+	 *
+	 * Given their item identifier lists, compare the two objects and return
+	 * a value in the HRESULT indicating the result of the comparison:
+	 * - Negative: pidl1 < pidl2
+	 * - Positive: pidl1 > pidl2
+	 * - Zero:     pidl1 == pidl2
+	 */
+	int compare(
+		const winapi::shell::pidl::cpidl_t& lhs,
+		const winapi::shell::pidl::cpidl_t& rhs) const
+	{
+		const DummyItemId *pitemid1 =
+			reinterpret_cast<const DummyItemId *>(lhs.get());
+		const DummyItemId *pitemid2 =
+			reinterpret_cast<const DummyItemId *>(rhs.get());
+		return pitemid1->level - pitemid2->level;	
+	}
+};
+
 class ATL_NO_VTABLE CDummyFolder :
-	public swish::shell_folder::folder::CSwishFolder,
+	public swish::shell_folder::folder::CSwishFolder<DummyColumn>,
 	private swish::CCoFactory<CDummyFolder>
 {
 public:
 
 	BEGIN_COM_MAP(CDummyFolder)
 		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(swish::shell_folder::folder::CFolder)
+		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
 	END_COM_MAP()
 	
 	/**
@@ -100,9 +158,6 @@ protected:
 	CLSID clsid() const;
 
 	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
-	int compare_pidls(
-		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
-		int column, bool compare_all_fields, bool canonical) const;
 
 	ATL::CComPtr<IQueryAssociations> query_associations(
 		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
@@ -163,18 +218,6 @@ public: // IShellFolder methods
 		__deref_out_opt PITEMID_CHILD *ppidlOut);
 
 public: // IShellFolder2 methods
-
-	IFACEMETHODIMP GetDefaultColumn(
-		DWORD dwRes,
-		__out ULONG *pSort,
-		__out ULONG *pDisplay);
-
-	IFACEMETHODIMP GetDefaultColumnState(UINT iColumn, __out SHCOLSTATEF *pcsFlags);
-
-	IFACEMETHODIMP GetDetailsOf(
-		__in_opt PCUITEMID_CHILD pidl,
-		UINT iColumn,
-		__out SHELLDETAILS *psd);
 
 	IFACEMETHODIMP MapColumnToSCID(
 		UINT iColumn,

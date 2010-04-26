@@ -35,12 +35,16 @@
 
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
+#include <winapi/shell/shell.hpp> // string_to_strret
 
 #include <comet/variant.h> // variant_t
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
 #include <shlobj.h>     // Windows Shell API
+
+#include <cstring> // memset, memcpy
+#include <stdexcept> // range_error
 
 #ifndef __IPersistIDList_INTERFACE_DEFINED__
 #define __IPersistIDList_INTERFACE_DEFINED__
@@ -102,6 +106,7 @@ namespace detail{
 	}
 }
 
+template<typename ColumnType>
 class CFolder :
 	public ATL::CComObjectRoot,
 	public IPersistFolder3,
@@ -524,6 +529,57 @@ public: // IShellDetails methods
 		return S_FALSE; // Tell the shell to sort the items itself
 	}
 
+	/**
+	 * Returns detailed information on the items in a folder.
+	 *
+	 * @implementing IShellDetails
+	 *
+	 * This function operates in two distinctly different ways:
+	 * If pidl is NULL:
+	 *     Retrieves the information on the view columns, i.e., the names of
+	 *     the columns themselves.  The index of the desired column is given
+	 *     in iColumn.  If this column does not exist we return E_FAIL.
+	 * If pidl is not NULL:
+	 *     Retrieves the specific item information for the given pidl and the
+	 *     requested column.
+	 * The information is returned in the SHELLDETAILS structure.
+	 *
+	 * @note   The first column for which we return an error, marks the end
+	 *         of the columns in this folder.
+	 */
+	IFACEMETHODIMP GetDetailsOf(
+		PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* details_out)
+	{
+		if (!details_out) return E_POINTER;
+		std::memset(details_out, 0, sizeof(SHELLDETAILS));
+
+		try
+		{
+			ColumnType col(iColumn);
+			if (!pidl)
+			{
+				// Construct in a temporary to prevent partial construction
+				// if some part throws an error
+
+				SHELLDETAILS details;
+				std::memset(&details, 0, sizeof(SHELLDETAILS));
+
+				details.cxChar = col.average_width_in_chars();
+				details.fmt = col.format();
+				details.str = winapi::shell::string_to_strret(col.header());
+
+				std::memcpy(details_out, &details, sizeof(SHELLDETAILS));
+			}
+			else
+			{
+				details_out->str =
+					winapi::shell::string_to_strret(col.detail(pidl));
+			}
+		}
+		catchCom()
+
+		return S_OK;
+	}
 public: // IShellFolder2 methods
 
 	IFACEMETHODIMP GetDefaultSearchGUID(GUID* pguid)
@@ -569,6 +625,26 @@ public: // IShellFolder2 methods
 
 		*pSort = 0;
 		*pDisplay = 0;
+
+		return S_OK;
+	}
+
+	/**
+	 * Returns the default state for the column specified by index.
+	 *
+	 * @implementing IShellFolder2
+	 */
+	IFACEMETHODIMP GetDefaultColumnState(UINT iColumn, SHCOLSTATEF* pcsFlags)
+	{
+		if (!pcsFlags) return E_POINTER;
+		*pcsFlags = 0;
+
+		try
+		{
+			ColumnType col(iColumn);
+			*pcsFlags = col.state();
+		}
+		catchCom()
 
 		return S_OK;
 	}
@@ -622,7 +698,7 @@ protected:
 	virtual void validate_pidl(PCUIDLIST_RELATIVE pidl) const = 0;
 
 	/**
-	 * Compare two items in the folder.
+	 * Determine the relative order of two file objects or folders.
 	 *
 	 * @returns
 	 * - Negative: pidl1 < pidl2
@@ -635,10 +711,47 @@ protected:
 	 * uses this to test if an item it has cached and if you falsely
 	 * claim that it is Explorer is likely not to bother looking at your
 	 * item becuase it thinks it already has it.
+	 *
+	 * If compare_all_fields is false, the PIDLs are compared by the
+	 * data that corresponds to the given column index.  Otherwise, the PIDLs
+	 * are compared by all the data the contain.
+	 *
+	 * @todo  We aren't actually comparing raw PIDLs here when
+	 *        compare_all_fields is true.  We should be.
+	 *
+	 * @todo  Do something with canonical flag.
 	 */
 	virtual int compare_pidls(
 		PCUITEMID_CHILD pidl1, PCUITEMID_CHILD pidl2,
-		int column, bool compare_all_fields, bool canonical) const = 0;
+		int column, bool compare_all_fields, bool /*canonical*/) const
+		// TODO: This should be a PURE virtual method.  We're putting the
+		//       impl here temporarily.  Move it somewhere better!
+	{
+		if (compare_all_fields)
+		{
+			// FIXME:  This should ignore columns completely and do a raw PIDL
+			//         comparison
+			try
+			{
+				int i = 0;
+				while (true)
+				{
+					int result = compare_pidls(pidl1, pidl2, i, false, false);
+					if (result != 0)
+						return result;
+				}
+			}
+			catch (const std::range_error&)
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			ColumnType col(column);
+			return col.compare(pidl1, pidl2);
+		}
+	}
 
 	/**
 	 * The caller is requesting an object associated with the current folder.

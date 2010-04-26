@@ -1,6 +1,6 @@
 /*  File permissions processing functions
 
-    Copyright (C) 2006, 2009  Alexander Lamaison <awl03 (at) doc.ic.ac.uk>
+    Copyright (C) 2006, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 #include <assert.h>
 
-using namespace swish::properties::mode;
+using namespace swish::remote_folder::mode;
 
 Mode::Mode(mode_t mode) : mode(mode) {}
 
