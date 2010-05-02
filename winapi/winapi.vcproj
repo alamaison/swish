@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="winapi"
 	ProjectGUID="{3861C666-997C-41EA-9BDF-EC136E963149}"
 	RootNamespace="winapi"
@@ -16,10 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="10"
-			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish_output_dirs.vsprops"
+			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -37,10 +35,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="10"
-			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish_output_dirs.vsprops"
+			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -133,6 +129,14 @@
 			Name="shell"
 			>
 			<File
+				RelativePath=".\shell\folder_error_adapters.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shell\folder_interfaces.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\shell\format.hpp"
 				>
 			</File>
@@ -158,6 +162,14 @@
 			>
 			<File
 				RelativePath=".\detail\path_traits.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="com"
+			>
+			<File
+				RelativePath=".\com\catch.hpp"
 				>
 			</File>
 		</Filter>

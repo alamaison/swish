@@ -173,8 +173,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\folder_error_adapter_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\form_test.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\format_test.cpp"

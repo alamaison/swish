@@ -39,7 +39,10 @@
 #include "swish/exception.hpp"     // com_exception
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
+#include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
+
+#include <winapi/shell/shell.hpp> // string_to_strret
 
 #include <cassert> // assert
 #include <string>
@@ -49,12 +52,17 @@ using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::tracing::trace;
 
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
+using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
+using winapi::shell::string_to_strret;
 
 using comet::com_ptr;
+using comet::com_error;
+using comet::throw_com_error;
 using comet::variant_t;
 
 using ATL::CComObject;
@@ -67,71 +75,51 @@ using std::wstring;
 using namespace swish;
 
 /*--------------------------------------------------------------------------*/
-/*                     Remaining IShellFolder functions.                    */
-/* Eventually these should be replaced by the internal interfaces of        */
-/* CFolder and CSwishFolder.                                                */
+/*      Functions implementing IShellFolder via folder_error_adapter.       */
 /*--------------------------------------------------------------------------*/
 
 /**
  * Create an IEnumIDList which enumerates the items in this folder.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  *
- * @param[in]  hwndOwner     An optional window handle to be used if 
- *                           enumeration requires user input.
- * @param[in]  grfFlags      Flags specifying which types of items to include 
- *                           in the enumeration. Possible flags are from the 
- *                           @c SHCONT enum.
- * @param[out] ppEnumIDList  Location in which to return the IEnumIDList.
- *
- * @retval S_FALSE if the are no matching items to enumerate.
+ * @param hwnd   Optional window handle used if enumeration requires user
+ *               input.
+ * @param flags  Flags specifying which types of items to include in the
+ *               enumeration. Possible flags are from the @c SHCONT enum.
  */
-STDMETHODIMP CRemoteFolder::EnumObjects(
-	HWND hwndOwner, SHCONTF grfFlags, IEnumIDList **ppEnumIDList)
+IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(ppEnumIDList, E_POINTER);
+	// Create SFTP connection for this folder using hwndOwner for UI
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 
-    *ppEnumIDList = NULL;
-
-	try
-	{
-		// Create SFTP connection for this folder using hwndOwner for UI
-		CComPtr<ISftpProvider> spProvider = 
-			_CreateConnectionForFolder(hwndOwner);
-
-		// Create directory handler and get listing as PIDL enumeration
-		CSftpDirectory directory(
-			root_pidl().get(), spProvider, m_consumer.get());
-		*ppEnumIDList = directory.GetEnum(grfFlags).Detach();
-	}
-	catchCom()
-	
-	return S_OK;
+	// Create directory handler and get listing as PIDL enumeration
+	CSftpDirectory directory(
+		root_pidl().get(), provider.get(), m_consumer.get());
+	return directory.GetEnum(flags).Detach();
 }
 
 /**
  * Convert path string relative to this folder into a PIDL to the item.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  *
  * @todo  Handle the attributes parameter.  Will need to contact server
  * as the PIDL we create is fake and will not have correct folderness, etc.
  */
-STDMETHODIMP CRemoteFolder::ParseDisplayName(
-	HWND hwnd, IBindCtx *pbc, PWSTR pwszDisplayName, ULONG *pchEaten,
-	PIDLIST_RELATIVE *ppidl, __inout_opt ULONG *pdwAttributes)
+PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
+	HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
+	ULONG* attributes_inout)
 {
-	ATLTRACE(__FUNCTION__" called (pwszDisplayName=%ws)\n", pwszDisplayName);
-	ATLENSURE_RETURN_HR(pwszDisplayName, E_POINTER);
-	ATLENSURE_RETURN_HR(*pwszDisplayName != L'\0', E_INVALIDARG);
-	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
+	trace(__FUNCTION__" called (display_name=%s)") % display_name;
+	if (*display_name == L'\0')
+		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
 	// The string we are trying to parse should be of the form:
 	//    directory/directory/filename
 	// or 
     //    filename
-	wstring strDisplayName(pwszDisplayName);
+	wstring strDisplayName(display_name);
 
 	// May have / to separate path segments
 	wstring::size_type nSlash = strDisplayName.find_first_of(L'/');
@@ -146,140 +134,121 @@ STDMETHODIMP CRemoteFolder::ParseDisplayName(
 	}
 
 	// Create child PIDL for this path segment
-	HRESULT hr = S_OK;
-	try
+	CRemoteItem pidl(strSegment.c_str());
+
+	// Bind to subfolder and recurse if there were other path segments
+	if (nSlash != wstring::npos)
 	{
-		CRemoteItem pidl(strSegment.c_str());
+		wstring strRest = strDisplayName.substr(nSlash+1);
 
-		// Bind to subfolder and recurse if there were other path segments
-		if (nSlash != wstring::npos)
-		{
-			wstring strRest = strDisplayName.substr(nSlash+1);
+		com_ptr<IShellFolder> subfolder;
+		bind_to_object(
+			pidl, bind_ctx, subfolder.iid(),
+			reinterpret_cast<void**>(subfolder.out()));
 
-			CComPtr<IShellFolder> spSubfolder;
-			hr = BindToObject(pidl, pbc, IID_PPV_ARGS(&spSubfolder));
-			ATLENSURE_SUCCEEDED(hr);
+		wchar_t wszRest[MAX_PATH];
+		::wcscpy_s(wszRest, ARRAYSIZE(wszRest), strRest.c_str());
 
-			wchar_t wszRest[MAX_PATH];
-			::wcscpy_s(wszRest, ARRAYSIZE(wszRest), strRest.c_str());
+		pidl_t rest;
+		HRESULT hr = subfolder->ParseDisplayName(
+			hwnd, bind_ctx, wszRest, NULL, rest.out(), attributes_inout);
+		if (FAILED(hr))
+			throw_com_error(subfolder.get(), hr);
 
-			CRelativePidl pidlRest;
-			hr = spSubfolder->ParseDisplayName(
-				hwnd, pbc, wszRest, pchEaten, &pidlRest, pdwAttributes);
-			ATLENSURE_SUCCEEDED(hr);
-
-			*ppidl = CRelativePidl(pidl, pidlRest).Detach();
-		}
-		else
-		{
-			*ppidl = pidl.Detach();
-		}
+		return (pidl_t(pidl.m_pidl) + rest).detach();
 	}
-	catchCom()
-
-	return hr;
+	else
+	{
+		return pidl.Detach();
+	}
 }
 
 /**
  * Retrieve the display name for the specified file object or subfolder.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  */
-STDMETHODIMP CRemoteFolder::GetDisplayNameOf( 
-	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
+STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 {
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
-	ATLENSURE_RETURN_HR(pName, E_POINTER);
+	if (::ILIsEmpty(pidl))
+		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	::ZeroMemory(pName, sizeof STRRET);
+	wstring name;
+	CRemoteItem rpidl(pidl);
 
-	try
+	bool fForParsing = (flags & SHGDN_FORPARSING) != 0;
+
+	if (fForParsing || (flags & SHGDN_FORADDRESSBAR))
+	{
+		if (!(flags & SHGDN_INFOLDER))
 		{
-		CString strName;
-		CRemoteItem rpidl(pidl);
+			// Bind to parent
+			com_ptr<IShellFolder> parent;
+			PCUITEMID_CHILD pidlThisFolder = NULL;
+			HRESULT hr = swish::windows_api::SHBindToParent(
+				root_pidl().get(), parent.iid(),
+				reinterpret_cast<void**>(parent.out()), &pidlThisFolder);
+			
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error(hr));
 
-		bool fForParsing = (uFlags & SHGDN_FORPARSING) != 0;
+			STRRET strret;
+			std::memset(&strret, 0, sizeof(strret));
+			hr = parent->GetDisplayNameOf(pidlThisFolder, flags, &strret);
+			if (FAILED(hr))
+				throw_com_error(parent.get(), hr);
 
-		if (fForParsing || (uFlags & SHGDN_FORADDRESSBAR))
-		{
-			if (!(uFlags & SHGDN_INFOLDER))
-			{
-				// Bind to parent
-				CComPtr<IShellFolder> spParent;
-				PCUITEMID_CHILD pidlThisFolder = NULL;
-				HRESULT hr = swish::windows_api::SHBindToParent(
-					root_pidl().get(), IID_PPV_ARGS(&spParent), &pidlThisFolder);
-				ATLASSERT(SUCCEEDED(hr));
+			ATLASSERT(strret.uType == STRRET_WSTR);
 
-				STRRET strret;
-				::ZeroMemory(&strret, sizeof strret);
-				hr = spParent->GetDisplayNameOf(
-					pidlThisFolder, uFlags, &strret);
-				ATLASSERT(SUCCEEDED(hr));
-				ATLASSERT(strret.uType == STRRET_WSTR);
-
-				strName += strret.pOleStr;
-				strName += L'/';
-			}
-
-			// Add child path - include extension if FORPARSING
-			strName += rpidl.GetFilename(fForParsing);
-		}
-		else if (uFlags & SHGDN_FOREDITING)
-		{
-			strName = rpidl.GetFilename();
-		}
-		else
-		{
-			ATLASSERT(uFlags == SHGDN_NORMAL || uFlags == SHGDN_INFOLDER);
-
-			strName = rpidl.GetFilename(false);
+			name += strret.pOleStr;
+			name += L'/';
 		}
 
-		// Store in a STRRET and return
-		pName->uType = STRRET_WSTR;
-
-		return SHStrDupW( strName, &pName->pOleStr );
+		// Add child path - include extension if FORPARSING
+		name += rpidl.GetFilename(fForParsing);
 	}
-	catchCom()
+	else if (flags & SHGDN_FOREDITING)
+	{
+		name = rpidl.GetFilename();
+	}
+	else
+	{
+		ATLASSERT(flags == SHGDN_NORMAL || flags == SHGDN_INFOLDER);
+
+		name = rpidl.GetFilename(false);
+	}
+
+	return string_to_strret(name);
 }
 
 /**
  * Rename item.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  */
-STDMETHODIMP CRemoteFolder::SetNameOf(
-	HWND hwnd, PCUITEMID_CHILD pidl, LPCWSTR pwszName,
-	SHGDNF /*uFlags*/, PITEMID_CHILD *ppidlOut)
+PITEMID_CHILD CRemoteFolder::set_name_of(
+	HWND hwnd, PCUITEMID_CHILD pidl, const wchar_t* name, SHGDNF /*flags*/)
 {
-	if (ppidlOut)
-		*ppidlOut = NULL;
+	// Create SFTP connection object for this folder using hwnd for UI
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 
+	// Rename file
+	CSftpDirectory directory(
+		root_pidl().get(), provider.get(), m_consumer.get());
+	bool fOverwritten = directory.Rename(pidl, name);
+
+	// Create new PIDL from old one
+	CRemoteItem pidlNewFile;
+	pidlNewFile.Attach(::ILCloneChild(pidl));
+	pidlNewFile.SetFilename(name);
+
+	// Make PIDLs absolute
+	apidl_t old_pidl = root_pidl() + pidl;
+	apidl_t new_pidl = root_pidl() + pidlNewFile.m_pidl;
+
+	// A failure to notify the shell shouldn't prevent us returning the PIDL
 	try
 	{
-		// Create SFTP connection object for this folder using hwnd for UI
-		CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder(hwnd);
-
-		// Rename file
-		CSftpDirectory directory(
-			root_pidl().get(), spProvider, m_consumer.get());
-		bool fOverwritten = directory.Rename(pidl, pwszName);
-
-		// Create new PIDL from old one
-		CRemoteItem pidlNewFile;
-		pidlNewFile.Attach(::ILCloneChild(pidl));
-		pidlNewFile.SetFilename(pwszName);
-
-		// Make PIDLs absolute
-		apidl_t old_pidl = root_pidl() + pidl;
-		apidl_t new_pidl = root_pidl() + pidlNewFile.m_pidl;
-
-		// Return new child pidl if requested else dispose of it
-		if (ppidlOut)
-			*ppidlOut = pidlNewFile.Detach();
-
 		// Update the shell by passing both PIDLs
 		if (fOverwritten)
 		{
@@ -292,29 +261,30 @@ STDMETHODIMP CRemoteFolder::SetNameOf(
 			(rpidl.IsFolder()) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
 			SHCNF_IDLIST | SHCNF_FLUSH, old_pidl.get(), new_pidl.get()
 		);
-
-		return S_OK;
 	}
-	catchCom()
+	catch (const std::exception& e)
+	{
+		trace("Exception thrown while notifying shell of rename:");
+		trace("%s") % boost::diagnostic_information(e);
+	}
+
+	return pidlNewFile.Detach();
 }
 
 /**
  * Returns the attributes for the items whose PIDLs are passed in.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  */
-STDMETHODIMP CRemoteFolder::GetAttributesOf(
-	UINT cIdl,
-	__in_ecount_opt( cIdl ) PCUITEMID_CHILD_ARRAY aPidl,
-	__inout SFGAOF *pdwAttribs )
+void CRemoteFolder::get_attributes_of(
+	UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+	SFGAOF* attributes_inout)
 {
-	ATLTRACE("CRemoteFolder::GetAttributesOf called\n");
-
 	// Search through all PIDLs and check if they are all folders
 	bool fAllAreFolders = true;
-	for (UINT i = 0; i < cIdl; i++)
+	for (UINT i = 0; i < pidl_count; i++)
 	{
-		CRemoteItemHandle rpidl(aPidl[i]);
+		CRemoteItemHandle rpidl(pidl_array[i]);
 		ATLASSERT(rpidl.IsValid());
 		if (!rpidl.IsFolder())
 		{
@@ -325,9 +295,9 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 
 	// Search through all PIDLs and check if they are all 'dot' files
 	bool fAllAreDotFiles = true;
-	for (UINT i = 0; i < cIdl; i++)
+	for (UINT i = 0; i < pidl_count; i++)
 	{
-		CRemoteItemHandle rpidl(aPidl[i]);
+		CRemoteItemHandle rpidl(pidl_array[i]);
 		if (rpidl.GetFilename()[0] != L'.')
 		{
 			fAllAreDotFiles = false;
@@ -351,30 +321,21 @@ STDMETHODIMP CRemoteFolder::GetAttributesOf(
 	dwAttribs |= SFGAO_CANDELETE;
 	dwAttribs |= SFGAO_CANCOPY;
 
-    *pdwAttribs &= dwAttribs;
-
-    return S_OK;
+    *attributes_inout &= dwAttribs;
 }
 
-/**
- * Convert column to appropriate property set ID (FMTID) and property ID (PID).
- *
- * @implementing IShellFolder2
- *
- * @note   The first column for which we return an error, marks the end of the
- *         columns in this folder.
- */
-STDMETHODIMP CRemoteFolder::MapColumnToSCID(UINT iColumn, SHCOLUMNID* pscid)
-{
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(pscid, E_POINTER);
+/*--------------------------------------------------------------------------*/
+/*     Functions implementing IShellFolder2 via folder2_error_adapter.      */
+/*--------------------------------------------------------------------------*/
 
-	try
-	{
-		*pscid = property_key_from_column_index(iColumn).get();
-	}
-	catchCom()
-	return S_OK;
+/**
+ * Convert column index to matching PROPERTYKEY, if any.
+ *
+ * @implementing folder2_error_adapter
+ */
+SHCOLUMNID CRemoteFolder::map_column_to_scid(UINT column_index)
+{
+	return property_key_from_column_index(column_index).get();
 }
 
 /*--------------------------------------------------------------------------*/

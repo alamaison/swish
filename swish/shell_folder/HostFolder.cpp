@@ -5,7 +5,8 @@
 
     @if licence
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +28,6 @@
 #include "HostFolder.h"
 
 #include "RemoteFolder.h"
-#include "ConnCopyPolicy.h"
 #include "ExplorerCallback.h"     // For interaction with Explorer window
 #include "Registry.h"             // For saved connection details
 #include "host_management.hpp"
@@ -39,8 +39,11 @@
 #include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/shell_folder/commands/host/host.hpp" // host_folder_commands
+#include "swish/trace.hpp" // trace
 
 #include <winapi/shell/shell.hpp> // strret_to_string
+
+#include <comet/enum.h> // stl_enumeration
 
 #include <strsafe.h>  // For StringCchCopy
 
@@ -51,15 +54,21 @@
 #include <cassert> // assert
 #include <cstring> // memset
 #include <string>
+#include <vector>
 
 using ATL::CComPtr;
 using ATL::CComObject;
 
+using comet::com_error;
+using comet::com_ptr;
+using comet::stl_enumeration_t;
+using comet::throw_com_error;
 using comet::variant_t;
 
 using boost::locale::translate;
 using boost::shared_ptr;
 
+using std::vector;
 using std::wstring;
 
 using swish::host_management::LoadConnectionsFromRegistry;
@@ -67,270 +76,262 @@ using swish::exception::com_exception;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::shell_folder::commands::host::host_folder_command_provider;
+using swish::tracing::trace;
 
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::strret_to_string;
+using winapi::shell::string_to_strret;
+
+/**
+ * Comet IID lookup for IEnumIDList.
+ */
+template<> struct ::comet::comtype<::IEnumIDList>
+{
+	static const ::IID& uuid() throw() { return ::IID_IEnumIDList; }
+	typedef ::IUnknown base;
+};
+
+/**
+ * Copy policy used to create IEnumIDList from CHostItems.
+ */
+template<> struct ::comet::impl::type_policy<PITEMID_CHILD>
+{
+	static void init(PITEMID_CHILD& raw_pidl, const CHostItem& pidl) 
+	{
+		assert(pidl.IsValid());
+		raw_pidl = pidl.CopyTo();
+	}
+
+	static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }	
+};
 
 /*--------------------------------------------------------------------------*/
-/*                     Remaining IShellFolder functions.                    */
-/* Eventually these should be replaced by the internal interfaces of        */
-/* CFolder and CSwishFolder.                                                */
+/*      Functions implementing IShellFolder via folder_error_adapter.       */
 /*--------------------------------------------------------------------------*/
 
 /**
  * Create an IEnumIDList which enumerates the items in this folder.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  *
- * @param[in]  hwndOwner     An optional window handle to be used if 
- *                           enumeration requires user input.
- * @param[in]  grfFlags      Flags specifying which types of items to include 
- *                           in the enumeration. Possible flags are from the 
- *                           @c SHCONT enum.
- * @param[out] ppEnumIDList  Location in which to return the IEnumIDList.
+ * @param hwnd   Optional window handle used if enumeration requires user
+ *               input.
+ * @param flags  Flags specifying which types of items to include in the
+ *               enumeration. Possible flags are from the @c SHCONT enum.
  *
  * @retval S_FALSE if the are no matching items to enumerate.
  */
-STDMETHODIMP CHostFolder::EnumObjects(
-	HWND hwndOwner, SHCONTF grfFlags, IEnumIDList **ppEnumIDList)
+IEnumIDList* CHostFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(ppEnumIDList, E_POINTER);
-	UNREFERENCED_PARAMETER(hwndOwner); // No UI required to access registry
-
-	HRESULT hr;
-
-    *ppEnumIDList = NULL;
+	UNREFERENCED_PARAMETER(hwnd); // No UI required to access registry
 
 	// This folder only contains folders
-	if (!(grfFlags & SHCONTF_FOLDERS) ||
-		(grfFlags & (SHCONTF_NETPRINTERSRCH | SHCONTF_SHAREABLE)))
-		return S_FALSE;
+	if (!(flags & SHCONTF_FOLDERS) ||
+		(flags & (SHCONTF_NETPRINTERSRCH | SHCONTF_SHAREABLE)))
+		return NULL;
 
-	try
-	{
-		// Load connections from HKCU\Software\Swish\Connections
-		m_vecConnData = LoadConnectionsFromRegistry();
-	}
-	catchCom()
+	// Load connections from HKCU\Software\Swish\Connections
+	m_vecConnData = LoadConnectionsFromRegistry();
 
-    // Create an enumerator with CComEnumOnSTL<> and our copy policy class.
-	CComObject<CEnumIDListImpl>* pEnum;
-    hr = CComObject<CEnumIDListImpl>::CreateInstance( &pEnum );
-	ATLENSURE_RETURN_HR(SUCCEEDED(hr), hr);
-    pEnum->AddRef();
-
-    // Init the enumerator.  Init() will AddRef() our IUnknown (obtained with
-    // GetUnknown()) so this object will stay alive as long as the enumerator 
-    // needs access to the vector m_vecConnData.
-    hr = pEnum->Init(GetUnknown(), m_vecConnData);
-
-    // Return an IEnumIDList interface to the caller.
-    if (SUCCEEDED(hr))
-        hr = pEnum->QueryInterface(__uuidof(IEnumIDList), (void**)ppEnumIDList);
-
-    pEnum->Release();
-    return hr;
+    // Create an enumerator from the member vector.  We pass in a pointer to
+	// this object so that the vector remains valid as long as the enumerator
+	// is in use.
+	return new stl_enumeration_t<
+		IEnumIDList, vector<CHostItem>, PITEMID_CHILD>(
+		m_vecConnData, GetUnknown());
 }
 
 /**
  * Convert path string relative to this folder into a PIDL to the item.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  *
  * @todo  Handle the attributes parameter.  Should just return
  * GetAttributesOf() the PIDL we create but it is a bit hazy where the
  * host PIDL's responsibilities end and the remote PIDL's start because
  * of the path embedded in the host PIDL.
  */
-STDMETHODIMP CHostFolder::ParseDisplayName(
-	HWND hwnd, IBindCtx *pbc, PWSTR pwszDisplayName, ULONG *pchEaten,
-	PIDLIST_RELATIVE *ppidl, __inout_opt ULONG *pdwAttributes)
+PIDLIST_RELATIVE CHostFolder::parse_display_name(
+	HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
+	ULONG* attributes_inout)
 {
-	ATLTRACE(__FUNCTION__" called (pwszDisplayName=%ws)\n", pwszDisplayName);
-	ATLENSURE_RETURN_HR(pwszDisplayName, E_POINTER);
-	ATLENSURE_RETURN_HR(*pwszDisplayName != L'\0', E_INVALIDARG);
-	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
+	trace(__FUNCTION__" called (display_name=%s)") % display_name;
 
 	// The string we are trying to parse should be of the form:
 	//    sftp://username@hostname:port/path
 
-	wstring strDisplayName(pwszDisplayName);
+	wstring strDisplayName(display_name);
 	if (strDisplayName.empty())
 	{
-		root_pidl().copy_to(*ppidl);
-		return S_OK;
+		PIDLIST_RELATIVE pidl;
+		root_pidl().copy_to(pidl);
+		return pidl;
 	}
 
 	// Must start with sftp://
-	ATLENSURE_RETURN(strDisplayName.substr(0, 7) == L"sftp://");
+	if (strDisplayName.substr(0, 7) != L"sftp://")
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	// Must have @ to separate username from hostname
 	wstring::size_type nAt = strDisplayName.find_first_of(L'@', 7);
-	ATLENSURE_RETURN(nAt != wstring::npos);
+	if (nAt == wstring::npos)
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	// Must have : to separate hostname from port number
 	wstring::size_type nColon = strDisplayName.find_first_of(L':', 7);
-	ATLENSURE_RETURN(nColon != wstring::npos);
-	ATLENSURE_RETURN(nColon > nAt);
+	if (nAt == wstring::npos)
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+	if (nColon <= nAt)
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	// Must have / to separate port number from path
 	wstring::size_type nSlash = strDisplayName.find_first_of(L'/', 7);
-	ATLENSURE_RETURN(nSlash != wstring::npos);
-	ATLENSURE_RETURN(nSlash > nColon);
+	if (nAt == wstring::npos)
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+	if (nColon <= nAt)
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	wstring strUser = strDisplayName.substr(7, nAt - 7);
 	wstring strHost = strDisplayName.substr(nAt+1, nColon - (nAt+1));
 	wstring strPort = strDisplayName.substr(nColon+1, nAt - (nSlash+1));
 	wstring strPath = strDisplayName.substr(nSlash+1);
-	ATLENSURE_RETURN(!strUser.empty());
-	ATLENSURE_RETURN(!strHost.empty());
-	ATLENSURE_RETURN(!strPort.empty());
-	ATLENSURE_RETURN(!strPath.empty());
+	if (strUser.empty() || strHost.empty() || strPort.empty() ||
+		strPath.empty())
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	int nPort = _wtoi(strPort.c_str());
-	ATLENSURE_RETURN(nPort >= MIN_PORT && nPort <= MAX_PORT);
+	if (nPort < MIN_PORT || nPort > MAX_PORT)
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	// Create child PIDL for this path segment
-	HRESULT hr = S_OK;
-	try
-	{
-		CHostItem pidl(
-			strUser.c_str(), strHost.c_str(), strPath.c_str(),
-			static_cast<USHORT>(nPort));
+	CHostItem pidl(
+		strUser.c_str(), strHost.c_str(), strPath.c_str(),
+		static_cast<USHORT>(nPort));
 
-		CComPtr<IShellFolder> spSubfolder;
-		hr = BindToObject(pidl, pbc, IID_PPV_ARGS(&spSubfolder));
-		ATLENSURE_SUCCEEDED(hr);
+	com_ptr<IShellFolder> subfolder;
+	bind_to_object(
+		pidl, bind_ctx, subfolder.iid(),
+		reinterpret_cast<void**>(subfolder.out()));
 
-		wchar_t wszPath[MAX_PATH];
-		::StringCchCopyW(wszPath, ARRAYSIZE(wszPath), strPath.c_str());
+	wchar_t wszPath[MAX_PATH];
+	::StringCchCopyW(wszPath, ARRAYSIZE(wszPath), strPath.c_str());
 
-		pidl_t pidl_path;
-		hr = spSubfolder->ParseDisplayName(
-			hwnd, pbc, wszPath, pchEaten, pidl_path.out(), pdwAttributes);
-		ATLENSURE_SUCCEEDED(hr);
+	pidl_t pidl_path;
+	HRESULT hr = subfolder->ParseDisplayName(
+		hwnd, bind_ctx, wszPath, NULL, pidl_path.out(), attributes_inout);
+	if (FAILED(hr))
+		throw_com_error(subfolder.get(), hr);
 
-		pidl_t pidl_out = root_pidl() + pidl_path;
-		pidl_out.copy_to(*ppidl);
-	}
-	catchCom()
-
-	return hr;
+	pidl_t pidl_out = root_pidl() + pidl_path;
+	return pidl_out.detach();
 }
 
 /**
  * Retrieve the display name for the specified file object or subfolder.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  */
-STDMETHODIMP CHostFolder::GetDisplayNameOf(
-	PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
+STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 {
-	METHOD_TRACE;
-	ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
-	ATLENSURE_RETURN_HR(pName, E_POINTER);
+	if (::ILIsEmpty(pidl))
+		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	::ZeroMemory(pName, sizeof STRRET);
+	wstring name;
+	CHostItem hpidl(pidl);
 
-	try
+	if (flags & SHGDN_FORPARSING)
 	{
-		wstring name;
-		CHostItem hpidl(pidl);
-
-		if (uFlags & SHGDN_FORPARSING)
+		if (!(flags & SHGDN_INFOLDER))
 		{
-			if (!(uFlags & SHGDN_INFOLDER))
-			{
-				// Bind to parent
-				CComPtr<IShellFolder> spParent;
-				PCUITEMID_CHILD pidlThisFolder;
-				HRESULT hr = swish::windows_api::SHBindToParent(
-					root_pidl().get(), IID_PPV_ARGS(&spParent),
-					&pidlThisFolder);
-				ATLASSERT(SUCCEEDED(hr));
+			// Bind to parent
+			com_ptr<IShellFolder> parent;
+			PCUITEMID_CHILD pidlThisFolder = NULL;
+			HRESULT hr = swish::windows_api::SHBindToParent(
+				root_pidl().get(), parent.iid(),
+				reinterpret_cast<void**>(parent.out()), &pidlThisFolder);
+			
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error(hr));
 
-				STRRET strret;
-				::ZeroMemory(&strret, sizeof strret);
-				hr = spParent->GetDisplayNameOf(
-					pidlThisFolder, uFlags, &strret);
-				if (FAILED(hr))
-					BOOST_THROW_EXCEPTION(com_exception(hr));
+			STRRET strret;
+			std::memset(&strret, 0, sizeof(strret));
+			hr = parent->GetDisplayNameOf(pidlThisFolder, flags, &strret);
+			if (FAILED(hr))
+				throw_com_error(parent.get(), hr);
 
-				name = strret_to_string<wchar_t>(
-					strret, pidlThisFolder) + L'\\';
-			}
-
-			name += hpidl.GetLongName(true);
-		}
-		else if (uFlags == SHGDN_NORMAL || uFlags & SHGDN_FORADDRESSBAR)
-		{
-			name = hpidl.GetLongName(false);
-		}
-		else if (uFlags == SHGDN_INFOLDER || uFlags & SHGDN_FOREDITING)
-		{
-			name = hpidl.GetLabel();
-		}
-		else
-		{
-			UNREACHABLE;
-			return E_INVALIDARG;
+			name = strret_to_string<wchar_t>(
+				strret, pidlThisFolder) + L'\\';
 		}
 
-		// Store in a STRRET and return
-		pName->uType = STRRET_WSTR;
-
-		return SHStrDupW( name.c_str(), &pName->pOleStr );
+		name += hpidl.GetLongName(true);
 	}
-	catchCom()
+	else if (flags == SHGDN_NORMAL || flags & SHGDN_FORADDRESSBAR)
+	{
+		name = hpidl.GetLongName(false);
+	}
+	else if (flags == SHGDN_INFOLDER || flags & SHGDN_FOREDITING)
+	{
+		name = hpidl.GetLabel();
+	}
+	else
+	{
+		UNREACHABLE;
+		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+	}
+
+	return string_to_strret(name);
+}
+
+/**
+ * Rename item.
+ *
+ * @todo  Support renaming host items.
+ */
+PITEMID_CHILD CHostFolder::set_name_of(
+	HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/, const wchar_t* /*name*/,
+	SHGDNF /*flags*/)
+{
+	BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
 }
 
 /**
  * Returns the attributes for the items whose PIDLs are passed in.
  *
- * @implementing IShellFolder
+ * @implementing folder_error_adapter
  */
-STDMETHODIMP CHostFolder::GetAttributesOf(
-	UINT cIdl,
-	__in_ecount_opt( cIdl ) PCUITEMID_CHILD_ARRAY aPidl,
-	__inout SFGAOF *pdwAttribs )
+void CHostFolder::get_attributes_of(
+	UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+	SFGAOF* attributes_inout)
 {
-	ATLTRACE("CHostFolder::GetAttributesOf called\n");
-	(void)aPidl; // All items are folders. No need to check PIDL.
-	(void)cIdl;
+	(void)pidl_array; // All items are folders. No need to check PIDL.
+	(void)pidl_count;
 
 	DWORD dwAttribs = 0;
     dwAttribs |= SFGAO_FOLDER;
     dwAttribs |= SFGAO_HASSUBFOLDER;
-    *pdwAttribs &= dwAttribs;
-
-    return S_OK;
+    *attributes_inout &= dwAttribs;
 }
+
+/*--------------------------------------------------------------------------*/
+/*     Functions implementing IShellFolder2 via folder2_error_adapter.      */
+/*--------------------------------------------------------------------------*/
 
 /**
- * Convert column to appropriate property set ID (FMTID) and property ID (PID).
+ * Convert column index to matching PROPERTYKEY, if any.
  *
- * @implementing IShellFolder2
- *
- * @note   The first column for which we return an error, marks the end of the
- *         columns in this folder.
+ * @implementing folder2_error_adapter
  */
-STDMETHODIMP CHostFolder::MapColumnToSCID(UINT iColumn, PROPERTYKEY* pscid)
+SHCOLUMNID CHostFolder::map_column_to_scid(UINT column_index)
 {
-	if (!pscid) return E_POINTER;
-	std::memset(pscid, 0, sizeof(PROPERTYKEY));
-
-	try
-	{
-		*pscid = property_key_from_column_index(iColumn).get();
-	}
-	catchCom()
-
-	return S_OK;
+	return property_key_from_column_index(column_index).get();
 }
+
+/*--------------------------------------------------------------------------*/
+/*                    Functions implementing IExtractIcon                   */
+/*--------------------------------------------------------------------------*/
 
 /**
  * Extract an icon bitmap given the information passed.

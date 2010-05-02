@@ -271,10 +271,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
-				RelativePath=".\ConnCopyPolicy.h"
-				>
-			</File>
-			<File
 				RelativePath=".\DataObject.h"
 				>
 			</File>

@@ -149,78 +149,52 @@ comet::variant_t CDummyFolder::property(
 	AtlThrow(E_NOTIMPL);
 }
 
-STDMETHODIMP CDummyFolder::ParseDisplayName(
-	HWND /*hwnd*/, IBindCtx * /*pbc*/, PWSTR pwszDisplayName, ULONG *pchEaten, 
-	PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
+PIDLIST_RELATIVE CDummyFolder::parse_display_name(
+	HWND /*hwnd*/, IBindCtx* /*bind_ctx*/, const wchar_t* /*display_name*/,
+	ULONG* /*attributes_inout*/)
 {
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pwszDisplayName, E_POINTER);
-	ATLENSURE_RETURN_HR(*pwszDisplayName != L'\0', E_INVALIDARG);
-	ATLENSURE_RETURN_HR(ppidl, E_POINTER);
-
-	if (pchEaten)
-		*pchEaten = 0;
-	*ppidl = NULL;
-	if (pdwAttributes)
-		*pdwAttributes = 0;
-
-	ATLTRACENOTIMPL(__FUNCTION__);
+	AtlThrow(E_NOTIMPL);
 }
 
-STDMETHODIMP CDummyFolder::EnumObjects(
-	HWND /*hwnd*/, SHCONTF grfFlags, IEnumIDList **ppenumIDList)
+IEnumIDList* CDummyFolder::enum_objects(HWND /*hwnd*/, SHCONTF flags)
 {
 	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(ppenumIDList, E_POINTER);
 
-	*ppenumIDList = NULL;
-
-	if (!(grfFlags & SHCONTF_FOLDERS))
-		return S_FALSE;
+	if (!(flags & SHCONTF_FOLDERS))
+		return NULL;
 
 	typedef ATL::CComEnum<IEnumIDList, &__uuidof(IEnumIDList), PITEMID_CHILD,
 		                  _CopyPidl>
 	        CComEnumIDList;
 
-	CComObject<CComEnumIDList> *pEnum = NULL;
-	HRESULT hr = pEnum->CreateInstance(&pEnum);
-	if (SUCCEEDED(hr))
-	{
-		pEnum->AddRef();
+	comet::com_ptr<CComObject<CComEnumIDList> > items;
+	HRESULT hr = CComObject<CComEnumIDList>::CreateInstance(items.out());
+	ATLENSURE_SUCCEEDED(hr);
+	items.get()->AddRef(); // CreateInstance leaves refcount at 0
 
-		hr = pEnum->Init(&m_apidl[0], &m_apidl[1], GetUnknown());
-		ATLASSERT(SUCCEEDED(hr));
+	hr = items->Init(&m_apidl[0], &m_apidl[1], GetUnknown());
+	ATLENSURE_SUCCEEDED(hr);
 
-		hr = pEnum->QueryInterface(ppenumIDList);
-		ATLASSERT(SUCCEEDED(hr));
-
-		pEnum->Release();
-	}
-
-	return hr;
+	return comet::com_ptr<IEnumIDList>(items).detach();
 }
 
-
-STDMETHODIMP CDummyFolder::GetAttributesOf( 
-	UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY apidl, SFGAOF *rgfInOut)
+void CDummyFolder::get_attributes_of(
+	UINT /*pidl_count*/, PCUITEMID_CHILD_ARRAY /*pidl_array*/,
+	SFGAOF* attributes_inout)
 {
 	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(apidl, E_POINTER);
-	ATLENSURE_RETURN_HR(rgfInOut, E_POINTER);
 
-	SFGAOF rgfRequested = *rgfInOut;
-	*rgfInOut = 0;
+	SFGAOF rgfRequested = *attributes_inout;
+	*attributes_inout = 0;
 
 	if (rgfRequested & SFGAO_FOLDER)
-		*rgfInOut |= SFGAO_FOLDER;
+		*attributes_inout |= SFGAO_FOLDER;
 	if (rgfRequested & SFGAO_HASSUBFOLDER)
-		*rgfInOut |= SFGAO_HASSUBFOLDER;
+		*attributes_inout |= SFGAO_HASSUBFOLDER;
 	if (rgfRequested & SFGAO_FILESYSANCESTOR)
-		*rgfInOut |= SFGAO_FILESYSANCESTOR;
+		*attributes_inout |= SFGAO_FILESYSANCESTOR;
 	if (rgfRequested & SFGAO_BROWSABLE)
-		*rgfInOut |= SFGAO_BROWSABLE;
-
-	return S_OK;
+		*attributes_inout |= SFGAO_BROWSABLE;
 }
 
 CComPtr<IQueryAssociations> CDummyFolder::query_associations(
@@ -283,14 +257,10 @@ CComPtr<IDataObject> CDummyFolder::data_object(
 	return spdo;
 }
 
-STDMETHODIMP CDummyFolder::GetDisplayNameOf( 
-	PCUITEMID_CHILD pidl, SHGDNF /*uFlags*/, STRRET *pName)
+STRRET CDummyFolder::get_display_name_of(
+	PCUITEMID_CHILD pidl, SHGDNF /*flags*/)
 {
 	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pidl, E_POINTER);
-	ATLENSURE_RETURN_HR(pName, E_POINTER);
-
-	::ZeroMemory(pName, sizeof *pName);
 
 	const DummyItemId *pitemid = reinterpret_cast<const DummyItemId *>(pidl);
 
@@ -298,33 +268,24 @@ STDMETHODIMP CDummyFolder::GetDisplayNameOf(
 	strName.AppendFormat(L"Level %d", pitemid->level);
 	
 	// Store in a STRRET and return
-	pName->uType = STRRET_WSTR;
-	return ::SHStrDup(strName, &(pName->pOleStr));
+	STRRET strret;
+	::ZeroMemory(&strret, sizeof(STRRET));
+	strret.uType = STRRET_WSTR;
+	::SHStrDup(strName, &(strret.pOleStr));
+
+	return strret;
 }
 
-STDMETHODIMP CDummyFolder::SetNameOf( 
-	HWND /*hwnd*/, PCUITEMID_CHILD pidl, PCWSTR pwszName, SHGDNF /*uFlags*/, 
-	PITEMID_CHILD *ppidlOut)
+PITEMID_CHILD CDummyFolder::set_name_of(
+	HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/, const wchar_t* /*name*/,
+	SHGDNF /*flags*/)
 {
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pidl, E_POINTER);
-	ATLENSURE_RETURN_HR(pwszName, E_POINTER);
-	ATLENSURE_RETURN_HR(*pwszName != L'\0', E_INVALIDARG);
-	ATLENSURE_RETURN_HR(ppidlOut, E_POINTER);
-
-	*ppidlOut = NULL;
-
-	ATLTRACENOTIMPL(__FUNCTION__);
+	AtlThrow(E_NOTIMPL);
 }
 
-STDMETHODIMP CDummyFolder::MapColumnToSCID(UINT /*iColumn*/, SHCOLUMNID *pscid)
+SHCOLUMNID CDummyFolder::map_column_to_scid(UINT /*column_index*/)
 {
-	FUNCTION_TRACE;
-	ATLENSURE_RETURN_HR(pscid, E_POINTER);
-
-	::ZeroMemory(pscid, sizeof *pscid);
-
-	ATLTRACENOTIMPL(__FUNCTION__);
+	AtlThrow(E_NOTIMPL);
 }
 
 /**

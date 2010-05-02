@@ -376,6 +376,7 @@ private:
 
 		// Enumerate folder
 		hr = pFolder->EnumObjects(NULL, SHCONTF_FOLDERS, &spEnum);
+		CPPUNIT_ASSERT_OK(hr);
 		hr = spEnum->Next(1, &pidl, &celtFetched);
 		CPPUNIT_ASSERT_OK(hr);
 		CPPUNIT_ASSERT(pidl);

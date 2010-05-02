@@ -505,6 +505,16 @@ public:
 	}
 
 	/**
+	 * Return raw PIDL and break link between it and the wrapper.
+	 */
+	T* detach()
+	{
+		T* pidl = m_pidl;
+		m_pidl = NULL;
+		return pidl;
+	}
+
+	/**
 	 * The size of the PIDL in bytes.
 	 *
 	 * This is not necessarily the allocated size of the PIDL, just the 

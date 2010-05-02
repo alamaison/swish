@@ -185,43 +185,28 @@ public:
 
 	__override STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl);
 
-public: // IShellFolder methods
+public:
 
-	IFACEMETHODIMP ParseDisplayName(
-		__in_opt HWND hwnd,
-		__in_opt IBindCtx *pbc,
-		__in PWSTR pwszDisplayName,
-		__reserved  ULONG *pchEaten,
-		__deref_out_opt PIDLIST_RELATIVE *ppidl,
-		__inout_opt ULONG *pdwAttributes);
+	// IShellFolder (via folder_error_adapter)
+	virtual IEnumIDList* enum_objects(HWND hwnd, SHCONTF flags);
+	
+	virtual void get_attributes_of(
+		UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+		SFGAOF* flags_inout);
 
-	IFACEMETHODIMP EnumObjects(
-		__in_opt HWND hwnd,
-		SHCONTF grfFlags,
-		__deref_out_opt IEnumIDList **ppenumIDList);
+	virtual STRRET get_display_name_of(
+		PCUITEMID_CHILD pidl, SHGDNF uFlags);
 
-	IFACEMETHODIMP GetAttributesOf( 
-		UINT cidl,
-		__in_ecount_opt(cidl) PCUITEMID_CHILD_ARRAY apidl,
-		__inout SFGAOF *rgfInOut);
+	virtual PIDLIST_RELATIVE parse_display_name(
+		HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
+		ULONG* attributes_inout);
 
-	IFACEMETHODIMP GetDisplayNameOf( 
-		__in PCUITEMID_CHILD pidl,
-		SHGDNF uFlags,
-		__out STRRET *pName);
+	virtual PITEMID_CHILD set_name_of(
+		HWND hwnd, PCUITEMID_CHILD pidl, const wchar_t* name,
+		SHGDNF flags);
 
-	IFACEMETHODIMP SetNameOf( 
-		__in_opt HWND hwnd,
-		__in PCUITEMID_CHILD pidl,
-		__in PCWSTR pszName,
-		SHGDNF uFlags,
-		__deref_out_opt PITEMID_CHILD *ppidlOut);
-
-public: // IShellFolder2 methods
-
-	IFACEMETHODIMP MapColumnToSCID(
-		UINT iColumn,
-		__out SHCOLUMNID *pscid);
+	// IShellFolder2 (via folder_error_adapter2)
+	virtual SHCOLUMNID map_column_to_scid(UINT column_index);
 
 private:
 	PITEMID_CHILD m_apidl[1];

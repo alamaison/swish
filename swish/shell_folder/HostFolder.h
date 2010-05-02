@@ -5,7 +5,8 @@
 
     @if licence
 
-    Copyright (C) 2007, 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2007, 2008, 2009, 2010
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,26 +78,28 @@ protected:
 
 	ATL::CComPtr<IShellFolderViewCB> folder_view_callback(HWND hwnd);
 
-public: // IShellFolder methods
+public:
 
-	IFACEMETHODIMP EnumObjects(
-		__in_opt HWND hwnd,
-		SHCONTF grfFlags,
-		__deref_out_opt IEnumIDList **ppenumIDList);
+	// IShellFolder (via folder_error_adapter)
+	virtual IEnumIDList* enum_objects(HWND hwnd, SHCONTF flags);
+	
+	virtual void get_attributes_of(
+		UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+		SFGAOF* flags_inout);
 
-	STDMETHOD(GetAttributesOf) ( UINT, PCUITEMID_CHILD_ARRAY, SFGAOF* );
-	IFACEMETHODIMP GetDisplayNameOf( 
-		__in PCUITEMID_CHILD pidl, __in SHGDNF uFlags, __out STRRET *pName);
-	IFACEMETHODIMP ParseDisplayName( 
-		__in_opt HWND hwnd, __in_opt IBindCtx *pbc, __in PWSTR pwszDisplayName,
-		__reserved ULONG *pchEaten, __deref_out_opt PIDLIST_RELATIVE *ppidl, 
-		__inout_opt ULONG *pdwAttributes);
-    STDMETHOD(SetNameOf)
-		( HWND, PCUITEMID_CHILD, LPCOLESTR, DWORD, PITEMID_CHILD* )
-        { return E_NOTIMPL; }
+	virtual STRRET get_display_name_of(
+		PCUITEMID_CHILD pidl, SHGDNF uFlags);
 
-	// IShellFolder2
-	STDMETHOD(MapColumnToSCID)( UINT iColumn, PROPERTYKEY *pscid );
+	virtual PIDLIST_RELATIVE parse_display_name(
+		HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
+		ULONG* attributes_inout);
+
+	virtual PITEMID_CHILD set_name_of(
+		HWND hwnd, PCUITEMID_CHILD pidl, const wchar_t* name,
+		SHGDNF flags);
+
+	// IShellFolder2 (via folder_error_adapter2)
+	virtual SHCOLUMNID map_column_to_scid(UINT column_index);
 
 	// IExtractIconW
 	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 

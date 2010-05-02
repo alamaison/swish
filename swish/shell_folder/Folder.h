@@ -33,11 +33,14 @@
 #include "swish/debug.hpp" // METHOD_TRACE
 #include "swish/exception.hpp"  // com_exception
 
+#include <winapi/shell/folder_error_adapters.hpp> // folder2_error_adapter
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 #include <winapi/shell/shell.hpp> // string_to_strret
 
 #include <comet/variant.h> // variant_t
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
@@ -68,7 +71,7 @@ namespace swish {
 namespace shell_folder {
 namespace folder {
 
-namespace detail{
+namespace detail {
 
 	/**
 	 * Return the parent IShellFolder of the last item in the PIDL.
@@ -109,10 +112,10 @@ namespace detail{
 template<typename ColumnType>
 class CFolder :
 	public ATL::CComObjectRoot,
+	public winapi::shell::folder2_error_adapter,
+	public winapi::shell::shell_details_error_adapter,
 	public IPersistFolder3,
-	public IShellFolder2,
-	public IPersistIDList,
-	public IShellDetails
+	public IPersistIDList
 {
 public:
 
@@ -249,198 +252,188 @@ public: // IPersistIDList methods
 	}
 
 public: // IShellFolder methods
-	
-	IFACEMETHODIMP BindToStorage( 
-		PCUIDLIST_RELATIVE pidl, IBindCtx* /*pbc*/, REFIID /*riid*/,
-		void** ppv)
-	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(pidl, E_POINTER);
-		ATLENSURE_RETURN_HR(ppv, E_POINTER);
 
-		*ppv = NULL;
-		return E_NOTIMPL;
+	virtual void bind_to_storage(
+		PCUIDLIST_RELATIVE /*pidl*/, IBindCtx* /*bind_ctx*/,
+		const IID& /*iid*/, void** /*interface_out*/)
+	{
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
 	}
 
 	/**
 	 * Caller is requesting a subobject of this folder.
 	 *
-	 * @implementing IShellFolder
+	 * @implementing folder_error_adapter
+	 *
+	 * Create and initialise an instance of the subitem represented by @a pidl
+	 * and return the interface asked for in @a iid.
 	 *
 	 * Typically this is an IShellFolder although it may be an IStream.  
-	 * Whereas CreateViewObject() and GetUIObjectOf() request *associated*
-	 * objects of items in the filesystem hierarchy, calls to BindToObject()
-	 * are for the objects representing the actual filesystem items.  Hence,
+	 * Whereas create_view_object() and get_ui_object_of() request 'associated
+	 * objects' of items in the hierarchy, calls to bind_to_object()
+	 * are for the objects representing the items themselves.  E.g.,
 	 * IShellFolder for folders and IStream for files.
 	 *
 	 * @todo  Find out more about how IStreams are dealt with and what it 
 	 *        gains us.
 	 *
-	 * Create and initialise an instance of the subitem represented by @a pidl
-	 * and return the interface asked for in @a riid.
+	 * @param[in]  pidl           PIDL to the requested object @b relative to
+	 *                            this folder.
+	 * @param[in]  bind_ctx       Binding context.
+	 * @param[in]  iid            IID of the interface being requested.
+	 * @param[out] interface_out  Location in which to return the requested
+	 *                            interface.
 	 *
-	 * @param[in]  pidl  PIDL to the requested object @b relative to this
-	 *                   folder.
-	 * @param[in]  pbc   Binding context.
-	 * @param[in]  riid  IID of the interface being requested.
-	 * @param[out] ppv   Location in which to return the requested interface.
+	 * @note  Corresponds to IShellFolder::BindToObject.
 	 */
-	IFACEMETHODIMP BindToObject( 
-		PCUIDLIST_RELATIVE pidl, IBindCtx* pbc, REFIID riid, void** ppv)
+	virtual void bind_to_object(
+		PCUIDLIST_RELATIVE pidl, IBindCtx* bind_ctx, const IID& iid,
+		void** interface_out)
 	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
-		ATLENSURE_RETURN_HR(ppv, E_POINTER);
+		if (::ILIsEmpty(pidl))
+			BOOST_THROW_EXCEPTION(comet::com_error(E_INVALIDARG));
 
-		*ppv = NULL;
-
-		// TODO: We can optimise this function by immediately returning
+		// TODO: We can optimise this function by immediately throwing
 		// E_NOTIMPL for any riid that we know our children and grandchildren
 		// don't provide. This is not in the spirit of COM QueryInterface but
 		// it may be a performance boost.
 
-		try
+		// First item in pidl must be of our type
+		validate_pidl(pidl);
+
+		if (::ILIsChild(pidl)) // Our child subfolder is the target
 		{
-			// First item in pidl must be of our type
-			validate_pidl(pidl);
+			comet::com_ptr<IShellFolder> folder =
+				subfolder(root_pidl() + pidl);
 
-			if (::ILIsChild(pidl)) // Our child subfolder is the target
-			{
-				// Create absolute PIDL to the subfolder by combining with 
-				// our root
-				ATL::CComPtr<IShellFolder> folder =
-					subfolder(root_pidl() + pidl);
-
-				return folder->QueryInterface(riid, ppv);
-			}
-			else
-			// One of our grandchildren is the target - delegate to its parent
-			{
-				ATL::CComPtr<IShellFolder> folder;
-
-				PCUITEMID_CHILD pidl_grandchild = NULL;
-				HRESULT hr = detail::BindToParentFolderOfPIDL(
-					this, pidl, IID_PPV_ARGS(&folder), &pidl_grandchild);
-				if FAILED(hr)
-					throw swish::exception::com_exception(hr);
-
-				return folder->BindToObject(pidl_grandchild, pbc, riid, ppv);
-			}
+			// Create absolute PIDL to the subfolder by combining with 
+			// our root
+			HRESULT hr = folder->QueryInterface(iid, interface_out);
+			if (FAILED(hr))
+				comet::throw_com_error(folder.get(), hr);
 		}
-		catchCom()
+		else
+		// One of our grandchildren is the target - delegate to its parent
+		{
+			comet::com_ptr<IShellFolder> folder;
+
+			PCUITEMID_CHILD pidl_grandchild = NULL;
+			HRESULT hr = detail::BindToParentFolderOfPIDL(
+				this, pidl, IID_PPV_ARGS(folder.out()), &pidl_grandchild);
+			if (FAILED(hr))
+				comet::throw_com_error(
+					comet::com_ptr<IShellFolder>(this).get(), hr);
+
+			hr = folder->BindToObject(
+				pidl_grandchild, bind_ctx, iid, interface_out);
+			if (FAILED(hr))
+				comet::throw_com_error(folder.get(), hr);
+		}
 	}
 
 	/**
-	 * Determine the relative order of two file objects or folders.
+	 * Determine the relative order of two items in or below this folder.
 	 *
-	 * @implementing IShellFolder
+	 * @implementing folder_error_adapter
 	 *
 	 * Given their item identifier lists, compare the two objects and return a
-	 * value in the HRESULT indicating the result of the comparison:
+	 * value indicating the result of the comparison:
 	 * - Negative: pidl1 < pidl2
 	 * - Positive: pidl1 > pidl2
 	 * - Zero:     pidl1 == pidl2
+	 *
+	 * @note  Corresponds to IShellFolder::CompareIDs.
 	 */
-	IFACEMETHODIMP CompareIDs( 
-		LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
+	int compare_ids( 
+		LPARAM lparam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 	{
-		METHOD_TRACE;
+		int column = LOWORD(lparam);
 
-		int column = LOWORD(lParam);
-
-		bool compare_all_fields = (HIWORD(lParam) == SHCIDS_ALLFIELDS);
-		bool canonical = (HIWORD(lParam) == SHCIDS_CANONICALONLY);
+		bool compare_all_fields = (HIWORD(lparam) == SHCIDS_ALLFIELDS);
+		bool canonical = (HIWORD(lparam) == SHCIDS_CANONICALONLY);
 
 		assert(!compare_all_fields || column == 0);
 		assert(!canonical || !compare_all_fields);
 
-		try
+		// Handle empty PIDL cases
+		if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2)) // Both empty - equal
+			return 0;
+		else if (::ILIsEmpty(pidl1))                  // Only pidl1 empty <
+			return -1;
+		else if (::ILIsEmpty(pidl2))                  // Only pidl2 empty >
+			return 1;
+		
+		// Explorer can pass us invalid PIDLs from its cache if our PIDL 
+		// representation changes.  We catch that here to stop us asserting
+		// later.
+		validate_pidl(pidl1);
+		validate_pidl(pidl2);
+
+		// The casts here are OK.  We are aware compare_pidls only compares
+		// a single item.  We recurse later if needed.
+		int result = compare_pidls(
+			static_cast<PCUITEMID_CHILD>(pidl1),
+			static_cast<PCUITEMID_CHILD>(pidl2),
+			column, compare_all_fields, canonical);
+
+		if ((::ILIsChild(pidl1) && ::ILIsChild(pidl2)) || result != 0)
 		{
-			// Handle empty PIDL cases
-			if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2)) // Both empty - equal
-				return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
-			else if (::ILIsEmpty(pidl1))                  // Only pidl1 empty <
-				return MAKE_HRESULT(SEVERITY_SUCCESS, 0, -1);
-			else if (::ILIsEmpty(pidl2))                  // Only pidl2 empty >
-				return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
-			
-			// Explorer can pass us invalid PIDLs from its cache if our PIDL 
-			// representation changes.  We catch that here to stop us asserting
-			// later.
-			validate_pidl(pidl1);
-			validate_pidl(pidl2);
-
-			// The casts here are OK.  We are aware compare_pidls only compares
-			// a single item.  We recurse later if needed.
-			int result = compare_pidls(
-				static_cast<PCUITEMID_CHILD>(pidl1),
-				static_cast<PCUITEMID_CHILD>(pidl2),
-				column, compare_all_fields, canonical);
-
-			if ((::ILIsChild(pidl1) && ::ILIsChild(pidl2)) || result != 0)
-			{
-				// The cast to unsigned short is *crucial*!  Without it,
-				// sorting in Explorer does all sorts of wierd stuff
-				return MAKE_HRESULT(
-					SEVERITY_SUCCESS, 0, (unsigned short)result);
-			}
-			else
-			{
-				// The first items are equal and there are more items to
-				// compare.
-				// Delegate the rest of the comparison to our child.
-
-				ATL::CComPtr<IShellFolder> folder;
-
-				PITEMID_CHILD pidl_child = ::ILCloneFirst(pidl1);		
-				HRESULT hr = BindToObject(
-					pidl_child, NULL, IID_PPV_ARGS(&folder));
-				::ILFree(pidl_child);
-				ATLENSURE_SUCCEEDED(hr);
-
-				return folder->CompareIDs(
-					lParam, ::ILNext(pidl1), ::ILNext(pidl2));
-			}
+			return result;
 		}
-		catchCom()
+		else
+		{
+			// The first items are equal and there are more items to
+			// compare.
+			// Delegate the rest of the comparison to our child.
+
+			comet::com_ptr<IShellFolder> folder;
+
+			winapi::shell::pidl::cpidl_t child;
+			child.attach(::ILCloneFirst(pidl1));		
+			bind_to_object(child.get(), NULL, IID_PPV_ARGS(folder.out()));
+
+			HRESULT hr = folder->CompareIDs(
+				lparam, ::ILNext(pidl1), ::ILNext(pidl2));
+			if (FAILED(hr))
+				comet::throw_com_error(folder.get(), hr);
+
+			return (short)HRESULT_CODE(hr);
+		}
 	}
 
 	/**
-	 * Create an object associated with the @b current folder.
+	 * Create an object associated with @b this folder.
 	 *
-	 * @implementing IShellFolder
+	 * @implementing folder_error_adapter
 	 *
 	 * The types of object which can be requested include IShellView,
 	 * IContextMenu, IExtractIcon, IQueryInfo, IShellDetails or IDropTarget.
-	 * This method is in contrast to GetUIObjectOf() which performs the same
+	 * This method is in contrast to get_ui_object_of() which performs the same
 	 * task but for an item contained *within* the current folder rather than
 	 * the folder itself.
 	 *
-	 * @param [in]   hwnd  Handle to the parent window, if any, of any UI that
-	 *                     may be needed to complete the request.
-	 * @param [in]   riid  Interface UUID for the object being requested.
-	 * @param [out]  ppv   Return value.
+	 * @param[in]   hwnd           Handle to the parent window, if any, of any
+	 *                             UI that may be needed to complete the 
+	 *                             request.
+	 * @param[in]   iid            Interface UUID for the object being
+	 *                             requested.
+	 * @param[out]  interface_out  Return value.
+	 *
+	 * @note  Corresponds to IShellFolder::CreateViewObject.
 	 */
-	IFACEMETHODIMP CreateViewObject(HWND hwnd, REFIID riid, void** ppv)
+	void create_view_object(HWND hwnd_owner, REFIID iid, void** interface_out)
 	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(ppv, E_POINTER);
+		comet::com_ptr<IUnknown> object = folder_object(hwnd_owner, iid);
 
-		*ppv = NULL;
-
-		try
-		{
-			ATL::CComPtr<IUnknown> object = folder_object(hwnd, riid);
-			return object->QueryInterface(riid, ppv);
-		}
-		catchCom()
-		return S_OK;
+		HRESULT hr = object.get()->QueryInterface(iid, interface_out);
+		if (FAILED(hr))
+			comet::throw_com_error(object.get(), hr);
 	}
 
 	/**
 	 * Create an object associated with an item in the current folder.
 	 *
-	 * @implementing IShellFolder
+	 * @implementing folder_error_adapter
 	 *
 	 * Callers will request an associated object, such as a context menu, for 
 	 * items in the folder by calling this method with the IID of the object 
@@ -469,49 +462,49 @@ public: // IShellFolder methods
 	 * it doesn't, the request will be delegated to the subfolder
 	 * implementation.
 	 * 
-	 * CreateViewObject() performs the same task as GetUIObjectOf but only
-	 * for the folder, not for items within it.
+	 * create_view_object() performs the same task as get_ui_object_of() but
+	 * only for the folder, not for items within it.
 	 *
-	 * @param [in]   hwnd  Handle to the parent window, if any, of any UI that
-	 *                     may be needed to complete the request.
-	 * @param [in]   riid  Interface UUID for the object being requested.
-	 * @param [out]  ppv   Return value.
+	 * @param[in]  hwnd_owner     Handle to the parent window, if any, of any
+	 *                            UI that may be needed to complete the
+	 *                            request.
+	 * @param[in]  riid           Interface UUID for the object being
+	 *                            requested.
+	 * @param[out] interface_out  Return value.
+	 *
+	 * @note  Corresponds to IShellFolder::GetUIObjectIf.
 	 */
-	IFACEMETHODIMP GetUIObjectOf(
-		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
-		UINT* /*puReserved*/, void** ppv) 
+	void get_ui_object_of(
+		HWND hwnd_owner, UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+		const IID& iid, void** interface_out)
 	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(ppv, E_POINTER);
+		comet::com_ptr<IUnknown> object;
 
-		*ppv = NULL;
-
-		try
+		if (pidl_count == 0)
 		{
-			ATL::CComPtr<IUnknown> object;
-
-			if (cpidl == 0)
-				object = folder_object(hwnd, riid); // Equiv CreateViewObject
-			else
-			{
-				try
-				{
-					object = folder_item_object(hwnd, riid, cpidl, apidl);
-				}
-				catch (swish::exception::com_exception e)
-				{
-					if (e == E_NOINTERFACE && cpidl == 1)
-						object = _delegate_object_lookup_to_subfolder(
-							hwnd, riid, apidl[0]);
-					else
-						throw;
-				}
-			}
-
-			return object->QueryInterface(riid, ppv);
+			// Equivalent to CreateViewObject
+			object = folder_object(hwnd_owner, iid);
 		}
-		catchCom()
-		return S_OK;
+		else
+		{
+			try
+			{
+				object = folder_item_object(
+					hwnd_owner, iid, pidl_count, pidl_array);
+			}
+			catch (const swish::exception::com_exception& e)
+			{
+				if (e == E_NOINTERFACE && pidl_count == 1)
+					object = _delegate_object_lookup_to_subfolder(
+						hwnd_owner, iid, pidl_array[0]);
+				else
+					throw;
+			}
+		}
+
+		HRESULT hr = object.get()->QueryInterface(iid, interface_out);
+		if (FAILED(hr))
+			comet::throw_com_error(object.get(), hr);
 	}
 
 public: // IShellDetails methods
@@ -519,159 +512,127 @@ public: // IShellDetails methods
 	/**
 	 * Sort by a given column of the folder view.
 	 *
-	 * @implementing IShellDetails
+	 * @implementing shell_details_base_interface
 	 *
-	 * @return S_FALSE to instruct the shell to perform the sort itself.
+	 * @return false to instruct the shell to perform the sort itself.
 	 */
-	IFACEMETHODIMP ColumnClick(UINT /*iColumn*/)
+	bool column_click(UINT /*column_index*/)
 	{
-		METHOD_TRACE;
-		return S_FALSE; // Tell the shell to sort the items itself
+		return false;
 	}
-
-	/**
-	 * Returns detailed information on the items in a folder.
-	 *
-	 * @implementing IShellDetails
-	 *
-	 * This function operates in two distinctly different ways:
-	 * If pidl is NULL:
-	 *     Retrieves the information on the view columns, i.e., the names of
-	 *     the columns themselves.  The index of the desired column is given
-	 *     in iColumn.  If this column does not exist we return E_FAIL.
-	 * If pidl is not NULL:
-	 *     Retrieves the specific item information for the given pidl and the
-	 *     requested column.
-	 * The information is returned in the SHELLDETAILS structure.
-	 *
-	 * @note   The first column for which we return an error, marks the end
-	 *         of the columns in this folder.
-	 */
-	IFACEMETHODIMP GetDetailsOf(
-		PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS* details_out)
-	{
-		if (!details_out) return E_POINTER;
-		std::memset(details_out, 0, sizeof(SHELLDETAILS));
-
-		try
-		{
-			ColumnType col(iColumn);
-			if (!pidl)
-			{
-				// Construct in a temporary to prevent partial construction
-				// if some part throws an error
-
-				SHELLDETAILS details;
-				std::memset(&details, 0, sizeof(SHELLDETAILS));
-
-				details.cxChar = col.average_width_in_chars();
-				details.fmt = col.format();
-				details.str = winapi::shell::string_to_strret(col.header());
-
-				std::memcpy(details_out, &details, sizeof(SHELLDETAILS));
-			}
-			else
-			{
-				details_out->str =
-					winapi::shell::string_to_strret(col.detail(pidl));
-			}
-		}
-		catchCom()
-
-		return S_OK;
-	}
+	
 public: // IShellFolder2 methods
 
-	IFACEMETHODIMP GetDefaultSearchGUID(GUID* pguid)
+	/**
+	 * Detailed information about an item in a folder.
+	 *
+	 * The desired detail is specified by a column index.
+	 *
+	 * @implementing folder_base_interface2
+	 *
+	 * This function operates in two distinctly different ways:
+	 *  - if pidl is NULL:
+	 *       Retrieve the the names of the columns themselves.
+	 *  - if pidl is not NULL:
+	 *       Retrieve  information for the item in the given pidl.
+	 *
+	 * The caller indicates which detail they want by specifying a column index
+	 * in column_index.  If this column does not exist, throw an error.
+	 *
+	 * @retval  A SHELLDETAILS structure holding the requested detail as a
+	 *          string along with various metadata.
+	 *
+	 * @note  Typically, a folder view calls this method repeatedly,
+	 *        incrementing the column index each time.  The first column for
+	 *        which we throw an error, marks the end of the columns in this
+	 *        folder.
+	 */
+	SHELLDETAILS get_details_of(PCUITEMID_CHILD pidl, UINT column_index)
 	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(pguid, E_POINTER);
+		ColumnType col(column_index);
 
-		*pguid = GUID_NULL;
-		return E_NOTIMPL;
+		SHELLDETAILS details;
+		std::memset(&details, 0, sizeof(SHELLDETAILS));
+
+		if (!pidl)
+		{
+			details.cxChar = col.average_width_in_chars();
+			details.fmt = col.format();
+			details.str = winapi::shell::string_to_strret(col.header());
+		}
+		else
+		{
+			details.str = winapi::shell::string_to_strret(col.detail(pidl));
+		}
+
+		return details;
 	}
 
 	/**
-	 * Return pointer to interface allowing client to enumerate search objects.
+	 * GUID of the search to invoke when the user clicks on the search
+	 * toolbar button.
 	 *
-	 * @implementing IShellFolder2
+	 * @implementing folder_base_interface2
 	 *
 	 * We do not support search objects so this method is not implemented.
 	 */
-	IFACEMETHODIMP EnumSearches(IEnumExtraSearch** ppenum)
+	GUID get_default_search_guid()
 	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(ppenum, E_POINTER);
-
-		*ppenum = NULL;
-		return E_NOTIMPL;
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
 	}
 
 	/**
-	 * Get the default sorting and display columns.
+	 * Enumeration of all searches supported by this folder
 	 *
-	 * @implementing IShellFolder2
+	 * @implementing folder_base_interface2
+	 *
+	 * We do not support search objects so this method is not implemented.
+	 */
+	IEnumExtraSearch* enum_searches()
+	{
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
+	}
+
+	/**
+	 * Default sorting and display columns.
+	 *
+	 * @implementing folder_base_interface2
 	 *
 	 * This is a default implementation which simply return the 1st (zeroth)
 	 * column for both sorting and display.  Derived classes can override this
 	 * if they need custom behaviour.
 	 */
-	IFACEMETHODIMP GetDefaultColumn(
-		DWORD /*dwReserved*/, ULONG* pSort, ULONG* pDisplay)
+	void get_default_column(ULONG* sort_out, ULONG* display_out)
 	{
-		METHOD_TRACE;
-		ATLENSURE_RETURN_HR(pSort, E_POINTER);
-		ATLENSURE_RETURN_HR(pDisplay, E_POINTER);
-
-		*pSort = 0;
-		*pDisplay = 0;
-
-		return S_OK;
+		*sort_out = 0;
+		*display_out = 0;
 	}
 
 	/**
-	 * Returns the default state for the column specified by index.
+	 * Default UI state (hidden etc.) and type (string, integer, etc.) for the
+	 * column specified by column_index.
 	 *
-	 * @implementing IShellFolder2
+	 * @implementing folder_base_interface2
 	 */
-	IFACEMETHODIMP GetDefaultColumnState(UINT iColumn, SHCOLSTATEF* pcsFlags)
+	SHCOLSTATEF get_default_column_state(UINT column_index)
 	{
-		if (!pcsFlags) return E_POINTER;
-		*pcsFlags = 0;
-
-		try
-		{
-			ColumnType col(iColumn);
-			*pcsFlags = col.state();
-		}
-		catchCom()
-
-		return S_OK;
+		ColumnType col(column_index);
+		return col.state();
 	}
 	
 	/**
-	 * Get property of an item as a VARIANT.
+	 * Detailed information about an item in a folder.
 	 *
-	 * @implementing IShellFolder2
+	 * The desired detail is specified by PROPERTYKEY.
 	 *
-	 * The work is delegated to the subclass.
+	 * @implementing folder_base_interface2
 	 */
-	IFACEMETHODIMP GetDetailsEx(
-		PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid, VARIANT* pv)
+	VARIANT get_details_ex(PCUITEMID_CHILD pidl, const SHCOLUMNID* pscid)
 	{
-		if (!pv) return E_POINTER;
-		::VariantClear(pv);
-		if (!pscid) return E_POINTER;
-		if (::ILIsEmpty(pidl)) return E_INVALIDARG;
+		if (::ILIsEmpty(pidl))
+			BOOST_THROW_EXCEPTION(comet::com_error(E_INVALIDARG));
 
-		try
-		{
-			comet::variant_t var = property(*pscid, pidl);
-			*pv = var.detach();
-		}
-		catchCom()
-
-		return S_OK;
+		return property(*pscid, pidl).detach();
 	}
 
 protected:
