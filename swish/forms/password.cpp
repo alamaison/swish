@@ -55,17 +55,17 @@ namespace {
 	public:
 		PasswordForm(HWND hwnd_owner, const wstring& prompt)
 			:
-			m_form(translate("Password"), 219, 49, 0, 0),
-			m_cancelled(true), m_password_box(edit(L"", 148, 14, 7, 18, true))
+			m_form(translate("Password"), 0, 0, 219, 49),
+			m_cancelled(true), m_password_box(edit(L"", 7, 18, 148, 14, true))
 		{
 			m_form.add_control(m_password_box);
-			m_form.add_control(label(prompt, 149, 8, 7, 7));
+			m_form.add_control(label(prompt, 7, 7, 149, 8));
 
-			button ok(translate("OK"), 50, 16, 162, 7, true);
+			button ok(translate("OK"), 162, 7, 50, 16, true);
 			ok.on_click().connect(bind(&PasswordForm::on_ok, this));
 			m_form.add_control(ok);
 
-			button cancel(translate("Cancel"), 50, 16, 162, 26);
+			button cancel(translate("Cancel"), 162, 26, 50, 16);
 			cancel.on_click().connect(m_form.killer());
 			m_form.add_control(cancel);
 			

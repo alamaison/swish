@@ -47,10 +47,10 @@ class checkbox_impl : public winapi::gui::detail::window_impl
 public:
 
 	checkbox_impl(
-		const std::wstring& text, short width, short height, short left,
-		short top, on_click_callback click_callback)
+		const std::wstring& text, short left, short top, short width,
+		short height, on_click_callback click_callback)
 		:
-		winapi::gui::detail::window_impl(text, width, height, left, top),
+		winapi::gui::detail::window_impl(text, left, top, width, height),
 		m_on_click(click_callback) {}
 
 	std::wstring window_class() const { return L"button"; }
@@ -70,19 +70,19 @@ class checkbox : public control<checkbox_impl>
 {
 public:
 	checkbox(
-		const std::wstring& text, short width, short height, short left,
-		short top, on_click_callback click_callback=on_click_callback())
+		const std::wstring& text, short left, short top, short width,
+		short height, on_click_callback click_callback=on_click_callback())
 		:
 		control<checkbox_impl>(
 			boost::shared_ptr<checkbox_impl>(
 				new checkbox_impl(
-					text, width, height, left, top, click_callback))) {}
+					text, left, top, width, height, click_callback))) {}
 
 	std::wstring text() const { return impl()->text(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }
+	short width() const { return impl()->width(); }
+	short height() const { return impl()->height(); }
 };
 
 }}} // namespace winapi::gui::controls

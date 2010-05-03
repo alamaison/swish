@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(form_tests)
  */
 BOOST_AUTO_TEST_CASE( create_form )
 {
-	form frm(L"my title", 30, 30, 30, 40);
+	form frm(L"my title", 30, 40, 30, 30);
 	frm.show();
 	BOOST_CHECK_EQUAL(frm.text(), L"my title");
 }
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( create_form )
  */
 BOOST_AUTO_TEST_CASE( create_form_no_title )
 {
-	form frm(L"", 30, 30, 30, 40);
+	form frm(L"", 30, 40, 30, 30);
 	frm.show();
 	BOOST_CHECK_EQUAL(frm.text(), L"");
 }
@@ -72,9 +72,9 @@ BOOST_AUTO_TEST_CASE( create_form_no_title )
  */
 BOOST_AUTO_TEST_CASE( form_with_button )
 {
-	form frm(L"my title", 100, 50, 30, 40);
+	form frm(L"my title", 30, 40, 100, 50);
 	
-	button hello(L"Hello", 30, 20, 0, 0);
+	button hello(L"Hello", 0, 0, 30, 20);
 	hello.on_click().connect(frm.killer());
 	frm.add_control(hello);
 
@@ -94,12 +94,12 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( form_with_two_controls )
 {
-	form frm(L"Pick one", 200, 50, 30, 40);
+	form frm(L"Pick one", 30, 40, 200, 50);
 	
-	button hello(L"Oh noes!", 50, 20, 10, 10, true);
+	button hello(L"Oh noes!", 10, 10, 50, 20, true);
 	hello.on_click().connect(frm.killer());
 
-	button parp(L"Parp", 50, 20, 70, 10);
+	button parp(L"Parp", 70, 10, 50, 20);
 	parp.on_click().connect(beep);
 
 	frm.add_control(hello);
@@ -112,13 +112,13 @@ BOOST_AUTO_TEST_CASE( form_with_two_controls )
  */
 BOOST_AUTO_TEST_CASE( form_with_different_controls )
 {
-	form frm(L"A button and a box went to tea", 200, 50, 30, 40);
+	form frm(L"A button and a box went to tea", 30, 40, 200, 50);
 	
-	button hello(L"Hello", 30, 20, 10, 10, true);
+	button hello(L"Hello", 10, 10, 30, 20, true);
 	hello.on_click().connect(frm.killer());
 	frm.add_control(hello);
 
-	edit text_box(L"Some text", 70, 14, 70, 10, false, beep);
+	edit text_box(L"Some text", 70, 10, 70, 14, false, beep);
 	frm.add_control(text_box);
 
 	frm.show();
@@ -138,12 +138,12 @@ BOOST_AUTO_TEST_CASE( four_different_alignments )
 
 	BOOST_FOREACH(wchar_t* title, titles)
 	{
-		form frm(L"You'll see me four times", 200, 50, 30, 40);
+		form frm(L"You'll see me four times", 30, 40, 200, 50);
 		
-		button hello(title, 60, 20, 10, 10);
+		button hello(title, 10, 10, 60, 20);
 		hello.on_click().connect(frm.killer());
 
-		label lab(L"press the button to exit", 50, 20, 70, 10);
+		label lab(L"press the button to exit", 70, 10, 50, 20);
 		frm.add_control(hello);
 		frm.add_control(lab);
 		frm.show();
@@ -158,13 +158,13 @@ BOOST_AUTO_TEST_CASE( four_different_alignments )
  */
 BOOST_AUTO_TEST_CASE( form_with_button_inline_contructor )
 {
-	form frm(L"my title", 100, 50, 30, 40);
+	form frm(L"my title", 30, 40, 100, 50);
 	
-	button close(L"Close", 60, 20, 40, 25, true);
+	button close(L"Close", 40, 25, 60, 20, true);
 	close.on_click().connect(frm.killer());
 	frm.add_control(close);
 	
-	frm.add_control(button(L"I do nothing", 75, 20, 0, 0));
+	frm.add_control(button(L"I do nothing", 0, 0, 75, 20));
 
 	frm.show();
 }
@@ -174,13 +174,13 @@ BOOST_AUTO_TEST_CASE( form_with_button_inline_contructor )
  */
 BOOST_AUTO_TEST_CASE( one_control_updates_another )
 {
-	form frm(L"Multipass", 220, 50, 30, 40);
+	form frm(L"Multipass", 30, 40, 220, 50);
 	
-	button close(L"Close", 30, 20, 10, 10);
+	button close(L"Close", 10, 10, 30, 20);
 	close.on_click().connect(frm.killer());
 
-	label lab(L"My old text", 50, 20, 160, 15);
-	button change(L"Click me to change him", 100, 20, 50, 10, true);
+	label lab(L"My old text", 160, 15, 50, 20);
+	button change(L"Click me to change him", 50, 10, 100, 20, true);
 	change.on_click().connect(
 		bind(&label::text, boost::ref(lab), L"I got new!"));
 
@@ -198,9 +198,9 @@ BOOST_AUTO_TEST_CASE( one_control_updates_another )
  */
 BOOST_AUTO_TEST_CASE( chain_events )
 {
-	form frm(L"I should beep then die", 100, 50, 30, 40);
+	form frm(L"I should beep then die", 30, 40, 100, 50);
 	
-	button ping(L"Ping!", 100, 50, 0, 0);
+	button ping(L"Ping!", 0, 0, 100, 50);
 
 	ping.on_click().connect(beep);
 	ping.on_click().connect(frm.killer());

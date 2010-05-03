@@ -47,10 +47,10 @@ class edit_impl : public winapi::gui::detail::window_impl
 public:
 
 	edit_impl(
-		const std::wstring& text, short width, short height, short left,
-		short top, bool password, on_update_callback update_callback)
+		const std::wstring& text, short left, short top, short width,
+		short height, bool password, on_update_callback update_callback)
 		:
-		winapi::gui::detail::window_impl(text, width, height, left, top),
+		winapi::gui::detail::window_impl(text, left, top, width, height),
 		m_on_update(update_callback), m_password(password) {}
 
 	std::wstring window_class() const { return L"Edit"; }
@@ -77,21 +77,21 @@ class edit : public control<edit_impl>
 {
 public:
 	edit(
-		const std::wstring& text, short width, short height, short left,
-		short top, bool password=false,
+		const std::wstring& text, short left, short top, short width,
+		short height, bool password=false,
 		on_update_callback update_callback=on_update_callback())
 		:
 		control<edit_impl>(
 			boost::shared_ptr<edit_impl>(
 				new edit_impl(
-					text, width, height, left, top, password,
+					text, left, top, width, height, password,
 					update_callback))) {}
 
 	std::wstring text() const { return impl()->text(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }
+	short width() const { return impl()->width(); }
+	short height() const { return impl()->height(); }
 };
 
 }}} // namespace winapi::gui::controls

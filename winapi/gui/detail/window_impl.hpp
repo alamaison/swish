@@ -99,11 +99,11 @@ public:
 	//using command_handler_mixin::on;
 
 	window_impl(
-		const std::wstring& text, short width, short height, short left,
-		short top)
+		const std::wstring& text, short left, short top, short width,
+		short height)
 		:
 		m_hwnd(NULL), m_real_window_proc(NULL), m_text(text),
-		m_width(width), m_height(height), m_left(left), m_top(top) {}
+		m_left(left), m_top(top), m_width(width), m_height(height) {}
 
 	virtual ~window_impl() {}
 
@@ -114,10 +114,10 @@ public:
 	virtual std::wstring window_class() const = 0;
 	virtual DWORD style() const = 0;
 
-	short width() const { return m_width; }
-	short height() const { return m_height; }
 	short left() const { return m_left; }
 	short top() const { return m_top; }
+	short width() const { return m_width; }
+	short height() const { return m_height; }
 
 	std::wstring text() const
 	{
@@ -231,10 +231,10 @@ private:
 	                            ///< handler
 	
 	std::wstring m_text;
-	short m_width;
-	short m_height;
 	short m_left;
 	short m_top;
+	short m_width;
+	short m_height;
 };
 
 /**

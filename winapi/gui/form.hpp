@@ -76,10 +76,10 @@ namespace detail {
 		using window_impl::on;
 
 		form_impl(
-			const std::wstring& title, short width, short height, short left,
-			short top)
+			const std::wstring& title, short left, short top, short width,
+			short height)
 			:
-			window_impl(title, width, height, left, top) {}
+			window_impl(title, left, top, width, height) {}
 
 		std::wstring window_class() const { return L"#32770"; }
 		DWORD style() const
@@ -93,7 +93,7 @@ namespace detail {
 		void show(HWND hwnd_owner)
 		{
 			std::vector<byte> buffer = build_dialog_template_in_memory(
-				L"MS Shell Dlg", 8, text(), width(), height(), left(), top(),
+				L"MS Shell Dlg", 8, text(), left(), top(), width(), height(),
 				m_controls);
 
 			hook_window_creation();
@@ -343,9 +343,9 @@ class form
 public:
 
 	form(
-		const std::wstring& title, short width, short height, short left,
-		short top)
-		: m_impl(new detail::form_impl(title, width, height, left, top)) {}
+		const std::wstring& title, short left, short top, short width,
+		short height)
+		: m_impl(new detail::form_impl(title, left, top, width, height)) {}
 
 	template<typename T>
 	void add_control(const winapi::gui::control<T>& control)

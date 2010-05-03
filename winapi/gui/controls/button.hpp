@@ -49,10 +49,10 @@ class button_impl : public winapi::gui::detail::window_impl
 public:
 
 	button_impl(
-		const std::wstring& title, short width, short height, short left,
-		short top, bool default)
+		const std::wstring& title, short left, short top, short width,
+		short height, bool default)
 		:
-		winapi::gui::detail::window_impl(title, width, height, left, top),
+		winapi::gui::detail::window_impl(title, left, top, width, height),
 		m_default(default) {}
 
 	std::wstring window_class() const { return L"button"; }
@@ -79,20 +79,20 @@ class button : public control<button_impl>
 {
 public:
 	button(
-		const std::wstring& title, short width, short height, short left,
-		short top, bool default=false)
+		const std::wstring& title, short left, short top, short width,
+		short height, bool default=false)
 		:
 		control<button_impl>(
 			boost::shared_ptr<button_impl>(
-				new button_impl(title, width, height, left, top, default))) {}
+				new button_impl(title, left, top, width, height, default))) {}
 
 	boost::signal<void ()>& on_click() { return impl()->on_click(); }
 
 	std::wstring text() const { return impl()->text(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }
+	short width() const { return impl()->width(); }
+	short height() const { return impl()->height(); }
 };
 
 }}} // namespace winapi::gui::controls

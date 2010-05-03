@@ -113,7 +113,7 @@ inline size_t calculate_template_size(
  */
 inline DLGITEMTEMPLATE* write_template_to_buffer(
 	const std::wstring& title, short font_size, const std::wstring& font,
-	short width, short height, short left, short top, size_t control_count,
+	short left, short top, short width, short height, size_t control_count,
 	DLGTEMPLATE* dlg)
 {
 	// dlg buffer must already be DWORD aligned
