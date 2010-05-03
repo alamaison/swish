@@ -106,7 +106,7 @@ typedef boost::shared_ptr<boost::remove_pointer<HHOOK>::type> hhook;
  *
  * The hook is uninstalled when the returned hhook goes out of scope.
  */
-hhook windows_hook(int type, HOOKPROC hook_function)
+inline hhook windows_hook(int type, HOOKPROC hook_function)
 {
 	HHOOK hook = ::SetWindowsHookExW(
 		type, hook_function, NULL, ::GetCurrentThreadId());

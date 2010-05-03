@@ -56,7 +56,7 @@ BOOST_STATIC_ASSERT(sizeof(wchar_t) == sizeof(WORD));
  * advance to the next DWORD boundary.
  */
 template<typename T>
-T* next_double_word(T* p)
+inline T* next_double_word(T* p)
 {
 	return reinterpret_cast<T*>((reinterpret_cast<size_t>(p) + 3) & ~3);
 }
@@ -66,7 +66,7 @@ T* next_double_word(T* p)
  * advance to the next WORD boundary.
  */
 template<typename T>
-T* next_word(T* p)
+inline T* next_word(T* p)
 {
 	return reinterpret_cast<T*>((reinterpret_cast<size_t>(p) + 1) & ~1);
 }
@@ -79,7 +79,7 @@ T* next_word(T* p)
  * (@see http://msdn.microsoft.com/en-us/library/ms644996%28VS.85%29.aspx in
  * the user contrib comments) but we do so anyway just to be on the safe side.
  */
-size_t calculate_template_size(
+inline size_t calculate_template_size(
 	const std::wstring& title, const std::wstring& font)
 {
 	DLGTEMPLATE* dlg = 0;
@@ -111,8 +111,8 @@ size_t calculate_template_size(
  * Assumes the buffer is big enough to fit the data.  Use
  * calculate_template_size to calculate the nescessary size.
  */
-DLGITEMTEMPLATE* write_template_to_buffer(const std::wstring& title,
-	short font_size, const std::wstring& font,
+inline DLGITEMTEMPLATE* write_template_to_buffer(
+	const std::wstring& title, short font_size, const std::wstring& font,
 	short width, short height, short left, short top, size_t control_count,
 	DLGTEMPLATE* dlg)
 {
@@ -167,7 +167,7 @@ DLGITEMTEMPLATE* write_template_to_buffer(const std::wstring& title,
  * MSDN documentation but is required.
  */
 template<typename Customdata>
-size_t calculate_control_template_size(
+inline size_t calculate_control_template_size(
 	const std::wstring& window_class, const std::wstring& title,
 	size_t current_buffer_size)
 {
@@ -202,7 +202,7 @@ size_t calculate_control_template_size(
  * calculate_item_template_size to calculate the nescessary size.
  */
 template<typename CustomData>
-DLGITEMTEMPLATE* write_control_to_buffer(
+inline DLGITEMTEMPLATE* write_control_to_buffer(
 	const std::wstring& window_class, const std::wstring& title,
 	unsigned short id, DWORD style,
 	short width, short height, short left, short top, 
@@ -273,7 +273,7 @@ const unsigned short BUTTON_ID_OFFSET = 100;
 /**
  * Build a dialog resource template in memory.
  */
-std::vector<byte> build_dialog_template_in_memory(
+inline std::vector<byte> build_dialog_template_in_memory(
 	const std::wstring& font, short font_size, const std::wstring& title,
 	short width, short height, short left, short top,
 	const std::vector<boost::shared_ptr<window_impl> >& controls)
