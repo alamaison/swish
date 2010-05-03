@@ -46,7 +46,6 @@ using boost::locale::translate;
 using std::wstring;
 
 namespace swish {
-namespace shell_folder {
 namespace forms {
 
 namespace {
@@ -101,4 +100,4 @@ wstring password_prompt(HWND hwnd_owner, const wstring& prompt)
 		return pass_form.password();
 }
 	
-}}} // namespace swish::shell_folder::forms
+}} // namespace swish::forms

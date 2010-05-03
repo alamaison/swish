@@ -171,6 +171,10 @@
 			ReferencedProjectIdentifier="{7F112C5B-3DFD-4FB1-AFF0-4441CBBC0D37}"
 			RelativePathToProject=".\swish\remote_folder\remote_folder.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{F0D481E1-ED53-4833-878B-4EFE1368A6F5}"
+			RelativePathToProject=".\swish\forms\forms.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -494,18 +498,6 @@
 					>
 				</File>
 			</Filter>
-		</Filter>
-		<Filter
-			Name="forms"
-			>
-			<File
-				RelativePath=".\forms\password.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\forms\password.hpp"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

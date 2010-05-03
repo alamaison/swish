@@ -29,7 +29,7 @@
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 #include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
-#include <swish/shell_folder/forms/password.hpp> // password_prompt
+#include "swish/forms/password.hpp" // password_prompt
 
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 #include <winapi/gui/message_box.hpp> // message_box
@@ -51,7 +51,7 @@ using ATL::CComBSTR;
 using ATL::CString;
 using ATL::CComSafeArray;
 
-using swish::shell_folder::forms::password_prompt;
+using swish::forms::password_prompt;
 
 using namespace winapi::gui;
 

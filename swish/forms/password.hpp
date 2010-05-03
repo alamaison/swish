@@ -24,18 +24,17 @@
     @endif
 */
 
-#ifndef SWISH_SHELL_FOLDER_FORMS_PASSWORD_HPP
-#define SWISH_SHELL_FOLDER_FORMS_PASSWORD_HPP
+#ifndef SWISH_FORMS_PASSWORD_HPP
+#define SWISH_FORMS_PASSWORD_HPP
 #pragma once
 
 #include <string>
 
 namespace swish {
-namespace shell_folder {
 namespace forms {
 
 std::wstring password_prompt(HWND hwnd_owner, const std::wstring& prompt);
 	
-}}} // namespace swish::shell_folder::forms
+}} // namespace swish::forms
 
 #endif
