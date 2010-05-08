@@ -26,7 +26,7 @@
 
 #include "host.hpp"
 
-#include "swish/shell_folder/NewConnDialog.h" // CNewConnDialog
+#include "swish/forms/add_host.hpp" // add_host
 #include "swish/shell_folder/explorer_command.hpp" // CExplorerCommandProvider
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/host_management.hpp" // AddConnectionToRegistry
@@ -41,6 +41,8 @@
 #include <cassert>
 #include <string>
 
+using swish::forms::add_host;
+using swish::forms::host_info;
 using swish::shell_folder::explorer_command::CExplorerCommandProvider;
 using swish::shell_folder::explorer_command::make_explorer_command;
 using swish::shell_folder::data_object::PidlFormat;
@@ -102,29 +104,17 @@ bool Add::hidden(
 const
 { return false; }
 
+/** Display dialog to get connection info from user. */
 void Add::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
 const
 {
-	// Display dialog to get connection info from user
-	wstring label, user, host, path;
-	UINT port;
-	CNewConnDialog dlgNewConnection;
-	dlgNewConnection.SetPort( 22 ); // Sensible default
-	if (dlgNewConnection.DoModal(m_hwnd) == IDOK)
-	{
-		label = dlgNewConnection.GetName();
-		user = dlgNewConnection.GetUser();
-		host = dlgNewConnection.GetHost();
-		path = dlgNewConnection.GetPath();
-		port = dlgNewConnection.GetPort();
-	}
-	else
-		BOOST_THROW_EXCEPTION(com_exception(E_ABORT));
+	host_info info = add_host(m_hwnd);
 
-	if (ConnectionExists(label))
+	if (ConnectionExists(info.name))
 		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
 
-	AddConnectionToRegistry(label, host, port, user, path);
+	AddConnectionToRegistry(
+		info.name, info.host, info.port, info.user, info.path);
 
 	notify_shell(m_folder_pidl);
 }

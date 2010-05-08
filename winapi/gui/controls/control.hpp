@@ -60,6 +60,9 @@ public:
 		return impl()->text(new_text);
 	}
 
+	void visible(bool visibility) { impl()->visible(visibility); }
+	void enable(bool enablement) { impl()->enable(enablement); }
+
 protected:
 	
 	friend class form; // form need a p-impl from controls

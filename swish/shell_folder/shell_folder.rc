@@ -40,7 +40,7 @@ END
 
 3 TEXTINCLUDE 
 BEGIN
-    "\r\0"
+    "\r\n\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -63,32 +63,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // Dialog
 //
 
-IDD_HOSTINFO_DIALOG DIALOGEX 0, 0, 275, 189
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "New SFTP Connection"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LTEXT           "&Name:",IDC_LABEL_NAME,12,11,28,8
-    EDITTEXT        IDC_NAME,42,9,222,13,ES_AUTOHSCROLL | WS_GROUP
-    LTEXT           "Swish can connect to an SFTP server so that you can exchange and manage files just as though they were on a local disk.  ",IDC_BLURB_CONNECTION,12,27,258,18
-    LTEXT           "Specify the name of the computer and the port to connect to the SFTP server on as well as the username you would like to connect with:",IDC_BLURB_SERVER,12,51,258,18
-    LTEXT           "&Host:",IDC_LABEL_HOST,12,73,30,8
-    EDITTEXT        IDC_HOST,42,71,156,13,ES_LOWERCASE | ES_AUTOHSCROLL | WS_GROUP
-    LTEXT           "&Port:",IDC_LABEL_PORT,204,73,18,8
-    EDITTEXT        IDC_PORT,228,71,36,13,ES_AUTOHSCROLL | ES_NUMBER | WS_GROUP
-    LTEXT           "&User:",IDC_LABEL_USER,12,91,56,8
-    EDITTEXT        IDC_USER,42,89,156,13,ES_AUTOHSCROLL | WS_GROUP
-    LTEXT           "Specify the directory on the server that you would like Swish to start the connection in:",IDC_BLURB_PATH,12,109,258,18
-    LTEXT           "P&ath:",IDC_LABEL_PATH,12,130,35,8
-    EDITTEXT        IDC_PATH,42,128,222,13,ES_AUTOHSCROLL | WS_GROUP
-    LTEXT           "Example: /home/yourusername",IDC_PATH_EXAMPLE,42,144,104,8
-    CONTROL         "",IDC_SEPARATOR,"Static",SS_ETCHEDHORZ,0,160,277,1
-    DEFPUSHBUTTON   "OK",IDOK,162,168,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,216,168,50,14
-    LTEXT           "Status messages are displayed here and can be more than one line long.",IDC_HOSTDLG_STATUS,23,171,135,20,SS_NOPREFIX | NOT WS_VISIBLE
-    ICON            "",IDC_HOSTDLG_STATUS_ICON,2,166,21,20,SS_CENTERIMAGE | SS_REALSIZEIMAGE | NOT WS_VISIBLE
-END
-
 IDD_KBDINTERACTIVEDIALOG DIALOGEX 0, 0, 186, 95
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
@@ -97,28 +71,6 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,73,73,50,16
     PUSHBUTTON      "Cancel",IDCANCEL,129,73,50,16
     LTEXT           "The instruction from the server which may be multiline, include embedded newlines or even be empty",IDC_INSTRUCTION,6,6,174,8
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE 
-BEGIN
-    IDS_HOSTDLG_INVALID_PORT "The port is not valid (between 0 and 65535)."
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_HOSTDLG_INVALID_HOST "The host name is invalid."
-    IDS_HOSTDLG_INVALID_USER "The username is invalid."
-    IDS_HOSTDLG_INVALID_PATH "The path is invalid."
-    IDS_HOSTDLG_COMPLETE_ALL "All fields must be completed."
-    IDS_HOSTDLG_CONNECTION_EXISTS 
-                            "A connection with that name already exists. Please try another name."
-    IDS_HOSTDLG_INVALID_NAME "The name cannot be longer than 30 characters."
 END
 
 #endif    // English (U.K.) resources

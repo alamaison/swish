@@ -206,6 +206,47 @@ inline size_t window_text_length(HWND hwnd)
 }
 
 /**
+ * Is the window theoretically visible?
+ *
+ * It may be obscured but not hidden.
+ */
+inline bool is_window_visible(HWND hwnd)
+{
+	return ::IsWindowVisible(hwnd) == TRUE;
+}
+
+/**
+ * Show or hide a window.
+ *
+ * @returns  Previous visibility.
+ */
+inline bool set_window_visibility(HWND hwnd, bool visible)
+{
+	return ::ShowWindow(hwnd, (visible) ? SW_SHOW : SW_HIDE) == TRUE;
+}
+
+/**
+ * Is the window able to respond to they keyboard and mouse?
+ *
+ * Some types of window, e.g., buttons, may have a visible difference when
+ * they are disabled usch as being greyed out.
+ */
+inline bool is_window_enabled(HWND hwnd)
+{
+	return ::IsWindowEnabled(hwnd) == TRUE;
+}
+
+/**
+ * Enable or disable a window.
+ *
+ * @returns  Previous state.
+ */
+inline bool set_window_enablement(HWND hwnd, bool enable)
+{
+	return ::EnableWindow(hwnd, enable) == TRUE;
+}
+
+/**
  * A window's text from its handle.
  */
 template<typename T>

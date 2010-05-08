@@ -1,7 +1,7 @@
 /**
     @file
 
-    GUI edit (text) control.
+    GUI horizontal line control.
 
     @if licence
 
@@ -24,15 +24,14 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_EDIT_HPP
-#define WINAPI_GUI_CONTROLS_EDIT_HPP
+#ifndef WINAPI_GUI_CONTROLS_LINE_HPP
+#define WINAPI_GUI_CONTROLS_LINE_HPP
 #pragma once
 
 #include <winapi/gui/controls/control.hpp> // control base class
 #include <winapi/gui/detail/window_impl.hpp> // window_impl
 
 #include <boost/shared_ptr.hpp> // shared_ptr
-#include <boost/signal.hpp> // signal
 
 #include <string>
 
@@ -40,63 +39,30 @@ namespace winapi {
 namespace gui {
 namespace controls {
 
-class edit_impl : public winapi::gui::detail::window_impl
+class line_impl : public winapi::gui::detail::window_impl
 {
 public:
 
-	edit_impl(
-		const std::wstring& text, short left, short top, short width,
-		short height, DWORD custom_style)
+	line_impl(short left, short top, short width)
 		:
-		winapi::gui::detail::window_impl(text, left, top, width, height),
-		m_custom_style(custom_style) {}
+		winapi::gui::detail::window_impl(L"", left, top, width, 1) {}
 
-	std::wstring window_class() const { return L"Edit"; }
-
+	std::wstring window_class() const { return L"static"; }
 	DWORD style() const
 	{
-		DWORD style = winapi::gui::detail::window_impl::style() |
-			WS_CHILD | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL;
-		
-		style |= m_custom_style;
-
-		return style;
+		return WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ | WS_GROUP | SS_NOTIFY;
 	}
-
-	boost::signal<void ()>& on_update() { return m_on_update; }
-
-private:
-	void on(command<EN_UPDATE>) { m_on_update(); }
-
-	boost::signal<void ()> m_on_update;
-	DWORD m_custom_style;
 };
 
-class edit : public control<edit_impl>
+class line : public control<line_impl>
 {
 public:
-
-	struct style
-	{
-		enum value
-		{
-			default = 0,
-			password = ES_PASSWORD,
-			force_lowercase = ES_LOWERCASE,
-			only_allow_numbers = ES_NUMBER
-		};
-	};
-
-	edit(
-		const std::wstring& text, short left, short top, short width,
-		short height, style::value custom_style=style::default)
+	line(
+		short left, short top, short width)
 		:
-		control<edit_impl>(
-			boost::shared_ptr<edit_impl>(
-				new edit_impl(
-					text, left, top, width, height, custom_style))) {}
-
-	boost::signal<void ()>& on_update() { return impl()->on_update(); }
+		control<line_impl>(
+			boost::shared_ptr<line_impl>(new line_impl(left, top, width)))
+		{}
 
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }

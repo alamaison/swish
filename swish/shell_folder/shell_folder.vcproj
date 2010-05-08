@@ -214,10 +214,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NewConnDialog.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
@@ -332,10 +328,6 @@
 			</File>
 			<File
 				RelativePath=".\locale_setup.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\NewConnDialog.h"
 				>
 			</File>
 			<File

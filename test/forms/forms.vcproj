@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-shell_folder-dialogue"
-	ProjectGUID="{9225F798-2571-4F7A-8E30-42165A44B16A}"
-	RootNamespace="test-shell_folder-dialogue"
+	Name="test-forms"
+	ProjectGUID="{C0632619-EC3C-4F18-81C1-E93D813AB0D6}"
+	RootNamespace="forms"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -56,8 +56,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
-				AdditionalLibraryDirectories="$(OutDir)"
+				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -90,7 +89,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -111,7 +110,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -126,9 +125,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -163,30 +160,30 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
-			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
+			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
+			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-			RelativePathToProject=".\test\common\common.vcproj"
+			ReferencedProjectIdentifier="{F0D481E1-ED53-4833-878B-4EFE1368A6F5}"
+			RelativePathToProject=".\swish\forms\forms.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
+			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
 	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			UniqueIdentifier="{804D884A-080D-469a-B26A-62590CF37E80}"
 			>
 			<File
-				RelativePath=".\KbdInteractiveDialog_test.cpp"
+				RelativePath=".\add_host_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Module.cpp"
+				RelativePath=".\password_test.cpp"
 				>
 			</File>
 			<File
@@ -209,11 +206,15 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\test.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			UniqueIdentifier="{F2058680-E10A-440a-9FDD-32C5FC90292A}"
 			>
 		</Filter>
 	</Files>

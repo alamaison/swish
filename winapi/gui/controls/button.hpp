@@ -32,7 +32,6 @@
 #include <winapi/gui/commands.hpp> // command<BN_CLICKED>
 #include <winapi/gui/detail/window_impl.hpp> // window_impl
 
-#include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/signal.hpp> // signal
 
@@ -41,8 +40,6 @@
 namespace winapi {
 namespace gui {
 namespace controls {
-
-typedef boost::function<void (void)> on_click_callback;
 
 class button_impl : public winapi::gui::detail::window_impl
 {
@@ -68,9 +65,9 @@ public:
 
 	boost::signal<void ()>& on_click() { return m_on_click; }
 
+private:
 	void on(command<BN_CLICKED>) { m_on_click(); }
 
-private:
 	boost::signal<void ()> m_on_click;
 	bool m_default;
 };
@@ -88,7 +85,6 @@ public:
 
 	boost::signal<void ()>& on_click() { return impl()->on_click(); }
 
-	std::wstring text() const { return impl()->text(); }
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }
 	short width() const { return impl()->width(); }

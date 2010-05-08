@@ -44,6 +44,7 @@
 #include <boost/function.hpp> // function
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/signal.hpp> // signal
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/weak_ptr.hpp> // weak_ptr
 
@@ -128,6 +129,8 @@ namespace detail {
 					boost::errinfo_api_function("EndDialog"));
 		}
 
+		boost::signal<void ()>& on_update() { return m_on_update; }
+
 	private:
 
 		friend void catch_form_creation(
@@ -192,6 +195,13 @@ namespace detail {
 		
 		// @}
 
+		/// @name Command handlers
+		// @{
+
+		void on(command<EN_UPDATE>) { m_on_update(); }
+
+		// @}
+
 		/**
 		 * Dispatch the dialog message to the message handlers.
 		 */
@@ -224,6 +234,8 @@ namespace detail {
 		 */
 		std::vector<boost::shared_ptr<window_impl> > m_controls;
 		boost::shared_ptr<creation_hooks<wchar_t> > m_hooks;
+
+		boost::signal<void ()> m_on_update;
 	};
 
 	/**
@@ -385,6 +397,8 @@ public:
 			&detail::form_impl::end, boost::bind(
 				&weak_form_reference::lock, weak_ref));
 	}
+
+	boost::signal<void ()>& on_update() { return m_impl->on_update(); }
 
 	std::wstring text() const { return m_impl->text(); }
 

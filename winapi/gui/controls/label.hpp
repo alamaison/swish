@@ -31,7 +31,6 @@
 #include <winapi/gui/controls/control.hpp> // control base class
 #include <winapi/gui/detail/window_impl.hpp> // window_impl
 
-#include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
@@ -40,48 +39,54 @@ namespace winapi {
 namespace gui {
 namespace controls {
 
-typedef boost::function<void (void)> on_click_callback;
-
 class label_impl : public winapi::gui::detail::window_impl
 {
 public:
 
 	label_impl(
 		const std::wstring& text, short left, short top, short width,
-		short height, on_click_callback click_callback,
-		on_click_callback double_click_callback)
+		short height, DWORD custom_style)
 		:
 		winapi::gui::detail::window_impl(text, left, top, width, height),
-		m_on_click(click_callback),
-		m_on_double_click(double_click_callback) {}
+		m_custom_style(custom_style) {}
 
 	std::wstring window_class() const { return L"static"; }
 	DWORD style() const
 	{
-		return WS_CHILD | WS_VISIBLE | SS_LEFT | WS_GROUP | SS_NOTIFY;
+		DWORD style = winapi::gui::detail::window_impl::style() |
+			WS_CHILD | SS_LEFT | WS_GROUP | SS_NOTIFY;
+		
+		style &= ~WS_TABSTOP;
+		style |= m_custom_style;
+
+		return style;
 	}
 
-	virtual void on_click() { m_on_click(); }
-	virtual void on_double_click() { m_on_double_click(); }
-
 private:
-	on_click_callback m_on_click;
-	on_click_callback m_on_double_click;
+	DWORD m_custom_style;
 };
 
 class label : public control<label_impl>
 {
 public:
+
+	struct style
+	{
+		enum value
+		{
+			default = 0,
+			ampersand_not_special = SS_NOPREFIX
+		};
+	};
+
 	label(
 		const std::wstring& text, short left, short top, short width,
-		short height, on_click_callback click_callback=on_click_callback(),
-		on_click_callback double_click_callback=on_click_callback())
+		short height, style::value custom_style=style::default)
 		:
 		control<label_impl>(
 			boost::shared_ptr<label_impl>(
 				new label_impl(
-					text, left, top, width, height, click_callback,
-					double_click_callback))) {}
+					text, left, top, width, height, custom_style))) {}
 
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }

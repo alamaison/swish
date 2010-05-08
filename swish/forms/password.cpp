@@ -33,6 +33,7 @@
 
 #include <boost/bind.hpp> // bind
 #include <boost/locale.hpp> // translate
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <exception> // exception
 #include <string>
@@ -56,7 +57,8 @@ namespace {
 		PasswordForm(HWND hwnd_owner, const wstring& prompt)
 			:
 			m_form(translate("Password"), 0, 0, 219, 49),
-			m_cancelled(true), m_password_box(edit(L"", 7, 18, 148, 14, true))
+			m_cancelled(true),
+			m_password_box(edit(L"", 7, 18, 148, 14, edit::style::password))
 		{
 			m_form.add_control(m_password_box);
 			m_form.add_control(label(prompt, 7, 7, 149, 8));
@@ -95,7 +97,8 @@ wstring password_prompt(HWND hwnd_owner, const wstring& prompt)
 {
 	PasswordForm pass_form(hwnd_owner, prompt);
 	if (pass_form.was_cancelled())
-		throw std::exception("user cancelled without entering password");
+		BOOST_THROW_EXCEPTION(
+			std::exception("user cancelled without entering password"));
 	else
 		return pass_form.password();
 }

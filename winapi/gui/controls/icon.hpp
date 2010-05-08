@@ -1,7 +1,7 @@
 /**
     @file
 
-    GUI edit (text) control.
+    GUI icon control.
 
     @if licence
 
@@ -24,15 +24,15 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_EDIT_HPP
-#define WINAPI_GUI_CONTROLS_EDIT_HPP
+#ifndef WINAPI_GUI_CONTROLS_ICON_HPP
+#define WINAPI_GUI_CONTROLS_ICON_HPP
 #pragma once
 
+#include <winapi/message.hpp> // send_message
 #include <winapi/gui/controls/control.hpp> // control base class
 #include <winapi/gui/detail/window_impl.hpp> // window_impl
 
 #include <boost/shared_ptr.hpp> // shared_ptr
-#include <boost/signal.hpp> // signal
 
 #include <string>
 
@@ -40,39 +40,56 @@ namespace winapi {
 namespace gui {
 namespace controls {
 
-class edit_impl : public winapi::gui::detail::window_impl
+class icon_impl : public winapi::gui::detail::window_impl
 {
 public:
 
-	edit_impl(
-		const std::wstring& text, short left, short top, short width,
-		short height, DWORD custom_style)
+	icon_impl(short left, short top, short width, short height)
 		:
-		winapi::gui::detail::window_impl(text, left, top, width, height),
-		m_custom_style(custom_style) {}
+		winapi::gui::detail::window_impl(L"", left, top, width, height),
+		m_icon(NULL) {}
 
-	std::wstring window_class() const { return L"Edit"; }
-
+	std::wstring window_class() const { return L"static"; }
 	DWORD style() const
 	{
 		DWORD style = winapi::gui::detail::window_impl::style() |
-			WS_CHILD | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL;
-		
-		style |= m_custom_style;
+			WS_CHILD | SS_ICON | WS_GROUP | SS_NOTIFY | SS_CENTERIMAGE;
 
 		return style;
 	}
 
-	boost::signal<void ()>& on_update() { return m_on_update; }
+	HICON change_icon(HICON new_icon)
+	{
+		if (!is_active())
+		{
+			HICON previous = m_icon;
+			m_icon = new_icon;
+			return previous;
+		}
+		else
+		{
+			return send_message<wchar_t, HICON>(
+				hwnd(), STM_SETIMAGE, IMAGE_ICON, new_icon);
+		}
+	}
 
 private:
-	void on(command<EN_UPDATE>) { m_on_update(); }
 
-	boost::signal<void ()> m_on_update;
-	DWORD m_custom_style;
+	/**
+	 * Set the source of the icon to whatever the user set via change_icon.
+	 */
+	virtual void push()
+	{
+		assert(is_active());
+
+		send_message<wchar_t, HICON>(
+			hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
+	}
+
+	HICON m_icon;
 };
 
-class edit : public control<edit_impl>
+class icon : public control<icon_impl>
 {
 public:
 
@@ -81,22 +98,17 @@ public:
 		enum value
 		{
 			default = 0,
-			password = ES_PASSWORD,
-			force_lowercase = ES_LOWERCASE,
-			only_allow_numbers = ES_NUMBER
+			ampersand_not_special = SS_NOPREFIX
 		};
 	};
 
-	edit(
-		const std::wstring& text, short left, short top, short width,
-		short height, style::value custom_style=style::default)
+	icon(short left, short top, short width, short height)
 		:
-		control<edit_impl>(
-			boost::shared_ptr<edit_impl>(
-				new edit_impl(
-					text, left, top, width, height, custom_style))) {}
+		control<icon_impl>(
+			boost::shared_ptr<icon_impl>(
+				new icon_impl(left, top, width, height))) {}
 
-	boost::signal<void ()>& on_update() { return impl()->on_update(); }
+	HICON change_icon(HICON new_icon) { return impl()->change_icon(new_icon); }
 
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }

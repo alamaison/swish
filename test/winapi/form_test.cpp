@@ -118,7 +118,8 @@ BOOST_AUTO_TEST_CASE( form_with_different_controls )
 	hello.on_click().connect(frm.killer());
 	frm.add_control(hello);
 
-	edit text_box(L"Some text", 70, 10, 70, 14, false, beep);
+	edit text_box(L"Some text", 70, 10, 70, 14, edit::style::default);
+	text_box.on_update().connect(beep);
 	frm.add_control(text_box);
 
 	frm.show();

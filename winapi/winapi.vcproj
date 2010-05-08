@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="winapi"
 	ProjectGUID="{3861C666-997C-41EA-9BDF-EC136E963149}"
 	RootNamespace="winapi"
@@ -69,6 +69,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gui\icon.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\gui\message_box.hpp"
 				>
 			</File>
@@ -100,7 +104,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\gui\controls\icon.hpp"
+					>
+				</File>
+				<File
 					RelativePath=".\gui\controls\label.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\gui\controls\line.hpp"
 					>
 				</File>
 			</Filter>
@@ -183,6 +195,10 @@
 		</File>
 		<File
 			RelativePath=".\hwnd.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\message.hpp"
 			>
 		</File>
 		<File

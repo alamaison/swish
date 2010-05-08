@@ -192,6 +192,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\icon_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\module.cpp"
 				>
 			</File>

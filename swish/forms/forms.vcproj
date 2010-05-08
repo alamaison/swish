@@ -139,6 +139,10 @@
 			UniqueIdentifier="{24A4E065-6ACF-45b5-A524-90BACF2ABA37}"
 			>
 			<File
+				RelativePath=".\add_host.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\password.cpp"
 				>
 			</File>
@@ -168,6 +172,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{99942465-52D6-4eff-8E7C-33B7BEE12A95}"
 			>
+			<File
+				RelativePath=".\add_host.hpp"
+				>
+			</File>
 			<File
 				RelativePath=".\password.hpp"
 				>

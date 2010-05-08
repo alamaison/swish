@@ -96,13 +96,12 @@ class window_impl : private boost::noncopyable, public command_handler_mixin
 {
 public:
 
-	//using command_handler_mixin::on;
-
 	window_impl(
 		const std::wstring& text, short left, short top, short width,
 		short height)
 		:
-		m_hwnd(NULL), m_real_window_proc(NULL), m_text(text),
+		m_hwnd(NULL), m_real_window_proc(NULL),
+		m_enabled(true), m_visible(true), m_text(text),
 		m_left(left), m_top(top), m_width(width), m_height(height) {}
 
 	virtual ~window_impl() {}
@@ -110,9 +109,11 @@ public:
 	bool is_active() const { return m_hwnd != NULL; }
 	HWND hwnd() const { return m_hwnd; }
 
-
 	virtual std::wstring window_class() const = 0;
-	virtual DWORD style() const = 0;
+	virtual DWORD style() const
+	{
+		return WS_VISIBLE | WS_TABSTOP;
+	}
 
 	short left() const { return m_left; }
 	short top() const { return m_top; }
@@ -123,22 +124,69 @@ public:
 	{
 		if (!is_active())
 			return m_text;
-		
-		return winapi::window_text<wchar_t>(hwnd());
+		else
+			return winapi::window_text<wchar_t>(hwnd());
 	}
 
 	void text(const std::wstring& new_text)
 	{
 		if (!is_active())
 			m_text = new_text;
-		
-		winapi::window_text(hwnd(), new_text);
+		else
+			winapi::window_text(hwnd(), new_text);
 	}
 
+	void visible(bool visibility)
+	{
+		if (!is_active())
+			m_visible = visibility;
+		else
+			winapi::set_window_visibility(hwnd(), visibility);
+	}
+
+	void enable(bool enablement)
+	{
+		if (!is_active())
+			m_enabled = enablement;
+		else
+			winapi::set_window_enablement(hwnd(), enablement);
+	}
+
+	/**
+	 * Main message loop.
+	 *
+	 * The main purpose of this handler is to synchronise C++ wrapper
+	 * and the real Win32 window.  The wrapper's fields can be set before the
+	 * real window is created and callers need access to the fields after the
+	 * real window is destroyed.  Therefore we push the data out to the
+	 * window when it's created and pull it back just before it's destroyed.
+	 *
+	 * We do this with the @c WM_CREATE and @c WM_DESTROY messages (rather
+	 * than @c WM_NCCREATE and @c WM_NCDESTROY) as we can't be sure of the
+	 * fields' integrity outside of this 'safe zone'.  For example, when
+	 * common controls 6 is enabled setting an icon before @c WM_CREATE
+	 * fails to show the icon.
+	 *
+	 * To prevent capturing creation of windows not directly part of our
+	 * dialog template, such as the system menu, we engage our CBT hook for
+	 * as short a period as possible.  Therefore we have to detach ourselves
+	 * in this function rather than from the CBT hook.
+	 *
+	 * @see winapi::gui::detail::cbt_hook_function.
+	 */
 	LRESULT handle_message(unsigned int message, WPARAM wparam, LPARAM lparam)
 	{
 		switch (message)
 		{
+		case WM_CREATE:
+			push_common();
+			push();
+			break;
+
+		case WM_DESTROY:
+			pull_common();
+			break;
+
 		case WM_NCDESTROY:
 			detach();
 			break;
@@ -151,7 +199,6 @@ public:
 			m_real_window_proc, m_hwnd, message, wparam, lparam);
 	}
 
-
 	/**
 	 * Default WM_COMMAND message handler.
 	 *
@@ -163,7 +210,7 @@ public:
 	{
 #ifdef _DEBUG
 		window_impl* w = window_from_hwnd(unknown.control_hwnd());
-		trace("Unhandled command (code %x) from window with title '%s'")
+		trace("Unhandled command (code 0x%x) from window with title '%s'")
 			% unknown.command_code() % w->text();
 #endif
 	}
@@ -175,6 +222,10 @@ public:
 	 * Also replace the Win32 window's message handling procedure (WNDPROC)
 	 * with our own so that we can intercept any messages it is sent. This
 	 * is otherwise known as subclassing.
+	 *
+	 * We don't push the wrapper fields out to the Win32 window yet as it's
+	 * much too early.  This is called by the CBT hook and at this point the
+	 * window hasn't even recieved an WM_NCCREATE message yet.
 	 *
 	 * @todo  What if we get a failure partway through?
 	 */
@@ -194,16 +245,14 @@ public:
 	/**
 	 * Break the two-way link between this C++ wrapper object and the
 	 * Win32 window object.
-	 *
-	 * Before breaking the link, all data is pulled from the Win32 window
-	 * object so this wrapper can continue to serve data after the real
-	 * window's destruction.
+	 * 
+	 * The fields of the Win32 window should have been pulled in by our window
+	 * proc when it recieved WM_DESTROY.  This message is the last point at
+	 * which we can be sure of the fields' integrity.
 	 */
 	void detach()
 	{
 		assert(m_hwnd); // why are we trying to detach a detached wrapper?
-
-		sync(); // pull in Win32 data
 
 		// Remove our window proc and put back the one it came with
 		WNDPROC window_proc = winapi::set_window_field<wchar_t>(
@@ -220,16 +269,44 @@ private:
 
 	/**
 	 * Update fields in this wrapper class from data in Win32 window object.
+	 *
+	 * This method does any pulling common to all types of window.
 	 */
-	void sync()
+	void pull_common()
 	{
 		m_text = winapi::window_text<wchar_t>(hwnd());
 	}
 
+	/**
+	 * Update Win32 window object from fields in this wrapper class.
+	 *
+	 * Fields can be set in the wrapper before the Win32 window is created.
+	 * This window pushes those values out to the real window once it is created.
+	 *
+	 * @see push where subclasses of the window wrapper can push additional
+	 *      fields if needed.
+	 */
+	void push_common()
+	{
+		winapi::set_window_visibility(hwnd(), m_visible);
+		winapi::set_window_enablement(hwnd(), m_enabled);
+	}
+
+	/**
+	 * Update Win32 window object from fields in wrapper subclasses.
+	 *
+	 * Some Window fields, such as the source of an icon, are best set without
+	 * passing them through the dialog template.  This function is called when
+	 * the Win32 window is created so that wrapper instances can set fields
+	 * based on their own attribtues.
+	 */
+	virtual void push() {}
+
 	HWND m_hwnd;
 	WNDPROC m_real_window_proc; ///< Wrapped window's default message
 	                            ///< handler
-	
+	bool m_enabled;
+	bool m_visible;
 	std::wstring m_text;
 	short m_left;
 	short m_top;
