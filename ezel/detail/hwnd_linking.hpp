@@ -29,7 +29,7 @@
 #pragma once
 
 #include <winapi/error.hpp> // last_error
-#include <winapi/hwnd.hpp> // set_window_field, window_field
+#include <winapi/gui/hwnd.hpp> // set_window_field, window_field
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo
@@ -50,7 +50,7 @@ namespace detail {
 template<typename T, typename U>
 inline void store_user_window_data(HWND hwnd, const U& data)
 {
-	winapi::set_window_field<T>(hwnd, GWLP_USERDATA, data);
+	winapi::gui::set_window_field<T>(hwnd, GWLP_USERDATA, data);
 }
 
 /**
@@ -61,7 +61,7 @@ inline void store_user_window_data(HWND hwnd, const U& data)
 template<typename T, typename U>
 inline void store_dialog_window_data(HWND hwnd, const U& data)
 {
-	winapi::set_window_field<T>(hwnd, DWLP_USER, data);
+	winapi::gui::set_window_field<T>(hwnd, DWLP_USER, data);
 }
 
 /**
@@ -78,7 +78,7 @@ inline void store_dialog_window_data(HWND hwnd, const U& data)
 template<typename T, typename U>
 inline U fetch_user_window_data(HWND hwnd)
 {
-	return winapi::window_field<T, U>(hwnd, GWLP_USERDATA);
+	return winapi::gui::window_field<T, U>(hwnd, GWLP_USERDATA);
 }
 
 /**
@@ -95,7 +95,7 @@ inline U fetch_user_window_data(HWND hwnd)
 template<typename T, typename U>
 inline U fetch_dialog_window_data(HWND hwnd)
 {
-	return winapi::window_field<T, U>(hwnd, DWLP_USER);
+	return winapi::gui::window_field<T, U>(hwnd, DWLP_USER);
 }
 
 typedef boost::shared_ptr<boost::remove_pointer<HHOOK>::type> hhook;

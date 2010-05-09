@@ -24,8 +24,8 @@
     @endif
 */
 
-#ifndef WINAPI_HWND_HPP
-#define WINAPI_HWND_HPP
+#ifndef WINAPI_GUI_HWND_HPP
+#define WINAPI_GUI_HWND_HPP
 #pragma once
 
 #include <winapi/error.hpp> // last_error
@@ -42,6 +42,7 @@
 #include <Winuser.h> // SetWindowLongPtr, GetWindowLongPtr, GetWindowTextLength
                      // GetWindowText, SetWindowText
 namespace winapi {
+namespace gui {
 
 namespace detail {
 
@@ -288,6 +289,6 @@ inline void window_text(HWND hwnd, const std::string& text)
 inline void window_text(HWND hwnd, const std::wstring& text)
 { return detail::window_text(hwnd, text); }
 
-} // namespace winapi
+}} // namespace winapi::gui
 
 #endif

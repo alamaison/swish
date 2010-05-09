@@ -65,6 +65,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gui\hwnd.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\gui\icon.hpp"
 				>
 			</File>
@@ -135,10 +139,6 @@
 		</File>
 		<File
 			RelativePath=".\error.hpp"
-			>
-		</File>
-		<File
-			RelativePath=".\hwnd.hpp"
 			>
 		</File>
 		<File

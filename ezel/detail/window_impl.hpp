@@ -33,7 +33,8 @@
 
 #include <winapi/gui/messages.hpp> // message
 #include <winapi/gui/commands.hpp> // command_handler_mixin
-#include <winapi/hwnd.hpp> // window_text, window_field
+#include <winapi/gui/hwnd.hpp> // window_text, window_field, set_window_field,
+                               // set_window_visibility, set_window_enablement
 #include <winapi/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
@@ -126,7 +127,7 @@ public:
 		if (!is_active())
 			return m_text;
 		else
-			return winapi::window_text<wchar_t>(hwnd());
+			return winapi::gui::window_text<wchar_t>(hwnd());
 	}
 
 	void text(const std::wstring& new_text)
@@ -134,7 +135,7 @@ public:
 		if (!is_active())
 			m_text = new_text;
 		else
-			winapi::window_text(hwnd(), new_text);
+			winapi::gui::window_text(hwnd(), new_text);
 	}
 
 	void visible(bool visibility)
@@ -142,7 +143,7 @@ public:
 		if (!is_active())
 			m_visible = visibility;
 		else
-			winapi::set_window_visibility(hwnd(), visibility);
+			winapi::gui::set_window_visibility(hwnd(), visibility);
 	}
 
 	void enable(bool enablement)
@@ -150,7 +151,7 @@ public:
 		if (!is_active())
 			m_enabled = enablement;
 		else
-			winapi::set_window_enablement(hwnd(), enablement);
+			winapi::gui::set_window_enablement(hwnd(), enablement);
 	}
 
 	/**
@@ -240,7 +241,7 @@ public:
 		m_hwnd = hwnd;
 
 		// Replace the window's own Window proc with ours.
-		m_real_window_proc = winapi::set_window_field<wchar_t>(
+		m_real_window_proc = winapi::gui::set_window_field<wchar_t>(
 			m_hwnd, GWLP_WNDPROC, &window_impl_proc);
 	}
 
@@ -257,7 +258,7 @@ public:
 		assert(m_hwnd); // why are we trying to detach a detached wrapper?
 
 		// Remove our window proc and put back the one it came with
-		WNDPROC window_proc = winapi::set_window_field<wchar_t>(
+		WNDPROC window_proc = winapi::gui::set_window_field<wchar_t>(
 			m_hwnd, GWLP_WNDPROC, &window_impl_proc);
 		assert(window_proc == window_impl_proc); // mustn't remove someone
 		                                         // else's window proc
@@ -276,7 +277,7 @@ private:
 	 */
 	void pull_common()
 	{
-		m_text = winapi::window_text<wchar_t>(hwnd());
+		m_text = winapi::gui::window_text<wchar_t>(hwnd());
 	}
 
 	/**
@@ -290,8 +291,8 @@ private:
 	 */
 	void push_common()
 	{
-		winapi::set_window_visibility(hwnd(), m_visible);
-		winapi::set_window_enablement(hwnd(), m_enabled);
+		winapi::gui::set_window_visibility(hwnd(), m_visible);
+		winapi::gui::set_window_enablement(hwnd(), m_enabled);
 	}
 
 	/**
