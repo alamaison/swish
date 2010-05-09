@@ -24,23 +24,22 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_EDIT_HPP
-#define WINAPI_GUI_CONTROLS_EDIT_HPP
+#ifndef EZEL_CONTROLS_EDIT_HPP
+#define EZEL_CONTROLS_EDIT_HPP
 #pragma once
 
-#include <winapi/gui/controls/control.hpp> // control base class
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
+#include <ezel/control.hpp> // control base class
+#include <ezel/detail/window_impl.hpp> // window_impl
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/signal.hpp> // signal
 
 #include <string>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace controls {
 
-class edit_impl : public winapi::gui::detail::window_impl
+class edit_impl : public ezel::detail::window_impl
 {
 public:
 
@@ -48,14 +47,14 @@ public:
 		const std::wstring& text, short left, short top, short width,
 		short height, DWORD custom_style)
 		:
-		winapi::gui::detail::window_impl(text, left, top, width, height),
+		ezel::detail::window_impl(text, left, top, width, height),
 		m_custom_style(custom_style) {}
 
 	std::wstring window_class() const { return L"Edit"; }
 
 	DWORD style() const
 	{
-		DWORD style = winapi::gui::detail::window_impl::style() |
+		DWORD style = ezel::detail::window_impl::style() |
 			WS_CHILD | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL;
 		
 		style |= m_custom_style;
@@ -66,13 +65,13 @@ public:
 	boost::signal<void ()>& on_update() { return m_on_update; }
 
 private:
-	void on(command<EN_UPDATE>) { m_on_update(); }
+	void on(winapi::gui::command<EN_UPDATE>) { m_on_update(); }
 
 	boost::signal<void ()> m_on_update;
 	DWORD m_custom_style;
 };
 
-class edit : public control<edit_impl>
+class edit : public ezel::control<edit_impl>
 {
 public:
 
@@ -104,6 +103,6 @@ public:
 	short height() const { return impl()->height(); }
 };
 
-}}} // namespace winapi::gui::controls
+}} // namespace ezel::controls
 
 #endif

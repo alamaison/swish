@@ -24,11 +24,13 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_DETAIL_WINDOW_IMPL_HPP
-#define WINAPI_GUI_DETAIL_WINDOW_IMPL_HPP
+#ifndef EZEL_DETAIL_WINDOW_IMPL_HPP
+#define EZEL_DETAIL_WINDOW_IMPL_HPP
 #pragma once
 
-#include <winapi/gui/detail/hwnd_linking.hpp> // store_user_window_data
+#include <ezel/detail/command_handler_mixin.hpp> // command_handler_mixin
+#include <ezel/detail/hwnd_linking.hpp> // store_user_window_data
+
 #include <winapi/gui/messages.hpp> // message
 #include <winapi/gui/commands.hpp> // command_handler_mixin
 #include <winapi/hwnd.hpp> // window_text, window_field
@@ -41,8 +43,7 @@
 #include <string>
 #include <vector>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace detail {
 
 void catch_form_creation(HWND hwnd, unsigned int msg, LPARAM lparam);
@@ -172,7 +173,7 @@ public:
 	 * as short a period as possible.  Therefore we have to detach ourselves
 	 * in this function rather than from the CBT hook.
 	 *
-	 * @see winapi::gui::detail::cbt_hook_function.
+	 * @see ezel::detail::cbt_hook_function.
 	 */
 	LRESULT handle_message(unsigned int message, WPARAM wparam, LPARAM lparam)
 	{
@@ -206,11 +207,12 @@ public:
 	 * function.  By default, it does nothing.  Override if you want to
 	 * to handle unhandled command messages.
 	 */
-	virtual void on(command_base unknown)
+	virtual void on(winapi::gui::command_base unknown)
 	{
 #ifdef _DEBUG
 		window_impl* w = window_from_hwnd(unknown.control_hwnd());
-		trace("Unhandled command (code 0x%x) from window with title '%s'")
+		winapi::trace(
+			"Unhandled command (code 0x%x) from window with title '%s'")
 			% unknown.command_code() % w->text();
 #endif
 	}
@@ -341,6 +343,6 @@ inline LRESULT CALLBACK window_impl_proc(
 	}
 }
 
-}}} // namespace winapi::gui::detail
+}} // namespace ezel::detail
 
 #endif

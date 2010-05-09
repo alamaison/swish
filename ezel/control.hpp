@@ -24,16 +24,15 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROL_HPP
-#define WINAPI_GUI_CONTROL_HPP
+#ifndef EZEL_CONTROL_HPP
+#define EZEL_CONTROL_HPP
 #pragma once
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 
 class form;
 
@@ -73,6 +72,6 @@ private:
 	boost::shared_ptr<T> m_impl; // pimpl
 };
 
-}} // namespace winapi::gui
+} // namespace ezel
 
 #endif

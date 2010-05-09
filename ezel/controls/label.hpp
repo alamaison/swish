@@ -1,7 +1,7 @@
 /**
     @file
 
-    GUI horizontal line control.
+    GUI label (static text) control.
 
     @if licence
 
@@ -24,45 +24,68 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_LINE_HPP
-#define WINAPI_GUI_CONTROLS_LINE_HPP
+#ifndef EZEL_CONTROLS_LABEL_HPP
+#define EZEL_CONTROLS_LABEL_HPP
 #pragma once
 
-#include <winapi/gui/controls/control.hpp> // control base class
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
+#include <ezel/control.hpp> // control base class
+#include <ezel/detail/window_impl.hpp> // window_impl
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace controls {
 
-class line_impl : public winapi::gui::detail::window_impl
+class label_impl : public ezel::detail::window_impl
 {
 public:
 
-	line_impl(short left, short top, short width)
+	label_impl(
+		const std::wstring& text, short left, short top, short width,
+		short height, DWORD custom_style)
 		:
-		winapi::gui::detail::window_impl(L"", left, top, width, 1) {}
+		ezel::detail::window_impl(text, left, top, width, height),
+		m_custom_style(custom_style) {}
 
 	std::wstring window_class() const { return L"static"; }
 	DWORD style() const
 	{
-		return WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ | WS_GROUP | SS_NOTIFY;
+		DWORD style = ezel::detail::window_impl::style() |
+			WS_CHILD | SS_LEFT | WS_GROUP | SS_NOTIFY;
+		
+		style &= ~WS_TABSTOP;
+		style |= m_custom_style;
+
+		return style;
 	}
+
+private:
+	DWORD m_custom_style;
 };
 
-class line : public control<line_impl>
+class label : public ezel::control<label_impl>
 {
 public:
-	line(
-		short left, short top, short width)
+
+	struct style
+	{
+		enum value
+		{
+			default = 0,
+			ampersand_not_special = SS_NOPREFIX
+		};
+	};
+
+	label(
+		const std::wstring& text, short left, short top, short width,
+		short height, style::value custom_style=style::default)
 		:
-		control<line_impl>(
-			boost::shared_ptr<line_impl>(new line_impl(left, top, width)))
-		{}
+		control<label_impl>(
+			boost::shared_ptr<label_impl>(
+				new label_impl(
+					text, left, top, width, height, custom_style))) {}
 
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }
@@ -70,6 +93,6 @@ public:
 	short height() const { return impl()->height(); }
 };
 
-}}} // namespace winapi::gui::controls
+}} // namespace ezel::controls
 
 #endif

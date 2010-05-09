@@ -24,24 +24,24 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_BUTTON_HPP
-#define WINAPI_GUI_CONTROLS_BUTTON_HPP
+#ifndef EZEL_CONTROLS_BUTTON_HPP
+#define EZEL_CONTROLS_BUTTON_HPP
 #pragma once
 
-#include <winapi/gui/controls/control.hpp> // control base class
+#include <ezel/control.hpp> // control base class
+#include <ezel/detail/window_impl.hpp> // window_impl
+
 #include <winapi/gui/commands.hpp> // command<BN_CLICKED>
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/signal.hpp> // signal
 
 #include <string>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace controls {
 
-class button_impl : public winapi::gui::detail::window_impl
+class button_impl : public ezel::detail::window_impl
 {
 public:
 
@@ -49,7 +49,7 @@ public:
 		const std::wstring& title, short left, short top, short width,
 		short height, bool default)
 		:
-		winapi::gui::detail::window_impl(title, left, top, width, height),
+		ezel::detail::window_impl(title, left, top, width, height),
 		m_default(default) {}
 
 	std::wstring window_class() const { return L"button"; }
@@ -66,13 +66,13 @@ public:
 	boost::signal<void ()>& on_click() { return m_on_click; }
 
 private:
-	void on(command<BN_CLICKED>) { m_on_click(); }
+	void on(winapi::gui::command<BN_CLICKED>) { m_on_click(); }
 
 	boost::signal<void ()> m_on_click;
 	bool m_default;
 };
 
-class button : public control<button_impl>
+class button : public ezel::control<button_impl>
 {
 public:
 	button(
@@ -91,6 +91,6 @@ public:
 	short height() const { return impl()->height(); }
 };
 
-}}} // namespace winapi::gui::controls
+}} // namespace ezel::controls
 
 #endif

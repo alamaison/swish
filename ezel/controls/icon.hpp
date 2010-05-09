@@ -24,35 +24,35 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_ICON_HPP
-#define WINAPI_GUI_CONTROLS_ICON_HPP
+#ifndef EZEL_CONTROLS_ICON_HPP
+#define EZEL_CONTROLS_ICON_HPP
 #pragma once
 
+#include <ezel/control.hpp> // control base class
+#include <ezel/detail/window_impl.hpp> // window_impl
+
 #include <winapi/message.hpp> // send_message
-#include <winapi/gui/controls/control.hpp> // control base class
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace controls {
 
-class icon_impl : public winapi::gui::detail::window_impl
+class icon_impl : public ezel::detail::window_impl
 {
 public:
 
 	icon_impl(short left, short top, short width, short height)
 		:
-		winapi::gui::detail::window_impl(L"", left, top, width, height),
+		ezel::detail::window_impl(L"", left, top, width, height),
 		m_icon(NULL) {}
 
 	std::wstring window_class() const { return L"static"; }
 	DWORD style() const
 	{
-		DWORD style = winapi::gui::detail::window_impl::style() |
+		DWORD style = ezel::detail::window_impl::style() |
 			WS_CHILD | SS_ICON | WS_GROUP | SS_NOTIFY | SS_CENTERIMAGE;
 
 		return style;
@@ -68,7 +68,7 @@ public:
 		}
 		else
 		{
-			return send_message<wchar_t, HICON>(
+			return winapi::send_message<wchar_t, HICON>(
 				hwnd(), STM_SETIMAGE, IMAGE_ICON, new_icon);
 		}
 	}
@@ -82,14 +82,14 @@ private:
 	{
 		assert(is_active());
 
-		send_message<wchar_t, HICON>(
+		winapi::send_message<wchar_t, HICON>(
 			hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
 	}
 
 	HICON m_icon;
 };
 
-class icon : public control<icon_impl>
+class icon : public ezel::control<icon_impl>
 {
 public:
 
@@ -116,6 +116,6 @@ public:
 	short height() const { return impl()->height(); }
 };
 
-}}} // namespace winapi::gui::controls
+}} // namespace ezel::controls
 
 #endif

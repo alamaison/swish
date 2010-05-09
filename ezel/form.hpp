@@ -24,18 +24,19 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_FORM_HPP
-#define WINAPI_GUI_FORM_HPP
+#ifndef EZEL_FORM_HPP
+#define EZEL_FORM_HPP
 #pragma once
+
+#include <ezel/control.hpp> // control
+#include <ezel/detail/dialog_template.hpp>
+                                   // build_in_memory_dialog_template
+#include <ezel/detail/hooks.hpp> // creation_hooks
+#include <ezel/detail/hwnd_linking.hpp> // fetch_user_window_data
+#include <ezel/detail/window_impl.hpp> // window_impl
 
 #include <winapi/dynamic_link.hpp> // module_handle
 #include <winapi/gui/commands.hpp> // command
-#include <winapi/gui/controls/control.hpp> // control
-#include <winapi/gui/detail/dialog_template.hpp>
-                                   // build_in_memory_dialog_template
-#include <winapi/gui/detail/hooks.hpp> // creation_hooks
-#include <winapi/gui/detail/hwnd_linking.hpp> // fetch_user_window_data
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
 #include <winapi/gui/messages.hpp> // message
 
 #include <boost/bind.hpp> // bind
@@ -54,8 +55,7 @@
 
 #include <Winuser.h> // DialogBoxIndirectParam
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 
 namespace detail {
 
@@ -152,7 +152,8 @@ namespace detail {
 		/// @name Message handlers
 		// @{
 
-		handling_outcome::type on(const message<WM_CLOSE>& /*message*/)
+		handling_outcome::type on(
+			const winapi::gui::message<WM_CLOSE>& /*message*/)
 		{
 			end();
 			return handling_outcome::fully_handled;
@@ -169,7 +170,8 @@ namespace detail {
 		 * XXX: is this true?  We could always add that capability.  Do we
 		 *      want to?
 		 */
-		handling_outcome::type on(message<WM_COMMAND> command, LRESULT result)
+		handling_outcome::type on(
+			const winapi::gui::message<WM_COMMAND>& command, LRESULT result)
 		{
 			this->dispatch_command_message(
 				command.command_code(), command.wparam(), command.lparam());
@@ -183,7 +185,7 @@ namespace detail {
 			return handling_outcome::fully_handled;
 		}
 
-		BOOL on(const message<WM_INITDIALOG>& /*message*/)
+		BOOL on(const winapi::gui::message<WM_INITDIALOG>& /*message*/)
 		{
 			// All our controls should have been created by now so stop
 			// monitoring window creation.  This prevents problems with
@@ -198,7 +200,7 @@ namespace detail {
 		/// @name Command handlers
 		// @{
 
-		void on(command<EN_UPDATE>) { m_on_update(); }
+		void on(const winapi::gui::command<EN_UPDATE>&) { m_on_update(); }
 
 		// @}
 
@@ -212,14 +214,16 @@ namespace detail {
 			{
 			case WM_INITDIALOG:
 				// no option not to handle this message
-				result = on(message<WM_INITDIALOG>(wparam, lparam));
+				result = on(
+					winapi::gui::message<WM_INITDIALOG>(wparam, lparam));
 				return handling_outcome::fully_handled;
 
 			case WM_CLOSE:
-				return on(message<WM_CLOSE>());
+				return on(winapi::gui::message<WM_CLOSE>());
 
 			case WM_COMMAND:
-				return on(message<WM_COMMAND>(wparam, lparam), result);
+				return on(
+					winapi::gui::message<WM_COMMAND>(wparam, lparam), result);
 
 			default:
 				result = 0;
@@ -360,7 +364,7 @@ public:
 		: m_impl(new detail::form_impl(title, left, top, width, height)) {}
 
 	template<typename T>
-	void add_control(const winapi::gui::control<T>& control)
+	void add_control(const control<T>& control)
 	{
 		m_impl->add_control(control.impl());
 	}
@@ -406,6 +410,6 @@ private:
 	boost::shared_ptr<detail::form_impl> m_impl; // pimpl
 };
 
-}} // namespace winapi::gui
+} // namespace ezel
 
 #endif

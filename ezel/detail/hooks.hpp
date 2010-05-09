@@ -24,19 +24,18 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_HOOKS_HPP
-#define WINAPI_GUI_HOOKS_HPP
+#ifndef EZEL_HOOKS_HPP
+#define EZEL_HOOKS_HPP
 #pragma once
 
-#include <winapi/gui/detail/hwnd_linking.hpp> // windows_hook
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
+#include <ezel/detail/hwnd_linking.hpp> // windows_hook
+#include <ezel/detail/window_impl.hpp> // window_impl
 
 #include <iostream> // cerr
 
 #include <Winuser.h> // CallNextHookEx
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace detail {
 
 namespace native {
@@ -149,6 +148,6 @@ private:
 	hhook m_cbt_hook;
 };
 
-}}} // namespace winapi::gui::detail
+}} // namespace ezel::detail
 
 #endif

@@ -24,8 +24,8 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_DETAIL_WINDOW_HPP
-#define WINAPI_GUI_DETAIL_WINDOW_HPP
+#ifndef EZEL_DETAIL_WINDOW_HPP
+#define EZEL_DETAIL_WINDOW_HPP
 #pragma once
 
 #include <winapi/error.hpp> // last_error
@@ -39,8 +39,7 @@
 #include <Winuser.h> // SetWindowsHookEx
 #include <Winbase.h> // GetCurrentThreadId
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace detail {
 
 /**
@@ -118,6 +117,6 @@ inline hhook windows_hook(int type, HOOKPROC hook_function)
 	return hhook(hook, ::UnhookWindowsHookEx);
 }
 
-}}} // namespace winapi::gui::detail
+}} // namespace ezel::detail
 
 #endif

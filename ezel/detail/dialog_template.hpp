@@ -24,11 +24,11 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_DETAIL_DIALOG_TEMPLATE_HPP
-#define WINAPI_GUI_DETAIL_DIALOG_TEMPLATE_HPP
+#ifndef EZEL_DETAIL_DIALOG_TEMPLATE_HPP
+#define EZEL_DETAIL_DIALOG_TEMPLATE_HPP
 #pragma once
 
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
+#include <ezel/detail/window_impl.hpp> // window_impl
 
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
@@ -39,8 +39,7 @@
 #include <string>
 #include <vector>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace detail {
 
 #pragma warning(push)
@@ -308,6 +307,6 @@ inline std::vector<byte> build_dialog_template_in_memory(
 
 #pragma warning(pop)
 
-}}} // namespace winapi::gui::detail
+}} // namespace ezel::detail
 
 #endif

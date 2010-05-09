@@ -29,13 +29,14 @@
 #include "swish/remotelimits.h"
 #include "swish/shell_folder/host_management.hpp" // ConnectionExists
 
+#include <ezel/controls/button.hpp> // button
+#include <ezel/controls/edit.hpp> // edit
+#include <ezel/controls/label.hpp> // label
+#include <ezel/controls/line.hpp> // line
+#include <ezel/controls/icon.hpp> // icon
+#include <ezel/form.hpp> // form
+
 #include <winapi/dynamic_link.hpp> // module_handle
-#include <winapi/gui/controls/button.hpp> // button
-#include <winapi/gui/controls/edit.hpp> // edit
-#include <winapi/gui/controls/label.hpp> // label
-#include <winapi/gui/controls/line.hpp> // line
-#include <winapi/gui/controls/icon.hpp> // icon
-#include <winapi/gui/form.hpp> // form
 #include <winapi/gui/icon.hpp> // load_icon
 
 #include <boost/bind.hpp> // bind
@@ -49,10 +50,10 @@
 using swish::host_management::ConnectionExists;
 
 using winapi::module_handle;
-using winapi::gui::form;
+using ezel::form;
 using winapi::gui::hicon;
 using winapi::gui::load_icon;
-using namespace winapi::gui::controls;
+using namespace ezel::controls;
 
 using boost::bad_lexical_cast;
 using boost::bind;

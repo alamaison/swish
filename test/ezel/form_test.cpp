@@ -26,22 +26,22 @@
 
 #include <test/common_boost/helpers.hpp> // wstring output
 
-#include <winapi/gui/form.hpp> // test subject
+#include <ezel/form.hpp> // test subject
 
-#include <winapi/gui/controls/button.hpp> // button
-#include <winapi/gui/controls/checkbox.hpp> // checkbox
-#include <winapi/gui/controls/edit.hpp> // edit
-#include <winapi/gui/controls/label.hpp> // label
+#include <ezel/controls/button.hpp> // button
+#include <ezel/controls/checkbox.hpp> // checkbox
+#include <ezel/controls/edit.hpp> // edit
+#include <ezel/controls/label.hpp> // label
 
 #include <boost/bind.hpp> // bind
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/test/unit_test.hpp>
 
-using winapi::gui::form;
-using winapi::gui::controls::button;
-using winapi::gui::controls::checkbox;
-using winapi::gui::controls::edit;
-using winapi::gui::controls::label;
+using ezel::form;
+using ezel::controls::button;
+using ezel::controls::checkbox;
+using ezel::controls::edit;
+using ezel::controls::label;
 
 using boost::bind;
 

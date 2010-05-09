@@ -24,25 +24,24 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_CONTROLS_CHECKBOX_HPP
-#define WINAPI_GUI_CONTROLS_CHECKBOX_HPP
+#ifndef EZEL_CONTROLS_CHECKBOX_HPP
+#define EZEL_CONTROLS_CHECKBOX_HPP
 #pragma once
 
-#include <winapi/gui/controls/control.hpp> // control base class
-#include <winapi/gui/detail/window_impl.hpp> // window_impl
+#include <ezel/control.hpp> // control base class
+#include <ezel/detail/window_impl.hpp> // window_impl
 
 #include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
 
-namespace winapi {
-namespace gui {
+namespace ezel {
 namespace controls {
 
 typedef boost::function<void (void)> on_click_callback;
 
-class checkbox_impl : public winapi::gui::detail::window_impl
+class checkbox_impl : public ezel::detail::window_impl
 {
 public:
 
@@ -50,7 +49,7 @@ public:
 		const std::wstring& text, short left, short top, short width,
 		short height, on_click_callback click_callback)
 		:
-		winapi::gui::detail::window_impl(text, left, top, width, height),
+		ezel::detail::window_impl(text, left, top, width, height),
 		m_on_click(click_callback) {}
 
 	std::wstring window_class() const { return L"button"; }
@@ -66,7 +65,7 @@ private:
 	on_click_callback m_on_click;
 };
 
-class checkbox : public control<checkbox_impl>
+class checkbox : public ezel::control<checkbox_impl>
 {
 public:
 	checkbox(
@@ -85,6 +84,6 @@ public:
 	short height() const { return impl()->height(); }
 };
 
-}}} // namespace winapi::gui::controls
+}} // namespace ezel::controls
 
 #endif

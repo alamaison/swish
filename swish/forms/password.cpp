@@ -26,10 +26,10 @@
 
 #include "password.hpp"
 
-#include <winapi/gui/controls/button.hpp> // button
-#include <winapi/gui/controls/edit.hpp> // edit
-#include <winapi/gui/controls/label.hpp> // label
-#include <winapi/gui/form.hpp> // form
+#include <ezel/controls/button.hpp> // button
+#include <ezel/controls/edit.hpp> // edit
+#include <ezel/controls/label.hpp> // label
+#include <ezel/form.hpp> // form
 
 #include <boost/bind.hpp> // bind
 #include <boost/locale.hpp> // translate
@@ -38,8 +38,8 @@
 #include <exception> // exception
 #include <string>
 
-using winapi::gui::form;
-using namespace winapi::gui::controls;
+using ezel::form;
+using namespace ezel::controls;
 
 using boost::bind;
 using boost::locale::translate;

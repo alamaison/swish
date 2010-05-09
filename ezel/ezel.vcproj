@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="winapi"
-	ProjectGUID="{3861C666-997C-41EA-9BDF-EC136E963149}"
-	RootNamespace="winapi"
+	Name="ezel"
+	ProjectGUID="{09F3BF08-CB72-409C-BACC-557891E4C221}"
+	RootNamespace="ezel"
 	>
 	<Platforms>
 		<Platform
@@ -58,95 +58,63 @@
 	</References>
 	<Files>
 		<Filter
-			Name="gui"
-			>
-			<File
-				RelativePath=".\gui\commands.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\gui\icon.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\gui\message_box.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\gui\messages.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\gui\task_dialog.hpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="shell"
-			>
-			<File
-				RelativePath=".\shell\folder_error_adapters.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shell\folder_interfaces.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shell\format.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shell\pidl.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shell\pidl_array.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shell\property_key.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shell\shell.hpp"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="detail"
 			>
 			<File
-				RelativePath=".\detail\path_traits.hpp"
+				RelativePath=".\detail\command_handler_mixin.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\dialog_template.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\hooks.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\hwnd_linking.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\window_impl.hpp"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="com"
+			Name="controls"
 			>
 			<File
-				RelativePath=".\com\catch.hpp"
+				RelativePath=".\controls\button.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\controls\checkbox.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\controls\edit.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\controls\icon.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\controls\label.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\controls\line.hpp"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\dynamic_link.hpp"
+			RelativePath=".\control.hpp"
 			>
 		</File>
 		<File
-			RelativePath=".\error.hpp"
-			>
-		</File>
-		<File
-			RelativePath=".\hwnd.hpp"
-			>
-		</File>
-		<File
-			RelativePath=".\message.hpp"
-			>
-		</File>
-		<File
-			RelativePath=".\trace.hpp"
+			RelativePath=".\form.hpp"
 			>
 		</File>
 	</Files>

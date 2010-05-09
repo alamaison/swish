@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-winapi"
-	ProjectGUID="{36EA4E3E-0F4C-41DB-B771-3475078C01F9}"
-	RootNamespace="testwinapi"
+	Name="test-ezel"
+	ProjectGUID="{797CE45E-78F4-423C-80F5-74C3751665E3}"
+	RootNamespace="test-ezel"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -164,24 +164,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\dynamic_link_test.cpp"
+			RelativePath=".\form_test.cpp"
 			>
-		</File>
-		<File
-			RelativePath=".\folder_error_adapter_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\format_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\icon_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\module.cpp"
-			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="..\..\swish\pch.cpp"
@@ -204,15 +195,7 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\pidl_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\shell_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\task_dialog_test.cpp"
+			RelativePath=".\test.cpp"
 			>
 		</File>
 	</Files>
