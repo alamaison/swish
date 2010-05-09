@@ -33,8 +33,8 @@
 
 #include <winapi/gui/messages.hpp> // message
 #include <winapi/gui/commands.hpp> // command_handler_mixin
-#include <winapi/gui/hwnd.hpp> // window_text, window_field, set_window_field,
-                               // set_window_visibility, set_window_enablement
+#include <winapi/gui/window.hpp> // window
+#include <winapi/gui/hwnd.hpp> // window_field, set_window_field,
 #include <winapi/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
@@ -102,14 +102,13 @@ public:
 		const std::wstring& text, short left, short top, short width,
 		short height)
 		:
-		m_hwnd(NULL), m_real_window_proc(NULL),
+		m_hwnd(NULL), m_window(NULL), m_real_window_proc(NULL),
 		m_enabled(true), m_visible(true), m_text(text),
 		m_left(left), m_top(top), m_width(width), m_height(height) {}
 
 	virtual ~window_impl() {}
 
 	bool is_active() const { return m_hwnd != NULL; }
-	HWND hwnd() const { return m_hwnd; }
 
 	virtual std::wstring window_class() const = 0;
 	virtual DWORD style() const
@@ -127,7 +126,7 @@ public:
 		if (!is_active())
 			return m_text;
 		else
-			return winapi::gui::window_text<wchar_t>(hwnd());
+			return window().text<wchar_t>();
 	}
 
 	void text(const std::wstring& new_text)
@@ -135,23 +134,23 @@ public:
 		if (!is_active())
 			m_text = new_text;
 		else
-			winapi::gui::window_text(hwnd(), new_text);
+			window().text(new_text);
 	}
 
-	void visible(bool visibility)
+	void visible(bool state)
 	{
 		if (!is_active())
-			m_visible = visibility;
+			m_visible = state;
 		else
-			winapi::gui::set_window_visibility(hwnd(), visibility);
+			window().visible(state);
 	}
 
-	void enable(bool enablement)
+	void enable(bool state)
 	{
 		if (!is_active())
-			m_enabled = enablement;
+			m_enabled = state;
 		else
-			winapi::gui::set_window_enablement(hwnd(), enablement);
+			window().enable(state);
 	}
 
 	/**
@@ -239,6 +238,7 @@ public:
 		// Store object pointer in HWND and HWND in object
 		store_user_window_data<wchar_t>(hwnd, this);
 		m_hwnd = hwnd;
+		m_window = winapi::gui::window<wchar_t>(hwnd);
 
 		// Replace the window's own Window proc with ours.
 		m_real_window_proc = winapi::gui::set_window_field<wchar_t>(
@@ -265,10 +265,18 @@ public:
 		                                         
 		// Unlink the HWND
 		store_user_window_data<wchar_t, window_impl*>(m_hwnd, 0);
+		m_window = winapi::gui::window<wchar_t>(NULL);
 		m_hwnd = NULL;
 	}
 
+protected:
+	
+	HWND hwnd() const { return m_hwnd; }
+	winapi::gui::window<wchar_t>& window() { return m_window; }
+	const winapi::gui::window<wchar_t>& window() const { return m_window; }
+
 private:
+
 
 	/**
 	 * Update fields in this wrapper class from data in Win32 window object.
@@ -277,7 +285,7 @@ private:
 	 */
 	void pull_common()
 	{
-		m_text = winapi::gui::window_text<wchar_t>(hwnd());
+		m_text = window().text<wchar_t>();
 	}
 
 	/**
@@ -291,8 +299,8 @@ private:
 	 */
 	void push_common()
 	{
-		winapi::gui::set_window_visibility(hwnd(), m_visible);
-		winapi::gui::set_window_enablement(hwnd(), m_enabled);
+		window().visible(m_visible);
+		window().enable(m_enabled);
 	}
 
 	/**
@@ -306,6 +314,7 @@ private:
 	virtual void push() {}
 
 	HWND m_hwnd;
+	winapi::gui::window<wchar_t> m_window;
 	WNDPROC m_real_window_proc; ///< Wrapped window's default message
 	                            ///< handler
 	bool m_enabled;

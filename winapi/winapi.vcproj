@@ -84,6 +84,10 @@
 				RelativePath=".\gui\task_dialog.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\gui\window.hpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="shell"

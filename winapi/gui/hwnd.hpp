@@ -213,7 +213,7 @@ inline size_t window_text_length(HWND hwnd)
  */
 inline bool is_window_visible(HWND hwnd)
 {
-	return ::IsWindowVisible(hwnd) == TRUE;
+	return ::IsWindowVisible(hwnd) != 0;
 }
 
 /**
@@ -223,7 +223,7 @@ inline bool is_window_visible(HWND hwnd)
  */
 inline bool set_window_visibility(HWND hwnd, bool visible)
 {
-	return ::ShowWindow(hwnd, (visible) ? SW_SHOW : SW_HIDE) == TRUE;
+	return ::ShowWindow(hwnd, (visible) ? SW_SHOW : SW_HIDE) != 0;
 }
 
 /**
@@ -234,7 +234,7 @@ inline bool set_window_visibility(HWND hwnd, bool visible)
  */
 inline bool is_window_enabled(HWND hwnd)
 {
-	return ::IsWindowEnabled(hwnd) == TRUE;
+	return ::IsWindowEnabled(hwnd) != 0;
 }
 
 /**
@@ -244,7 +244,7 @@ inline bool is_window_enabled(HWND hwnd)
  */
 inline bool set_window_enablement(HWND hwnd, bool enable)
 {
-	return ::EnableWindow(hwnd, enable) == TRUE;
+	return ::EnableWindow(hwnd, enable) == 0;
 }
 
 /**

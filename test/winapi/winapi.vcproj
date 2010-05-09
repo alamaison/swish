@@ -215,6 +215,10 @@
 			RelativePath=".\task_dialog_test.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\window_test.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
