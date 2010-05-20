@@ -36,12 +36,13 @@ namespace gui {
 
 class message_base
 {
+public:
+	WPARAM wparam() const { return m_wparam; }
+	LPARAM lparam() const { return m_lparam; }
+
 protected:
 	message_base(WPARAM wparam, LPARAM lparam)
 		: m_wparam(wparam), m_lparam(lparam) {}
-
-	WPARAM wparam() const { return m_wparam; }
-	LPARAM lparam() const { return m_lparam; }
 
 private:
 	WPARAM m_wparam;
@@ -93,12 +94,6 @@ public:
 	/** Is the source of this command message a translated accelerator? */
 	bool from_accelerator() const
 	{ return command_code() == 1 && !from_control(); }
-
-	/** Access to raw WPARAM for use when converting to command object. */
-	WPARAM wparam() const { return message_base::wparam(); }
-	
-	/** Access to raw LPARAM for use when converting to command object. */
-	LPARAM lparam() const { return message_base::lparam(); }
 };
 
 template<>
@@ -122,7 +117,64 @@ public:
 };
 
 template<>
-class message<WM_CLOSE> {};
+class message<WM_CREATE> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+
+	/**
+	 * Record holding the data passed to CreateWindow() or CreateWindowEx().
+	 */
+	CREATESTRUCT& creation_data() const
+	{
+		return *reinterpret_cast<CREATESTRUCT*>(lparam());
+	}
+};
+
+template<>
+class message<WM_DESTROY> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+};
+
+template<>
+class message<WM_NCDESTROY> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+};
+
+template<>
+class message<WM_CLOSE> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+};
+
+template<>
+class message<WM_SETTEXT> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+
+	/**
+	 * The string that the Window text is being set to.
+	 *
+	 * This message is for observation only.  You can't change the string
+	 * though you prevent the string from being set by suppressing default
+	 * message handling in the handler code.
+	 *
+	 * @warning  Unlike many of the other templated string accessors, this
+	 *           doesn't convert the string to the correct width given as the
+	 *           template argument.  You must call the correct version for the
+	 *           window type.  In other words, if you are cracking a message
+	 *           from a Unicode window call @c text<wchar_t>() otherwise call
+	 *           @c text<char>().
+	 */
+	template<typename T>
+	const T* text() const { return reinterpret_cast<const T*>(lparam()); }
+};
 
 }} // namespace winapi::gui
 

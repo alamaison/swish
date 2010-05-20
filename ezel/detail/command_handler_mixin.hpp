@@ -91,12 +91,12 @@ public:
 	}
 
 private:
-	virtual void on(winapi::gui::command_base) {}
-	virtual void on(winapi::gui::command<BN_CLICKED>) {}
-	virtual void on(winapi::gui::command<BN_DOUBLECLICKED>) {}
-	virtual void on(winapi::gui::command<STN_DBLCLK>) {}
-	virtual void on(winapi::gui::command<EN_UPDATE>) {}
-	virtual void on(winapi::gui::command<EN_CHANGE>) {}
+	virtual void on(const winapi::gui::command_base&) {}
+	virtual void on(const winapi::gui::command<BN_CLICKED>&) {}
+	virtual void on(const winapi::gui::command<BN_DOUBLECLICKED>&) {}
+	virtual void on(const winapi::gui::command<STN_DBLCLK>&) {}
+	virtual void on(const winapi::gui::command<EN_UPDATE>&) {}
+	virtual void on(const winapi::gui::command<EN_CHANGE>&) {}
 };
 
 }} // namespace winapi::gui

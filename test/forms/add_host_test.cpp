@@ -48,7 +48,7 @@ namespace {
  */
 DWORD WINAPI click_cancel_thread(LPVOID /*thread_param*/)
 {
-	::Sleep(1700);
+	::Sleep(2000);
 	HWND hwnd = GetForegroundWindow();
 
 	// Send Cancel button click message to dialog box
@@ -57,8 +57,8 @@ DWORD WINAPI click_cancel_thread(LPVOID /*thread_param*/)
 
 	// Alternatively post left mouse button up/down directly to Cancel button
 	::SendMessage(
-		::GetDlgItem(hwnd, 116), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
-	::SendMessage(::GetDlgItem(hwnd, 116), WM_LBUTTONUP, NULL, NULL);
+		::GetDlgItem(hwnd, 117), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
+	::SendMessage(::GetDlgItem(hwnd, 117), WM_LBUTTONUP, NULL, NULL);
 	return 0;
 }
 

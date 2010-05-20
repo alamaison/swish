@@ -77,6 +77,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\detail\message_dispatch.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\detail\window_impl.hpp"
 				>
 			</File>
@@ -106,6 +110,10 @@
 			</File>
 			<File
 				RelativePath=".\controls\line.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\controls\spinner.hpp"
 				>
 			</File>
 		</Filter>

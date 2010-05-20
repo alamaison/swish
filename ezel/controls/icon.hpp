@@ -42,6 +42,9 @@ namespace controls {
 
 class icon_impl : public ezel::detail::window_impl
 {
+protected:
+	typedef ezel::detail::window_impl super;
+
 public:
 
 	icon_impl(short left, short top, short width, short height)
@@ -73,19 +76,20 @@ public:
 		}
 	}
 
-private:
+protected:
 
 	/**
 	 * Set the source of the icon to whatever the user set via change_icon.
 	 */
 	virtual void push()
 	{
-		assert(is_active());
+		super::push();
 
 		winapi::send_message<wchar_t, HICON>(
 			hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
 	}
 
+private:
 	HICON m_icon;
 };
 

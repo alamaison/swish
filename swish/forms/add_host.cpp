@@ -31,9 +31,10 @@
 
 #include <ezel/controls/button.hpp> // button
 #include <ezel/controls/edit.hpp> // edit
+#include <ezel/controls/icon.hpp> // icon
 #include <ezel/controls/label.hpp> // label
 #include <ezel/controls/line.hpp> // line
-#include <ezel/controls/icon.hpp> // icon
+#include <ezel/controls/spinner.hpp> // spinner
 #include <ezel/form.hpp> // form
 
 #include <winapi/dynamic_link.hpp> // module_handle
@@ -103,9 +104,11 @@ namespace {
 			m_host_box(
 				edit(L"", 42, 71, 156, 13, edit::style::force_lowercase)),
 			m_port_box(
-				edit(
-					lexical_cast<wstring>(DEFAULT_PORT),
-					228, 71, 36, 13, edit::style::only_allow_numbers)),
+				edit(L"", 228, 71, 26, 13, edit::style::only_allow_numbers)),
+			m_port_spinner(
+				spinner(
+					254, 71, 10, 13, MIN_PORT, MAX_PORT, DEFAULT_PORT,
+					spinner::style::no_thousand_separator)),
 			m_user_box(edit(L"", 42, 89, 156, 13)),
 			m_path_box(edit(L"", 42, 128, 222, 13)),
 			m_status(
@@ -118,7 +121,9 @@ namespace {
 			// every time a field is changed we revalidate all the fields,
 			// enable or disable the OK button and a display a status message
 			// if needed
-			m_form.on_update().connect(
+			m_form.on_change().connect(
+				bind(&AddHostForm::update_validity, this));
+			m_port_box.on_text_changed().connect(
 				bind(&AddHostForm::update_validity, this));
 
 			m_form.add_control(
@@ -143,6 +148,7 @@ namespace {
 			m_form.add_control(
 				label(translate("#New Host#&Port:"), 204, 73, 18, 8));
 			m_form.add_control(m_port_box);
+			m_form.add_control(m_port_spinner);
 
 			m_form.add_control(
 				label(translate("#New Host#&User:"), 12, 91, 56, 8));
@@ -372,6 +378,7 @@ namespace {
 		edit m_name_box;
 		edit m_host_box;
 		edit m_port_box;
+		spinner m_port_spinner;
 		edit m_user_box;
 		edit m_path_box;
 		label m_status; ///< Status message window

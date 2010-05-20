@@ -142,6 +142,28 @@ public:
 	/// Change window text. @overload text(const std::string& new_text)
 	void text(const std::wstring& new_text) { generic_text(new_text); }
 
+	/**
+	 * Window message handling procedure.
+	 */
+	WNDPROC window_procedure()
+	{
+		return window_field<T, WNDPROC>(m_hwnd.get(), GWLP_WNDPROC);
+	}
+
+	/**
+	 * Change the function that handles window messages.
+	 *
+	 * This method is used to 'subclass' a window by passing any messages,
+	 * not handled by the new wndproc, throught to the previous window message
+	 * procedure (returned by this method).
+	 *
+	 * @returns  Pointer to previous window message procedure.
+	 */
+	WNDPROC change_window_procedure(WNDPROC new_wndproc)
+	{
+		return set_window_field<T>(m_hwnd.get(), GWLP_WNDPROC, new_wndproc);
+	}
+
 private:
 
 	/**

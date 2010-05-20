@@ -62,11 +62,14 @@ public:
 		return style;
 	}
 
+	boost::signal<void ()>& on_change() { return m_on_change; }
 	boost::signal<void ()>& on_update() { return m_on_update; }
 
 private:
-	void on(winapi::gui::command<EN_UPDATE>) { m_on_update(); }
+	void on(const winapi::gui::command<EN_CHANGE>&) { m_on_change(); }
+	void on(const winapi::gui::command<EN_UPDATE>&) { m_on_update(); }
 
+	boost::signal<void ()> m_on_change;
 	boost::signal<void ()> m_on_update;
 	DWORD m_custom_style;
 };
@@ -95,7 +98,13 @@ public:
 				new edit_impl(
 					text, left, top, width, height, custom_style))) {}
 
+	boost::signal<void ()>& on_change() { return impl()->on_change(); }
 	boost::signal<void ()>& on_update() { return impl()->on_update(); }
+	
+	boost::signal<void (const wchar_t*)>& on_text_change()
+	{ return impl()->on_text_change(); }
+	boost::signal<void ()>& on_text_changed()
+	{ return impl()->on_text_changed(); }
 
 	short left() const { return impl()->left(); }
 	short top() const { return impl()->top(); }

@@ -59,6 +59,12 @@ inline R send_message(HWND hwnd, UINT message, W wparam, L lparam)
 			hwnd, message, (WPARAM)wparam, (LPARAM)lparam));
 }
 
+template<typename T, typename W, typename L>
+inline void send_message(HWND hwnd, UINT message, W wparam, L lparam)
+{
+	send_message<T, LRESULT, W, L>(hwnd, message, wparam, lparam);
+}
+
 } // namespace winapi
 
 #endif

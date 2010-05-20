@@ -129,13 +129,13 @@ namespace detail {
 					boost::errinfo_api_function("EndDialog"));
 		}
 
+		boost::signal<void ()>& on_change() { return m_on_change; }
 		boost::signal<void ()>& on_update() { return m_on_update; }
 
 	private:
 
 		friend void catch_form_creation(
 			HWND hwnd, unsigned int msg, LPARAM lparam);
-		friend void catch_form_destruction(HWND hwnd, unsigned int msg);
 		friend INT_PTR CALLBACK dialog_message_handler(
 			HWND hwnd, unsigned int msg, WPARAM wparam, LPARAM lparam);
 
@@ -200,6 +200,7 @@ namespace detail {
 		/// @name Command handlers
 		// @{
 
+		void on(const winapi::gui::command<EN_CHANGE>&) { m_on_change(); }
 		void on(const winapi::gui::command<EN_UPDATE>&) { m_on_update(); }
 
 		// @}
@@ -219,7 +220,7 @@ namespace detail {
 				return handling_outcome::fully_handled;
 
 			case WM_CLOSE:
-				return on(winapi::gui::message<WM_CLOSE>());
+				return on(winapi::gui::message<WM_CLOSE>(wparam, lparam));
 
 			case WM_COMMAND:
 				return on(
@@ -239,6 +240,7 @@ namespace detail {
 		std::vector<boost::shared_ptr<window_impl> > m_controls;
 		boost::shared_ptr<creation_hooks<wchar_t> > m_hooks;
 
+		boost::signal<void ()> m_on_change;
 		boost::signal<void ()> m_on_update;
 	};
 
@@ -257,26 +259,6 @@ namespace detail {
 		// between the C++ form object and the Win32 dialog object
 		form_impl* this_form = reinterpret_cast<form_impl*>(lparam);
 		this_form->attach(hwnd);
-	}
-
-	/**
-	 * Inform C++ wrapper of Win32 dialog window destruction, if any.
-	 */
-	inline void catch_form_destruction(HWND hwnd, unsigned int msg)
-	{
-		if (msg != WM_NCDESTROY)
-			return;
-
-		// inform our C++ wrapper that the Win32 object no longer exists
-		// by setting its HWND to NULL
-
-		// fetch pointer to C++ wrapper from the HWND
-		form_impl* this_form = static_cast<form_impl*>(window_from_hwnd(hwnd));
-
-		// break link
-		// XXX: If this weren't done here it would be done anyway in the
-		//      window hook so why are we doing it here?
-		this_form->detach();
 	}
 
 	/**
@@ -343,12 +325,6 @@ namespace detail {
 		}
 		catch (std::exception&) { /* ignore */ }
 
-		try
-		{
-			catch_form_destruction(hwnd, msg);
-		}
-		catch (std::exception&) { /* ignore */ }
-
 		return do_dialog_message_return(msg, fully_handled, result, hwnd);
 	}
 
@@ -402,6 +378,7 @@ public:
 				&weak_form_reference::lock, weak_ref));
 	}
 
+	boost::signal<void ()>& on_change() { return m_impl->on_change(); }
 	boost::signal<void ()>& on_update() { return m_impl->on_update(); }
 
 	std::wstring text() const { return m_impl->text(); }

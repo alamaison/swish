@@ -66,7 +66,7 @@ public:
 	boost::signal<void ()>& on_click() { return m_on_click; }
 
 private:
-	void on(winapi::gui::command<BN_CLICKED>) { m_on_click(); }
+	void on(const winapi::gui::command<BN_CLICKED>&) { m_on_click(); }
 
 	boost::signal<void ()> m_on_click;
 	bool m_default;
