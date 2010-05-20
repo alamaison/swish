@@ -159,7 +159,7 @@ public:
 			*ppidl = parse_display_name(
 				hwnd, pbc, pszDisplayName, &dwAttributes);
 
-			assert(*ppidl && !"No error but no retval");
+			assert(*ppidl || !"No error but no retval");
 
 			if (pdwAttributes)
 				*pdwAttributes = dwAttributes;
@@ -388,7 +388,7 @@ public:
 
 			*ppidlOut = set_name_of(hwnd, pidl, pszName, uFlags);
 
-			assert(*ppidlOut && !"No error but no retval");
+			assert(*ppidlOut || !"No error but no retval");
 		}
 		COM_CATCH_AUTO_INTERFACE();
 
@@ -466,7 +466,7 @@ public:
 
 			*ppenum = enum_searches();
 
-			assert(*ppenum && !"No error but no retval");
+			assert(*ppenum || !"No error but no retval");
 		}
 		COM_CATCH_AUTO_INTERFACE();
 
