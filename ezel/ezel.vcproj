@@ -84,6 +84,10 @@
 				RelativePath=".\detail\window_impl.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\detail\window_link.hpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="controls"

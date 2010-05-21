@@ -30,7 +30,7 @@
 
 #include <ezel/detail/command_handler_mixin.hpp> // command_handler_mixin
 #include <ezel/detail/message_dispatch.hpp> // message_dispatch
-#include <ezel/detail/hwnd_linking.hpp> // store_user_window_data
+#include <ezel/detail/window_link.hpp> // window_link
 
 #include <winapi/gui/messages.hpp> // message
 #include <winapi/gui/commands.hpp> // command
@@ -114,16 +114,16 @@ public:
 		const std::wstring& text, short left, short top, short width,
 		short height)
 		:
-		m_hwnd(NULL), m_window(NULL), m_real_window_proc(NULL),
+		m_window(NULL), m_real_window_proc(NULL),
 		m_enabled(true), m_visible(true), m_text(text),
 		m_left(left), m_top(top), m_width(width), m_height(height) {}
 
 	virtual ~window_impl()
 	{
-		assert(m_hwnd == NULL); // why have we not detached?
+		assert(!m_link.attached()); // why have we not detached?
 	}
 
-	bool is_active() const { return m_hwnd != NULL; }
+	bool is_active() const { return m_link.attached(); }
 
 	virtual std::wstring window_class() const = 0;
 	virtual DWORD style() const
@@ -264,7 +264,7 @@ public:
 		UINT message_id, WPARAM wparam, LPARAM lparam)
 	{
 		return ::CallWindowProcW(
-			m_real_window_proc, m_hwnd, message_id, wparam, lparam);
+			m_real_window_proc, m_link.hwnd(), message_id, wparam, lparam);
 	}
 
 	/**
@@ -300,11 +300,9 @@ public:
 	 */
 	void attach(HWND hwnd)
 	{
-		assert(m_hwnd == NULL); // an instance should only be attached once
-
-		// Store object pointer in HWND and HWND in object
-		store_user_window_data<wchar_t>(hwnd, this);
-		m_hwnd = hwnd;
+		assert(!m_link.attached()); // an instance should only be attached once
+		
+		m_link = window_link<window_impl>(hwnd, this);
 		m_window = winapi::gui::window<wchar_t>(hwnd);
 
 		// Replace the window's own Window proc with ours.
@@ -325,7 +323,8 @@ public:
 
 protected:
 	
-	HWND hwnd() const { return m_hwnd; }
+	window_link<window_impl> m_link;
+	HWND hwnd() const { return m_link.hwnd(); }
 	winapi::gui::window<wchar_t>& window() { return m_window; }
 	const winapi::gui::window<wchar_t>& window() const { return m_window; }
 
@@ -398,7 +397,7 @@ private:
 	 */
 	void detach()
 	{
-		assert(m_hwnd); // why are we trying to detach a detached wrapper?
+		assert(m_link.attached()); // why are we detaching a detached wrapper?
 
 		// Remove our window proc and put back the one it came with
 		WNDPROC current_wndproc = window().window_procedure();
@@ -410,10 +409,8 @@ private:
 													 // else's window proc
 		}
 
-		// Unlink the HWND
-		store_user_window_data<wchar_t, window_impl*>(m_hwnd, 0);
 		m_window = winapi::gui::window<wchar_t>(NULL);
-		m_hwnd = NULL;
+		m_link = window_link<window_impl>();
 	}
 
 	HWND m_hwnd;
