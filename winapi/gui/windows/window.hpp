@@ -1,7 +1,7 @@
 /**
     @file
 
-    HWND wrapper class.
+    General HWND wrapper class.
 
     @if licence
 
@@ -24,12 +24,15 @@
     @endif
 */
 
-#ifndef WINAPI_GUI_WINDOW_HPP
-#define WINAPI_GUI_WINDOW_HPP
+#ifndef WINAPI_GUI_WINDOWS_WINDOW_HPP
+#define WINAPI_GUI_WINDOWS_WINDOW_HPP
 #pragma once
 
-#include "hwnd.hpp" // HWND-manipulating functions
+#include <winapi/error.hpp> // last_error
+#include <winapi/gui/hwnd.hpp> // HWND-manipulating functions
 
+#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
+#include <boost/exception/info.hpp> // errinfo
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/type_traits/remove_pointer.hpp> // remove_pointer
 
@@ -60,6 +63,33 @@ public:
 	invalid_window_error() : std::logic_error(
 		"Can't perform operation with a NULL window handle (HWND)") {}
 };
+
+class rectangle
+{
+public:
+	rectangle() : m_rect(RECT()) {}
+	rectangle(const RECT& rect) : m_rect(rect) {}
+
+	/// @name Coordinates
+	// @{
+	long left() const { return m_rect.left; }
+	long top() const { return m_rect.top; }
+	long bottom() const { return m_rect.bottom; }
+	long right() const { return m_rect.right; }
+	// @}
+
+	/// @name Dimensions
+	// @{
+	long width() const { return right() - left(); }
+	long height() const { return bottom() - top(); }
+	// @}
+
+	RECT* out() { return &m_rect; }
+
+private:
+	RECT m_rect;
+};
+
 
 template<typename T>
 class window
@@ -142,6 +172,17 @@ public:
 	/// Change window text. @overload text(const std::string& new_text)
 	void text(const std::wstring& new_text) { generic_text(new_text); }
 
+	rectangle position() const
+	{
+		rectangle rect;
+		if (::GetWindowRect(m_hwnd.get(), rect.out()) == 0)
+			BOOST_THROW_EXCEPTION(
+				boost::enable_error_info(winapi::last_error()) << 
+				boost::errinfo_api_function("GetWindowRect"));
+
+		return rect;
+	}
+
 	/**
 	 * Window message handling procedure.
 	 */
@@ -163,6 +204,10 @@ public:
 	{
 		return set_window_field<T>(m_hwnd.get(), GWLP_WNDPROC, new_wndproc);
 	}
+
+protected:
+	
+	HWND hwnd() const { return m_hwnd.get(); }
 
 private:
 

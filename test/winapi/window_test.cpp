@@ -26,7 +26,7 @@
 
 #include <test/common_boost/helpers.hpp> // wstring output
 
-#include <winapi/gui/window.hpp> // test subject
+#include <winapi/gui/windows/window.hpp> // test subject
 
 #include <boost/mpl/list.hpp> // list
 #include <boost/test/unit_test.hpp>

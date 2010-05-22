@@ -88,6 +88,10 @@
 				RelativePath=".\detail\window_link.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\detail\window_proxy.hpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="controls"

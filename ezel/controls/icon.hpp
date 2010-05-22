@@ -31,7 +31,7 @@
 #include <ezel/control.hpp> // control base class
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/message.hpp> // send_message
+#include <winapi/gui/windows/icon.hpp> // icon_window
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -71,8 +71,8 @@ public:
 		}
 		else
 		{
-			return winapi::send_message<wchar_t, HICON>(
-				hwnd(), STM_SETIMAGE, IMAGE_ICON, new_icon);
+			winapi::gui::icon_window<wchar_t> icon(hwnd());
+			return icon.change_icon(new_icon);
 		}
 	}
 

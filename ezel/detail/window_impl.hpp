@@ -31,19 +31,20 @@
 #include <ezel/detail/command_handler_mixin.hpp> // command_handler_mixin
 #include <ezel/detail/message_dispatch.hpp> // message_dispatch
 #include <ezel/detail/window_link.hpp> // window_link
+#include <ezel/detail/window_proxy.hpp> // window_proxy
 
 #include <winapi/gui/messages.hpp> // message
 #include <winapi/gui/commands.hpp> // command
-#include <winapi/gui/window.hpp> // window
+#include <winapi/gui/windows/window.hpp> // window
 #include <winapi/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+#include <boost/make_shared.hpp> // make_shared
 #include <boost/noncopyable.hpp> // noncopyable
 #include <boost/signal.hpp> // signal
 
 #include <cassert> // assert
 #include <string>
-#include <vector>
 
 namespace ezel {
 namespace detail {
@@ -84,6 +85,137 @@ inline window_impl* window_from_hwnd(HWND hwnd)
 }
 
 /**
+ * Interface for window wrappers used internally by window_impl.
+ *
+ * There are two implementations of this interface.  One wraps a real Win32
+ * window which window_impl uses once it's been attached to an HWND.  The
+ * other only simulates a window to holds the properties that a window_impl
+ * in initialised with as well as to reflect any property changes made before
+ * the real window is created.
+ */
+template<typename T>
+class internal_window
+{
+public:
+	virtual std::basic_string<T> text() const = 0;
+	virtual void text(const std::basic_string<T>& new_text) = 0;
+
+	virtual bool is_visible() = 0;
+	virtual bool is_enabled() = 0;
+	virtual void visible(bool state) = 0;
+	virtual void enable(bool state) = 0;
+
+	virtual short left() const = 0;
+	virtual short top() const = 0;
+	virtual short width() const = 0;
+	virtual short height() const = 0;
+};
+
+/**
+ * Fake window holding properties before real window is attached.
+ *
+ * The purpose of this class is to maintain any properties which are set on
+ * a wrapper before it has been attached to a real Win32 window.  It
+ * simulates the fields in the real window.
+ */
+template<typename T>
+class fake_window : public internal_window<T>
+{
+public:
+	fake_window(
+		bool is_enabled, bool is_visible, const std::basic_string<T>& text,
+		short left, short top, short width, short height)
+		:
+		m_enabled(is_enabled), m_visible(is_visible), m_text(text),
+		m_left(left), m_top(top), m_width(width), m_height(height) {}
+
+	std::basic_string<T> text() const { return m_text; }
+	void text(const std::basic_string<T>& new_text) { m_text = new_text; }
+
+	bool is_visible() { return m_visible; }
+	bool is_enabled() { return m_enabled; }
+	void visible(bool state) { m_visible = state; }
+	void enable(bool state) { m_enabled = state; }
+
+	short left() const { return m_left; }
+	short top() const { return m_top; }
+	short width() const { return m_width; }
+	short height() const { return m_height; }
+
+private:
+	std::basic_string<T> m_text;
+
+	bool m_enabled;
+	bool m_visible;
+
+	short m_left;
+	short m_top;
+	short m_width;
+	short m_height;
+};
+
+/**
+ * Wrapper around a real Win32 window.
+ */
+template<typename T>
+class real_window : public internal_window<T>
+{
+public:
+	real_window(HWND hwnd) : m_window(hwnd)
+	{
+		if (hwnd == NULL)
+			BOOST_THROW_EXCEPTION(std::logic_error("Invalid window handle"));
+	}
+
+	/**
+	 * Window text.
+	 *
+	 * @note  We could allow the caller to specify that they require narrow or
+	 *        wide string irrespective of whether this window is narrow or
+	 *        wide.  However, the fake_window doesn't support this and
+	 *        this class must match its interface.
+	 */
+	std::basic_string<T> text() const { return window().text<T>(); }
+
+	/**
+	 * Window text.
+	 *
+	 * @note  We could allow the caller to pass this method a narrow or wide
+	 *        string irrespective of whether this window is narrow or wide.
+	 *        However, the fake_window doesn't support this and this
+	 *        class must match its interface.
+	 */
+	void text(const std::basic_string<T>& new_text)
+	{ window().text(new_text); }
+
+	bool is_visible() { return window().is_visible(); }
+	bool is_enabled() { return window().is_enabled(); }
+
+	void visible(bool state) { window().visible(state); }
+	void enable(bool state) { window().enable(state); }
+
+	short left() const { return window().position().left(); }
+	short top() const { return window().position().top(); }
+	short width() const { return window().position().width(); }
+	short height() const { return window().position().height(); }
+
+private:
+
+	winapi::gui::window<T>& window() { return m_window; }
+	const winapi::gui::window<T>& window() const { return m_window; }
+
+	winapi::gui::window<T> m_window;
+};
+
+template<typename T>
+void copy_fields(internal_window<T>& source, internal_window<T>& target)
+{
+	target.text(source.text());
+	target.enable(source.is_enabled());
+	target.visible(source.is_visible());
+}
+
+/**
  * Window handle (HWND) wrapper class.
  *
  * Only one instance must exist per HWND so this class in non-copyable.
@@ -114,9 +246,10 @@ public:
 		const std::wstring& text, short left, short top, short width,
 		short height)
 		:
-		m_window(NULL), m_real_window_proc(NULL),
-		m_enabled(true), m_visible(true), m_text(text),
-		m_left(left), m_top(top), m_width(width), m_height(height) {}
+		m_window(
+			boost::make_shared< fake_window<wchar_t> >(
+				true, true, text, left, top, width, height)),
+		m_real_window_proc(NULL) {}
 
 	virtual ~window_impl()
 	{
@@ -131,42 +264,16 @@ public:
 		return WS_VISIBLE | WS_TABSTOP;
 	}
 
-	short left() const { return m_left; }
-	short top() const { return m_top; }
-	short width() const { return m_width; }
-	short height() const { return m_height; }
+	short left() const { return window().left(); }
+	short top() const { return window().top(); }
+	short width() const { return window().width(); }
+	short height() const { return window().height(); }
 
-	std::wstring text() const
-	{
-		if (!is_active())
-			return m_text;
-		else
-			return window().text<wchar_t>();
-	}
+	std::wstring text() const { return window().text(); }
+	void text(const std::wstring& new_text) { window().text(new_text); }
 
-	void text(const std::wstring& new_text)
-	{
-		if (!is_active())
-			m_text = new_text;
-		else
-			window().text(new_text);
-	}
-
-	void visible(bool state)
-	{
-		if (!is_active())
-			m_visible = state;
-		else
-			window().visible(state);
-	}
-
-	void enable(bool state)
-	{
-		if (!is_active())
-			m_enabled = state;
-		else
-			window().enable(state);
-	}
+	void visible(bool state) { window().visible(state); }
+	void enable(bool state) { window().enable(state); }
 
 	/**
 	 * Main message loop.
@@ -303,11 +410,12 @@ public:
 		assert(!m_link.attached()); // an instance should only be attached once
 		
 		m_link = window_link<window_impl>(hwnd, this);
-		m_window = winapi::gui::window<wchar_t>(hwnd);
+		m_window.attach(hwnd);
 
 		// Replace the window's own Window proc with ours.
+		winapi::gui::window<wchar_t> window(hwnd);
 		m_real_window_proc =
-			window().change_window_procedure(window_impl_proc);
+			window.change_window_procedure(window_impl_proc);
 	}
 
 	/// @name Events
@@ -322,11 +430,8 @@ public:
 	// @}
 
 protected:
-	
-	window_link<window_impl> m_link;
+
 	HWND hwnd() const { return m_link.hwnd(); }
-	winapi::gui::window<wchar_t>& window() { return m_window; }
-	const winapi::gui::window<wchar_t>& window() const { return m_window; }
 
 	/**
 	 * Suck data from real Win32 window object into the wrapper class.
@@ -340,9 +445,7 @@ protected:
 	 */
 	virtual void pull()
 	{
-		assert(is_active());
-
-		m_text = window().text<wchar_t>();
+		m_window.pull();
 	}
 
 	/**
@@ -362,11 +465,7 @@ protected:
 	 */
 	virtual void push()
 	{
-		assert(is_active());
-
-		window().text(m_text);
-		window().enable(m_enabled);
-		window().visible(m_visible);
+		m_window.push();
 	}
 
 private:
@@ -381,8 +480,8 @@ private:
 	 * Break the two-way link between this C++ wrapper object and the
 	 * Win32 window object.
 	 * 
-	 * The fields of the Win32 window should have been pulled in by our window
-	 * proc when it recieved WM_DESTROY.  This message is the last point at
+	 * The fields of the Win32 must have been pulled in by our window
+	 * proc when it recieved WM_DESTROY.  That message is the last point at
 	 * which we can be sure of the fields' integrity.
 	 *
 	 * @bug  If someone has subclassed us but not removed their hook by the
@@ -400,33 +499,31 @@ private:
 		assert(m_link.attached()); // why are we detaching a detached wrapper?
 
 		// Remove our window proc and put back the one it came with
-		WNDPROC current_wndproc = window().window_procedure();
+		winapi::gui::window<wchar_t> window(hwnd());
+		WNDPROC current_wndproc = window.window_procedure();
 		if (current_wndproc == window_impl_proc)
 		{
 			WNDPROC window_proc =
-				window().change_window_procedure(m_real_window_proc);
+				window.change_window_procedure(m_real_window_proc);
 			assert(window_proc == window_impl_proc); // mustn't remove someone
 													 // else's window proc
 		}
 
-		m_window = winapi::gui::window<wchar_t>(NULL);
+		m_window.detach();
 		m_link = window_link<window_impl>();
 	}
 
-	HWND m_hwnd;
-	winapi::gui::window<wchar_t> m_window;
+	internal_window<wchar_t>& window() { return *m_window; }
+	const internal_window<wchar_t>& window() const { return *m_window; }
+
+	window_link<window_impl> m_link;
+	window_proxy<
+		internal_window<wchar_t>, fake_window<wchar_t>, real_window<wchar_t> >
+		m_window;
 	WNDPROC m_real_window_proc; ///< Wrapped window's default message
 	                            ///< handler
 	message_dispatcher<
 		WM_CREATE, WM_DESTROY, WM_NCDESTROY, WM_SETTEXT> m_dispatch;
-
-	bool m_enabled;
-	bool m_visible;
-	std::wstring m_text;
-	short m_left;
-	short m_top;
-	short m_width;
-	short m_height;
 
 	/// @name Events
 	// @{
