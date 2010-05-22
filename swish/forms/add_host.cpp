@@ -164,7 +164,7 @@ namespace {
 			m_form.add_control(
 				label(
 					translate("Example: /home/yourusername"),
-					42, 131, 104, 8));
+					42, 131, 144, 8));
 			
 			m_form.add_control(line(0, 147, 277));
 
