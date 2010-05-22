@@ -113,12 +113,12 @@ namespace {
 			m_path_box(edit(L"", 42, 115, 222, 13)),
 			m_status(
 				label(
-					L"", 23, 158, 105, 20,
+					L"", 23, 158, 135, 20,
 					label::style::ampersand_not_special)),
 			m_icon(icon(2,153,21,20)),
 			m_ok(
 				button(
-					translate("Create Connection"), 132, 155, 80, 14, true))
+					translate("Create"), 162, 155, 50, 14, true))
 		{
 			// every time a field is changed we revalidate all the fields,
 			// enable or disable the OK button and a display a status message
