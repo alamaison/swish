@@ -3,49 +3,166 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish 0.3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-04-19 22:34-0000\n"
-"PO-Revision-Date: 2010-04-19 22:34-0000\n"
+"POT-Creation-Date: 2010-05-22 23:58-0000\n"
+"PO-Revision-Date: 2010-05-23 00:20+0100\n"
 "Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: Swish project\n"
+"Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: nl\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Virtaal 0.5.2\n"
 "X-Poedit-KeywordsList: translate\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
-#: ../../swish/host_folder/columns.cpp:68
+#: ../../swish/forms/add_host.cpp:101
+msgid "New SFTP Connection"
+msgstr "Nieuwe SFTP Verbinding"
+
+#: ../../swish/forms/add_host.cpp:121
+msgid "Create"
+msgstr "Aanmaken"
+
+#: ../../swish/forms/add_host.cpp:132
+msgid "#New Host#&Label:"
+msgstr "&Titel:"
+
+#: ../../swish/forms/add_host.cpp:137
+msgid "For example: \"Home Computer\"."
+msgstr "Bijvoorbeeld: \"Computer Thuis\"."
+
+#: ../../swish/forms/add_host.cpp:140
+msgid "Specify the details of the computer and account you would like to connect to:"
+msgstr "Geef de details van de computer en de account waarmee u verbinding wilt maken:"
+
+#: ../../swish/forms/add_host.cpp:144
+msgid "#New Host#&Host:"
+msgstr "&Host:"
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "#New Host#&Port:"
+msgstr "&Poort:"
+
+#: ../../swish/forms/add_host.cpp:153
+msgid "#New Host#&User:"
+msgstr "&Gebruiker:"
+
+#: ../../swish/forms/add_host.cpp:158
+msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgstr "Geef de map op de server waar Swish de verbinding in op moet starten:"
+
+#: ../../swish/forms/add_host.cpp:162
+msgid "#New Host#P&ath:"
+msgstr "P&ad:"
+
+#: ../../swish/forms/add_host.cpp:166
+msgid "Example: /home/yourusername"
+msgstr "Voorbeeld: /home/uwgebruikersnaam"
+
+#: ../../swish/forms/add_host.cpp:174
+#: ../../swish/forms/password.cpp:70
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: ../../swish/forms/add_host.cpp:321
+msgid "The label cannot be longer than 30 characters."
+msgstr "De titel mag niet langer dan 30 lettertekens zijn."
+
+#: ../../swish/forms/add_host.cpp:325
+msgid "The host name is invalid."
+msgstr "De hostnaam is ongeldig."
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The port is not valid (between 0 and 65535)."
+msgstr "De poort is niet geldig (tussen 0 en 65535)."
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The username is invalid."
+msgstr "De gebruikersnaam is ongeldig."
+
+#: ../../swish/forms/add_host.cpp:339
+msgid "The path is invalid."
+msgstr "Het pad is ongeldig."
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "A connection with the same label already exists. Please try another."
+msgstr "Een verbinding met deze titel bestaat al. Probeer een ander."
+
+#: ../../swish/forms/add_host.cpp:351
+msgid "Complete all fields."
+msgstr "Vul alle velden in."
+
+#: ../../swish/forms/password.cpp:59
+msgid "Password"
+msgstr "Wachtwoord"
+
+#: ../../swish/forms/password.cpp:66
+msgid "OK"
+msgstr "OK"
+
+#: ../../swish/host_folder/columns.cpp:57
 msgid "#Property (filename/label)#Name"
 msgstr "Naam"
 
-#: ../../swish/host_folder/columns.cpp:70
+#: ../../swish/host_folder/columns.cpp:60
 msgid "#Property#Host"
 msgstr "Host"
 
-#: ../../swish/host_folder/columns.cpp:72
+#: ../../swish/host_folder/columns.cpp:63
 msgid "#Property#Username"
 msgstr "Gebruikersnaam"
 
-#: ../../swish/host_folder/columns.cpp:74
+#: ../../swish/host_folder/columns.cpp:66
 msgid "#Property#Port"
 msgstr "Poort"
 
-#: ../../swish/host_folder/columns.cpp:76
+#: ../../swish/host_folder/columns.cpp:69
 msgid "#Property#Remote path"
 msgstr "Externe pad"
 
-#: ../../swish/host_folder/columns.cpp:78
+#: ../../swish/host_folder/columns.cpp:72
 msgid "#Property#Type"
 msgstr "Bestandsformaat"
 
-#: ../../swish/host_folder/properties.cpp:67
+#: ../../swish/host_folder/properties.cpp:79
 msgid "#FileType#Network Drive"
 msgstr "Bestandsserver"
 
-#: ../../swish/shell_folder/DropTarget.cpp:479
+#: ../../swish/remote_folder/columns.cpp:82
+msgid "#Property#Size"
+msgstr "Grootte"
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgid "#Property#Date Modified"
+msgstr "Gewijzigd op"
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgid "#Property#Date Accessed"
+msgstr "Geraadpleegd op"
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgid "#Property#Permissions"
+msgstr "Toegangsrechten"
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgid "#Property#Owner"
+msgstr "Eigenaar"
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgid "#Property#Group"
+msgstr "Groep"
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgid "#Property#Owner ID"
+msgstr "Eigenaar ID"
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgid "#Property#Group ID"
+msgstr "Groep ID"
+
+#: ../../swish/shell_folder/DropTarget.cpp:482
 msgid "#Progress#Copying..."
 msgstr "Kopiëren..."
 
@@ -177,63 +294,18 @@ msgstr "Om dit als bekende sleutel voor deze server op te slaan klik op Ja."
 msgid "To connect to the server without storing the key click No."
 msgstr "Om met de server te verbinden zonder de sleutel op te slaan klik op Nee. "
 
-#: ../../swish/shell_folder/commands/host/host.cpp:89
+#: ../../swish/shell_folder/commands/host/host.cpp:92
 msgid "&Add SFTP Connection"
 msgstr "SFTP Verbinding &Aanmaken"
 
-#: ../../swish/shell_folder/commands/host/host.cpp:90
+#: ../../swish/shell_folder/commands/host/host.cpp:93
 msgid "Create a new SFTP connection with Swish."
 msgstr "Maak een niewe SFTP verbinding aan."
 
-#: ../../swish/shell_folder/commands/host/host.cpp:133
+#: ../../swish/shell_folder/commands/host/host.cpp:124
 msgid "&Remove SFTP Connection"
 msgstr "SFTP Verbinding &Verwijderen"
 
-#: ../../swish/shell_folder/commands/host/host.cpp:134
+#: ../../swish/shell_folder/commands/host/host.cpp:125
 msgid "Remove a SFTP connection created with Swish."
 msgstr "Verwijder een SFTP verbinding gemaakt met Swish."
-
-#: ../../swish/shell_folder/forms/password.cpp:59
-msgid "Password"
-msgstr "Wachtwoord"
-
-#: ../../swish/shell_folder/forms/password.cpp:65
-msgid "OK"
-msgstr "OK"
-
-#: ../../swish/shell_folder/forms/password.cpp:69
-msgid "Cancel"
-msgstr "Annuleren"
-
-#: ../../swish/shell_folder/properties/column.cpp:67
-msgid "#Property#Size"
-msgstr "Grootte"
-
-#: ../../swish/shell_folder/properties/column.cpp:72
-msgid "#Property#Date Modified"
-msgstr "Gewijzigd op"
-
-#: ../../swish/shell_folder/properties/column.cpp:75
-msgid "#Property#Date Accessed"
-msgstr "Geraadpleegd op"
-
-#: ../../swish/shell_folder/properties/column.cpp:78
-msgid "#Property#Permissions"
-msgstr "Toegangsrechten"
-
-#: ../../swish/shell_folder/properties/column.cpp:81
-msgid "#Property#Owner"
-msgstr "Eigenaar"
-
-#: ../../swish/shell_folder/properties/column.cpp:83
-msgid "#Property#Group"
-msgstr "Groep"
-
-#: ../../swish/shell_folder/properties/column.cpp:85
-msgid "#Property#Owner ID"
-msgstr "Eigenaar ID"
-
-#: ../../swish/shell_folder/properties/column.cpp:87
-msgid "#Property#Group ID"
-msgstr "Groep ID"
-
