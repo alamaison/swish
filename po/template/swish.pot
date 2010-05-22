@@ -1,0 +1,292 @@
+# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish 0.3.2.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-05-23 00:27-0000\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: translate\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ../../swish\n"
+
+#: ../../swish/forms/add_host.cpp:101
+msgid "New SFTP Connection"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:121
+msgid "Create"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:132
+msgid "#New Host#&Label:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:137
+msgid "For example: \"Home Computer\"."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:140
+msgid "Specify the details of the computer and account you would like to connect to:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:144
+msgid "#New Host#&Host:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "#New Host#&Port:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:153
+msgid "#New Host#&User:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:158
+msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:162
+msgid "#New Host#P&ath:"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:166
+msgid "Example: /home/yourusername"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:174
+#: ../../swish/forms/password.cpp:70
+msgid "Cancel"
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:321
+msgid "The label cannot be longer than 30 characters."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:325
+msgid "The host name is invalid."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The port is not valid (between 0 and 65535)."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The username is invalid."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:339
+msgid "The path is invalid."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "A connection with the same label already exists. Please try another."
+msgstr ""
+
+#: ../../swish/forms/add_host.cpp:351
+msgid "Complete all fields."
+msgstr ""
+
+#: ../../swish/forms/password.cpp:59
+msgid "Password"
+msgstr ""
+
+#: ../../swish/forms/password.cpp:66
+msgid "OK"
+msgstr ""
+
+#: ../../swish/host_folder/columns.cpp:57
+msgid "#Property (filename/label)#Name"
+msgstr ""
+
+#: ../../swish/host_folder/columns.cpp:60
+msgid "#Property#Host"
+msgstr ""
+
+#: ../../swish/host_folder/columns.cpp:63
+msgid "#Property#Username"
+msgstr ""
+
+#: ../../swish/host_folder/columns.cpp:66
+msgid "#Property#Port"
+msgstr ""
+
+#: ../../swish/host_folder/columns.cpp:69
+msgid "#Property#Remote path"
+msgstr ""
+
+#: ../../swish/host_folder/columns.cpp:72
+msgid "#Property#Type"
+msgstr ""
+
+#: ../../swish/host_folder/properties.cpp:79
+msgid "#FileType#Network Drive"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:82
+msgid "#Property#Size"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgid "#Property#Date Modified"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgid "#Property#Date Accessed"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgid "#Property#Permissions"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgid "#Property#Owner"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgid "#Property#Group"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgid "#Property#Owner ID"
+msgstr ""
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgid "#Property#Group ID"
+msgstr ""
+
+#: ../../swish/shell_folder/DropTarget.cpp:482
+msgid "#Progress#Copying..."
+msgstr ""
+
+#: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
+msgid "Keyboard-interactive request"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:195
+#, boost-format
+msgid "The folder already contains a file named '%1%'"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:200
+#, boost-format
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:249
+msgid "Mismatched host-key"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:250
+msgid "WARNING: the SSH host-key has changed!"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:256
+#, boost-format
+msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:263
+msgid "It is important to check this is the right key fingerprint:"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:274
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:279
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:285
+#: ../../swish/shell_folder/UserInteraction.cpp:357
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:295
+msgid "To update the known key for this host click Yes."
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:297
+msgid "To connect to the server without updating the key click No."
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:299
+#: ../../swish/shell_folder/UserInteraction.cpp:371
+msgid "Click Cancel unless you are sure the key is correct."
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:324
+msgid "Unknown host-key"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:330
+#, boost-format
+msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:334
+msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:339
+msgid "Verify unknown SSH host-key"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:346
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:351
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:367
+msgid "To store this as the known key for this server click Yes."
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:369
+msgid "To connect to the server without storing the key click No."
+msgstr ""
+
+#: ../../swish/shell_folder/commands/host/host.cpp:92
+msgid "&Add SFTP Connection"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/host/host.cpp:93
+msgid "Create a new SFTP connection with Swish."
+msgstr ""
+
+#: ../../swish/shell_folder/commands/host/host.cpp:124
+msgid "&Remove SFTP Connection"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/host/host.cpp:125
+msgid "Remove a SFTP connection created with Swish."
+msgstr ""
+
