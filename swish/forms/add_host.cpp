@@ -318,7 +318,7 @@ namespace {
 			{
 				m_status.text(
 					translate(
-						"The name cannot be longer than 30 characters."));
+						"The label cannot be longer than 30 characters."));
 			}
 			else if (!is_valid_host())
 			{
