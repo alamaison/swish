@@ -154,6 +154,7 @@
 
     <ComponentGroup Id="Translations">
       <ComponentGroupRef Id="NLTrans" />
+      <ComponentGroupRef Id="RUTrans" />
     </ComponentGroup>
 
     <Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>

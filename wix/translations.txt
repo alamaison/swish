@@ -1,0 +1,16 @@
+﻿Use heat to generate a new fragment file for a translation.  Run the following
+command:
+
+"C:\Program Files\Windows Installer XML v3\bin\heat.exe" dir <lang_CODE> -cg <lang_CODE>Trans -dr INSTALLDIR -var var.SolutionDir -ag -indent 2 -o <lang_CODE>.wxs
+
+ in the root of a tree with the following layout:
+
+this_dir/
+    <lang_CODE>/  -- (e.g de_DE)
+        LC_MESSAGES/
+            <lang_CODE>.mo
+
+replacing <lang_CODE> with the appropriate language code.
+
+Then edit the wxs file and replace "$(var.SolutionDir)\LC_MESSAGES\swish.mo"
+with "$(var.SolutionDir)\po\<lang_CODE>\swish.mo".

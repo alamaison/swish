@@ -21,6 +21,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="nl.wxs" />
+    <Compile Include="ru.wxs" />
     <Compile Include="swish.wxs" />
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +50,9 @@
     <WixExtension Include="WixUIExtension">
       <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
     </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="translations.txt" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <!--
