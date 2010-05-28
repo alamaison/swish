@@ -383,6 +383,7 @@ public:
 	 */
 	virtual void on(const winapi::gui::command_base& unknown)
 	{
+		(void)unknown;
 #ifdef _DEBUG
 		window_impl* w = window_from_hwnd(unknown.control_hwnd());
 		winapi::trace(
@@ -505,6 +506,7 @@ private:
 		{
 			WNDPROC window_proc =
 				window.change_window_procedure(m_real_window_proc);
+			(void)window_proc;
 			assert(window_proc == window_impl_proc); // mustn't remove someone
 													 // else's window proc
 		}

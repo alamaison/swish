@@ -44,6 +44,8 @@
 
 #include <winapi/shell/shell.hpp> // string_to_strret
 
+#include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+
 #include <cassert> // assert
 #include <string>
 
