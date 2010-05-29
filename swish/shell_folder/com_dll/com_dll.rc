@@ -52,7 +52,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,2,0
+ FILEVERSION 0,3,3,0
  PRODUCTVERSION 0,3,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -70,7 +70,7 @@ BEGIN
         BEGIN
             VALUE "Comments", "Secure access to remote directories from Windows Explorer via SSH/SFTP"
             VALUE "FileDescription", "Swish ATL module and in-proc COM server"
-            VALUE "FileVersion", "0.3.2.0"
+            VALUE "FileVersion", "0.3.3.0"
             VALUE "InternalName", "swish-com_dll"
             VALUE "LegalCopyright", "Copyright (C) 2010 Alexander Lamaison <awl03@doc.ic.ac.uk>"
             VALUE "OriginalFilename", "shell_folder-com_dll.dll"

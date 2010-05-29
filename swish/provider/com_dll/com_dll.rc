@@ -53,7 +53,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,1,1,5
+ FILEVERSION 0,3,3,0
  PRODUCTVERSION 0,3,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -70,7 +70,7 @@ BEGIN
         BLOCK "080004e4"
         BEGIN
             VALUE "FileDescription", "Swish libssh2-based SFTP connection provider"
-            VALUE "FileVersion", "0.1.1.5"
+            VALUE "FileVersion", "0.3.3.0"
             VALUE "InternalName", "provider-com_dll.dll"
             VALUE "LegalCopyright", "Copyright (C) 2010 Alexander Lamaison <awl03@doc.ic.ac.uk>"
             VALUE "LegalTrademarks", "This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/)"
