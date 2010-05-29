@@ -74,11 +74,11 @@ public:
 		const std::string host_name, int port)
 	{
 		tcp::resolver resolver(m_io);
-		tcp::endpoint endpoint;
 		typedef tcp::resolver::query Lookup;
 		Lookup query(
-			endpoint.protocol(), host_name, lexical_cast<string>(port), 
-			Lookup::all_matching | Lookup::numeric_service);
+			tcp::v6(), host_name, lexical_cast<string>(port), 
+			Lookup::all_matching | Lookup::v4_mapped |
+			Lookup::numeric_service);
 
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 		tcp::resolver::iterator end;

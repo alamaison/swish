@@ -228,11 +228,10 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 	string host_name = WideStringToUtf8String(pwszHost);
 
 	tcp::resolver resolver(m_io);
-	tcp::endpoint endpoint;
 	typedef tcp::resolver::query Lookup;
 	Lookup query(
-		endpoint.protocol(), host_name, lexical_cast<string>(uPort), 
-		Lookup::all_matching | Lookup::numeric_service);
+		tcp::v6(), host_name, lexical_cast<string>(uPort), 
+		Lookup::all_matching | Lookup::v4_mapped | Lookup::numeric_service);
 
 	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 	tcp::resolver::iterator end;
