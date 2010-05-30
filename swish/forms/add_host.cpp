@@ -70,6 +70,7 @@ namespace {
 	
 	const int DEFAULT_PORT = 22;
 
+	const wchar_t* FORBIDDEN_USER_CHARS = L":\t\n\r\b";
 	const wchar_t* FORBIDDEN_CHARS = L"@: \t\n\r\b\"'\\";
 	const wchar_t* FORBIDDEN_PATH_CHARS = L"\"\t\n\r\b\\";
 
@@ -238,17 +239,16 @@ namespace {
 		 * Criteria:
 		 * - The field must not contain more than @ref MAX_USERNAME_LEN
 		 *   characters and must not contain any characters from
-		 *   @ref FORBIDDEN_CHARS.
+		 *   @ref FORBIDDEN_USER_CHARS.
 		 *
 		 * @todo The validity criteria are woefully inadequate:
 		 * - There are many characters that are not allowed in usernames.
-		 * - Windows usernames can contain spaces.  These must be escaped.
 		 */
 		bool is_valid_user() const
 		{
 			wstring text = user();
 			return text.length() <= MAX_USERNAME_LEN &&
-				text.find_first_of(FORBIDDEN_CHARS) == wstring::npos;
+				text.find_first_of(FORBIDDEN_USER_CHARS) == wstring::npos;
 		}
 
 		/**
