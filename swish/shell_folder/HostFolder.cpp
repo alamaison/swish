@@ -579,29 +579,14 @@ HRESULT CHostFolder::OnMenuCallback(
 	switch (uMsg)
 	{
 	case DFM_MERGECONTEXTMENU:
-		return this->OnMergeContextMenu(
-			hwnd,
-			pdtobj,
-			static_cast<UINT>(wParam),
-			*reinterpret_cast<QCMINFO *>(lParam)
-		);
+		// Must return S_OK even if we do nothing else or Vista and later
+		// won't add standard verbs
+		return S_OK;
+	case DFM_INVOKECOMMAND: // Required to invoke default action
+	case DFM_INVOKECOMMANDEX:
+	case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+		return S_FALSE; 
 	default:
-		return S_FALSE;
+		return E_NOTIMPL; // Required for Windows 7 to show any menu at all
 	}
-}
-
-/**
- * Handle @c DFM_MERGECONTEXTMENU callback.
- */
-HRESULT CHostFolder::OnMergeContextMenu(
-	HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
-{
-	UNREFERENCED_PARAMETER(hwnd);
-	UNREFERENCED_PARAMETER(pDataObj);
-	UNREFERENCED_PARAMETER(uFlags);
-	UNREFERENCED_PARAMETER(info);
-
-	// It seems we have to return S_OK even if we do nothing else or Explorer
-	// won't put Open as the default item and in the right order
-	return S_OK;
 }

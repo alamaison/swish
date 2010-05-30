@@ -572,6 +572,8 @@ HRESULT CRemoteFolder::OnMenuCallback(
 			static_cast<int>(wParam),
 			reinterpret_cast<PDFMICS>(lParam)
 		);
+	case DFM_GETDEFSTATICID:
+		return S_FALSE;
 	default:
 		return E_NOTIMPL;
 	}

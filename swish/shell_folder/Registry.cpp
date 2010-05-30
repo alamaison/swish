@@ -196,9 +196,9 @@ throw()
 {
 	KeyNames vecKeynames;
 
+	vecKeynames.push_back(L"Folder");
 	vecKeynames.push_back(L"Directory");
 	vecKeynames.push_back(L"Directory\\Background");
-	vecKeynames.push_back(L"Folder");
 
 	return vecKeynames;
 }
@@ -221,6 +221,9 @@ throw()
  * Get the list of names of registry keys related to a specific file extension.
  *
  * @param pwszExtension  File extension whose keys will be returned.
+ *
+ * @todo  Some files, e.g. PDFs, need
+ *        HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ext
  */
 /* static */ CRegistry::KeyNames CRegistry::_GetKeynamesForExtension(
 	__in PCWSTR pwszExtension)

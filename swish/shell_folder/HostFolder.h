@@ -126,7 +126,5 @@ private:
 	// @{
 	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
 		UINT uMsg, WPARAM wParam, LPARAM lParam );
-	HRESULT OnMergeContextMenu(
-		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
 	// @}
 };
