@@ -83,7 +83,6 @@ throw()
  *   HKCU\\Directory
  *   HKCU\\Directory\\Background
  *   HKCU\\Folder
- *   HKCU\\*
  *   HKCU\\AllFileSystemObjects
  * for a folder.
  *
@@ -113,24 +112,18 @@ throw()
  * Get names of registry keys which provide association info for Folder items.
  *
  * Such a list is required by Windows XP and earlier in order to display the 
- * default context menu. The keys are:
- *   HKCU\\Directory
- *   HKCU\\Directory\\Background
- *   HKCU\\Folder
- *   HKCU\\*
- *   HKCU\\AllFileSystemObjects
+ * default context menu. Only 'HKCR\\Folder' is relevant as the Swish hosts are
+ * virtual folder items with no filesystem parallel.  'HKCR\\Directory' and
+ * 'HKCR\AllFileSystemObjects' are for real filesystem items.  'HKCR\\*' is
+ * not for folders at all.
  */
 /* static */ CRegistry::KeyNames CRegistry::_GetHostFolderAssocKeynames()
 throw()
 {
 	KeyNames vecNames;
 
-	// Add directory-specific items
-	vecNames = _GetKeynamesForFolder();
-
-	// Add names of keys that apply to items of all types
-	KeyNames vecCommon = _GetKeynamesCommonToAll();
-	vecNames.insert(vecNames.end(), vecCommon.begin(), vecCommon.end());
+	// Add virtual folder specific items
+	vecNames.push_back(L"Folder");
 
 	return vecNames;
 }
@@ -147,10 +140,9 @@ throw()
  *   HKCU\\*
  *   HKCU\\AllFileSystemObjects
  * for a file and:
+ *   HKCU\\Folder
  *   HKCU\\Directory
  *   HKCU\\Directory\\Background
- *   HKCU\\Folder
- *   HKCU\\*
  *   HKCU\\AllFileSystemObjects
  * for a folder.
  *
@@ -212,7 +204,6 @@ throw()
 	KeyNames vecKeynames;
 
 	vecKeynames.push_back(L"AllFilesystemObjects");
-	vecKeynames.push_back(L"*");
 
 	return vecKeynames;
 }
@@ -296,7 +287,9 @@ throw()
 	if (!vecKeynames.size())
 		vecKeynames.push_back(L"Unknown");
 
-	ATLASSERT( vecKeynames.size() <= 5 ); 
+	vecKeynames.push_back(L"*");
+
+	ATLASSERT( vecKeynames.size() <= 6 ); 
 	return vecKeynames;
 }
 
@@ -318,7 +311,6 @@ throw()
 	const vector<HKEY> vecKeys, UINT *pcKeys, HKEY **paKeys)
 throw()
 {
-	ATLASSERT( vecKeys.size() >= 3 );  // The minimum we must have added
 	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
 
 	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
