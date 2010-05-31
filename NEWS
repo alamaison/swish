@@ -1,6 +1,8 @@
 swish-0.3.3
 -IPv6 support.
--Window 7 fixes
+-Window 7 fixes.
+-Fix overwriting larger file with smaller one.
+-Error messages when negotiating a connection fails.
 
 swish-0.3.2.0
 -Internationalisation (English, Dutch, Russian)
