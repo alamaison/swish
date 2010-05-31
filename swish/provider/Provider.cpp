@@ -46,6 +46,7 @@
 #include "swish/utils.hpp" // running_object_table
 #include "swish/trace.hpp" // trace
 
+#include <comet/bstr.h> // bstr_t
 #include <comet/ptr.h> // com_ptr
 #include <comet/enum.h> // stl_enumeration
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
@@ -62,6 +63,7 @@ using swish::exception::com_exception;
 using swish::utils::com::running_object_table;
 using swish::tracing::trace;
 
+using comet::bstr_t;
 using comet::com_ptr;
 using comet::stl_enumeration;
 
@@ -248,11 +250,22 @@ HRESULT CProvider::_Connect(ISftpConsumer *pConsumer)
 {
 	try
 	{
-		if (!m_session.get())
+		try
 		{
-			m_session = CSessionFactory::CreateSftpSession(
-				m_strHost, m_uPort, m_strUser, pConsumer);
+			if (!m_session.get())
+			{
+				m_session = CSessionFactory::CreateSftpSession(
+					m_strHost, m_uPort, m_strUser, pConsumer);
+			}
 		}
+		catch (const std::exception& e)
+		{
+			bstr_t message("Could not connect to server:\n\n");
+			message += e.what();
+			pConsumer->OnReportError(message.get_raw());
+			throw;
+		}
+
 	}
 	catchCom()
 
@@ -364,7 +377,16 @@ STDMETHODIMP CProvider::GetListing(
 		*m_session, szDirectory
 	);
 	if (!pSftpHandle)
+	{
+		bstr_t message("Could not open directory '");
+		message += szDirectory.m_psz;
+		message += "':\n\n";
+		
+		message += _GetLastErrorMessage();
+
+		pConsumer->OnReportError(message.get_raw());
 		return E_FAIL;
+	}
 
 	// Read entries from directory until we fail
 	shared_ptr<vector<Listing> > files(new vector<Listing>);

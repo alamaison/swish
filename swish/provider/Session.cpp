@@ -45,6 +45,7 @@
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
 #include <boost/lexical_cast.hpp> // lexical_cast: convert port num to string
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
 
@@ -99,16 +100,15 @@ void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
 	ATLASSERT(m_socket.native() != INVALID_SOCKET);
 	if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
 	{
-#ifdef _DEBUG
 		char *szError;
 		int cchError;
-		int rc = libssh2_session_last_error(*this, &szError, &cchError, false);
-		ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
-#endif
+		libssh2_session_last_error(*this, &szError, &cchError, false);
+
 		_ResetSession();
 		_CloseSocketToHost();
 	
-		AtlThrow(E_FAIL); // Legal to fail here, e.g. server refuses banner/kex
+		BOOST_THROW_EXCEPTION(std::exception(szError));
+		// Legal to fail here, e.g. server refuses banner/kex
 	}
 	
 	// Tell libssh2 we are blocking

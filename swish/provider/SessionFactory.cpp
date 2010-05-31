@@ -198,8 +198,9 @@ void CSessionFactory::_AuthenticateUser(
 		session, szUsername, ::strlen(szUsername));
 	if (!szAuthList || *szAuthList == '\0')
 	{
-		TRACE("No supported authentication methods found!");
-		AtlThrow(E_FAIL); // If empty, server refused to let user connect
+		// If empty, server refused to let user connect
+		BOOST_THROW_EXCEPTION(
+			std::exception("No supported authentication methods found"));
 	}
 
 	TRACE("Authentication methods: %s", szAuthList);
