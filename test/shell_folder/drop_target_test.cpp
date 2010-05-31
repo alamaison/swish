@@ -60,6 +60,9 @@ using std::istreambuf_iterator;
 namespace { // private
 
 	const string TEST_DATA = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
+	const string LARGER_TEST_DATA = 
+		";sdkfna;sldjnksj fjnweneofiun weof woenf woeunr2938y4192n34kj1458c"
+		"d;ofn3498tv 3405jnv 3498thv-948rc 34f 9485hv94htc rwr98thv3948h534h4";
 
 	/**
 	 * The test data which will be written and read from files to
@@ -109,7 +112,6 @@ namespace { // private
 		string contents = string(
 			istreambuf_iterator<char>(stream),
 			istreambuf_iterator<char>());
-		BOOST_REQUIRE_EQUAL(contents, test_data());
 
 		if (contents != test_data())
 		{
@@ -347,6 +349,64 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 	expected = destination / L"non-empty" / 
 		L"second-level-folder" / L"third-level-file";
 	BOOST_REQUIRE(exists(expected));
+}
+
+/**
+ * Overwrite an existing file.
+ */
+BOOST_AUTO_TEST_CASE( copy_overwrite )
+{
+	wpath local = NewFileInSandbox();
+	com_ptr<IDataObject> spdo = create_data_object(local);
+
+	wpath destination = Sandbox() / L"copy-destination";
+	wpath expected = destination / local.filename();
+
+	// make sure the destination file already exists
+	create_directory(destination);
+	ofstream stream(expected);
+	stream << "blah";
+	stream.close();
+
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(!file_contents_correct(expected));
+
+	copy_data_to_provider(
+		spdo, Provider(), Consumer(), ToRemotePath(destination));
+
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
+}
+
+/**
+ * Overwrite a larger file.
+ *
+ * Tests that we truncate the large file before writing.  Otherwise the final
+ * file would be corrupt.
+ */
+BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
+{
+	wpath local = NewFileInSandbox();
+	com_ptr<IDataObject> spdo = create_data_object(local);
+
+	wpath destination = Sandbox() / L"copy-destination";
+	wpath expected = destination / local.filename();
+
+	// make sure that the destination file already exists and is larger
+	// that what we're about to copy to it
+	create_directory(destination);
+	ofstream stream(expected);
+	stream << LARGER_TEST_DATA;
+	stream.close();
+
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(!file_contents_correct(expected));
+
+	copy_data_to_provider(
+		spdo, Provider(), Consumer(), ToRemotePath(destination));
+
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(file_contents_correct(expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
