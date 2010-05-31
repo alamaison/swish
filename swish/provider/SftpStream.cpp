@@ -243,7 +243,7 @@ CSftpStream::CSftpStream(
 	if (flags & read)
 		libssh2_flags |= LIBSSH2_FXF_READ;
 	if (flags & write)
-		libssh2_flags |= LIBSSH2_FXF_WRITE;
+		libssh2_flags |= LIBSSH2_FXF_WRITE | LIBSSH2_FXF_TRUNC;
 	if (flags & create)
 		libssh2_flags |= LIBSSH2_FXF_CREAT;
 
