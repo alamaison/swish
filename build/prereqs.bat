@@ -33,6 +33,10 @@ echo ===- Dowloading libssh2 ...
 	echo ===- Error while trying to extract libssh2 & goto error)
 %SEVENZ% x libssh2.tar -aoa || (
 	echo ===- Error while trying to extract libssh2 & goto error)
+xcopy /E /Q /Y libssh2-9abf81d libssh2 || (
+	echo ===- Error while trying to copy comet files & goto error)
+rd /S /Q libssh2-9abf81d || (
+	echo ===- Error while trying to clean up comet files & goto error)
 del pax_global_header
 del libssh2.tar
 del libssh2.tar.gz
