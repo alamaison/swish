@@ -17,6 +17,7 @@ Status:
     authentication. 
 
 Supported Operating Systems:
+    Window 7      (recently tested)
     Windows Vista (most tested)
     Windows XP    (regularly tested)
     Windows 2000  (regularly tested)
@@ -117,7 +118,7 @@ OpenSSL:
     This product includes cryptographic software written by Eric Young 
     (eay@cryptsoft.com)
 
-Building on Vista:
+Building on Vista and later:
     When building on Windows Vista, make sure you are running Visual
     Studio as an Administrator.  Otherwise it can't register the components
     and later components that depend on earlier ones will fail to build.

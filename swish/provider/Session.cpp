@@ -229,9 +229,7 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 
 	tcp::resolver resolver(m_io);
 	typedef tcp::resolver::query Lookup;
-	Lookup query(
-		tcp::v6(), host_name, lexical_cast<string>(uPort), 
-		Lookup::all_matching | Lookup::v4_mapped | Lookup::numeric_service);
+	Lookup query(host_name, lexical_cast<string>(uPort));
 
 	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 	tcp::resolver::iterator end;

@@ -1,4 +1,5 @@
 swish-0.3.4
+-Fixed hostname resolution for Windows versions earlier than Vista
 
 swish-0.3.3
 -IPv6 support.
