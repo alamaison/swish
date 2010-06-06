@@ -144,6 +144,10 @@
 				RelativePath=".\com\catch.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\com\object.hpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\dynamic_link.hpp"

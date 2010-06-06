@@ -32,12 +32,16 @@
 #include "swish/utils.hpp" // running_object_table
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
+#include <winapi/com/object.hpp> // object_from_moniker_name
+
 #include <comet/interface.h>  // uuidof, comtype
 
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
+
+using winapi::com::object_from_moniker_name;
 
 using boost::lexical_cast;
 
@@ -82,23 +86,6 @@ namespace {
 		return item_name;
 	}
 
-	/**
-	 * Get an object instance by its moniker display name.
-	 *
-	 * Corresponds to CoGetObject Windows API function with default BIND_OPTS.
-	 */
-	template<typename T>
-	com_ptr<T> object_from_moniker_name(const wstring& display_name)
-	{
-		com_ptr<T> object;
-		HRESULT hr = ::CoGetObject(
-			display_name.c_str(), NULL, 
-			uuidof(object.in()), reinterpret_cast<void**>(object.out()));
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
-
-		return object;
-	}
 }
 
 critical_section CPool::m_cs;
