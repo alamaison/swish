@@ -38,7 +38,6 @@
 #include <boost/filesystem.hpp>
 
 namespace test {
-namespace common_boost {
 
 class ATL_NO_VTABLE CConsumerStub :
 	public ATL::CComObjectRootEx<ATL::CComObjectThreadModel>,
@@ -150,4 +149,4 @@ private:
 	boost::filesystem::path m_publicKey;
 };
 
-}} // namespace test::common_boost
+} // namespace test

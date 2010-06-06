@@ -29,10 +29,10 @@
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture
 
-#include "swish/shell_folder/Pool.h" // CPool
 #include "swish/interfaces/SftpProvider.h"  // ISftpProvider
-#include "swish/utils.hpp"  // string conversion functions
 
+#include <comet/bstr.h> // bstr_t
+#include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 #include <comet/util.h> // auto_coinit
 
@@ -42,17 +42,31 @@
 
 #include <string>
 
-namespace {
+namespace comet {
 
-	comet::com_ptr<ISftpProvider> provider_instance(
-		const std::string& host, const std::string& user, int port)
+	template<> struct comtype<ISftpProvider>
 	{
-		std::wstring whost = swish::utils::Utf8StringToWideString(host);
-		std::wstring wuser = swish::utils::Utf8StringToWideString(user);
+		static const IID& uuid() throw() { return IID_ISftpProvider; }
+		typedef IUnknown base;
+	};
 
-		// Create Provider instance
-		CPool pool;
-		return pool.GetSession(whost, wuser, port);
+}
+
+namespace test {
+
+namespace detail {
+
+	inline comet::com_ptr<ISftpProvider> provider_instance(
+		const comet::bstr_t& host, const comet::bstr_t& user, int port)
+	{
+		comet::com_ptr<ISftpProvider> provider(L"Provider.Provider");
+		HRESULT hr;
+		hr = provider->Initialize(user.in(), host.in(), port);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(
+				comet::com_error("Couldn't initialise Provider", hr));
+
+		return provider;
 	}
 
 	/**
@@ -87,9 +101,6 @@ namespace {
 		return s_server;
 	}
 }
-
-namespace test {
-namespace provider {
 
 /**
  * Abstract base class of mortality policy classes.
@@ -152,18 +163,18 @@ public:
 	 */
 	comet::com_ptr<ISftpProvider> provider() const
 	{
-		if (!s_provider)
+		if (!detail::s_provider)
 		{
-			s_provider = boost::make_shared<static_provider>(
+			detail::s_provider = boost::make_shared<detail::static_provider>(
 				host(), user(), port());
 		}
 
-		return s_provider->get();
+		return detail::s_provider->get();
 	}
 	
 private:
 	const ServerType& server() const
-	{ return *singleton_server<ServerType>(); }
+	{ return *detail::singleton_server<ServerType>(); }
 };
 
 /**
@@ -189,7 +200,7 @@ public:
 	{
 		if (!m_provider)
 		{
-			m_provider = provider_instance(
+			m_provider = detail::provider_instance(
 				m_server.GetHost(), m_server.GetUser(), m_server.GetPort());
 		}
 
@@ -197,15 +208,15 @@ public:
 	}
 
 private:
-	ServerType m_server;
 	comet::auto_coinit m_coinit;
+	ServerType m_server;
 	comet::com_ptr<ISftpProvider> m_provider;
 
 	const ServerType& server() const { return m_server; }
 };
 
 template<typename MortalityPolicy>
-class ProviderFixtureT : public test::common_boost::SandboxFixture
+class ProviderFixtureT : public test::SandboxFixture
 {
 public:
 
@@ -222,8 +233,8 @@ public:
 	 */
 	comet::com_ptr<ISftpConsumer> ProviderFixtureT::Consumer()
 	{
-		comet::com_ptr<test::common_boost::CConsumerStub> consumer = 
-			test::common_boost::CConsumerStub::CreateCoObject();
+		comet::com_ptr<test::CConsumerStub> consumer = 
+			test::CConsumerStub::CreateCoObject();
 		consumer->SetKeyPaths(m_policy.private_key(), m_policy.public_key());
 		return consumer;
 	}
@@ -249,14 +260,14 @@ private:
 
 #ifdef _DEBUG
 typedef ProviderFixtureT<
-	immortal_provider<test::common_boost::OpenSshFixture> > ProviderFixture;
+	immortal_provider<test::OpenSshFixture> > ProviderFixture;
 #else
 typedef ProviderFixtureT<
-	mortal_provider<test::common_boost::OpenSshFixture> > ProviderFixture;
+	mortal_provider<test::OpenSshFixture> > ProviderFixture;
 #endif
 
 typedef ProviderFixtureT<
-	mortal_provider<test::common_boost::OpenSshFixture> >
+	mortal_provider<test::OpenSshFixture> >
 MortalProviderFixture;
 
-}} // namespace test::provider
+} // namespace test

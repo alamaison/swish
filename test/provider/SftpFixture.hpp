@@ -1,11 +1,11 @@
 /**
     @file
 
-    Fixture for tests that need instances of CSftpStream.
+    Fixture for tests that need to access a server using SFTP.
 
     @if licence
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,9 +36,8 @@
 
 #pragma once
 
-#include "SftpFixture.hpp" // SftpFixture
-
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
+#include "test/common_boost/fixtures.hpp"  // SandboxFixture etc.
 
 #include "swish/provider/SessionFactory.hpp"  // CSessionFactory
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
@@ -51,41 +50,29 @@ namespace test {
 namespace provider {
 
 /**
- * Extends the Sandbox fixture by allowing the creation of swish::provider
- * IStreams that pass through the OpenSSH server pointing to files in the
- * sandbox.
+ * Test fixture providing a running SFTP server, a sandbox for test files and
+ * and SFTP session object to access the server.
  */
-class StreamFixture : public test::provider::SftpFixture
+class SftpFixture : 
+	public test::ComFixture,
+	public test::SandboxFixture,
+	public test::OpenSshFixture
 {
 public:
 
-	boost::filesystem::wpath m_local_path;
-	std::string m_remote_path;
-
 	/**
-	 * Initialise the test fixture with the path of a new, empty file
-	 * in the sandbox.
+	 * Return a new CSession instance connected to the fixture SSH server.
 	 */
-	StreamFixture() 
-		: m_local_path(NewFileInSandbox()), 
-		  m_remote_path(ToRemotePath(
-			swish::utils::WideStringToUtf8String(m_local_path.file_string())))
+	boost::shared_ptr<CSession> Session()
 	{
-	}
+		ATL::CComPtr<test::CConsumerStub> spConsumer = 
+			test::CConsumerStub::CreateCoObject();
+		spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
-	/**
-	 * Create an IStream instance open on a temporary file in our sandbox.
-	 * By default the stream is open for reading and writing but different
-	 * flags can be passed to change this.
-	 */
-	ATL::CComPtr<IStream> GetStream(
-		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
-	{
-		boost::shared_ptr<CSession> session(Session());
-
-		ATL::CComPtr<IStream> stream = new CSftpStream(
-			session, m_remote_path, flags);
-		return stream;
+		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
+			swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+			swish::utils::Utf8StringToWideString(GetUser()).c_str(),
+			spConsumer));
 	}
 };
 

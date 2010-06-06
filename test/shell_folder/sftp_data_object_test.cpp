@@ -43,7 +43,7 @@
 #include "swish/utils.hpp"  // character conversion
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
-#include "test/shell_folder/ProviderFixture.hpp"  // ProviderFixture
+#include "test/common_boost/ProviderFixture.hpp"  // ProviderFixture
 
 #include <winapi/shell/pidl.hpp>  // PIDL wrapper
 #include <winapi/shell/pidl_array.hpp>  // PIDL array wrapper
@@ -71,7 +71,7 @@ using swish::shell_folder::parsing_name_from_pidl;
 using swish::utils::Utf8StringToWideString;
 using namespace swish::shell_folder::data_object;
 
-using test::provider::ProviderFixture;
+using test::ProviderFixture;
 
 using namespace winapi::shell::pidl;
 

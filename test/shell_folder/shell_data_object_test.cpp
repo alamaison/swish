@@ -46,8 +46,8 @@ using swish::shell_folder::data_object_for_directory;
 
 using winapi::shell::pidl::apidl_t;
 
-using test::common_boost::ComFixture;
-using test::common_boost::SandboxFixture;
+using test::ComFixture;
+using test::SandboxFixture;
 using namespace test::shell_folder::data_object_utils;
 
 using boost::filesystem::wpath;

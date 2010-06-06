@@ -29,7 +29,7 @@
 #include "swish/shell_folder/DropTarget.hpp"  // Test subject
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
-#include "test/shell_folder/ProviderFixture.hpp"  // ProviderFixture
+#include "test/common_boost/ProviderFixture.hpp"  // ProviderFixture
 #include "test/shell_folder/data_object_utils.hpp"  // DataObjects on zip
 
 #include <boost/test/unit_test.hpp>
@@ -46,7 +46,7 @@
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::copy_data_to_provider;
 using swish::shell_folder::data_object_for_files;
-using test::provider::ProviderFixture;
+using test::ProviderFixture;
 using namespace test::shell_folder::data_object_utils;
 using comet::com_ptr;
 using boost::filesystem::wpath;

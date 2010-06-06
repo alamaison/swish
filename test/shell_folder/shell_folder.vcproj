@@ -258,10 +258,6 @@
 				RelativePath=".\data_object_utils.hpp"
 				>
 			</File>
-			<File
-				RelativePath=".\ProviderFixture.hpp"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

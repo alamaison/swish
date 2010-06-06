@@ -221,7 +221,6 @@ namespace { // private
 
 
 namespace test {
-namespace common_boost {
 
 OpenSshFixture::OpenSshFixture() : 
 	m_port(GenerateRandomPort()),
@@ -357,4 +356,4 @@ wpath SandboxFixture::NewFileInSandbox()
 	return p;
 }
 
-}} // namespace test::common_boost
+} // namespace test

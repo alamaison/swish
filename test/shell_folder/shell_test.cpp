@@ -57,8 +57,8 @@ using swish::shell_folder::data_object::PidlFormat;
 
 using winapi::shell::pidl::apidl_t;
 
-using test::common_boost::ComFixture;
-using test::common_boost::SandboxFixture;
+using test::ComFixture;
+using test::SandboxFixture;
 
 using comet::com_ptr;
 

@@ -73,7 +73,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying OpenSSH /etc files ..."
-				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -132,7 +132,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying OpenSSH /etc files ..."
-				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -184,6 +184,10 @@
 			</File>
 			<File
 				RelativePath=".\helpers.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ProviderFixture.hpp"
 				>
 			</File>
 		</Filter>

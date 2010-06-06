@@ -50,9 +50,9 @@
 
 using swish::utils::Utf8StringToWideString;
 
-using test::common_boost::ComFixture;
-using test::common_boost::OpenSshFixture;
-using test::common_boost::CConsumerStub;
+using test::ComFixture;
+using test::OpenSshFixture;
+using test::CConsumerStub;
 
 using comet::com_ptr;
 using comet::bstr_t;

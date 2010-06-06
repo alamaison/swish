@@ -37,7 +37,6 @@
 #include <string>
 
 namespace test {
-namespace common_boost {
 
 /**
  * Fixture that initialises and uninitialises COM.
@@ -120,4 +119,4 @@ private:
 	boost::filesystem::wpath m_sandbox;
 };
 
-}} // namespace test::common_boost
+} // namespace test
