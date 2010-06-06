@@ -423,7 +423,7 @@ STDMETHODIMP CProvider::GetListing(
 		string strFilename(szFilename);
 		string strLongEntry(szLongEntry);
 		files->push_back(
-			listing::FillListingEntry(strFilename, strLongEntry, attrs));
+			listing::fill_listing_entry(strFilename, strLongEntry, attrs));
 	} while (true);
 
     ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);

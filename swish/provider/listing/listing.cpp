@@ -37,16 +37,21 @@
 #include "listing.hpp"
 
 #include "swish/interfaces/SftpProvider.h" // Listing
+#include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <ATLComTime.h>    // COleDateTime
 
 #include <boost/regex.hpp> // Regular expressions
 
-using ATL::CComBSTR;
+#include <exception> // exception
+
 using ATL::COleDateTime;
 
-using std::string;
+using swish::utils::Utf8StringToWideString;
 
+using comet::bstr_t;
+
+using std::string;
 
 namespace { // private
 
@@ -77,96 +82,96 @@ namespace listing {
  * The spec specifically forbids parsing this long entry by it is the
  * only way to get the user @b name rather than the user @b ID.
  */
-CComBSTR ParseUserFromLongEntry(string longentry)
+bstr_t parse_user_from_long_entry(const string& long_entry)
 {
 	boost::smatch match;
-	if (regex_match(longentry, match, regex) 
-		&& match[USER_MATCH].matched)
-	{
-		return CComBSTR(match[USER_MATCH].str().c_str());
-	}
-
-	return L"";
+	if (regex_match(long_entry, match, regex) && match[USER_MATCH].matched)
+		return Utf8StringToWideString(match[USER_MATCH].str());
+	else
+		return comet::bstr_t();
 }
 
 /**
  * Get the group name part of an SFTP 'ls -l'-style long entry.
  *
- * @see ParseUserFromLongEntry() for more information.
+ * @see parse_user_from_long_entry() for more information.
  */
-CComBSTR ParseGroupFromLongEntry(string longentry)
+bstr_t parse_group_from_long_entry(const string& long_entry)
 {
 	boost::smatch match;
-	if (regex_match(longentry, match, regex) 
-		&& match[GROUP_MATCH].matched)
-	{
-		return CComBSTR(match[GROUP_MATCH].str().c_str());
-	}
-
-	return L"";
+	if (regex_match(long_entry, match, regex) && match[GROUP_MATCH].matched)
+		return Utf8StringToWideString(match[GROUP_MATCH].str());
+	else
+		return comet::bstr_t();
 }
 
 /**
  * Create Listing file entry object from filename, long entry and attributes.
  *
- * @param strFilename   Filename as an ANSI string.
- * @param pszLongEntry  Long (ls -l) form of the file's attributes from
- *                      which we, naughtily, parse the username and
- *                      group.  The standard says we shouldn't do this but
- *                      there is no other way.
- * @param attrs         Reference to the LIBSSH2_SFTP_ATTRIBUTES containing
- *                      the file's details.
+ * @param utf8_file_name   Filename as UTF-8 string.
+ * @param utf8_long_entry  Long (ls -l) form of the file's attributes from
+ *                         which we, naughtily, parse the username and
+ *                         group.  The standard says we shouldn't do this but
+ *                         there is no other way.  UTF-8 encoding.
+ * @param attributes       Reference to the LIBSSH2_SFTP_ATTRIBUTES containing
+ *                         the file's details.
  *
  * @returns A listing object representing the file.
  */
-Listing FillListingEntry(
-	const string& strFilename, const string& strLongEntry,
-	LIBSSH2_SFTP_ATTRIBUTES& attrs)
+Listing fill_listing_entry(
+	const string& utf8_file_name, const string& utf8_long_entry,
+	LIBSSH2_SFTP_ATTRIBUTES& attributes)
 {
-	Listing lt;
-	::ZeroMemory(&lt, sizeof(Listing));
+	Listing lt = Listing();
 
-	// Filename
-	CComBSTR bstrFile(strFilename.c_str());
-	HRESULT hr = bstrFile.CopyTo(&(lt.bstrFilename));
-	ATLASSERT(SUCCEEDED(hr));
-	if (FAILED(hr))
+	bstr_t file_name;
+	bstr_t owner;
+	bstr_t group;
+
+	// This function isn't allowed to fail because it would leak BSTRs in
+	// a Listing so we catch any exceptions and return and empty string for
+	// any fields not yet completed
+	try
 	{
-		lt.bstrFilename = ::SysAllocString(OLESTR(""));
-	}
+		// Filename
+		file_name = Utf8StringToWideString(utf8_file_name);
 
-	// Permissions
-	if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
-	{
-		lt.uPermissions = attrs.permissions;
-	}
+		// Permissions
+		if (attributes.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
+			lt.uPermissions = attributes.permissions;
 
-	// User & Group
-	if (attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID)
-	{
-		// String fields
-		lt.bstrOwner = ::SysAllocString(ParseUserFromLongEntry(strLongEntry));
-		lt.bstrGroup = ::SysAllocString(ParseGroupFromLongEntry(strLongEntry));
+		// User & Group
+		if (attributes.flags & LIBSSH2_SFTP_ATTR_UIDGID)
+		{
+			// To be on the safe side assume that the long entry doesn't hold
+			// valid owner and group info if the UID and GID aren't valid
 
-		// Numerical fields (UID and GID)
-		lt.uUid = attrs.uid;
-		lt.uGid = attrs.gid;
-	}
+			owner = parse_user_from_long_entry(utf8_long_entry);
+			group = parse_group_from_long_entry(utf8_long_entry);
 
-	// Size of file
-	if (attrs.flags & LIBSSH2_SFTP_ATTR_SIZE)
-	{
-		lt.uSize = attrs.filesize;
-	}
+			// Numerical fields (UID and GID)
+			lt.uUid = attributes.uid;
+			lt.uGid = attributes.gid;
+		}
 
-	// Access & Modification time
-	if (attrs.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)
-	{
-		COleDateTime dateModified(static_cast<time_t>(attrs.mtime));
-		COleDateTime dateAccessed(static_cast<time_t>(attrs.atime));
-		lt.dateModified = dateModified;
-		lt.dateAccessed = dateAccessed;
+		// Size of file
+		if (attributes.flags & LIBSSH2_SFTP_ATTR_SIZE)
+			lt.uSize = attributes.filesize;
+
+		// Access & Modification time
+		if (attributes.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)
+		{
+			COleDateTime dateModified(static_cast<time_t>(attributes.mtime));
+			COleDateTime dateAccessed(static_cast<time_t>(attributes.atime));
+			lt.dateModified = dateModified;
+			lt.dateAccessed = dateAccessed;
+		}
 	}
+	catch (const std::exception&) { /* ignore */ }
+
+	lt.bstrFilename = bstr_t::detach(file_name);
+	lt.bstrOwner = bstr_t::detach(owner);
+	lt.bstrGroup = bstr_t::detach(group);
 
 	return lt;
 }

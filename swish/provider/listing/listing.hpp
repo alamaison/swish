@@ -38,10 +38,12 @@
 
 #include "swish/atl.hpp"  // Common ATL setup
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
+#include <comet/bstr.h> // bstr_t
 
 #include <string>
+
+#include <libssh2.h>
+#include <libssh2_sftp.h>
 
 struct Listing;
 
@@ -49,12 +51,13 @@ namespace swish {
 namespace provider {
 namespace listing {
 
-	ATL::CComBSTR ParseUserFromLongEntry(std::string longentry);
+	comet::bstr_t parse_user_from_long_entry(const std::string& long_entry);
 
-	ATL::CComBSTR ParseGroupFromLongEntry(std::string longentry);
+	comet::bstr_t parse_group_from_long_entry(const std::string& long_entry);
 
-	Listing FillListingEntry(
-		const std::string& filename, const std::string& longentry,
-		LIBSSH2_SFTP_ATTRIBUTES& attrs);
+	Listing fill_listing_entry(
+		const std::string& utf8_file_name,
+		const std::string& utf8_long_entry,
+		LIBSSH2_SFTP_ATTRIBUTES& attributes);
 
 }}} // namespace swish::provider::listing

@@ -43,7 +43,7 @@
 
 #include <string>
 
-using ATL::CComBSTR;
+using comet::bstr_t;
 
 using std::string;
 using std::wstring;
@@ -55,28 +55,29 @@ namespace {
 		"-rw-r--r--    1 swish    wheel         767 Dec  8  2005 .cshrc";
 }
 
+BOOST_AUTO_TEST_SUITE(listing_tests)
+
 /**
- * Test for ParseUserFromLongEntry().
+ * Test for parse_user_from_long_entry().
  */
 BOOST_AUTO_TEST_CASE( parse_user_test )
 {
-	CComBSTR bstr = listing::ParseUserFromLongEntry(longentry);
-	wstring str(bstr);
+	bstr_t bstr = listing::parse_user_from_long_entry(longentry);
 	wstring user(L"swish");
-	BOOST_REQUIRE_EQUAL(str, user);
+	BOOST_REQUIRE_EQUAL(bstr, user);
 }
 
 /**
- * Test for ParseGroupFromLongEntry().
+ * Test for parse_group_from_long_entry().
  */
 BOOST_AUTO_TEST_CASE( parse_group_test )
 {
-	CComBSTR bstr = listing::ParseGroupFromLongEntry(longentry);
+	bstr_t bstr = listing::parse_group_from_long_entry(longentry);
 	BOOST_REQUIRE_EQUAL(bstr, L"wheel");
 }
 
 /**
- * Test for FillListingEntry().
+ * Test for fill_listing_entry().
  *
  * @todo Test dates.
  * @todo Test max filesize.
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
 	attrs.filesize = 348;
 	attrs.permissions = 0677;
 
-	Listing lt = listing::FillListingEntry(filename, longentry, attrs);
+	Listing lt = listing::fill_listing_entry(filename, longentry, attrs);
 
 	// Check fields that should be set
 	BOOST_CHECK_EQUAL(lt.bstrFilename, L".cshrc test");
@@ -117,3 +118,5 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
 	::SysFreeString(lt.bstrGroup);
 	::SysFreeString(lt.bstrOwner);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
