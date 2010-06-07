@@ -551,7 +551,7 @@ void copy_data_to_provider(
 	const com_ptr<ISftpConsumer>& consumer, const wpath& remote_path,
 	bool show_progress)
 {
-	com_ptr<CDropTarget> sp = sp->CreateCoObject();
+	com_ptr<CDropTarget> sp = CDropTarget::CreateCoObject();
 	sp->m_provider = provider;
 	sp->m_consumer = consumer;
 	sp->m_remote_path = remote_path;
