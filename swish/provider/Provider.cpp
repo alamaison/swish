@@ -43,7 +43,7 @@
 #include "swish/remotelimits.h"
 #include "swish/catch_com.hpp"   // COM exception handler
 #include "swish/exception.hpp"   // com_exception
-#include "swish/utils.hpp" // running_object_table
+#include "swish/utils.hpp" // running_object_table, WideStringToUtf8String
 #include "swish/trace.hpp" // trace
 
 #include <comet/bstr.h> // bstr_t
@@ -61,6 +61,7 @@
 using namespace swish::provider;
 using swish::exception::com_exception;
 using swish::utils::com::running_object_table;
+using swish::utils::WideStringToUtf8String;
 using swish::tracing::trace;
 
 using comet::bstr_t;
@@ -526,7 +527,7 @@ STDMETHODIMP CProvider::Rename(
 	*pfWasTargetOverwritten = VARIANT_FALSE;
 
 	// NOP if filenames are equal
-	if (CComBSTR(bstrFromPath) == CComBSTR(bstrToPath))
+	if (bstr_t(bstrFromPath) == bstr_t(bstrToPath))
 		return S_OK;
 
 	HRESULT hr;
@@ -537,20 +538,21 @@ STDMETHODIMP CProvider::Rename(
 		return hr;
 
 	// Attempt to rename old path to new path
-	CW2A szFrom(bstrFromPath), szTo(bstrToPath);
-	hr = _RenameSimple(szFrom, szTo);
+	string from = WideStringToUtf8String(bstrFromPath);
+	string to = WideStringToUtf8String(bstrToPath);
+	hr = _RenameSimple(from, to);
 	if (SUCCEEDED(hr)) // Rename was successful without overwrite
 		return S_OK;
 
 	// Rename failed - this is OK, it might be an overwrite - check
-	CComBSTR bstrMessage;
+	bstr_t message;
 	int nErr; PSTR pszErr; int cchErr;
 	nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
 		CString strError;
 		hr = _RenameRetryWithOverwrite(
-			pConsumer, libssh2_sftp_last_error(*m_session), szFrom, szTo,
+			pConsumer, libssh2_sftp_last_error(*m_session), from, to,
 			strError);
 		if (SUCCEEDED(hr))
 		{
@@ -560,13 +562,13 @@ STDMETHODIMP CProvider::Rename(
 		if (hr == E_ABORT) // User denied overwrite
 			return hr;
 		else
-			bstrMessage = strError;
+			message = strError.GetString();
 	}
 	else // A non-SFTP error occurred
-		bstrMessage = pszErr;
+		message = pszErr;
 
 	// Report remaining errors to front-end
-	pConsumer->OnReportError(bstrMessage);
+	pConsumer->OnReportError(message.in());
 
 	return E_FAIL;
 }
@@ -578,13 +580,13 @@ STDMETHODIMP CProvider::Rename(
  *    @retval S_OK   if the file or directory was successfully renamed
  *    @retval E_FAIL if there already is a file or directory at the target path
  *
- * @param szFrom  Absolute path of the file or directory to be renamed.
- * @param szTo    Absolute path to rename @a szFrom to.
+ * @param from  Absolute path of the file or directory to be renamed.
+ * @param to    Absolute path to rename @a from to.
  */
-HRESULT CProvider::_RenameSimple(const char *szFrom, const char *szTo)
+HRESULT CProvider::_RenameSimple(const string& from, const string& to)
 {
 	int rc = libssh2_sftp_rename_ex(
-		*m_session, szFrom, strlen(szFrom), szTo, strlen(szTo),
+		*m_session, from.data(), from.size(), to.data(), to.size(),
 		LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
 
 	return (!rc) ? S_OK : E_FAIL;
@@ -601,28 +603,32 @@ HRESULT CProvider::_RenameSimple(const char *szFrom, const char *szTo)
  *                             order to determine if an overwrite has any chance
  *                             of being successful.
  *
- * @param [in]  szFrom         Absolute path of the file or directory to 
+ * @param [in]  from           Absolute path of the file or directory to 
  *                             be renamed.
  *
- * @param [in]  szTo           Absolute path to rename @a szFrom to.
+ * @param [in]  to             Absolute path to rename @a from to.
  *
  * @param [out] strError       Error message if the operation fails.
+ *
+ * @bug  The strings aren't converted from UTF-8 to UTF-16 before displaying
+ *       to the user.  Any unicode filenames will produce gibberish in the
+ *       confirmation dialogues.
  */
 HRESULT CProvider::_RenameRetryWithOverwrite(
 	ISftpConsumer *pConsumer,
-	ULONG uPreviousError, const char *szFrom, const char *szTo, 
+	ULONG uPreviousError, const string& from, const string& to, 
 	CString& strError)
 {
 	HRESULT hr;
 
 	if (uPreviousError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
 	{
-		hr = pConsumer->OnConfirmOverwrite(CComBSTR(szFrom), CComBSTR(szTo));
+		hr = pConsumer->OnConfirmOverwrite(bstr_t(from).in(), bstr_t(to).in());
 		if (FAILED(hr))
 			return E_ABORT; // User disallowed overwrite
 
 		// Attempt rename again this time allowing overwrite
-		return _RenameAtomicOverwrite(szFrom, szTo, strError);
+		return _RenameAtomicOverwrite(from, to, strError);
 	}
 	else if (uPreviousError == LIBSSH2_FX_FAILURE)
 	{
@@ -637,15 +643,15 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
 		// for race conditions.
 		LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
 		::ZeroMemory(&attrsTarget, sizeof attrsTarget);
-		if (!libssh2_sftp_stat(*m_session, szTo, &attrsTarget))
+		if (!libssh2_sftp_stat(*m_session, to.c_str(), &attrsTarget))
 		{
 			// File already exists
 			hr = pConsumer->OnConfirmOverwrite(
-				CComBSTR(szFrom), CComBSTR(szTo));
+				bstr_t(from).in(), bstr_t(to).in());
 			if (FAILED(hr))
 				return E_ABORT; // User disallowed overwrite
 
-			return _RenameNonAtomicOverwrite(szFrom, szTo, strError);
+			return _RenameNonAtomicOverwrite(from, to, strError);
 		}
 	}
 		
@@ -660,15 +666,15 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
  * @remarks
  * This will only work on a server supporting SFTP version 5 or above.
  *
- * @param [in]  szFrom    Absolute path of the file or directory to be renamed.
- * @param [in]  szTo      Absolute path to rename @a szFrom to.
+ * @param [in]  from      Absolute path of the file or directory to be renamed.
+ * @param [in]  to        Absolute path to rename @a from to.
  * @param [out] strError  Error message if the operation fails.
  */
 HRESULT CProvider::_RenameAtomicOverwrite(
-	const char *szFrom, const char *szTo, CString& strError)
+	const string& from, const string& to, CString& strError)
 {
 	int rc = libssh2_sftp_rename_ex(
-		*m_session, szFrom, strlen(szFrom), szTo, strlen(szTo), 
+		*m_session, from.data(), from.size(), to.data(), to.size(), 
 		LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
 		LIBSSH2_SFTP_RENAME_NATIVE
 	);
@@ -695,39 +701,39 @@ HRESULT CProvider::_RenameAtomicOverwrite(
  * between any of these stages and is not a prefect solution.  It may, for 
  * instance, leave the temporary file behind.
  *
- * @param [in]  szFrom    Absolute path of the file or directory to be renamed.
- * @param [in]  szTo      Absolute path to rename @a szFrom to.
+ * @param [in]  from      Absolute path of the file or directory to be renamed.
+ * @param [in]  to        Absolute path to rename @a from to.
  * @param [out] strError  Error message if the operation fails.
  */
 HRESULT CProvider::_RenameNonAtomicOverwrite(
-	const char *szFrom, const char *szTo, CString& strError)
+	const string& from, const string& to, CString& strError)
 {
 	// First, rename existing file to temporary
-	string strTemporary(szTo);
-	strTemporary += ".swish_rename_temp";
-	int rc = libssh2_sftp_rename(*m_session, szTo, strTemporary.c_str());
+	string temporary(to);
+	temporary += ".swish_rename_temp";
+	int rc = libssh2_sftp_rename(*m_session, to.c_str(), temporary.c_str());
 	if (!rc)
 	{
 		// Rename our subject
-		rc = libssh2_sftp_rename(*m_session, szFrom, szTo);
+		rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
 		if (!rc)
 		{
 			// Delete temporary
 			CString strError; // unused
-			HRESULT hr = _DeleteRecursive(strTemporary.c_str(), strError);
+			HRESULT hr = _DeleteRecursive(temporary.c_str(), strError);
 			ATLASSERT(SUCCEEDED(hr));
 			(void)hr; // The rename succeeded even if this fails
 			return S_OK;
 		}
 
 		// Rename failed, rename our temporary back to its old name
-		rc = libssh2_sftp_rename(*m_session, szFrom, szTo);
+		rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
 		ATLASSERT(!rc);
 
 		strError = _T("Cannot overwrite \"");
-		strError += CString(szFrom) + _T("\" with \"") + CString(szTo);
+		strError += (from + "\" with \"" + to).c_str();
 		strError += _T("\": Please specify a different name or delete \"");
-		strError += CString(szTo) + _T("\" first.");
+		strError += (to + "\" first.").c_str();
 	}
 
 	return E_FAIL;

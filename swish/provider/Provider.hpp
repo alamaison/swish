@@ -44,6 +44,8 @@
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
+#include <string>
+
 namespace swish {
 namespace provider {
 
@@ -98,17 +100,17 @@ private:
 	ATL::CString _GetLastErrorMessage();
 	ATL::CString _GetSftpErrorMessage( ULONG uError );
 
-	HRESULT _RenameSimple( __in_z const char* szFrom, __in_z const char* szTo );
+	HRESULT _RenameSimple(const std::string& from, const std::string& to);
 	HRESULT _RenameRetryWithOverwrite(
-		__in ISftpConsumer *pConsumer,
-		__in ULONG uPreviousError,
-		__in_z const char* szFrom, __in_z const char* szTo, 
-		__out ATL::CString& strError );
+		__in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
+		const std::string& from, const std::string& to,
+		__out ATL::CString& strError);
 	HRESULT _RenameAtomicOverwrite(
-		__in_z const char* szFrom, __in_z const char* szTo, 
-		__out ATL::CString& strError );
+		const std::string& from, const std::string& to,
+		__out ATL::CString& strError);
 	HRESULT _RenameNonAtomicOverwrite(
-		const char* szFrom, const char* szTo, ATL::CString& strError );
+		const std::string& from, const std::string& to,
+		ATL::CString& strError);
 
 	HRESULT _Delete(
 		__in_z const char *szPath, __out ATL::CString& strError );
