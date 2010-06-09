@@ -467,8 +467,8 @@ STDMETHODIMP CProvider::GetFile(
 		if (fWriteable)
 			flags |= CSftpStream::write;
 
-		com_ptr<IStream> stream = new CSftpStream(
-			m_session, CW2A(bstrFilePath).m_psz, flags);
+		string path = WideStringToUtf8String(bstrFilePath);
+		com_ptr<IStream> stream = new CSftpStream(m_session, path, flags);
 		*ppStream = stream.detach();
 	}
 	catchCom()
