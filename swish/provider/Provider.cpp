@@ -753,8 +753,8 @@ STDMETHODIMP CProvider::Delete(ISftpConsumer *pConsumer, BSTR bstrPath)
 
 	// Delete file
 	CString strError;
-	CW2A szPath(bstrPath);
-	hr = _Delete(szPath, strError);
+	string path = WideStringToUtf8String(bstrPath);
+	hr = _Delete(path.c_str(), strError);
 	if (SUCCEEDED(hr))
 		return S_OK;
 
@@ -788,8 +788,8 @@ STDMETHODIMP CProvider::DeleteDirectory(
 
 	// Delete directory recursively
 	CString strError;
-	CW2A szPath(bstrPath);
-	hr = _DeleteDirectory(szPath, strError);
+	string path = WideStringToUtf8String(bstrPath);
+	hr = _DeleteDirectory(path.c_str(), strError);
 	if (SUCCEEDED(hr))
 		return S_OK;
 
