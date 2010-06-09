@@ -373,14 +373,13 @@ STDMETHODIMP CProvider::GetListing(
 		return hr;
 
 	// Open directory
-	CW2A szDirectory(bstrDirectory);
+	string path = WideStringToUtf8String(bstrDirectory);
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-		*m_session, szDirectory
-	);
+		*m_session, path.c_str());
 	if (!pSftpHandle)
 	{
 		bstr_t message("Could not open directory '");
-		message += szDirectory.m_psz;
+		message += path;
 		message += "':\n\n";
 		
 		message += _GetLastErrorMessage();
