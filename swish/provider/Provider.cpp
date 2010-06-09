@@ -882,9 +882,9 @@ STDMETHODIMP CProvider::CreateNewFile(
 	if (FAILED(hr))
 		return hr;
 
-	CW2A szPath(bstrPath);
+	string path = WideStringToUtf8String(bstrPath);
 	LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
-		*m_session, szPath, LIBSSH2_FXF_CREAT, 0644);
+		*m_session, path.c_str(), LIBSSH2_FXF_CREAT, 0644);
 	if (pHandle == NULL)
 	{
 		// Report error to front-end
@@ -907,8 +907,8 @@ STDMETHODIMP CProvider::CreateNewDirectory(
 	if (FAILED(hr))
 		return hr;
 
-	CW2A szPath(bstrPath);
-	if (libssh2_sftp_mkdir(*m_session, szPath, 0755) != 0)
+	string path = WideStringToUtf8String(bstrPath);
+	if (libssh2_sftp_mkdir(*m_session, path.c_str(), 0755) != 0)
 	{
 		// Report error to front-end
 		pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
