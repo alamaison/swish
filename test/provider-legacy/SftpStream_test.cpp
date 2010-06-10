@@ -419,7 +419,7 @@ protected:
 	void testReadFileMassiveBuffer()
 	{
 		CComPtr<IStream> pStream = _CreateConnectInit(
-			"/usr/share/example-content/GIMP_Ubuntu_splash_screen.xcf");
+			"/usr/share/example-content/Presenting_Kubuntu.odp");
 		HRESULT hr;
 
 		ULONG cbRead = 0;
@@ -430,8 +430,8 @@ protected:
 		delete [] aBuf;
 
 		CPPUNIT_ASSERT_OK(hr);
-		CPPUNIT_ASSERT_EQUAL((ULONG)840814, cbRead);
-		CPPUNIT_ASSERT_EQUAL(CStringA("gimp"), CStringA(buf, 4));
+		CPPUNIT_ASSERT_EQUAL(1797271UL, cbRead);
+		CPPUNIT_ASSERT_EQUAL(CStringA("PK\x03\x04"), CStringA(buf, 4));
 	}
 
 	void testReadFileExact()
