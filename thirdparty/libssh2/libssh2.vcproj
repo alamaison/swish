@@ -179,6 +179,10 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath=".\src\agent.c"
+				>
+			</File>
+			<File
 				RelativePath="src\channel.c"
 				>
 			</File>
@@ -188,6 +192,10 @@
 			</File>
 			<File
 				RelativePath="src\crypt.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\global.c"
 				>
 			</File>
 			<File
