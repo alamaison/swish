@@ -40,9 +40,6 @@
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/provider/provider_error_adapter.hpp" // provider_error_adapter
 
-#include "swish/atl.hpp"                    // Common ATL setup
-#include <atlstr.h>                          // CString
-
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -100,27 +97,27 @@ private:
 	void _Connect(comet::com_ptr<ISftpConsumer> consumer);
 	void _Disconnect();
 
-	ATL::CString _GetLastErrorMessage();
-	ATL::CString _GetSftpErrorMessage( ULONG uError );
+	std::wstring _GetLastErrorMessage();
+	std::wstring _GetSftpErrorMessage( ULONG uError );
 
 	HRESULT _RenameSimple(const std::string& from, const std::string& to);
 	HRESULT _RenameRetryWithOverwrite(
 		__in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
 		const std::string& from, const std::string& to,
-		__out ATL::CString& strError);
+		std::wstring& error_out);
 	HRESULT _RenameAtomicOverwrite(
 		const std::string& from, const std::string& to,
-		__out ATL::CString& strError);
+		std::wstring& error_out);
 	HRESULT _RenameNonAtomicOverwrite(
 		const std::string& from, const std::string& to,
-		ATL::CString& strError);
+		std::wstring& error_out);
 
 	HRESULT _Delete(
-		__in_z const char *szPath, __out ATL::CString& strError );
+		__in_z const char *szPath, std::wstring& error_out);
 	HRESULT _DeleteDirectory(
-		__in_z const char *szPath, __out ATL::CString& strError );
+		__in_z const char *szPath, std::wstring& error_out);
 	HRESULT _DeleteRecursive(
-		__in_z const char *szPath, __out ATL::CString& strError );
+		__in_z const char *szPath, std::wstring& error_out);
 };
 
 

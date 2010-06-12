@@ -53,6 +53,7 @@
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
 
 #include <boost/lexical_cast.hpp> // lexical_cast
+#include <boost/make_shared.hpp> // make_shared<provider>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error, system_category
 
@@ -63,6 +64,7 @@ using namespace swish::provider;
 using swish::exception::com_exception;
 using swish::utils::com::running_object_table;
 using swish::utils::WideStringToUtf8String;
+using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
 
 using comet::bstr_t;
@@ -70,34 +72,16 @@ using comet::com_error;
 using comet::com_ptr;
 using comet::stl_enumeration;
 
+using boost::filesystem::wpath;
 using boost::lexical_cast;
+using boost::make_shared;
 using boost::system::system_error;
 using boost::system::system_category;
 using boost::shared_ptr;
 
-using ATL::CW2A;
-using ATL::CComBSTR;
-using ATL::CString;
-
 using std::string;
 using std::wstring;
 using std::vector;
-
-#pragma warning (push)
-#pragma warning (disable: 4267) // ssize_t to unsigned int
-
-/**
- * Create libssh2-based data provider component instance.
- *
- * @warning
- *   The Initialize() method must be called before the other methods
- *   of the object can be used.
- */
-CProvider::CProvider() :
-	m_fInitialized(false),
-	m_dwCookie(0)
-{
-}
 
 namespace {
 
@@ -171,15 +155,16 @@ namespace {
 	}
 }
 
+
+CProvider::CProvider() : m_dwCookie(0) {}
+
 /**
- * Free libssh2 and remove from ROT.
+ * Remove from ROT.
  */
 CProvider::~CProvider() throw()
 {
 	try
 	{
-		_Disconnect(); // Destroy session before shutting down Winsock
-
 		if (m_dwCookie)
 			revoke_from_rot(m_dwCookie);
 	}
@@ -189,40 +174,67 @@ CProvider::~CProvider() throw()
 	}
 }
 
-/**
- * Perform initial setup of libssh2 data provider.
- *
- * This function must be called before any other and is used to set the
- * user name, host and port with which to perform the SSH connection.  None
- * of these parameters is optional.
- *
- * @pre The port must be between 0 and 65535 (@ref MAX_PORT) inclusive.
- * @pre The user name (@a bstrUser) and the host name (@a bstrHost) must not
- *      be empty strings.
- *
- * @param bstrUser The user name of the SSH account.
- * @param bstrHost The name of the machine to connect to.
- * @param uPort    The TCP/IP port on which the SSH server is running.
- */
-void CProvider::initialize(BSTR bstrUser, BSTR bstrHost, UINT uPort)
+provider_interface& CProvider::impl() {	return *this; }
+
+void CProvider::initialize(BSTR user, BSTR host, UINT port)
 {
-	if (::SysStringLen(bstrUser) == 0 || ::SysStringLen(bstrHost) == 0)
+	if (::SysStringLen(user) == 0 || ::SysStringLen(host) == 0)
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (uPort < MIN_PORT || uPort > MAX_PORT)
+	if (port < MIN_PORT || port > MAX_PORT)
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	m_strUser = bstrUser;
-	m_strHost = bstrHost;
-	m_uPort = uPort;
+	m_provider = make_shared<provider>(user, host, port);
+	m_dwCookie = register_in_rot(this, user, host, port);
+}
 
-	ATLASSUME( !m_strUser.IsEmpty() );
-	ATLASSUME( !m_strHost.IsEmpty() );
-	ATLASSUME( m_uPort >= MIN_PORT );
-	ATLASSUME( m_uPort <= MAX_PORT );
+IEnumListing* CProvider::get_listing(ISftpConsumer* consumer, BSTR directory)
+{ return m_provider->get_listing(consumer, directory); }
 
-	m_dwCookie = register_in_rot(this, bstrUser, bstrHost, uPort);
+IStream* CProvider::get_file(
+	ISftpConsumer* consumer, BSTR file_path, BOOL writeable)
+{ return m_provider->get_file(consumer, file_path, writeable == TRUE); }
 
-	m_fInitialized = true;
+VARIANT_BOOL CProvider::rename(
+	ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
+{ return m_provider->rename(consumer, from_path, to_path); }
+
+void CProvider::delete_file(ISftpConsumer* consumer, BSTR path)
+{ m_provider->delete_file(consumer, path); }
+
+void CProvider::delete_directory(ISftpConsumer* consumer, BSTR path)
+{ m_provider->delete_directory(consumer, path); }
+
+void CProvider::create_new_file(ISftpConsumer* consumer, BSTR path)
+{ m_provider->create_new_file(consumer, path); }
+
+void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
+{ m_provider->create_new_directory(consumer, path); }
+
+/**
+ * Create libssh2-based data provider.
+ */
+provider::provider(const wstring& user, const wstring host, int port)
+	: m_user(user), m_host(host), m_port(port)
+{
+	assert(!m_user.empty());
+	assert(!m_host.empty());
+	assert(m_port >= MIN_PORT);
+	assert(m_port <= MAX_PORT);
+}
+
+/**
+ * Free libssh2 and remove from ROT.
+ */
+provider::~provider() throw()
+{
+	try
+	{
+		_Disconnect(); // Destroy session before shutting down Winsock
+	}
+	catch (const std::exception& e)
+	{
+		trace("EXCEPTION THROWN IN DESTRUCTOR: %s") % e.what();
+	}
 }
 
 /**
@@ -235,26 +247,26 @@ void CProvider::initialize(BSTR bstrUser, BSTR bstrHost, UINT uPort)
  *
  * If the session has already been created, this function does nothing.
  */
-void CProvider::_Connect(ISftpConsumer *pConsumer)
+void provider::_Connect(comet::com_ptr<ISftpConsumer> consumer)
 {
 	try
 	{
 		if (!m_session.get())
 		{
 			m_session = CSessionFactory::CreateSftpSession(
-				m_strHost, m_uPort, m_strUser, pConsumer);
+				m_host.c_str(), m_port, m_user.c_str(), consumer.get());
 		}
 	}
 	catch (const std::exception& e)
 	{
 		bstr_t message("Could not connect to server:\n\n");
 		message += e.what();
-		pConsumer->OnReportError(message.get_raw());
+		consumer->OnReportError(message.get_raw());
 		throw;
 	}
 }
 
-void CProvider::_Disconnect()
+void provider::_Disconnect()
 {
 	m_session.reset();
 }
@@ -266,7 +278,8 @@ template<> struct comet::comtype<IEnumListing>
 	typedef IUnknown base;
 };
 
-template<> struct comet::enumerated_type_of<IEnumListing> { typedef Listing is; };
+template<> struct comet::enumerated_type_of<IEnumListing>
+{ typedef Listing is; };
 
 /**
  * Copy-policy for use by enumerators of Listing items.
@@ -320,9 +333,8 @@ public:
 *
 * The listing is returned as an IEnumListing of Listing objects.
 *
-* @pre The Initialize() method must have been called first
-*
-* @param [in]  bstrDirectory Absolute path of the directory to list.
+* @param consumer   UI callback.  
+* @param directory  Absolute path of the directory to list.
 *
 * @todo Handle the case where the directory does not exist
 * @todo Return a collection rather than an enumerator
@@ -330,18 +342,16 @@ public:
 *
 * @see Listing for details of what file information is retrieved.
 */
-IEnumListing* CProvider::get_listing(
-	ISftpConsumer *pConsumer, BSTR bstrDirectory)
+IEnumListing* provider::get_listing(
+	com_ptr<ISftpConsumer> consumer, const wpath& directory)
 {
-	if (::SysStringLen(bstrDirectory) == 0)
+	if (directory.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
 	// Open directory
-	string path = WideStringToUtf8String(bstrDirectory);
+	string path = WideStringToUtf8String(directory.string());
 	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
 		*m_session, path.c_str());
 	if (!pSftpHandle)
@@ -352,7 +362,7 @@ IEnumListing* CProvider::get_listing(
 		
 		message += _GetLastErrorMessage();
 
-		pConsumer->OnReportError(message.get_raw());
+		consumer->OnReportError(message.get_raw());
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 	}
 
@@ -409,21 +419,19 @@ IEnumListing* CProvider::get_listing(
 /**
  * @todo  Add flag to interface to allow choice of read or write.
  */
-IStream* CProvider::get_file(
-	ISftpConsumer *pConsumer, BSTR bstrFilePath, BOOL fWriteable)
+IStream* provider::get_file(
+	com_ptr<ISftpConsumer> consumer, const wpath& file_path, bool writeable)
 {
-	if (::SysStringLen(bstrFilePath) == 0)
+	if (file_path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
 	CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::create;
-	if (fWriteable)
+	if (writeable)
 		flags |= CSftpStream::write;
 
-	string path = WideStringToUtf8String(bstrFilePath);
+	string path = WideStringToUtf8String(file_path.string());
 	com_ptr<IStream> stream = new CSftpStream(m_session, path, flags);
 	return stream.detach();
 }
@@ -436,10 +444,10 @@ IStream* CProvider::get_file(
  * not guaranteed (though, libssh2 seems to default to operating in the home 
  * directory) and may be dangerous.
  *
- * If a file or folder already exists at the target path, @a bstrToPath, 
+ * If a file or folder already exists at the target path, @a to_path, 
  * we inform the front-end consumer through a call to OnConfirmOverwrite.
  * If confirmation is given, we attempt to overwrite the
- * obstruction with the source path, @a bstrFromPath, and if successful we
+ * obstruction with the source path, @a from_path, and if successful we
  * return @c VARIANT_TRUE.  This can be used by the caller to decide whether
  * or not to update a directory view.
  *
@@ -458,34 +466,31 @@ IStream* CProvider::get_file(
  * in whichever directory libssh2 considers 'current' to be renamed or deleted 
  * if they happen to have matching filenames.
  *
- * @param[in] bstrFromPath  Absolute path of the file or directory to be
- *                          renamed.
- *
- * @param[in] bstrToPath    Absolute path that @a bstrFromPath should be
- *                          renamed to.
+ * @param consumer   UI callback.  
+ * @param from_path  Absolute path of the file or directory to be renamed.
+ * @param to_path    Absolute path that @a from_path should be renamed to.
  *
  * @returns  Whether or not we needed to overwrite an existing file or
  *           directory at the target path. 
  */
-VARIANT_BOOL CProvider::rename(
-	ISftpConsumer *pConsumer, BSTR bstrFromPath, BSTR bstrToPath)
+VARIANT_BOOL provider::rename(
+	com_ptr<ISftpConsumer> consumer, const wpath& from_path,
+	const wpath& to_path)
 {
-	if (::SysStringLen(bstrFromPath) == 0)
+	if (from_path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (::SysStringLen(bstrToPath) == 0)
+	if (to_path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
 	// NOP if filenames are equal
-	if (bstr_t(bstrFromPath) == bstr_t(bstrToPath))
+	if (from_path == to_path)
 		return VARIANT_FALSE;
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
 	// Attempt to rename old path to new path
-	string from = WideStringToUtf8String(bstrFromPath);
-	string to = WideStringToUtf8String(bstrToPath);
+	string from = WideStringToUtf8String(from_path.string());
+	string to = WideStringToUtf8String(to_path.string());
 	HRESULT hr = _RenameSimple(from, to);
 	if (SUCCEEDED(hr)) // Rename was successful without overwrite
 		return VARIANT_FALSE;
@@ -496,22 +501,22 @@ VARIANT_BOOL CProvider::rename(
 	nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
 	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
 	{
-		CString strError;
+		wstring error_out;
 		hr = _RenameRetryWithOverwrite(
-			pConsumer, libssh2_sftp_last_error(*m_session), from, to,
-			strError);
+			consumer.get(), libssh2_sftp_last_error(*m_session), from, to,
+			error_out);
 		if (SUCCEEDED(hr))
 			return VARIANT_TRUE;
 		else if (hr == E_ABORT) // User denied overwrite
 			BOOST_THROW_EXCEPTION(com_error(hr));
 		else
-			message = strError.GetString();
+			message = error_out;
 	}
 	else // A non-SFTP error occurred
 		message = pszErr;
 
 	// Report remaining errors to front-end
-	pConsumer->OnReportError(message.in());
+	consumer->OnReportError(message.in());
 
 	BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 }
@@ -526,7 +531,7 @@ VARIANT_BOOL CProvider::rename(
  * @param from  Absolute path of the file or directory to be renamed.
  * @param to    Absolute path to rename @a from to.
  */
-HRESULT CProvider::_RenameSimple(const string& from, const string& to)
+HRESULT provider::_RenameSimple(const string& from, const string& to)
 {
 	int rc = libssh2_sftp_rename_ex(
 		*m_session, from.data(), from.size(), to.data(), to.size(),
@@ -540,7 +545,7 @@ HRESULT CProvider::_RenameSimple(const string& from, const string& to)
  * overwrite the obstruction at the target.
  *
  * If this fails the file or directory really can't be renamed and the error
- * message from libssh2 is returned in @a strError.
+ * message from libssh2 is returned in @a error_out.
  *
  * @param [in]  uPreviousError Error code of the previous rename attempt in
  *                             order to determine if an overwrite has any chance
@@ -551,16 +556,16 @@ HRESULT CProvider::_RenameSimple(const string& from, const string& to)
  *
  * @param [in]  to             Absolute path to rename @a from to.
  *
- * @param [out] strError       Error message if the operation fails.
+ * @param [out] error_out       Error message if the operation fails.
  *
  * @bug  The strings aren't converted from UTF-8 to UTF-16 before displaying
  *       to the user.  Any unicode filenames will produce gibberish in the
  *       confirmation dialogues.
  */
-HRESULT CProvider::_RenameRetryWithOverwrite(
+HRESULT provider::_RenameRetryWithOverwrite(
 	ISftpConsumer *pConsumer,
 	ULONG uPreviousError, const string& from, const string& to, 
-	CString& strError)
+	std::wstring& error_out)
 {
 	HRESULT hr;
 
@@ -571,7 +576,7 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
 			return E_ABORT; // User disallowed overwrite
 
 		// Attempt rename again this time allowing overwrite
-		return _RenameAtomicOverwrite(from, to, strError);
+		return _RenameAtomicOverwrite(from, to, error_out);
 	}
 	else if (uPreviousError == LIBSSH2_FX_FAILURE)
 	{
@@ -594,12 +599,12 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
 			if (FAILED(hr))
 				return E_ABORT; // User disallowed overwrite
 
-			return _RenameNonAtomicOverwrite(from, to, strError);
+			return _RenameNonAtomicOverwrite(from, to, error_out);
 		}
 	}
 		
 	// File does not already exist, another error caused rename failure
-	strError = _GetSftpErrorMessage(uPreviousError);
+	error_out = _GetSftpErrorMessage(uPreviousError);
 	return E_FAIL;
 }
 
@@ -611,10 +616,10 @@ HRESULT CProvider::_RenameRetryWithOverwrite(
  *
  * @param [in]  from      Absolute path of the file or directory to be renamed.
  * @param [in]  to        Absolute path to rename @a from to.
- * @param [out] strError  Error message if the operation fails.
+ * @param [out] error_out  Error message if the operation fails.
  */
-HRESULT CProvider::_RenameAtomicOverwrite(
-	const string& from, const string& to, CString& strError)
+HRESULT provider::_RenameAtomicOverwrite(
+	const string& from, const string& to, std::wstring& error_out)
 {
 	int rc = libssh2_sftp_rename_ex(
 		*m_session, from.data(), from.size(), to.data(), to.size(), 
@@ -629,7 +634,7 @@ HRESULT CProvider::_RenameAtomicOverwrite(
 		char *pszMessage; int cchMessage;
 		libssh2_session_last_error(
 			*m_session, &pszMessage, &cchMessage, false);
-		strError = pszMessage;
+		error_out = Utf8StringToWideString(pszMessage);
 		return E_FAIL;
 	}
 }
@@ -646,10 +651,10 @@ HRESULT CProvider::_RenameAtomicOverwrite(
  *
  * @param [in]  from      Absolute path of the file or directory to be renamed.
  * @param [in]  to        Absolute path to rename @a from to.
- * @param [out] strError  Error message if the operation fails.
+ * @param [out] error_out  Error message if the operation fails.
  */
-HRESULT CProvider::_RenameNonAtomicOverwrite(
-	const string& from, const string& to, CString& strError)
+HRESULT provider::_RenameNonAtomicOverwrite(
+	const string& from, const string& to, std::wstring& error_out)
 {
 	// First, rename existing file to temporary
 	string temporary(to);
@@ -662,78 +667,74 @@ HRESULT CProvider::_RenameNonAtomicOverwrite(
 		if (!rc)
 		{
 			// Delete temporary
-			CString strError; // unused
-			HRESULT hr = _DeleteRecursive(temporary.c_str(), strError);
-			ATLASSERT(SUCCEEDED(hr));
+			wstring error_out; // unused
+			HRESULT hr = _DeleteRecursive(temporary.c_str(), error_out);
+			assert(SUCCEEDED(hr));
 			(void)hr; // The rename succeeded even if this fails
 			return S_OK;
 		}
 
 		// Rename failed, rename our temporary back to its old name
 		rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
-		ATLASSERT(!rc);
+		assert(!rc);
 
-		strError = _T("Cannot overwrite \"");
-		strError += (from + "\" with \"" + to).c_str();
-		strError += _T("\": Please specify a different name or delete \"");
-		strError += (to + "\" first.").c_str();
+		error_out = _T("Cannot overwrite \"");
+		error_out += Utf8StringToWideString(from + "\" with \"" + to);
+		error_out += _T("\": Please specify a different name or delete \"");
+		error_out += Utf8StringToWideString(to + "\" first.");
 	}
 
 	return E_FAIL;
 }
 
-void CProvider::delete_file(ISftpConsumer *pConsumer, BSTR bstrPath)
+void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
-	if (::SysStringLen(bstrPath) == 0)
+	if (path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
 	// Delete file
-	CString strError;
-	string path = WideStringToUtf8String(bstrPath);
-	HRESULT hr = _Delete(path.c_str(), strError);
+	wstring error_out;
+	string utf8_path = WideStringToUtf8String(path.string());
+	HRESULT hr = _Delete(utf8_path.c_str(), error_out);
 	if (FAILED(hr))
 	{
-		pConsumer->OnReportError(CComBSTR(strError));
+		consumer->OnReportError(bstr_t(error_out).in());
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 	}
 }
 
-HRESULT CProvider::_Delete( const char *szPath, CString& strError )
+HRESULT provider::_Delete( const char *szPath, std::wstring& error_out )
 {
 	if (libssh2_sftp_unlink(*m_session, szPath) == 0)
 		return S_OK;
 
 	// Delete failed
-	strError = _GetLastErrorMessage();
+	error_out = _GetLastErrorMessage();
 	return E_FAIL;
 }
 
-void CProvider::delete_directory(ISftpConsumer *pConsumer, BSTR bstrPath)
+void provider::delete_directory(
+	com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
-	if (::SysStringLen(bstrPath) == 0)
+	if (path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
 	// Delete directory recursively
-	CString strError;
-	string path = WideStringToUtf8String(bstrPath);
-	HRESULT hr = _DeleteDirectory(path.c_str(), strError);
+	wstring error_out;
+	string utf8_path = WideStringToUtf8String(path.string());
+	HRESULT hr = _DeleteDirectory(utf8_path.c_str(), error_out);
 	if (FAILED(hr))
 	{
-		pConsumer->OnReportError(CComBSTR(strError));
+		consumer->OnReportError(bstr_t(error_out).in());
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 	}
 }
 
-HRESULT CProvider::_DeleteDirectory(
-	const char *szPath, CString& strError )
+HRESULT provider::_DeleteDirectory(const char* szPath, std::wstring& error_out)
 {
 	HRESULT hr;
 
@@ -743,7 +744,7 @@ HRESULT CProvider::_DeleteDirectory(
 	);
 	if (!pSftpHandle)
 	{
-		strError = _GetLastErrorMessage();
+		error_out = _GetLastErrorMessage();
 		return E_FAIL;
 	}
 
@@ -759,7 +760,7 @@ HRESULT CProvider::_DeleteDirectory(
 		if (rc <= 0)
 			break;
 
-		ATLENSURE(szFilename[0]); // TODO: can files have no filename?
+		assert(szFilename[0]); // TODO: can files have no filename?
 		if (szFilename[0] == '.' && !szFilename[1])
 			continue; // Skip .
 		if (szFilename[0] == '.' && szFilename[1] == '.' && !szFilename[2])
@@ -768,79 +769,80 @@ HRESULT CProvider::_DeleteDirectory(
 		string strSubPath(szPath);
 		strSubPath += "/";
 		strSubPath += szFilename;
-		hr = _DeleteRecursive(strSubPath.c_str(), strError);
+		hr = _DeleteRecursive(strSubPath.c_str(), error_out);
 		if (FAILED(hr))
 		{
-			ATLVERIFY(libssh2_sftp_close_handle(pSftpHandle) == 0);
+			rc = libssh2_sftp_close_handle(pSftpHandle);
+			assert(rc == 0);
 			return hr;
 		}
 	} while (true);
-	ATLVERIFY(libssh2_sftp_close_handle(pSftpHandle) == 0);
+	int rc = libssh2_sftp_close_handle(pSftpHandle);
+	assert(rc == 0); (void)rc;
 
 	// Delete directory itself
 	if (libssh2_sftp_rmdir(*m_session, szPath) == 0)
 		return S_OK;
 
 	// Delete failed
-	strError = _GetLastErrorMessage();
+	error_out = _GetLastErrorMessage();
 	return E_FAIL;
 }
 
-HRESULT CProvider::_DeleteRecursive(
-	const char *szPath, CString& strError)
+HRESULT provider::_DeleteRecursive(
+	const char *szPath, std::wstring& error_out)
 {
 	LIBSSH2_SFTP_ATTRIBUTES attrs;
 	::ZeroMemory(&attrs, sizeof attrs);
 	if (libssh2_sftp_lstat(*m_session, szPath, &attrs) != 0)
 	{
-		strError = _GetLastErrorMessage();
+		error_out = _GetLastErrorMessage();
 		return E_FAIL;
 	}
 
-	ATLASSERT( // Permissions field is valid
+	assert( // Permissions field is valid
 		attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS);
 	if (attrs.permissions & LIBSSH2_SFTP_S_IFDIR)
-		return _DeleteDirectory(szPath, strError);
+		return _DeleteDirectory(szPath, error_out);
 	else
-		return _Delete(szPath, strError);
+		return _Delete(szPath, error_out);
 }
 
-void CProvider::create_new_file(ISftpConsumer *pConsumer, BSTR bstrPath)
+void provider::create_new_file(
+	com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
-	if (::SysStringLen(bstrPath) == 0)
+	if (path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
-	string path = WideStringToUtf8String(bstrPath);
+	string utf8_path = WideStringToUtf8String(path.string());
 	LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
-		*m_session, path.c_str(), LIBSSH2_FXF_CREAT, 0644);
+		*m_session, utf8_path.c_str(), LIBSSH2_FXF_CREAT, 0644);
 	if (pHandle == NULL)
 	{
 		// Report error to front-end
-		pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
+		consumer->OnReportError(bstr_t(_GetLastErrorMessage()).in());
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 	}
 
-	ATLVERIFY(libssh2_sftp_close_handle(pHandle) == 0);
+	int rc = libssh2_sftp_close_handle(pHandle);
+	assert(rc == 0); (void)rc;
 }
 
-void CProvider::create_new_directory(ISftpConsumer *pConsumer, BSTR bstrPath)
+void provider::create_new_directory(
+	com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
-	if (::SysStringLen(bstrPath) == 0)
+	if (path.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (!m_fInitialized) // Call Initialize first
-		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
-	_Connect(pConsumer);
+	_Connect(consumer);
 
-	string path = WideStringToUtf8String(bstrPath);
-	if (libssh2_sftp_mkdir(*m_session, path.c_str(), 0755) != 0)
+	string utf8_path = WideStringToUtf8String(path.string());
+	if (libssh2_sftp_mkdir(*m_session, utf8_path.c_str(), 0755) != 0)
 	{
 		// Report error to front-end
-		pConsumer->OnReportError(CComBSTR(_GetLastErrorMessage()));
+		consumer->OnReportError(bstr_t(_GetLastErrorMessage()).in());
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 	}
 }
@@ -851,9 +853,8 @@ void CProvider::create_new_directory(ISftpConsumer *pConsumer, BSTR bstrPath)
  * In the case that the last SSH error is an SFTP error it returns the SFTP
  * error message in preference.
  */
-CString CProvider::_GetLastErrorMessage()
+wstring provider::_GetLastErrorMessage()
 {
-	CString bstrMessage;
 	int nErr; PSTR pszErr; int cchErr;
 
 	nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
@@ -863,7 +864,7 @@ CString CProvider::_GetLastErrorMessage()
 		return _GetSftpErrorMessage(uErr);
 	}
 	else // A non-SFTP error occurred
-		return CString(pszErr);
+		return Utf8StringToWideString(pszErr);
 }
 
 /**
@@ -871,7 +872,7 @@ CString CProvider::_GetLastErrorMessage()
  *
  * @param uError  SFTP error code as returned by libssh2_sftp_last_error().
  */
-CString CProvider::_GetSftpErrorMessage(ULONG uError)
+wstring provider::_GetSftpErrorMessage(ULONG uError)
 {
 	switch (uError)
 	{
@@ -922,11 +923,4 @@ CString CProvider::_GetSftpErrorMessage(ULONG uError)
 	default:
 		return _T("Unexpected error code returned by server");
 	}
-}
-
-#pragma warning (pop)
-
-provider_interface& CProvider::impl()
-{
-	return *this;
 }
