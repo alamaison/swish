@@ -37,12 +37,11 @@
 #include "Provider.hpp"
 
 #include "KeyboardInteractive.hpp"
+#include "SessionFactory.hpp" // CSession
 #include "SftpStream.hpp"
 #include "listing/listing.hpp"   // SFTP directory listing helper functions
 
 #include "swish/remotelimits.h"
-#include "swish/catch_com.hpp"   // COM exception handler
-#include "swish/exception.hpp"   // com_exception
 #include "swish/utils.hpp" // running_object_table, WideStringToUtf8String
 #include "swish/trace.hpp" // trace
 
@@ -52,16 +51,16 @@
 #include <comet/enum.h> // stl_enumeration
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
 
+#include <boost/filesystem/path.hpp> // wpath
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/make_shared.hpp> // make_shared<provider>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error, system_category
 
+#include <exception>
 #include <string>
 #include <vector> // to hold listing
 
-using namespace swish::provider;
-using swish::exception::com_exception;
 using swish::utils::com::running_object_table;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
@@ -79,9 +78,124 @@ using boost::system::system_error;
 using boost::system::system_category;
 using boost::shared_ptr;
 
+using std::exception;
 using std::string;
 using std::wstring;
 using std::vector;
+
+namespace comet {
+
+template<> struct comtype<IEnumListing>
+{
+	static const IID& uuid() throw() { return IID_IEnumListing; }
+	typedef IUnknown base;
+};
+
+template<> struct enumerated_type_of<IEnumListing>
+{ typedef Listing is; };
+
+/**
+ * Copy-policy for use by enumerators of Listing items.
+ */
+template<> struct impl::type_policy<Listing>
+{
+	template<typename S>
+	static void init(Listing& t, const S& s) 
+	{
+		::ZeroMemory(&t, sizeof(t));
+
+		t.bstrFilename = SysAllocStringLen(
+			s.bstrFilename, ::SysStringLen(s.bstrFilename));
+		t.uPermissions = s.uPermissions;
+		t.bstrOwner = SysAllocStringLen(
+			s.bstrOwner, ::SysStringLen(s.bstrOwner));
+		t.bstrGroup = SysAllocStringLen(
+			s.bstrGroup, ::SysStringLen(s.bstrGroup));
+		t.uUid = s.uUid;
+		t.uGid = s.uGid;
+		t.uSize = s.uSize;
+		t.cHardLinks = s.cHardLinks;
+		t.dateModified = s.dateModified;
+		t.dateAccessed = s.dateAccessed;
+	}
+
+	static void clear(Listing& t)
+	{
+		::SysFreeString(t.bstrFilename);
+		::SysFreeString(t.bstrOwner);
+		::SysFreeString(t.bstrGroup);
+		::ZeroMemory(&t, sizeof(t));
+	}	
+};
+
+} // namespace comet
+
+namespace swish {
+namespace provider {
+
+class provider
+{
+public:
+
+	provider(const wstring& user, const wstring host, int port);
+	~provider() throw();
+
+	IEnumListing* get_listing(
+		com_ptr<ISftpConsumer> consumer, const wpath& directory);
+
+	IStream* get_file(
+		com_ptr<ISftpConsumer> consumer, const wpath& file_path,
+		bool writeable);
+
+	VARIANT_BOOL rename(
+		com_ptr<ISftpConsumer> consumer, const wpath& from_path,
+		const wpath& to_path);
+
+	void delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
+
+	void delete_directory(com_ptr<ISftpConsumer> consumer, const wpath& path);
+
+	void create_new_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
+
+	void create_new_directory(
+		com_ptr<ISftpConsumer> consumer, const wpath& path);
+
+private:
+	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
+
+	/** @name Fields used for lazy connection. */
+	// @{
+	wstring m_user;
+	wstring m_host;
+	UINT m_port;
+	// @}
+
+	void _Connect(com_ptr<ISftpConsumer> consumer);
+	void _Disconnect();
+
+	wstring _GetLastErrorMessage();
+	wstring _GetSftpErrorMessage( ULONG uError );
+
+	HRESULT _RenameSimple(const string& from, const string& to);
+	HRESULT _RenameRetryWithOverwrite(
+		__in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
+		const string& from, const string& to,
+		wstring& error_out);
+	HRESULT _RenameAtomicOverwrite(
+		const string& from, const string& to,
+		wstring& error_out);
+	HRESULT _RenameNonAtomicOverwrite(
+		const string& from, const string& to,
+		wstring& error_out);
+
+	HRESULT _Delete(
+		__in_z const char *szPath, wstring& error_out);
+	HRESULT _DeleteDirectory(
+		__in_z const char *szPath, wstring& error_out);
+	HRESULT _DeleteRecursive(
+		__in_z const char *szPath, wstring& error_out);
+};
+
 
 namespace {
 
@@ -101,7 +215,7 @@ namespace {
 			OLESTR("!"), moniker_name.c_str(), moniker.out());
 		assert(SUCCEEDED(hr));
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 
 		return moniker;
 	}
@@ -133,7 +247,7 @@ namespace {
 		DWORD cookie = 0;
 		HRESULT hr = rot->Register(flags, unknown.in(), moniker.in(), &cookie);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 
 		return cookie;
 	}
@@ -151,7 +265,7 @@ namespace {
 
 		HRESULT hr = rot->Revoke(cookie);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
 }
 
@@ -247,7 +361,7 @@ provider::~provider() throw()
  *
  * If the session has already been created, this function does nothing.
  */
-void provider::_Connect(comet::com_ptr<ISftpConsumer> consumer)
+void provider::_Connect(com_ptr<ISftpConsumer> consumer)
 {
 	try
 	{
@@ -270,50 +384,6 @@ void provider::_Disconnect()
 {
 	m_session.reset();
 }
-
-
-template<> struct comet::comtype<IEnumListing>
-{
-	static const IID& uuid() throw() { return IID_IEnumListing; }
-	typedef IUnknown base;
-};
-
-template<> struct comet::enumerated_type_of<IEnumListing>
-{ typedef Listing is; };
-
-/**
- * Copy-policy for use by enumerators of Listing items.
- */
-template<> struct comet::impl::type_policy<Listing>
-{
-	template<typename S>
-	static void init(Listing& t, const S& s) 
-	{
-		::ZeroMemory(&t, sizeof(t));
-
-		t.bstrFilename = SysAllocStringLen(
-			s.bstrFilename, ::SysStringLen(s.bstrFilename));
-		t.uPermissions = s.uPermissions;
-		t.bstrOwner = SysAllocStringLen(
-			s.bstrOwner, ::SysStringLen(s.bstrOwner));
-		t.bstrGroup = SysAllocStringLen(
-			s.bstrGroup, ::SysStringLen(s.bstrGroup));
-		t.uUid = s.uUid;
-		t.uGid = s.uGid;
-		t.uSize = s.uSize;
-		t.cHardLinks = s.cHardLinks;
-		t.dateModified = s.dateModified;
-		t.dateAccessed = s.dateAccessed;
-	}
-
-	static void clear(Listing& t)
-	{
-		::SysFreeString(t.bstrFilename);
-		::SysFreeString(t.bstrOwner);
-		::SysFreeString(t.bstrGroup);
-		::ZeroMemory(&t, sizeof(t));
-	}	
-};
 
 namespace {
 
@@ -565,7 +635,7 @@ HRESULT provider::_RenameSimple(const string& from, const string& to)
 HRESULT provider::_RenameRetryWithOverwrite(
 	ISftpConsumer *pConsumer,
 	ULONG uPreviousError, const string& from, const string& to, 
-	std::wstring& error_out)
+	wstring& error_out)
 {
 	HRESULT hr;
 
@@ -619,7 +689,7 @@ HRESULT provider::_RenameRetryWithOverwrite(
  * @param [out] error_out  Error message if the operation fails.
  */
 HRESULT provider::_RenameAtomicOverwrite(
-	const string& from, const string& to, std::wstring& error_out)
+	const string& from, const string& to, wstring& error_out)
 {
 	int rc = libssh2_sftp_rename_ex(
 		*m_session, from.data(), from.size(), to.data(), to.size(), 
@@ -654,7 +724,7 @@ HRESULT provider::_RenameAtomicOverwrite(
  * @param [out] error_out  Error message if the operation fails.
  */
 HRESULT provider::_RenameNonAtomicOverwrite(
-	const string& from, const string& to, std::wstring& error_out)
+	const string& from, const string& to, wstring& error_out)
 {
 	// First, rename existing file to temporary
 	string temporary(to);
@@ -705,7 +775,7 @@ void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
 	}
 }
 
-HRESULT provider::_Delete( const char *szPath, std::wstring& error_out )
+HRESULT provider::_Delete( const char *szPath, wstring& error_out )
 {
 	if (libssh2_sftp_unlink(*m_session, szPath) == 0)
 		return S_OK;
@@ -734,7 +804,7 @@ void provider::delete_directory(
 	}
 }
 
-HRESULT provider::_DeleteDirectory(const char* szPath, std::wstring& error_out)
+HRESULT provider::_DeleteDirectory(const char* szPath, wstring& error_out)
 {
 	HRESULT hr;
 
@@ -790,7 +860,7 @@ HRESULT provider::_DeleteDirectory(const char* szPath, std::wstring& error_out)
 }
 
 HRESULT provider::_DeleteRecursive(
-	const char *szPath, std::wstring& error_out)
+	const char *szPath, wstring& error_out)
 {
 	LIBSSH2_SFTP_ATTRIBUTES attrs;
 	::ZeroMemory(&attrs, sizeof attrs);
@@ -924,3 +994,5 @@ wstring provider::_GetSftpErrorMessage(ULONG uError)
 		return _T("Unexpected error code returned by server");
 	}
 }
+
+}} // namespace swish::provider
