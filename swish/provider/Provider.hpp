@@ -43,6 +43,7 @@
 #include "swish/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
 
+#include <boost/filesystem/path.hpp> // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
@@ -50,14 +51,86 @@
 namespace swish {
 namespace provider {
 
+class provider
+{
+public:
+
+	provider(const std::wstring& user, const std::wstring host, int port);
+	~provider() throw();
+
+	IEnumListing* get_listing(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& directory);
+
+	IStream* get_file(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& file_path, bool writeable);
+
+	VARIANT_BOOL rename(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& from_path,
+		const boost::filesystem::wpath& to_path);
+
+	void delete_file(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& path);
+
+	void delete_directory(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& path);
+
+	void create_new_file(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& path);
+
+	void create_new_directory(
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& path);
+
+private:
+	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
+
+	/** @name Fields used for lazy connection. */
+	// @{
+	std::wstring m_user;
+	std::wstring m_host;
+	UINT m_port;
+	// @}
+
+	void _Connect(comet::com_ptr<ISftpConsumer> consumer);
+	void _Disconnect();
+
+	ATL::CString _GetLastErrorMessage();
+	ATL::CString _GetSftpErrorMessage( ULONG uError );
+
+	HRESULT _RenameSimple(const std::string& from, const std::string& to);
+	HRESULT _RenameRetryWithOverwrite(
+		__in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
+		const std::string& from, const std::string& to,
+		__out ATL::CString& strError);
+	HRESULT _RenameAtomicOverwrite(
+		const std::string& from, const std::string& to,
+		__out ATL::CString& strError);
+	HRESULT _RenameNonAtomicOverwrite(
+		const std::string& from, const std::string& to,
+		ATL::CString& strError);
+
+	HRESULT _Delete(
+		__in_z const char *szPath, __out ATL::CString& strError );
+	HRESULT _DeleteDirectory(
+		__in_z const char *szPath, __out ATL::CString& strError );
+	HRESULT _DeleteRecursive(
+		__in_z const char *szPath, __out ATL::CString& strError );
+};
+
+
 class CProvider :
-	public provider_interface,
-	public provider_error_adapter
+	public provider_interface, public provider_error_adapter
 {
 public:
 
 	CProvider();
-	~CProvider() throw();
+	virtual ~CProvider() throw();
 
 	/** @name ISftpProvider implementation via provider_error_adapter */
 	// @{
@@ -84,37 +157,8 @@ public:
 	virtual provider_interface& impl();
 
 private:
-	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
-	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
-	ATL::CString m_strUser;        ///< Holds username for remote connection
-	ATL::CString m_strHost;        ///< Hold name of remote host
-	UINT m_uPort;                  ///< Holds remote port to connect to
-	DWORD m_dwCookie;              ///< Running Object Table registration
-
-	void _Connect(__in ISftpConsumer *pConsumer);
-	void _Disconnect();
-
-	ATL::CString _GetLastErrorMessage();
-	ATL::CString _GetSftpErrorMessage( ULONG uError );
-
-	HRESULT _RenameSimple(const std::string& from, const std::string& to);
-	HRESULT _RenameRetryWithOverwrite(
-		__in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
-		const std::string& from, const std::string& to,
-		__out ATL::CString& strError);
-	HRESULT _RenameAtomicOverwrite(
-		const std::string& from, const std::string& to,
-		__out ATL::CString& strError);
-	HRESULT _RenameNonAtomicOverwrite(
-		const std::string& from, const std::string& to,
-		ATL::CString& strError);
-
-	HRESULT _Delete(
-		__in_z const char *szPath, __out ATL::CString& strError );
-	HRESULT _DeleteDirectory(
-		__in_z const char *szPath, __out ATL::CString& strError );
-	HRESULT _DeleteRecursive(
-		__in_z const char *szPath, __out ATL::CString& strError );
+	boost::shared_ptr<provider> m_provider;
+	DWORD m_dwCookie;  ///< Running Object Table registration
 };
 
 }} // namespace swish::provider
