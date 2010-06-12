@@ -38,6 +38,7 @@
 
 #include "SessionFactory.hpp"                // CSession
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/provider_error_adapter.hpp" // provider_error_adapter
 
 #include "swish/atl.hpp"                    // Common ATL setup
 #include <atlstr.h>                          // CString
@@ -49,42 +50,38 @@
 namespace swish {
 namespace provider {
 
-class ATL_NO_VTABLE CProvider : public ISftpProvider
+class CProvider :
+	public provider_interface,
+	public provider_error_adapter
 {
 public:
-	typedef ISftpProvider interface_is;
 
 	CProvider();
 	~CProvider() throw();
 
-	/** @name ISftpProvider methods */
+	/** @name ISftpProvider implementation via provider_error_adapter */
 	// @{
-	IFACEMETHODIMP Initialize(
-		__in BSTR bstrUser, __in BSTR bstrHost, UINT uPort );
-	IFACEMETHODIMP GetListing(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrDirectory, __out IEnumListing **ppEnum );
-	IFACEMETHODIMP GetFile(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrFilePath, __in BOOL fWriteable,
-		__out IStream **ppStream );
-	IFACEMETHODIMP Rename(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrFromPath, __in BSTR bstrToPath,
-		__deref_out VARIANT_BOOL *pfWasTargetOverwritten );
-	IFACEMETHODIMP Delete(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrPath );
-	IFACEMETHODIMP DeleteDirectory(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrPath );
-	IFACEMETHODIMP CreateNewFile(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrPath );
-	IFACEMETHODIMP CreateNewDirectory(
-		__in ISftpConsumer *pConsumer,
-		__in BSTR bstrPath );
+	virtual void initialize(BSTR user, BSTR host, UINT port);
+
+	virtual IEnumListing* get_listing(
+		ISftpConsumer* consumer, BSTR directory);
+
+	virtual IStream* get_file(
+		ISftpConsumer* consumer, BSTR file_path, BOOL writeable);
+
+	virtual VARIANT_BOOL rename(
+		ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
+
+	virtual void delete_file(ISftpConsumer* consumer, BSTR path);
+
+	virtual void delete_directory(ISftpConsumer* consumer, BSTR path);
+
+	virtual void create_new_file(ISftpConsumer* consumer, BSTR path);
+
+	virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
 	// @}
+
+	virtual provider_interface& impl();
 
 private:
 	BOOL m_fInitialized;           ///< Flag if Initialize() has been called
@@ -94,7 +91,7 @@ private:
 	UINT m_uPort;                  ///< Holds remote port to connect to
 	DWORD m_dwCookie;              ///< Running Object Table registration
 
-	HRESULT _Connect(__in ISftpConsumer *pConsumer);
+	void _Connect(__in ISftpConsumer *pConsumer);
 	void _Disconnect();
 
 	ATL::CString _GetLastErrorMessage();

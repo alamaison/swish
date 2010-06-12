@@ -209,6 +209,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\provider_error_adapter.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Session.hpp"
 				>
 			</File>

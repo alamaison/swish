@@ -124,12 +124,6 @@ template<> struct comtype<Dispenser> {
     typedef nil base;
 };
 
-template<> struct comtype<ISftpProvider>
-{
-	static const IID& uuid() throw() { return IID_ISftpProvider; }
-	typedef IUnknown base;
-};
-
 template<> struct comtype<IParseDisplayName>
 {
 	static const IID& uuid() throw() { return IID_IParseDisplayName; }
