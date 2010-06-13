@@ -571,10 +571,10 @@ CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
  * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
  */
 HRESULT CHostFolder::OnMenuCallback(
-	HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	HWND /*hwnd*/, IDataObject* /*pdtobj*/, UINT uMsg, WPARAM /*wParam*/,
+	LPARAM /*lParam*/)
 {
 	METHOD_TRACE("(uMsg=%d)\n", uMsg);
-	UNREFERENCED_PARAMETER(hwnd);
 
 	switch (uMsg)
 	{
