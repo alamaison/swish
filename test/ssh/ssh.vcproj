@@ -24,7 +24,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -97,7 +97,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -173,6 +173,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\auth_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_key_test.cpp"
 				>
 			</File>
@@ -212,6 +216,10 @@
 				RelativePath=".\sandbox_fixture.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\sftp_test.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -228,6 +236,10 @@
 			</File>
 			<File
 				RelativePath=".\sandbox_fixture.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\session_fixture.hpp"
 				>
 			</File>
 		</Filter>

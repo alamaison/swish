@@ -1,11 +1,11 @@
 /**
     @file
 
-    Fixture creating a temporary sandbox directory.
+    Connected session fixture.
 
     @if licence
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,11 +34,18 @@
     @endif
 */
 
-#ifndef SSH_SANDBOX_FIXTURE_HPP
-#define SSH_SANDBOX_FIXTURE_HPP
+#ifndef SSH_SESSION_FIXTURE_HPP
+#define SSH_SESSION_FIXTURE_HPP
 #pragma once
 
-#include <boost/filesystem.hpp> // path
+#include "openssh_fixture.hpp" // openssh_fixture
+
+#include <ssh/session.hpp> // session
+
+#include <boost/asio/ip/tcp.hpp> // Boost sockets
+#include <boost/lexical_cast.hpp> // lexical_cast
+#include <boost/system/system_error.hpp> // system_error
+#include <boost/test/unit_test.hpp>
 
 #include <string>
 
@@ -46,19 +53,46 @@ namespace test {
 namespace ssh {
 
 /**
- * Fixture that creates and destroys a sandbox directory.
+ * Fixture serving ssh::session objects connected to a running server.
  */
-class sandbox_fixture
+class session_fixture : public openssh_fixture
 {
 public:
-	sandbox_fixture();
-	~sandbox_fixture();
+	session_fixture() : m_io(0), m_socket(m_io) {}
 
-	boost::filesystem::path sandbox();
-	boost::filesystem::path new_file_in_sandbox();
+	boost::asio::ip::tcp::socket& open_socket(
+		const std::string host_name, int port)
+	{
+		using boost::asio::ip::tcp;
+
+		tcp::resolver resolver(m_io);
+		typedef tcp::resolver::query Lookup;
+		Lookup query(host_name, boost::lexical_cast<std::string>(port));
+
+		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+		tcp::resolver::iterator end;
+
+		boost::system::error_code error = boost::asio::error::host_not_found;
+		while (error && endpoint_iterator != end)
+		{
+			m_socket.close();
+			m_socket.connect(*endpoint_iterator++, error);
+		}
+		if (error)
+			BOOST_THROW_EXCEPTION(boost::system::system_error(error));
+
+		return m_socket;
+	}
+
+	::ssh::session::session test_session()
+	{
+		boost::asio::ip::tcp::socket& sock = open_socket(host(), port());
+		return ::ssh::session::session(sock.native());
+	}
 
 private:
-	boost::filesystem::path m_sandbox;
+	boost::asio::io_service m_io; ///< Boost IO system
+	boost::asio::ip::tcp::socket m_socket;
 };
 
 }} // namespace test::ssh

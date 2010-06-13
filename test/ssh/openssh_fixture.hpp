@@ -62,6 +62,8 @@ public:
 	int port() const;
 	boost::filesystem::path private_key_path() const;
 	boost::filesystem::path public_key_path() const;
+	boost::filesystem::path wrong_private_key_path() const;
+	boost::filesystem::path wrong_public_key_path() const;
 	boost::filesystem::path to_remote_path(
 		boost::filesystem::path local_path) const;
 

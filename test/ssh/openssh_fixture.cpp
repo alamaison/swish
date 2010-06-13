@@ -80,6 +80,8 @@ namespace { // private
 	const string SSHD_HOST_KEY_FILE = "fixture_hostkey";
 	const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
 	const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
+	const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
+	const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
 
 	const path CYGDRIVE_PREFIX = "/cygdrive/";
 
@@ -250,14 +252,48 @@ int openssh_fixture::port() const
 	return m_port;
 }
 
+/**
+ * The private half of a key-pair that is expected to authenticate successfully
+ * with the fixture server.
+ */
 path openssh_fixture::private_key_path() const
 {
 	return ConfigDir() / SSHD_PRIVATE_KEY_FILE;
 }
 
+/**
+ * The public half of a key-pair that is expected to authenticate successfully
+ * with the fixture server.
+ */
 path openssh_fixture::public_key_path() const
 {
 	return ConfigDir() / SSHD_PUBLIC_KEY_FILE;
+}
+
+/**
+ * The private half of a key-pair that is expected to fail to authenticate
+ * with the fixture server.
+ *
+ * This must be in the same format as the successful key-pair so that the
+ * key mismatches rather than format mismatches are the cause of authentication
+ * failure regardless of which combination of keys is passed.
+ */
+path openssh_fixture::wrong_private_key_path() const
+{
+	return ConfigDir() / SSHD_WRONG_PRIVATE_KEY_FILE;
+}
+
+/**
+ * The public half of a key-pair that is expected to fail to authenticate
+ * with the fixture server.
+ *
+ * This must be in the same format as the successful key-pair so that the
+ * key mismatches rather than format mismatches are the cause of authentication
+ * failure regardless of which combination of keys is passed.
+ */
+path openssh_fixture::wrong_public_key_path() const
+{
+	return ConfigDir() / SSHD_WRONG_PUBLIC_KEY_FILE;
 }
 
 /**

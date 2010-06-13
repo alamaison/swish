@@ -34,18 +34,13 @@
     @endif
 */
 
-#include "openssh_fixture.hpp" // openssh_fixture
+#include "session_fixture.hpp" // session_fixture
 
 #include <ssh/host_key.hpp> // test subject
 #include <ssh/session.hpp> // session
 
-#include <boost/asio/ip/tcp.hpp> // Boost sockets
-#include <boost/foreach.hpp> // BOOST_FOREACH
-#include <boost/lexical_cast.hpp> // lexical_cast
-#include <boost/system/system_error.hpp> // system_error
 #include <boost/test/unit_test.hpp>
 
-#include <sstream> // ostringstream
 #include <string>
 
 #include <libssh2.h>
@@ -53,58 +48,9 @@
 using ssh::host_key::host_key;
 using ssh::session::session;
 
-using test::ssh::openssh_fixture;
+using test::ssh::session_fixture;
 
-using boost::asio::error::host_not_found;
-using boost::asio::ip::tcp;
-using boost::lexical_cast;
-using boost::system::error_code;
-using boost::system::system_error;
-
-using std::ostringstream;
-using std::pair;
 using std::string;
-
-class session_fixture : public openssh_fixture
-{
-public:
-	session_fixture() : m_io(0), m_socket(m_io) {}
-
-	boost::asio::ip::tcp::socket& open_socket(
-		const std::string host_name, int port)
-	{
-		tcp::resolver resolver(m_io);
-		typedef tcp::resolver::query Lookup;
-		Lookup query(
-			tcp::v6(), host_name, lexical_cast<string>(port), 
-			Lookup::all_matching | Lookup::v4_mapped |
-			Lookup::numeric_service);
-
-		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-		tcp::resolver::iterator end;
-
-		error_code error = host_not_found;
-		while (error && endpoint_iterator != end)
-		{
-			m_socket.close();
-			m_socket.connect(*endpoint_iterator++, error);
-		}
-		if (error)
-			BOOST_THROW_EXCEPTION(system_error(error));
-
-		return m_socket;
-	}
-
-	session test_session()
-	{
-		boost::asio::ip::tcp::socket& sock = open_socket(host(), port());
-		return session(sock.native());
-	}
-
-private:
-	boost::asio::io_service m_io; ///< Boost IO system
-	boost::asio::ip::tcp::socket m_socket;
-};
 
 const string EXPECTED_HOSTKEY =
 	"AAAAB3NzaC1yc2EAAAABIwAAAQEArrr/JuJmaZligyfS8vcNur+mWR2ddDQtVdhHzdKU"
@@ -118,8 +64,8 @@ BOOST_FIXTURE_TEST_SUITE(host_key_tests, session_fixture)
 
 namespace {
 
-	std::string base64_decode(
-		boost::shared_ptr<LIBSSH2_SESSION> session, const std::string input)
+	string base64_decode(
+		boost::shared_ptr<LIBSSH2_SESSION> session, const string& input)
 	{
 		char* data;
 		unsigned int data_len;
