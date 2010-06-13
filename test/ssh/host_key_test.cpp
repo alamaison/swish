@@ -46,7 +46,7 @@
 #include <libssh2.h>
 
 using ssh::host_key::host_key;
-using ssh::session::session;
+using ssh::session;
 
 using test::ssh::session_fixture;
 

@@ -43,7 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 using ssh::exception::ssh_error;
-using ssh::session::session;
+using ssh::session;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_file;
 using ssh::sftp::directory_iterator;

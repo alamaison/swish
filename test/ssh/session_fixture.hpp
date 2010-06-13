@@ -84,10 +84,10 @@ public:
 		return m_socket;
 	}
 
-	::ssh::session::session test_session()
+	::ssh::session test_session()
 	{
 		boost::asio::ip::tcp::socket& sock = open_socket(host(), port());
-		return ::ssh::session::session(sock.native());
+		return ::ssh::session(sock.native());
 	}
 
 private:

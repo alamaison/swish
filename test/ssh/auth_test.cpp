@@ -43,7 +43,7 @@
 #include <string>
 
 using ssh::exception::ssh_error;
-using ssh::session::session;
+using ssh::session;
 
 using test::ssh::session_fixture;
 

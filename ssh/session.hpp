@@ -53,7 +53,6 @@
 #include <libssh2.h>
 
 namespace ssh {
-namespace session {
 
 namespace detail {
 	namespace libssh2 {
@@ -190,6 +189,6 @@ private:
 	boost::shared_ptr<LIBSSH2_SESSION> m_session;
 };
 
-}} // namespace ssh::session
+} // namespace ssh
 
 #endif

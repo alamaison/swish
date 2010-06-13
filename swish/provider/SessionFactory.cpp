@@ -126,7 +126,7 @@ void CSessionFactory::_VerifyHostKey(
 {
 	ATLASSUME(pConsumer);
 
-	ssh::session::session sess(session.get());
+	ssh::session sess(session.get());
 
 	bstr_t host = pwszHost;
 	host_key key = sess.hostkey();
