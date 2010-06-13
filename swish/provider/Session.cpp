@@ -213,8 +213,7 @@ void CSession::_DestroySftpChannel() throw()
  * The socket is stored as the member variable @c m_socket. The hostname 
  * and port used are passed as parameters.
  *
- * @throws  A com_exception or boost::system::system_error if there is a
- *          failure.
+ * @throws  A boost::system::system_error if there is a failure.
  *
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c _CloseSocketToHost()
