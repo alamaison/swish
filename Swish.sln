@@ -5,8 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell_folder-com_dll", "swi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder", "test\shell_folder\shell_folder.vcproj", "{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
 	ProjectSection(ProjectDependencies) = postProject
-		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 		{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0} = {80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}
+		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{D3818F0B-C311-4E86-AD4A-AA9AFE387E24}"
@@ -45,6 +45,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{D17C85C0-179F-4460-993A-FB627E20DA2F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider", "test\provider\provider.vcproj", "{541385C8-3DF7-401E-92E8-133B36AC7B62}"
+	ProjectSection(ProjectDependencies) = postProject
+		{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0} = {80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider-com_dll", "test\provider-com_dll\provider-com_dll.vcproj", "{4A4A271A-7EC9-49C9-AEC7-7BFA0F8F4017}"
 	ProjectSection(ProjectDependencies) = postProject
