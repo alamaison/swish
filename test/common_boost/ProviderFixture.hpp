@@ -31,14 +31,17 @@
 
 #include "swish/interfaces/SftpProvider.h"  // ISftpProvider
 
+#include <winapi/com/object.hpp> // object_from_moniker_name
+
 #include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 #include <comet/util.h> // auto_coinit
 
 #include <boost/filesystem/path.hpp> // path
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/make_shared.hpp> // make_shared
+#include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
 
@@ -59,14 +62,11 @@ namespace detail {
 	inline comet::com_ptr<ISftpProvider> provider_instance(
 		const comet::bstr_t& host, const comet::bstr_t& user, int port)
 	{
-		comet::com_ptr<ISftpProvider> provider(L"Provider.Provider");
-		HRESULT hr;
-		hr = provider->Initialize(user.in(), host.in(), port);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(
-				comet::com_error("Couldn't initialise Provider", hr));
+		std::wstring item_name = 
+			L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L"@" + 
+			host + L":" + boost::lexical_cast<std::wstring>(port);
 
-		return provider;
+		return winapi::com::object_from_moniker_name<ISftpProvider>(item_name);
 	}
 
 	/**
