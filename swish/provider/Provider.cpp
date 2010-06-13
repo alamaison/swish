@@ -137,7 +137,7 @@ class provider
 {
 public:
 
-	provider(const wstring& user, const wstring host, int port);
+	provider(const wstring& user, const wstring& host, int port);
 	~provider() throw();
 
 	IEnumListing* get_listing(
@@ -327,7 +327,7 @@ void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(const wstring& user, const wstring host, int port)
+provider::provider(const wstring& user, const wstring& host, int port)
 	: m_user(user), m_host(host), m_port(port)
 {
 	assert(!m_user.empty());
