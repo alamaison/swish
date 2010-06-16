@@ -8,7 +8,7 @@ command:
 this_dir/
     <lang_CODE>/  -- (e.g de_DE)
         LC_MESSAGES/
-            <lang_CODE>.mo
+            swish.mo
 
 replacing <lang_CODE> with the appropriate language code.
 
