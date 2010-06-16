@@ -23,9 +23,16 @@
 #include "swish/exception.hpp"
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
-#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+#include <comet/error.h> // com_error
+#include <comet/ptr.h> // com_ptr
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 using swish::exception::com_exception;
+
+using comet::com_error;
+using comet::com_ptr;
+
 using ATL::CComObject;
 using ATL::CComPtr;
 using ATL::CComBSTR;
@@ -55,6 +62,12 @@ throw(...) :
 {
 }
 
+template<> struct ::comet::comtype<::ISftpProvider>
+{
+	static const ::IID& uuid() throw() { return ::IID_ISftpProvider; }
+	typedef ::IUnknown base;
+};
+
 /**
  * Fetches directory listing from the server as an enumeration.
  *
@@ -76,6 +89,11 @@ HRESULT CSftpDirectory::_Fetch( SHCONTF grfFlags )
 	CComPtr<IEnumListing> spEnum;
 	hr = m_spProvider->GetListing(
 		m_spConsumer, CComBSTR(m_strDirectory), &spEnum);
+	if (FAILED(hr))
+	{
+		com_ptr<ISftpProvider> ptr(m_spProvider.p);
+		BOOST_THROW_EXCEPTION(com_error(ptr, hr));
+	}
 	if (SUCCEEDED(hr))
 	{
 		m_vecPidls.clear();
@@ -148,7 +166,7 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 	// Fetch listing and cache in m_vecPidls
 	hr = _Fetch(grfFlags);
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 
 	// Create holder for the collection of PIDLs the enumerator will enumerate
 	CComPidlHolder *pHolder;

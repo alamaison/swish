@@ -55,11 +55,12 @@ public:
 	void StartSftp() throw(...);
 
 	boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
+	boost::shared_ptr<LIBSSH2_SFTP> sftp() { return m_sftp_session; }
 private:
 	boost::asio::io_service m_io; ///< Boost IO system
 	boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
 	boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
-	LIBSSH2_SFTP *m_pSftpSession;  ///< SFTP subsystem session
+	boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
 	bool m_bConnected;             ///< Have we already connected to server?
 
 	CSession(const CSession& session); // Intentionally not implemented

@@ -28,6 +28,8 @@
 #define WINAPI_GUI_MESSAGE_DIALOG_HPP
 #pragma once
 
+#include <winapi/error.hpp> // last_error
+
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION

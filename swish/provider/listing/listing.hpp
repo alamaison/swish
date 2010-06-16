@@ -58,6 +58,6 @@ namespace listing {
 	Listing fill_listing_entry(
 		const std::string& utf8_file_name,
 		const std::string& utf8_long_entry,
-		LIBSSH2_SFTP_ATTRIBUTES& attributes);
+		const LIBSSH2_SFTP_ATTRIBUTES& attributes);
 
 }}} // namespace swish::provider::listing

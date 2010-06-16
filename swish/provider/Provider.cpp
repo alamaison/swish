@@ -51,7 +51,10 @@
 #include <comet/enum.h> // stl_enumeration
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
 
+#include <ssh/sftp.hpp> // directory_iterator
+
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/make_shared.hpp> // make_shared<provider>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -73,10 +76,15 @@ using comet::stl_enumeration;
 
 using boost::filesystem::wpath;
 using boost::lexical_cast;
+using boost::make_filter_iterator;
 using boost::make_shared;
 using boost::system::system_error;
 using boost::system::system_category;
 using boost::shared_ptr;
+
+using ssh::sftp::directory_iterator;
+using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_file;
 
 using std::exception;
 using std::string;
@@ -387,14 +395,25 @@ void provider::_Disconnect()
 
 namespace {
 
-template<typename Collection>
-class stl_enum_holder : public comet::simple_object<> //<IUnknown>
-{
-public:
-	stl_enum_holder(shared_ptr<Collection> collection)
-		: m_collection(collection) {}
-	shared_ptr<Collection> m_collection;
-};
+	template<typename Collection>
+	class stl_enum_holder : public comet::simple_object<> //<IUnknown>
+	{
+	public:
+		stl_enum_holder(shared_ptr<Collection> collection)
+			: m_collection(collection) {}
+		shared_ptr<Collection> m_collection;
+	};
+
+	Listing listing_from_sftp_file(const sftp_file& file)
+	{
+		return listing::fill_listing_entry(
+			file.name(), file.long_entry(), file.raw_attributes());
+	}
+
+	bool not_special_file(const sftp_file& file)
+	{
+		return file.name() != "." && file.name() != "..";
+	}
 
 }
 
@@ -406,10 +425,6 @@ public:
 * @param consumer   UI callback.  
 * @param directory  Absolute path of the directory to list.
 *
-* @todo Handle the case where the directory does not exist
-* @todo Return a collection rather than an enumerator
-* @todo Refactor connection code out of this method
-*
 * @see Listing for details of what file information is retrieved.
 */
 IEnumListing* provider::get_listing(
@@ -420,70 +435,27 @@ IEnumListing* provider::get_listing(
 
 	_Connect(consumer);
 
-	// Open directory
+	sftp_channel channel(m_session->get(), m_session->sftp());
+
 	string path = WideStringToUtf8String(directory.string());
-	LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-		*m_session, path.c_str());
-	if (!pSftpHandle)
-	{
-		bstr_t message("Could not open directory '");
-		message += path;
-		message += "':\n\n";
-		
-		message += _GetLastErrorMessage();
 
-		consumer->OnReportError(message.get_raw());
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	}
+	shared_ptr<vector<Listing> > files(make_shared<vector<Listing> >());
+	transform(
+		make_filter_iterator(
+			not_special_file, directory_iterator(channel, path)),
+		make_filter_iterator(
+			not_special_file, directory_iterator()),
+		back_inserter(*files),
+		listing_from_sftp_file);
 
-	// Read entries from directory until we fail
-	shared_ptr<vector<Listing> > files(new vector<Listing>);
-    do {
-		// Read filename and attributes. Returns length of filename retrieved.
-		char szFilename[MAX_FILENAME_LENZ];
-		::ZeroMemory(szFilename, sizeof(szFilename));
-
-		char szLongEntry[MAX_LONGENTRY_LENZ];
-		::ZeroMemory(szLongEntry, sizeof(szLongEntry));
-
-        LIBSSH2_SFTP_ATTRIBUTES attrs;
-		::ZeroMemory(&attrs, sizeof(attrs));
-
-        int len = libssh2_sftp_readdir_ex(
-			pSftpHandle, szFilename, sizeof(szFilename) - 1,
-			szLongEntry, sizeof(szLongEntry) - 1, &attrs);
-		if (len <= 0)
-			break;
-		else
-		{
-			// Make doubly sure
-			szFilename[MAX_FILENAME_LEN] = '\0';
-			szLongEntry[MAX_LONGENTRY_LEN] = '\0';
-		}
-
-		// Exclude . and ..
-		if (szFilename[0] == '.')
-		{
-			if (len == 1 || (len == 2 && szFilename[1] == '.'))
-				continue;
-		}
-
-		string strFilename(szFilename);
-		string strLongEntry(szLongEntry);
-		files->push_back(
-			listing::fill_listing_entry(strFilename, strLongEntry, attrs));
-	} while (true);
-
-    ATLVERIFY(libssh2_sftp_closedir(pSftpHandle) == 0);
-
-	// Create copy of our list of Listings and put into an AddReffed 'holder'
+	// Put the list of Listings into an AddReffed 'holder' so the
+	// IEnumListing implementation can control its lifetime
 	com_ptr<stl_enum_holder<vector<Listing> > > holder = 
 		new stl_enum_holder<vector<Listing> >(files);
 	IUnknown* unknown = holder->get_unknown();
-	com_ptr<IEnumListing> listing = stl_enumeration<IEnumListing>::create(
-		*holder->m_collection, unknown);
-	
-	return listing.detach();
+
+	return stl_enumeration<IEnumListing>::create(
+		*holder->m_collection, unknown).detach();
 }
 
 /**

@@ -42,6 +42,7 @@
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
+#include <winapi/gui/message_box.hpp> // message_box
 #include <winapi/shell/shell.hpp> // string_to_strret
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
@@ -56,6 +57,7 @@ using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::tracing::trace;
 
+using namespace winapi::gui::message_box;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
@@ -92,13 +94,28 @@ using namespace swish;
  */
 IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
-	// Create SFTP connection for this folder using hwndOwner for UI
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+	try
+	{
+		// Create SFTP connection for this folder using hwndOwner for UI
+		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 
-	// Create directory handler and get listing as PIDL enumeration
-	CSftpDirectory directory(
-		root_pidl().get(), provider.get(), m_consumer.get());
-	return directory.GetEnum(flags).Detach();
+		// Create directory handler and get listing as PIDL enumeration
+		CSftpDirectory directory(
+			root_pidl().get(), provider.get(), m_consumer.get());
+		return directory.GetEnum(flags).Detach();
+	}
+	catch (const com_error& e)
+	{
+		if (hwnd)
+		{
+			message_box(
+				hwnd, 
+				L"An error occurred while trying to access the directory:\n\n"
+				+ e.w_str(), L"Swish", box_type::ok, icon_type::error);
+		}
+
+		throw;
+	}
 }
 
 /**

@@ -40,6 +40,7 @@
 
 #include "exception.hpp" // last_error
 #include "host_key.hpp" // host_key
+#include "session.hpp" // session
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo_api_function
@@ -149,16 +150,16 @@ class sftp_file
 {
 public:
 	sftp_file(
-		const boost::filesystem::path& file, const std::string& long_entry,
+		const std::string& file, const std::string& long_entry,
 		const LIBSSH2_SFTP_ATTRIBUTES& attributes)
 		:
 		m_file(file), m_long_entry(long_entry), m_attributes(attributes) {}
 
-	const boost::filesystem::path& name() const { return m_file; }
+	const std::string& name() const { return m_file; }
 	const std::string& long_entry() const { return m_long_entry; }
-
+	LIBSSH2_SFTP_ATTRIBUTES raw_attributes() const { return m_attributes; }
 private:
-	boost::filesystem::path m_file;
+	std::string m_file;
 	std::string m_long_entry;
 	LIBSSH2_SFTP_ATTRIBUTES m_attributes;
 };

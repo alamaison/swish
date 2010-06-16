@@ -61,8 +61,7 @@ using boost::lexical_cast;
 using std::string;
 
 CSession::CSession() : 
-	m_io(0), m_socket(m_io), m_pSftpSession(NULL), 
-	m_bConnected(false)
+	m_io(0), m_socket(m_io), m_bConnected(false)
 {
 	_CreateSession();
 	ATLASSUME(m_session);
@@ -82,8 +81,8 @@ CSession::operator LIBSSH2_SESSION*() const
 
 CSession::operator LIBSSH2_SFTP*() const
 {
-	ATLASSUME(m_pSftpSession);
-	return m_pSftpSession;
+	ATLASSUME(m_sftp_session);
+	return m_sftp_session.get();
 }
 
 void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
@@ -177,13 +176,13 @@ void CSession::_ResetSession() throw(...)
  */
 void CSession::_CreateSftpChannel() throw(...)
 {
-	ATLASSUME(m_pSftpSession == NULL);
+	ATLASSUME(m_sftp_session == NULL);
 
 	if (libssh2_userauth_authenticated(*this) == 0)
 		AtlThrow(E_UNEXPECTED); // We must be authenticated first
 
-    m_pSftpSession = libssh2_sftp_init(*this); // Start up SFTP session
-	if (!m_pSftpSession)
+	LIBSSH2_SFTP* sftp = libssh2_sftp_init(*this); // Start up SFTP session
+	if (!sftp)
 	{
 #ifdef _DEBUG
 		char *szError;
@@ -193,6 +192,8 @@ void CSession::_CreateSftpChannel() throw(...)
 #endif
 		AtlThrow(E_FAIL);
 	}
+	
+	m_sftp_session = shared_ptr<LIBSSH2_SFTP>(sftp, libssh2_sftp_shutdown);
 }
 
 /**
@@ -200,11 +201,7 @@ void CSession::_CreateSftpChannel() throw(...)
  */
 void CSession::_DestroySftpChannel() throw()
 {
-	if (m_pSftpSession) // dual of libssh2_sftp_init()
-	{
-		ATLVERIFY( !libssh2_sftp_shutdown(*this) );
-		m_pSftpSession = NULL;
-	}
+	m_sftp_session.reset();
 }
 
 /**
