@@ -26,29 +26,31 @@
 
 #pragma once
 
-#include "swish/atl.hpp"
-#include "swish/CoFactory.hpp"
 #include "swish/catch_com.hpp"
 #include "swish/interfaces/SftpProvider.h"
 
 #include "test/common_boost/helpers.hpp"
 
+#include <comet/bstr.h> // bstr_t
+#include <comet/server.h> // simple_object
+
 #include <string>
 
 #include <boost/filesystem.hpp>
 
+template<> struct ::comet::comtype<::ISftpConsumer>
+{
+	static const ::IID& uuid() throw() { return ::IID_ISftpConsumer; }
+	typedef ::IUnknown base;
+};
+
 namespace test {
 
-class ATL_NO_VTABLE CConsumerStub :
-	public ATL::CComObjectRootEx<ATL::CComObjectThreadModel>,
-	public ISftpConsumer,
-	public swish::CCoFactory<CConsumerStub>
+class CConsumerStub : public comet::simple_object<ISftpConsumer>
 {
 public:
 
-	BEGIN_COM_MAP(CConsumerStub)
-		COM_INTERFACE_ENTRY(ISftpConsumer)
-	END_COM_MAP()
+	typedef ISftpConsumer interface_is;
 
 	void SetKeyPaths(
 		boost::filesystem::path privatekey, boost::filesystem::path publickey)
@@ -58,18 +60,16 @@ public:
 	}
 
 	// ISftpConsumer methods
-	IFACEMETHODIMP OnPasswordRequest(
-		__in BSTR /*bstrRequest*/, __out BSTR *pbstrPassword)
+	IFACEMETHODIMP OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
 	{
 		*pbstrPassword = NULL;
 		return E_NOTIMPL;
 	}
 
 	IFACEMETHODIMP OnKeyboardInteractiveRequest(
-		__in BSTR /*bstrName*/, __in BSTR /*bstrInstruction*/,
-		__in SAFEARRAY * /*psaPrompts*/,
-		__in SAFEARRAY * /*psaShowResponses*/,
-		__deref_out SAFEARRAY ** /*ppsaResponses*/)
+		BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
+		SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
+		SAFEARRAY ** /*ppsaResponses*/)
 	{
 		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
@@ -80,15 +80,15 @@ public:
 	 *
 	 * The path is set via SetKeyPaths().
 	 */
-	IFACEMETHODIMP OnPrivateKeyFileRequest(__out BSTR *pbstrPrivateKeyFile)
+	IFACEMETHODIMP OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
 	{
 		ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
 		*pbstrPrivateKeyFile = NULL;
 
 		try
 		{
-			ATL::CComBSTR bstrPrivate = m_privateKey.file_string().c_str();
-			*pbstrPrivateKeyFile = bstrPrivate.Detach();
+			*pbstrPrivateKeyFile = comet::bstr_t::detach(
+				m_privateKey.file_string());
 		}
 		catchCom()
 
@@ -100,15 +100,15 @@ public:
 	 *
 	 * The path is set via SetKeyPaths().
 	 */
-	IFACEMETHODIMP OnPublicKeyFileRequest(__out BSTR *pbstrPublicKeyFile)
+	IFACEMETHODIMP OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
 	{
 		ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
 		*pbstrPublicKeyFile = NULL;
 
 		try
 		{
-			ATL::CComBSTR bstrPublic = m_publicKey.file_string().c_str();
-			*pbstrPublicKeyFile = bstrPublic.Detach();
+			*pbstrPublicKeyFile = comet::bstr_t::detach(
+				m_publicKey.file_string());
 		}
 		catchCom()
 
@@ -116,15 +116,13 @@ public:
 	}
 
 	IFACEMETHODIMP OnConfirmOverwrite(
-		__in BSTR /*bstrOldFile*/,
-		__in BSTR /*bstrNewFile*/)
+		BSTR /*bstrOldFile*/, BSTR /*bstrNewFile*/)
 	{
 		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
 	}
 
-	IFACEMETHODIMP OnReportError(
-		__in BSTR bstrMessage)
+	IFACEMETHODIMP OnReportError(BSTR bstrMessage)
 	{
 		std::wstring message(bstrMessage);
 		BOOST_ERROR(

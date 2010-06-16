@@ -84,7 +84,7 @@ namespace { // private
 
 		com_ptr<ISftpConsumer> Consumer()
 		{
-			com_ptr<CConsumerStub> consumer = CConsumerStub::CreateCoObject();
+			com_ptr<CConsumerStub> consumer = new CConsumerStub();
 			consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 			return consumer;
 		}

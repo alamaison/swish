@@ -42,6 +42,8 @@
 #include "swish/provider/SessionFactory.hpp"  // CSessionFactory
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
+#include <comet/ptr.h> // com_ptr
+
 #include <boost/shared_ptr.hpp>  // shared_ptr
 
 #include <memory>  // auto_ptr
@@ -65,14 +67,14 @@ public:
 	 */
 	boost::shared_ptr<CSession> Session()
 	{
-		ATL::CComPtr<test::CConsumerStub> spConsumer = 
-			test::CConsumerStub::CreateCoObject();
-		spConsumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
+		comet::com_ptr<test::CConsumerStub> consumer =
+			new test::CConsumerStub();
+		consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
 
 		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
 			swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
 			swish::utils::Utf8StringToWideString(GetUser()).c_str(),
-			spConsumer));
+			consumer.get()));
 	}
 };
 

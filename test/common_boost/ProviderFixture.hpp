@@ -234,7 +234,7 @@ public:
 	comet::com_ptr<ISftpConsumer> ProviderFixtureT::Consumer()
 	{
 		comet::com_ptr<test::CConsumerStub> consumer = 
-			test::CConsumerStub::CreateCoObject();
+			new test::CConsumerStub();
 		consumer->SetKeyPaths(m_policy.private_key(), m_policy.public_key());
 		return consumer;
 	}
