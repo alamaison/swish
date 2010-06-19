@@ -469,9 +469,9 @@ IStream* provider::get_file(
 
 	_Connect(consumer);
 
-	CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::create;
+	CSftpStream::OpenFlags flags = CSftpStream::read;
 	if (writeable)
-		flags |= CSftpStream::write;
+		flags |= CSftpStream::write | CSftpStream::create;
 
 	string path = WideStringToUtf8String(file_path.string());
 	com_ptr<IStream> stream = new CSftpStream(m_session, path, flags);
