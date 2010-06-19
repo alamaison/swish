@@ -46,9 +46,12 @@
 #include <winapi/shell/shell.hpp> // string_to_strret
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+#include <boost/filesystem/path.hpp> // wpath
+#include <boost/locale.hpp> // translate
 
 #include <cassert> // assert
 #include <string>
+#include <iosfwd> // wstringstream
 
 using swish::exception::com_exception;
 using swish::remote_folder::property_from_pidl;
@@ -69,12 +72,17 @@ using comet::com_error;
 using comet::throw_com_error;
 using comet::variant_t;
 
+using boost::filesystem::wpath;
+using boost::locale::wformat;
+using boost::locale::translate;
+
 using ATL::CComObject;
 using ATL::CComPtr;
 using ATL::CComBSTR;
 using ATL::CString;
 
 using std::wstring;
+using std::wstringstream;
 
 using namespace swish;
 
@@ -528,6 +536,48 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 		cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
 }
 
+namespace {
+
+	/**
+	 * Functor asking user for permission to overwrite remote file.
+	 */
+	class OverwriteConfirmer
+	{
+	public:
+		OverwriteConfirmer(HWND hwnd) : m_hwnd(hwnd) {}
+
+		bool operator()(const wpath& target)
+		{
+			if (!m_hwnd)
+				return false;
+
+			wstringstream message;
+			message << wformat(translate(
+				"This folder already contains a file named '{1}'."))
+				% target.filename();
+			message << "\n\n";
+			message << translate("Would you like to replace it?");
+
+			button_type::type button = message_box(
+				m_hwnd, message.str(), translate("Confirm File Replace"),
+				box_type::yes_no_cancel, icon_type::question);
+			switch (button)
+			{
+			case button_type::yes:
+				return true;
+			case button_type::no:
+				return false;
+			case button_type::cancel:
+			default:
+				BOOST_THROW_EXCEPTION(std::exception("User cancelled"));
+			}
+		}
+
+	private:
+		HWND m_hwnd;
+	};
+}
+
 /**
  * Create a drop target handler for the folder.
  *
@@ -541,7 +591,8 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 	CHostItemAbsoluteHandle pidl = root_pidl().get();
 	return CDropTarget::Create(
-		provider, m_consumer, pidl.GetFullPath().GetString()).get();
+		provider, m_consumer, pidl.GetFullPath().GetString(),
+		OverwriteConfirmer(hwnd)).get();
 }
 
 /**

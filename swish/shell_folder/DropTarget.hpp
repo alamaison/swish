@@ -29,6 +29,7 @@
 #include "swish/CoFactory.hpp"  // CCoObject factory mixin
 
 #include <boost/filesystem.hpp>  // wpath
+#include <boost/function.hpp> // function
 
 #include <comet/ptr.h> // com_ptr
 
@@ -50,9 +51,11 @@ public:
 	END_COM_MAP()
 
 	static comet::com_ptr<IDropTarget> Create(
-		const comet::com_ptr<ISftpProvider>& provider,
-		const comet::com_ptr<ISftpConsumer>& consumer,
-		const boost::filesystem::wpath& remote_path, bool show_progress=true);
+		comet::com_ptr<ISftpProvider> provider,
+		comet::com_ptr<ISftpConsumer> consumer,
+		const boost::filesystem::wpath& remote_path,
+		boost::function<bool (const boost::filesystem::wpath&)> can_overwrite,
+		bool show_progress=true);
 	
 	CDropTarget();
 	~CDropTarget();
@@ -87,14 +90,16 @@ private:
 	comet::com_ptr<ISftpConsumer> m_consumer;
 	boost::filesystem::wpath m_remote_path;
 	comet::com_ptr<IDataObject> m_data_object;
+	boost::function<bool (const boost::filesystem::wpath&)> m_can_overwrite;
 	bool m_show_progress;
 };
 
 void copy_data_to_provider(
-	const comet::com_ptr<IDataObject>& data_object,
-	const comet::com_ptr<ISftpProvider>& provider,
-	const comet::com_ptr<ISftpConsumer>& consumer,
-	boost::filesystem::wpath remote_path,
-	const comet::com_ptr<IProgressDialog>& progress=NULL);
+	comet::com_ptr<IDataObject> data_object,
+	comet::com_ptr<ISftpProvider> provider,
+	comet::com_ptr<ISftpConsumer> consumer,
+	const boost::filesystem::wpath& remote_path,
+	boost::function<bool (const boost::filesystem::wpath&)> can_overwrite,
+	comet::com_ptr<IProgressDialog> progress=NULL);
 
 }} // namespace swish::shell_folder

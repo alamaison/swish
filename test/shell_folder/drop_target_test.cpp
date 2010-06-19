@@ -46,13 +46,17 @@
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::copy_data_to_provider;
 using swish::shell_folder::data_object_for_files;
+
 using test::ProviderFixture;
 using namespace test::shell_folder::data_object_utils;
+
 using comet::com_ptr;
+
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::filesystem::ifstream;
 using boost::test_tools::predicate_result;
+
 using std::string;
 using std::vector;
 using std::istreambuf_iterator;
@@ -138,6 +142,9 @@ namespace { // private
 		BOOST_CHECK(exists(name));
 		BOOST_CHECK(is_regular_file(name));
 	}
+
+	bool forbid_overwrite(const wpath&) { return false; }
+	bool allow_overwrite(const wpath&) { return true; }
 }
 
 #pragma region SFTP folder Drop Target tests
@@ -149,7 +156,7 @@ BOOST_FIXTURE_TEST_SUITE(drop_target_tests, ProviderFixture)
 BOOST_AUTO_TEST_CASE( create )
 {
 	com_ptr<IDropTarget> sp = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
 	BOOST_REQUIRE(sp);
 }
 
@@ -170,7 +177,8 @@ BOOST_AUTO_TEST_CASE( copy_single )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		forbid_overwrite);
 
 	wpath expected = destination / local.filename();
 	BOOST_REQUIRE(exists(expected));
@@ -196,7 +204,8 @@ BOOST_AUTO_TEST_CASE( copy_many )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		forbid_overwrite);
 
 	vector<wpath>::const_iterator it;
 	for (it = locals.begin(); it != locals.end(); ++it)
@@ -257,7 +266,8 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		forbid_overwrite);
 
 	wpath expected;
 
@@ -317,7 +327,8 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		forbid_overwrite);
 
 	wpath expected;
 
@@ -353,29 +364,56 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 
 /**
  * Overwrite an existing file.
+ *
+ * Must ask the user to confirm.  This test and the test after together
+ * ensure that the user's response makes a difference to the outcome and
+ * thereby proves that the user was asked.
  */
-BOOST_AUTO_TEST_CASE( copy_overwrite )
+BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
 {
 	wpath local = NewFileInSandbox();
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	wpath destination = Sandbox() / L"copy-destination";
-	wpath expected = destination / local.filename();
+	wpath obstruction = destination / local.filename();
 
-	// make sure the destination file already exists
 	create_directory(destination);
-	ofstream stream(expected);
-	stream << "blah";
-	stream.close();
+	ofstream(obstruction).close();
 
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(!file_contents_correct(expected));
+	BOOST_CHECK(exists(obstruction));
+	BOOST_CHECK(!file_contents_correct(obstruction));
 
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		allow_overwrite);
 
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+	BOOST_CHECK(exists(obstruction));
+	BOOST_CHECK(file_contents_correct(obstruction));
+}
+
+/**
+ * Deny permission to overwrite an existing file.
+ */
+BOOST_AUTO_TEST_CASE( copy_overwrite_no )
+{
+	wpath local = NewFileInSandbox();
+	com_ptr<IDataObject> spdo = create_data_object(local);
+
+	wpath destination = Sandbox() / L"copy-destination";
+	wpath obstruction = destination / local.filename();
+
+	create_directory(destination);
+	ofstream(obstruction).close(); // empty
+
+	BOOST_CHECK(exists(obstruction));
+	BOOST_CHECK(!file_contents_correct(obstruction));
+
+	copy_data_to_provider(
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		forbid_overwrite);
+
+	BOOST_CHECK(exists(obstruction));
+	BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
 }
 
 /**
@@ -390,23 +428,24 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	wpath destination = Sandbox() / L"copy-destination";
-	wpath expected = destination / local.filename();
+	wpath obstruction = destination / local.filename();
 
 	// make sure that the destination file already exists and is larger
 	// that what we're about to copy to it
 	create_directory(destination);
-	ofstream stream(expected);
+	ofstream stream(obstruction);
 	stream << LARGER_TEST_DATA;
 	stream.close();
 
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(!file_contents_correct(expected));
+	BOOST_REQUIRE(exists(obstruction));
+	BOOST_REQUIRE(!file_contents_correct(obstruction));
 
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination));
+		spdo, Provider(), Consumer(), ToRemotePath(destination),
+		allow_overwrite);
 
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+	BOOST_REQUIRE(exists(obstruction));
+	BOOST_REQUIRE(file_contents_correct(obstruction));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -428,7 +467,7 @@ BOOST_AUTO_TEST_CASE( drag_enter )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_LINK;
@@ -449,7 +488,7 @@ BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_LINK;
@@ -473,7 +512,7 @@ BOOST_AUTO_TEST_CASE( drag_over )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
 
 	POINTL pt = {0, 0};
 
@@ -502,7 +541,7 @@ BOOST_AUTO_TEST_CASE( drag_leave )
 	com_ptr<IDataObject> spdo = create_data_object(local);
 
 	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()));
+		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
 
 	POINTL pt = {0, 0};
 

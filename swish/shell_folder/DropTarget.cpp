@@ -58,13 +58,11 @@ using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::strret_to_string;
 
-using ATL::CComPtr;
-using ATL::CComBSTR;
-
-using boost::filesystem::wpath;
-using boost::shared_ptr;
 using boost::integer_traits;
+using boost::filesystem::wpath;
+using boost::function;
 using boost::locale::translate;
+using boost::shared_ptr;
 using boost::system::system_error;
 using boost::system::system_category;
 
@@ -202,18 +200,40 @@ namespace { // private
 
 	const size_t COPY_CHUNK_SIZE = 1024 * 32;
 
+	/**
+	 * Write a stream to the provider at the given path.
+	 *
+	 * If it already exists, we want to ask the user for confirmation.
+	 * The poor-mans way of checking if the file is already there is to
+	 * try to get the file read-only first.  If this fails, assume the
+	 * file noes not already exist.
+	 *
+	 * @bug  The get may have failed for a different reason or this
+	 *       may not work reliably on all SFTP servers.  A safer
+	 *       solution would be an explicit stat on the file.
+	 *
+	 * @bug  Of course, there is a race condition here.  After we check if the
+	 *       file exists, someone else may have created it.  Unfortunately,
+	 *       there is nothing we can do about this as SFTP doesn't give us
+	 *       a way to do this atomically such as locking a file.
+	 */
 	template<typename Predicate>
 	void copy_stream_to_remote_destination(
-		const com_ptr<IStream>& local_stream, 
-		const com_ptr<ISftpProvider>& provider,
-		const com_ptr<ISftpConsumer>& consumer, wpath destination,
+		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
+		com_ptr<ISftpConsumer> consumer,
+		const wpath& to_path, function<bool (const wpath&)> can_overwrite,
 		Predicate cancelled)
 	{
-		CComBSTR bstrPath = destination.string().c_str();
-
 		com_ptr<IStream> remote_stream;
+		bstr_t target(to_path.string());
+
 		HRESULT hr = provider->GetFile(
-			consumer.get(), bstrPath, true, remote_stream.out());
+			consumer.get(), target.in(), false, remote_stream.out());
+		if (SUCCEEDED(hr) && !can_overwrite(to_path))
+			return;
+
+		hr = provider->GetFile(
+			consumer.get(), target.in(), true, remote_stream.out());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_exception(hr));
 
@@ -471,9 +491,10 @@ namespace shell_folder {
  * @param progress  Optional progress dialogue.
  */
 void copy_format_to_provider(
-	PidlFormat format, const com_ptr<ISftpProvider>& provider,
-	const com_ptr<ISftpConsumer>& consumer, 
-	wpath remote_path, const com_ptr<IProgressDialog>& progress)
+	PidlFormat format, com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	function<bool (const wpath&)> can_overwrite,
+	com_ptr<IProgressDialog> progress)
 {
 	vector<CopylistEntry> copy_list;
 	build_copy_list(format, copy_list);
@@ -488,6 +509,7 @@ void copy_format_to_provider(
 
 		wpath from_path = copy_list[i].relative_path;
 		wpath to_path = remote_path / copy_list[i].relative_path;
+		assert(from_path.filename() == to_path.filename());
 
 		if (copy_list[i].is_folder)
 		{
@@ -509,7 +531,8 @@ void copy_format_to_provider(
 			auto_progress.line_path(2, to_path);
 
 			copy_stream_to_remote_destination(
-				stream, provider, consumer, to_path, cancel_check(progress));
+				stream, provider, consumer, to_path, can_overwrite,
+				cancel_check(progress));
 			
 			auto_progress.update(i, copy_list.size());
 		}
@@ -525,17 +548,18 @@ void copy_format_to_provider(
  *                     This must be a path to a @b directory.
  */
 void copy_data_to_provider(
-	const com_ptr<IDataObject>& data_object,
-	const com_ptr<ISftpProvider>& provider, 
-	const com_ptr<ISftpConsumer>& consumer, wpath remote_path,
-	const com_ptr<IProgressDialog>& progress)
+	com_ptr<IDataObject> data_object,
+	com_ptr<ISftpProvider> provider, 
+	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	function<bool (const wpath&)> can_overwrite,
+	com_ptr<IProgressDialog> progress)
 {
 	ShellDataObject data(data_object.get());
 	if (data.has_pidl_format())
 	{
 		copy_format_to_provider(
 			PidlFormat(data_object), provider, consumer, remote_path,
-			progress);
+			can_overwrite, progress);
 	}
 	else
 	{
@@ -547,14 +571,15 @@ void copy_data_to_provider(
  * Create an instance of the DropTarget initialised with a data provider.
  */
 /*static*/ com_ptr<IDropTarget> CDropTarget::Create(
-	const com_ptr<ISftpProvider>& provider,
-	const com_ptr<ISftpConsumer>& consumer, const wpath& remote_path,
-	bool show_progress)
+	com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	function<bool (const wpath&)> can_overwrite, bool show_progress)
 {
 	com_ptr<CDropTarget> sp = CDropTarget::CreateCoObject();
 	sp->m_provider = provider;
 	sp->m_consumer = consumer;
 	sp->m_remote_path = remote_path;
+	sp->m_can_overwrite = can_overwrite;
 	sp->m_show_progress = show_progress;
 	return sp;
 }
@@ -646,11 +671,13 @@ STDMETHODIMP CDropTarget::Drop(
 			{
 				com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
 				copy_data_to_provider(
-					pdo, m_provider, m_consumer, m_remote_path, progress);
+					pdo, m_provider, m_consumer, m_remote_path,
+					m_can_overwrite, progress);
 			}
 			else
 				copy_data_to_provider(
-					pdo, m_provider, m_consumer, m_remote_path, NULL);
+					pdo, m_provider, m_consumer, m_remote_path,
+					m_can_overwrite, NULL);
 		}
 	}
 	catchCom()
