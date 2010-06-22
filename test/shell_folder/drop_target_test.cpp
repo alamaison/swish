@@ -32,9 +32,10 @@
 #include "test/common_boost/ProviderFixture.hpp"  // ProviderFixture
 #include "test/shell_folder/data_object_utils.hpp"  // DataObjects on zip
 
-#include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <shlobj.h>
 
@@ -46,6 +47,8 @@
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::copy_data_to_provider;
 using swish::shell_folder::data_object_for_files;
+using swish::shell_folder::CopyCallback;
+using swish::shell_folder::Progress;
 
 using test::ProviderFixture;
 using namespace test::shell_folder::data_object_utils;
@@ -55,9 +58,11 @@ using comet::com_ptr;
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::filesystem::ifstream;
+using boost::make_shared;
 using boost::test_tools::predicate_result;
 
 using std::string;
+using std::wstring;
 using std::vector;
 using std::istreambuf_iterator;
 
@@ -143,20 +148,64 @@ namespace { // private
 		BOOST_CHECK(is_regular_file(name));
 	}
 
-	bool forbid_overwrite(const wpath&) { return false; }
-	bool allow_overwrite(const wpath&) { return true; }
+	class ProgressStub : public Progress
+	{
+	public:
+		bool user_cancelled() const { return false; }
+		void line(DWORD, const wstring&) {}
+		void line_path(DWORD, const wpath&) {}
+		void update(ULONGLONG, ULONGLONG) {}
+	};
+
+	class CopyCallbackStub : public CopyCallback
+	{
+	public:
+		void site(com_ptr<IUnknown>) {}
+
+		std::auto_ptr<Progress> progress()
+		{ return std::auto_ptr<Progress>(new ProgressStub()); }
+
+		bool can_overwrite(const wpath&)
+		{ throw std::exception("unexpected request to confirm overwrite"); }
+	};
+
+	class ForbidOverwrite : public CopyCallbackStub
+	{
+	public:
+		bool can_overwrite(const wpath&) { return false; }
+	};
+
+	class AllowOverwrite : public CopyCallbackStub
+	{
+	public:
+		bool can_overwrite(const wpath&) { return true; }
+	};
+
+	class DropTargetFixture : public ProviderFixture
+	{
+	public:
+		comet::com_ptr<IDropTarget> create_drop_target() 
+		{
+			wpath target_directory = Sandbox() / L"drop-target";
+			create_directory(target_directory);
+
+			return CDropTarget::Create(
+				Provider(), Consumer(), ToRemotePath(target_directory),
+				make_shared<CopyCallbackStub>());
+		}
+	};
+
 }
 
 #pragma region SFTP folder Drop Target tests
-BOOST_FIXTURE_TEST_SUITE(drop_target_tests, ProviderFixture)
+BOOST_FIXTURE_TEST_SUITE(drop_target_tests, DropTargetFixture)
 
 /**
  * Create an instance.
  */
 BOOST_AUTO_TEST_CASE( create )
 {
-	com_ptr<IDropTarget> sp = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
+	com_ptr<IDropTarget> sp = create_drop_target();
 	BOOST_REQUIRE(sp);
 }
 
@@ -176,9 +225,10 @@ BOOST_AUTO_TEST_CASE( copy_single )
 
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
+
+	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		forbid_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	wpath expected = destination / local.filename();
 	BOOST_REQUIRE(exists(expected));
@@ -203,9 +253,10 @@ BOOST_AUTO_TEST_CASE( copy_many )
 
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
+
+	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		forbid_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	vector<wpath>::const_iterator it;
 	for (it = locals.begin(); it != locals.end(); ++it)
@@ -265,9 +316,10 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
+
+	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		forbid_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	wpath expected;
 
@@ -326,9 +378,10 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 
 	wpath destination = Sandbox() / L"copy-destination";
 	create_directory(destination);
+
+	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		forbid_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	wpath expected;
 
@@ -383,9 +436,9 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
 	BOOST_CHECK(exists(obstruction));
 	BOOST_CHECK(!file_contents_correct(obstruction));
 
+	AllowOverwrite cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		allow_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	BOOST_CHECK(exists(obstruction));
 	BOOST_CHECK(file_contents_correct(obstruction));
@@ -408,9 +461,9 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_no )
 	BOOST_CHECK(exists(obstruction));
 	BOOST_CHECK(!file_contents_correct(obstruction));
 
+	ForbidOverwrite cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		forbid_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	BOOST_CHECK(exists(obstruction));
 	BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
@@ -440,9 +493,9 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
 	BOOST_REQUIRE(exists(obstruction));
 	BOOST_REQUIRE(!file_contents_correct(obstruction));
 
+	AllowOverwrite cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination),
-		allow_overwrite);
+		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
 
 	BOOST_REQUIRE(exists(obstruction));
 	BOOST_REQUIRE(file_contents_correct(obstruction));
@@ -452,7 +505,7 @@ BOOST_AUTO_TEST_SUITE_END()
 #pragma endregion
 
 #pragma region Drag-n-Drop behaviour tests
-BOOST_FIXTURE_TEST_SUITE(drop_target_dnd_tests, ProviderFixture)
+BOOST_FIXTURE_TEST_SUITE(drop_target_dnd_tests, DropTargetFixture)
 
 /**
  * Drag enter.  
@@ -465,9 +518,7 @@ BOOST_AUTO_TEST_CASE( drag_enter )
 {
 	wpath local = NewFileInSandbox();
 	com_ptr<IDataObject> spdo = create_data_object(local);
-
-	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
+	com_ptr<IDropTarget> spdt = create_drop_target();
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_LINK;
@@ -486,9 +537,7 @@ BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 {
 	wpath local = NewFileInSandbox();
 	com_ptr<IDataObject> spdo = create_data_object(local);
-
-	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
+	com_ptr<IDropTarget> spdt = create_drop_target();
 
 	POINTL pt = {0, 0};
 	DWORD dwEffect = DROPEFFECT_LINK;
@@ -510,9 +559,7 @@ BOOST_AUTO_TEST_CASE( drag_over )
 {
 	wpath local = NewFileInSandbox();
 	com_ptr<IDataObject> spdo = create_data_object(local);
-
-	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
+	com_ptr<IDropTarget> spdt = create_drop_target();
 
 	POINTL pt = {0, 0};
 
@@ -521,7 +568,7 @@ BOOST_AUTO_TEST_CASE( drag_over )
 	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 
-	// Change request to copy which sould be accepted
+	// Change request to copy which should be accepted
 	dwEffect = DROPEFFECT_COPY;
 	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
@@ -539,9 +586,7 @@ BOOST_AUTO_TEST_CASE( drag_leave )
 {
 	wpath local = NewFileInSandbox();
 	com_ptr<IDataObject> spdo = create_data_object(local);
-
-	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(Sandbox()), forbid_overwrite);
+	com_ptr<IDropTarget> spdt = create_drop_target();
 
 	POINTL pt = {0, 0};
 
@@ -570,22 +615,17 @@ BOOST_AUTO_TEST_CASE( drag_leave )
  * The folder drop target should copy the contents of the DataObject to the
  * remote end, respond S_OK and any subsequent DragOver calls should be 
  * declined until a new drag-and-drop loop is started with DragEnter().
- *
- * @todo  Actually verify that the file ends up at the target end.
  */
 BOOST_AUTO_TEST_CASE( drop )
 {
 	wpath local = NewFileInSandbox();
-	wpath drop_target_directory = Sandbox() / L"drop-target";
-	create_directory(drop_target_directory);
 
 	com_ptr<IDataObject> spdo = create_data_object(local);
-	com_ptr<IDropTarget> spdt = CDropTarget::Create(
-		Provider(), Consumer(), ToRemotePath(drop_target_directory), false);
+	com_ptr<IDropTarget> spdt = create_drop_target();
 
 	POINTL pt = {0, 0};
 
-	// Do enter with copy which sould be accepted
+	// Do enter with copy which should be accepted
 	DWORD dwEffect = DROPEFFECT_COPY;
 	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
@@ -601,6 +641,10 @@ BOOST_AUTO_TEST_CASE( drop )
 	// Decline any further queries until next DragEnter()
 	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
 	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
+
+	wpath expected = Sandbox() / L"drop-target" / local.filename();
+	BOOST_CHECK(exists(expected));
+	BOOST_CHECK(file_contents_correct(expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

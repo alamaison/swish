@@ -190,6 +190,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DropUI.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\explorer_command.cpp"
 				>
 			</File>
@@ -276,6 +280,10 @@
 			</File>
 			<File
 				RelativePath=".\DropTarget.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DropUI.hpp"
 				>
 			</File>
 			<File

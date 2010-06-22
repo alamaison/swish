@@ -35,13 +35,12 @@
 
 #include <winapi/shell/shell.hpp> // strret_to_string
 
+#include <boost/bind.hpp> // bind
+#include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp>  // shared_ptr
-#include <boost/integer_traits.hpp>
-#include <boost/locale.hpp> // translate
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error
 
-#include <comet/interface.h>  // uuidof, comtype
 #include <comet/ptr.h>  // com_ptr
 #include <comet/bstr.h> // bstr_t
 
@@ -58,30 +57,19 @@ using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::strret_to_string;
 
-using boost::integer_traits;
+using boost::bind;
 using boost::filesystem::wpath;
 using boost::function;
-using boost::locale::translate;
 using boost::shared_ptr;
-using boost::system::system_error;
-using boost::system::system_category;
 
 using comet::com_ptr;
-using comet::uuidof;
 using comet::bstr_t;
 
 using std::wstring;
 using std::vector;
 
-namespace comet {
-
-template<> struct comtype<IProgressDialog>
-{
-	static const IID& uuid() throw() { return IID_IProgressDialog; }
-	typedef IUnknown base;
-};
-
-}
+namespace swish {
+namespace shell_folder {
 
 namespace { // private
 
@@ -217,19 +205,17 @@ namespace { // private
 	 *       there is nothing we can do about this as SFTP doesn't give us
 	 *       a way to do this atomically such as locking a file.
 	 */
-	template<typename Predicate>
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
-		com_ptr<ISftpConsumer> consumer,
-		const wpath& to_path, function<bool (const wpath&)> can_overwrite,
-		Predicate cancelled)
+		com_ptr<ISftpConsumer> consumer, const wpath& to_path,
+		CopyCallback& callback, function<bool()> cancelled)
 	{
 		com_ptr<IStream> remote_stream;
 		bstr_t target(to_path.string());
 
 		HRESULT hr = provider->GetFile(
 			consumer.get(), target.in(), false, remote_stream.out());
-		if (SUCCEEDED(hr) && !can_overwrite(to_path))
+		if (SUCCEEDED(hr) && !callback.can_overwrite(to_path))
 			return;
 
 		hr = provider->GetFile(
@@ -387,99 +373,7 @@ namespace { // private
 			}
 		}
 	}
-
-
-	/**
-	 * Exception-safe lifetime manager for an IProgressDialog object.
-	 *
-	 * Calls StartProgressDialog when created and StopProgressDialog when
-	 * destroyed.
-	 */
-	class AutoStartProgressDialog
-	{
-	public:
-		AutoStartProgressDialog(
-			const com_ptr<IProgressDialog>& progress, HWND hwnd, DWORD flags,
-			const wstring& title)
-			: m_progress(progress)
-		{
-			if (!m_progress) return;
-
-			HRESULT hr;
-
-			hr = m_progress->SetTitle(title.c_str());
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-
-			hr = m_progress->StartProgressDialog(hwnd, NULL, flags, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-		}
-
-		~AutoStartProgressDialog()
-		{
-			if (m_progress)
-				m_progress->StopProgressDialog();
-		}
-
-		/**
-		 * Has the user cancelled the operation via the progress dialogue?
-		 */
-		bool user_cancelled() const
-		{
-			return m_progress && m_progress->HasUserCancelled();
-		}
-
-		/**
-		 * Set the indexth line of the display to the given text.
-		 */
-		void line(DWORD index, const wstring& text) const
-		{
-			if (!m_progress) return;
-
-			HRESULT hr = m_progress->SetLine(index, text.c_str(), FALSE, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-		}
-
-		/**
-		 * Set the indexth line of the display to the given path.
-		 *
-		 * Uses the inbuilt path compression.
-		 */
-		void line_path(DWORD index, const wpath& path) const
-		{
-			if (!m_progress) return;
-
-			HRESULT hr = m_progress->SetLine(
-				index, path.string().c_str(), TRUE, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-		}
-
-		/**
-		 * Update the indicator to show current progress level.
-		 */
-		void update(ULONGLONG so_far, ULONGLONG out_of)
-		{
-			if (!m_progress) return;
-
-			HRESULT hr = m_progress->SetProgress64(so_far, out_of);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
-		}
-
-	private:
-		// disable copying
-		AutoStartProgressDialog(const AutoStartProgressDialog&);
-		AutoStartProgressDialog& operator=(const AutoStartProgressDialog&);
-
-		const com_ptr<IProgressDialog> m_progress;
-	};
 }
-
-namespace swish {
-namespace shell_folder {
 
 /**
  * Copy the items in the DataObject to the remote target.
@@ -493,18 +387,16 @@ namespace shell_folder {
 void copy_format_to_provider(
 	PidlFormat format, com_ptr<ISftpProvider> provider,
 	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
-	function<bool (const wpath&)> can_overwrite,
-	com_ptr<IProgressDialog> progress)
+	CopyCallback& callback)
 {
 	vector<CopylistEntry> copy_list;
 	build_copy_list(format, copy_list);
 
-	AutoStartProgressDialog auto_progress(
-		progress, NULL, PROGDLG_AUTOTIME, translate("#Progress#Copying..."));
+	std::auto_ptr<Progress> auto_progress(callback.progress());
 
 	for (unsigned int i = 0; i < copy_list.size(); ++i)
 	{
-		if (auto_progress.user_cancelled())
+		if (auto_progress->user_cancelled())
 			BOOST_THROW_EXCEPTION(com_exception(E_ABORT));
 
 		wpath from_path = copy_list[i].relative_path;
@@ -513,12 +405,12 @@ void copy_format_to_provider(
 
 		if (copy_list[i].is_folder)
 		{
-			auto_progress.line_path(1, from_path);
-			auto_progress.line_path(2, to_path);
+			auto_progress->line_path(1, from_path);
+			auto_progress->line_path(2, to_path);
 
 			create_remote_directory(provider, consumer, to_path);
 			
-			auto_progress.update(i, copy_list.size());
+			auto_progress->update(i, copy_list.size());
 		}
 		else
 		{
@@ -527,14 +419,14 @@ void copy_format_to_provider(
 			stream = stream_from_shell_pidl(
 				format.parent_folder() + copy_list[i].pidl);
 
-			auto_progress.line_path(1, from_path);
-			auto_progress.line_path(2, to_path);
+			auto_progress->line_path(1, from_path);
+			auto_progress->line_path(2, to_path);
 
 			copy_stream_to_remote_destination(
-				stream, provider, consumer, to_path, can_overwrite,
-				cancel_check(progress));
+				stream, provider, consumer, to_path, callback,
+				bind(&Progress::user_cancelled, boost::ref(*auto_progress)));
 			
-			auto_progress.update(i, copy_list.size());
+			auto_progress->update(i, copy_list.size());
 		}
 	}
 }
@@ -551,15 +443,13 @@ void copy_data_to_provider(
 	com_ptr<IDataObject> data_object,
 	com_ptr<ISftpProvider> provider, 
 	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
-	function<bool (const wpath&)> can_overwrite,
-	com_ptr<IProgressDialog> progress)
+	CopyCallback& callback)
 {
 	ShellDataObject data(data_object.get());
 	if (data.has_pidl_format())
 	{
 		copy_format_to_provider(
-			PidlFormat(data_object), provider, consumer, remote_path,
-			can_overwrite, progress);
+			PidlFormat(data_object), provider, consumer, remote_path, callback);
 	}
 	else
 	{
@@ -573,14 +463,13 @@ void copy_data_to_provider(
 /*static*/ com_ptr<IDropTarget> CDropTarget::Create(
 	com_ptr<ISftpProvider> provider,
 	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
-	function<bool (const wpath&)> can_overwrite, bool show_progress)
+	shared_ptr<CopyCallback> callback)
 {
 	com_ptr<CDropTarget> sp = CDropTarget::CreateCoObject();
 	sp->m_provider = provider;
 	sp->m_consumer = consumer;
 	sp->m_remote_path = remote_path;
-	sp->m_can_overwrite = can_overwrite;
-	sp->m_show_progress = show_progress;
+	sp->m_callback = callback;
 	return sp;
 }
 
@@ -590,6 +479,18 @@ CDropTarget::CDropTarget()
 
 CDropTarget::~CDropTarget()
 {
+}
+
+STDMETHODIMP CDropTarget::SetSite(IUnknown* pUnkSite)
+{
+	HRESULT hr = ATL::IObjectWithSiteImpl<CDropTarget>::SetSite(pUnkSite);
+
+	try
+	{
+		m_callback->site(pUnkSite);
+	}
+	catchCom()
+	return S_OK;
 }
 
 /**
@@ -667,17 +568,8 @@ STDMETHODIMP CDropTarget::Drop(
 	{
 		if (pdo && *pdwEffect == DROPEFFECT_COPY)
 		{
-			if (m_show_progress)
-			{
-				com_ptr<IProgressDialog> progress(CLSID_ProgressDialog);
-				copy_data_to_provider(
-					pdo, m_provider, m_consumer, m_remote_path,
-					m_can_overwrite, progress);
-			}
-			else
-				copy_data_to_provider(
-					pdo, m_provider, m_consumer, m_remote_path,
-					m_can_overwrite, NULL);
+			copy_data_to_provider(
+				pdo, m_provider, m_consumer, m_remote_path, *m_callback);
 		}
 	}
 	catchCom()

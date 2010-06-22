@@ -34,6 +34,7 @@
 #include "UserInteraction.h"       // Implementation of ISftpConsumer
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "DropTarget.hpp"          // CDropTarget
+#include "DropUI.hpp" // DropUI
 #include "Registry.h"
 #include "swish/debug.hpp"
 #include "swish/exception.hpp"     // com_exception
@@ -47,17 +48,17 @@
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/filesystem/path.hpp> // wpath
-#include <boost/locale.hpp> // translate
+#include <boost/make_shared.hpp> // make_shared
 
 #include <cassert> // assert
 #include <string>
-#include <iosfwd> // wstringstream
 
 using swish::exception::com_exception;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::shell_folder::CDropTarget;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::DropUI;
 using swish::tracing::trace;
 
 using namespace winapi::gui::message_box;
@@ -73,16 +74,13 @@ using comet::throw_com_error;
 using comet::variant_t;
 
 using boost::filesystem::wpath;
-using boost::locale::wformat;
-using boost::locale::translate;
+using boost::make_shared;
 
-using ATL::CComObject;
 using ATL::CComPtr;
 using ATL::CComBSTR;
 using ATL::CString;
 
 using std::wstring;
-using std::wstringstream;
 
 using namespace swish;
 
@@ -536,48 +534,6 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 		cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
 }
 
-namespace {
-
-	/**
-	 * Functor asking user for permission to overwrite remote file.
-	 */
-	class OverwriteConfirmer
-	{
-	public:
-		OverwriteConfirmer(HWND hwnd) : m_hwnd(hwnd) {}
-
-		bool operator()(const wpath& target)
-		{
-			if (!m_hwnd)
-				return false;
-
-			wstringstream message;
-			message << wformat(translate(
-				"This folder already contains a file named '{1}'."))
-				% target.filename();
-			message << "\n\n";
-			message << translate("Would you like to replace it?");
-
-			button_type::type button = message_box(
-				m_hwnd, message.str(), translate("Confirm File Replace"),
-				box_type::yes_no_cancel, icon_type::question);
-			switch (button)
-			{
-			case button_type::yes:
-				return true;
-			case button_type::no:
-				return false;
-			case button_type::cancel:
-			default:
-				BOOST_THROW_EXCEPTION(std::exception("User cancelled"));
-			}
-		}
-
-	private:
-		HWND m_hwnd;
-	};
-}
-
 /**
  * Create a drop target handler for the folder.
  *
@@ -592,7 +548,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	CHostItemAbsoluteHandle pidl = root_pidl().get();
 	return CDropTarget::Create(
 		provider, m_consumer, pidl.GetFullPath().GetString(),
-		OverwriteConfirmer(hwnd)).get();
+		make_shared<DropUI>(hwnd)).get();
 }
 
 /**
