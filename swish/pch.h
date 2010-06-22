@@ -5,7 +5,7 @@
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,28 +68,28 @@
 #include <atltypes.h>
 #include <atlctl.h>
 
-#include <vector>
-#include <string>
-#include <algorithm>
+#include <comet/bstr.h>
+#include <comet/error.h>
+#include <comet/ptr.h>
+#include <comet/server.h>
 
-// Conditional PCH section for projects using common Boost headers
 #ifdef PCH_BOOST
-#include <boost/shared_ptr.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/system/system_error.hpp>
-#include <boost/function.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/errinfo_api_function.hpp>
-#endif // PCH_BOOST
+#include <boost/filesystem.hpp>
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/throw_exception.hpp>
+#endif
 
-// Conditional PCH section for projects using Boost.Test
-#ifdef PCH_BOOST_TEST
-
-#endif // PCH_BOOST_TEST
+#include <algorithm>
+#include <string>
+#include <vector>
 
 #endif // __cplusplus
 
 #include <shlobj.h>
+#include <shobjidl.h>
 
 #endif // USING_PRECOMPILED_HEADERS - do not add anything below this line
