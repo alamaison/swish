@@ -34,6 +34,14 @@
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
+#include <memory> // auto_ptr
+
+template<> struct comet::comtype<IProgressDialog>
+{
+	static const IID& uuid() throw() { return IID_IProgressDialog; }
+	typedef IUnknown base;
+};
+
 namespace swish {
 namespace shell_folder {
 
@@ -54,6 +62,7 @@ namespace shell_folder {
 	private:
 		HWND m_hwnd_owner;
 		comet::com_ptr<IUnknown> m_ole_site;
+		comet::com_ptr<IProgressDialog> m_progress;
 	};
 
 }} // namespace swish::shell_folder
