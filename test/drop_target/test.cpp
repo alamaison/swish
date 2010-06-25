@@ -24,36 +24,5 @@
     @endif
 */
 
-//////////////////////////////////////////////////////////////////////////
-// REMOVE THIS WHEN STRIPPING DROP_TARGET ATL
-//////////////////////////////////////////////////////////////////////////
-
-#include "swish/atl.hpp"
-
-namespace test {
-namespace swish {
-namespace drop_target {
-
-using ATL::CAtlModule;
-
-/**
- * ATL module needed to use ATL-based objects, e.g. CMockSftpConsumer.
- */
-class CModule : public CAtlModule
-{
-public :
-	
-	virtual HRESULT AddCommonRGSReplacements(IRegistrarBase*) throw()
-	{
-		return S_OK;
-	}
-};
-
-}}}
-
-test::swish::drop_target::CModule _AtlModule; ///< Global module instance
-
-//////////////////////////////////////////////////////////////////////////
-
 #define BOOST_TEST_MODULE swish::drop_target tests
 #include <boost/test/unit_test.hpp>

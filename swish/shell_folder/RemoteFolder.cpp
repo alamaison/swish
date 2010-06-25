@@ -546,9 +546,9 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	// Create connection for this folder with hwnd for UI
 	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 	CHostItemAbsoluteHandle pidl = root_pidl().get();
-	return CDropTarget::Create(
+	return new CDropTarget(
 		provider, m_consumer, pidl.GetFullPath().GetString(),
-		make_shared<DropUI>(hwnd)).get();
+		make_shared<DropUI>(hwnd));
 }
 
 /**

@@ -24,8 +24,6 @@
     @endif
 */
 
-#include "swish/atl.hpp"
-
 #include "swish/drop_target/DropTarget.hpp"  // Test subject
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
@@ -190,7 +188,7 @@ namespace { // private
 			wpath target_directory = Sandbox() / L"drop-target";
 			create_directory(target_directory);
 
-			return CDropTarget::Create(
+			return new CDropTarget(
 				Provider(), Consumer(), ToRemotePath(target_directory),
 				make_shared<CopyCallbackStub>());
 		}

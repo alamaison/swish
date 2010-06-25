@@ -28,18 +28,32 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
-#include "swish/CoFactory.hpp"  // CCoObject factory mixin
-
 #include <boost/filesystem.hpp>  // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr to UI callback
 
 #include <comet/ptr.h> // com_ptr
+#include <comet/server.h> // simple_object
 
 #include <memory> // auto_ptr
 #include <string>
 
+#include <OleIdl.h> // IDropTarget
+#include <OCIdl.h> // IObjectWithSite
+
 struct ISftpProvider;
 struct ISftpConsumer;
+
+template<> struct comet::comtype<IDropTarget>
+{
+	static const IID& uuid() throw() { return IID_IDropTarget; }
+	typedef IUnknown base;
+};
+
+template<> struct comet::comtype<IObjectWithSite>
+{
+	static const IID& uuid() throw() { return IID_IObjectWithSite; }
+	typedef IUnknown base;
+};
 
 namespace swish {
 namespace drop_target {
@@ -64,27 +78,15 @@ public:
 	virtual std::auto_ptr<Progress> progress() = 0;
 };
 
-class CDropTarget :
-	public ATL::CComObjectRoot,
-	public IDropTarget,
-	public ATL::IObjectWithSiteImpl<CDropTarget>,
-	public swish::CCoFactory<CDropTarget>
+class CDropTarget : public comet::simple_object<IDropTarget, IObjectWithSite>
 {
 public:
 
-	BEGIN_COM_MAP(CDropTarget)
-		COM_INTERFACE_ENTRY(IDropTarget)
-		COM_INTERFACE_ENTRY(IObjectWithSite)
-	END_COM_MAP()
-
-	static comet::com_ptr<IDropTarget> Create(
+	CDropTarget(
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
 		const boost::filesystem::wpath& remote_path,
 		boost::shared_ptr<CopyCallback> callback);
-	
-	CDropTarget();
-	~CDropTarget();
 
 	/** @name IDropTarget methods */
 	// @{
@@ -114,6 +116,7 @@ public:
 	// @{
 
 	IFACEMETHODIMP SetSite(IUnknown* pUnkSite);
+	IFACEMETHODIMP GetSite(REFIID riid, void** ppvSite);
 
 	// @}
 
@@ -124,6 +127,7 @@ private:
 	boost::filesystem::wpath m_remote_path;
 	comet::com_ptr<IDataObject> m_data_object;
 	boost::shared_ptr<CopyCallback> m_callback;
+	comet::com_ptr<IUnknown> m_ole_site;
 };
 
 void copy_data_to_provider(

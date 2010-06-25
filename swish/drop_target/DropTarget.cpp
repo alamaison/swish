@@ -26,20 +26,18 @@
 
 #include "DropTarget.hpp"
 
-#include "swish/catch_com.hpp"  // catchCom
-#include "swish/exception.hpp"  // com_exception
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // ShellDataObject
 #include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
 #include "swish/windows_api.hpp" // SHBindToParent
 
+#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
 
 #include <boost/bind.hpp> // bind
 #include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
-#include <boost/system/system_error.hpp> // system_error
 
 #include <comet/ptr.h>  // com_ptr
 #include <comet/bstr.h> // bstr_t
@@ -50,7 +48,6 @@
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
-using swish::exception::com_exception;
 
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
@@ -62,11 +59,25 @@ using boost::filesystem::wpath;
 using boost::function;
 using boost::shared_ptr;
 
-using comet::com_ptr;
 using comet::bstr_t;
+using comet::com_error;
+using comet::com_ptr;
 
 using std::wstring;
 using std::vector;
+
+template<> struct comet::comtype<ISftpProvider>
+{
+	static const IID& uuid() throw() { return IID_ISftpProvider; }
+	typedef IUnknown base;
+};
+
+
+template<> struct comet::comtype<ISftpConsumer>
+{
+	static const IID& uuid() throw() { return IID_ISftpConsumer; }
+	typedef IUnknown base;
+};
 
 namespace swish {
 namespace drop_target {
@@ -107,24 +118,23 @@ namespace { // private
 		com_ptr<IShellFolder> folder;
 		
 		hr = swish::windows_api::SHBindToParent(
-			pidl.get(), __uuidof(IShellFolder), 
-			reinterpret_cast<void**>(folder.out()),
+			pidl.get(), folder.iid(), reinterpret_cast<void**>(folder.out()),
 			&pidl_child);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 
 		com_ptr<IStream> stream;
 		
 		hr = folder->BindToObject(
-			pidl_child, NULL, __uuidof(IStream),
+			pidl_child, NULL, stream.iid(),
 			reinterpret_cast<void**>(stream.out()));
 		if (FAILED(hr))
 		{
 			hr = folder->BindToStorage(
-				pidl_child, NULL, __uuidof(IStream),
+				pidl_child, NULL, stream.iid(),
 				reinterpret_cast<void**>(stream.out()));
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
+				BOOST_THROW_EXCEPTION(com_error(hr));
 		}
 
 		return stream;
@@ -138,7 +148,7 @@ namespace { // private
 		STATSTG statstg;
 		HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 
 		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
 		return name.get();
@@ -155,7 +165,7 @@ namespace { // private
 		HRESULT hr = parent_folder->GetDisplayNameOf(
 			pidl.get(), SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(parent_folder, hr));
 
 		return strret_to_string<wchar_t>(strret, pidl);
 	}
@@ -221,17 +231,17 @@ namespace { // private
 		hr = provider->GetFile(
 			consumer.get(), target.in(), true, remote_stream.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(provider, hr));
 
 		// Set both streams back to the start
 		LARGE_INTEGER move = {0};
 		hr = local_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(local_stream, hr));
 
 		hr = remote_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(remote_stream, hr));
 
 		// Do the copy in chunks allowing us to cancel the operation
 		ULARGE_INTEGER cb;
@@ -245,29 +255,11 @@ namespace { // private
 				remote_stream.get(), cb, &cbRead, &cbWritten);
 			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_exception(hr));
+				BOOST_THROW_EXCEPTION(com_error(local_stream, hr));
 			if (cbRead.QuadPart == 0)
 				break; // finished
 		}
 	}
-
-	/**
-	 * Predicate functor checking status of progress dialogue.
-	 */
-	class cancel_check
-	{
-	public:
-		cancel_check(const com_ptr<IProgressDialog>& dialog)
-			: m_dialog(dialog) {}
-
-		/**
-		 * Returns if the user cancelled the operation.
-		 */
-		bool operator()() { return m_dialog && m_dialog->HasUserCancelled(); }
-
-	private:
-		com_ptr<IProgressDialog> m_dialog;
-	};
 
 	void create_remote_directory(
 		const com_ptr<ISftpProvider>& provider, 
@@ -278,7 +270,7 @@ namespace { // private
 		HRESULT hr = provider->CreateNewDirectory(
 			consumer.get(), path.get_raw());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(provider, hr));
 	}
 
 	/**
@@ -300,7 +292,6 @@ namespace { // private
 		bool is_folder;
 	};
 
-
 	void build_copy_list_recursively(
 		const apidl_t& parent, const pidl_t& folder_pidl,
 		vector<CopylistEntry>& copy_list_out)
@@ -319,7 +310,7 @@ namespace { // private
 		HRESULT hr = folder->EnumObjects(
 			NULL, SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(folder, hr));
 
 		cpidl_t item;
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
@@ -335,7 +326,7 @@ namespace { // private
 		hr = folder->EnumObjects(
 			NULL, SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(folder, hr));
 
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{
@@ -362,7 +353,7 @@ namespace { // private
 					pidl, filename_from_stream(stream), false);
 				copy_list.push_back(entry);
 			}
-			catch (com_exception)
+			catch (const com_error&)
 			{
 				// Treating the item as something with an IStream has failed
 				// Now we try to treat it as an IShellFolder and hope we
@@ -397,7 +388,7 @@ void copy_format_to_provider(
 	for (unsigned int i = 0; i < copy_list.size(); ++i)
 	{
 		if (auto_progress->user_cancelled())
-			BOOST_THROW_EXCEPTION(com_exception(E_ABORT));
+			BOOST_THROW_EXCEPTION(com_error(E_ABORT));
 
 		wpath from_path = copy_list[i].relative_path;
 		wpath to_path = remote_path / copy_list[i].relative_path;
@@ -440,8 +431,7 @@ void copy_format_to_provider(
  *                     This must be a path to a @b directory.
  */
 void copy_data_to_provider(
-	com_ptr<IDataObject> data_object,
-	com_ptr<ISftpProvider> provider, 
+	com_ptr<IDataObject> data_object, com_ptr<ISftpProvider> provider, 
 	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
 	CopyCallback& callback)
 {
@@ -453,43 +443,48 @@ void copy_data_to_provider(
 	}
 	else
 	{
-		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+		BOOST_THROW_EXCEPTION(
+			com_error("DataObject doesn't contain a supported format"));
 	}
 }
 
 /**
  * Create an instance of the DropTarget initialised with a data provider.
  */
-/*static*/ com_ptr<IDropTarget> CDropTarget::Create(
+CDropTarget::CDropTarget(
 	com_ptr<ISftpProvider> provider,
 	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
 	shared_ptr<CopyCallback> callback)
-{
-	com_ptr<CDropTarget> sp = CDropTarget::CreateCoObject();
-	sp->m_provider = provider;
-	sp->m_consumer = consumer;
-	sp->m_remote_path = remote_path;
-	sp->m_callback = callback;
-	return sp;
-}
-
-CDropTarget::CDropTarget()
-{
-}
-
-CDropTarget::~CDropTarget()
-{
-}
+	:
+	m_provider(provider), m_consumer(consumer), m_remote_path(remote_path),
+		m_callback(callback) {}
 
 STDMETHODIMP CDropTarget::SetSite(IUnknown* pUnkSite)
 {
 	try
 	{
-		HRESULT hr = ATL::IObjectWithSiteImpl<CDropTarget>::SetSite(pUnkSite);
-		if (SUCCEEDED(hr))
-			m_callback->site(pUnkSite);
+		m_ole_site = pUnkSite;
+		m_callback->site(m_ole_site);
 	}
-	catchCom()
+	COM_CATCH_AUTO_INTERFACE();
+
+	return S_OK;
+}
+
+STDMETHODIMP CDropTarget::GetSite(REFIID riid, void** ppvSite)
+{
+	try
+	{
+		if (!ppvSite)
+			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+		*ppvSite = NULL;
+
+		HRESULT hr = m_ole_site.get()->QueryInterface(riid, ppvSite);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(m_ole_site, hr));
+	}
+	COM_CATCH_AUTO_INTERFACE();
+
 	return S_OK;
 }
 
@@ -502,16 +497,17 @@ STDMETHODIMP CDropTarget::SetSite(IUnknown* pUnkSite)
 STDMETHODIMP CDropTarget::DragEnter( 
 	IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
 {
-	if (!pdwEffect)
-		return E_INVALIDARG;
-
 	try
 	{
+		if (!pdwEffect)
+			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+
 		m_data_object = pdo;
 
 		*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
 	}
-	catchCom()
+	COM_CATCH_AUTO_INTERFACE();
+
 	return S_OK;
 }
 
@@ -525,14 +521,15 @@ STDMETHODIMP CDropTarget::DragEnter(
 STDMETHODIMP CDropTarget::DragOver( 
 	DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
 {
-	if (!pdwEffect)
-		return E_INVALIDARG;
-
 	try
 	{
+		if (!pdwEffect)
+			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+
 		*pdwEffect = determine_drop_effect(m_data_object, *pdwEffect);
 	}
-	catchCom()
+	COM_CATCH_AUTO_INTERFACE();
+
 	return S_OK;
 }
 
@@ -545,7 +542,8 @@ STDMETHODIMP CDropTarget::DragLeave()
 	{
 		m_data_object = NULL;
 	}
-	catchCom()
+	COM_CATCH_AUTO_INTERFACE();
+
 	return S_OK;
 }
 
@@ -558,23 +556,24 @@ STDMETHODIMP CDropTarget::DragLeave()
 STDMETHODIMP CDropTarget::Drop( 
 	IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
 {
-	if (!pdwEffect)
-		return E_INVALIDARG;
-
-	*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
-	m_data_object = pdo;
-
 	try
 	{
+		if (!pdwEffect)
+			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+
+		// Drop doesn't need to maintain any state and is handed a fresh copy
+		// of the IDataObject so we can can immediately cancel the one we were
+		// using for the other parts of the drag-drop loop
+		m_data_object = NULL;
+
+		*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
+
 		if (pdo && *pdwEffect == DROPEFFECT_COPY)
-		{
 			copy_data_to_provider(
 				pdo, m_provider, m_consumer, m_remote_path, *m_callback);
-		}
 	}
-	catchCom()
+	COM_CATCH_AUTO_INTERFACE();
 
-	m_data_object = NULL;
 	return S_OK;
 }
 
