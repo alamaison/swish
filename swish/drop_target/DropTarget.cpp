@@ -26,12 +26,12 @@
 
 #include "DropTarget.hpp"
 
-#include "data_object/ShellDataObject.hpp"  // ShellDataObject
-#include "shell.hpp"  // bind_to_handler_object
 #include "swish/catch_com.hpp"  // catchCom
 #include "swish/exception.hpp"  // com_exception
-#include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/shell_folder/data_object/ShellDataObject.hpp" // ShellDataObject
+#include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
+#include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/shell/shell.hpp> // strret_to_string
 
@@ -69,7 +69,7 @@ using std::wstring;
 using std::vector;
 
 namespace swish {
-namespace shell_folder {
+namespace drop_target {
 
 namespace { // private
 
@@ -483,11 +483,11 @@ CDropTarget::~CDropTarget()
 
 STDMETHODIMP CDropTarget::SetSite(IUnknown* pUnkSite)
 {
-	HRESULT hr = ATL::IObjectWithSiteImpl<CDropTarget>::SetSite(pUnkSite);
-
 	try
 	{
-		m_callback->site(pUnkSite);
+		HRESULT hr = ATL::IObjectWithSiteImpl<CDropTarget>::SetSite(pUnkSite);
+		if (SUCCEEDED(hr))
+			m_callback->site(pUnkSite);
 	}
 	catchCom()
 	return S_OK;
@@ -578,4 +578,4 @@ STDMETHODIMP CDropTarget::Drop(
 	return S_OK;
 }
 
-}} // namespace swish::shell_folder
+}} // namespace swish::drop_target

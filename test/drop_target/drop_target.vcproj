@@ -2,9 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-shell_folder"
-	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
-	RootNamespace="test"
+	Name="test-drop_target"
+	ProjectGUID="{60B88197-3356-4958-AE80-D870A70F9944}"
+	RootNamespace="drop_target"
+	Keyword="Win32Proj"
 	>
 	<Platforms>
 		<Platform
@@ -17,12 +18,12 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
-			UseOfATL="1"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\libssh2_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -39,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -56,8 +57,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
-				AdditionalLibraryDirectories="$(OutDir)"
+				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -90,13 +90,13 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
-			UseOfATL="1"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -112,7 +112,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
 			/>
@@ -127,9 +127,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -168,29 +166,17 @@
 			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
 		<ProjectReference
+			ReferencedProjectIdentifier="{AA48A6A1-1790-46CB-8C76-AAB52F684D8C}"
+			RelativePathToProject=".\swish\drop_target\drop_target.vcproj"
+		/>
+		<ProjectReference
 			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
 			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
 		/>
 	</References>
 	<Files>
 		<File
-			RelativePath=".\exception_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\explorer_command_tests.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\file_group_descriptor_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\global_lock_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\module.cpp"
+			RelativePath=".\drop_target_test.cpp"
 			>
 		</File>
 		<File
@@ -214,23 +200,7 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\pool_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\sftp_data_object_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\shell_data_object_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\shell_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\utils_test.cpp"
+			RelativePath=".\test.cpp"
 			>
 		</File>
 	</Files>

@@ -26,11 +26,11 @@
 
 #include "swish/atl.hpp"
 
-#include "swish/shell_folder/DropTarget.hpp"  // Test subject
+#include "swish/drop_target/DropTarget.hpp"  // Test subject
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
+#include "test/common_boost/data_object_utils.hpp"  // DataObjects on zip
 #include "test/common_boost/ProviderFixture.hpp"  // ProviderFixture
-#include "test/shell_folder/data_object_utils.hpp"  // DataObjects on zip
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -44,14 +44,15 @@
 #include <iterator>
 #include <algorithm>
 
-using swish::shell_folder::CDropTarget;
-using swish::shell_folder::copy_data_to_provider;
+using swish::drop_target::CDropTarget;
+using swish::drop_target::CopyCallback;
+using swish::drop_target::copy_data_to_provider;
+using swish::drop_target::Progress;
 using swish::shell_folder::data_object_for_files;
-using swish::shell_folder::CopyCallback;
-using swish::shell_folder::Progress;
 
+using test::data_object_utils::data_object_for_zipfile;
+using test::data_object_utils::create_test_zip_file;
 using test::ProviderFixture;
-using namespace test::shell_folder::data_object_utils;
 
 using comet::com_ptr;
 

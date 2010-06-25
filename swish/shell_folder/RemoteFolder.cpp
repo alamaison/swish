@@ -33,10 +33,10 @@
 #include "ExplorerCallback.h"      // Interaction with Explorer window
 #include "UserInteraction.h"       // Implementation of ISftpConsumer
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
-#include "DropTarget.hpp"          // CDropTarget
-#include "DropUI.hpp" // DropUI
 #include "Registry.h"
 #include "swish/debug.hpp"
+#include "swish/drop_target/DropTarget.hpp" // CDropTarget
+#include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/exception.hpp"     // com_exception
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
@@ -56,9 +56,9 @@
 using swish::exception::com_exception;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
-using swish::shell_folder::CDropTarget;
+using swish::drop_target::CDropTarget;
+using swish::drop_target::DropUI;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::DropUI;
 using swish::tracing::trace;
 
 using namespace winapi::gui::message_box;

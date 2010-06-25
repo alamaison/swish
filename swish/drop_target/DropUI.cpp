@@ -88,7 +88,7 @@ template<> struct comet::comtype<IShellView>
 };
 
 namespace swish {
-namespace shell_folder {
+namespace drop_target {
 
 namespace {
 
@@ -395,4 +395,4 @@ auto_ptr<Progress> DropUI::progress()
 			translate("#Progress#Copying..."), m_ole_site));
 }
 
-}} // namespace swish::shell_folder
+}} // namespace swish::drop_target

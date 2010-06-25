@@ -31,7 +31,6 @@
 #include <ObjIdl.h>  // IDataObject
 
 namespace test {
-namespace shell_folder {
 namespace data_object_utils {
 
 boost::filesystem::wpath create_test_zip_file(
@@ -40,4 +39,4 @@ boost::filesystem::wpath create_test_zip_file(
 comet::com_ptr<IDataObject> data_object_for_zipfile(
 	const boost::filesystem::wpath& zip_file);
 
-}}} // namespace test::shell_folder::data_object_utils
+}} // namespace test::data_object_utils

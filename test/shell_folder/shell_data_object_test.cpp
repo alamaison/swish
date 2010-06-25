@@ -30,7 +30,7 @@
 
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
-#include "test/shell_folder/data_object_utils.hpp"  // DataObject zip stuff
+#include "test/common_boost/data_object_utils.hpp" // DataObject zip stuff
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -47,8 +47,9 @@ using swish::shell_folder::data_object_for_directory;
 using winapi::shell::pidl::apidl_t;
 
 using test::ComFixture;
+using test::data_object_utils::create_test_zip_file;
+using test::data_object_utils::data_object_for_zipfile;
 using test::SandboxFixture;
-using namespace test::shell_folder::data_object_utils;
 
 using boost::filesystem::wpath;
 using boost::test_tools::predicate_result;

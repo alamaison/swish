@@ -74,7 +74,6 @@ namespace {
 }
 
 namespace test {
-namespace shell_folder {
 namespace data_object_utils {
 
 /**
@@ -135,4 +134,4 @@ com_ptr<IDataObject> data_object_for_zipfile(const wpath& zip_file)
 	return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
 }
 
-}}} // namespace test::shell_folder::data_object_utils
+}} // namespace test::data_object_utils

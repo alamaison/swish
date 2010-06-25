@@ -24,11 +24,11 @@
     @endif
 */
 
-#ifndef SWISH_SHELL_FOLDER_DROP_UI_HPP
-#define SWISH_SHELL_FOLDER_DROP_UI_HPP
+#ifndef SWISH_DROP_TARGET_DROPUI_HPP
+#define SWISH_DROP_TARGET_DROPUI_HPP
 #pragma once
 
-#include "swish/shell_folder/DropTarget.hpp" // CopyCallback, Progress
+#include "DropTarget.hpp" // CopyCallback, Progress
 
 #include <comet/ptr.h> // com_ptr
 
@@ -43,7 +43,7 @@ template<> struct comet::comtype<IProgressDialog>
 };
 
 namespace swish {
-namespace shell_folder {
+namespace drop_target {
 
 	/**
 	 * DropTarget callback turning requests into GUI windows so user can
@@ -65,6 +65,6 @@ namespace shell_folder {
 		comet::com_ptr<IProgressDialog> m_progress;
 	};
 
-}} // namespace swish::shell_folder
+}} // namespace swish::drop_target
 
 #endif

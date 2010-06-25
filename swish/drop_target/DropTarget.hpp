@@ -24,6 +24,8 @@
     @endif
 */
 
+#ifndef SWISH_DROP_TARGET_DROPTARGET_HPP
+#define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
 #include "swish/CoFactory.hpp"  // CCoObject factory mixin
@@ -40,7 +42,7 @@ struct ISftpProvider;
 struct ISftpConsumer;
 
 namespace swish {
-namespace shell_folder {
+namespace drop_target {
 
 class Progress
 {
@@ -131,4 +133,6 @@ void copy_data_to_provider(
 	const boost::filesystem::wpath& remote_path,
 	CopyCallback& callback);
 
-}} // namespace swish::shell_folder
+}} // namespace swish::drop_target
+
+#endif

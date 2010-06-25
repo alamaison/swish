@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-common_boost"
-	ProjectGUID="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
-	RootNamespace="common"
+	Name="drop_target"
+	ProjectGUID="{AA48A6A1-1790-46CB-8C76-AAB52F684D8C}"
+	RootNamespace="drop_target"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -18,8 +18,8 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;..\..\build\boost_test_client.vsprops"
-			UseOfATL="1"
+			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			UseOfATL="0"
 			CharacterSet="1"
 			>
 			<Tool
@@ -72,15 +72,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying OpenSSH /etc files ..."
-				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_zip_file.zip&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;..\..\build\boost_test_client.vsprops"
-			UseOfATL="1"
+			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -131,29 +128,31 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying OpenSSH /etc files ..."
-				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_zip_file.zip&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
+			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			UniqueIdentifier="{9662537D-200D-488d-BF14-C6A84DE3C786}"
 			>
 			<File
-				RelativePath=".\data_object_utils.cpp"
+				RelativePath=".\DropTarget.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\fixtures.cpp"
+				RelativePath=".\DropUI.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\swish\pch.cpp"
+				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -176,26 +175,14 @@
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			UniqueIdentifier="{48657AF1-C41C-4cb1-B816-5986F8301546}"
 			>
 			<File
-				RelativePath=".\ConsumerStub.hpp"
+				RelativePath=".\DropTarget.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\data_object_utils.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\fixtures.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\helpers.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ProviderFixture.hpp"
+				RelativePath=".\DropUI.hpp"
 				>
 			</File>
 		</Filter>
