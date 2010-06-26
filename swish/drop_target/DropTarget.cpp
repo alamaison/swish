@@ -33,9 +33,12 @@
 
 #include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
+#include <winapi/trace.hpp> // trace
 
 #include <boost/bind.hpp> // bind
+#include <boost/cstdint.hpp> // int64_t
 #include <boost/function.hpp> // function
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
@@ -53,10 +56,13 @@ using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::strret_to_string;
+using winapi::trace;
 
 using boost::bind;
+using boost::int64_t;
 using boost::filesystem::wpath;
 using boost::function;
+using boost::numeric_cast;
 using boost::shared_ptr;
 
 using comet::bstr_t;
@@ -140,18 +146,31 @@ namespace { // private
 		return stream;
 	}
 
+	std::pair<wpath, int64_t> stat_stream(const com_ptr<IStream>& stream)
+	{
+		STATSTG statstg;
+		HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(stream, hr));
+
+		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
+		return std::make_pair(name.get(), statstg.cbSize.QuadPart);
+	}
+
 	/**
 	 * Return the stream name from an IStream.
 	 */
 	wpath filename_from_stream(const com_ptr<IStream>& stream)
 	{
-		STATSTG statstg;
-		HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
+		return stat_stream(stream).first;
+	}
 
-		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
-		return name.get();
+	/**
+	 * Return size of the streamed object in bytes.
+	 */
+	int64_t size_of_stream(const com_ptr<IStream>& stream)
+	{
+		return stat_stream(stream).second;
 	}
 
 	/**
@@ -199,6 +218,19 @@ namespace { // private
 	const size_t COPY_CHUNK_SIZE = 1024 * 32;
 
 	/**
+	 * Calculate percentage.
+	 *
+	 * @bug  Throws if using ludicrously large sizes.
+	 */
+	int percentage(int64_t done, int64_t total)
+	{
+		if (total == 0)
+			return 100;
+		else
+			return numeric_cast<int>((done * 100) / total);
+	}
+
+	/**
 	 * Write a stream to the provider at the given path.
 	 *
 	 * If it already exists, we want to ask the user for confirmation.
@@ -218,7 +250,8 @@ namespace { // private
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
 		com_ptr<ISftpConsumer> consumer, const wpath& to_path,
-		CopyCallback& callback, function<bool()> cancelled)
+		CopyCallback& callback, function<bool()> cancelled,
+		function<void(int)> report_percent_done)
 	{
 		com_ptr<IStream> remote_stream;
 		bstr_t target(to_path.string());
@@ -244,8 +277,11 @@ namespace { // private
 			BOOST_THROW_EXCEPTION(com_error(remote_stream, hr));
 
 		// Do the copy in chunks allowing us to cancel the operation
+		// and display progress
 		ULARGE_INTEGER cb;
 		cb.QuadPart = COPY_CHUNK_SIZE;
+		int64_t done = 0;
+		int64_t total = size_of_stream(local_stream);
 		while (!cancelled())
 		{
 			ULARGE_INTEGER cbRead = {0};
@@ -256,6 +292,20 @@ namespace { // private
 			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(com_error(local_stream, hr));
+
+			// A failure to update the progress isn't a good enough reason
+			// to abort the copy so we swallow the exception.
+			try
+			{
+				done += cbWritten.QuadPart;
+				report_percent_done(percentage(done, total));
+			}
+			catch (const std::exception& e)
+			{
+				trace("Progress threw exception: %s") % e.what();
+				assert(false);
+			}
+
 			if (cbRead.QuadPart == 0)
 				break; // finished
 		}
@@ -364,6 +414,39 @@ namespace { // private
 			}
 		}
 	}
+
+	/**
+	 * Functor handles 'intra-file' progress.
+	 * 
+	 * In other words, it handles the small increments that happen during the
+	 * upload of one file amongst many.  We need this to give meaningful
+	 * progress when only a small number of files are being dropped.
+	 *
+	 * @bug  Vulnerable to integer overflow with a very large number of files.
+	 */
+	class ProgressMicroUpdater
+	{
+	public:
+		ProgressMicroUpdater(
+			Progress& auto_progress, unsigned int current_file_index,
+			unsigned int total_files)
+			: m_auto_progress(auto_progress),
+			  m_current_file_index(current_file_index),
+			  m_total_files(total_files)
+		{}
+
+		void operator()(int percent_done)
+		{
+			unsigned long long pos =
+				(m_current_file_index * 100) + percent_done;
+			m_auto_progress.update(pos, m_total_files * 100);
+		}
+
+	private:
+		Progress& m_auto_progress;
+		unsigned int m_current_file_index;
+		unsigned int m_total_files;
+	};
 }
 
 /**
@@ -415,8 +498,14 @@ void copy_format_to_provider(
 
 			copy_stream_to_remote_destination(
 				stream, provider, consumer, to_path, callback,
-				bind(&Progress::user_cancelled, boost::ref(*auto_progress)));
+				bind(&Progress::user_cancelled, boost::ref(*auto_progress)),
+				ProgressMicroUpdater(*auto_progress, i, copy_list.size()));
 			
+			// We update here as well, fixing the progress to a file boundary,
+			// as we don't completely trust the intra-file progress.  A stream
+			// could have lied about its size messing up the count.  This
+			// will override any such errors.
+
 			auto_progress->update(i, copy_list.size());
 		}
 	}
