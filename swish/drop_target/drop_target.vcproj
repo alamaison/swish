@@ -171,6 +171,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\SnitchingDropTarget.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -183,6 +187,10 @@
 			</File>
 			<File
 				RelativePath=".\DropUI.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnitchingDropTarget.hpp"
 				>
 			</File>
 		</Filter>

@@ -35,7 +35,7 @@
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
 #include "swish/debug.hpp"
-#include "swish/drop_target/DropTarget.hpp" // CDropTarget
+#include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/exception.hpp"     // com_exception
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
@@ -56,7 +56,7 @@
 using swish::exception::com_exception;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
-using swish::drop_target::CDropTarget;
+using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::tracing::trace;
@@ -546,8 +546,8 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	// Create connection for this folder with hwnd for UI
 	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 	CHostItemAbsoluteHandle pidl = root_pidl().get();
-	return new CDropTarget(
-		provider, m_consumer, pidl.GetFullPath().GetString(),
+	return new CSnitchingDropTarget(
+		hwnd, provider, m_consumer, pidl.GetFullPath().GetString(),
 		make_shared<DropUI>(hwnd));
 }
 
