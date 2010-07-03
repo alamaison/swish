@@ -248,7 +248,7 @@ inline DLGITEMTEMPLATE* write_control_to_buffer(
  * The required buffer size to store the window as a control in a
  * dialog template.
  */
-inline size_t required_buffer_size(
+inline size_t increment_required_buffer_size(
 	const window_impl* w, size_t current_buffer_size)
 {
 	return calculate_control_template_size<window_impl*>(
@@ -280,7 +280,7 @@ inline std::vector<byte> build_dialog_template_in_memory(
 	size_t buffer_len = calculate_template_size(title, font);
 	BOOST_FOREACH(boost::shared_ptr<window_impl> w, controls)
 	{
-		buffer_len += required_buffer_size(w.get(), buffer_len);
+		buffer_len = increment_required_buffer_size(w.get(), buffer_len);
 	}
 
 	std::vector<byte> buffer(buffer_len, 0);
