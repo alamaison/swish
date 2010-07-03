@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;..\..\build\boost_test_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_test_client.vsprops;..\..\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -79,7 +79,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\swish.vsprops;..\..\build\boost_test_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish.vsprops;..\..\build\boost_test_client.vsprops;..\..\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
