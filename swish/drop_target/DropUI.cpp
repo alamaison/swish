@@ -386,8 +386,7 @@ auto_ptr<Progress> DropUI::progress()
 	if (!m_hwnd_owner)
 		trace("Creating UI without a parent Window");
 
-	if (!m_progress)
-		m_progress = com_ptr<IProgressDialog>(CLSID_ProgressDialog);
+	m_progress = com_ptr<IProgressDialog>(CLSID_ProgressDialog);
 
 	return auto_ptr<Progress>(
 		new AutoStartProgressDialog(
