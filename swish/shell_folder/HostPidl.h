@@ -85,9 +85,13 @@ public:
 	/**
 	 * Concatenation constructor only implemented for non-const PidlT.
 	 */
+#ifdef NTDDI_VERSION
 	explicit CHostPidlBase(
-		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
-	throw(...);
+		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 );
+#else
+	explicit CHostPidlBase(
+		__in_opt ConstPidlType pidl1, __in_opt LPCITEMIDLIST pidl2 );
+#endif
 
 	/**
 	 * Does fingerprint stored in this PIDL correspond to a HostItemId?
@@ -246,6 +250,8 @@ public:
 	}
 };
 
+#ifdef NTDDI_VERSION
+
 /**
  * Concatenation constructor only implemented for non-const base type.
  * Also, the only non-const bases that make sense for concatentation are
@@ -262,6 +268,16 @@ inline CHostPidlBase< CPidl<ITEMIDLIST_RELATIVE> >::CHostPidlBase(
 	__in_opt CPidl<ITEMIDLIST_RELATIVE>::ConstPidlType pidl1,
 	__in_opt PCUIDLIST_RELATIVE pidl2 )
 	throw(...) : CPidl<ITEMIDLIST_RELATIVE>(pidl1, pidl2) {}
+
+#else
+
+template <>
+inline CHostPidlBase< CPidl<ITEMIDLIST> >::CHostPidlBase(
+	__in_opt CPidl<ITEMIDLIST>::ConstPidlType pidl1,
+	__in_opt LPCITEMIDLIST pidl2 )
+	throw(...) : CPidl<ITEMIDLIST>(pidl1, pidl2) {}
+
+#endif
 
 /**
  * Unmanaged-lifetime child PIDL for read-only HostItemId operations.
@@ -336,12 +352,18 @@ public:
 		return *this;
 	}
 
+#ifdef NTDDI_VERSION
 	/**
 	 * Concatenation constructor.
 	 */
 	explicit CHostPidl(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
 		throw(...) : CHostPidlBase(pidl1, pidl2) {}
+#else
+	explicit CHostPidl(
+		__in_opt ConstPidlType pidl1, __in_opt LPCITEMIDLIST pidl2 )
+		throw(...) : CHostPidlBase(pidl1, pidl2) {}
+#endif
 
 private:
 	/**
@@ -365,10 +387,7 @@ private:
 	}
 };
 
-/**
- * Managed-lifetime child PIDL for HostItemId operations.
- */
-typedef CHostPidl<ITEMID_CHILD> CHostItem;
+#ifdef NTDDI_VERSION
 
 /**
  * Managed-lifetime relative PIDL for HostItemId operations.
@@ -379,3 +398,16 @@ typedef CHostPidl<ITEMIDLIST_RELATIVE> CHostItemList;
  * Managed-lifetime absolute PIDL for HostItemId operations.
  */
 typedef CHostPidl<ITEMIDLIST_ABSOLUTE> CHostItemAbsolute;
+
+/**
+ * Managed-lifetime child PIDL for HostItemId operations.
+ */
+typedef CHostPidl<ITEMID_CHILD> CHostItem;
+
+#else
+
+typedef CHostPidl<ITEMIDLIST> CHostItemList;
+typedef CHostPidl<ITEMIDLIST> CHostItemAbsolute;
+typedef CHostPidl<ITEMIDLIST> CHostItem;
+
+#endif

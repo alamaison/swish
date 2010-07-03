@@ -50,7 +50,11 @@ namespace { // private
 	 * Function adapter for ILFindLastID to work with transform algorithm
 	 * in ui_object_of_items.
 	 */
+#ifdef NTDDI_VERSION
 	PUITEMID_CHILD find_last_ID(const ITEMIDLIST_RELATIVE& idl)
+#else
+	LPITEMIDLIST find_last_ID(const ITEMIDLIST& idl)
+#endif
 	{
 		return ::ILFindLastID(&idl);
 	}
@@ -90,14 +94,23 @@ comet::com_ptr<IShellFolder> desktop_folder();
  * name looks sufficiently path-like, however, it may silently
  * succeed and return a bogus path.
  */
+#ifdef NTDDI_VERSION
 boost::filesystem::wpath path_from_pidl(PIDLIST_ABSOLUTE pidl);
+#else
+boost::filesystem::wpath path_from_pidl(LPITEMIDLIST pidl);
+#endif
 
 /**
  * Return an absolute PIDL to the item in the filesystem at the given 
  * path.
  */
+#ifdef NTDDI_VERSION
 boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
 	const boost::filesystem::wpath& filesystem_path);
+#else
+boost::shared_ptr<ITEMIDLIST> pidl_from_path(
+	const boost::filesystem::wpath& filesystem_path);
+#endif
 
 /**
  * Return an IDataObject representing several files in the same folder.
@@ -112,7 +125,12 @@ boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
 template<typename It>
 comet::com_ptr<IDataObject> data_object_for_files(It begin, It end)
 {
+#ifdef NTDDI_VERSION
 	std::vector<boost::shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
+#else
+	std::vector<boost::shared_ptr<ITEMIDLIST> > pidls;
+#endif
+
 	transform(begin, end, back_inserter(pidls), pidl_from_path);
 
 	return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
@@ -162,7 +180,11 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
 
+#ifdef NTDDI_VERSION
 	std::vector<ITEMID_CHILD *> child_pidls;
+#else
+	std::vector<ITEMIDLIST *> child_pidls;
+#endif
 	std::transform(
 		boost::make_indirect_iterator(begin),
 		boost::make_indirect_iterator(end),
@@ -191,7 +213,11 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
  * @templateparam T  Type of associated object to return.
  */
 template<typename T>
+#ifdef NTDDI_VERSION
 comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
+#else
+comet::com_ptr<T> ui_object_of_item(LPITEMIDLIST pidl)
+#endif
 {
 	return ui_object_of_items<T>(&pidl, &pidl + 1);
 }
@@ -239,6 +265,10 @@ comet::com_ptr<T> bind_to_handler_object(
  *
  * For filesystem items this will be the absolute path.
  */
+#ifdef NTDDI_VERSION
 std::wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl);
+#else
+std::wstring parsing_name_from_pidl(LPITEMIDLIST pidl);
+#endif
 
 }} // namespace swish::shell_folder

@@ -26,8 +26,12 @@
 
 #include "columns.hpp"
 
+#include "pkeys.hpp" // PKEY_* constants
+
 #include <winapi/shell/format.hpp> // format_date_time,
                                    // format_filesize_kilobytes
+#include <winapi/shell/property_key.hpp> // property_key
+
 #pragma warning(push)
 #pragma warning(disable: 4510 4610) // Cannot generate default constructor
 #include <boost/array.hpp> // array
@@ -35,8 +39,6 @@
 #include <boost/locale.hpp> // translate
 
 #include <string>
-
-#include <Propkey.h> // PKEY_ *
 
 using winapi::shell::format_date_time;
 using winapi::shell::format_filesize_kilobytes;

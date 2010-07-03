@@ -44,6 +44,10 @@
 
 #include <comet/server.h> // simple_object
 
+#ifndef IFACEMETHODIMP
+#define IFACEMETHODIMP __override STDMETHODIMP
+#endif
+
 typedef struct _LIBSSH2_SFTP_HANDLE LIBSSH2_SFTP_HANDLE; // Forward-decl
 
 class CSftpStream : public comet::simple_object<IStream>

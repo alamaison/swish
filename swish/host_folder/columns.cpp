@@ -26,6 +26,8 @@
 
 #include "columns.hpp"
 
+#include "pkeys.hpp" // PKEY_* constants
+
 #pragma warning(push)
 #pragma warning(disable: 4510 4610) // Cannot generate default constructor
 #include <boost/array.hpp> // array
@@ -34,7 +36,7 @@
 
 #include <string>
 
-#include <Propkey.h> // PKEY_ *
+#include <ShObjIdl.h> // SCHOLSTATE_*
 
 using winapi::shell::property_key;
 
@@ -53,7 +55,6 @@ namespace {
 	 * Order of entries must correspond to the indices in columnIndices.
 	 */
 	const boost::array<column_entry, 6> column_key_index = { {
-
 		{ PKEY_ItemNameDisplay, translate("#Property (filename/label)#Name"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
 

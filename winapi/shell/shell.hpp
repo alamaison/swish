@@ -61,11 +61,19 @@ namespace detail {
 
 
 		inline HRESULT str_ret_to_str(
+#ifdef NTDDI_VERSION
 			STRRET* strret, const ITEMID_CHILD* pidl, char** string_out)
+#else
+			STRRET* strret, const ITEMIDLIST* pidl, char** string_out)
+#endif
 		{ return ::StrRetToStrA(strret, pidl, string_out); }
 
 		inline HRESULT str_ret_to_str(
+#ifdef NTDDI_VERSION
 			STRRET* strret, const ITEMID_CHILD* pidl, wchar_t** string_out)
+#else
+			STRRET* strret, const ITEMIDLIST* pidl, wchar_t** string_out)
+#endif
 		{ return ::StrRetToStrW(strret, pidl, string_out); }
 
 
@@ -85,9 +93,8 @@ namespace detail {
 	template<typename T>
 	inline STRRET string_to_strret(const std::basic_string<T>& str)
 	{
-		STRRET strret;
+		STRRET strret = STRRET();
 		strret.uType = STRRET_WSTR;
-		strret.pOleStr = NULL;
 
 		HRESULT hr = detail::native::sh_str_dup(str.c_str(), &strret.pOleStr);
 		if (FAILED(hr))

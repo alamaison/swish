@@ -33,8 +33,6 @@
 
 #include <comet/variant.h> // variant_t
 
-#include <WTypes.h> // PROPERTYKEY
-
 namespace swish {
 namespace remote_folder {
 
@@ -47,22 +45,6 @@ int compare_pidls_by_property(
 	const winapi::shell::pidl::cpidl_t& pidl_right,
 	const winapi::shell::property_key& key);
 
-/**
- * Custom properties (PKEYs) for Swish remote folder.
- *
- * Ideally, we want as few of these as possible.  If an appropriate
- * one already exists in propkey.h, that should be used instead.
- *
- * The Swish remote folder FMTID GUID which collects all the custom
- * properties together is @c {b816a851-5022-11dc-9153-0090f5284f85}.
- */
-// @{
-extern "C" const PROPERTYKEY PKEY_Group;
-extern "C" const PROPERTYKEY PKEY_Permissions;
-extern "C" const PROPERTYKEY PKEY_OwnerId;
-extern "C" const PROPERTYKEY PKEY_GroupId;
-// @}
-
-}} // namespace swish::host_folder
+}} // namespace swish::remote_folder
 
 #endif

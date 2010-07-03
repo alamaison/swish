@@ -34,6 +34,10 @@
 
 #include <WTypes.h> // PROPERTYKEY
 
+#ifndef PROPERTYKEY
+#define PROPERTYKEY SHCOLUMNID
+#endif
+
 namespace winapi {
 namespace shell {
 

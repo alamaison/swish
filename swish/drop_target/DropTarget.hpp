@@ -40,6 +40,10 @@
 #include <OleIdl.h> // IDropTarget
 #include <OCIdl.h> // IObjectWithSite
 
+#ifndef IFACEMETHODIMP
+#define IFACEMETHODIMP __override STDMETHODIMP
+#endif
+
 struct ISftpProvider;
 struct ISftpConsumer;
 

@@ -49,6 +49,10 @@
 
 #include <cassert> // assert
 
+#ifndef IFACEMETHODIMP
+#define IFACEMETHODIMP __override STDMETHODIMP
+#endif
+
 /**
  * Comet IID lookup for ISftpProvider.
  *

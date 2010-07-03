@@ -29,6 +29,10 @@
 
 #include <map>  // Associative container for IStream store
 
+#ifndef IFACEMETHODIMP
+#define IFACEMETHODIMP __override STDMETHODIMP
+#endif
+
 /**
  * Pseudo-subclass of IDataObject created by CIDLData_CreateFromIDArray().
  * 
@@ -59,9 +63,15 @@ public:
 		COM_INTERFACE_ENTRY(IDataObject)
 	END_COM_MAP()
 
+#ifdef NTDDI_VERSION
 	static ATL::CComPtr<IDataObject> Create(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
 		__in PCIDLIST_ABSOLUTE pidlCommonParent)
+#else
+	static ATL::CComPtr<IDataObject> Create(
+		UINT cPidl, __in_ecount_opt(cPidl) LPCITEMIDLIST* aPidl,
+		__in LPCITEMIDLIST pidlCommonParent)
+#endif
 	throw(...)
 	{
 		ATL::CComPtr<CDataObject> spObject = spObject->CreateCoObject();
@@ -77,9 +87,15 @@ public:
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 	HRESULT FinalConstruct();
 
+#ifdef NTDDI_VERSION
 	void Initialize(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
 		__in PCIDLIST_ABSOLUTE pidlCommonParent) throw(...);
+#else
+	void Initialize(
+		UINT cPidl, __in_ecount_opt(cPidl) LPCITEMIDLIST* aPidl,
+		__in LPCITEMIDLIST pidlCommonParent) throw(...);
+#endif
 
 public: // IDataObject methods
 

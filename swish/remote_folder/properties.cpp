@@ -25,7 +25,9 @@
 */
 
 #include "properties.hpp"
-#include "Mode.h"          // Unix-style permissions
+
+#include "Mode.h" // Unix-style permissions
+#include "pkeys.hpp" // PKEY_*
 
 #include <swish/shell_folder/RemotePidl.h> // CRemoteItemHandle
 
@@ -37,8 +39,6 @@
 #include <cassert> // assert
 #include <map>
 
-#include <initguid.h> // Make DEFINE_PROPERTYKEY() actually define a key
-#include <Propkey.h> // PKEY_ *
 #include <ShellAPI.h> // SHGetFileInfo
 
 using winapi::shell::pidl::cpidl_t;
@@ -54,23 +54,6 @@ using std::wstring;
 
 namespace swish {
 namespace remote_folder {
-
-DEFINE_PROPERTYKEY(
-	PKEY_Group, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE);
-DEFINE_PROPERTYKEY(
-	PKEY_Permissions, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE + 1);
-DEFINE_PROPERTYKEY(
-	PKEY_OwnerId, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE + 2);
-DEFINE_PROPERTYKEY(
-	PKEY_GroupId, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE + 3);
 
 namespace {
 

@@ -162,16 +162,28 @@ public:
 		return pidl;
 	}
 
+#ifdef NTDDI_VERSION
 	PCUIDLIST_RELATIVE GetNext() const throw()
+#else
+	LPCITEMIDLIST GetNext() const throw()
+#endif
 	{
 		if (m_pidl == NULL)
 			return NULL;
 
-		PCUIDLIST_RELATIVE pidl = ::ILNext(m_pidl);
+#ifdef NTDDI_VERSION
+		PCUIDLIST_RELATIVE pidl = ::ILGetNext(m_pidl);
+#else
+		LPCITEMIDLIST pidl = ::ILGetNext(m_pidl);
+#endif
 		return (::ILIsEmpty(pidl)) ? NULL : pidl;
 	}
 
+#ifdef NTDDI_VERSION
 	PCUITEMID_CHILD GetLast() const throw(...)
+#else
+	LPCITEMIDLIST GetLast() const throw(...)
+#endif
 	{
 		return ::ILFindLastID(m_pidl);
 	}
@@ -202,9 +214,15 @@ public:
  * This effect is achieved by deriving the common PIDL operations base
  * class from a const-PIDL data wrapper.
  */
+#ifdef NTDDI_VERSION
 typedef CPidlBase< CPidlConstData<ITEMIDLIST_RELATIVE> > CRelativePidlHandle;
 typedef CPidlBase< CPidlConstData<ITEMIDLIST_ABSOLUTE> > CAbsolutePidlHandle;
 typedef CPidlBase< CPidlConstData<ITEMID_CHILD> > CChildPidlHandle;
+#else
+typedef CPidlBase< CPidlConstData<ITEMIDLIST> > CRelativePidlHandle;
+typedef CPidlBase< CPidlConstData<ITEMIDLIST> > CAbsolutePidlHandle;
+typedef CPidlBase< CPidlConstData<ITEMIDLIST> > CChildPidlHandle;
+#endif
 
 /**
  * Wrapper for a PIDL with a @b managed lifetime.
@@ -256,15 +274,24 @@ public:
 	/**
 	 * Concatenation constructor.
 	 */
+#ifdef NTDDI_VERSION
 	explicit CPidl(
 		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+#else
+	explicit CPidl(
+		__in_opt ConstPidlType pidl1, __in_opt LPCITEMIDLIST pidl2 )
+#endif
 	throw(...)
 	{
-		if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2))
+		if ((!pidl1 || pidl1->mkid.cb == 0) && (!pidl2 || pidl2->mkid.cb == 0))
 			return;
 
 		m_pidl = reinterpret_cast<PidlType>(::ILCombine(
+#ifdef NTDDI_VERSION
 			reinterpret_cast<PCIDLIST_ABSOLUTE>(pidl1), pidl2));
+#else
+			reinterpret_cast<LPCITEMIDLIST>(pidl1), pidl2));
+#endif
 		ATLENSURE_THROW(m_pidl, E_OUTOFMEMORY);
 	}
 	
@@ -309,7 +336,11 @@ public:
 		m_pidl = NULL;
 	}
 
+#ifdef NTDDI_VERSION
 	CPidl& Append(__in_opt PCUIDLIST_RELATIVE pidl) throw(...)
+#else
+	CPidl& Append(__in_opt LPCITEMIDLIST pidl) throw(...)
+#endif
 	{
 		if (::ILIsEmpty(pidl))
 			return *this;
@@ -317,6 +348,8 @@ public:
 		return Attach(CPidl(m_pidl, pidl).Detach());
 	}
 };
+
+#ifdef NTDDI_VERSION
 
 /**
  * Wrapper around a @b relative PIDL with a @b managed lifetime.
@@ -332,3 +365,9 @@ typedef CPidl<ITEMIDLIST_ABSOLUTE> CAbsolutePidl;
  * Wrapper around a @b child PIDL with a @b managed lifetime.
  */
 typedef CPidl<ITEMID_CHILD> CChildPidl;
+
+#else
+typedef CPidl<ITEMIDLIST> CRelativePidl;
+typedef CPidl<ITEMIDLIST> CAbsolutePidl;
+typedef CPidl<ITEMIDLIST> CChildPidl;
+#endif

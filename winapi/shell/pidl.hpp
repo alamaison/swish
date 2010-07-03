@@ -223,6 +223,8 @@ namespace raw_pidl {
 		                                           ///< they say they are
 	};
 
+#ifdef NTDDI_VERSION
+
 	template<>
 	struct traits<ITEMID_CHILD>
 	{
@@ -241,6 +243,10 @@ namespace raw_pidl {
 		}
 	};
 
+#endif
+
+#ifdef NTDDI_VERSION
+
 	template<>
 	struct traits<ITEMIDLIST_ABSOLUTE>
 	{
@@ -252,6 +258,8 @@ namespace raw_pidl {
 		static const bool is_appendable = false;
 		static const void type_check(const_pidl_type) {}
 	};
+
+#endif
 
 	/**
 	 * Return size of a raw PIDL in bytes.
@@ -666,11 +674,17 @@ inline T pidl_cast(const U* raw_pidl)
  * These all use the CoTaskMemAlloc allocation method.
  */
 // @{
+#ifdef NTDDI_VERSION
 typedef basic_pidl<
 	ITEMIDLIST_RELATIVE, cotaskmem_alloc<ITEMIDLIST_RELATIVE> > pidl_t;
 typedef basic_pidl<
 	ITEMIDLIST_ABSOLUTE, cotaskmem_alloc<ITEMIDLIST_ABSOLUTE> > apidl_t;
 typedef basic_pidl<ITEMID_CHILD, cotaskmem_alloc<ITEMID_CHILD> > cpidl_t;
+#else
+typedef basic_pidl<ITEMIDLIST, cotaskmem_alloc<ITEMIDLIST> > pidl_t;
+typedef basic_pidl<ITEMIDLIST, cotaskmem_alloc<ITEMIDLIST> > apidl_t;
+typedef basic_pidl<ITEMIDLIST, cotaskmem_alloc<ITEMIDLIST> > cpidl_t;
+#endif
 // @}
 
 }}} // namespace winapi::shell::pidl

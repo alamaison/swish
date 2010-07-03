@@ -54,8 +54,13 @@ HRESULT CDataObject::FinalConstruct()
  * @throws  com_exception on error.
  */
 void CDataObject::Initialize(
+#ifdef NTDDI_VERSION
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
 	PCIDLIST_ABSOLUTE pidlCommonParent)
+#else
+	UINT cPidl, LPCITEMIDLIST* aPidl, 
+	LPCITEMIDLIST pidlCommonParent)
+#endif
 throw(...)
 {
 	ATLENSURE_THROW(!m_spDoInner, E_UNEXPECTED); // Initialised twice
@@ -64,7 +69,11 @@ throw(...)
 	// are wrapping.
 	HRESULT hr = ::CIDLData_CreateFromIDArray(
 		pidlCommonParent, cPidl, 
+#ifdef NTDDI_VERSION
 		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl), &m_spDoInner);
+#else
+		reinterpret_cast<LPCITEMIDLIST*>(aPidl), &m_spDoInner);
+#endif
 	ATLENSURE_SUCCEEDED(hr);
 }
 

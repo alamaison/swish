@@ -71,7 +71,7 @@ namespace { // private
 	CHostItem GetConnectionDetailsFromRegistry(wstring label)
 	{
 		CRegKey registry;
-		LSTATUS rc;
+		LONG rc;
 
 		// Open HKCU\Software\Swish\Connections\<label> registry key
 		wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;

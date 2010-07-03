@@ -191,6 +191,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\pkeys.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\properties.cpp"
 				>
 			</File>
@@ -210,6 +214,10 @@
 			</File>
 			<File
 				RelativePath=".\Mode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pkeys.hpp"
 				>
 			</File>
 			<File

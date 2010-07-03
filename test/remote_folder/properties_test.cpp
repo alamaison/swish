@@ -26,6 +26,7 @@
 
 #include <swish/remote_folder/properties.hpp> // test subject
 
+#include <swish/remote_folder/pkeys.hpp> // PKEY_*
 #include <swish/shell_folder/RemotePidl.h> // CRemoteItem
 
 #include <winapi/shell/property_key.hpp> // property_key

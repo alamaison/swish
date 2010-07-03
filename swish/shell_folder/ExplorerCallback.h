@@ -29,6 +29,10 @@
                              ///< before <shtypes.h> or <shlobj.h>).
 #include <shlobj.h>  // Windows Shell API
 
+#ifndef IFACEMETHODIMP
+#define IFACEMETHODIMP __override STDMETHODIMP
+#endif
+
 class ATL_NO_VTABLE CExplorerCallback :
 	public IShellFolderViewCB,
 	public ATL::CComObjectRoot,
@@ -50,7 +54,11 @@ public:
 			::ILFree(m_pidl);
 	}
 
+#ifdef NTDDI_VERSION
 	HRESULT Initialize( PCIDLIST_ABSOLUTE pidl );
+#else
+	HRESULT Initialize( LPCITEMIDLIST pidl );
+#endif
 
 	/**
 	 * Create and initialise an instance of the CExplorerCallback class.

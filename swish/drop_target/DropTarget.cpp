@@ -119,7 +119,11 @@ namespace { // private
 	 */
 	com_ptr<IStream> stream_from_shell_pidl(const apidl_t& pidl)
 	{
+#ifdef NTDDI_VERSION
 		PCUITEMID_CHILD pidl_child;
+#else
+		LPCITEMIDLIST pidl_child;
+#endif
 		HRESULT hr;
 		com_ptr<IShellFolder> folder;
 		
@@ -212,7 +216,7 @@ namespace { // private
 		item.attach(::ILCloneFirst(pidl.get()));
 
 		return display_name_from_pidl(parent, item) / 
-			parsing_path_from_pidl(parent + item, ::ILNext(pidl.get()));
+			parsing_path_from_pidl(parent + item, ::ILGetNext(pidl.get()));
 	}
 
 	const size_t COPY_CHUNK_SIZE = 1024 * 32;

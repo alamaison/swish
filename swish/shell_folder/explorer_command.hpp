@@ -40,6 +40,10 @@
 #include <map>
 #include <vector>
 
+#ifndef IFACEMETHODIMP
+#define IFACEMETHODIMP __override STDMETHODIMP
+#endif
+
 template<> struct comet::comtype<IExplorerCommand>
 {
 	static const IID& uuid() throw() { return IID_IExplorerCommand; }

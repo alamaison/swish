@@ -55,9 +55,15 @@ namespace windows_api {
  * http://source.winehq.org/source/dlls/shell32/pidl.c#L1282
  * Copyright 1998 Juergen Schmied.
  */
+#ifdef NTDDI_VERSION
 inline HRESULT WINAPI SHBindToParent(
 	PCIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID* ppv, 
 	PCUITEMID_CHILD* ppidlLast)
+#else
+inline HRESULT WINAPI SHBindToParent(
+	LPCITEMIDLIST pidl, REFIID riid, LPVOID* ppv, 
+	LPCITEMIDLIST* ppidlLast)
+#endif
 {
 	IShellFolder* psfDesktop;
 	HRESULT hr = E_FAIL;
@@ -76,14 +82,21 @@ inline HRESULT WINAPI SHBindToParent(
 	if (FAILED(hr))
 		return hr;
 
-	if (::ILIsChild(pidl))
+	if ((pidl == NULL) || (pidl->mkid.cb == 0) ||
+		(::ILGetNext(pidl) == NULL) || (::ILGetNext(pidl)->mkid.cb == 0))
+		// ILIsChild
 	{
 		/* we are on desktop level */
 		hr = psfDesktop->QueryInterface(riid, ppv);
 	}
 	else
 	{
+#ifdef NTDDI_VERSION
 		PIDLIST_ABSOLUTE pidlParent = ::ILCloneFull(pidl);
+#else
+		LPITEMIDLIST pidlParent = ::ILClone(pidl);
+#endif
+
 		::ILRemoveLastID(pidlParent);
 		hr = psfDesktop->BindToObject(pidlParent, NULL, riid, ppv);
 		::ILFree(pidlParent);

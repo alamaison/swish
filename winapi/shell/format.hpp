@@ -39,6 +39,28 @@
 
 #include <Shlwapi.h> // SHFormatDateTime, StrFormatKBSize
 
+/////////////////////////////////////////////////////////////////////////////
+// Visual Studio 2005 SDK is missing these declarations.
+#ifndef SHFormatDateTimeW
+
+LWSTDAPI_(int) SHFormatDateTimeW(
+	const FILETIME UNALIGNED *fileTime, DWORD *flags, LPWSTR buf, UINT size);
+
+LWSTDAPI_(int) SHFormatDateTimeA(
+	const FILETIME UNALIGNED *fileTime, DWORD *flags, LPSTR buf, UINT size);
+
+#define FDTF_SHORTTIME 0x00000001
+#define FDTF_SHORTDATE 0x00000002
+#define FDTF_DEFAULT (FDTF_SHORTDATE | FDTF_SHORTTIME)
+#define FDTF_LONGDATE 0x00000004
+#define FDTF_LONGTIME 0x00000008
+#define FDTF_RELATIVE 0x00000010
+#define FDTF_LTRDATE 0x00000100
+#define FDTF_RTLDATE 0x00000200
+
+#endif
+/////////////////////////////////////////////////////////////////////////////
+
 namespace winapi {
 namespace shell {
 

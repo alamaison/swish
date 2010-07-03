@@ -62,21 +62,36 @@ com_ptr<IShellFolder> desktop_folder()
 	return folder;
 }
 
+#ifdef NTDDI_VERSION
 wpath path_from_pidl(PIDLIST_ABSOLUTE pidl)
+#else
+wpath path_from_pidl(LPITEMIDLIST pidl)
+#endif
 {
 	return parsing_name_from_pidl(pidl);
 }
 
+#ifdef NTDDI_VERSION
 shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
 	const wpath& filesystem_path)
 {
 	PIDLIST_ABSOLUTE pidl;
+#else
+shared_ptr<ITEMIDLIST> pidl_from_path(
+	const wpath& filesystem_path)
+{
+	LPITEMIDLIST pidl;
+#endif
 	HRESULT hr = ::SHILCreateFromPath(
 		filesystem_path.file_string().c_str(), &pidl, NULL);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_exception(hr));
 
+#ifdef NTDDI_VERSION
 	return shared_ptr<ITEMIDLIST_ABSOLUTE>(pidl, ::ILFree);
+#else
+	return shared_ptr<ITEMIDLIST>(pidl, ::ILFree);
+#endif
 }
 
 com_ptr<IDataObject> data_object_for_file(const wpath& file)
@@ -94,10 +109,18 @@ com_ptr<IDataObject> data_object_for_directory(const wpath& directory)
 		wdirectory_iterator(directory), wdirectory_iterator());
 }
 
+#ifdef NTDDI_VERSION
 wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
+#else
+wstring parsing_name_from_pidl(LPITEMIDLIST pidl)
+#endif
 {
 	com_ptr<IShellFolder> folder;
+#ifdef NTDDI_VERSION
 	PCUITEMID_CHILD child_pidl;
+#else
+	LPITEMIDLIST child_pidl;
+#endif
 	HRESULT hr = swish::windows_api::SHBindToParent(
 		pidl, uuidof(folder.in()), reinterpret_cast<void**>(folder.out()), 
 		&child_pidl);

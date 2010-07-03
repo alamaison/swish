@@ -26,6 +26,7 @@
 
 #include "properties.hpp"
 
+#include "pkeys.hpp" // PKEY_* constants
 #include <swish/shell_folder/HostPidl.h> // CHostItemHandle
 
 #include <boost/assign.hpp> // map_list_of
@@ -35,9 +36,6 @@
 
 #include <cassert> // assert
 #include <map>
-
-#include <initguid.h> // Make DEFINE_PROPERTYKEY() actually define a key
-#include <Propkey.h> // PKEY_ *
 
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
@@ -51,15 +49,6 @@ using std::map;
 
 namespace swish {
 namespace host_folder {
-
-// PKEYs for custom swish details/properties
-// Swish Host FMTID GUID {b816a850-5022-11dc-9153-0090f5284f85}
-DEFINE_PROPERTYKEY(PKEY_SwishHostUser, 0xb816a850, 0x5022, 0x11dc, \
-                   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-                   PID_FIRST_USABLE);
-DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
-                   0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, 0x4f, 0x85, \
-                   PID_FIRST_USABLE + 1);
 
 namespace {
 

@@ -52,7 +52,11 @@ using swish::shell_folder::commands::host::Remove;
 
 #define SFVM_SELECTIONCHANGED 8
 
+#ifdef NTDDI_VERSION
 HRESULT CExplorerCallback::Initialize( PCIDLIST_ABSOLUTE pidl )
+#else
+HRESULT CExplorerCallback::Initialize( LPCITEMIDLIST pidl )
+#endif
 {
 	m_pidl = ::ILCloneFull(pidl);
 	return (m_pidl) ? S_OK : E_OUTOFMEMORY;
@@ -89,7 +93,11 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 		*reinterpret_cast<LONG*>(lParam) = 
 			SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
 			SHCNE_DELETE | SHCNE_RMDIR;
+#ifdef NTDDI_VERSION
 		*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam) = m_pidl; // Owned by us
+#else
+		*reinterpret_cast<LPCITEMIDLIST*>(wParam) = m_pidl;
+#endif
 		return S_OK;
 	case SFVM_FSNOTIFY:
 		// The shell is telling us that an event (probably a SHChangeNotify
