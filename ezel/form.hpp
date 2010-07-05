@@ -29,11 +29,13 @@
 #pragma once
 
 #include <ezel/control.hpp> // control
+#include <ezel/control_parent_impl.hpp> // control_parent_impl
 #include <ezel/detail/dialog_template.hpp>
                                    // build_in_memory_dialog_template
 #include <ezel/detail/hooks.hpp> // creation_hooks
 #include <ezel/detail/hwnd_linking.hpp> // fetch_user_window_data
 #include <ezel/detail/window_impl.hpp> // window_impl
+#include <ezel/window.hpp> // window
 
 #include <winapi/dynamic_link.hpp> // module_handle
 #include <winapi/gui/commands.hpp> // command
@@ -70,17 +72,24 @@ namespace detail {
 	/**
 	 * Real form class implementation.
 	 */
-	class form_impl : public window_impl
+	class form_impl : public control_parent_impl
 	{
 	public:
+		typedef control_parent_impl super;
 
-		using window_impl::on;
+		virtual LRESULT handle_message(
+			UINT message, WPARAM wparam, LPARAM lparam)
+		{
+			return dispatch_message(this, message, wparam, lparam);
+		}
+
+		typedef message_map<WM_CLOSE, WM_ACTIVATE> messages;
 
 		form_impl(
 			const std::wstring& title, short left, short top, short width,
 			short height)
 			:
-			window_impl(title, left, top, width, height) {}
+			control_parent_impl(title, left, top, width, height) {}
 
 		std::wstring window_class() const { return L"#32770"; }
 		DWORD style() const
@@ -129,8 +138,63 @@ namespace detail {
 					boost::errinfo_api_function("EndDialog"));
 		}
 
-		boost::signal<void ()>& on_change() { return m_on_change; }
-		boost::signal<void ()>& on_update() { return m_on_update; }
+		/// @name Event delegates
+		// @{
+
+		boost::signal<bool ()>& on_create() { return m_on_create; }
+
+		boost::signal<void (bool)>& on_activating() { return m_on_activating; }
+		boost::signal<void (bool)>& on_activate() { return m_on_activate; }
+
+		boost::signal<void ()>& on_deactivating() { return m_on_deactivating; }
+		boost::signal<void ()>& on_deactivate() { return m_on_deactivate; }
+
+		// @}
+
+		/// @name Message handlers
+		// @{
+
+		LRESULT on(message<WM_CLOSE> m)
+		{
+			end();
+			return default_message_handler(m);
+		}
+
+		LRESULT on(message<WM_ACTIVATE> m)
+		{
+			if (m.active())
+				m_on_activating(m.by_mouse());
+			else if (m.deactive())
+				m_on_deactivating();
+			else
+				assert(!"Inconsistent message state");
+
+			LRESULT res = default_message_handler(m);
+
+			if (m.active())
+				m_on_activate(m.by_mouse());
+			else if (m.deactive())
+				m_on_deactivate();
+			else
+				assert(!"Inconsistent message state");
+
+			return res;
+		}
+
+		BOOL on(const winapi::gui::message<WM_INITDIALOG>& /*message*/)
+		{
+			// All our controls should have been created by now so stop
+			// monitoring window creation.  This prevents problems with
+			// the system menu which is created later.
+			unhook_window_creation();
+
+			if (!m_on_create.empty())
+				return m_on_create() == TRUE;
+			else
+				return TRUE; // give default control focus
+		}
+		
+		// @}
 
 	private:
 
@@ -149,62 +213,6 @@ namespace detail {
 			m_hooks.reset();
 		}
 
-		/// @name Message handlers
-		// @{
-
-		handling_outcome::type on(
-			const winapi::gui::message<WM_CLOSE>& /*message*/)
-		{
-			end();
-			return handling_outcome::fully_handled;
-		}
-
-		/**
-		 * What to do if this form is sent a command message by a child window.
-		 *
-		 * We first send the command to this form's command handlers and
-		 * then reflect the command back to the control that sent it in case
-		 * wants to react to it as well.  Commands handlers don't report 
-		 * whether or not they handled messages so we always send it to both.
-		 *
-		 * XXX: is this true?  We could always add that capability.  Do we
-		 *      want to?
-		 */
-		handling_outcome::type on(
-			const winapi::gui::message<WM_COMMAND>& command, LRESULT result)
-		{
-			this->dispatch_command_message(
-				command.command_code(), command.wparam(), command.lparam());
-
-			window_impl* w = window_from_hwnd(command.control_hwnd());
-			
-			w->dispatch_command_message(
-				command.command_code(), command.wparam(), command.lparam());
-
-			result = 0;
-			return handling_outcome::fully_handled;
-		}
-
-		BOOL on(const winapi::gui::message<WM_INITDIALOG>& /*message*/)
-		{
-			// All our controls should have been created by now so stop
-			// monitoring window creation.  This prevents problems with
-			// the system menu which is created later.
-			unhook_window_creation();
-
-			return TRUE; // give default control focus
-		}
-		
-		// @}
-
-		/// @name Command handlers
-		// @{
-
-		void on(const winapi::gui::command<EN_CHANGE>&) { m_on_change(); }
-		void on(const winapi::gui::command<EN_UPDATE>&) { m_on_update(); }
-
-		// @}
-
 		/**
 		 * Dispatch the dialog message to the message handlers.
 		 */
@@ -218,13 +226,6 @@ namespace detail {
 				result = on(
 					winapi::gui::message<WM_INITDIALOG>(wparam, lparam));
 				return handling_outcome::fully_handled;
-
-			case WM_CLOSE:
-				return on(winapi::gui::message<WM_CLOSE>(wparam, lparam));
-
-			case WM_COMMAND:
-				return on(
-					winapi::gui::message<WM_COMMAND>(wparam, lparam), result);
 
 			default:
 				result = 0;
@@ -240,8 +241,18 @@ namespace detail {
 		std::vector<boost::shared_ptr<window_impl> > m_controls;
 		boost::shared_ptr<creation_hooks<wchar_t> > m_hooks;
 
-		boost::signal<void ()> m_on_change;
-		boost::signal<void ()> m_on_update;
+
+		/// @name Events
+		// @{
+		
+		boost::signal<bool ()> m_on_create;
+
+		boost::signal<void (bool)> m_on_activating;
+		boost::signal<void (bool)> m_on_activate;
+		boost::signal<void ()> m_on_deactivating;
+		boost::signal<void ()> m_on_deactivate;
+
+		// @}
 	};
 
 	/**
@@ -330,29 +341,31 @@ namespace detail {
 
 }
 
-class form
+class form : public window<detail::form_impl>
 {
 public:
 
 	form(
 		const std::wstring& title, short left, short top, short width,
 		short height)
-		: m_impl(new detail::form_impl(title, left, top, width, height)) {}
+		: window(
+			boost::make_shared<detail::form_impl>(
+				title, left, top, width, height)) {}
 
 	template<typename T>
 	void add_control(const control<T>& control)
 	{
-		m_impl->add_control(control.impl());
+		impl()->add_control(control.impl());
 	}
 
 	void show(HWND hwnd_owner=NULL)
 	{
-		m_impl->show(hwnd_owner);
+		impl()->show(hwnd_owner);
 	}
 
 	void end()
 	{
-		m_impl->end();
+		impl()->end();
 	}
 
 	/**
@@ -371,20 +384,24 @@ public:
 	boost::function<void ()> killer()
 	{
 		typedef boost::weak_ptr<detail::form_impl> weak_form_reference;
-		weak_form_reference weak_ref = m_impl;
+		weak_form_reference weak_ref = impl();
 
 		return boost::bind(
 			&detail::form_impl::end, boost::bind(
 				&weak_form_reference::lock, weak_ref));
 	}
 
-	boost::signal<void ()>& on_change() { return m_impl->on_change(); }
-	boost::signal<void ()>& on_update() { return m_impl->on_update(); }
+	/// @name  Event delegates.
+	// @{
 
-	std::wstring text() const { return m_impl->text(); }
+	boost::signal<bool ()>& on_create() { return impl()->on_create(); }
+	boost::signal<void (bool)>& on_activating() { return impl()->on_activating(); }
+	boost::signal<void (bool)>& on_activate() { return impl()->on_activate(); }
 
-private:
-	boost::shared_ptr<detail::form_impl> m_impl; // pimpl
+	boost::signal<void ()>& on_deactivating() { return impl()->on_deactivating(); }
+	boost::signal<void ()>& on_deactivate() { return impl()->on_deactivate(); }
+
+	// @}
 };
 
 } // namespace ezel

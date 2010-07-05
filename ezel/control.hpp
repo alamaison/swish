@@ -28,6 +28,8 @@
 #define EZEL_CONTROL_HPP
 #pragma once
 
+#include <ezel/window.hpp> // window
+
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <string>
@@ -46,30 +48,16 @@ class form;
  * @param T  Type of implementation class (pimpl)
  */
 template<typename T>
-class control
+class control : public window<T>
 {
 public:
 
-	control(boost::shared_ptr<T> impl) : m_impl(impl) {}
+	control(boost::shared_ptr<T> impl) : window<T>(impl) {}
 	virtual ~control() {}
-
-	std::wstring text() const { return impl()->text(); }
-	void text(const std::wstring& new_text) const
-	{
-		return impl()->text(new_text);
-	}
-
-	void visible(bool visibility) { impl()->visible(visibility); }
-	void enable(bool enablement) { impl()->enable(enablement); }
 
 protected:
 	
 	friend class form; // form need a p-impl from controls
-	boost::shared_ptr<T> impl() const { return m_impl; }
-
-private:
-
-	boost::shared_ptr<T> m_impl; // pimpl
 };
 
 } // namespace ezel

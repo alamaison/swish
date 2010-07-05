@@ -61,7 +61,7 @@
 			Name="detail"
 			>
 			<File
-				RelativePath=".\detail\command_handler_mixin.hpp"
+				RelativePath=".\detail\command_dispatch.hpp"
 				>
 			</File>
 			<File
@@ -130,7 +130,15 @@
 			>
 		</File>
 		<File
+			RelativePath=".\control_parent_impl.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\form.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\window.hpp"
 			>
 		</File>
 	</Files>

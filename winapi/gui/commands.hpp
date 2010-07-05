@@ -30,32 +30,39 @@
 
 #include "messages.hpp" // message<WM_COMMAND>
 
-#include <WinUser.h> // commands IDs
-
 namespace winapi {
 namespace gui {
 
 /**
- * Base class for unknown command IDs (or commands whose IDs cannot be
- * determined at compile-time, for example in the @c default case of
- * a @c switch statement.
+ * Generic command.
+ *
+ * Base of all command and generaly used to indicate a message whose ID
+ * was not found in a message map in order to invoke default handling.
+ *
+ * message<WM_COMMAND> could be used insteam but this intermediate class
+ * explicitly indicates that the command is to be treated as a command
+ * rather than as a message.  The handling may be different in these cases.
  */
 class command_base : public message<WM_COMMAND>
 {
 public:
-	command_base(WPARAM wparam, LPARAM lparam) : message(wparam, lparam) {}
+	command_base(WPARAM wparam, LPARAM lparam)
+		: message<WM_COMMAND>(wparam, lparam) {}
 };
 
 /**
- * Command message (e.g. BN_CLICKED).
+ * Command with specific ID.
  *
- * A subtype of WM_COMMAND messages.
+ * All commands are cracked the same where so there is only once command
+ * template in contrast to messages which have individual template
+ * specialisations for each message type.
  */
-template<int CommandId>
-class command : public command_base
+template<WORD CommandId>
+class command : public message<WM_COMMAND>
 {
 public:
-	command(WPARAM wparam, LPARAM lparam) : command_base(wparam, lparam) {}
+	command(WPARAM wparam, LPARAM lparam)
+		: message<WM_COMMAND>(wparam, lparam) {}
 };
 
 }} // namespace winapi::gui

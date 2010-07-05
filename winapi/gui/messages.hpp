@@ -176,6 +176,36 @@ public:
 	const T* text() const { return reinterpret_cast<const T*>(lparam()); }
 };
 
+/**
+ * Window is being shown or hidden.
+ *
+ * @todo  Handle LPARAM which indicates source of show/hide.
+ */
+template<>
+class message<WM_SHOWWINDOW> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+
+	bool state() const { return wparam() != FALSE; }
+};
+
+/**
+ * Window is being activated or deactivated.
+ */
+template<>
+class message<WM_ACTIVATE> : public message_base
+{
+public:
+	message(WPARAM wparam, LPARAM lparam) : message_base(wparam, lparam) {}
+
+	bool active() const { return LOWORD(wparam()) == 1 || by_mouse(); }
+	bool deactive() const { return LOWORD(wparam()) == 0; }
+	bool by_mouse() const { return LOWORD(wparam()) == 2; }
+	bool is_minimised() const { return HIWORD(wparam()) != 0; }
+	HWND other_window() const { return reinterpret_cast<HWND>(lparam()); }
+};
+
 }} // namespace winapi::gui
 
 #endif

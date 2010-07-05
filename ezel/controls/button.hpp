@@ -29,9 +29,10 @@
 #pragma once
 
 #include <ezel/control.hpp> // control base class
+#include <ezel/detail/command_dispatch.hpp> // command_map
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/gui/commands.hpp> // command<BN_CLICKED>
+#include <winapi/gui/commands.hpp> // command
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/signal.hpp> // signal
@@ -44,6 +45,15 @@ namespace controls {
 class button_impl : public ezel::detail::window_impl
 {
 public:
+	typedef ezel::detail::window_impl super;
+
+	typedef ezel::detail::command_map<BN_CLICKED> commands;
+
+	virtual void handle_command(
+		WORD command_id, WPARAM wparam, LPARAM lparam)
+	{
+		dispatch_command(this, command_id, wparam, lparam);
+	}
 
 	button_impl(
 		const std::wstring& title, short left, short top, short width,
@@ -65,8 +75,9 @@ public:
 
 	boost::signal<void ()>& on_click() { return m_on_click; }
 
+	void on(command<BN_CLICKED>) { m_on_click(); }
+
 private:
-	void on(const winapi::gui::command<BN_CLICKED>&) { m_on_click(); }
 
 	boost::signal<void ()> m_on_click;
 	bool m_default;

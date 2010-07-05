@@ -124,8 +124,18 @@ namespace {
 			// every time a field is changed we revalidate all the fields,
 			// enable or disable the OK button and a display a status message
 			// if needed
-			m_form.on_change().connect(
+			m_name_box.on_change().connect(
 				bind(&AddHostForm::update_validity, this));
+			m_host_box.on_change().connect(
+				bind(&AddHostForm::update_validity, this));
+			m_user_box.on_change().connect(
+				bind(&AddHostForm::update_validity, this));
+			m_path_box.on_change().connect(
+				bind(&AddHostForm::update_validity, this));
+			m_port_box.on_change().connect(
+				bind(&AddHostForm::update_validity, this));
+
+			// TODO: clarify difference between on_change and on_text_changed
 			m_port_box.on_text_changed().connect(
 				bind(&AddHostForm::update_validity, this));
 

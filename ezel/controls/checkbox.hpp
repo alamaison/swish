@@ -44,13 +44,22 @@ typedef boost::function<void (void)> on_click_callback;
 class checkbox_impl : public ezel::detail::window_impl
 {
 public:
+	typedef ezel::detail::window_impl super;
+
+	typedef ezel::detail::command_map<BN_CLICKED> commands;
+
+	virtual void handle_command(
+		WORD command_id, WPARAM wparam, LPARAM lparam)
+	{
+		dispatch_command(this, command_id, wparam, lparam);
+	}
 
 	checkbox_impl(
 		const std::wstring& text, short left, short top, short width,
-		short height, on_click_callback click_callback)
+		short height)
 		:
-		ezel::detail::window_impl(text, left, top, width, height),
-		m_on_click(click_callback) {}
+		ezel::detail::window_impl(text, left, top, width, height)
+		{}
 
 	std::wstring window_class() const { return L"button"; }
 
@@ -59,10 +68,14 @@ public:
 		return WS_CHILD | WS_VISIBLE | BS_CHECKBOX | WS_TABSTOP;
 	}
 
-	virtual void on_clicked() { m_on_click(); }
+	boost::signal<void ()>& on_click() { return m_on_click; }
+
+	void on(command<BN_CLICKED>) { m_on_click(); }
 
 private:
-	on_click_callback m_on_click;
+
+	boost::signal<void ()> m_on_click;
+	bool m_default;
 };
 
 class checkbox : public ezel::control<checkbox_impl>
@@ -70,12 +83,11 @@ class checkbox : public ezel::control<checkbox_impl>
 public:
 	checkbox(
 		const std::wstring& text, short left, short top, short width,
-		short height, on_click_callback click_callback=on_click_callback())
+		short height)
 		:
 		control<checkbox_impl>(
 			boost::shared_ptr<checkbox_impl>(
-				new checkbox_impl(
-					text, left, top, width, height, click_callback))) {}
+				new checkbox_impl(text, left, top, width, height))) {}
 
 	std::wstring text() const { return impl()->text(); }
 	short left() const { return impl()->left(); }

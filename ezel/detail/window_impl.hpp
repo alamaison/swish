@@ -28,8 +28,8 @@
 #define EZEL_DETAIL_WINDOW_IMPL_HPP
 #pragma once
 
-#include <ezel/detail/command_handler_mixin.hpp> // command_handler_mixin
-#include <ezel/detail/message_dispatch.hpp> // message_dispatch
+#include <ezel/detail/command_dispatch.hpp> // command_map
+#include <ezel/detail/message_dispatch.hpp> // message_map
 #include <ezel/detail/window_link.hpp> // window_link
 #include <ezel/detail/window_proxy.hpp> // window_proxy
 
@@ -47,17 +47,15 @@
 #include <string>
 
 namespace ezel {
-namespace detail {
-
+	
 /**
- * We are EXPLICITLY bringing the winapi::gui::message classes into this
- * namespace.
- *
- * @todo  Eventually this should move to the top-level ezel namespace,
- *        not detail.
+ * We are EXPLICITLY bringing the winapi::gui::message/command classes into
+ * the ezel namespace.
  */
 using winapi::gui::message;
+using winapi::gui::command;
 
+namespace detail {
 
 void catch_form_creation(HWND hwnd, unsigned int msg, LPARAM lparam);
 void catch_form_destruction(HWND hwnd, unsigned int msg);
@@ -237,10 +235,28 @@ void copy_fields(internal_window<T>& source, internal_window<T>& target)
  *    The Win32 data is pulled in just before destruction and stored in the
  *    member fields.  Subsequent method calls use this data.
  */
-class window_impl :
-	private boost::noncopyable, public command_handler_mixin
+class window_impl : private boost::noncopyable
 {
 public:
+
+	typedef window_impl super; // end of dispatch chain
+
+	typedef message_map<
+		WM_CREATE, WM_DESTROY, WM_NCDESTROY, WM_SETTEXT, WM_SHOWWINDOW>
+		messages;
+	typedef command_map<-1> commands;
+
+	virtual LRESULT handle_message(
+		UINT message_id, WPARAM wparam, LPARAM lparam)
+	{
+		return dispatch_message(this, message_id, wparam, lparam);
+	}
+
+	virtual void handle_command(
+		WORD command_id, WPARAM wparam, LPARAM lparam)
+	{
+		dispatch_command(this, command_id, wparam, lparam);
+	}
 
 	window_impl(
 		const std::wstring& text, short left, short top, short width,
@@ -274,33 +290,6 @@ public:
 
 	void visible(bool state) { window().visible(state); }
 	void enable(bool state) { window().enable(state); }
-
-	/**
-	 * Main message loop.
-	 *
-	 * The main purpose of this handler is to synchronise C++ wrapper
-	 * and the real Win32 window.  The wrapper's fields can be set before the
-	 * real window is created and callers need access to the fields after the
-	 * real window is destroyed.  Therefore we push the data out to the
-	 * window when it's created and pull it back just before it's destroyed.
-	 *
-	 * We do this with the @c WM_CREATE and @c WM_DESTROY messages (rather
-	 * than @c WM_NCCREATE and @c WM_NCDESTROY) as we can't be sure of the
-	 * fields' integrity outside of this 'safe zone'.  For example, when
-	 * common controls 6 is enabled setting an icon before @c WM_CREATE
-	 * fails to show the icon.
-	 *
-	 * To prevent capturing creation of windows not directly part of our
-	 * dialog template, such as the system menu, we engage our CBT hook for
-	 * as short a period as possible.  Therefore we have to detach ourselves
-	 * in this function rather than from the CBT hook.
-	 *
-	 * @see ezel::detail::cbt_hook_function.
-	 */
-	LRESULT handle_message(unsigned int message, WPARAM wparam, LPARAM lparam)
-	{
-		return m_dispatch.dispatch_message(this, message, wparam, lparam);
-	}
 
 	/// @name Event handlers
 	// @{
@@ -358,6 +347,14 @@ public:
 		return res;
 	}
 
+	LRESULT on(message<WM_SHOWWINDOW> m)
+	{
+		m_on_showing(m.state());
+		LRESULT res = default_message_handler(m);
+		m_on_show(m.state());
+		return res;
+	}
+
 	// @}
 
 	/**
@@ -374,14 +371,20 @@ public:
 			m_real_window_proc, m_link.hwnd(), message_id, wparam, lparam);
 	}
 
+	template<UINT N>
+	LRESULT default_message_handler(const message<N>& m)
+	{
+		return default_message_handler(N, m.wparam(), m.lparam());
+	}
+
 	/**
-	 * Default WM_COMMAND message handler.
+	 * Default command handler.
 	 *
 	 * Command message that aren't handled elsewhere are dispatched to this
 	 * function.  By default, it does nothing.  Override if you want to
 	 * to handle unhandled command messages.
 	 */
-	virtual void on(const winapi::gui::command_base& unknown)
+	virtual void on(winapi::gui::command_base unknown)
 	{
 		(void)unknown;
 #ifdef _DEBUG
@@ -419,7 +422,7 @@ public:
 			window.change_window_procedure(window_impl_proc);
 	}
 
-	/// @name Events
+	/// @name Event delegates
 	// @{
 
 	boost::signal<void (const wchar_t*)>& on_text_change()
@@ -427,6 +430,9 @@ public:
 
 	boost::signal<void ()>& on_text_changed()
 	{ return m_on_text_changed; }
+
+	boost::signal<void (bool)>& on_showing() { return m_on_showing; }
+	boost::signal<void (bool)>& on_show() { return m_on_show; }
 
 	// @}
 
@@ -470,12 +476,6 @@ protected:
 	}
 
 private:
-
-	template<UINT N>
-	LRESULT default_message_handler(const message<N>& m)
-	{
-		return default_message_handler(N, m.wparam(), m.lparam());
-	}
 
 	/**
 	 * Break the two-way link between this C++ wrapper object and the
@@ -524,14 +524,14 @@ private:
 		m_window;
 	WNDPROC m_real_window_proc; ///< Wrapped window's default message
 	                            ///< handler
-	message_dispatcher<
-		WM_CREATE, WM_DESTROY, WM_NCDESTROY, WM_SETTEXT> m_dispatch;
 
 	/// @name Events
 	// @{
 
 	boost::signal<void (const wchar_t*)> m_on_text_change;
 	boost::signal<void ()> m_on_text_changed;
+	boost::signal<void (bool)> m_on_showing;
+	boost::signal<void (bool)> m_on_show;
 
 	// @}
 };

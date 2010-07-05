@@ -71,15 +71,41 @@
 namespace ezel {
 namespace detail {
 
+template<typename T>
+inline LRESULT dispatch_message_next(
+	T* obj, UINT message_id, WPARAM wparam, LPARAM lparam);
+
 template<typename It, typename End, typename T>
-inline LRESULT dispatch(
+inline LRESULT dispatch_message_next(
 	T* obj, UINT message_id, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
 {
 	return obj->default_message_handler(message_id, wparam, lparam);
 }
 
 template<typename It, typename End, typename T>
-inline LRESULT dispatch(
+inline LRESULT dispatch_message_next(
+	T* obj, UINT message_id, WPARAM wparam, LPARAM lparam, boost::mpl::false_)
+{
+	return dispatch_message<T::super>(obj, message_id, wparam, lparam);
+}
+
+/**
+ * Dispatch conditionally based on whether we're at end of superclass chain.
+ *
+ * If we are, this message goes to the default message handler.  Otherwise,
+ * we create a dispatch for the superclasses message map and delegate
+ * dispatch there.
+ */
+template<typename It, typename End, typename T>
+inline LRESULT dispatch_message(
+	T* obj, UINT message_id, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
+{
+	return dispatch_message_next<It, End>(
+		obj, message_id, wparam, lparam, boost::is_same<T, T::super>::type());
+}
+
+template<typename It, typename End, typename T>
+inline LRESULT dispatch_message(
 	T* obj, UINT message_id, WPARAM wparam, LPARAM lparam, boost::mpl::false_)
 {
 	typedef boost::mpl::deref<It>::type Front;
@@ -87,20 +113,41 @@ inline LRESULT dispatch(
 
 	if(message_id == Front::value)
 	{
-		return obj->on(winapi::gui::message<Front::value>(wparam, lparam));
+		return obj->on(message<Front::value>(wparam, lparam));
 	}
 	else
 	{
-		return dispatch<Next, End>(
+		return dispatch_message<Next, End>(
 			obj, message_id, wparam, lparam,
 			typename boost::is_same<Next, End>::type());
 	}
 }
 
-template<EZEL_MESSAGE_MAP_TEMPLATE>
-class message_dispatcher
+/**
+ * Main message handler.
+ *
+ * Messages are dispatched to the superclasses of T one at a time until one is
+ * found whose message map contains the current message.  Then its handler for
+ * that meassage is invoked.  If we reach the end of the chain without finding
+ * a matching map entry, the message is delivered to the default message
+ * handler.
+ */
+template<typename T>
+inline LRESULT dispatch_message(
+	T* obj, UINT message_id, WPARAM wparam, LPARAM lparam)
 {
-private:
+	typedef boost::mpl::begin<T::messages::messages>::type Begin;
+	typedef boost::mpl::end<T::messages::messages>::type End;
+
+	return dispatch_message<Begin, End>(
+		obj, message_id, wparam, lparam,
+		typename boost::is_same<Begin, End>::type());
+}
+
+template<EZEL_MESSAGE_MAP_TEMPLATE>
+class message_map
+{
+public:
 
 	// Zero (0) is used to indicate an unused template parameter.  To
 	// prevent us having to treat 0 as a special case, we filter it out of
@@ -109,21 +156,7 @@ private:
 		boost::mpl::vector_c<UINT, EZEL_MESSAGE_ARG>,
 		boost::mpl::not_equal_to< boost::mpl::_1, boost::mpl::int_<0> >,
 		boost::mpl::back_inserter< boost::mpl::vector_c<UINT> >
-	>::type message_map;
-
-public:
-
-	template<typename T>
-	inline LRESULT dispatch_message(
-		T* obj, UINT message_id, WPARAM wparam, LPARAM lparam)
-	{
-		typedef boost::mpl::begin<message_map>::type Begin;
-		typedef boost::mpl::end<message_map>::type End;
-
-		return dispatch<Begin, End>(
-			obj, message_id, wparam, lparam,
-			typename boost::is_same<Begin, End>::type());
-	}
+	>::type messages;
 };
 
 }} // namespace winapi::gui

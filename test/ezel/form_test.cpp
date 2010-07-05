@@ -47,14 +47,65 @@ using boost::bind;
 
 BOOST_AUTO_TEST_SUITE(form_tests)
 
+namespace {
+
+	class form1
+	{
+	public:
+		form1() : m_form(L"my title", 30, 40, 30, 30)
+		{
+			m_form.on_activate().connect(
+				boost::bind(&form1::test_creation_and_die, this));
+			m_form.show();
+		}
+
+
+		void test_creation_and_die(/*bool by_mouse*/)
+		{
+//			BOOST_CHECK(!by_mouse);
+			BOOST_CHECK_EQUAL(m_form.text(), L"my title");
+			m_form.end();
+		}
+
+		form& get_form() { return m_form; }
+
+	private:
+		form m_form;
+	};
+
+	class form2
+	{
+	public:
+		form2() : m_form(L"", 30, 40, 30, 30)
+		{
+			m_form.on_create().connect(
+				boost::bind(&form2::test_creation_and_die, this));
+			m_form.show();
+		}
+
+
+		bool test_creation_and_die()
+		{
+			BOOST_CHECK_EQUAL(m_form.text(), L"");
+			m_form.end();
+			return true;
+		}
+
+		form& get_form() { return m_form; }
+
+	private:
+		form m_form;
+	};
+}
+
 /**
- * Create a form without showing it.
+ * Create a form and test some basic properties.  Then destroy it and test
+ * them again.
  */
 BOOST_AUTO_TEST_CASE( create_form )
 {
-	form frm(L"my title", 30, 40, 30, 30);
-	frm.show();
-	BOOST_CHECK_EQUAL(frm.text(), L"my title");
+	form1 frm;
+	BOOST_CHECK_EQUAL(frm.get_form().text(), L"my title");
 }
 
 /**
@@ -62,9 +113,8 @@ BOOST_AUTO_TEST_CASE( create_form )
  */
 BOOST_AUTO_TEST_CASE( create_form_no_title )
 {
-	form frm(L"", 30, 40, 30, 30);
-	frm.show();
-	BOOST_CHECK_EQUAL(frm.text(), L"");
+	form2 frm;
+	BOOST_CHECK_EQUAL(frm.get_form().text(), L"");
 }
 
 /**

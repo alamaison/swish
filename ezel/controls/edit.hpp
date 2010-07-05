@@ -42,6 +42,15 @@ namespace controls {
 class edit_impl : public ezel::detail::window_impl
 {
 public:
+	typedef ezel::detail::window_impl super;
+
+	typedef ezel::detail::command_map<EN_CHANGE, EN_UPDATE> commands;
+
+	virtual void handle_command(
+		WORD command_id, WPARAM wparam, LPARAM lparam)
+	{
+		dispatch_command(this, command_id, wparam, lparam);
+	}
 
 	edit_impl(
 		const std::wstring& text, short left, short top, short width,
@@ -65,10 +74,10 @@ public:
 	boost::signal<void ()>& on_change() { return m_on_change; }
 	boost::signal<void ()>& on_update() { return m_on_update; }
 
-private:
-	void on(const winapi::gui::command<EN_CHANGE>&) { m_on_change(); }
-	void on(const winapi::gui::command<EN_UPDATE>&) { m_on_update(); }
+	void on(command<EN_CHANGE>) { m_on_change(); }
+	void on(command<EN_UPDATE>) { m_on_update(); }
 
+private:
 	boost::signal<void ()> m_on_change;
 	boost::signal<void ()> m_on_update;
 	DWORD m_custom_style;
