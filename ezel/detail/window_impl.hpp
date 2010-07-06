@@ -31,6 +31,7 @@
 #include <ezel/detail/command_dispatch.hpp> // command_map
 #include <ezel/detail/message_dispatch.hpp> // message_map
 #include <ezel/detail/window_link.hpp> // window_link
+#include <ezel/detail/window_proc.hpp> // window_proc_base, window_proc
 #include <ezel/detail/window_proxy.hpp> // window_proxy
 
 #include <winapi/gui/messages.hpp> // message
@@ -61,16 +62,7 @@ void catch_form_creation(HWND hwnd, unsigned int msg, LPARAM lparam);
 void catch_form_destruction(HWND hwnd, unsigned int msg);
 
 LRESULT CALLBACK window_impl_proc(
-	HWND hwnd, unsigned int message, WPARAM wparam, LPARAM lparam);
-
-struct handling_outcome
-{
-	enum type
-	{
-		fully_handled,
-		partially_handled
-	};
-};
+	HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 
 class window_impl;
 
@@ -264,8 +256,7 @@ public:
 		:
 		m_window(
 			boost::make_shared< fake_window<wchar_t> >(
-				true, true, text, left, top, width, height)),
-		m_real_window_proc(NULL) {}
+				true, true, text, left, top, width, height)) {}
 
 	virtual ~window_impl()
 	{
@@ -333,8 +324,9 @@ public:
 	 */
 	LRESULT on(message<WM_NCDESTROY> m)
 	{
+		LRESULT res = default_message_handler(m);
 		detach();
-		return default_message_handler(m);
+		return res;
 	}
 
 	// @}
@@ -367,8 +359,7 @@ public:
 	virtual LRESULT default_message_handler(
 		UINT message_id, WPARAM wparam, LPARAM lparam)
 	{
-		return ::CallWindowProcW(
-			m_real_window_proc, m_link.hwnd(), message_id, wparam, lparam);
+		return m_window_proc->do_default_handling(message_id, wparam, lparam);
 	}
 
 	template<UINT N>
@@ -416,10 +407,7 @@ public:
 		m_link = window_link<window_impl>(hwnd, this);
 		m_window.attach(hwnd);
 
-		// Replace the window's own Window proc with ours.
-		winapi::gui::window<wchar_t> window(hwnd);
-		m_real_window_proc =
-			window.change_window_procedure(window_impl_proc);
+		install_window_procedure();
 	}
 
 	/// @name Event delegates
@@ -475,6 +463,9 @@ protected:
 		m_window.push();
 	}
 
+	boost::shared_ptr<window_proc_base>& window_procedure()
+	{ return m_window_proc; }
+
 private:
 
 	/**
@@ -499,20 +490,27 @@ private:
 	{
 		assert(m_link.attached()); // why are we detaching a detached wrapper?
 
-		// Remove our window proc and put back the one it came with
-		winapi::gui::window<wchar_t> window(hwnd());
-		WNDPROC current_wndproc = window.window_procedure();
-		if (current_wndproc == window_impl_proc)
-		{
-			WNDPROC window_proc =
-				window.change_window_procedure(m_real_window_proc);
-			(void)window_proc;
-			assert(window_proc == window_impl_proc); // mustn't remove someone
-													 // else's window proc
-		}
+		remove_window_procedure();
 
 		m_window.detach();
 		m_link = window_link<window_impl>();
+	}
+
+	/**
+	 * Replace the window's own Window proc with ours.
+	 */
+	virtual void install_window_procedure()
+	{
+		window_procedure() =
+			boost::make_shared<window_proc>(hwnd(), window_impl_proc);
+	}
+
+	/**
+	 * Remove our window proc and put back the one it came with.
+	 */
+	virtual void remove_window_procedure()
+	{
+		window_procedure().reset();
 	}
 
 	internal_window<wchar_t>& window() { return *m_window; }
@@ -522,8 +520,7 @@ private:
 	window_proxy<
 		internal_window<wchar_t>, fake_window<wchar_t>, real_window<wchar_t> >
 		m_window;
-	WNDPROC m_real_window_proc; ///< Wrapped window's default message
-	                            ///< handler
+	boost::shared_ptr<window_proc_base> m_window_proc;
 
 	/// @name Events
 	// @{
@@ -541,14 +538,14 @@ private:
  * messages.
  */
 inline LRESULT CALLBACK window_impl_proc(
-	HWND hwnd, unsigned int message, WPARAM wparam, LPARAM lparam)
+	HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	try
 	{
 		window_impl* w = window_from_hwnd(hwnd);
 		return w->handle_message(message, wparam, lparam);
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		// We should always be able to get our window.  If we were able to
 		// replace the window proc with this one then we must have hooked

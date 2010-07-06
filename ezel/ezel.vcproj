@@ -89,6 +89,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\detail\window_proc.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\detail\window_proxy.hpp"
 				>
 			</File>

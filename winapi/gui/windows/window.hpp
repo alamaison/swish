@@ -204,8 +204,6 @@ public:
 	{
 		return set_window_field<T>(m_hwnd.get(), GWLP_WNDPROC, new_wndproc);
 	}
-
-protected:
 	
 	HWND hwnd() const { return m_hwnd.get(); }
 

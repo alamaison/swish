@@ -35,6 +35,7 @@
 #include <ezel/detail/hooks.hpp> // creation_hooks
 #include <ezel/detail/hwnd_linking.hpp> // fetch_user_window_data
 #include <ezel/detail/window_impl.hpp> // window_impl
+#include <ezel/detail/window_proc.hpp> // dialog_proc
 #include <ezel/window.hpp> // window
 
 #include <winapi/dynamic_link.hpp> // module_handle
@@ -61,13 +62,10 @@ namespace ezel {
 
 namespace detail {
 
-	void catch_form_creation(
-		HWND hwnd, unsigned int msg, LPARAM lparam);
-
-	void catch_form_destruction(HWND hwnd, unsigned int msg);
-
 	INT_PTR CALLBACK dialog_message_handler(
-		HWND hwnd, unsigned int msg, WPARAM wparam, LPARAM lparam);
+		HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+	INT_PTR CALLBACK dialog_creation_message_handler(
+		HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 	/**
 	 * Real form class implementation.
@@ -83,7 +81,7 @@ namespace detail {
 			return dispatch_message(this, message, wparam, lparam);
 		}
 
-		typedef message_map<WM_CLOSE, WM_ACTIVATE> messages;
+		typedef message_map<WM_INITDIALOG, WM_ACTIVATE, WM_CLOSE> messages;
 
 		form_impl(
 			const std::wstring& title, short left, short top, short width,
@@ -113,7 +111,7 @@ namespace detail {
 					winapi::module_handle(),
 					(buffer.empty()) ?
 						NULL : reinterpret_cast<DLGTEMPLATE*>(&buffer[0]),
-					hwnd_owner, dialog_message_handler,
+					hwnd_owner, dialog_creation_message_handler,
 					reinterpret_cast<LPARAM>(this));
 				if (rc < 1)
 					BOOST_THROW_EXCEPTION(
@@ -181,12 +179,13 @@ namespace detail {
 			return res;
 		}
 
-		BOOL on(const winapi::gui::message<WM_INITDIALOG>& /*message*/)
+		LRESULT on(message<WM_INITDIALOG> /*message*/)
 		{
 			// All our controls should have been created by now so stop
 			// monitoring window creation.  This prevents problems with
 			// the system menu which is created later.
 			unhook_window_creation();
+			push();
 
 			if (!m_on_create.empty())
 				return m_on_create() == TRUE;
@@ -198,9 +197,17 @@ namespace detail {
 
 	private:
 
-		friend void catch_form_creation(
-			HWND hwnd, unsigned int msg, LPARAM lparam);
-		friend INT_PTR CALLBACK dialog_message_handler(
+		/**
+		 * Replace the window's own window proc with ours.
+		 */
+		virtual void install_window_procedure()
+		{
+			window_procedure() =
+				boost::make_shared<dialog_proc>(
+					hwnd(), dialog_message_handler);
+		}
+
+		friend INT_PTR CALLBACK dialog_creation_message_handler(
 			HWND hwnd, unsigned int msg, WPARAM wparam, LPARAM lparam);
 
 		void hook_window_creation()
@@ -211,26 +218,6 @@ namespace detail {
 		void unhook_window_creation()
 		{
 			m_hooks.reset();
-		}
-
-		/**
-		 * Dispatch the dialog message to the message handlers.
-		 */
-		handling_outcome::type dispatch_dialog_message(
-			unsigned int msg, WPARAM wparam, LPARAM lparam, LRESULT& result)
-		{
-			switch (msg)
-			{
-			case WM_INITDIALOG:
-				// no option not to handle this message
-				result = on(
-					winapi::gui::message<WM_INITDIALOG>(wparam, lparam));
-				return handling_outcome::fully_handled;
-
-			default:
-				result = 0;
-				return handling_outcome::partially_handled;
-			}
 		}
 
 		/**
@@ -256,28 +243,20 @@ namespace detail {
 	};
 
 	/**
-	 * Inform C++ wrapper of Win32 dialog window creation, if any.
-	 */
-	inline void catch_form_creation(
-		HWND hwnd, unsigned int msg, LPARAM lparam)
-	{
-		if (msg != WM_INITDIALOG)
-			return;
-
-		// we stashed a pointer to our C++ form object in the creation
-		// data in the dialog template
-		// now we extract it here and use it to set up a two-way link
-		// between the C++ form object and the Win32 dialog object
-		form_impl* this_form = reinterpret_cast<form_impl*>(lparam);
-		this_form->attach(hwnd);
-	}
-
-	/**
 	 * Handle the bizarre return value rules for the dialog proc.
+	 *
+	 * @TODO  We always return false here after setting DWL_MSGRESULT. This
+	 *        means that default processing is always invoked.  However, in
+	 *        some cases we may wish to be able to suppress that.
+	 *        A solution might be to implement one of the strategies explained
+	 *        by Raymond Chen.
+	 *
+	 * @see http://blogs.msdn.com/b/oldnewthing/archive/2003/11/07/55619.aspx
+	 * @see http://blogs.msdn.com/b/oldnewthing/archive/2003/11/12/55659.aspx
+	 * @see http://blogs.msdn.com/b/oldnewthing/archive/2003/11/13/55662.aspx
 	 */
 	inline INT_PTR do_dialog_message_return(
-		unsigned int message, bool was_message_handled, LRESULT result,
-		HWND hwnd)
+		UINT message, LRESULT result, HWND hwnd)
 	{
 		switch (message)
 		{
@@ -295,50 +274,58 @@ namespace detail {
 				return result;
 			default:
 				::SetWindowLongW(hwnd, DWL_MSGRESULT, result);
-				return was_message_handled;
+				return FALSE; // always do default processing?
 		}
 	}
 
 	/**
-	 * Dialog proc handling message dispatch for forms.
-	 *
-	 * @param hwnd    Handle of the parent dialog (form).
-	 * @param msg     Message type
-	 * @param wparam  1st message parameter
-	 * @param lparam  2nd message parameter
+	 * Dialog proc hooking form classes to HWNDs on WM_INITDIALOG.
 	 */
-	inline INT_PTR CALLBACK dialog_message_handler(
-		HWND hwnd, unsigned int msg, WPARAM wparam, LPARAM lparam)
+	inline INT_PTR CALLBACK dialog_creation_message_handler(
+		HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		assert(msg != WM_CREATE); // apparently a dialog should never get this
 
-		LRESULT result = 0;
-		bool fully_handled = false;
+		if (msg != WM_INITDIALOG)
+			return FALSE;
 
 		try
 		{
-			catch_form_creation(hwnd, msg, lparam);
+			// we stashed a pointer to our C++ form object in the creation
+			// data in the dialog template
+			// now we extract it here and use it to set up a two-way link
+			// between the C++ form object and the Win32 dialog object
+			form_impl* this_form = reinterpret_cast<form_impl*>(lparam);
+			this_form->attach(hwnd);
+
+			LRESULT result = this_form->handle_message(msg, wparam, lparam);
+			return do_dialog_message_return(msg, result, hwnd);
 		}
-		catch (std::exception&) { /* ignore */ }
+		catch (const std::exception&) { /* ignore */ }
+
+		return FALSE;
+	}
+
+	/**
+	 * Dialog proc handling message dispatch for forms.
+	 */
+	inline INT_PTR CALLBACK dialog_message_handler(
+		HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	{
+		assert(msg != WM_CREATE); // apparently a dialog should never get this
 
 		try
 		{
 			form_impl* this_form = 
 				static_cast<form_impl*>(window_from_hwnd(hwnd));
 
-			assert(hwnd == this_form->hwnd());
-
-			handling_outcome::type handled = 
-				this_form->dispatch_dialog_message(
-					msg, wparam, lparam, result);
-
-			fully_handled = (handled == handling_outcome::fully_handled);
+			LRESULT result = this_form->handle_message(msg, wparam, lparam);
+			return do_dialog_message_return(msg, result, hwnd);
 		}
-		catch (std::exception&) { /* ignore */ }
+		catch (const std::exception&) { /* ignore */ }
 
-		return do_dialog_message_return(msg, fully_handled, result, hwnd);
+		return FALSE;
 	}
-
 }
 
 class form : public window<detail::form_impl>

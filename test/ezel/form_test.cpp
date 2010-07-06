@@ -96,6 +96,43 @@ namespace {
 	private:
 		form m_form;
 	};
+
+	/**
+	 * Monitor text change event.
+	 */
+	class form3
+	{
+	public:
+		form3() :
+			m_form(L"initial text", 30, 40, 30, 30),
+			m_change_detected(false)
+		{
+			m_form.on_create().connect(
+				boost::bind(&form3::test_and_die, this));
+			m_form.on_text_changed().connect(
+				boost::bind(&form3::text_changed, this));
+			m_form.show();
+		}
+
+		void text_changed()
+		{
+			m_change_detected = true;
+		}
+
+		bool test_and_die()
+		{
+			BOOST_CHECK_EQUAL(m_form.text(), L"initial text");
+			m_form.text(L"changed text");
+			BOOST_CHECK(m_change_detected);
+			BOOST_CHECK_EQUAL(m_form.text(), L"changed text");
+			m_form.end();
+			return true;
+		}
+
+	private:
+		form m_form;
+		bool m_change_detected;
+	};
 }
 
 /**
@@ -115,6 +152,15 @@ BOOST_AUTO_TEST_CASE( create_form_no_title )
 {
 	form2 frm;
 	BOOST_CHECK_EQUAL(frm.get_form().text(), L"");
+}
+
+/**
+ * Test that we can react to changes in form properties.
+ * In other words, test that events work for forms.
+ */
+BOOST_AUTO_TEST_CASE( create_form_change_title )
+{
+	form3 frm;
 }
 
 /**

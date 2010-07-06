@@ -88,6 +88,10 @@
 				Name="windows"
 				>
 				<File
+					RelativePath=".\gui\windows\dialog.hpp"
+					>
+				</File>
+				<File
 					RelativePath=".\gui\windows\icon.hpp"
 					>
 				</File>
