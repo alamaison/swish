@@ -91,6 +91,9 @@ public:
 			m_sub_proc, m_window.hwnd(), message_id, wparam, lparam);
 	}
 
+protected:
+	winapi::gui::window<wchar_t>& window() { return m_window; }
+
 private:
 	winapi::gui::window<wchar_t> m_window;
 	WNDPROC m_proc;
@@ -99,52 +102,28 @@ private:
 
 
 /**
- * Subclass the dialog manager with a custom dialog procedure (DLGPROC).
+ * Window proc for dialog window.
+ *
+ * Delegates default processing to DefDlgProc as in the alternative
+ * dialog handling method explained by Raymond Chen.
+ *
+ * Your dialog loop will still be called but only if default processing
+ * is invoked.  Generally you should just return FALSE to allow the
+ * dialog manager to handle the message.
+ * 
+ * @see http://blogs.msdn.com/b/oldnewthing/archive/2003/11/13/55662.aspx
  */
-class dialog_proc : public window_proc_base
+class dialog_proc : public window_proc
 {
 public:
 
-	/**
-	 * Subclass dialog.
-	 */
-	dialog_proc(HWND hwnd, DLGPROC new_proc) :
-		m_dialog(hwnd), m_proc(new_proc),
-		m_sub_proc(m_dialog.change_dialog_procedure(m_proc)) {}
-
-	/**
-	 * Unsubclass dialog.
-	 */
-	~dialog_proc()
-	{
-		try
-		{
-			DLGPROC current_dlgproc = m_dialog.dialog_procedure();
-			if (current_dlgproc == m_proc)
-			{
-				DLGPROC proc = m_dialog.change_dialog_procedure(m_sub_proc);
-				(void)proc;
-				assert(proc == m_proc); // mustn't remove someone else's
-				                        // dialog procedure
-			}
-		}
-		catch (const std::exception& e)
-		{
-			winapi::trace("dialog_proc destructor threw exception: %s")
-				% boost::diagnostic_information(e);
-		}
-	}
+	dialog_proc(HWND hwnd, WNDPROC new_proc) : window_proc(hwnd, new_proc) {}
 
 	virtual LRESULT do_default_handling(
 		UINT message_id, WPARAM wparam, LPARAM lparam)
 	{
-		return FALSE;
+		return ::DefDlgProc(window().hwnd(), message_id, wparam, lparam);
 	}
-
-private:
-	winapi::gui::dialog_window<wchar_t> m_dialog;
-	DLGPROC m_proc;
-	DLGPROC m_sub_proc; ///< Subclassed dialog's default message handler
 };
 
 }} // namespace ezel::detail
