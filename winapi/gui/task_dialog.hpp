@@ -56,6 +56,10 @@
     "publicKeyToken='6595b64144ccf1df' "\
     "language='*'\"")
 
+namespace winapi {
+namespace gui {
+namespace task_dialog {
+
 //
 // Our task dialog class is designed to fail gracefully even on versions of
 // Windows without TaskDialog support so we don't require
@@ -64,105 +68,97 @@
 // building for pre-Vista Windows.
 //
 
-#ifndef TASKDIALOGCONFIG
-
 #ifdef _WIN32
 #include <pshpack1.h>
 #endif
 
-typedef HRESULT (CALLBACK *PFTASKDIALOGCALLBACK)(
-	HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-	LONG_PTR lpRefData);
+	typedef HRESULT (CALLBACK *PFTASKDIALOGCALLBACK)(
+		HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+		LONG_PTR lpRefData);
 
-enum _TASKDIALOG_FLAGS
-{
-	TDF_ENABLE_HYPERLINKS               = 0x0001,
-	TDF_USE_HICON_MAIN                  = 0x0002,
-	TDF_USE_HICON_FOOTER                = 0x0004,
-	TDF_ALLOW_DIALOG_CANCELLATION       = 0x0008,
-	TDF_USE_COMMAND_LINKS               = 0x0010,
-	TDF_USE_COMMAND_LINKS_NO_ICON       = 0x0020,
-	TDF_EXPAND_FOOTER_AREA              = 0x0040,
-	TDF_EXPANDED_BY_DEFAULT             = 0x0080,
-	TDF_VERIFICATION_FLAG_CHECKED       = 0x0100,
-	TDF_SHOW_PROGRESS_BAR               = 0x0200,
-	TDF_SHOW_MARQUEE_PROGRESS_BAR       = 0x0400,
-	TDF_CALLBACK_TIMER                  = 0x0800,
-	TDF_POSITION_RELATIVE_TO_WINDOW     = 0x1000,
-	TDF_RTL_LAYOUT                      = 0x2000,
-	TDF_NO_DEFAULT_RADIO_BUTTON         = 0x4000,
-	TDF_CAN_BE_MINIMIZED                = 0x8000
-};
-typedef int TASKDIALOG_FLAGS;
+	enum _TASKDIALOG_FLAGS
+	{
+		TDF_ENABLE_HYPERLINKS               = 0x0001,
+		TDF_USE_HICON_MAIN                  = 0x0002,
+		TDF_USE_HICON_FOOTER                = 0x0004,
+		TDF_ALLOW_DIALOG_CANCELLATION       = 0x0008,
+		TDF_USE_COMMAND_LINKS               = 0x0010,
+		TDF_USE_COMMAND_LINKS_NO_ICON       = 0x0020,
+		TDF_EXPAND_FOOTER_AREA              = 0x0040,
+		TDF_EXPANDED_BY_DEFAULT             = 0x0080,
+		TDF_VERIFICATION_FLAG_CHECKED       = 0x0100,
+		TDF_SHOW_PROGRESS_BAR               = 0x0200,
+		TDF_SHOW_MARQUEE_PROGRESS_BAR       = 0x0400,
+		TDF_CALLBACK_TIMER                  = 0x0800,
+		TDF_POSITION_RELATIVE_TO_WINDOW     = 0x1000,
+		TDF_RTL_LAYOUT                      = 0x2000,
+		TDF_NO_DEFAULT_RADIO_BUTTON         = 0x4000,
+		TDF_CAN_BE_MINIMIZED                = 0x8000
+	};
+	typedef int TASKDIALOG_FLAGS;
 
-struct TASKDIALOG_BUTTON
-{
-	int     nButtonID;
-	PCWSTR  pszButtonText;
-};
+	struct TASKDIALOG_BUTTON
+	{
+		int     nButtonID;
+		PCWSTR  pszButtonText;
+	};
 
 #define TD_WARNING_ICON         MAKEINTRESOURCEW(-1)
 #define TD_ERROR_ICON           MAKEINTRESOURCEW(-2)
 #define TD_INFORMATION_ICON     MAKEINTRESOURCEW(-3)
 #define TD_SHIELD_ICON          MAKEINTRESOURCEW(-4)
 
-enum _TASKDIALOG_COMMON_BUTTON_FLAGS
-{
-	TDCBF_OK_BUTTON            = 0x0001,
-	TDCBF_YES_BUTTON           = 0x0002,
-	TDCBF_NO_BUTTON            = 0x0004,
-	TDCBF_CANCEL_BUTTON        = 0x0008,
-	TDCBF_RETRY_BUTTON         = 0x0010,
-	TDCBF_CLOSE_BUTTON         = 0x0020
-};
-typedef int TASKDIALOG_COMMON_BUTTON_FLAGS;
+	enum _TASKDIALOG_COMMON_BUTTON_FLAGS
+	{
+		TDCBF_OK_BUTTON            = 0x0001,
+		TDCBF_YES_BUTTON           = 0x0002,
+		TDCBF_NO_BUTTON            = 0x0004,
+		TDCBF_CANCEL_BUTTON        = 0x0008,
+		TDCBF_RETRY_BUTTON         = 0x0010,
+		TDCBF_CLOSE_BUTTON         = 0x0020
+	};
+	typedef int TASKDIALOG_COMMON_BUTTON_FLAGS;
 
-struct TASKDIALOGCONFIG
-{
-	UINT                           cbSize;
-	HWND                           hwndParent;
-	HINSTANCE                      hInstance;
-	TASKDIALOG_FLAGS               dwFlags;
-	TASKDIALOG_COMMON_BUTTON_FLAGS dwCommonButtons;
-	PCWSTR                         pszWindowTitle;
-	union
+	struct TASKDIALOGCONFIG
 	{
-		HICON  hMainIcon;
-		PCWSTR pszMainIcon;
+		UINT                           cbSize;
+		HWND                           hwndParent;
+		HINSTANCE                      hInstance;
+		TASKDIALOG_FLAGS               dwFlags;
+		TASKDIALOG_COMMON_BUTTON_FLAGS dwCommonButtons;
+		PCWSTR                         pszWindowTitle;
+		union
+		{
+			HICON  hMainIcon;
+			PCWSTR pszMainIcon;
+		};
+		PCWSTR                         pszMainInstruction;
+		PCWSTR                         pszContent;
+		UINT                           cButtons;
+		const TASKDIALOG_BUTTON        *pButtons;
+		int                            nDefaultButton;
+		UINT                           cRadioButtons;
+		const TASKDIALOG_BUTTON        *pRadioButtons;
+		int                            nDefaultRadioButton;
+		PCWSTR                         pszVerificationText;
+		PCWSTR                         pszExpandedInformation;
+		PCWSTR                         pszExpandedControlText;
+		PCWSTR                         pszCollapsedControlText;
+		union
+		{
+			HICON  hFooterIcon;
+			PCWSTR pszFooterIcon;
+		};
+		PCWSTR                         pszFooter;
+		PFTASKDIALOGCALLBACK           pfCallback;
+		LONG_PTR                       lpCallbackData;
+		UINT                           cxWidth;
 	};
-	PCWSTR                         pszMainInstruction;
-	PCWSTR                         pszContent;
-	UINT                           cButtons;
-	const TASKDIALOG_BUTTON        *pButtons;
-	int                            nDefaultButton;
-	UINT                           cRadioButtons;
-	const TASKDIALOG_BUTTON        *pRadioButtons;
-	int                            nDefaultRadioButton;
-	PCWSTR                         pszVerificationText;
-	PCWSTR                         pszExpandedInformation;
-	PCWSTR                         pszExpandedControlText;
-	PCWSTR                         pszCollapsedControlText;
-	union
-	{
-		HICON  hFooterIcon;
-		PCWSTR pszFooterIcon;
-	};
-	PCWSTR                         pszFooter;
-	PFTASKDIALOGCALLBACK           pfCallback;
-	LONG_PTR                       lpCallbackData;
-	UINT                           cxWidth;
-};
 
 
 #ifdef _WIN32
 #include <poppack.h>
 #endif
-
-#endif
-
-namespace winapi {
-namespace gui {
-namespace task_dialog {
 
 namespace detail {
 	typedef boost::function<
