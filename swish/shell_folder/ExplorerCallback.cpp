@@ -142,6 +142,7 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 			// in SFVM_UNMERGEMENU but this seems to happen automatically
 		}
 	case SFVM_SELECTIONCHANGED:
+	case SFVM_INITMENUPOPUP:
 		// Update the menus to match the current selection.
 		if (m_hToolsMenu)
 		{
@@ -166,6 +167,8 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg,
 
 			return S_OK;
 		}
+		
+		return E_UNEXPECTED;
 	case SFVM_INVOKECOMMAND:
 		{
 			// The DEFVIEW is telling us that a menu or toolbar item has been
