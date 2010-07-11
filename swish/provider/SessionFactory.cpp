@@ -49,7 +49,7 @@
 
 #include <comet/bstr.h> // bstr_t;
 
-#include <boost/filesystem.hpp> // path
+#include <boost/filesystem.hpp> // wpath
 #include <boost/filesystem/fstream.hpp> // ofstream
 
 #include <libssh2.h>
@@ -70,7 +70,7 @@ using ssh::knownhost::openssh_knownhost_collection;
 
 using comet::bstr_t;
 
-using boost::filesystem::path;
+using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 
 using ATL::CT2A;
@@ -119,7 +119,8 @@ using std::string;
 	return spSession;
 }
 
-const path known_hosts_path = home_directory<path>() / ".ssh" / "known_hosts";
+const wpath known_hosts_path =
+	home_directory<wpath>() / L".ssh" / L"known_hosts";
 
 void CSessionFactory::_VerifyHostKey(
 	PCWSTR pwszHost, CSession& session, ISftpConsumer *pConsumer)

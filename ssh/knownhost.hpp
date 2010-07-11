@@ -758,6 +758,29 @@ public:
 	}
 
 	/**
+	 * Initialise collection from an OpenSSH known_hosts file.
+	 *
+	 * @TODO  Make errinfo work with wide paths.
+	 */
+	openssh_knownhost_collection(
+		boost::shared_ptr<LIBSSH2_SESSION> session,
+		const boost::filesystem::wpath& filename)
+		: knownhost_collection(session)
+	{
+		boost::filesystem::ifstream file(filename);
+		if (!file)
+			BOOST_THROW_EXCEPTION(
+				boost::enable_error_info(
+					std::runtime_error(
+						"Could not read from known-hosts file")));/* <<
+				boost::errinfo_file_name(filename.external_file_string()));*/
+
+		load_entries<LIBSSH2_KNOWNHOST_FILE_OPENSSH>(
+			std::istream_iterator<detail::line>(file),
+			std::istream_iterator<detail::line>());
+	}
+
+	/**
 	 * Save range of entries to an output iterator in OpenSSH known_hosts
 	 * format.
 	 *
@@ -782,6 +805,25 @@ public:
 					std::runtime_error(
 						"Could not write to known-hosts file")) <<
 				boost::errinfo_file_name(filename.external_file_string()));
+
+		save(
+			begin(), end(), std::ostream_iterator<std::string>(file, "\n"));
+	}
+
+	/**
+	 * Save all entires to an OpenSSH known_hosts file.
+	 *
+	 * @TODO  Make errinfo work with wide paths.
+	 */
+	void save(const boost::filesystem::wpath& filename) const
+	{
+		boost::filesystem::ofstream file(filename);
+		if (!file)
+			BOOST_THROW_EXCEPTION(
+				boost::enable_error_info(
+					std::runtime_error(
+						"Could not write to known-hosts file"))/* <<
+			boost::errinfo_file_name(filename.external_file_string())*/);
 
 		save(
 			begin(), end(), std::ostream_iterator<std::string>(file, "\n"));
