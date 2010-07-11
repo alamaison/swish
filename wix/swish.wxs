@@ -4,7 +4,7 @@
   <?define IcuDllDir="$(var.SolutionDir)thirdparty\icu\bin\"?>
 
   <Product Id="*" Name="Swish"
-           Language="0" Version="0.4.1" Manufacturer="Alexander Lamaison"
+           Language="0" Version="0.4.2" Manufacturer="Alexander Lamaison"
            UpgradeCode="97CF376F-FFDE-472A-946B-E3F5D45229DA">
 
     <Package InstallerVersion="200" Compressed="yes"
@@ -13,7 +13,7 @@
     <Upgrade Id="97CF376F-FFDE-472A-946B-E3F5D45229DA">
       <UpgradeVersion OnlyDetect="no" Property="PREVIOUSFOUND"
         Minimum="0.1.0" IncludeMinimum="yes"
-        Maximum="0.4.1" IncludeMaximum="no" />
+        Maximum="0.4.2" IncludeMaximum="no" />
     </Upgrade>
 
     <InstallExecuteSequence>
