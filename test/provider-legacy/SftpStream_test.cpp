@@ -78,7 +78,6 @@ protected:
 	void testCreate()
 	{
 		shared_ptr<CSession> session(_CreateSession());
-		session->Connect(config.GetHost(), config.GetPort());
 
 		CComPtr<IStream> pStream = new CSftpStream(
 			session, "/var/log/messages", CSftpStream::read);

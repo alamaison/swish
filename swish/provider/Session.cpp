@@ -54,6 +54,7 @@ using swish::utils::WideStringToUtf8String;
 using boost::asio::ip::tcp;
 using boost::asio::error::host_not_found;
 using boost::shared_ptr;
+using boost::system::system_category;
 using boost::system::system_error;
 using boost::system::error_code;
 using boost::lexical_cast;
@@ -85,11 +86,36 @@ CSession::operator LIBSSH2_SFTP*() const
 	return m_sftp_session.get();
 }
 
+/**
+ * Has the connection broken since we connected?
+ *
+ * This only gives the correct answer as long as we're not expecting data
+ * to arrive on the socket. select()ing a silent socket should return 0. If it
+ * doesn't, it indicates that the connection is broken.
+ *
+ * XXX: we could double-check this by reading from the socket.  It would return
+ *      0 if the socket is closed.
+ *
+ * @see http://www.libssh2.org/mail/libssh2-devel-archive-2010-07/0050.shtml
+ */
+bool CSession::IsDead()
+{
+	fd_set socket_set;
+	FD_ZERO(&socket_set);
+	FD_SET(m_socket.native(), &socket_set);
+	TIMEVAL tv = TIMEVAL();
+
+	int rc = ::select(1, &socket_set, NULL, NULL, &tv);
+	if (rc < 0)
+		BOOST_THROW_EXCEPTION(
+			system_error(::WSAGetLastError(), system_category));
+	return rc != 0;
+}
+
 void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
 {
-	// Are we already connected?
 	if (m_bConnected)
-		return;
+		BOOST_THROW_EXCEPTION(std::logic_error("Already connected"));
 	
 	// Connect to host over TCP/IP
 	_OpenSocketToHost(pwszHost, uPort);
@@ -238,6 +264,9 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 	}
 	if (error)
 		BOOST_THROW_EXCEPTION(system_error(error));
+
+	assert(m_socket.is_open());
+	assert(m_socket.available() == 0);
 }
 
 /**

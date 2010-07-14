@@ -373,7 +373,7 @@ void provider::_Connect(com_ptr<ISftpConsumer> consumer)
 {
 	try
 	{
-		if (!m_session.get())
+		if (!m_session || m_session->IsDead())
 		{
 			m_session = CSessionFactory::CreateSftpSession(
 				m_host.c_str(), m_port, m_user.c_str(), consumer.get());

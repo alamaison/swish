@@ -53,6 +53,7 @@ public:
 	void Connect(const wchar_t* pwszHost, unsigned int uPort) throw(...);
 	void Disconnect();
 	void StartSftp() throw(...);
+	bool IsDead();
 
 	boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
 	boost::shared_ptr<LIBSSH2_SFTP> sftp() { return m_sftp_session; }
