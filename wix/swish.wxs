@@ -16,6 +16,10 @@
         Maximum="0.4.2" IncludeMaximum="no" />
     </Upgrade>
 
+    <Condition Message="Swish can't be installed on 64-bit Windows yet.">
+      <![CDATA[Not VersionNT64]]>
+    </Condition>
+
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallInitialize"/>
     </InstallExecuteSequence>
