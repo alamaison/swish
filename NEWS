@@ -1,3 +1,17 @@
+swish-0.4.2
+-Explicitly prevent 64-bit installation.
+-Fix bug where sessions couldn't be restored until Explorer restarted.
+-Fix bug with non-ASCII Windows usernames.
+
+swish-0.4.1
+-Write speeds 4x faster.
+-Huge reduction in GUI memory usage.
+-Confirmation before overwriting existing files.
+-Improved write progress indicator.
+-Better error reporting.
+-Fix bug where 'Remove' option missing from host menu. 
+-German translation.
+
 swish-0.4.0
 -Full support for files and directories with non-Latin Unicode names.
 
