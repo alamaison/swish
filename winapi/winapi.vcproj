@@ -166,6 +166,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\object_with_site.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\trace.hpp"
 			>
 		</File>

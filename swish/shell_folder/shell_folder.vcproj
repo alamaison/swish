@@ -279,7 +279,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ExplorerCallback.h"
+				RelativePath=".\ExplorerCallback.hpp"
 				>
 			</File>
 			<File

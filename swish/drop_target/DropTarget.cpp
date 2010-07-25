@@ -546,35 +546,11 @@ CDropTarget::CDropTarget(
 	shared_ptr<CopyCallback> callback)
 	:
 	m_provider(provider), m_consumer(consumer), m_remote_path(remote_path),
-		m_callback(callback) {}
+	m_callback(callback) {}
 
-STDMETHODIMP CDropTarget::SetSite(IUnknown* pUnkSite)
+void CDropTarget::on_set_site(com_ptr<IUnknown> ole_site)
 {
-	try
-	{
-		m_ole_site = pUnkSite;
-		m_callback->site(m_ole_site);
-	}
-	COM_CATCH_AUTO_INTERFACE();
-
-	return S_OK;
-}
-
-STDMETHODIMP CDropTarget::GetSite(REFIID riid, void** ppvSite)
-{
-	try
-	{
-		if (!ppvSite)
-			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-		*ppvSite = NULL;
-
-		HRESULT hr = m_ole_site.get()->QueryInterface(riid, ppvSite);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(m_ole_site, hr));
-	}
-	COM_CATCH_AUTO_INTERFACE();
-
-	return S_OK;
+	m_callback->site(ole_site);
 }
 
 /**

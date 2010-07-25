@@ -30,7 +30,6 @@
 #include "SftpDirectory.h"
 #include "SftpDataObject.h"
 #include "IconExtractor.h"
-#include "ExplorerCallback.h"      // Interaction with Explorer window
 #include "UserInteraction.h"       // Implementation of ISftpConsumer
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
@@ -40,6 +39,7 @@
 #include "swish/exception.hpp"     // com_exception
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
+#include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
@@ -58,6 +58,7 @@ using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
+using swish::shell_folder::CExplorerCallback;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::tracing::trace;
 
@@ -556,7 +557,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
  */
 CComPtr<IShellFolderViewCB> CRemoteFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return CExplorerCallback::Create(root_pidl().get());
+	return new CExplorerCallback(root_pidl());
 }
 
 

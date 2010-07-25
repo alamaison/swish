@@ -1,11 +1,11 @@
 /**
     @file
 
-	Handler for the Shell Folder View's interaction with Explorer.
+    Handler for Shell Folder View's interaction with Explorer.
 
     @if licence
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,40 +24,333 @@
     @endif
 */
 
-#include "ExplorerCallback.h"
+#include "ExplorerCallback.hpp"
 
-#include "data_object/ShellDataObject.hpp"  // PidlFormat
-#include "Registry.h"
 #include "swish/shell_folder/commands/host/host.hpp" // host commands
-#include "swish/debug.hpp"
-#include "swish/catch_com.hpp" // catchCom
-#include "swish/exception.hpp"
 
-#include <strsafe.h>          // For StringCchCopy
+#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/error.hpp> // last_error
+#include <winapi/trace.hpp> // trace
 
+#include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
+#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
+#include <cassert> // assert
+#include <stdexcept> // logic_error
 #include <string>
-#include <vector>
 
-using ATL::CComPtr;
-using ATL::CComQIPtr;
-using ATL::CString;
-
-using std::wstring;
-using std::vector;
-
-using swish::exception::com_exception;
-using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::commands::host::Add;
 using swish::shell_folder::commands::host::Remove;
 
-#define SFVM_SELECTIONCHANGED 8
+using comet::com_error;
+using comet::com_ptr;
 
-HRESULT CExplorerCallback::Initialize( PCIDLIST_ABSOLUTE pidl )
+using winapi::last_error;
+using winapi::shell::pidl::apidl_t;
+using winapi::trace;
+
+using boost::diagnostic_information;
+using boost::enable_error_info;
+using boost::errinfo_api_function;
+
+using std::wstring;
+
+template<> struct comet::comtype<IServiceProvider>
 {
-	m_pidl = ::ILCloneFull(pidl);
-	return (m_pidl) ? S_OK : E_OUTOFMEMORY;
+	static const IID& uuid() throw() { return IID_IServiceProvider; }
+	typedef IUnknown base;
+};
+
+template<> struct comet::comtype<IShellBrowser>
+{
+	static const IID& uuid() throw() { return IID_IShellBrowser; }
+	typedef IUnknown base;
+};
+
+namespace swish {
+namespace shell_folder {
+
+namespace {
+
+	// Menu command ID offsets for Explorer Tools menu
+	enum MENUOFFSET
+	{
+		MENUIDOFFSET_FIRST = 0,
+		MENUIDOFFSET_ADD = MENUIDOFFSET_FIRST,
+		MENUIDOFFSET_REMOVE,
+		MENUIDOFFSET_LAST = MENUIDOFFSET_REMOVE
+	};
+
+	HMENU submenu_from_menu(HMENU parent_menu, UINT menu_id)
+	{
+		MENUITEMINFO info = MENUITEMINFO();
+		info.cbSize = sizeof(MENUITEMINFO);
+		info.fMask = MIIM_SUBMENU; // Item we're requesting
+
+		BOOL success = ::GetMenuItemInfo(parent_menu, menu_id, FALSE, &info);
+		if (success == FALSE)
+			BOOST_THROW_EXCEPTION(
+				enable_error_info(last_error()) << 
+				errinfo_api_function("GetMenuItemInfo"));
+
+		return info.hSubMenu;
+	}
+
+	/**
+	 * Get handle to explorer 'Tools' menu.
+	 *
+	 * The menu we want to insert into is actually the @e submenu of the
+	 * Tools menu @e item.  Confusing!
+	 */
+	HMENU tools_menu_with_fallback(HMENU parent_menu)
+	{
+		try
+		{
+			return submenu_from_menu(parent_menu, FCIDM_MENU_TOOLS);
+		}
+		catch (const std::exception& e)
+		{
+			trace("Failed getting tools menu: %s") % diagnostic_information(e);
+
+			// Fall back to using File menu
+			return submenu_from_menu(parent_menu, FCIDM_MENU_FILE);
+		}
+	}
+
+	#define SFVM_SELECTIONCHANGED 8
+
+	/**
+	 * Return the parent IShellBrowser from an OLE site.
+	 */
+	com_ptr<IShellBrowser> shell_browser(com_ptr<IUnknown> ole_site)
+	{
+		if (!ole_site)
+			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+
+		com_ptr<IServiceProvider> sp = try_cast(ole_site);
+
+		com_ptr<IShellBrowser> browser;
+		HRESULT hr = sp->QueryService(SID_SShellBrowser, browser.out());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(sp, hr));
+
+		return browser;
+	}
+
+	/**
+	 * Return the parent IShellView of a shell browser.
+	 */
+	com_ptr<IShellView> shell_view(com_ptr<IShellBrowser> browser)
+	{
+		com_ptr<IShellView> view;
+		HRESULT hr = browser->QueryActiveShellView(view.out());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(browser, hr));
+
+		return view;
+	}
+	
+	/**
+	 * Return a DataObject representing the items currently selected.
+	 *
+	 * @return NULL if nothing is selected.
+	 */
+	com_ptr<IDataObject> selection_data_object(com_ptr<IShellBrowser> browser)
+	{
+		com_ptr<IShellView> view = shell_view(browser);
+
+		com_ptr<IDataObject> data_object;
+		view->GetItemObject(
+			SVGIO_SELECTION, data_object.iid(),
+			reinterpret_cast<void **>(data_object.out()));
+
+		// We don't care if getting the DataObject succeded - if it did, great;
+		// return it.  If not we will return a NULL pointer indicating that no
+		// items were selected
+
+		return data_object;
+	}
 }
 
+/**
+ * Create customisation callback object for Explorer default shell view.
+ *
+ * @param folder_pidl  Absolute PIDL to the folder for whom we are
+ *                     creating this callback object.
+ */
+CExplorerCallback::CExplorerCallback(const apidl_t& folder_pidl) :
+	m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_tools_menu(NULL),
+	m_first_command_id(0) {}
+
+/**
+ * The folder window is being created.
+ *
+ * The shell is notifying us of the folder view's window handle.
+ */
+bool CExplorerCallback::on_window_created(HWND hwnd_view)
+{
+	m_hwnd_view = hwnd_view;
+	return true;
+}
+
+/**
+ * Which events should the shell monitor for changes?
+ *
+ * We are notified via SFVM_FSNOTIFY if any events indicated here occurr.
+ *
+ * @TODO: It's possible that @a events already has events set in its bitmask
+ *        so maybe we should 'or' our extra events with it.
+ */
+bool CExplorerCallback::on_get_notify(
+	PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
+{
+	// Tell the shell that we might notify it of update events that
+	// apply to this folder (specified using our absolute PIDL)
+	events = SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
+		SHCNE_DELETE | SHCNE_RMDIR;
+	pidl_monitor = m_folder_pidl.get(); // Owned by us
+	return true;
+}
+
+/**
+ * An event has occurred affecting one of our items.
+ *
+ * Returning false prevents the default view from refreshing to reflect the
+ * change.
+ */
+bool CExplorerCallback::on_fs_notify(
+	PCIDLIST_ABSOLUTE /*pidl*/, LONG /*event*/)
+{
+	// The shell is telling us that an event (probably a SHChangeNotify
+	// of some sort) has affected one of our item.  Just nod.
+	// If we don't it doesn't work.
+	return true;
+}
+
+/**
+ * The DEFVIEW is asking us if we want to merge any items into
+ * the menu it has created before it adds it to the Explorer window.
+ */
+bool CExplorerCallback::on_merge_menu(QCMINFO& menu_info)
+{
+	assert(menu_info.idCmdFirst >= FCIDM_SHVIEWFIRST);
+	assert(menu_info.idCmdLast <= FCIDM_SHVIEWLAST);
+	//assert(::IsMenu(menu_info.hmenu));
+	m_first_command_id = menu_info.idCmdFirst;
+
+	// Try to get a handle to the  Explorer Tools menu and insert 
+	// add and remove connection menu items into it if we find it
+	m_tools_menu = tools_menu_with_fallback(menu_info.hmenu);
+	if (m_tools_menu)
+	{
+		Add add(m_hwnd_view, m_folder_pidl);
+		BOOL success = ::InsertMenu(
+			m_tools_menu, 2, MF_BYPOSITION,
+			m_first_command_id + MENUIDOFFSET_ADD,
+			add.title(NULL).c_str());
+		if (success == FALSE)
+			BOOST_THROW_EXCEPTION(
+				enable_error_info(last_error()) << 
+				errinfo_api_function("InsertMenu"));
+
+		Remove remove(m_hwnd_view, m_folder_pidl);
+		success = ::InsertMenu(
+			m_tools_menu, 3, MF_BYPOSITION | MF_GRAYED, 
+			m_first_command_id + MENUIDOFFSET_REMOVE,
+			remove.title(NULL).c_str());
+		if (success == FALSE)
+			BOOST_THROW_EXCEPTION(
+				enable_error_info(last_error()) << 
+				errinfo_api_function("InsertMenu"));
+
+		// Return value of last menu ID plus 1
+		menu_info.idCmdFirst += MENUIDOFFSET_LAST + 1; // Added 2 items
+	}
+
+	return true;
+
+	// I would have expected to have to remove these menu items
+	// in SFVM_UNMERGEMENU but this seems to happen automatically
+}
+
+bool CExplorerCallback::on_selection_changed(
+	SFVCB_SELECTINFO& /*selection_info*/)
+{
+	update_menus();
+	return true;
+}
+
+/**
+ * The view is about to display a popup menu.
+ *
+ * This gives us the chance to modify the menu before it is displayed.
+ *
+ * @param first_command_id  First ID reserved for client commands.
+ * @param menu_index        Menu's index.
+ * @param menu              Menu's handle.
+ */
+bool CExplorerCallback::on_init_menu_popup(
+	UINT /*first_command_id*/, int /*menu_index*/, HMENU /*menu*/)
+{
+	update_menus();
+	return true;
+}
+
+/**
+ * DEFVIEW is telling us that a menu or toolbar item has been invoked 
+ * in the Explorer window and is giving us a chance to react to it.
+ */
+bool CExplorerCallback::on_invoke_command(UINT command_id)
+{
+	if (command_id == MENUIDOFFSET_ADD)
+	{
+		Add command(m_hwnd_view, m_folder_pidl);
+		command(selection(), NULL);
+		return true;
+	}
+	else if (command_id == MENUIDOFFSET_REMOVE)
+	{
+		Remove command(m_hwnd_view, m_folder_pidl);
+		command(selection(), NULL);
+		return true;
+	}
+
+	return false;
+}
+
+#pragma warning(push)
+#pragma warning(disable:4996) // std::copy ... may be unsafe
+
+/**
+ * Specify help text for menu or toolbar items.
+ */
+bool CExplorerCallback::on_get_help_text(
+	UINT command_id, UINT buffer_size, LPTSTR buffer)
+{
+	wstring help_text;
+	if (command_id == MENUIDOFFSET_ADD)
+	{
+		Add command(m_hwnd_view, m_folder_pidl);
+		help_text = command.tool_tip(selection());
+	}
+	else if (command_id == MENUIDOFFSET_REMOVE)
+	{
+		Remove command(m_hwnd_view, m_folder_pidl);
+		help_text = command.tool_tip(selection());
+	}
+	else
+	{
+		return false;
+	}
+	
+	size_t copied = help_text.copy(buffer, buffer_size - 1);
+	buffer[copied] = _T('\0');
+	return true;
+}
+
+#pragma warning(pop)
 
 /**
  * Callback method for shell DEFVIEW to inform HostFolder as things happen.
@@ -67,279 +360,123 @@ HRESULT CExplorerCallback::Initialize( PCIDLIST_ABSOLUTE pidl )
  * going on.  As things happen in the view, messages are sent to this
  * callback allowing us to react to them.
  *
- * @param uMsg The @c SFVM_* message type that the view is sending us.
- * @param wParam One of the possible parameters (varies with message type).
- * @param lParam Another possible parameter (varies with message type).
+ * @param message  The @c SFVM_* message type that the view is sending us.
+ * @param wparam   One of the possible parameters (varies with message type).
+ * @param lparam   Another possible parameter (varies with message type).
  *
  * @returns @c S_OK if we handled the message or @c E_NOTIMPL if we did not.
  */
-STDMETHODIMP CExplorerCallback::MessageSFVCB( UINT uMsg, 
-                                              WPARAM wParam, LPARAM lParam )
+STDMETHODIMP CExplorerCallback::MessageSFVCB(
+	UINT message, WPARAM wparam, LPARAM lparam)
 {
-	ATLASSUME(m_pidl);
-
-	switch (uMsg)
-	{
-	case SFVM_WINDOWCREATED:
-		m_hwndView = (HWND)wParam;
-		return S_OK;
-	case SFVM_GETNOTIFY:
-		// Tell the shell that we might notify it of update events that
-		// apply to this folder (specified using our absolute PIDL)
-		*reinterpret_cast<LONG*>(lParam) = 
-			SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
-			SHCNE_DELETE | SHCNE_RMDIR;
-		*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam) = m_pidl; // Owned by us
-		return S_OK;
-	case SFVM_FSNOTIFY:
-		// The shell is telling us that an event (probably a SHChangeNotify
-		// of some sort) has affected one of our item.  Just nod.
-		return S_OK;
-	case SFVM_MERGEMENU:
-		{
-			// The DEFVIEW is asking us if we want to merge any items into
-			// the menu it has created before it adds it to the Explorer window
-
-			QCMINFO *pInfo = (LPQCMINFO)lParam;
-			ATLASSERT(pInfo);
-			ATLASSERT(pInfo->idCmdFirst >= FCIDM_SHVIEWFIRST );
-			ATLASSERT(pInfo->idCmdLast <= FCIDM_SHVIEWLAST );
-			//ATLASSERT(::IsMenu(pInfo->hmenu));
-			m_idCmdFirst = pInfo->idCmdFirst;
-
-			// Try to get a handle to the  Explorer Tools menu and insert 
-			// add and remove connection menu items into it if we find it
-			m_hToolsMenu = _GetToolsMenu(pInfo->hmenu);
-			if (m_hToolsMenu)
-			{
-				try
-				{
-					Add add(m_hwndView, m_pidl);
-					ATLVERIFY_REPORT(
-						::InsertMenu(
-							m_hToolsMenu, 2, MF_BYPOSITION, 
-							m_idCmdFirst + MENUIDOFFSET_ADD,
-							add.title(NULL).c_str()),
-						::GetLastError());
-					
-					Remove remove(m_hwndView, m_pidl);
-					ATLVERIFY_REPORT(
-						::InsertMenu(
-							m_hToolsMenu, 3, MF_BYPOSITION | MF_GRAYED, 
-							m_idCmdFirst + MENUIDOFFSET_REMOVE,
-							remove.title(NULL).c_str()),
-						::GetLastError());
-
-					// Return value of last menu ID plus 1
-					pInfo->idCmdFirst += MENUIDOFFSET_LAST+1; // Added 2 items
-				}
-				catchCom()
-			}
-
-			return S_OK;
-
-			// I would have expected to have to remove these menu items
-			// in SFVM_UNMERGEMENU but this seems to happen automatically
-		}
-	case SFVM_SELECTIONCHANGED:
-	case SFVM_INITMENUPOPUP:
-		// Update the menus to match the current selection.
-		if (m_hToolsMenu)
-		{
-			UINT flags;
-			try
-			{
-				Add add(m_hwndView, m_pidl);
-				flags = add.disabled(_GetSelectionDataObject().p, false) ? 
-					MF_GRAYED : MF_ENABLED;
-				ATLVERIFY(::EnableMenuItem(
-					m_hToolsMenu, m_idCmdFirst + MENUIDOFFSET_ADD,
-					MF_BYCOMMAND | flags) >= 0);
-
-				Remove remove(m_hwndView, m_pidl);
-				flags = remove.disabled(_GetSelectionDataObject().p, false) ?
-					MF_GRAYED : MF_ENABLED;
-				ATLVERIFY(::EnableMenuItem(
-					m_hToolsMenu, m_idCmdFirst + MENUIDOFFSET_REMOVE,
-					MF_BYCOMMAND | flags) >= 0);
-			}
-			catchCom()
-
-			return S_OK;
-		}
-		
-		return E_UNEXPECTED;
-	case SFVM_INVOKECOMMAND:
-		{
-			// The DEFVIEW is telling us that a menu or toolbar item has been
-			// invoked in the Explorer window and is giving us a chance to
-			// react to it
-
-			try
-			{
-				UINT idCmd = (UINT)wParam;
-				if (idCmd == MENUIDOFFSET_ADD)
-				{
-					Add command(m_hwndView, m_pidl);
-					command(_GetSelectionDataObject().p, NULL);
-					return S_OK;
-				}
-				else if (idCmd == MENUIDOFFSET_REMOVE)
-				{
-					
-					Remove command(m_hwndView, m_pidl);
-					command(_GetSelectionDataObject().p, NULL);
-					return S_OK;
-				}
-			}
-			catchCom()
-
-			return E_NOTIMPL;
-		}
-	case SFVM_GETHELPTEXT:
-		{
-			try
-			{
-				UINT idCmd = (UINT)(LOWORD(wParam));
-				UINT cchMax = (UINT)(HIWORD(wParam));
-				LPTSTR pszText = (LPTSTR)lParam;
-
-				if (idCmd == MENUIDOFFSET_ADD)
-				{
-					Add command(m_hwndView, m_pidl);
-					return ::StringCchCopy(
-						pszText, cchMax, command.tool_tip(
-							_GetSelectionDataObject().p).c_str());
-				}
-				else if (idCmd == MENUIDOFFSET_REMOVE)
-				{
-					Remove command(m_hwndView, m_pidl);
-					return ::StringCchCopy(
-						pszText, cchMax, command.tool_tip(
-							_GetSelectionDataObject().p).c_str());
-				}
-			}
-			catchCom()
-
-			return E_NOTIMPL;
-		}
-	default:
-		return E_NOTIMPL;
-	}
-
-	return E_NOTIMPL;
-}
-
-
-/*----------------------------------------------------------------------------*
- * Private functions
- *----------------------------------------------------------------------------*/
-
-/**
- * Get handle to explorer 'Tools' menu.
- *
- * The menu we want to insert into is actually the @e submenu of the
- * Tools menu @e item.  Confusing!
- */
-HMENU CExplorerCallback::_GetToolsMenu(HMENU hParentMenu)
-{
-	MENUITEMINFO info;
-	::ZeroMemory(&info, sizeof(MENUITEMINFO));
-	info.cbSize = sizeof(MENUITEMINFO);
-	info.fMask = MIIM_SUBMENU; // Item we are requesting
-
-	BOOL fSucceeded = ::GetMenuItemInfo(
-		hParentMenu, FCIDM_MENU_TOOLS, FALSE, &info);
-	REPORT(fSucceeded);
-	if (!fSucceeded) // Fall back to using File menu
-	{
-		::ZeroMemory(&info, sizeof(MENUITEMINFO));
-		info.cbSize = sizeof(MENUITEMINFO);
-		info.fMask = MIIM_SUBMENU; // Item we are requesting
-
-		fSucceeded = ::GetMenuItemInfo(
-			hParentMenu, FCIDM_MENU_FILE, FALSE, &info);
-		REPORT(fSucceeded);
-	}
-
-	return (fSucceeded) ? info.hSubMenu : NULL;
-}
-
-/**
- * Return whether the Remove Host menu should be enabled.
- */
-bool CExplorerCallback::_ShouldEnableRemove()
-{
+	bool handled = false;
 	try
 	{
-		PidlFormat format(_GetSelectionDataObject().p);
-		return format.pidl_count() == 1;
+		switch (message)
+		{
+		case SFVM_WINDOWCREATED:
+			handled = on_window_created(reinterpret_cast<HWND>(wparam));
+			break;
+
+		case SFVM_GETNOTIFY:
+			if (wparam == 0 || lparam == 0)
+				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+			handled = on_get_notify(
+				*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wparam),
+				*reinterpret_cast<LONG*>(lparam));
+			break;
+
+		case SFVM_FSNOTIFY:
+			handled = on_fs_notify(
+				reinterpret_cast<PCIDLIST_ABSOLUTE>(wparam), lparam);
+			break;
+
+		case SFVM_MERGEMENU:
+			if (lparam == 0)
+				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+			handled = on_merge_menu(*reinterpret_cast<QCMINFO*>(lparam));
+			break;
+		  
+		case SFVM_SELECTIONCHANGED:
+			// wparam's meaning is unknown
+			if (lparam == 0)
+				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+			handled = on_selection_changed(
+				*reinterpret_cast<SFVCB_SELECTINFO*>(lparam));
+			break;
+
+		case SFVM_INITMENUPOPUP:
+			handled = on_init_menu_popup(
+				LOWORD(wparam), HIWORD(wparam),
+				reinterpret_cast<HMENU>(lparam));
+			break;
+
+		case SFVM_INVOKECOMMAND:
+			handled = on_invoke_command(wparam);
+			break;
+
+		case SFVM_GETHELPTEXT:
+			handled = on_get_help_text(
+				LOWORD(wparam), HIWORD(wparam), 
+				reinterpret_cast<LPTSTR>(lparam));
+			break;
+
+		default:
+			handled = false;
+			break;
+		}
+
+		if (!handled)
+		{
+			// special treatment fo FSNOTIFY because it uses S_FALSE to
+			// suppress default processing.
+			if (message == SFVM_FSNOTIFY)
+				BOOST_THROW_EXCEPTION(com_error(S_FALSE));
+			else
+				BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
+		}
 	}
-	catch (com_exception)
-	{
-		return false;
-	}
+	COM_CATCH_AUTO_INTERFACE();
+
+	return S_OK;
 }
 
 /**
- * Return the single item in the ShellView that is currently selected.
- * Fail if more than one item is selected or if none is.
+ * Items currently selected in the folder view.
  */
-CAbsolutePidl CExplorerCallback::_GetSelectedItem()
+com_ptr<IDataObject> CExplorerCallback::selection()
 {
-	PidlFormat format(_GetSelectionDataObject().p);
-	if (format.pidl_count() != 1)
-		AtlThrow(E_FAIL);
-	return format.file(0).get();
+	com_ptr<IShellBrowser> browser = shell_browser(ole_site());
+
+	return selection_data_object(browser);
 }
 
 /**
- * Return a DataObject representing the items currently selected.
- *
- * @return NULL if nothing is selected.
+ * Update the menus to match the current selection.
  */
-CComPtr<IDataObject> CExplorerCallback::_GetSelectionDataObject()
+void CExplorerCallback::update_menus()
 {
-	CComPtr<IShellView> spView = _GetShellView();
-	CComPtr<IDataObject> spDataObject;
-	spView->GetItemObject(
-		SVGIO_SELECTION, __uuidof(IDataObject), (void **)&spDataObject);
+	if (!m_tools_menu)
+		BOOST_THROW_EXCEPTION(std::logic_error("Missing menu"));
 
-	// We don't care if getting the DataObject succeded - if it did, great;
-	// return it.  If not we will return a NULL pointer indicating that no
-	// items were selected
+	UINT flags;
+	int rc; (void)rc;
+	// Despite being declared as a BOOL, the return value of EnableMenuItem is
+	// not treated that way.  Only a value < 0 (technically -1) is an error.
 
-	return spDataObject;
+	Add add(m_hwnd_view, m_folder_pidl);
+	flags = add.disabled(selection(), false) ? MF_GRAYED : MF_ENABLED;
+	rc = ::EnableMenuItem(
+		m_tools_menu, m_first_command_id + MENUIDOFFSET_ADD,
+		MF_BYCOMMAND | flags);
+	assert(rc > -1);
+
+	Remove remove(m_hwnd_view, m_folder_pidl);
+	flags = remove.disabled(selection(), false) ? MF_GRAYED : MF_ENABLED;
+	rc = ::EnableMenuItem(
+		m_tools_menu, m_first_command_id + MENUIDOFFSET_REMOVE,
+		MF_BYCOMMAND | flags);
+	assert(rc > -1);
 }
 
-/**
- * Return the parent IShellView from the site set through IObjectWithSite.
- *
- * @throw AtlException if interface not found.
- */
-CComPtr<IShellView> CExplorerCallback::_GetShellView()
-{
-	CComPtr<IShellBrowser> spBrowser = _GetShellBrowser();
-	CComPtr<IShellView> spView;
-	ATLENSURE_SUCCEEDED(spBrowser->QueryActiveShellView(&spView));
-	return spView;
-}
-
-/**
- * Return the parent IShellBrowser from the site set through IObjectWithSite.
- *
- * @throw AtlException if interface not found.
- */
-CComPtr<IShellBrowser> CExplorerCallback::_GetShellBrowser()
-{
-	if (!m_spUnkSite)
-		AtlThrow(E_NOINTERFACE);
-
-	CComQIPtr<IServiceProvider> spSP = m_spUnkSite;
-	if (!spSP)
-		AtlThrow(E_NOINTERFACE);
-
-	CComPtr<IShellBrowser> spBrowser;
-	ATLENSURE_SUCCEEDED(spSP->QueryService(SID_SShellBrowser, &spBrowser));
-	return spBrowser;
-}
+}} // namespace swish::shell_folder

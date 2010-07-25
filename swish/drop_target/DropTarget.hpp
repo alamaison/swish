@@ -28,6 +28,8 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
+#include <winapi/object_with_site.hpp> // object_with_site
+
 #include <boost/filesystem.hpp>  // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr to UI callback
 
@@ -46,12 +48,6 @@ struct ISftpConsumer;
 template<> struct comet::comtype<IDropTarget>
 {
 	static const IID& uuid() throw() { return IID_IDropTarget; }
-	typedef IUnknown base;
-};
-
-template<> struct comet::comtype<IObjectWithSite>
-{
-	static const IID& uuid() throw() { return IID_IObjectWithSite; }
 	typedef IUnknown base;
 };
 
@@ -78,9 +74,12 @@ public:
 	virtual std::auto_ptr<Progress> progress() = 0;
 };
 
-class CDropTarget : public comet::simple_object<IDropTarget, IObjectWithSite>
+class CDropTarget :
+	public comet::simple_object<IDropTarget, winapi::object_with_site>
 {
 public:
+
+	typedef IDropTarget interface_is;
 
 	CDropTarget(
 		comet::com_ptr<ISftpProvider> provider,
@@ -112,22 +111,15 @@ public:
 
 	// @}
 
-	/** @name IObjectWithSite methods */
-	// @{
-
-	IFACEMETHODIMP SetSite(IUnknown* pUnkSite);
-	IFACEMETHODIMP GetSite(REFIID riid, void** ppvSite);
-
-	// @}
-
 private:
+
+	virtual void on_set_site(comet::com_ptr<IUnknown> ole_site);
 
 	comet::com_ptr<ISftpProvider> m_provider;
 	comet::com_ptr<ISftpConsumer> m_consumer;
 	boost::filesystem::wpath m_remote_path;
 	comet::com_ptr<IDataObject> m_data_object;
 	boost::shared_ptr<CopyCallback> m_callback;
-	comet::com_ptr<IUnknown> m_ole_site;
 };
 
 void copy_data_to_provider(

@@ -28,7 +28,6 @@
 #include "HostFolder.h"
 
 #include "RemoteFolder.h"
-#include "ExplorerCallback.h"     // For interaction with Explorer window
 #include "Registry.h"             // For saved connection details
 #include "host_management.hpp"
 #include "swish/catch_com.hpp" // catchCom
@@ -39,6 +38,7 @@
 #include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/shell_folder/commands/host/host.hpp" // host_folder_commands
+#include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
 #include "swish/trace.hpp" // trace
 
 #include <winapi/shell/shell.hpp> // strret_to_string
@@ -75,6 +75,7 @@ using swish::host_management::LoadConnectionsFromRegistry;
 using swish::exception::com_exception;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
+using swish::shell_folder::CExplorerCallback;
 using swish::shell_folder::commands::host::host_folder_command_provider;
 using swish::tracing::trace;
 
@@ -559,7 +560,7 @@ CComPtr<IDataObject> CHostFolder::data_object(
  */
 CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return CExplorerCallback::Create(root_pidl().get());
+	return new CExplorerCallback(root_pidl());
 }
 
 
