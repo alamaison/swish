@@ -24,13 +24,14 @@
     @endif
 */
 
-#include "swish/shell_folder/explorer_command.hpp" // test subject
+#include "swish/nse/explorer_command.hpp" // test subject
 
 #include "swish/shell_folder/commands/Command.hpp" // Command
 
 #include "test/common_boost/helpers.hpp"
 #include <boost/test/unit_test.hpp>
 
+#include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 #include <comet/uuid_fwd.h> // uuid_t
 
@@ -38,10 +39,11 @@
 
 #include <string>
 
-using swish::shell_folder::explorer_command::CExplorerCommandProvider;
-using swish::shell_folder::explorer_command::make_explorer_command;
+using swish::nse::CExplorerCommandProvider;
+using swish::nse::make_explorer_command;
 using swish::shell_folder::commands::Command;
 
+using comet::com_error;
 using comet::com_ptr;
 using comet::uuidof;
 using comet::uuid_t;
@@ -188,7 +190,7 @@ namespace {
 		void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
 		const
 		{
-			throw swish::exception::com_exception(E_ABORT);
+			throw com_error(E_ABORT);
 		}
 	};
 

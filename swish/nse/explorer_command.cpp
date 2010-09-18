@@ -26,24 +26,21 @@
 
 #include "explorer_command.hpp"
 
-#include "swish/catch_com.hpp" // catchCom
-#include "swish/exception.hpp" // com_exception
+#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
 
-#include <comet/uuid_fwd.h> // uuid_t
 #include <comet/enum.h> // stl_enumeration
 #include <comet/ptr.h> // com_ptr
+#include <comet/uuid_fwd.h> // uuid_t
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/foreach.hpp> // BOOST_FOREACH
 
-using swish::exception::com_exception;
-using swish::shell_folder::commands::Command;
+#include <Shlwapi.h> // SHStrDup
 
-using comet::uuid_t;
-using comet::stl_enumeration;
+using comet::com_error;
 using comet::com_ptr;
-
-using std::wstring;
+using comet::stl_enumeration;
+using comet::uuid_t;
 
 template<> struct comet::enumerated_type_of<IEnumExplorerCommand>
 { typedef IExplorerCommand* is; };
@@ -58,8 +55,7 @@ template<> struct comet::impl::type_policy<IExplorerCommand*>
 };
 
 namespace swish {
-namespace shell_folder {
-namespace explorer_command {
+namespace nse {
 
 #pragma region CExplorerCommandProvider implementation
 
@@ -77,7 +73,7 @@ CExplorerCommandProvider::CExplorerCommandProvider(
 		uuid_t guid;
 		HRESULT hr = c->GetCanonicalName(guid.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 		m_guid_mapping[guid] = c;
 	}
 }
@@ -97,7 +93,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommands(
 				m_commands, get_unknown());
 		return commands->QueryInterface(riid, ppv);
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -114,11 +110,11 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
 	{
 		command_map::const_iterator item = m_guid_mapping.find(rguidCommandId);
 		if (item == m_guid_mapping.end())
-			BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+			BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 		return item->second->QueryInterface(riid, ppv);
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -133,7 +129,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
  * @param[in]  psiItemArray  Optional array of PIDLs that command would be
  *                           executed upon.
  * @param[out] ppszName      Location in which to return character buffer
- *                           allocated with CoTakMemAlloc.
+ *                           allocated with CoTaskMemAlloc.
  */
 STDMETHODIMP CExplorerCommandImpl::GetTitle(
 	IShellItemArray* psiItemArray, wchar_t** ppszName)
@@ -147,9 +143,9 @@ STDMETHODIMP CExplorerCommandImpl::GetTitle(
 	{
 		HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -162,7 +158,7 @@ STDMETHODIMP CExplorerCommandImpl::GetTitle(
  * @param[in]  psiItemArray  Optional array of PIDLs that command would be
  *                           executed upon.
  * @param[out] ppszIcon      Location in which to return character buffer
- *                           allocated with CoTakMemAlloc.
+ *                           allocated with CoTaskMemAlloc.
  */
 STDMETHODIMP CExplorerCommandImpl::GetIcon(
 	IShellItemArray* psiItemArray, wchar_t** ppszIcon)
@@ -176,9 +172,9 @@ STDMETHODIMP CExplorerCommandImpl::GetIcon(
 	{
 		HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -189,7 +185,7 @@ STDMETHODIMP CExplorerCommandImpl::GetIcon(
  * @param[in]  psiItemArray  Optional array of PIDLs that command would be
  *                           executed upon.
  * @param[out] ppszInfotip   Location in which to return character buffer
- *                           allocated with CoTakMemAlloc.
+ *                           allocated with CoTaskMemAlloc.
  */
 STDMETHODIMP CExplorerCommandImpl::GetToolTip(
 	IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
@@ -203,9 +199,9 @@ STDMETHODIMP CExplorerCommandImpl::GetToolTip(
 	{
 		HRESULT hr = ::SHStrDup(tool_tip(psiItemArray).c_str(), ppszInfotip);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -226,7 +222,7 @@ STDMETHODIMP CExplorerCommandImpl::GetCanonicalName(GUID* pguidCommandName)
 	{
 		*pguidCommandName = canonical_name();
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -252,7 +248,7 @@ STDMETHODIMP CExplorerCommandImpl::GetState(
 	{
 		*pCmdState = state(psiItemArray, (fOkToBeSlow) ? true : false);
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -271,7 +267,7 @@ STDMETHODIMP CExplorerCommandImpl::Invoke(
 	{
 		invoke(psiItemArray, pbc);
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -287,7 +283,7 @@ STDMETHODIMP CExplorerCommandImpl::GetFlags(EXPCMDFLAGS* pFlags)
 	{
 		*pFlags = flags();
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -304,11 +300,11 @@ STDMETHODIMP CExplorerCommandImpl::EnumSubCommands(
 	{
 		*ppEnum = subcommands().detach();
 	}
-	catchCom();
+	COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
 
 #pragma endregion
 
-}}} // namespace swish::shell_folder::explorer_command
+}} // namespace swish::nse

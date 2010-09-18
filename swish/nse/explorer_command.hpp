@@ -24,12 +24,15 @@
     @endif
 */
 
+#ifndef SWISH_NSE_EXPLORER_COMMAND_HPP
+#define SWISH_NSE_EXPLORER_COMMAND_HPP
 #pragma once
 
-#include "swish/shell_folder/commands/Command.hpp" // Command
+#include "swish/nse/data_object_util.hpp" // data_object_from_item_array
 
-#include <comet/server.h> // simple_object
+#include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
+#include <comet/server.h> // simple_object
 #include <comet/uuid_fwd.h> // uuid
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -58,15 +61,8 @@ template<> struct comet::comtype<IEnumExplorerCommand>
 	typedef IUnknown base;
 };
 
-template<> struct comet::comtype<IDataObject>
-{
-	static const IID& uuid() throw() { return IID_IDataObject; }
-	typedef IUnknown base;
-};
-
 namespace swish {
-namespace shell_folder {
-namespace explorer_command {
+namespace nse {
 
 class CExplorerCommandProvider : 
 	public comet::simple_object<IExplorerCommandProvider>
@@ -171,38 +167,6 @@ private:
 	// @}
 };
 
-namespace {
-
-	/**
-	 * Convert a ShellItemArray to a DataObject.
-	 *
-	 * This DataObject hold the items in the array in the usual form
-	 * expected of a shell DataObject.
-	 *
-	 * @return  NULL if there is a failure.  This indicates that the array
-	 *          was empty.
-	 */
-	inline comet::com_ptr<IDataObject> data_object_from_item_array(
-		const comet::com_ptr<IShellItemArray>& items,
-		const comet::com_ptr<IBindCtx>& bind_ctx=NULL)
-	{
-		comet::com_ptr<IDataObject> data_object;
-		if (items)
-		{
-			items->BindToHandler(
-				bind_ctx.get(), BHID_DataObject, 
-				comet::uuidof(data_object.in()),
-				reinterpret_cast<void**>(data_object.out()));
-		}
-
-		// We don't care if binding succeeded - if it did, great; we pass
-		// the DataObject.  If not, the data_object pointer will be NULL
-		// and we can assume that no items were selected
-
-		return data_object;
-	}
-}
-
 /**
  * Implements IExplorerCommands by wrapping command functors.
  *
@@ -293,7 +257,7 @@ private:
 
 	comet::com_ptr<IEnumExplorerCommand> subcommands() const
 	{
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(E_NOTIMPL));
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
 	}
 
 	/**
@@ -321,4 +285,6 @@ inline comet::com_ptr<IExplorerCommand> make_explorer_command(T command)
 	return new CExplorerCommand<T>(command);
 }
 
-}}} // namespace swish::shell_folder::explorer_command
+}} // namespace swish::nse
+
+#endif

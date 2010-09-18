@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "swish/nse/UICommand.hpp" // IUIElement
 #include "swish/shell_folder/commands/Command.hpp" // Command
 
 #include <winapi/shell/pidl.hpp> // apidl_t
@@ -78,8 +79,18 @@ private:
 	HWND m_hwnd;
 	winapi::shell::pidl::apidl_t m_folder_pidl;
 };
-	
+
 comet::com_ptr<IExplorerCommandProvider> host_folder_command_provider(
+	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+
+std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
+host_folder_task_pane_titles(
+	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+
+std::pair<
+	comet::com_ptr<nse::IEnumUICommand>,
+	comet::com_ptr<nse::IEnumUICommand> >
+host_folder_task_pane_tasks(
 	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 
 }}}} // namespace swish::shell_folder::commands::host

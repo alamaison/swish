@@ -26,18 +26,11 @@
 
 #include "Command.hpp"
 
-#include "swish/exception.hpp" // com_exception
-
-#include <comet/interface.h> // uuidof
-
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
-
-using swish::exception::com_exception;
 
 using winapi::shell::pidl::apidl_t;
 
 using comet::com_ptr;
-using comet::uuidof;
 using comet::uuid_t;
 
 using std::wstring;
@@ -48,9 +41,11 @@ namespace commands {
 
 Command::Command(
 	const wstring& title, const uuid_t& guid,
-	const wstring& tool_tip, const wstring& icon_descriptor)
+	const wstring& tool_tip, const wstring& icon_descriptor,
+	const wstring& menu_title, const wstring& webtask_title)
 : m_title(title), m_guid(guid), m_tool_tip(tool_tip),
-  m_icon_descriptor(icon_descriptor) {}
+  m_icon_descriptor(icon_descriptor), m_menu_title(menu_title),
+  m_webtask_title(webtask_title) {}
 
 wstring Command::title(const comet::com_ptr<IDataObject>&) const
 { return m_title; }
@@ -63,5 +58,14 @@ wstring Command::tool_tip(const comet::com_ptr<IDataObject>&) const
 
 wstring Command::icon_descriptor(const comet::com_ptr<IDataObject>&) const 
 { return m_icon_descriptor; }
+
+wstring Command::menu_title(
+	const comet::com_ptr<IDataObject>& data_object) const
+{ return (m_menu_title.empty()) ? title(data_object) : m_menu_title; }
+
+wstring Command::webtask_title(
+	const comet::com_ptr<IDataObject>& data_object) const
+{ return (m_webtask_title.empty()) ? title(data_object) : m_webtask_title; }
+
 
 }}} // namespace swish::shell_folder::commands

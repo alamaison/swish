@@ -26,11 +26,15 @@
 
 #include "ExplorerCallback.hpp"
 
+#include "swish/nse/task_pane.hpp" // make_ui_command
+#include "swish/shell_folder/commands/Command.hpp" // MenuCommandTitleAdapter
 #include "swish/shell_folder/commands/host/host.hpp" // host commands
 
 #include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
 #include <winapi/error.hpp> // last_error
 #include <winapi/trace.hpp> // trace
+
+#include <comet/interface.h> // comtype
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
@@ -41,8 +45,13 @@
 #include <stdexcept> // logic_error
 #include <string>
 
+using swish::nse::IEnumUICommand;
+using swish::nse::IUIElement;
 using swish::shell_folder::commands::host::Add;
 using swish::shell_folder::commands::host::Remove;
+using swish::shell_folder::commands::host::host_folder_task_pane_tasks;
+using swish::shell_folder::commands::host::host_folder_task_pane_titles;
+using swish::shell_folder::commands::MenuCommandTitleAdapter;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -55,6 +64,7 @@ using boost::diagnostic_information;
 using boost::enable_error_info;
 using boost::errinfo_api_function;
 
+using std::pair;
 using std::wstring;
 
 template<> struct comet::comtype<IServiceProvider>
@@ -73,6 +83,13 @@ namespace swish {
 namespace shell_folder {
 
 namespace {
+
+	/// @name  Undocumented messages
+	// @{
+	const UINT SFVM_SELECTIONCHANGED = 8;
+	const UINT SFVM_GET_WEBVIEW_CONTENT = 83;
+	const UINT SFVM_GET_WEBVIEW_TASKS = 84;
+	// @}
 
 	// Menu command ID offsets for Explorer Tools menu
 	enum MENUOFFSET
@@ -118,8 +135,6 @@ namespace {
 			return submenu_from_menu(parent_menu, FCIDM_MENU_FILE);
 		}
 	}
-
-	#define SFVM_SELECTIONCHANGED 8
 
 	/**
 	 * Return the parent IShellBrowser from an OLE site.
@@ -245,7 +260,7 @@ bool CExplorerCallback::on_merge_menu(QCMINFO& menu_info)
 	m_tools_menu = tools_menu_with_fallback(menu_info.hmenu);
 	if (m_tools_menu)
 	{
-		Add add(m_hwnd_view, m_folder_pidl);
+		MenuCommandTitleAdapter<Add> add(m_hwnd_view, m_folder_pidl);
 		BOOL success = ::InsertMenu(
 			m_tools_menu, 2, MF_BYPOSITION,
 			m_first_command_id + MENUIDOFFSET_ADD,
@@ -255,7 +270,7 @@ bool CExplorerCallback::on_merge_menu(QCMINFO& menu_info)
 				enable_error_info(last_error()) << 
 				errinfo_api_function("InsertMenu"));
 
-		Remove remove(m_hwnd_view, m_folder_pidl);
+		MenuCommandTitleAdapter<Remove> remove(m_hwnd_view, m_folder_pidl);
 		success = ::InsertMenu(
 			m_tools_menu, 3, MF_BYPOSITION | MF_GRAYED, 
 			m_first_command_id + MENUIDOFFSET_REMOVE,
@@ -276,7 +291,7 @@ bool CExplorerCallback::on_merge_menu(QCMINFO& menu_info)
 }
 
 bool CExplorerCallback::on_selection_changed(
-	SFVCB_SELECTINFO& /*selection_info*/)
+	SFV_SELECTINFO& /*selection_info*/)
 {
 	update_menus();
 	return true;
@@ -353,6 +368,49 @@ bool CExplorerCallback::on_get_help_text(
 #pragma warning(pop)
 
 /**
+ * The shell view is requesting our expando title info.
+ * Undocumented by Microsoft.
+ *
+ * @see http://www.codeproject.com/KB/shell/foldertasks.aspx
+ * @see http://www.eggheadcafe.com/forumarchives/platformsdkshell/Feb2006/post25949644.asp
+ */
+bool CExplorerCallback::on_get_webview_content(
+	SFV_WEBVIEW_CONTENT_DATA& content_out)
+{
+	assert(content_out.pFolderTasksExpando == NULL);
+	assert(content_out.pExtraTasksExpando == NULL);
+	assert(content_out.pEnumRelatedPlaces == NULL);
+
+	pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
+		host_folder_task_pane_titles(m_hwnd_view, m_folder_pidl);
+
+	content_out.pExtraTasksExpando = tasks.first.detach();
+	content_out.pFolderTasksExpando = tasks.second.detach();
+	return true;
+}
+
+/**
+ * The shell view is requesting our expando members.
+ * Undocumented by Microsoft.
+ *
+ * @see http://www.codeproject.com/KB/shell/foldertasks.aspx
+ * @see http://www.eggheadcafe.com/forumarchives/platformsdkshell/Feb2006/post25949644.asp
+ */
+bool CExplorerCallback::on_get_webview_tasks(
+	SFV_WEBVIEW_TASKSECTION_DATA& tasks_out)
+{
+	assert(tasks_out.pEnumExtraTasks == NULL);
+	assert(tasks_out.pEnumFolderTasks == NULL);
+
+	pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
+		host_folder_task_pane_tasks(m_hwnd_view, m_folder_pidl);
+
+	tasks_out.pEnumExtraTasks = commands.first.detach();
+	tasks_out.pEnumFolderTasks = commands.second.detach();
+	return true;
+}
+
+/**
  * Callback method for shell DEFVIEW to inform HostFolder as things happen.
  *
  * This is the way in which the default @c IShellView object that we created
@@ -402,7 +460,7 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB(
 			if (lparam == 0)
 				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 			handled = on_selection_changed(
-				*reinterpret_cast<SFVCB_SELECTINFO*>(lparam));
+				*reinterpret_cast<SFV_SELECTINFO*>(lparam));
 			break;
 
 		case SFVM_INITMENUPOPUP:
@@ -419,6 +477,20 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB(
 			handled = on_get_help_text(
 				LOWORD(wparam), HIWORD(wparam), 
 				reinterpret_cast<LPTSTR>(lparam));
+			break;
+
+		case SFVM_GET_WEBVIEW_CONTENT:
+			if (lparam == 0)
+				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+			handled = on_get_webview_content(
+				*reinterpret_cast<SFV_WEBVIEW_CONTENT_DATA*>(lparam));
+			break;
+
+		case SFVM_GET_WEBVIEW_TASKS:
+			if (lparam == 0)
+				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+			handled = on_get_webview_tasks(
+				*reinterpret_cast<SFV_WEBVIEW_TASKSECTION_DATA*>(lparam));
 			break;
 
 		default:

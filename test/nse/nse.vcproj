@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test-shell_folder"
-	ProjectGUID="{6C4476D2-1CD6-4A97-B6B1-A106926F44AD}"
+	Name="test-nse"
+	ProjectGUID="{21A62AE6-312E-4BAD-BFDD-FE21170BA6EB}"
 	RootNamespace="test"
 	>
 	<Platforms>
@@ -56,8 +56,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
-				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -127,9 +125,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shell_folder.res"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -164,25 +160,21 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
-			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
 			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{23FF8881-F180-4389-A903-DFAB308CBF08}"
+			RelativePathToProject=".\swish\nse\nse.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
+			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
 	</References>
 	<Files>
 		<File
-			RelativePath=".\exception_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\file_group_descriptor_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\global_lock_test.cpp"
+			RelativePath=".\explorer_command_tests.cpp"
 			>
 		</File>
 		<File
@@ -208,26 +200,6 @@
 					UsePrecompiledHeader="1"
 				/>
 			</FileConfiguration>
-		</File>
-		<File
-			RelativePath=".\pool_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\sftp_data_object_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\shell_data_object_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\shell_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\utils_test.cpp"
-			>
 		</File>
 	</Files>
 	<Globals>

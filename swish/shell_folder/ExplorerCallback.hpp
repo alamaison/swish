@@ -31,6 +31,8 @@
 
 #include "HostPidl.h"
 
+#include "swish/nse/UICommand.hpp" // IUIElement, IEnumUICommand
+
 #include <winapi/object_with_site.hpp> // object_with_site
 #include <winapi/shell/pidl.hpp> // apidl_t
 
@@ -40,12 +42,6 @@
 template<> struct comet::comtype<IShellFolderViewCB>
 {
 	static const IID& uuid() throw() { return IID_IShellFolderViewCB; }
-	typedef IUnknown base;
-};
-
-template<> struct comet::comtype<IDataObject>
-{
-	static const IID& uuid() throw() { return IID_IDataObject; }
 	typedef IUnknown base;
 };
 
@@ -60,11 +56,42 @@ namespace shell_folder {
  *
  * Copyright (C) 1998-2003 Whirling Dervishes Software.
  */
-struct SFVCB_SELECTINFO
+struct SFV_SELECTINFO
 {
 	UINT uOldState; // 0
 	UINT uNewState; // LVIS_SELECTED, LVIS_FOCUSED,...
 	LPITEMIDLIST pidl;
+};
+
+/**
+ * SFVM_GET_WEBVIEW_CONTENT parameter.
+ *
+ * Undocumented by Microsoft.  Based on public domain code at
+ * http://www.whirlingdervishes.com/nselib/mfc/samples/source.php.
+ *
+ * Copyright (C) 1998-2003 Whirling Dervishes Software.
+ */
+struct SFV_WEBVIEW_CONTENT_DATA
+{
+	long l1;
+	long l2;
+	nse::IUIElement* pExtraTasksExpando; ///< Expando with dark title
+	nse::IUIElement* pFolderTasksExpando;
+	IEnumIDList* pEnumRelatedPlaces;
+};
+
+/**
+ * SFVM_GET_WEBVIEW_TASKS parameter.
+ *
+ * Undocumented by Microsoft.  Based on public domain code at
+ * http://www.whirlingdervishes.com/nselib/mfc/samples/source.php.
+ *
+ * Copyright (C) 1998-2003 Whirling Dervishes Software.
+ */
+struct SFV_WEBVIEW_TASKSECTION_DATA
+{
+	nse::IEnumUICommand *pEnumExtraTasks;
+	nse::IEnumUICommand *pEnumFolderTasks;
 };
 
 class CExplorerCallback :
@@ -90,10 +117,12 @@ private:
 	bool on_get_notify(PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events);
 	bool on_fs_notify(PCIDLIST_ABSOLUTE pidl, LONG event);
 	bool on_merge_menu(QCMINFO& menu_info);
-	bool on_selection_changed(SFVCB_SELECTINFO& selection_info);
+	bool on_selection_changed(SFV_SELECTINFO& selection_info);
 	bool on_init_menu_popup(UINT first_command_id, int menu_index, HMENU menu);
 	bool on_invoke_command(UINT command_id);
 	bool on_get_help_text(UINT command_id, UINT buffer_size, LPTSTR buffer);
+	bool on_get_webview_content(SFV_WEBVIEW_CONTENT_DATA& content_out);
+	bool on_get_webview_tasks(SFV_WEBVIEW_TASKSECTION_DATA& tasks_out);
 
 	// @}
 

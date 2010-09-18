@@ -190,10 +190,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\explorer_command.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ExplorerCallback.cpp"
 				>
 			</File>
@@ -272,10 +268,6 @@
 			>
 			<File
 				RelativePath=".\DataObject.h"
-				>
-			</File>
-			<File
-				RelativePath=".\explorer_command.hpp"
 				>
 			</File>
 			<File

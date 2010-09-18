@@ -27,39 +27,56 @@
 #include "host.hpp"
 
 #include "swish/forms/add_host.hpp" // add_host
-#include "swish/shell_folder/explorer_command.hpp" // CExplorerCommandProvider
+#include "swish/nse/explorer_command.hpp" // CExplorerCommandProvider
+#include "swish/nse/task_pane.hpp" // CUIElementImpl, make_ui_command
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/host_management.hpp" // AddConnectionToRegistry
 #include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
-#include "swish/exception.hpp" // com_exception
 
+#include <comet/error.h> // com_error
+#include <comet/server.h> // simple_object
+#include <comet/smart_enum.h> // make_smart_enumeration
 #include <comet/uuid_fwd.h> // uuid_t
 
 #include <boost/locale.hpp> // translate
+#include <boost/make_shared.hpp> // make_shared
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <cassert>
+#include <cassert> // assert
 #include <string>
+#include <utility> // make_pair
+#include <vector>
 
 using swish::forms::add_host;
 using swish::forms::host_info;
-using swish::shell_folder::explorer_command::CExplorerCommandProvider;
-using swish::shell_folder::explorer_command::make_explorer_command;
+using swish::nse::CExplorerCommandProvider;
+using swish::nse::CUIElementImpl;
+using swish::nse::IEnumUICommand;
+using swish::nse::IUICommand;
+using swish::nse::IUIElement;
+using swish::nse::make_explorer_command;
+using swish::nse::CUICommand;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::commands::Command;
+using swish::shell_folder::commands::WebtaskCommandTitleAdapter;
 using swish::host_management::AddConnectionToRegistry;
 using swish::host_management::RemoveConnectionFromRegistry;
 using swish::host_management::ConnectionExists;
-using swish::exception::com_exception;
 
 using winapi::shell::pidl::apidl_t;
 
-using comet::uuid_t;
+using comet::com_error;
 using comet::com_ptr;
-using comet::uuidof;
+using comet::make_smart_enumeration;
+using comet::simple_object;
+using comet::uuid_t;
 
 using boost::locale::translate;
+using boost::make_shared;
+using boost::shared_ptr;
 
+using std::make_pair;
+using std::vector;
 using std::wstring;
 
 namespace swish {
@@ -91,7 +108,8 @@ Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
 	Command(
 		translate("&Add SFTP Connection"), ADD_COMMAND_ID,
 		translate("Create a new SFTP connection with Swish."),
-		L"shell32.dll,-258"),
+		L"shell32.dll,-258", translate("&Add SFTP Connection..."),
+		translate("Add Connection")),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 bool Add::disabled(
@@ -111,7 +129,7 @@ const
 	host_info info = add_host(m_hwnd);
 
 	if (ConnectionExists(info.name))
-		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	AddConnectionToRegistry(
 		info.name, info.host, info.port, info.user, info.path);
@@ -123,7 +141,8 @@ Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
 	Command(
 		translate("&Remove SFTP Connection"), REMOVE_COMMAND_ID,
 		translate("Remove a SFTP connection created with Swish."),
-		L"shell32.dll,-240"),
+		L"shell32.dll,-240", translate("&Remove SFTP Connection..."),
+		translate("Remove Connection")),
 	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 bool Remove::disabled(
@@ -149,13 +168,13 @@ const
 	// XXX: for the moment we only allow removing one item.
 	//      is this what we want?
 	if (format.pidl_count() != 1)
-		BOOST_THROW_EXCEPTION(com_exception(E_FAIL));
+		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	CHostItemAbsolute pidl_selected = format.file(0).get();
 	wstring label = pidl_selected.FindHostPidl().GetLabel();
 	assert(!label.empty());
 	if (label.empty())
-		BOOST_THROW_EXCEPTION(com_exception(E_UNEXPECTED));
+		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 
 	RemoveConnectionFromRegistry(label);
 	notify_shell(m_folder_pidl);
@@ -168,6 +187,54 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
 	commands.push_back(make_explorer_command(Add(hwnd, folder_pidl)));
 	commands.push_back(make_explorer_command(Remove(hwnd, folder_pidl)));
 	return new CExplorerCommandProvider(commands);
+}
+
+class CSftpTasksTitle : public simple_object<CUIElementImpl>
+{
+public:
+
+	virtual std::wstring title(
+		const comet::com_ptr<IShellItemArray>& /*items*/) const
+	{
+		return translate("SFTP Tasks");
+	}
+
+	virtual std::wstring icon(
+		const comet::com_ptr<IShellItemArray>& /*items*/) const
+	{
+		return L"shell32.dll,-9";
+	}
+
+	virtual std::wstring tool_tip(
+		const comet::com_ptr<IShellItemArray>& /*items*/) const
+	{
+		return translate(
+			"These tasks help you manage Swish SFTP connections.");
+	}
+};
+
+std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
+host_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
+{
+	return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
+}
+
+std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
+host_folder_task_pane_tasks(HWND hwnd, const apidl_t& folder_pidl)
+{
+	typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
+	shared_command_vector commands =
+		make_shared< vector< com_ptr<IUICommand> > >();
+
+	commands->push_back(
+		new CUICommand< WebtaskCommandTitleAdapter<Add> >(hwnd, folder_pidl));
+	commands->push_back(
+		new CUICommand< WebtaskCommandTitleAdapter<Remove> >(hwnd, folder_pidl));
+
+	com_ptr<IEnumUICommand> e = 
+		make_smart_enumeration<IEnumUICommand>(commands);
+
+	return make_pair(e, com_ptr<IEnumUICommand>());
 }
 
 }}}} // namespace swish::shell_folder::commands::host

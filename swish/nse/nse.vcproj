@@ -139,6 +139,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\data_object_util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\explorer_command.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
@@ -158,6 +166,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\UICommand.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -165,7 +177,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\data_object_util.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\explorer_command.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\StaticColumn.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\task_pane.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UICommand.hpp"
 				>
 			</File>
 		</Filter>
