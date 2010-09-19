@@ -187,6 +187,18 @@ namespace {
 
 		return data_object;
 	}
+
+	bool is_vista_or_greater()
+	{
+		OSVERSIONINFO version = OSVERSIONINFO();
+		version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		if (::GetVersionEx(&version) == FALSE)
+			BOOST_THROW_EXCEPTION(
+				enable_error_info(last_error()) << 
+				errinfo_api_function("GetVersionEx"));
+
+		return version.dwMajorVersion > 5;
+	}
 }
 
 /**
@@ -381,6 +393,11 @@ bool CExplorerCallback::on_get_webview_content(
 	assert(content_out.pExtraTasksExpando == NULL);
 	assert(content_out.pEnumRelatedPlaces == NULL);
 
+	// HACK: webview conflicts with ExplorerCommands so we disable it if
+	//       ExplorerCommands are likely to be used.
+	if (is_vista_or_greater())
+		return false;
+
 	pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
 		host_folder_task_pane_titles(m_hwnd_view, m_folder_pidl);
 
@@ -401,6 +418,12 @@ bool CExplorerCallback::on_get_webview_tasks(
 {
 	assert(tasks_out.pEnumExtraTasks == NULL);
 	assert(tasks_out.pEnumFolderTasks == NULL);
+
+
+	// HACK: webview conflicts with ExplorerCommands so we disable it if
+	//       ExplorerCommands are likely to be used.
+	if (is_vista_or_greater())
+		return false;
 
 	pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
 		host_folder_task_pane_tasks(m_hwnd_view, m_folder_pidl);
