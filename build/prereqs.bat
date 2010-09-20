@@ -34,9 +34,9 @@ echo ===- Dowloading libssh2 ...
 %SEVENZ% x libssh2.tar -aoa || (
 	echo ===- Error while trying to extract libssh2 & goto error)
 xcopy /E /Q /Y libssh2-c87a48a libssh2 || (
-	echo ===- Error while trying to copy comet files & goto error)
+	echo ===- Error while trying to copy libssh2 files & goto error)
 rd /S /Q libssh2-c87a48a || (
-	echo ===- Error while trying to clean up comet files & goto error)
+	echo ===- Error while trying to clean up libssh2 files & goto error)
 del pax_global_header
 del libssh2.tar
 del libssh2.tar.gz
@@ -89,31 +89,23 @@ del a15550f5a011.zip
 
 echo.
 echo ===- Dowloading Boost.Locale ...
-%WGET% -O boost_locale.zip "http://downloads.sourceforge.net/project/cppcms/boost_locale/boost_locale-svn_r1112.zip" || (
+%WGET% -O boost_locale.tar.gz "http://cppcms.svn.sourceforge.net/viewvc/cppcms/boost_locale/branches/rework.tar.gz" || (
 	echo ===- Error while trying to download Boost.Locale & goto error)
-%SEVENZ% x boost_locale.zip -aoa || (
+%SEVENZ% x boost_locale.tar.gz -aoa || (
 	echo ===- Error while trying to extract Boost.Locale & goto error)
-xcopy /E /Q /Y boost_locale-svn_r1112 boost.locale || (
+%SEVENZ% x boost_locale.tar -aoa || (
+	echo ===- Error while trying to extract Boost.Locale & goto error)
+xcopy /E /Q /Y rework boost.locale || (
 	echo ===- Error while trying to copy Boost.Locale files & goto error)
-rd /S /Q boost_locale-svn_r1112 || (
+rd /S /Q rework || (
 	echo ===- Error while trying to clean up Boost.Locale files & goto error)
-del boost_locale.zip
-
-:: ICU
-
-echo.
-echo ===- Downloading ICU ...
-%WGET% -O icu.zip "http://download.icu-project.org/files/icu4c/4.0.1/icu4c-4_0_1-Win32-msvc8.zip" || (
-	echo ===- Error while trying to download ICU. & goto error)
-%SEVENZ% x icu.zip -aoa || (
-	echo ===- Error while trying to extract ICU. & goto error)
-del icu.zip
+del boost_locale.tar.gz
+del boost_locale.tar
 
 echo.
 echo ===- All build prerequisites successfully created.
 echo.
 if [%1]==[] pause
-pause
 exit /B 0
 
 :error

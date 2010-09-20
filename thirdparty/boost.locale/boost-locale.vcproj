@@ -43,8 +43,8 @@
 				AdditionalOptions=" /Zm1000"
 				Optimization="0"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="..\icu\include;.\libs\locale\..\..;"
-				PreprocessorDefinitions="WIN32,_WINDOWS,_DEBUG"
+				AdditionalIncludeDirectories="."
+				PreprocessorDefinitions="_DEBUG;BOOST_LOCALE_NO_STD_BACKEND;BOOST_LOCALE_NO_POSIX_BACKEND;BOOST_ALL_NO_LIB;BOOST_LOCALE_NO_ICONV;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,9 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="icudt.lib icuin.lib icuuc.lib"
 				OutputFile="$(OutDir)libboost_locale.lib"
-				AdditionalLibraryDirectories="..\icu\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -82,8 +80,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying Boost.Locale dependencies to the target directory..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icudt40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuin40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuuc40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 		<Configuration
@@ -108,24 +104,14 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32,_WINDOWS,NDEBUG,CMAKE_INTDIR=\&quot;Release\&quot;"
-				MkTypLibCompatible="false"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				TypeLibraryName="$(InputName).tlb"
-				OutputDirectory="$(IntDir)"
-				HeaderFileName="$(InputName).h"
-				DLLDataFileName=""
-				InterfaceIdentifierFileName="$(InputName)_i.c"
-				ProxyFileName="$(InputName)_p.c"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000"
 				Optimization="2"
 				InlineFunctionExpansion="2"
-				AdditionalIncludeDirectories="..\icu\include;.\libs\locale\..\..;"
-				PreprocessorDefinitions="WIN32,_WINDOWS,NDEBUG"
+				AdditionalIncludeDirectories="."
+				PreprocessorDefinitions="NDEBUG;BOOST_LOCALE_NO_STD_BACKEND;BOOST_LOCALE_NO_POSIX_BACKEND;BOOST_ALL_NO_LIB;BOOST_LOCALE_NO_ICONV;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
 				ProgramDataBaseFileName="libboost_locale.pdb"
@@ -142,9 +128,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="icudt.lib icuin.lib icuuc.lib"
 				OutputFile="$(OutDir)libboost_locale.lib"
-				AdditionalLibraryDirectories="..\icu\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -160,8 +144,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying Boost.Locale dependencies to the target directory..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icudt40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuin40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(SolutionDir)thirdparty\icu\bin\icuuc40.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 		</Configuration>
 	</Configurations>
@@ -171,119 +153,61 @@
 		<Filter
 			Name="Source Files"
 			>
+
 			<File
-				RelativePath=".\libs\locale\src\boundary.cpp"
-				>
+				RelativePath=".\libs\locale\src\encoding\codepage.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\codepage.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\date_time.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\collator.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\format.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\conversion.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\formatting.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\date_time.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\generator.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\format.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\ids.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\formatter.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\localization_backend.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\formatting.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\message.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\generator.cpp"
-				>
+				RelativePath=".\libs\locale\src\shared\mo_lambda.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\info.cpp"
-				>
+				RelativePath=".\libs\locale\src\util\info.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\message.cpp"
-				>
+				RelativePath=".\libs\locale\src\util\locale_data.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\mo_lambda.cpp"
-				>
+				RelativePath=".\libs\locale\src\util\default_locale.cpp">
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\time_zone.cpp"
-				>
+				RelativePath=".\libs\locale\src\util\codecvt_converter.cpp">
 			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			>
 			<File
-				RelativePath=".\boost\locale.hpp"
-				>
+				RelativePath=".\libs\locale\src\win32\collate.cpp">
 			</File>
-			<Filter
-				Name="locale"
-				>
-				<File
-					RelativePath=".\boost\locale\boundary.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\codepage.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\collator.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\config.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\conversion.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\date_time.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\format.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\formatting.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\generator.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\info.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\message.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\boost\locale\time_zone.hpp"
-					>
-				</File>
-			</Filter>
+			<File
+				RelativePath=".\libs\locale\src\win32\converter.cpp">
+			</File>
+			<File
+				RelativePath=".\libs\locale\src\win32\lcid.cpp">
+			</File>
+			<File
+				RelativePath=".\libs\locale\src\win32\numeric.cpp">
+			</File>
+			<File
+				RelativePath=".\libs\locale\src\win32\win_backend.cpp">
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

@@ -71,9 +71,6 @@ Requirements to build:
         Candidate boost library handling internationalisation.
         http://cppcms.sourceforge.net/boost_locale/html/index.html
         http://sourceforge.net/projects/cppcms/files/boost_locale
-    ICU
-        Internationalisation library used by Boost.Locale.
-        http://site.icu-project.org/
     Wix 3 with Votive
         Not required to build Swish itself but needed if you want to build
         the installer. http://wix.sourceforge.net/
