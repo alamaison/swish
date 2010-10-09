@@ -391,7 +391,7 @@ auto_ptr<Progress> DropUI::progress()
 	return auto_ptr<Progress>(
 		new AutoStartProgressDialog(
 			m_progress, m_hwnd_owner, PROGDLG_AUTOTIME,
-			translate("#Progress#Copying..."), m_ole_site));
+			translate("Progress", "Copying..."), m_ole_site));
 }
 
 }} // namespace swish::drop_target

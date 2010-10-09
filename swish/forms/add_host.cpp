@@ -140,7 +140,7 @@ namespace {
 				bind(&AddHostForm::update_validity, this));
 
 			m_form.add_control(
-				label(translate("#New Host#&Label:"), 12, 11, 28, 8));
+				label(translate("New Host", "&Label:"), 12, 11, 28, 8));
 			m_form.add_control(m_name_box);
 
 			m_form.add_control(
@@ -152,16 +152,16 @@ namespace {
 					"like to connect to:"), 12, 45, 258, 18));
 			
 			m_form.add_control(
-				label(translate("#New Host#&Host:"), 12, 60, 30, 8));
+				label(translate("New Host", "&Host:"), 12, 60, 30, 8));
 			m_form.add_control(m_host_box);
 
 			m_form.add_control(
-				label(translate("#New Host#&Port:"), 204, 60, 18, 8));
+				label(translate("New Host", "&Port:"), 204, 60, 18, 8));
 			m_form.add_control(m_port_box);
 			m_form.add_control(m_port_spinner);
 
 			m_form.add_control(
-				label(translate("#New Host#&User:"), 12, 78, 56, 8));
+				label(translate("New Host", "&User:"), 12, 78, 56, 8));
 			m_form.add_control(m_user_box);
 
 			m_form.add_control(
@@ -170,7 +170,7 @@ namespace {
 					"Swish to start the connection in:"), 12, 96, 258, 18));
 
 			m_form.add_control(
-				label(translate("#New Host#P&ath:"), 12, 117, 35, 8));
+				label(translate("New Host", "P&ath:"), 12, 117, 35, 8));
 			m_form.add_control(m_path_box);
 			m_form.add_control(
 				label(

@@ -3,94 +3,121 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish 0.3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-23 00:27-0000\n"
+"POT-Creation-Date: 2010-10-09 15:40-0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Alexey Khromov <zxalexis@gmail.com>\n"
 "Language-Team: zxalexis <zxalexis@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-KeywordsList: translate\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
-#: ../../swish/forms/add_host.cpp:101
+#: ../../swish/drop_target/DropTargetErrorUI.cpp:122
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:122
+msgid "An error occurred while transferring files:"
+msgstr ""
+
+#: ../../swish/drop_target/DropUI.cpp:344
+msgid "This folder already contains a file named '{1}'."
+msgstr "Каталог уже содержит файл с именем '{1}'"
+
+#: ../../swish/drop_target/DropUI.cpp:347
+msgid "Would you like to replace it?"
+msgstr ""
+
+#: ../../swish/drop_target/DropUI.cpp:355
+msgid "Confirm File Replace"
+msgstr ""
+
+#: ../../swish/drop_target/DropUI.cpp:394
+msgctxt "Progress"
+msgid "Copying..."
+msgstr "Копирую..."
+
+#: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
 msgstr "Новое SFTP соединение"
 
-#: ../../swish/forms/add_host.cpp:121
+#: ../../swish/forms/add_host.cpp:122
 msgid "Create"
 msgstr "Создать"
 
-#: ../../swish/forms/add_host.cpp:132
-msgid "#New Host#&Label:"
+#: ../../swish/forms/add_host.cpp:143
+msgctxt "New Host"
+msgid "&Label:"
 msgstr "&Имя:"
 
-#: ../../swish/forms/add_host.cpp:137
+#: ../../swish/forms/add_host.cpp:148
 msgid "For example: \"Home Computer\"."
 msgstr "Пример: \"Домашний\"."
 
-#: ../../swish/forms/add_host.cpp:140
+#: ../../swish/forms/add_host.cpp:151
 msgid "Specify the details of the computer and account you would like to connect to:"
 msgstr "Укажите параметры хоста и аккаунта, к которому Вы соединяетесь:"
 
-#: ../../swish/forms/add_host.cpp:144
-msgid "#New Host#&Host:"
+#: ../../swish/forms/add_host.cpp:155
+msgctxt "New Host"
+msgid "&Host:"
 msgstr "&Хост:"
 
-#: ../../swish/forms/add_host.cpp:148
-msgid "#New Host#&Port:"
+#: ../../swish/forms/add_host.cpp:159
+msgctxt "New Host"
+msgid "&Port:"
 msgstr "&Порт:"
 
-#: ../../swish/forms/add_host.cpp:153
-msgid "#New Host#&User:"
+#: ../../swish/forms/add_host.cpp:164
+msgctxt "New Host"
+msgid "&User:"
 msgstr "&Логин:"
 
-#: ../../swish/forms/add_host.cpp:158
+#: ../../swish/forms/add_host.cpp:169
 msgid "Specify the directory on the server that you would like Swish to start the connection in:"
 msgstr "Укажите каталог удаленного сервера, к которому соединиться:"
 
-#: ../../swish/forms/add_host.cpp:162
-msgid "#New Host#P&ath:"
+#: ../../swish/forms/add_host.cpp:173
+msgctxt "New Host"
+msgid "P&ath:"
 msgstr "П&уть:"
 
-#: ../../swish/forms/add_host.cpp:166
+#: ../../swish/forms/add_host.cpp:177
 msgid "Example: /home/yourusername"
 msgstr "Пример: /home/вашлогин"
 
-#: ../../swish/forms/add_host.cpp:174
+#: ../../swish/forms/add_host.cpp:185
 #: ../../swish/forms/password.cpp:70
 msgid "Cancel"
 msgstr "Отмена"
 
-#: ../../swish/forms/add_host.cpp:321
+#: ../../swish/forms/add_host.cpp:331
 msgid "The label cannot be longer than 30 characters."
 msgstr "Имя не может быть длиннее 30 символов."
 
-#: ../../swish/forms/add_host.cpp:325
+#: ../../swish/forms/add_host.cpp:335
 msgid "The host name is invalid."
 msgstr "Имя хоста неверно."
 
-#: ../../swish/forms/add_host.cpp:331
+#: ../../swish/forms/add_host.cpp:341
 msgid "The port is not valid (between 0 and 65535)."
 msgstr "Порт неверен (между 0 и 65535)."
 
-#: ../../swish/forms/add_host.cpp:335
+#: ../../swish/forms/add_host.cpp:345
 msgid "The username is invalid."
 msgstr "Логин неверен."
 
-#: ../../swish/forms/add_host.cpp:339
+#: ../../swish/forms/add_host.cpp:349
 msgid "The path is invalid."
 msgstr "Путь неверен."
 
-#: ../../swish/forms/add_host.cpp:345
+#: ../../swish/forms/add_host.cpp:355
 msgid "A connection with the same label already exists. Please try another."
 msgstr "Соединение с таким именем уже существует. Введите другое имя."
 
-#: ../../swish/forms/add_host.cpp:351
+#: ../../swish/forms/add_host.cpp:361
 msgid "Complete all fields."
 msgstr "Заполните все поля."
 
@@ -103,68 +130,79 @@ msgid "OK"
 msgstr "ОК"
 
 #: ../../swish/host_folder/columns.cpp:57
-msgid "#Property (filename/label)#Name"
+msgctxt "Property (filename/label)"
+msgid "Name"
 msgstr "Имя"
 
 #: ../../swish/host_folder/columns.cpp:60
-msgid "#Property#Host"
+msgctxt "Property"
+msgid "Host"
 msgstr "Хост"
 
 #: ../../swish/host_folder/columns.cpp:63
-msgid "#Property#Username"
+msgctxt "Property"
+msgid "Username"
 msgstr "Логин"
 
 #: ../../swish/host_folder/columns.cpp:66
-msgid "#Property#Port"
+msgctxt "Property"
+msgid "Port"
 msgstr "Порт"
 
 #: ../../swish/host_folder/columns.cpp:69
-msgid "#Property#Remote path"
+msgctxt "Property"
+msgid "Remote path"
 msgstr "Удаленный путь"
 
 #: ../../swish/host_folder/columns.cpp:72
-msgid "#Property#Type"
+msgctxt "Property"
+msgid "Type"
 msgstr "Тип"
 
 #: ../../swish/host_folder/properties.cpp:79
-msgid "#FileType#Network Drive"
+msgctxt "FileType"
+msgid "Network Drive"
 msgstr "Сетевой диск"
 
 #: ../../swish/remote_folder/columns.cpp:82
-msgid "#Property#Size"
+msgctxt "Property"
+msgid "Size"
 msgstr "Размер"
 
 #: ../../swish/remote_folder/columns.cpp:89
-msgid "#Property#Date Modified"
+msgctxt "Property"
+msgid "Date Modified"
 msgstr "Изменен"
 
 #: ../../swish/remote_folder/columns.cpp:93
-msgid "#Property#Date Accessed"
+msgctxt "Property"
+msgid "Date Accessed"
 msgstr "Последний доступ"
 
 #: ../../swish/remote_folder/columns.cpp:96
-msgid "#Property#Permissions"
+msgctxt "Property"
+msgid "Permissions"
 msgstr "Права"
 
 #: ../../swish/remote_folder/columns.cpp:99
-msgid "#Property#Owner"
+msgctxt "Property"
+msgid "Owner"
 msgstr "Владелец"
 
 #: ../../swish/remote_folder/columns.cpp:102
-msgid "#Property#Group"
+msgctxt "Property"
+msgid "Group"
 msgstr "Группа"
 
 #: ../../swish/remote_folder/columns.cpp:105
-msgid "#Property#Owner ID"
+msgctxt "Property"
+msgid "Owner ID"
 msgstr "ID владельца"
 
 #: ../../swish/remote_folder/columns.cpp:108
-msgid "#Property#Group ID"
+msgctxt "Property"
+msgid "Group ID"
 msgstr "Username"
-
-#: ../../swish/shell_folder/DropTarget.cpp:482
-msgid "#Progress#Copying..."
-msgstr "Копирую..."
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
@@ -294,19 +332,43 @@ msgstr "Чтобы сохранить этот ключ в списке изве
 msgid "To connect to the server without storing the key click No."
 msgstr "Чтобы соединиться с сервером, не сохраняя ключ, нажмите Нет."
 
-#: ../../swish/shell_folder/commands/host/host.cpp:92
+#: ../../swish/shell_folder/commands/host/host.cpp:109
 msgid "&Add SFTP Connection"
 msgstr "&Добавить SFTP-соединение"
 
-#: ../../swish/shell_folder/commands/host/host.cpp:93
+#: ../../swish/shell_folder/commands/host/host.cpp:110
 msgid "Create a new SFTP connection with Swish."
 msgstr "Создать новое SFTP соединение с помощью Swish."
 
-#: ../../swish/shell_folder/commands/host/host.cpp:124
+#: ../../swish/shell_folder/commands/host/host.cpp:111
+msgid "&Add SFTP Connection..."
+msgstr "&Добавить SFTP-соединение..."
+
+#: ../../swish/shell_folder/commands/host/host.cpp:112
+msgid "Add Connection"
+msgstr "Добавить соединение"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:142
 msgid "&Remove SFTP Connection"
 msgstr "&Удалить SFTP-соединение"
 
-#: ../../swish/shell_folder/commands/host/host.cpp:125
+#: ../../swish/shell_folder/commands/host/host.cpp:143
 msgid "Remove a SFTP connection created with Swish."
 msgstr "Удалить SFTP-соединение, созданное Swish."
+
+#: ../../swish/shell_folder/commands/host/host.cpp:144
+msgid "&Remove SFTP Connection..."
+msgstr "&Удалить SFTP-соединение..."
+
+#: ../../swish/shell_folder/commands/host/host.cpp:145
+msgid "Remove Connection"
+msgstr "Удалить соединение"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:199
+msgid "SFTP Tasks"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/host/host.cpp:212
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr ""
 

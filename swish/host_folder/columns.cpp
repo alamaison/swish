@@ -54,22 +54,22 @@ namespace {
 	 */
 	const boost::array<column_entry, 6> column_key_index = { {
 
-		{ PKEY_ItemNameDisplay, translate("#Property (filename/label)#Name"),
+		{ PKEY_ItemNameDisplay, translate("Property (filename/label)", "Name"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
 
-		{ PKEY_ComputerName, translate("#Property#Host"),
+		{ PKEY_ComputerName, translate("Property", "Host"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
 
-		{ PKEY_SwishHostUser, translate("#Property#Username"),
+		{ PKEY_SwishHostUser, translate("Property", "Username"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
 
-		{ PKEY_SwishHostPort, translate("#Property#Port"),
+		{ PKEY_SwishHostPort, translate("Property", "Port"),
 		  SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
 
-		{ PKEY_ItemPathDisplay, translate("#Property#Remote path"),
+		{ PKEY_ItemPathDisplay, translate("Property", "Remote path"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
 
-		{ PKEY_ItemType, translate("#Property#Type"),
+		{ PKEY_ItemType, translate("Property", "Type"),
 		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_SECONDARYUI, LVCFMT_LEFT, 30 }
 	} };
 
