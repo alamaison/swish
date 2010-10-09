@@ -81,7 +81,7 @@ using boost::filesystem::wpath;
 using boost::filesystem::ifstream;
 using boost::filesystem::ofstream;
 using boost::system::system_error;
-using boost::system::system_category;
+using boost::system::get_system_category;
 using boost::posix_time::from_time_t;
 using boost::test_tools::predicate_result;
 
@@ -178,10 +178,10 @@ namespace { // private
 			{
 				if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
 					BOOST_THROW_EXCEPTION(
-						system_error(errno, system_category));
+						system_error(errno, get_system_category()));
 				if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
 					BOOST_THROW_EXCEPTION(
-						system_error(errno, system_category));
+						system_error(errno, get_system_category()));
 			}
 
 			return files;

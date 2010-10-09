@@ -32,6 +32,7 @@
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/shared_ptr.hpp>
 #pragma warning(push)
 #pragma warning(disable:4100) // unreferenced formal parameter
@@ -49,8 +50,8 @@
 using swish::utils::Utf8StringToWideString;
 using swish::utils::current_user_a;
 
+using boost::system::get_system_category;
 using boost::system::system_error;
-using boost::system::system_category;
 using boost::filesystem::path;
 using boost::filesystem::wpath;
 using boost::process::environment;
@@ -60,6 +61,7 @@ using boost::process::self;
 using boost::process::find_executable_in_path;
 using boost::assign::list_of;
 using boost::lexical_cast;
+using boost::numeric_cast;
 using boost::shared_ptr;
 using boost::uniform_int;
 using boost::variate_generator;
@@ -290,7 +292,8 @@ namespace { // private
 	wpath NewTempFilePath()
 	{
 		vector<wchar_t> buffer(MAX_PATH);
-		DWORD len = ::GetTempPath(buffer.size(), &buffer[0]);
+		DWORD len = ::GetTempPath(
+			numeric_cast<DWORD>(buffer.size()), &buffer[0]);
 		BOOST_REQUIRE_LE(len, buffer.size());
 		
 		wpath directory(wstring(&buffer[0], buffer.size()));
@@ -300,7 +303,7 @@ namespace { // private
 		if (!GetTempFileName(
 			directory.directory_string().c_str(), NULL, 0, &buffer[0]))
 			throw boost::system::system_error(
-				::GetLastError(), boost::system::system_category);
+				::GetLastError(), boost::system::get_system_category());
 		
 		return wpath(wstring(&buffer[0], buffer.size()));
 	}
@@ -347,7 +350,7 @@ wpath SandboxFixture::NewFileInSandbox()
 
 	if (!GetTempFileName(
 		Sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
-		throw system_error(::GetLastError(), system_category);
+		throw system_error(::GetLastError(), get_system_category());
 	
 	wpath p = wpath(wstring(&buffer[0], buffer.size()));
 	BOOST_CHECK(exists(p));

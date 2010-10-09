@@ -121,7 +121,7 @@ inline typename T::ToType ConvertString(const typename T::FromType& from)
 	}
 
 	throw boost::system::system_error(
-		::GetLastError(), boost::system::system_category);
+		::GetLastError(), boost::system::get_system_category());
 }
 
 /**
@@ -194,7 +194,7 @@ inline typename T::return_type current_user()
 	{
 		BOOST_THROW_EXCEPTION(
 			boost::system::system_error(
-				err, boost::system::system_category));
+				err, boost::system::get_system_category()));
 	}
 
 	// Repeat call with a buffer of required size
@@ -209,7 +209,7 @@ inline typename T::return_type current_user()
 		{
 			BOOST_THROW_EXCEPTION(
 				boost::system::system_error(
-					::GetLastError(), boost::system::system_category));
+					::GetLastError(), boost::system::get_system_category()));
 		}
 	}
 
@@ -255,11 +255,12 @@ inline T environment_variable(const T& key)
 		return T();
 
 	std::vector<T::value_type> buf(len);
-	len = detail::get_environment_variable(key.c_str(), &buf[0], buf.size());
+	len = detail::get_environment_variable(
+		key.c_str(), &buf[0], boost::numeric_cast<DWORD>(buf.size()));
 	if (len == 0)
 		BOOST_THROW_EXCEPTION(
 			boost::system::system_error(
-				::GetLastError(), boost::system::system_category));
+				::GetLastError(), boost::system::get_system_category()));
 
 	return T(buf.begin(), buf.begin() + len);
 }

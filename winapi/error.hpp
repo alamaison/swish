@@ -28,7 +28,7 @@
 #define WINAPI_ERROR_HPP
 #pragma once
 
-#include <boost/system/system_error.hpp> // system_error, system_category
+#include <boost/system/system_error.hpp> // system_error, get_system_category
 
 #include <Winbase.h> // GetLastError
 
@@ -37,7 +37,7 @@ namespace winapi {
 inline boost::system::system_error last_error()
 {
 	return boost::system::system_error(
-		::GetLastError(), boost::system::system_category);
+		::GetLastError(), boost::system::get_system_category());
 }
 
 } // namespace winapi

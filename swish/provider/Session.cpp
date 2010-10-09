@@ -54,7 +54,7 @@ using swish::utils::WideStringToUtf8String;
 using boost::asio::ip::tcp;
 using boost::asio::error::host_not_found;
 using boost::shared_ptr;
-using boost::system::system_category;
+using boost::system::get_system_category;
 using boost::system::system_error;
 using boost::system::error_code;
 using boost::lexical_cast;
@@ -108,7 +108,7 @@ bool CSession::IsDead()
 	int rc = ::select(1, &socket_set, NULL, NULL, &tv);
 	if (rc < 0)
 		BOOST_THROW_EXCEPTION(
-			system_error(::WSAGetLastError(), system_category));
+			system_error(::WSAGetLastError(), get_system_category()));
 	return rc != 0;
 }
 

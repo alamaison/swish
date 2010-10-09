@@ -42,6 +42,7 @@
 
 #include "swish/atl.hpp"
 
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/test/unit_test.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/shared_ptr.hpp>
@@ -58,8 +59,9 @@ using test::provider::StreamFixture;
 
 using ATL::CComPtr;
 
+using boost::numeric_cast;
 using boost::system::system_error;
-using boost::system::system_category;
+using boost::system::get_system_category;
 using boost::shared_ptr;
 
 using std::string;
@@ -83,7 +85,7 @@ BOOST_AUTO_TEST_CASE( get )
 BOOST_AUTO_TEST_CASE( get_readonly )
 {
 	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
-		BOOST_THROW_EXCEPTION(system_error(errno, system_category));
+		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
 	BOOST_REQUIRE_THROW(GetStream(), com_exception);
 }
@@ -125,7 +127,8 @@ BOOST_AUTO_TEST_CASE( write_a_string )
 
 	string in = "Lorem ipsum dolor sit amet. ";
 	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(spStream->Write(&in[0], in.size(), &cbWritten));
+	BOOST_REQUIRE_OK(
+		spStream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
 	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
 
 	// Reset seek pointer to beginning and read back
@@ -134,13 +137,15 @@ BOOST_AUTO_TEST_CASE( write_a_string )
 
 	vector<char> out(in.size());
 	ULONG cbRead = 0;
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, out.size());
+	BOOST_REQUIRE_OK(
+		spStream->Read(&out[0], numeric_cast<ULONG>(out.size()), &cbRead));
+	BOOST_REQUIRE_EQUAL(cbRead, numeric_cast<ULONG>(out.size()));
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		out.begin(), out.end(), in.begin(), in.end());
 	
 	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
+	BOOST_REQUIRE_OK(
+		spStream->Read(&out[0], numeric_cast<ULONG>(out.size()), &cbRead));
 	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
@@ -154,7 +159,8 @@ BOOST_AUTO_TEST_CASE( write_large )
 	vector<char> in(1000000); // Doesn't need to be initialised
 
 	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(spStream->Write(&in[0], in.size(), &cbWritten));
+	BOOST_REQUIRE_OK(
+		spStream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
 	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
 
 	// Reset seek pointer to beginning and read back
@@ -163,13 +169,14 @@ BOOST_AUTO_TEST_CASE( write_large )
 
 	vector<char> out(in.size());
 	ULONG cbRead = 0;
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, out.size());
+	ULONG out_size = numeric_cast<ULONG>(out.size());
+	BOOST_REQUIRE_OK(spStream->Read(&out[0], out_size, &cbRead));
+	BOOST_REQUIRE_EQUAL(cbRead, out_size);
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		out.begin(), out.end(), in.begin(), in.end());
 	
 	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out.size(), &cbRead));
+	BOOST_REQUIRE_OK(spStream->Read(&out[0], out_size, &cbRead));
 	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
@@ -191,11 +198,11 @@ BOOST_AUTO_TEST_CASE( write_fail )
 			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
 		::CloseHandle);
 	if (file_handle.get() == INVALID_HANDLE_VALUE)
-		throw system_error(::GetLastError(), system_category);
+		throw system_error(::GetLastError(), get_system_category());
 
 	// Lock it
 	if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
-		throw system_error(::GetLastError(), system_category);
+		throw system_error(::GetLastError(), get_system_category());
 
 	// Try to write to it via the stream
 	try
@@ -203,7 +210,8 @@ BOOST_AUTO_TEST_CASE( write_fail )
 		string in = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
 		ULONG cbWritten = 0;
 		BOOST_REQUIRE(FAILED(
-			spStream->Write(&in[0], in.size(), &cbWritten)));
+			spStream->Write(&in[0], numeric_cast<ULONG>(in.size()),
+			&cbWritten)));
 		BOOST_REQUIRE_EQUAL(cbWritten, 0U);
 	}
 	catch (...)

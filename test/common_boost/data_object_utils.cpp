@@ -32,7 +32,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
-#include <boost/system/system_error.hpp>  // system_error, system_category
+#include <boost/system/system_error.hpp>  // system_error, get_system_category
 
 #include <string>
 #include <vector>
@@ -45,8 +45,8 @@ using swish::exception::com_exception;
 using boost::filesystem::wpath;
 using boost::shared_ptr;
 using boost::numeric_cast;
+using boost::system::get_system_category;
 using boost::system::system_error;
-using boost::system::system_category;
 
 using comet::com_ptr;
 
@@ -66,7 +66,7 @@ namespace {
 		
 		if (len == 0)
 			BOOST_THROW_EXCEPTION(
-				system_error(::GetLastError(), system_category));
+				system_error(::GetLastError(), get_system_category()));
 
 		return wstring(&buffer[0], len);
 	}

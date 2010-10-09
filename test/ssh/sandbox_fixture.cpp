@@ -45,7 +45,7 @@
 #include <vector>
 
 using boost::system::system_error;
-using boost::system::system_category;
+using boost::system::get_system_category;
 using boost::filesystem::path;
 using boost::shared_ptr;
 
@@ -101,7 +101,7 @@ path sandbox_fixture::new_file_in_sandbox()
 
 	if (!GetTempFileNameA(
 		sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
-		throw system_error(::GetLastError(), system_category);
+		throw system_error(::GetLastError(), get_system_category());
 	
 	path p = path(string(&buffer[0], buffer.size()));
 	BOOST_CHECK(exists(p));

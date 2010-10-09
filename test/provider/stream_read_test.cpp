@@ -44,6 +44,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/system/system_error.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -58,8 +59,9 @@ using test::provider::StreamFixture;
 using ATL::CComPtr;
 
 using boost::filesystem::ofstream;
+using boost::numeric_cast;
 using boost::system::system_error;
-using boost::system::system_category;
+using boost::system::get_system_category;
 using boost::shared_ptr;
 
 using std::string;
@@ -124,7 +126,7 @@ BOOST_AUTO_TEST_CASE( get )
 BOOST_AUTO_TEST_CASE( get_readonly )
 {
 	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
-		BOOST_THROW_EXCEPTION(system_error(errno, system_category));
+		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
 	CComPtr<IStream> spStream = GetReadStream();
 	BOOST_REQUIRE(spStream);
@@ -140,7 +142,8 @@ BOOST_AUTO_TEST_CASE( read_a_string )
 	string expected = ExpectedData();
 	ULONG cbRead = 0;
 	vector<char> buf(expected.size());
-	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
+	BOOST_REQUIRE_OK(
+		spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
 	BOOST_REQUIRE_EQUAL(cbRead, expected.size());
 
 	// Test that the bytes we read match
@@ -148,7 +151,8 @@ BOOST_AUTO_TEST_CASE( read_a_string )
 		buf.begin(), buf.end(), expected.begin(), expected.end());
 	
 	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
+	BOOST_REQUIRE_OK(
+		spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
 	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
@@ -158,14 +162,15 @@ BOOST_AUTO_TEST_CASE( read_a_string )
 BOOST_AUTO_TEST_CASE( read_a_string_readonly )
 {
 	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
-		BOOST_THROW_EXCEPTION(system_error(errno, system_category));
+		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
 	CComPtr<IStream> spStream = GetReadStream();
 
 	string expected = ExpectedData();
 	ULONG cbRead = 0;
 	vector<char> buf(expected.size());
-	BOOST_REQUIRE_OK(spStream->Read(&buf[0], buf.size(), &cbRead));
+	BOOST_REQUIRE_OK(
+		spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
 
 	// Test that the bytes we read match
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
@@ -191,11 +196,11 @@ BOOST_AUTO_TEST_CASE( read_fail )
 			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
 		::CloseHandle);
 	if (file_handle.get() == INVALID_HANDLE_VALUE)
-		throw system_error(::GetLastError(), system_category);
+		throw system_error(::GetLastError(), get_system_category());
 
 	// Lock it
 	if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
-		throw system_error(::GetLastError(), system_category);
+		throw system_error(::GetLastError(), get_system_category());
 
 	// Try to read from the stream
 	try
@@ -203,7 +208,9 @@ BOOST_AUTO_TEST_CASE( read_fail )
 		string expected = ExpectedData();
 		ULONG cbRead = 0;
 		vector<char> buf(expected.size());
-		BOOST_REQUIRE(FAILED(spStream->Read(&buf[0], buf.size(), &cbRead)));
+		BOOST_REQUIRE(FAILED(
+			spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()),
+			&cbRead)));
 		BOOST_REQUIRE_EQUAL(cbRead, 0U);
 	}
 	catch (...)
