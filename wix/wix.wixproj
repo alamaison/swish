@@ -24,6 +24,7 @@
     <Compile Include="nl.wxs" />
     <Compile Include="ru.wxs" />
     <Compile Include="swish.wxs" />
+    <Compile Include="tr.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\swish\interfaces\interfaces.vcproj">
