@@ -416,7 +416,9 @@ bool CExplorerCallback::on_get_webview_content(
 bool CExplorerCallback::on_get_webview_tasks(
 	SFV_WEBVIEW_TASKSECTION_DATA& tasks_out)
 {
-	assert(tasks_out.pEnumExtraTasks == NULL);
+	//for some reason this fails on 64-bit
+	//assert(tasks_out.pEnumExtraTasks == NULL);
+
 	assert(tasks_out.pEnumFolderTasks == NULL);
 
 

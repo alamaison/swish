@@ -32,6 +32,7 @@
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
@@ -89,7 +90,7 @@ inline std::basic_string<T> format_date_time(
 	std::vector<T> buffer(512); // XXX: Unfortunately we have to hard-code this
 
 	int len = detail::native::sh_format_date_time(
-		&ft, &flags, &buffer[0], buffer.size());
+		&ft, &flags, &buffer[0], boost::numeric_cast<UINT>(buffer.size()));
 	// flags gets modifed but that's OK as its a local copy.  However, that
 	// means we can't return any information about these changes to the caller
 
@@ -113,7 +114,7 @@ inline std::basic_string<T> format_filesize_kilobytes(LONGLONG file_size)
 {
 	std::vector<T> buf(64); // XXX: Unfortunately we have to hard-code this
 	T* str = detail::native::str_format_kb_size(
-		file_size, &buf[0], buf.size());
+		file_size, &buf[0], boost::numeric_cast<UINT>(buf.size()));
 
 	return (str) ? str : std::basic_string<T>();
 }

@@ -258,7 +258,8 @@ inline std::basic_string<T> window_text(HWND hwnd)
 	::SetLastError(0);
 
 	int cch = detail::native::get_window_text(
-		hwnd, (buffer.empty()) ? NULL : &buffer[0], buffer.size());
+		hwnd, (buffer.empty()) ? NULL : &buffer[0],
+		boost::numeric_cast<int>(buffer.size()));
 
 	if (cch < 0)
 		BOOST_THROW_EXCEPTION(

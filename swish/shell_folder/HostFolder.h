@@ -32,7 +32,7 @@
 #include <swish/host_folder/columns.hpp> // Column
 
 #include "resource.h"            // main symbols
-#include "swish.h"               // For CHostFolder UUID
+#include "swish/shell_folder/Swish.h" // For CHostFolder UUID
 #include "HostPidl.h"            // HostItemId handling
 #include "swish/CoFactory.hpp"   // CComObject factory
 

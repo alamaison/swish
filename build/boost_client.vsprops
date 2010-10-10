@@ -11,6 +11,6 @@
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalLibraryDirectories="$(SolutionDir)\thirdparty\boost\stage\lib"
+		AdditionalLibraryDirectories="&quot;$(SolutionDir)thirdparty\boost\lib\$(PlatformName)\lib&quot;"
 	/>
 </VisualStudioPropertySheet>

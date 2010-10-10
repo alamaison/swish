@@ -11,6 +11,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -37,6 +40,74 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000"
+				Optimization="0"
+				InlineFunctionExpansion="0"
+				AdditionalIncludeDirectories=".;&quot;C:\Users\awl03\Documents\Visual Studio 2005\Projects\swish_trunk\thirdparty\boost&quot;"
+				PreprocessorDefinitions="_DEBUG;BOOST_LOCALE_NO_STD_BACKEND;BOOST_LOCALE_NO_POSIX_BACKEND;BOOST_ALL_NO_LIB;BOOST_LOCALE_NO_ICONV;_CRT_SECURE_NO_WARNINGS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				RuntimeTypeInfo="true"
+				ProgramDataBaseFileName="libboost_locale.pdb"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)libboost_locale.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			ConfigurationType="4"
+			InheritedPropertySheets="..\..\build\boost_client.vsprops;..\..\build\swish_output_dirs.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -146,6 +217,71 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			ConfigurationType="4"
+			InheritedPropertySheets="..\..\build\boost_client.vsprops;..\..\build\swish_output_dirs.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				AdditionalIncludeDirectories="."
+				PreprocessorDefinitions="NDEBUG;BOOST_LOCALE_NO_STD_BACKEND;BOOST_LOCALE_NO_POSIX_BACKEND;BOOST_ALL_NO_LIB;BOOST_LOCALE_NO_ICONV;_CRT_SECURE_NO_WARNINGS"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="true"
+				ProgramDataBaseFileName="libboost_locale.pdb"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)libboost_locale.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -153,60 +289,77 @@
 		<Filter
 			Name="Source Files"
 			>
-
 			<File
-				RelativePath=".\libs\locale\src\encoding\codepage.cpp">
+				RelativePath=".\libs\locale\src\util\codecvt_converter.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\date_time.cpp">
+				RelativePath=".\libs\locale\src\encoding\codepage.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\format.cpp">
+				RelativePath=".\libs\locale\src\win32\collate.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\formatting.cpp">
+				RelativePath=".\libs\locale\src\win32\converter.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\generator.cpp">
+				RelativePath=".\libs\locale\src\shared\date_time.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\ids.cpp">
+				RelativePath=".\libs\locale\src\util\default_locale.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\localization_backend.cpp">
+				RelativePath=".\libs\locale\src\shared\format.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\message.cpp">
+				RelativePath=".\libs\locale\src\shared\formatting.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\shared\mo_lambda.cpp">
+				RelativePath=".\libs\locale\src\shared\generator.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\util\info.cpp">
+				RelativePath=".\libs\locale\src\shared\ids.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\util\locale_data.cpp">
+				RelativePath=".\libs\locale\src\util\info.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\util\default_locale.cpp">
+				RelativePath=".\libs\locale\src\win32\lcid.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\util\codecvt_converter.cpp">
+				RelativePath=".\libs\locale\src\util\locale_data.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\win32\collate.cpp">
+				RelativePath=".\libs\locale\src\shared\localization_backend.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\win32\converter.cpp">
+				RelativePath=".\libs\locale\src\shared\message.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\win32\lcid.cpp">
+				RelativePath=".\libs\locale\src\shared\mo_lambda.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\win32\numeric.cpp">
+				RelativePath=".\libs\locale\src\win32\numeric.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\libs\locale\src\win32\win_backend.cpp">
+				RelativePath=".\libs\locale\src\win32\win_backend.cpp"
+				>
 			</File>
 		</Filter>
 	</Files>

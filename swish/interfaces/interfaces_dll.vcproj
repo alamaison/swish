@@ -2,10 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="shell_folder-com_dll"
-	ProjectGUID="{3F48C01A-FE7D-4907-860B-B7F45926F277}"
-	RootNamespace="swish"
-	Keyword="AtlProj"
+	Name="interfaces_dll"
+	ProjectGUID="{DFE19EBD-F9D6-4A7A-84A4-07AAC6FBF951}"
+	RootNamespace="interfaces_dll"
+	Keyword="Win32Proj"
 	>
 	<Platforms>
 		<Platform
@@ -21,9 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Debug-Win32.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
-			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
+			InheritedPropertySheets="..\..\build\swish-Debug-Win32.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -40,20 +38,19 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				EnableErrorChecks="2"
-				ValidateParameters="false"
+				GenerateTypeLibrary="false"
+				OutputDirectory="$(OutDir)\swish\interfaces"
+				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL"
+				PreprocessorDefinitions="_DEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -61,8 +58,6 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -70,10 +65,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				IgnoreImportLibrary="true"
-				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="com_dll.def"
-				MergedIDLBaseFileName="_$(TargetName).idl"
+				AdditionalDependencies="rpcrt4.lib"
+				LinkIncremental="2"
+				ModuleDefinitionFile="interfaces.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -101,15 +95,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Debug-x64.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
-			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
+			InheritedPropertySheets="..\..\build\swish-Debug-x64.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -126,19 +117,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
 				TargetEnvironment="3"
 				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				EnableErrorChecks="2"
+				GenerateTypeLibrary="false"
+				OutputDirectory="$(OutDir)\swish\interfaces"
+				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL"
+				PreprocessorDefinitions="_DEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -146,8 +138,6 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -155,10 +145,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				IgnoreImportLibrary="true"
-				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="com_dll.def"
-				MergedIDLBaseFileName="_$(TargetName).idl"
+				AdditionalDependencies="rpcrt4.lib"
+				LinkIncremental="2"
+				ModuleDefinitionFile="interfaces.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -186,16 +175,14 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Release-Win32.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
-			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
+			InheritedPropertySheets="..\..\build\swish-Release-Win32.vsprops"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -211,16 +198,17 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				TargetEnvironment="1"
 				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				ValidateParameters="false"
+				GenerateTypeLibrary="false"
+				OutputDirectory="$(OutDir)\swish\interfaces"
+				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
+				PreprocessorDefinitions="NDEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -228,8 +216,6 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -237,13 +223,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				IgnoreImportLibrary="true"
+				AdditionalDependencies="rpcrt4.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="com_dll.def"
-				MergedIDLBaseFileName="_$(TargetName).idl"
+				ModuleDefinitionFile="interfaces.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -269,16 +256,14 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Release-x64.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
-			UseOfATL="1"
-			ATLMinimizesCRunTimeLibraryUsage="false"
+			InheritedPropertySheets="..\..\build\swish-Release-x64.vsprops"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -294,15 +279,18 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
 				TargetEnvironment="3"
 				GenerateStublessProxies="true"
-				DLLDataFileName=""
+				GenerateTypeLibrary="false"
+				OutputDirectory="$(OutDir)\swish\interfaces"
+				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
+				PreprocessorDefinitions="NDEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -310,8 +298,6 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -319,13 +305,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				IgnoreImportLibrary="true"
+				AdditionalDependencies="rpcrt4.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="com_dll.def"
-				MergedIDLBaseFileName="_$(TargetName).idl"
+				ModuleDefinitionFile="interfaces.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -351,19 +338,10 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
-			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
-			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
-		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
 			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
@@ -372,92 +350,24 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\com_dll.def"
-				>
-			</File>
-			<File
-				RelativePath="..\..\pch.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\SwishCoClasses.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SwishModule.cpp"
+				RelativePath=".\interfaces.def"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc"
+			Name="Generated Files"
+			SourceControlFiles="false"
 			>
 			<File
-				RelativePath=".\resource.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest"
-			>
-			<File
-				RelativePath=".\com_dll.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\HostFolder.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\RemoteFolder.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\Swish.rgs"
+				RelativePath="$(OutDir)generated-files\swish\interfaces\dlldata.c"
 				>
 			</File>
 		</Filter>
 	</Files>
 	<Globals>
-		<Global
-			Name="RESOURCE_FILE"
-			Value="Swish.rc"
-		/>
 	</Globals>
 </VisualStudioProject>

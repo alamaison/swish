@@ -45,21 +45,25 @@ del libssh2.tar.gz
 
 echo.
 echo ===- Downloading zlib ...
-%WGET% "http://prdownloads.sourceforge.net/libpng/zlib123-dll.zip?download" || (
+%WGET% "http://prdownloads.sourceforge.net/libpng/zlib125.zip?download" || (
 	echo ===- Error while trying to download zlib. & goto error)
-%SEVENZ% x zlib123-dll.zip -ozlib -aoa || (
+%SEVENZ% x zlib125.zip -ozlib -aoa || (
 	echo ===- Error while trying to extract zlib. & goto error)
-del zlib123-dll.zip
+xcopy /E /Q /Y zlib\zlib-1.2.5 zlib || (
+	echo ===- Error while trying to copy zlib files & goto error)
+rd /S /Q zlib\zlib-1.2.5 || (
+	echo ===- Error while trying to clean up zlib files & goto error)
+del zlib125.zip
 
 :: OpenSSL
 
 echo.
 echo ===- Downloading OpenSSL ...
-%WGET% "http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download" || (
+%WGET% "http://sourceforge.net/projects/swish/files/openssl-swish/openssl-1.0.0a-swish/openssl-1.0.0a-swish.zip/download" || (
 	echo ===- Error while trying to download OpenSSL. & goto error)
-%SEVENZ% x openssl-0.9.8g-swish.zip -oopenssl -aoa || (
+%SEVENZ% x openssl-1.0.0a-swish.zip -oopenssl -aoa || (
 	echo ===- Error while trying to extract OpenSSL. & goto error)
-del openssl-0.9.8g-swish.zip
+del openssl-1.0.0a-swish.zip
 
 :: WTL
 
@@ -89,15 +93,15 @@ del a15550f5a011.zip
 
 echo.
 echo ===- Dowloading Boost.Locale ...
-%WGET% -O boost_locale.tar.gz "http://cppcms.svn.sourceforge.net/viewvc/cppcms/boost_locale/branches/rework.tar.gz" || (
+%WGET% -O boost_locale.tar.gz "http://cppcms.svn.sourceforge.net/viewvc/cppcms/boost_locale/trunk.tar.gz" || (
 	echo ===- Error while trying to download Boost.Locale & goto error)
 %SEVENZ% x boost_locale.tar.gz -aoa || (
 	echo ===- Error while trying to extract Boost.Locale & goto error)
 %SEVENZ% x boost_locale.tar -aoa || (
 	echo ===- Error while trying to extract Boost.Locale & goto error)
-xcopy /E /Q /Y rework boost.locale || (
+xcopy /E /Q /Y trunk boost.locale || (
 	echo ===- Error while trying to copy Boost.Locale files & goto error)
-rd /S /Q rework || (
+rd /S /Q trunk || (
 	echo ===- Error while trying to clean up Boost.Locale files & goto error)
 del boost_locale.tar.gz
 del boost_locale.tar

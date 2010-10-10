@@ -37,6 +37,7 @@
 #include <boost/date_time/gregorian/greg_date.hpp> // date
 #include <boost/date_time/posix_time/conversion.hpp> // from_ftime
 #pragma warning(pop)
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/system/system_error.hpp> // system_error
 #include <boost/static_assert.hpp> //  BOOST_STATIC_ASSERT
 #include <boost/cstdint.hpp> // unint64_t
@@ -369,7 +370,7 @@ HGLOBAL group_descriptor_from_range(It first, It last)
 	try
 	{
 		GlobalLocker<FILEGROUPDESCRIPTOR> lock(hglobal);
-		lock.get()->cItems = count;
+		lock.get()->cItems = boost::numeric_cast<UINT>(count);
 		std::copy(first, last, &lock.get()->fgd[0]);
 		// last arg above: decay array to stop false +ive by checked iterator
 	}

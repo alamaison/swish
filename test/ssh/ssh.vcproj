@@ -11,6 +11,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -18,13 +21,13 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish-Debug-Win32.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -88,16 +91,90 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish-Debug-x64.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Copying test input files..."
+				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="_DEBUG;_CONSOLE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="2"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish-Release-Win32.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -133,6 +210,80 @@
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\libssh2_client.vsprops;..\..\build\swish-Release-x64.vsprops"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Copying test input files..."
+				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				PreprocessorDefinitions="NDEBUG;_CONSOLE"
+				RuntimeLibrary="2"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -204,7 +355,23 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

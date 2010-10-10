@@ -69,6 +69,7 @@ using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
 
+using std::size_t;
 using std::wstring;
 using std::vector;
 
@@ -428,8 +429,8 @@ namespace { // private
 	{
 	public:
 		ProgressMicroUpdater(
-			Progress& auto_progress, unsigned int current_file_index,
-			unsigned int total_files)
+			Progress& auto_progress, size_t current_file_index,
+			size_t total_files)
 			: m_auto_progress(auto_progress),
 			  m_current_file_index(current_file_index),
 			  m_total_files(total_files)
@@ -444,8 +445,8 @@ namespace { // private
 
 	private:
 		Progress& m_auto_progress;
-		unsigned int m_current_file_index;
-		unsigned int m_total_files;
+		size_t m_current_file_index;
+		size_t m_total_files;
 	};
 }
 

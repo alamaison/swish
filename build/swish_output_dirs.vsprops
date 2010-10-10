@@ -3,7 +3,15 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="swish_output_dirs"
-	OutputDirectory="$(SolutionDir)bin\$(ConfigurationName)\"
-	IntermediateDirectory="$(SolutionDir)bin\$(ProjectName)\$(ConfigurationName)\"
+	OutputDirectory="$(SolutionDir)bin\$(ConfigurationName)-$(PlatformName)\"
+	IntermediateDirectory="$(SolutionDir)bin\$(ProjectName)\$(ConfigurationName)-$(PlatformName)\"
 	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="$(OutDir)generated-files"
+	/>
+	<Tool
+		Name="VCMIDLTool"
+		OutputDirectory="$(OutDir)generated-files\swish\$(ProjectName)"
+	/>
 </VisualStudioPropertySheet>

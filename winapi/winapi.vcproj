@@ -10,6 +10,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -17,7 +20,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="10"
-			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish.vsprops"
+			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish-Debug-Win32.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -34,9 +37,29 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			ConfigurationType="10"
+			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish-Debug-x64.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="10"
-			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish.vsprops"
+			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish-Release-Win32.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -48,6 +71,27 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			ConfigurationType="10"
+			InheritedPropertySheets="..\build\boost_client.vsprops;..\build\swish-Release-x64.vsprops"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"

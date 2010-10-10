@@ -1,4 +1,4 @@
-LIBRARY	"interfaces"
+LIBRARY	"interfaces_dll"
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE

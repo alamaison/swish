@@ -35,6 +35,7 @@
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/filesystem.hpp> // basic_path
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/type_traits/remove_pointer.hpp> // remove_pointer
@@ -168,7 +169,8 @@ inline typename detail::choose_path<T>::type module_path(H module)
 {
 	std::vector<T> buffer(MAX_PATH);
 	DWORD size = detail::native::module_filename(
-		detail::get_handle(module), &buffer[0], buffer.size());
+		detail::get_handle(module), &buffer[0],
+		boost::numeric_cast<DWORD>(buffer.size()));
 
 	if (size >= buffer.size())
 		BOOST_THROW_EXCEPTION(

@@ -47,6 +47,7 @@
 #include <comet/interface.h> // uuidof, comtype
 #include <comet/threading.h> // critical_section, auto_cs
 
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/regex.hpp> // Regular expressions
 #include <boost/lexical_cast.hpp> // lexical_cast
 
@@ -62,6 +63,8 @@ using comet::uuidof;
 using comet::critical_section;
 using comet::auto_cs;
 
+using boost::lexical_cast;
+using boost::numeric_cast;
 using boost::wregex;
 using boost::wsmatch;
 using boost::lexical_cast;
@@ -198,7 +201,7 @@ STDMETHODIMP CDispenser::ParseDisplayName(
 
 	hr = ::CreateItemMoniker(OLESTR("!"), pszDisplayName + 1, ppmkOut);
 	if (SUCCEEDED(hr))
-		*pchEaten = ::wcslen(pszDisplayName);
+		*pchEaten = numeric_cast<ULONG>(::wcslen(pszDisplayName));
 	else
 		*pchEaten = 0;
 

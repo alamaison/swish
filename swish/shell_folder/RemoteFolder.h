@@ -25,7 +25,7 @@
 #include <swish/remote_folder/columns.hpp> // Column
 
 #include "resource.h"           // main symbols
-#include "swish.h"              // For CRemoteFolder UUID
+#include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
 #include "RemotePidl.h"         // RemoteItemId handling
 #include "Pool.h"               // Access to SFTP global session pool
 #include "swish/CoFactory.hpp"  // CComObject factory

@@ -30,6 +30,7 @@
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/filesystem.hpp>  // wpath
+#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/iterator/indirect_iterator.hpp>
@@ -170,7 +171,7 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 
 	comet::com_ptr<T> ui_object;
 	hr = parent->GetUIObjectOf(
-		NULL, child_pidls.size(),
+		NULL, boost::numeric_cast<UINT>(child_pidls.size()),
 		(child_pidls.empty()) ? NULL : &child_pidls[0],
 		comet::uuidof<T>(), NULL, reinterpret_cast<void**>(ui_object.out()));
 	if (FAILED(hr))

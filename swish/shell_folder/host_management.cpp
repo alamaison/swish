@@ -82,7 +82,7 @@ namespace { // private
 		vector<wchar_t> host(MAX_HOSTNAME_LENZ);
 		if (host.size() > 0)
 		{
-			ULONG cch = host.size();
+			ULONG cch = numeric_cast<ULONG>(host.size());
 			rc = registry.QueryStringValue(HOST_VALUE_NAME, &host[0], &cch);
 			ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
 		}
@@ -97,7 +97,7 @@ namespace { // private
 		vector<wchar_t> user(MAX_USERNAME_LENZ);
 		if (user.size() > 0)
 		{
-			ULONG cch = user.size();
+			ULONG cch = numeric_cast<ULONG>(user.size());
 			rc = registry.QueryStringValue(USER_VALUE_NAME, &user[0], &cch);
 			ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
 		}
@@ -106,7 +106,7 @@ namespace { // private
 		vector<wchar_t> path(MAX_PATH_LENZ);
 		if (path.size() > 0)
 		{
-			ULONG cch = path.size();
+			ULONG cch = numeric_cast<ULONG>(path.size());
 			rc = registry.QueryStringValue(PATH_VALUE_NAME, &path[0], &cch);
 			ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
 		}
