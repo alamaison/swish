@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="ESTrans">
+      <Component Id="cmp8EDB14FB1698A7DD0DB00A0B23541C1F" Directory="dir3E68079F479E8AB78B392232952916ED" Guid="*">
+        <File Id="filD239C28D82603CCE019446D2063BE46E" KeyPath="yes" Source="$(var.SolutionDir)\po\es\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dirA412D920167A9863DBA4DC421E1F3A7B" Name="es" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir3E68079F479E8AB78B392232952916ED" />
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dirA412D920167A9863DBA4DC421E1F3A7B">
+      <Directory Id="dir3E68079F479E8AB78B392232952916ED" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>

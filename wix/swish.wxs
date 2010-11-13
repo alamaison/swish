@@ -162,6 +162,7 @@
       <ComponentGroupRef Id="DETrans" />
       <ComponentGroupRef Id="TRTrans" />
       <ComponentGroupRef Id="FRTrans" />
+      <ComponentGroupRef Id="ESTrans" />
     </ComponentGroup>
 
     <Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>
