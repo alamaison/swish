@@ -163,6 +163,7 @@
       <ComponentGroupRef Id="TRTrans" />
       <ComponentGroupRef Id="FRTrans" />
       <ComponentGroupRef Id="ESTrans" />
+      <ComponentGroupRef Id="HETrans" />
     </ComponentGroup>
 
     <Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>

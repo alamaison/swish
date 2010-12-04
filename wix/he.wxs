@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="HETrans">
+      <Component Id="cmpBC8B5DAA2CADD87E0013E8A0E2609F1A" Directory="dir70645792ED8D326D4069C6F373F45395" Guid="*">
+        <File Id="filC8ADC7AC9E0FE43FD9D1EADB817CF6AE" KeyPath="yes" Source="$(var.SolutionDir)\po\swish\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dirF55D3F91ED7B0BB8BAA4F0B18E72C545" Name="he" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir70645792ED8D326D4069C6F373F45395" />
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dirF55D3F91ED7B0BB8BAA4F0B18E72C545">
+      <Directory Id="dir70645792ED8D326D4069C6F373F45395" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>

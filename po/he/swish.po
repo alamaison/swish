@@ -1,0 +1,369 @@
+# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish 0.3.2.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-10-09 15:40-0000\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Moran\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ../../swish\n"
+
+#: ../../swish/drop_target/DropTargetErrorUI.cpp:122
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:122
+msgid "An error occurred while transferring files:"
+msgstr "קרתה טעות בזמן העברת קבצים:"
+
+#: ../../swish/drop_target/DropUI.cpp:344
+msgid "This folder already contains a file named '{1}'."
+msgstr "'{1}' התקייה הזאת כבר מכילה קובץ בשם"
+
+#: ../../swish/drop_target/DropUI.cpp:347
+msgid "Would you like to replace it?"
+msgstr "האם אתה רוצה להחליף את זה?"
+
+#: ../../swish/drop_target/DropUI.cpp:355
+msgid "Confirm File Replace"
+msgstr "אשר החלפת קבצים"
+
+#: ../../swish/drop_target/DropUI.cpp:394
+msgctxt "Progress"
+msgid "Copying..."
+msgstr "מעתיק..."
+
+#: ../../swish/forms/add_host.cpp:102
+msgid "New SFTP Connection"
+msgstr "חדש SFTP חיבור"
+
+#: ../../swish/forms/add_host.cpp:122
+msgid "Create"
+msgstr "צור"
+
+#: ../../swish/forms/add_host.cpp:143
+msgctxt "New Host"
+msgid "&Label:"
+msgstr "&שם:"
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "For example: \"Home Computer\"."
+msgstr "\"Home Computer\" לדוגמא "
+
+#: ../../swish/forms/add_host.cpp:151
+msgid "Specify the details of the computer and account you would like to connect to:"
+msgstr "הגדר את הפרטים של המחשב והחשבון שברצונך להתחבר אליו:"
+
+#: ../../swish/forms/add_host.cpp:155
+msgctxt "New Host"
+msgid "&Host:"
+msgstr "&שרת:"
+
+#: ../../swish/forms/add_host.cpp:159
+msgctxt "New Host"
+msgid "&Port:"
+msgstr "&שער:"
+
+#: ../../swish/forms/add_host.cpp:164
+msgctxt "New Host"
+msgid "&User:"
+msgstr "&משתמש:"
+
+#: ../../swish/forms/add_host.cpp:169
+msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgstr "יתחיל בחיבור אליוSwish הקש את הספריה בשרת שאתה רוצה ש"
+
+#: ../../swish/forms/add_host.cpp:173
+msgctxt "New Host"
+msgid "P&ath:"
+msgstr "נ&תיב"
+
+#: ../../swish/forms/add_host.cpp:177
+msgid "Example: /home/yourusername"
+msgstr "/home/yourusername דוגמא:"
+
+#: ../../swish/forms/add_host.cpp:185
+#: ../../swish/forms/password.cpp:70
+msgid "Cancel"
+msgstr "בטל"
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The label cannot be longer than 30 characters."
+msgstr "השם לא יכול להיות באורך יותר מ 30 אותיות"
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The host name is invalid."
+msgstr "השרת לא תקין"
+
+#: ../../swish/forms/add_host.cpp:341
+msgid "The port is not valid (between 0 and 65535)."
+msgstr "(השער לא תקין (השער התקין הוא בין 0 ל 65535"
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "The username is invalid."
+msgstr "המשתמש לא תקין"
+
+#: ../../swish/forms/add_host.cpp:349
+msgid "The path is invalid."
+msgstr "הנתיב לא חוקי"
+
+#: ../../swish/forms/add_host.cpp:355
+msgid "A connection with the same label already exists. Please try another."
+msgstr "חיבור עם אותו שם קיים. בבקשה נסה אחר."
+
+#: ../../swish/forms/add_host.cpp:361
+msgid "Complete all fields."
+msgstr "השלם את כל השדות."
+
+#: ../../swish/forms/password.cpp:59
+msgid "Password"
+msgstr "סיסמא"
+
+#: ../../swish/forms/password.cpp:66
+msgid "OK"
+msgstr "אישור"
+
+#: ../../swish/host_folder/columns.cpp:57
+msgctxt "Property (filename/label)"
+msgid "Name"
+msgstr "שם"
+
+#: ../../swish/host_folder/columns.cpp:60
+msgctxt "Property"
+msgid "Host"
+msgstr "שרת"
+
+#: ../../swish/host_folder/columns.cpp:63
+msgctxt "Property"
+msgid "Username"
+msgstr "משתמש"
+
+#: ../../swish/host_folder/columns.cpp:66
+msgctxt "Property"
+msgid "Port"
+msgstr "שער"
+
+#: ../../swish/host_folder/columns.cpp:69
+msgctxt "Property"
+msgid "Remote path"
+msgstr "נתיב מרוחק"
+
+#: ../../swish/host_folder/columns.cpp:72
+msgctxt "Property"
+msgid "Type"
+msgstr "סוג"
+
+#: ../../swish/host_folder/properties.cpp:79
+msgctxt "FileType"
+msgid "Network Drive"
+msgstr "כונן רשת"
+
+#: ../../swish/remote_folder/columns.cpp:82
+msgctxt "Property"
+msgid "Size"
+msgstr "גודל"
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgctxt "Property"
+msgid "Date Modified"
+msgstr "תאריך שונה"
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgctxt "Property"
+msgid "Date Accessed"
+msgstr "תאריך ניגש"
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgctxt "Property"
+msgid "Permissions"
+msgstr "הרשאות"
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgctxt "Property"
+msgid "Owner"
+msgstr "בעלים"
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgctxt "Property"
+msgid "Group"
+msgstr "קבוצה"
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgctxt "Property"
+msgid "Owner ID"
+msgstr "מספר בעלים"
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgctxt "Property"
+msgid "Group ID"
+msgstr "מספר קבוצה"
+
+#: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
+msgid "Keyboard-interactive request"
+msgstr "מקלדת-בקשה אינטראקטיבית"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:195
+#, boost-format
+msgid "The folder already contains a file named '%1%'"
+msgstr "'%1%' התקיה כבר מכילה קובץ בשם "
+
+#: ../../swish/shell_folder/UserInteraction.cpp:200
+#, boost-format
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr ""
+"האם אתה רוצה להחליף את הקובץ הקיים/n\t%1%\n"
+"\n"
+"אם זה?\n"
+"\n"
+"\t%2%"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "קובץ קיים"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:249
+msgid "Mismatched host-key"
+msgstr "מפתח לא מתאים"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:250
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "אזהרה: הפצח השתנה!"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:256
+#, boost-format
+msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
+msgstr "על מנת לזהות את עצמו לא תואם למפתח קיים לשרת זה. '%1%' שנשלח על ידי SSHמפתח הדבר זה יכול להוות אינדיקציה שצד שלישי מנסה להעמיד פנים שהוא המחשב אליו אתה מנסה להתחבר או שהמנהל מערכת שינה את המפתח."
+
+#: ../../swish/shell_folder/UserInteraction.cpp:263
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "זה חשוב לבדוק שזה מפתח החתימה הנכון:"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:274
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+"אני בוטח במפתח זה:&עדכן והתחבר\n"
+"לא יהיה עליך לוודא את מפתח זה שוב אלא אם הוא משתנה"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:279
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr ""
+"אני בוטח במפתח זה: &רק תתחבר\n"
+"אתה תוזהר בפעם הבאה על מפתח זה בפעם הבאה כשתתחבר"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:285
+#: ../../swish/shell_folder/UserInteraction.cpp:357
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr ""
+"ביטול&\n"
+"בחר אופציה זאת אלא אם אתה בטוח שהמפתח נכון"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:295
+msgid "To update the known key for this host click Yes."
+msgstr "לעדכון המפתח הידוע לשרת זה לחץ כן."
+
+#: ../../swish/shell_folder/UserInteraction.cpp:297
+msgid "To connect to the server without updating the key click No."
+msgstr "על מנת להתחבר לשרת בלי לעדכן את המפתח לחץ לא."
+
+#: ../../swish/shell_folder/UserInteraction.cpp:299
+#: ../../swish/shell_folder/UserInteraction.cpp:371
+msgid "Click Cancel unless you are sure the key is correct."
+msgstr "לחץ ביטול אלא אם אתה בטוח שהמפתח נכון."
+
+#: ../../swish/shell_folder/UserInteraction.cpp:324
+msgid "Unknown host-key"
+msgstr "מפתח-שרת לא ידוע"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:330
+#, boost-format
+msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
+msgstr ":SSH זיהה את עצמו עם מפתח שרת  '%1%' השרת "
+
+#: ../../swish/shell_folder/UserInteraction.cpp:334
+msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
+msgstr "אם אתה לא מצפה למפתח זה, צד שלישי יכול להיות מנסה להתחזות להיות המחשב אשר אליו אתה מנסה להתחבר."
+
+#: ../../swish/shell_folder/UserInteraction.cpp:339
+msgid "Verify unknown SSH host-key"
+msgstr "בעל מפתח-שרת לא ידוע SSH וודא "
+
+#: ../../swish/shell_folder/UserInteraction.cpp:346
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+"אני בוטח במפתח זה: &אחסן והתחבר\n"
+"לא תצטרך לוודא מפתח זה שוב אלא אם הוא ישתנה"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:351
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr ""
+" &just connect\n"
+"אני בוטח במפתח זה: אתה תתבקש לוודא את המפתח שוב בפעם הבאה שתתחבר"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:367
+msgid "To store this as the known key for this server click Yes."
+msgstr "על מנת לאחסן את זה כמפתח ידוע לשרת זה הקש כן."
+
+#: ../../swish/shell_folder/UserInteraction.cpp:369
+msgid "To connect to the server without storing the key click No."
+msgstr "על מנת להתחבר לשרת בלי לשמור מפתח הקש לא."
+
+#: ../../swish/shell_folder/commands/host/host.cpp:109
+msgid "&Add SFTP Connection"
+msgstr "SFTP הוסף חיבור&"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:110
+msgid "Create a new SFTP connection with Swish."
+msgstr "Swish עם SFTP צור חיבור "
+
+#: ../../swish/shell_folder/commands/host/host.cpp:111
+msgid "&Add SFTP Connection..."
+msgstr "SFTP הוסף חיבור&"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:112
+msgid "Add Connection"
+msgstr "הוסף חיבור"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:142
+msgid "&Remove SFTP Connection"
+msgstr "&SFTP הסר חיבור"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:143
+msgid "Remove a SFTP connection created with Swish."
+msgstr ".Swish הסר חיבור אשר נוצר עם "
+
+#: ../../swish/shell_folder/commands/host/host.cpp:144
+msgid "&Remove SFTP Connection..."
+msgstr "&...SFTP הסר חיבור "
+
+#: ../../swish/shell_folder/commands/host/host.cpp:145
+msgid "Remove Connection"
+msgstr "הסר חיבור"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:199
+msgid "SFTP Tasks"
+msgstr "SFTP משימות "
+
+#: ../../swish/shell_folder/commands/host/host.cpp:212
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Swish SFTP משימות אלו עוזרות לך לנהל את חיבורי"
+
