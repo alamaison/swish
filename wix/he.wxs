@@ -3,7 +3,7 @@
   <Fragment>
     <ComponentGroup Id="HETrans">
       <Component Id="cmpBC8B5DAA2CADD87E0013E8A0E2609F1A" Directory="dir70645792ED8D326D4069C6F373F45395" Guid="*">
-        <File Id="filC8ADC7AC9E0FE43FD9D1EADB817CF6AE" KeyPath="yes" Source="$(var.SolutionDir)\po\swish\swish.mo" />
+        <File Id="filC8ADC7AC9E0FE43FD9D1EADB817CF6AE" KeyPath="yes" Source="$(var.SolutionDir)po\he\swish.mo" />
       </Component>
     </ComponentGroup>
   </Fragment>

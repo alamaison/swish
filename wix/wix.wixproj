@@ -5,31 +5,44 @@
     <ProductVersion>3.0</ProductVersion>
     <ProjectGuid>{b11052ed-f8b3-487c-b265-ee8a2363d523}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>swish-0.4.2</OutputName>
+    <OutputName>swish-0.4.3</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.0\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.0\Wix.targets</WixTargetsPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>$(SolutionDir)\bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DefineConstants>Debug</DefineConstants>
+    <OutputPath>$(SolutionDir)\bin\$(Configuration)-x64\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>$(SolutionDir)\bin\$(Configuration)-x64\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DefineConstants>Debug</DefineConstants>
+    <OutputPath>$(SolutionDir)\bin\$(Configuration)-Win32\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>$(SolutionDir)\bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)\bin\$(Configuration)-Win32\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="cs.wxs" />
     <Compile Include="de.wxs" />
+    <Compile Include="es.wxs" />
+    <Compile Include="fr.wxs" />
+    <Compile Include="he.wxs" />
     <Compile Include="nl.wxs" />
     <Compile Include="ru.wxs" />
     <Compile Include="swish.wxs" />
     <Compile Include="tr.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\swish\interfaces\interfaces.vcproj">
-      <Name>interfaces</Name>
-      <Project>{58748987-258d-435d-80b6-ee067f90a688}</Project>
+    <ProjectReference Include="..\swish\interfaces\interfaces_dll.vcproj">
+      <Name>interfaces_dll</Name>
+      <Project>{dfe19ebd-f9d6-4a7a-84a4-07aac6fbf951}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\swish\provider\com_dll\com_dll.vcproj">
