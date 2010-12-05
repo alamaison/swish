@@ -1,3 +1,8 @@
+swish-0.4.4
+-64-bit support.
+-Windows XP 'webtask' pane.
+-Hebrew, Czech, Spanish, French, Turkish and Russian translations.
+
 swish-0.4.2
 -Explicitly prevent 64-bit installation.
 -Fix bug where sessions couldn't be restored until Explorer restarted.

@@ -8,17 +8,16 @@ What is Swish?
     remote files via SSH/SFTP.
     
 Status:
-    In this version, Swish is finally starting to look like a real SFTP 
-    client.  As well as management tasks such as renaming and deleting 
-    files on the remote server users can drag and drop the contents of files
+    As well as management tasks such as renaming and deleting files
+    on the remote server users can drag and drop the contents of files
     and folders from the remote server to the local filesystem.
  
     Currently, Swish only supports simple password and keyboard-interactive
     authentication. 
 
 Supported Operating Systems:
-    Window 7      (recently tested)
-    Windows Vista (most tested)
+    Window 7      (most tested)
+    Windows Vista (regularly tested)
     Windows XP    (regularly tested)
     Windows 2000  (regularly tested)
     Windows Me    (rarely tested)
