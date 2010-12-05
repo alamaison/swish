@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;win32;$(SolutionDir)\thirdparty\openssl\inc32;$(SolutionDir)\thirdparty\zlib"
+				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -59,12 +59,14 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Copying OpenSSL DLLs to target directory ..."
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib"
 				OutputFile="$(OutDir)\libssh2.dll"
-				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl"
+				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl\$(PlatformName)"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -120,7 +122,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;win32;$(SolutionDir)\thirdparty\openssl\inc32;$(SolutionDir)\thirdparty\zlib"
+				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -136,12 +138,14 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Copying OpenSSL DLLs to target directory ..."
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay64.lib ssleay64.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib"
 				OutputFile="$(OutDir)\libssh2.dll"
-				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl"
+				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl\$(PlatformName)"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
 			/>
@@ -197,7 +201,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include;win32;$(SolutionDir)\thirdparty\openssl\inc32;$(SolutionDir)\thirdparty\zlib"
+				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -212,12 +216,14 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Copying OpenSSL DLLs to target directory ..."
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib"
 				OutputFile="$(OutDir)\libssh2.dll"
-				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl"
+				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl\$(PlatformName)"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -274,7 +280,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include;win32;$(SolutionDir)\thirdparty\openssl\inc32;$(SolutionDir)\thirdparty\zlib"
+				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -289,12 +295,14 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Copying OpenSSL DLLs to target directory ..."
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\libeay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\openssl\$(PlatformName)\ssleay32.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay64.lib ssleay64.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib"
 				OutputFile="$(OutDir)\libssh2.dll"
-				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl"
+				AdditionalLibraryDirectories="$(SolutionDir)thirdparty\openssl\$(PlatformName)"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
 			/>
