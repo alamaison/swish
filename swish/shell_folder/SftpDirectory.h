@@ -29,76 +29,35 @@
 
 #include "HostPidl.h"  // PIDL wrapper classes
 #include "RemotePidl.h"
-#include "swish/catch_com.hpp"  // COM catch block
-#include "swish/ComSTLContainer.hpp"  // CComSTLContainer
 
-#include <vector>
+#include <comet/bstr.h> // bstr_t
+#include <comet/ptr.h> // com_ptr
 
-struct ISftpProvider;
 struct ISftpConsumer;
-
-typedef ATL::CComObject<
-        swish::CComSTLContainer< std::vector<CChildPidl> > >
-	CComPidlHolder;
+struct ISftpProvider;
 
 class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		__in CAbsolutePidlHandle pidlDirectory, __in ISftpProvider *pProvider,
-		__in ISftpConsumer* pConsumer);
+		CAbsolutePidlHandle pidlDirectory,
+		comet::com_ptr<ISftpProvider> provider,
+		comet::com_ptr<ISftpConsumer> consumer);
 
-	ATL::CComPtr<IEnumIDList> GetEnum(__in SHCONTF grfFlags) throw(...);
-	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl) throw(...);
+	ATL::CComPtr<IEnumIDList> GetEnum(SHCONTF grfFlags);
+	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl);
 	ATL::CComPtr<IStream> GetFile(
-		__in CRemoteItemHandle pidl, bool writeable) throw(...);
+		__in CRemoteItemHandle pidl, bool writeable);
 	ATL::CComPtr<IStream> GetFileByPath(
-		PCWSTR pwszPath, bool writeable) throw(...);
+		PCWSTR pwszPath, bool writeable);
 
 	bool Rename(
-		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename)
-		throw(...);
-	void Delete(__in CRemoteItemHandle pidl) throw(...);
+		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename);
+	void Delete(__in CRemoteItemHandle pidl);
 
 private:
-	ATL::CComPtr<ISftpProvider> m_spProvider;  ///< Backend data provider
-	ATL::CComPtr<ISftpConsumer> m_spConsumer;  ///< UI callback
-	ATL::CString m_strDirectory;         ///< Absolute path to this directory.
-	CAbsolutePidl m_pidlDirectory;       ///< Absolute PIDL to this directory.
-	std::vector<CChildPidl> m_vecPidls;  ///< Directory contents as PIDLs.
-
-	HRESULT _Fetch( __in SHCONTF grfFlags );
-};
-
-
-/**
- * Copy-policy to manage copying and destruction of PITEMID_CHILD pidls.
- */
-struct _CopyChildPidl
-{
-	static HRESULT copy(PITEMID_CHILD *ppidlCopy, const CChildPidl *ppidl)
-	{
-		try
-		{
-			*ppidlCopy = ppidl->CopyTo();
-		}
-		catchCom();
-
-		return S_OK;
-	}
-
-	static HRESULT copy(PITEMID_CHILD *ppidlCopy, const PITEMID_CHILD *ppidl)
-	{
-		*ppidlCopy = ::ILCloneChild(*ppidl);
-		if (*ppidlCopy)
-			return S_OK;
-		else
-			return E_OUTOFMEMORY;
-	}
-
-	static void init(PITEMID_CHILD* /* ppidl */) { }
-	static void destroy(PITEMID_CHILD *ppidl)
-	{
-		::ILFree(*ppidl);
-	}
+	comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider
+	comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
+	comet::bstr_t m_directory;        ///< Absolute path to this directory.
+	CAbsolutePidl m_pidlDirectory;    ///< Absolute PIDL to this directory.
 };

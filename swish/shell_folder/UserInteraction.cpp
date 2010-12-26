@@ -227,16 +227,6 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
 }
 
 
-STDMETHODIMP CUserInteraction::OnReportError( BSTR bstrMessage )
-{
-	if (m_hwnd == NULL)
-		return E_FAIL;
-
-	::IsolationAwareMessageBox(m_hwnd, CComBSTR(bstrMessage), NULL,
-		MB_OK | MB_ICONERROR);
-	return S_OK;
-}
-
 namespace {
 
 /** Click handler callback. */

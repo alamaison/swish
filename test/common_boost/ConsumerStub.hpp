@@ -38,12 +38,6 @@
 
 #include <boost/filesystem.hpp>
 
-template<> struct ::comet::comtype<::ISftpConsumer>
-{
-	static const ::IID& uuid() throw() { return ::IID_ISftpConsumer; }
-	typedef ::IUnknown base;
-};
-
 namespace test {
 
 class CConsumerStub : public comet::simple_object<ISftpConsumer>
@@ -120,14 +114,6 @@ public:
 	{
 		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
-	}
-
-	IFACEMETHODIMP OnReportError(BSTR bstrMessage)
-	{
-		std::wstring message(bstrMessage);
-		BOOST_ERROR(
-			std::wstring(L"Unexpected call to "__FUNCTIONW__) + message);
-		return S_OK;
 	}
 
 	IFACEMETHODIMP OnHostkeyMismatch(

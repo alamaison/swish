@@ -218,12 +218,6 @@ STDMETHODIMP CMockSftpProvider::Rename(
 			*fWasTargetOverwritten = VARIANT_TRUE;
 		return hr;
 
-	case ReportError:
-		hr = pConsumer->OnReportError(
-			CComBSTR("Mock error message \"CMockSftpProvider::Rename\"")
-		);
-		return E_FAIL;
-
 	case AbortRename:
 		return E_ABORT;
 

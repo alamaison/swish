@@ -45,16 +45,6 @@
 
 #include <string>
 
-namespace comet {
-
-	template<> struct comtype<ISftpProvider>
-	{
-		static const IID& uuid() throw() { return IID_ISftpProvider; }
-		typedef IUnknown base;
-	};
-
-}
-
 namespace test {
 
 namespace detail {

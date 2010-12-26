@@ -52,24 +52,6 @@ using comet::uuidof;
 
 using std::wstring;
 
-
-namespace comet {
-
-template<> struct comtype<ISftpProvider>
-{
-	static const IID& uuid() throw() { return IID_ISftpProvider; }
-	typedef IUnknown base;
-};
-
-
-template<> struct comtype<ISftpConsumer>
-{
-	static const IID& uuid() throw() { return IID_ISftpConsumer; }
-	typedef IUnknown base;
-};
-
-} // namespace comet
-
 namespace {
 
 	/**

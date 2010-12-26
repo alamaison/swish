@@ -431,10 +431,6 @@
 				RelativePath=".\SftpDataObject_test.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\SftpDirectory_test.cpp"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

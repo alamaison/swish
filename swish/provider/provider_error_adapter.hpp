@@ -43,22 +43,10 @@
 #include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error
-#include <comet/interface.h> // comtype
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
-
-/**
- * Comet IID lookup for ISftpProvider.
- *
- * Allows provider_error_adapter to be used as a base for Comet objects.
- */
-template<> struct ::comet::comtype<::ISftpProvider>
-{
-	static const ::IID& uuid() throw() { return ::IID_ISftpProvider; }
-	typedef ::IUnknown base;
-};
 
 namespace swish {
 namespace provider {
@@ -106,7 +94,7 @@ public:
  *
  * - On entry to a COM method it first clears any [out]-parameters.  This is
  *   required by COM rules so that, for example, cross-apartment marshalling
- *   doesn't try to marshal ininitialised memory (see item 19 of 
+ *   doesn't try to marshal uninitialised memory (see item 19 of 
  *   'Effective Com').
  * - If certain required parameters are missing, it immediately returns a
  *   COM error without calling the inner C++ method.
@@ -118,7 +106,7 @@ public:
  *
  * As the return-values are no longer being used for error codes, the inner
  * methods are sometimes changed to return a value directly instead of using
- * an [out]-paramter.
+ * an [out]-parameter.
  *
  * Although the adapters make use of Comet, they do not have to be instantiated
  * as Comet objects.  They work just as well using ATL::CComObject.
@@ -268,6 +256,7 @@ public:
 	}
 
 private:
+
 	virtual provider_interface& impl() = 0;
 };
 

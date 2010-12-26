@@ -76,7 +76,8 @@ public:
 
 			HRESULT hr = m_ole_site.get()->QueryInterface(riid, ppvSite);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(comet::com_error(m_ole_site, hr));
+				BOOST_THROW_EXCEPTION(
+					comet::com_error_from_interface(m_ole_site, hr));
 		}
 		COM_CATCH_AUTO_INTERFACE();
 

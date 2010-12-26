@@ -39,6 +39,7 @@
 #include "swish/exception.hpp"     // com_exception
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
+#include "swish/shell_folder/announce_error.hpp" // rethrow_and_announce
 #include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
@@ -48,6 +49,7 @@
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
 
 #include <cassert> // assert
@@ -60,6 +62,7 @@ using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::shell_folder::CExplorerCallback;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::rethrow_and_announce;
 using swish::tracing::trace;
 
 using namespace winapi::gui::message_box;
@@ -75,6 +78,7 @@ using comet::throw_com_error;
 using comet::variant_t;
 
 using boost::filesystem::wpath;
+using boost::locale::translate;
 using boost::make_shared;
 
 using ATL::CComPtr;
@@ -82,8 +86,6 @@ using ATL::CComBSTR;
 using ATL::CString;
 
 using std::wstring;
-
-using namespace swish;
 
 /*--------------------------------------------------------------------------*/
 /*      Functions implementing IShellFolder via folder_error_adapter.       */
@@ -111,17 +113,10 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 			root_pidl().get(), provider.get(), m_consumer.get());
 		return directory.GetEnum(flags).Detach();
 	}
-	catch (const com_error& e)
+	catch (...)
 	{
-		if (hwnd)
-		{
-			message_box(
-				hwnd, 
-				L"An error occurred while trying to access the directory:\n\n"
-				+ e.w_str(), L"Swish", box_type::ok, icon_type::error);
-		}
-
-		throw;
+		rethrow_and_announce(
+			hwnd, translate("Unable to access the directory"));
 	}
 }
 
@@ -137,55 +132,62 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
 	HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
 	ULONG* attributes_inout)
 {
-	trace(__FUNCTION__" called (display_name=%s)") % display_name;
-	if (*display_name == L'\0')
-		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-
-	// The string we are trying to parse should be of the form:
-	//    directory/directory/filename
-	// or 
-    //    filename
-	wstring strDisplayName(display_name);
-
-	// May have / to separate path segments
-	wstring::size_type nSlash = strDisplayName.find_first_of(L'/');
-	wstring strSegment;
-	if (nSlash == 0) // Unix machine - starts with folder called /
+	try
 	{
-		strSegment = strDisplayName.substr(0, 1);
+		trace(__FUNCTION__" called (display_name=%s)") % display_name;
+		if (*display_name == L'\0')
+			BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+
+		// The string we are trying to parse should be of the form:
+		//    directory/directory/filename
+		// or 
+		//    filename
+		wstring strDisplayName(display_name);
+
+		// May have / to separate path segments
+		wstring::size_type nSlash = strDisplayName.find_first_of(L'/');
+		wstring strSegment;
+		if (nSlash == 0) // Unix machine - starts with folder called /
+		{
+			strSegment = strDisplayName.substr(0, 1);
+		}
+		else
+		{
+			strSegment = strDisplayName.substr(0, nSlash);
+		}
+
+		// Create child PIDL for this path segment
+		CRemoteItem pidl(strSegment.c_str());
+
+		// Bind to subfolder and recurse if there were other path segments
+		if (nSlash != wstring::npos)
+		{
+			wstring strRest = strDisplayName.substr(nSlash+1);
+
+			com_ptr<IShellFolder> subfolder;
+			bind_to_object(
+				pidl, bind_ctx, subfolder.iid(),
+				reinterpret_cast<void**>(subfolder.out()));
+
+			wchar_t wszRest[MAX_PATH];
+			::wcscpy_s(wszRest, ARRAYSIZE(wszRest), strRest.c_str());
+
+			pidl_t rest;
+			HRESULT hr = subfolder->ParseDisplayName(
+				hwnd, bind_ctx, wszRest, NULL, rest.out(), attributes_inout);
+			if (FAILED(hr))
+				throw_com_error(subfolder.get(), hr);
+
+			return (pidl_t(pidl.m_pidl) + rest).detach();
+		}
+		else
+		{
+			return pidl.Detach();
+		}
 	}
-	else
+	catch (...)
 	{
-		strSegment = strDisplayName.substr(0, nSlash);
-	}
-
-	// Create child PIDL for this path segment
-	CRemoteItem pidl(strSegment.c_str());
-
-	// Bind to subfolder and recurse if there were other path segments
-	if (nSlash != wstring::npos)
-	{
-		wstring strRest = strDisplayName.substr(nSlash+1);
-
-		com_ptr<IShellFolder> subfolder;
-		bind_to_object(
-			pidl, bind_ctx, subfolder.iid(),
-			reinterpret_cast<void**>(subfolder.out()));
-
-		wchar_t wszRest[MAX_PATH];
-		::wcscpy_s(wszRest, ARRAYSIZE(wszRest), strRest.c_str());
-
-		pidl_t rest;
-		HRESULT hr = subfolder->ParseDisplayName(
-			hwnd, bind_ctx, wszRest, NULL, rest.out(), attributes_inout);
-		if (FAILED(hr))
-			throw_com_error(subfolder.get(), hr);
-
-		return (pidl_t(pidl.m_pidl) + rest).detach();
-	}
-	else
-	{
-		return pidl.Detach();
+		rethrow_and_announce(hwnd, translate("Path not recognised"));
 	}
 }
 
@@ -255,46 +257,53 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 PITEMID_CHILD CRemoteFolder::set_name_of(
 	HWND hwnd, PCUITEMID_CHILD pidl, const wchar_t* name, SHGDNF /*flags*/)
 {
-	// Create SFTP connection object for this folder using hwnd for UI
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
-
-	// Rename file
-	CSftpDirectory directory(
-		root_pidl().get(), provider.get(), m_consumer.get());
-	bool fOverwritten = directory.Rename(pidl, name);
-
-	// Create new PIDL from old one
-	CRemoteItem pidlNewFile;
-	pidlNewFile.Attach(::ILCloneChild(pidl));
-	pidlNewFile.SetFilename(name);
-
-	// Make PIDLs absolute
-	apidl_t old_pidl = root_pidl() + pidl;
-	apidl_t new_pidl = root_pidl() + pidlNewFile.m_pidl;
-
-	// A failure to notify the shell shouldn't prevent us returning the PIDL
 	try
 	{
-		// Update the shell by passing both PIDLs
-		if (fOverwritten)
-		{
-			::SHChangeNotify(
-				SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, new_pidl.get(), NULL
-			);
-		}
-		CRemoteItemHandle rpidl(pidl);
-		::SHChangeNotify(
-			(rpidl.IsFolder()) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-			SHCNF_IDLIST | SHCNF_FLUSH, old_pidl.get(), new_pidl.get()
-		);
-	}
-	catch (const std::exception& e)
-	{
-		trace("Exception thrown while notifying shell of rename:");
-		trace("%s") % boost::diagnostic_information(e);
-	}
+		// Create SFTP connection object for this folder using hwnd for UI
+		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 
-	return pidlNewFile.Detach();
+		// Rename file
+		CSftpDirectory directory(
+			root_pidl().get(), provider.get(), m_consumer.get());
+		bool fOverwritten = directory.Rename(pidl, name);
+
+		// Create new PIDL from old one
+		CRemoteItem pidlNewFile;
+		pidlNewFile.Attach(::ILCloneChild(pidl));
+		pidlNewFile.SetFilename(name);
+
+		// A failure to notify the shell shouldn't prevent us returning the PIDL
+		try
+		{
+
+			// Make PIDLs absolute
+			apidl_t old_pidl = root_pidl() + pidl;
+			apidl_t new_pidl = root_pidl() + pidlNewFile.m_pidl;
+
+			// Update the shell by passing both PIDLs
+			if (fOverwritten)
+			{
+				::SHChangeNotify(
+					SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, new_pidl.get(),
+					NULL);
+			}
+			CRemoteItemHandle rpidl(pidl);
+			::SHChangeNotify(
+				(rpidl.IsFolder()) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
+				SHCNF_IDLIST | SHCNF_FLUSH, old_pidl.get(), new_pidl.get());
+		}
+		catch (const std::exception& e)
+		{
+			trace("Exception thrown while notifying shell of rename:");
+			trace("%s") % boost::diagnostic_information(e);
+		}
+
+		return pidlNewFile.Detach();
+	}
+	catch (...)
+	{
+		rethrow_and_announce(hwnd, translate("Unable to rename the item"));
+	}
 }
 
 /**
@@ -662,29 +671,36 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 
 	try
 	{
-		PidlFormat format(pDataObj);
-		assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
-
-		// Build up a list of PIDLs for all the items to be deleted
-		RemotePidls vecDeathRow;
-		for (UINT i = 0; i < format.pidl_count(); i++)
+		try
 		{
-			CRemoteItemList pidlFile = format.relative_file(i).get();
+			PidlFormat format(pDataObj);
+			assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
 
-			// May be overkill (it should always be a child) but check anyway
-			// because we don't want to accidentally recursively delete the root
-			// of a folder tree
-			if (::ILIsChild(pidlFile) && !::ILIsEmpty(pidlFile))
+			// Build up a list of PIDLs for all the items to be deleted
+			RemotePidls vecDeathRow;
+			for (UINT i = 0; i < format.pidl_count(); i++)
 			{
-				CRemoteItem pidlChild = 
-					static_cast<PCITEMID_CHILD>(
-					static_cast<PCIDLIST_RELATIVE>(pidlFile));
-				vecDeathRow.push_back(pidlChild);
-			}
-		}
+				CRemoteItemList pidlFile = format.relative_file(i).get();
 
-		// Delete
-		_Delete(hwnd, vecDeathRow);
+				// May be overkill (it should always be a child) but check anyway
+				// because we don't want to accidentally recursively delete the root
+				// of a folder tree
+				if (::ILIsChild(pidlFile) && !::ILIsEmpty(pidlFile))
+				{
+					CRemoteItem pidlChild = 
+						static_cast<PCITEMID_CHILD>(
+						static_cast<PCIDLIST_RELATIVE>(pidlFile));
+					vecDeathRow.push_back(pidlChild);
+				}
+			}
+
+			// Delete
+			_Delete(hwnd, vecDeathRow);
+		}
+		catch (...)
+		{
+			rethrow_and_announce(hwnd, translate("Unable to delete the item"));
+		}
 	}
 	catchCom()
 
@@ -756,7 +772,7 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 	CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder( hwnd );
 
 	// Create instance of our directory handler class
-	CSftpDirectory directory(root_pidl().get(), spProvider, m_consumer.get());
+	CSftpDirectory directory(root_pidl().get(), spProvider.p, m_consumer.get());
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();

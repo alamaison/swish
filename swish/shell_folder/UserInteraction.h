@@ -71,9 +71,6 @@ public:
 		__in BSTR bstrOldFile,
 		__in BSTR bstrNewFile
 	);
-	IFACEMETHODIMP OnReportError(
-		__in BSTR bstrMessage
-	);
 	IFACEMETHODIMP OnHostkeyMismatch(
 		__in BSTR bstrHostName,
 		__in BSTR bstrHostKey,

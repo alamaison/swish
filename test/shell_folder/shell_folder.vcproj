@@ -386,6 +386,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sftp_directory_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\shell_data_object_test.cpp"
 			>
 		</File>

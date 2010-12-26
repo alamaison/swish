@@ -108,19 +108,19 @@ namespace {
 		{
 			HRESULT hr = browser->EnableModelessSB(enable);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(browser, hr));
+				BOOST_THROW_EXCEPTION(com_error_from_interface(browser, hr));
 		}
 		else if (com_ptr<IOleInPlaceFrame> ole_frame = com_cast(site))
 		{
 			HRESULT hr = ole_frame->EnableModeless(enable);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(ole_frame, hr));
+				BOOST_THROW_EXCEPTION(com_error_from_interface(ole_frame, hr));
 		}
 		else if (com_ptr<IShellView> view = com_cast(site))
 		{
 			HRESULT hr = view->EnableModeless(state);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(view, hr));
+				BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
 		}
 		else
 		{
@@ -221,12 +221,14 @@ namespace {
 
 			hr = m_progress->SetTitle(title.c_str());
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(m_progress, hr));
+				BOOST_THROW_EXCEPTION(
+					com_error_from_interface(m_progress, hr));
 
 			hr = m_progress->StartProgressDialog(
 				hwnd, ole_site.get(), flags, NULL);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(m_progress, hr));
+				BOOST_THROW_EXCEPTION(
+					com_error_from_interface(m_progress, hr));
 		}
 
 		~AutoStartProgressDialog()
@@ -252,7 +254,8 @@ namespace {
 
 			HRESULT hr = m_progress->SetLine(index, text.c_str(), FALSE, NULL);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(m_progress, hr));
+				BOOST_THROW_EXCEPTION(
+					com_error_from_interface(m_progress, hr));
 		}
 
 		/**
@@ -267,7 +270,8 @@ namespace {
 			HRESULT hr = m_progress->SetLine(
 				index, path.string().c_str(), TRUE, NULL);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(m_progress, hr));
+				BOOST_THROW_EXCEPTION(
+					com_error_from_interface(m_progress, hr));
 		}
 
 		/**
@@ -279,7 +283,8 @@ namespace {
 
 			HRESULT hr = m_progress->SetProgress64(so_far, out_of);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(m_progress, hr));
+				BOOST_THROW_EXCEPTION(
+					com_error_from_interface(m_progress, hr));
 		}
 
 	private:

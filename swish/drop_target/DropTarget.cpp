@@ -73,19 +73,6 @@ using std::size_t;
 using std::wstring;
 using std::vector;
 
-template<> struct comet::comtype<ISftpProvider>
-{
-	static const IID& uuid() throw() { return IID_ISftpProvider; }
-	typedef IUnknown base;
-};
-
-
-template<> struct comet::comtype<ISftpConsumer>
-{
-	static const IID& uuid() throw() { return IID_ISftpConsumer; }
-	typedef IUnknown base;
-};
-
 namespace swish {
 namespace drop_target {
 
@@ -152,7 +139,7 @@ namespace { // private
 		STATSTG statstg;
 		HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(stream, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(stream, hr));
 
 		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
 		return std::make_pair(name.get(), statstg.cbSize.QuadPart);
@@ -185,7 +172,7 @@ namespace { // private
 		HRESULT hr = parent_folder->GetDisplayNameOf(
 			pidl.get(), SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(parent_folder, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(parent_folder, hr));
 
 		return strret_to_string<wchar_t>(strret, pidl);
 	}
@@ -265,17 +252,17 @@ namespace { // private
 		hr = provider->GetFile(
 			consumer.get(), target.in(), true, remote_stream.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(provider, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
 
 		// Set both streams back to the start
 		LARGE_INTEGER move = {0};
 		hr = local_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(local_stream, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(local_stream, hr));
 
 		hr = remote_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(remote_stream, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(remote_stream, hr));
 
 		// Do the copy in chunks allowing us to cancel the operation
 		// and display progress
@@ -292,7 +279,8 @@ namespace { // private
 				remote_stream.get(), cb, &cbRead, &cbWritten);
 			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(local_stream, hr));
+				BOOST_THROW_EXCEPTION(
+					com_error_from_interface(local_stream, hr));
 
 			// A failure to update the progress isn't a good enough reason
 			// to abort the copy so we swallow the exception.
@@ -321,7 +309,7 @@ namespace { // private
 		HRESULT hr = provider->CreateNewDirectory(
 			consumer.get(), path.get_raw());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(provider, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
 	}
 
 	/**
@@ -361,7 +349,7 @@ namespace { // private
 		HRESULT hr = folder->EnumObjects(
 			NULL, SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(folder, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
 
 		cpidl_t item;
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
@@ -377,7 +365,7 @@ namespace { // private
 		hr = folder->EnumObjects(
 			NULL, SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(folder, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
 
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{

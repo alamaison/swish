@@ -40,7 +40,7 @@
 				Name="VCMIDLTool"
 				GenerateStublessProxies="true"
 				GenerateTypeLibrary="false"
-				HeaderFileName="$(InputName).h"
+				HeaderFileName="_$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -103,7 +103,7 @@
 				TargetEnvironment="3"
 				GenerateStublessProxies="true"
 				GenerateTypeLibrary="false"
-				HeaderFileName="$(InputName).h"
+				HeaderFileName="_$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -166,7 +166,7 @@
 				Name="VCMIDLTool"
 				GenerateStublessProxies="true"
 				GenerateTypeLibrary="false"
-				HeaderFileName="$(InputName).h"
+				HeaderFileName="_$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -228,7 +228,7 @@
 				TargetEnvironment="3"
 				GenerateStublessProxies="true"
 				GenerateTypeLibrary="false"
-				HeaderFileName="$(InputName).h"
+				HeaderFileName="_$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -285,7 +285,7 @@
 			SourceControlFiles="false"
 			>
 			<File
-				RelativePath="$(OutDir)generated-files\swish\$(ProjectName)\SftpProvider.h"
+				RelativePath="$(OutDir)generated-files\swish\$(ProjectName)\_SftpProvider.h"
 				>
 			</File>
 			<File
@@ -294,6 +294,14 @@
 			</File>
 			<File
 				RelativePath="$(OutDir)generated-files\swish\$(ProjectName)\SftpProvider_p.c"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			>
+			<File
+				RelativePath=".\SftpProvider.h"
 				>
 			</File>
 		</Filter>

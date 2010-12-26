@@ -114,7 +114,7 @@ STDMETHODIMP CSnitchingDropTarget::Drop(
 		HRESULT hr = m_inner->Drop(pdo, grfKeyState, pt, pdwEffect);
 		if (FAILED(hr))
 		{
-			com_error error(m_inner, hr);
+			com_error error(com_error_from_interface(m_inner, hr));
 			if (m_hwnd_owner && error.hr() != E_ABORT)
 			{
 				wstringstream message;

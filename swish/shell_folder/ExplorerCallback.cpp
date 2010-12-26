@@ -149,7 +149,7 @@ namespace {
 		com_ptr<IShellBrowser> browser;
 		HRESULT hr = sp->QueryService(SID_SShellBrowser, browser.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(sp, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(sp, hr));
 
 		return browser;
 	}
@@ -162,7 +162,7 @@ namespace {
 		com_ptr<IShellView> view;
 		HRESULT hr = browser->QueryActiveShellView(view.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(browser, hr));
+			BOOST_THROW_EXCEPTION(com_error_from_interface(browser, hr));
 
 		return view;
 	}

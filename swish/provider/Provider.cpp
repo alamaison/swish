@@ -91,53 +91,6 @@ using std::string;
 using std::wstring;
 using std::vector;
 
-namespace comet {
-
-template<> struct comtype<IEnumListing>
-{
-	static const IID& uuid() throw() { return IID_IEnumListing; }
-	typedef IUnknown base;
-};
-
-template<> struct enumerated_type_of<IEnumListing>
-{ typedef Listing is; };
-
-/**
- * Copy-policy for use by enumerators of Listing items.
- */
-template<> struct impl::type_policy<Listing>
-{
-	template<typename S>
-	static void init(Listing& t, const S& s) 
-	{
-		::ZeroMemory(&t, sizeof(t));
-
-		t.bstrFilename = SysAllocStringLen(
-			s.bstrFilename, ::SysStringLen(s.bstrFilename));
-		t.uPermissions = s.uPermissions;
-		t.bstrOwner = SysAllocStringLen(
-			s.bstrOwner, ::SysStringLen(s.bstrOwner));
-		t.bstrGroup = SysAllocStringLen(
-			s.bstrGroup, ::SysStringLen(s.bstrGroup));
-		t.uUid = s.uUid;
-		t.uGid = s.uGid;
-		t.uSize = s.uSize;
-		t.cHardLinks = s.cHardLinks;
-		t.dateModified = s.dateModified;
-		t.dateAccessed = s.dateAccessed;
-	}
-
-	static void clear(Listing& t)
-	{
-		::SysFreeString(t.bstrFilename);
-		::SysFreeString(t.bstrOwner);
-		::SysFreeString(t.bstrGroup);
-		::ZeroMemory(&t, sizeof(t));
-	}	
-};
-
-} // namespace comet
-
 namespace swish {
 namespace provider {
 
@@ -371,20 +324,10 @@ provider::~provider() throw()
  */
 void provider::_Connect(com_ptr<ISftpConsumer> consumer)
 {
-	try
+	if (!m_session || m_session->IsDead())
 	{
-		if (!m_session || m_session->IsDead())
-		{
-			m_session = CSessionFactory::CreateSftpSession(
-				m_host.c_str(), m_port, m_user.c_str(), consumer.get());
-		}
-	}
-	catch (const std::exception& e)
-	{
-		bstr_t message("Could not connect to server:\n\n");
-		message += e.what();
-		consumer->OnReportError(message.get_raw());
-		throw;
+		m_session = CSessionFactory::CreateSftpSession(
+			m_host.c_str(), m_port, m_user.c_str(), consumer.get());
 	}
 }
 
@@ -557,10 +500,8 @@ VARIANT_BOOL provider::rename(
 	else // A non-SFTP error occurred
 		message = pszErr;
 
-	// Report remaining errors to front-end
-	consumer->OnReportError(message.in());
-
-	BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+	// Report remaining errors
+	BOOST_THROW_EXCEPTION(com_error(message, E_FAIL));
 }
 
 /**
@@ -741,10 +682,7 @@ void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
 	string utf8_path = WideStringToUtf8String(path.string());
 	HRESULT hr = _Delete(utf8_path.c_str(), error_out);
 	if (FAILED(hr))
-	{
-		consumer->OnReportError(bstr_t(error_out).in());
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	}
+		BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
 }
 
 HRESULT provider::_Delete( const char *szPath, wstring& error_out )
@@ -770,10 +708,7 @@ void provider::delete_directory(
 	string utf8_path = WideStringToUtf8String(path.string());
 	HRESULT hr = _DeleteDirectory(utf8_path.c_str(), error_out);
 	if (FAILED(hr))
-	{
-		consumer->OnReportError(bstr_t(error_out).in());
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	}
+		BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
 }
 
 HRESULT provider::_DeleteDirectory(const char* szPath, wstring& error_out)
@@ -862,11 +797,7 @@ void provider::create_new_file(
 	LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
 		*m_session, utf8_path.c_str(), LIBSSH2_FXF_CREAT, 0644);
 	if (pHandle == NULL)
-	{
-		// Report error to front-end
-		consumer->OnReportError(bstr_t(_GetLastErrorMessage()).in());
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	}
+		BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
 
 	int rc = libssh2_sftp_close_handle(pHandle);
 	assert(rc == 0); (void)rc;
@@ -882,11 +813,7 @@ void provider::create_new_directory(
 
 	string utf8_path = WideStringToUtf8String(path.string());
 	if (libssh2_sftp_mkdir(*m_session, utf8_path.c_str(), 0755) != 0)
-	{
-		// Report error to front-end
-		consumer->OnReportError(bstr_t(_GetLastErrorMessage()).in());
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	}
+		BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
 }
 
 /**

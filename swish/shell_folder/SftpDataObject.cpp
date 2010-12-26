@@ -22,6 +22,7 @@
 #include "HostPidl.h"
 #include "RemotePidl.h"
 #include "SftpDirectory.h"
+#include "swish/catch_com.hpp"  // COM catch block
 #include "data_object/StorageMedium.hpp"  // StorageMedium
 
 #pragma warning(push)
@@ -301,7 +302,7 @@ throw(...)
 	FileGroupDescriptor fgd(medium.get().hGlobal);
 
 	// Get stream from relative path stored in the lindexth FILEDESCRIPTOR
-	CSftpDirectory dir(m_pidlCommonParent, m_spProvider, m_spConsumer);
+	CSftpDirectory dir(m_pidlCommonParent, m_spProvider.p, m_spConsumer.p);
 	return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
 }
 
@@ -470,7 +471,7 @@ const throw(...)
 CComPtr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
 const throw(...)
 {
-	CSftpDirectory dir(pidl, m_spProvider, m_spConsumer);
+	CSftpDirectory dir(pidl, m_spProvider.p, m_spConsumer.p);
 	return dir.GetEnum(
 		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 }

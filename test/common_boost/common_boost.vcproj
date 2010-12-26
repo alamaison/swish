@@ -340,7 +340,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MockConsumer.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MockProvider.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProviderFixture.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tree.hpp"
 				>
 			</File>
 		</Filter>

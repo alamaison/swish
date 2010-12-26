@@ -66,7 +66,7 @@
  *
  * - On entry to a COM method they first clear any [out]-parameters.  This is
  *   required by COM rules so that, for example, cross-apartment marshalling
- *   doesn't try to marshal ininitialised memory (see item 19 of 
+ *   doesn't try to marshal uninitialised memory (see item 19 of 
  *   'Effective Com').
  * - If certain required parameters are missing, they immediately return a
  *   COM error without calling the inner C++ method.
@@ -78,7 +78,7 @@
  *
  * As the return-values are no longer being used for error codes, the protected
  * methods are sometimes changed to return a value directly instead of using
- * an [out]-paramter.
+ * an [out]-parameter.
  *
  * Although the adapters make use of Comet, they do not have to be instantiated
  * as Comet objects.  They work just as well using ATL::CComObject.

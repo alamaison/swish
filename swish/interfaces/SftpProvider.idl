@@ -62,7 +62,7 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("F01E103A-6C4B-4f70-9FC7-6E79B2A3F99F"),
+	object, uuid("0AEE1A06-7327-4a82-B52C-A7B2531F93EC"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
 	helpstring("ISftpConsumer Interface")
@@ -89,9 +89,6 @@ interface ISftpConsumer : IUnknown
 	HRESULT OnConfirmOverwrite(
 		[in]          BSTR bstrOldFile,
 		[in]          BSTR bstrNewFile
-	);
-	HRESULT OnReportError(
-		[in]          BSTR bstrMessage
 	);
 	HRESULT OnHostkeyMismatch(
 		[in]          BSTR bstrHostName,

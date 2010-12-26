@@ -38,6 +38,8 @@
 
 #include "atl.hpp"        // For CAtlException, com_exception
 
+#include <comet/error.h> // com_error
+
 #include <ComDef.h>       // For _com_error
 
 #include <exception>      // For std::exception and std::bad_alloc
@@ -60,6 +62,12 @@ inline void trace_diagnostic_info(const T& e)
 }
 
 #define catchCom()                  \
+catch (const comet::com_error& e)   \
+{                                   \
+	ATLTRACE("Caught comet::com_error: %ws\n", e.what()); \
+	trace_diagnostic_info(e);       \
+	return e.hr();                  \
+}                                   \
 catch (const _com_error& e)         \
 {                                   \
 	ATLTRACE("Caught _com_error: %ws\n", e.ErrorMessage()); \
@@ -90,6 +98,11 @@ catch (const ATL::CAtlException& e) \
 }
 #else
 #define catchCom()                  \
+catch (const comet::com_error& e)   \
+{                                   \
+	ATLTRACE("Caught comet::com_error: %ws\n", e.what()); \
+	return e.hr();                  \
+}                                   \
 catch (const _com_error& e)         \
 {                                   \
 	ATLTRACE("Caught _com_error: %ws\n", e.ErrorMessage()); \

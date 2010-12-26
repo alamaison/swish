@@ -28,7 +28,7 @@
 #include "test/common/MockSftpConsumer.h"
 #include "test/common/TestConfig.h"
 
-#include "swish/provider/com_dll/com_dll.h" // Provider UUID and forward-decl
+#include "swish/provider-com_dll/com_dll.h" // Provider UUID and forward-decl
 
 #include "swish/atl.hpp"                    // Common ATL setup
 #include <ATLComTime.h>                     // COleDateTime

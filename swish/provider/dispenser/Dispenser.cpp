@@ -79,12 +79,6 @@ template<> struct comtype<IOleItemContainer>
 	typedef IUnknown base;
 };
 
-template<> struct comtype<ISftpProvider>
-{
-	static const IID& uuid() throw() { return IID_ISftpProvider; }
-	typedef IUnknown base;
-};
-
 } // namespace comet
 
 
