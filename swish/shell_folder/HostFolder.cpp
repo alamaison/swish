@@ -30,20 +30,20 @@
 #include "RemoteFolder.h"
 #include "Registry.h"             // For saved connection details
 #include "host_management.hpp"
-#include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
 #include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remotelimits.h"   // Text field limits
-#include "swish/exception.hpp"    // com_exception
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/shell_folder/commands/host/host.hpp" // host_folder_commands
 #include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
 #include "swish/trace.hpp" // trace
 
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
 
 #include <comet/enum.h> // stl_enumeration
+#include <comet/error.h> // com_error
 
 #include <strsafe.h>  // For StringCchCopy
 
@@ -60,6 +60,7 @@ using ATL::CComPtr;
 using ATL::CComObject;
 
 using comet::com_error;
+using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::stl_enumeration_t;
 using comet::throw_com_error;
@@ -72,7 +73,6 @@ using std::vector;
 using std::wstring;
 
 using swish::host_management::LoadConnectionsFromRegistry;
-using swish::exception::com_exception;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::shell_folder::CExplorerCallback;
@@ -86,14 +86,21 @@ using winapi::shell::property_key;
 using winapi::shell::strret_to_string;
 using winapi::shell::string_to_strret;
 
-/**
- * Comet IID lookup for IEnumIDList.
- */
-template<> struct ::comet::comtype<::IEnumIDList>
+namespace comet {
+
+template<> struct comtype<::IEnumIDList>
 {
 	static const ::IID& uuid() throw() { return ::IID_IEnumIDList; }
 	typedef ::IUnknown base;
 };
+
+template<> struct comtype<IQueryAssociations>
+{
+	static const IID& uuid() { return IID_IQueryAssociations; }
+	typedef ::IUnknown base;
+};
+
+}
 
 /**
  * Copy policy used to create IEnumIDList from CHostItems.
@@ -393,10 +400,10 @@ CLSID CHostFolder::clsid() const
 void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 {
 	if (pidl == NULL)
-		throw com_exception(E_POINTER);
+		BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
 	if (!CHostItemList::IsValid(pidl))
-		throw com_exception(E_INVALIDARG);
+		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 }
 
 /**
@@ -483,7 +490,7 @@ CComPtr<IQueryAssociations> CHostFolder::query_associations(
 	// This is necessary to pick up properties and TileInfo etc.
 	hr = spAssoc->Init(0, clsid.get(), NULL, NULL);
 	if (FAILED(hr))
-		throw com_exception(hr);
+		BOOST_THROW_EXCEPTION(com_error_from_interface(spAssoc.p, hr));
 
 	return spAssoc;
 }
@@ -523,7 +530,7 @@ CComPtr<IContextMenu> CHostFolder::context_menu(
 		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
 		MenuCallback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
-		throw com_exception(hr);
+		BOOST_THROW_EXCEPTION(com_error(hr));
 
 	return spMenu;
 }
@@ -548,7 +555,7 @@ CComPtr<IDataObject> CHostFolder::data_object(
 		root_pidl().get(), cpidl, 
 		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
 	if (FAILED(hr))
-		throw com_exception(hr);
+		BOOST_THROW_EXCEPTION(com_error(hr));
 
 	return spdo;
 }

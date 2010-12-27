@@ -78,14 +78,20 @@
                              ///< need to define this here.
 
 #define _ATL_CUSTOM_THROW
-#include "exception.hpp"
+
+#include <WinError.h> // HRESULT
+
+__declspec(noreturn) inline void AtlThrow(HRESULT hr);
+
+#include <atlbase.h> // base ATL classes
+#include <atlcom.h>
+
+#include <comet/error.h> // com_error
+
 /**
  * Custom ATL thrower which throws std::exception derived exceptions.
  */
 __declspec(noreturn) inline void AtlThrow(HRESULT hr)
 {
-	throw swish::exception::com_exception(hr);
+	throw comet::com_error(hr);
 };
-
-#include <atlbase.h> // base ATL classes
-#include <atlcom.h>

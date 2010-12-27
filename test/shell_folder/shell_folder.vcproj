@@ -326,10 +326,6 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\exception_test.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\file_group_descriptor_test.cpp"
 			>
 		</File>

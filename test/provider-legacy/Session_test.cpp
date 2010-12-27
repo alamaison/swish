@@ -80,8 +80,7 @@ protected:
 	void testStartSftpBeforeConnect()
 	{
 		CSession session;
-		CPPUNIT_ASSERT_THROW(
-			session.StartSftp(), swish::exception::com_exception);
+		CPPUNIT_ASSERT_THROW(session.StartSftp(), comet::com_error);
 	}
 
 	/** 
@@ -91,8 +90,7 @@ protected:
 	{
 		CSession session;
 		session.Connect(config.GetHost(), config.GetPort());
-		CPPUNIT_ASSERT_THROW(
-			session.StartSftp(), swish::exception::com_exception);
+		CPPUNIT_ASSERT_THROW(session.StartSftp(), comet::com_error);
 	}
 	
 	/**

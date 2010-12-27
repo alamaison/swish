@@ -35,12 +35,13 @@
 */
 
 #include "swish/provider/SftpStream.hpp"  // Test subject
-#include "swish/exception.hpp"  // com_exception
 
 #include "test/provider/StreamFixture.hpp"
 #include "test/common_boost/helpers.hpp"
 
 #include "swish/atl.hpp"
+
+#include <comet/error.h> // com_error
 
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/test/unit_test.hpp>
@@ -53,11 +54,11 @@
 
 #include <sys/stat.h>  // _S_IREAD
 
-using swish::exception::com_exception;
-
 using test::provider::StreamFixture;
 
 using ATL::CComPtr;
+
+using comet::com_error;
 
 using boost::numeric_cast;
 using boost::system::system_error;
@@ -87,7 +88,7 @@ BOOST_AUTO_TEST_CASE( get_readonly )
 	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
 		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
-	BOOST_REQUIRE_THROW(GetStream(), com_exception);
+	BOOST_REQUIRE_THROW(GetStream(), com_error);
 }
 
 /**

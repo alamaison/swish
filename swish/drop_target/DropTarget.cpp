@@ -31,7 +31,7 @@
 #include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
 #include "swish/windows_api.hpp" // SHBindToParent
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
 #include <winapi/trace.hpp> // trace
 
@@ -560,7 +560,7 @@ STDMETHODIMP CDropTarget::DragEnter(
 
 		*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -582,7 +582,7 @@ STDMETHODIMP CDropTarget::DragOver(
 
 		*pdwEffect = determine_drop_effect(m_data_object, *pdwEffect);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -596,7 +596,7 @@ STDMETHODIMP CDropTarget::DragLeave()
 	{
 		m_data_object = NULL;
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -626,7 +626,7 @@ STDMETHODIMP CDropTarget::Drop(
 			copy_data_to_provider(
 				pdo, m_provider, m_consumer, m_remote_path, *m_callback);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }

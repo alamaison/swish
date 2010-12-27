@@ -27,8 +27,8 @@
 #include "data_object_utils.hpp"
 
 #include "swish/shell_folder/shell.hpp"
-#include "swish/exception.hpp"
 
+#include <comet/error.h> // com_error
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
@@ -40,7 +40,6 @@
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::ui_object_of_items;
-using swish::exception::com_exception;
 
 using boost::filesystem::wpath;
 using boost::shared_ptr;
@@ -48,6 +47,7 @@ using boost::numeric_cast;
 using boost::system::get_system_category;
 using boost::system::system_error;
 
+using comet::com_error_from_interface;
 using comet::com_ptr;
 
 using std::wstring;
@@ -111,7 +111,7 @@ com_ptr<IDataObject> data_object_for_zipfile(const wpath& zip_file)
 	HRESULT hr = zip_folder->EnumObjects(
 		NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, enum_items.out());
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error_from_interface(zip_folder, hr));
 
 	enum_items->Reset();
 

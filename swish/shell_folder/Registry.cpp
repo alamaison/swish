@@ -27,8 +27,9 @@
 #include "Registry.h"
 
 #include "RemotePidl.h"
-#include "swish/catch_com.hpp"  // COM catch block
 #include "swish/debug.hpp"
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 using ATL::CRegKey;
 using ATL::CString;
@@ -61,7 +62,7 @@ throw()
 		return _GetHKEYArrayFromKeynames(
 			_GetHostFolderAssocKeynames(), pcKeys, paKeys);
 	}
-	catchCom()
+	WINAPI_COM_CATCH();
 }
 
 /**
@@ -100,7 +101,7 @@ throw()
 		return _GetHKEYArrayFromKeynames(
 			_GetRemoteFolderAssocKeynames(pidl), pcKeys, paKeys);
 	}
-	catchCom()
+	WINAPI_COM_CATCH();
 }
 
 

@@ -28,27 +28,26 @@
 #include "Pool.h"
 
 #include "swish/remotelimits.h" // Text field limits
-#include "swish/exception.hpp" // com_exception
 #include "swish/utils.hpp" // running_object_table
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <winapi/com/object.hpp> // object_from_moniker_name
 
-#include <comet/interface.h>  // uuidof, comtype
+#include <comet/error.h> // com_error
+#include <comet/interface.h> // uuidof, comtype
 
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-using swish::exception::com_exception;
-
 using winapi::com::object_from_moniker_name;
 
-using boost::lexical_cast;
-
+using comet::com_error;
 using comet::com_ptr;
 using comet::critical_section;
 using comet::auto_cs;
 using comet::uuidof;
+
+using boost::lexical_cast;
 
 using std::wstring;
 
@@ -92,9 +91,9 @@ critical_section CPool::m_cs;
 com_ptr<ISftpProvider> CPool::GetSession(
 	const wstring& host, const wstring& user, int port)
 {
-	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
-	if (host.empty()) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
-	if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_exception(E_INVALIDARG));
+	if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+	if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+	if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
 	auto_cs lock(m_cs);
 

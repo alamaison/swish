@@ -19,7 +19,17 @@
 
 #include "DataObject.h"
 
-#include "swish/catch_com.hpp"  // COM catch block
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+
+namespace comet {
+
+template<> struct comtype<IDataObject>
+{
+	static const IID& uuid() { return IID_IDataObject; }
+	typedef ::IUnknown base;
+};
+
+}
 
 CDataObject::CDataObject() :
 	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
@@ -51,7 +61,7 @@ HRESULT CDataObject::FinalConstruct()
  * @param aPidl             The selected PIDLs.
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
  *
- * @throws  com_exception on error.
+ * @throws  com_error on error.
  */
 void CDataObject::Initialize(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
@@ -113,7 +123,7 @@ STDMETHODIMP CDataObject::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 			return m_spDoInner->GetData(pformatetcIn, pmedium);
 		}
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
 
 /**

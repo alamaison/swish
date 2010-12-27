@@ -59,6 +59,8 @@ public:
 		COM_INTERFACE_ENTRY(IDataObject)
 	END_COM_MAP()
 
+	typedef IDataObject interface_is;
+
 	static ATL::CComPtr<IDataObject> Create(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
 		__in PCIDLIST_ABSOLUTE pidlCommonParent)

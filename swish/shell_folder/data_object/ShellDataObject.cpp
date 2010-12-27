@@ -28,18 +28,18 @@
 
 #include "GlobalLocker.hpp" // GlobalLocker
 #include "StorageMedium.hpp" // StorageMedium
-#include "swish/exception.hpp"  // com_exception
+
+#include <comet/error.h> // com_error
 
 #include <boost/shared_ptr.hpp>  // share_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
-
-using swish::exception::com_exception;
 
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 
 using boost::shared_ptr;
 
+using comet::com_error;
 using comet::com_ptr;
 
 namespace swish {
@@ -82,7 +82,7 @@ namespace { // private
 		{
 			CIDA* pcida = m_lock.get();
 			if (!pcida)
-				throw com_exception(E_UNEXPECTED);
+				BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
 			return *pcida;
 		}
 
@@ -106,7 +106,7 @@ namespace { // private
 		StorageMedium medium;
 		HRESULT hr = data_object->GetData(&fetc, medium.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 
 		assert(medium.get().hGlobal);
 		return medium;

@@ -104,8 +104,7 @@ protected:
 			"The factory didn't throw an exception when it should have",
 			auto_ptr<CSession> spSession = CSessionFactory::CreateSftpSession(
 				config.GetHost(), config.GetPort(), config.GetUser(),
-				m_spConsumer),
-			swish::exception::com_exception);
+				m_spConsumer), comet::com_error);
 	}
 
 	/**
@@ -120,7 +119,7 @@ protected:
 			CMockSftpConsumer::AbortPassword);
 
 		// Create a session using the factory and mock consumer
-		// This should throw an E_ABORT com_exception exception indicating that 
+		// This should throw an E_ABORT com_error exception indicating that 
 		// the operation was cancelled by the user
 		try
 		{
@@ -128,9 +127,9 @@ protected:
 				config.GetHost(), config.GetPort(), config.GetUser(),
 				m_spConsumer);
 		}
-		catch(swish::exception::com_exception& e)
+		catch(comet::com_error& e)
 		{
-			CPPUNIT_ASSERT(e == E_ABORT);
+			CPPUNIT_ASSERT(e.hr() == E_ABORT);
 			return;
 		}
 

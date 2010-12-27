@@ -38,6 +38,7 @@
 
 #include <winapi/shell/shell.hpp> // known_folder_path
 
+#include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/filesystem.hpp> // basic_path
@@ -321,7 +322,7 @@ inline comet::com_ptr<IRunningObjectTable> running_object_table()
 	assert(rot);
 
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+		BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 	return rot;
 }
@@ -334,7 +335,7 @@ inline CLSID clsid_from_progid(const std::wstring& progid)
 	CLSID clsid;
 	HRESULT hr = ::CLSIDFromProgID(progid.c_str(), &clsid);
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+		BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 	return clsid;
 }
@@ -352,7 +353,7 @@ inline comet::com_ptr<T> class_object(
 		reinterpret_cast<void**>(object.out()));
 	
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+		BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 	return object;
 }

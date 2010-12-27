@@ -32,7 +32,7 @@
                                  // folder2_base_interface,
                                  // shell_details_base_interface
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // comtype
@@ -164,7 +164,7 @@ public:
 			if (pdwAttributes)
 				*pdwAttributes = dwAttributes;
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -185,7 +185,7 @@ public:
 			if (!*ppenumIDList)
 				return S_FALSE;
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -223,7 +223,7 @@ public:
 
 			assert(*ppv || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -241,7 +241,7 @@ public:
 
 			assert(*ppv || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -258,7 +258,7 @@ public:
 			return MAKE_HRESULT(
 				SEVERITY_SUCCESS, 0, (unsigned short)result);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -288,7 +288,7 @@ public:
 
 			assert(*ppv || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -308,7 +308,7 @@ public:
 			*rgfInOut = flags;
 
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -346,7 +346,7 @@ public:
 
 			assert(*ppv || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -365,7 +365,7 @@ public:
 
 			*pName = get_display_name_of(pidl, uFlags);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -390,7 +390,7 @@ public:
 
 			assert(*ppidlOut || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -448,7 +448,7 @@ public:
 
 			*pguid = get_default_search_guid();
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -468,7 +468,7 @@ public:
 
 			assert(*ppenum || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -496,7 +496,7 @@ public:
 			*pSort = sort;
 			*pDisplay = display;
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -516,7 +516,7 @@ public:
 
 			*pcsFlags = get_default_column_state(iColumn);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -543,7 +543,7 @@ public:
 
 			*pv = get_details_ex(pidl, pscid);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -584,7 +584,7 @@ public:
 
 			*psd = get_details_of(pidl, iColumn);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -599,7 +599,7 @@ public:
 
 			*pscid = map_column_to_scid(iColumn);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -662,7 +662,7 @@ public:
 
 			*psd = get_details_of(pidl, iColumn);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -674,7 +674,7 @@ public:
 			if (!column_click(iColumn))
 				return S_FALSE;
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}

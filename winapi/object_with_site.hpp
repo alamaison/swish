@@ -28,10 +28,10 @@
 #define WINAPI_OBJECT_WITH_SITE_HPP
 #pragma once
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
-
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // comtype
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -61,7 +61,7 @@ public:
 			m_ole_site = pUnkSite;
 			on_set_site(m_ole_site);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -79,7 +79,7 @@ public:
 				BOOST_THROW_EXCEPTION(
 					comet::com_error_from_interface(m_ole_site, hr));
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}

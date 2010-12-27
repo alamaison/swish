@@ -42,10 +42,11 @@
 #include "swish/debug.hpp"
 #include "swish/trace.hpp"
 #include "swish/utils.hpp"
-#include "swish/catch_com.hpp"
 
 #include <ssh/knownhost.hpp> // openssh_knownhost_collection
 #include <ssh/session.hpp> // session
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/bstr.h> // bstr_t;
 
@@ -95,7 +96,7 @@ using std::string;
  *           host (subject to verification of the host's key), authenticated and 
  *           over which an SFTP channel has been started.
  *
- * @throws com_exception if any part of this process fails:
+ * @throws com_error if any part of this process fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -184,7 +185,7 @@ void CSessionFactory::_VerifyHostKey(
  * and these are tried one at time until one succeeds in the order:
  * public-key, keyboard-interactive, plain password.
  *
- * @throws com_exception if authentication fails:
+ * @throws com_error if authentication fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -238,7 +239,7 @@ void CSessionFactory::_AuthenticateUser(
  * asked for the password again.  This repeats until the user supplies a 
  * correct password or cancels the request.
  *
- * @throws com_exception if authentication fails:
+ * @throws com_error if authentication fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -272,7 +273,7 @@ HRESULT CSessionFactory::_PasswordAuthentication(
  * This uses the ISftpConsumer callback to challenge the user for various
  * pieces of information (usually just their password).
  *
- * @throws com_exception if authentication fails:
+ * @throws com_error if authentication fails:
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
@@ -327,7 +328,7 @@ HRESULT CSessionFactory::_PublicKeyAuthentication(
 
 		ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
 	}
-	catchCom()
+	WINAPI_COM_CATCH();
 
 	return S_OK;
 }

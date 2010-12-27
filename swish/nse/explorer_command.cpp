@@ -26,7 +26,7 @@
 
 #include "explorer_command.hpp"
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/enum.h> // stl_enumeration
 #include <comet/ptr.h> // com_ptr
@@ -93,7 +93,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommands(
 				m_commands, get_unknown());
 		return commands->QueryInterface(riid, ppv);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -114,7 +114,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
 
 		return item->second->QueryInterface(riid, ppv);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -145,7 +145,7 @@ STDMETHODIMP CExplorerCommandImpl::GetTitle(
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -174,7 +174,7 @@ STDMETHODIMP CExplorerCommandImpl::GetIcon(
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -201,7 +201,7 @@ STDMETHODIMP CExplorerCommandImpl::GetToolTip(
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -222,7 +222,7 @@ STDMETHODIMP CExplorerCommandImpl::GetCanonicalName(GUID* pguidCommandName)
 	{
 		*pguidCommandName = canonical_name();
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -248,7 +248,7 @@ STDMETHODIMP CExplorerCommandImpl::GetState(
 	{
 		*pCmdState = state(psiItemArray, (fOkToBeSlow) ? true : false);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -267,7 +267,7 @@ STDMETHODIMP CExplorerCommandImpl::Invoke(
 	{
 		invoke(psiItemArray, pbc);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -283,7 +283,7 @@ STDMETHODIMP CExplorerCommandImpl::GetFlags(EXPCMDFLAGS* pFlags)
 	{
 		*pFlags = flags();
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -300,7 +300,7 @@ STDMETHODIMP CExplorerCommandImpl::EnumSubCommands(
 	{
 		*ppEnum = subcommands().detach();
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }

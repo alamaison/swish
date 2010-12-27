@@ -28,7 +28,9 @@
 
 #include "swish/shell_folder/Pidl.h"
 
-#include "swish/exception.hpp"  // com_exception
+#include <comet/error.h> // com_error
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 namespace swish {
 namespace shell_folder {
@@ -46,7 +48,7 @@ public:
 	{
 		HRESULT hr = ::CopyStgMedium(&(medium.m_medium), &m_medium);
 		if (FAILED(hr))
-			throw swish::exception::com_exception(hr);
+			BOOST_THROW_EXCEPTION(comet::com_error(hr));
 	}
 
 	StorageMedium& operator=(StorageMedium medium) throw()

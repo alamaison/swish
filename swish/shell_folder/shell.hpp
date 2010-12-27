@@ -26,6 +26,7 @@
 
 #include "swish/windows_api.hpp" // SHBindToParent
 
+#include <comet/error.h> // com_error
 #include <comet/interface.h>  // uuidof, comtype
 #include <comet/ptr.h>  // com_ptr
 
@@ -161,7 +162,7 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 		&**begin, comet::uuidof(parent.in()),
 		reinterpret_cast<void**>(parent.out()), NULL);
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+		BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 	std::vector<ITEMID_CHILD *> child_pidls;
 	std::transform(
@@ -175,7 +176,7 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 		(child_pidls.empty()) ? NULL : &child_pidls[0],
 		comet::uuidof<T>(), NULL, reinterpret_cast<void**>(ui_object.out()));
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+		BOOST_THROW_EXCEPTION(comet::com_error_from_interface(parent, hr));
 
 	return ui_object;
 }
@@ -228,9 +229,9 @@ comet::com_ptr<T> bind_to_handler_object(
 		reinterpret_cast<void**>(handler.out()));
 
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(hr));
+		BOOST_THROW_EXCEPTION(comet::com_error_from_interface(desktop, hr));
 	if (!handler)
-		BOOST_THROW_EXCEPTION(swish::exception::com_exception(E_FAIL));
+		BOOST_THROW_EXCEPTION(comet::com_error(E_FAIL));
 
 	return handler;
 }

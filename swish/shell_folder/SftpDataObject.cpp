@@ -22,8 +22,9 @@
 #include "HostPidl.h"
 #include "RemotePidl.h"
 #include "SftpDirectory.h"
-#include "swish/catch_com.hpp"  // COM catch block
 #include "data_object/StorageMedium.hpp"  // StorageMedium
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #pragma warning(push)
 #pragma warning(disable:4244) // conversion from uint64_t to uint32_t
@@ -39,6 +40,16 @@ using swish::shell_folder::data_object::StorageMedium;
 using swish::shell_folder::data_object::group_descriptor_from_range;
 using boost::make_transform_iterator;
 using boost::mem_fn;
+
+namespace comet {
+
+template<> struct comtype<IDataObject>
+{
+	static const IID& uuid() { return IID_IDataObject; }
+	typedef ::IUnknown base;
+};
+
+}
 
 CSftpDataObject::CSftpDataObject() :
 	m_fExpandedPidlList(false),
@@ -76,7 +87,7 @@ HRESULT CSftpDataObject::FinalConstruct()
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
  * @param pProvider         Backend to communicate with remote server.
  *
- * @throws  com_exception on error.
+ * @throws  com_error on error.
  */
 void CSftpDataObject::Initialize(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
@@ -142,7 +153,7 @@ STDMETHODIMP CSftpDataObject::GetData(
 		// Delegate all non-FILECONTENTS requests to the superclass
 		return __super::GetData(pformatetcIn, pmedium);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
 
 /*----------------------------------------------------------------------------*
@@ -189,7 +200,7 @@ throw(...)
  *
  * @see _DelayRenderCfFileContents()
  *
- * @throws  com_exception on error.
+ * @throws  com_error on error.
  */
 void CSftpDataObject::_DelayRenderCfFileGroupDescriptor()
 throw(...)
@@ -237,7 +248,7 @@ throw(...)
  *
  * @see _DelayRenderCfFileGroupDescriptor()
  *
- * @throws  com_exception on error.
+ * @throws  com_error on error.
  */
 STGMEDIUM CSftpDataObject::_DelayRenderCfFileContents(long lindex)
 throw(...)

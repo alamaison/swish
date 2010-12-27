@@ -26,10 +26,11 @@
 
 #pragma once
 
-#include "swish/catch_com.hpp"
 #include "swish/interfaces/SftpProvider.h"
 
 #include "test/common_boost/helpers.hpp"
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/server.h> // simple_object
@@ -84,7 +85,7 @@ public:
 			*pbstrPrivateKeyFile = comet::bstr_t::detach(
 				m_privateKey.file_string());
 		}
-		catchCom()
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -104,7 +105,7 @@ public:
 			*pbstrPublicKeyFile = comet::bstr_t::detach(
 				m_publicKey.file_string());
 		}
-		catchCom()
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}

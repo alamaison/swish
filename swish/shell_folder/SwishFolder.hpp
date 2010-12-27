@@ -29,9 +29,13 @@
 #include "Folder.h" // Superclass
 
 #include "swish/atl.hpp" // Common ATL setup
-#include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp" // METHOD_TRACE
-#include "swish/exception.hpp"  // com_exception
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+
+#include <comet/error.h> // com_error
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 
@@ -85,7 +89,7 @@ protected:
 		// an exception.  We have to check for NULL once we are sure it can't
 		// fail again: IUnknown returned as IUnknown shouldn't be able to fail.
 		if (!object)
-			throw swish::exception::com_exception(E_NOINTERFACE);
+			BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 
 		return object;
 	}
@@ -136,7 +140,7 @@ protected:
 		// an exception.  We have to check for NULL once we are sure it can't
 		// fail again: IUnknown returned as IUnknown shouldn't be able to fail.
 		if (!object)
-			throw swish::exception::com_exception(E_NOINTERFACE);
+			BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 
 		return object;
 	}
@@ -169,7 +173,7 @@ protected:
 		ATL::CComPtr<IShellView> view;
 		HRESULT hr = ::SHCreateShellFolderView(&sfvdata, &view);
 		if (FAILED(hr))
-			throw swish::exception::com_exception(hr);
+			BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 		return view;
 	}
@@ -191,7 +195,7 @@ protected:
 	virtual ATL::CComPtr<IDropTarget> drop_target(HWND /*hwnd*/)
 	{
 		TRACE("Request: IDropTarget");
-		throw swish::exception::com_exception(E_NOINTERFACE);
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 
 	/** Create a toolbar command provider for the folder. */
@@ -199,7 +203,7 @@ protected:
 		HWND /*hwnd*/)
 	{
 		TRACE("Request: IExplorerCommandProvider");
-		throw swish::exception::com_exception(E_NOINTERFACE);
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 
 	// @}
@@ -213,7 +217,7 @@ protected:
 		HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
 	{
 		TRACE("Request: IExtractIconW");
-		throw swish::exception::com_exception(E_NOINTERFACE);
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 
 	/**
@@ -236,7 +240,7 @@ protected:
 		HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
 	{
 		TRACE("Request: IContextMenu");
-		throw swish::exception::com_exception(E_NOINTERFACE);
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 
 	/** Create a file association handler for the selected items. */
@@ -244,7 +248,7 @@ protected:
 		HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
 	{
 		TRACE("Request: IQueryAssociations");
-		throw swish::exception::com_exception(E_NOINTERFACE);
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 
 	/** Create a data object for the selected items. */
@@ -252,7 +256,7 @@ protected:
 		HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
 	{
 		TRACE("Request: IDataObject");
-		throw swish::exception::com_exception(E_NOINTERFACE);
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 
 	/**

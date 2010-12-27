@@ -37,7 +37,7 @@
 #include "swish/nse/data_object_util.hpp" // data_object_from_item_array
 #include "swish/nse/UICommand.hpp" // IUIElement, IUICommand
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
@@ -101,7 +101,7 @@ public:
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(comet::com_error(hr));
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -130,7 +130,7 @@ public:
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(comet::com_error(hr));
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -158,7 +158,7 @@ public:
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(comet::com_error(hr));
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -220,7 +220,7 @@ public:
 		{
 			*pguidCommandName = canonical_name();
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -247,7 +247,7 @@ public:
 		{
 			*pCmdState = state(psiItemArray, (nRequested) ? true : false);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -267,7 +267,7 @@ public:
 		{
 			invoke(psiItemArray, pbc);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}

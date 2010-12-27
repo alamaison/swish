@@ -38,15 +38,13 @@
 
 #include "swish/interfaces/SftpProvider.h" // ISftpConsumer
 
-#include <swish/exception.hpp>
-
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
 using ATL::CComBSTR;
 using ATL::CComSafeArray;
 
-using swish::exception::com_exception;
+using comet::com_error;
 
 CKeyboardInteractive::CKeyboardInteractive(ISftpConsumer *pConsumer) throw() :
 	m_spConsumer(pConsumer), m_hr(S_OK)
@@ -100,9 +98,9 @@ HRESULT CKeyboardInteractive::GetErrorState() throw()
 		// Pack responses into libssh2 data-structure
 		_ProcessResponses(saResponses, num_prompts, responses);
 	}
-	catch (com_exception& e)
+	catch (com_error& e)
 	{
-		pThis->SetErrorState(e);
+		pThis->SetErrorState(e.hr());
 		return;
 	}
 	catch (...)

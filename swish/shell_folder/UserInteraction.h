@@ -43,6 +43,8 @@ public:
 		COM_INTERFACE_ENTRY(ISftpConsumer)
 	END_COM_MAP()
 
+	typedef ISftpConsumer interface_is;
+
 	CUserInteraction();
 	void SetHWND(__in_opt HWND hwnd);
 	void ClearHWND();

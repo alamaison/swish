@@ -29,15 +29,15 @@
 #include "Pidl.h"
 
 #include "swish/atl.hpp" // Common ATL setup
-#include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp" // METHOD_TRACE
-#include "swish/exception.hpp"  // com_exception
 
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/folder_error_adapters.hpp> // folder2_error_adapter
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 #include <winapi/shell/shell.hpp> // string_to_strret
 
+#include <comet/error.h> // com_error
 #include <comet/variant.h> // variant_t
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -66,6 +66,16 @@
         
     };
 #endif
+
+namespace comet {
+
+template<> struct comtype<IPersistFolder2>
+{
+	static const IID& uuid() { return IID_IPersistFolder; }
+	typedef IPersistFolder base;
+};
+
+}
 
 namespace swish {
 namespace shell_folder {
@@ -211,7 +221,7 @@ public: // IPersistFolder2 methods
 			// Copy the PIDL that was passed to us in Initialize()
 			root_pidl().copy_to(*ppidl);
 		}
-		catchCom()
+		WINAPI_COM_CATCH_INTERFACE(IPersistFolder2);
 		
 		return S_OK;
 	}
@@ -492,9 +502,9 @@ public: // IShellFolder methods
 				object = folder_item_object(
 					hwnd_owner, iid, pidl_count, pidl_array);
 			}
-			catch (const swish::exception::com_exception& e)
+			catch (const comet::com_error& e)
 			{
-				if (e == E_NOINTERFACE && pidl_count == 1)
+				if (e.hr() == E_NOINTERFACE && pidl_count == 1)
 					object = _delegate_object_lookup_to_subfolder(
 						hwnd_owner, iid, pidl_array[0]);
 				else
@@ -804,13 +814,13 @@ private:
 		ATL::CComPtr<IShellFolder> subfolder;
 		hr = BindToObject(pidl, NULL, IID_PPV_ARGS(&subfolder));
 		if (FAILED(hr))
-			throw swish::exception::com_exception(hr);
+			BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 		ATL::CComPtr<IUnknown> object;
 		hr = subfolder->CreateViewObject(
 			hwnd, riid, reinterpret_cast<void**>(&object));
 		if (FAILED(hr))
-			throw swish::exception::com_exception(hr);
+			BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 		return object;
 	}

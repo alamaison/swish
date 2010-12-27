@@ -36,7 +36,6 @@
 #include "swish/debug.hpp"
 #include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
-#include "swish/exception.hpp"     // com_exception
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/shell_folder/announce_error.hpp" // rethrow_and_announce
@@ -51,11 +50,11 @@
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 #include <string>
 
-using swish::exception::com_exception;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::drop_target::CSnitchingDropTarget;
@@ -397,10 +396,10 @@ CLSID CRemoteFolder::clsid() const
 void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 {
 	if (pidl == NULL)
-		throw com_exception(E_POINTER);
+		BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
 	if (!CRemoteItemList::IsValid(pidl))
-		throw com_exception(E_INVALIDARG);
+		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 }
 
 /**
@@ -520,7 +519,7 @@ CComPtr<IContextMenu> CRemoteFolder::context_menu(
 		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
 		MenuCallback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
-		throw com_exception(hr);
+		BOOST_THROW_EXCEPTION(com_error(hr));
 
 	return spMenu;
 }
@@ -702,7 +701,7 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 			rethrow_and_announce(hwnd, translate("Unable to delete the item"));
 		}
 	}
-	catchCom()
+	WINAPI_COM_CATCH();
 
 	return S_OK;
 }

@@ -40,7 +40,7 @@
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error
 
@@ -127,7 +127,7 @@ public:
 		{
 			impl().initialize(bstrUser, bstrHost, uPort);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -148,7 +148,7 @@ public:
 
 			assert(*ppEnum || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -170,7 +170,7 @@ public:
 
 			assert(*ppStream || !"No error but no retval");
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -191,7 +191,7 @@ public:
 			*pfWasTargetOverwritten = impl().rename(
 				pConsumer, bstrFromPath, bstrToPath);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -205,7 +205,7 @@ public:
 
 			impl().delete_file(pConsumer, bstrPath);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -220,7 +220,7 @@ public:
 
 			impl().delete_directory(pConsumer, bstrPath);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -235,7 +235,7 @@ public:
 
 			impl().create_new_file(pConsumer, bstrPath);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}
@@ -250,7 +250,7 @@ public:
 
 			impl().create_new_directory(pConsumer, bstrPath);
 		}
-		COM_CATCH_AUTO_INTERFACE();
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 		return S_OK;
 	}

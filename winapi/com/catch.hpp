@@ -48,18 +48,47 @@ namespace com {
 }} // namespace winapi::com
 
 /**
- * COM-interface boundary exception catcher that infers IID from interface_is.
+ * COM exception catcher.
+ *
+ * Catches all exceptions and converts them into a COM HRESULT.
+ */
+#define WINAPI_COM_CATCH() \
+	catch (...) \
+	{ \
+		return ::winapi::com::rethrow( \
+			BOOST_CURRENT_FUNCTION, __FILE__, __LINE__); \
+	}
+
+/**
+ * COM-interface boundary exception catcher.
+ *
+ * Catches all exceptions and converts them into a COM HRESULT.  Sets last
+ * ErrorInfo to include the given interface in its information.
+ *
+ * This variant (rather than WINAPI_COM_CATCH_AUTO_INTERFACE) is needed
+ * when interface_is is ambiguous.
+ * 
+ * A comtype for the interface must be in scope.
+ */
+#define WINAPI_COM_CATCH_INTERFACE(Itf) \
+	catch (...) \
+	{ \
+		return ::winapi::com::rethrow( \
+			BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, \
+			::comet::comtype<Itf>::uuid()); \
+	}
+
+/**
+* COM-interface boundary exception catcher that infers IID from interface_is.
+*
+* Catches all exceptions and converts them into a COM HRESULT.  Sets last
+* ErrorInfo to include the enclosing object's interface its in information.
  *
  * This should be used in a class implementing an interface and having a
  * typedef @c interface_is giving the IID of the interface the current method
  * is part of.  A comtype for the interface must also be in scope.
  */
-#define COM_CATCH_AUTO_INTERFACE() \
-	catch (...) \
-	{ \
-		return ::winapi::com::rethrow( \
-			BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, \
-			::comet::comtype<interface_is>::uuid()); \
-	}
+#define WINAPI_COM_CATCH_AUTO_INTERFACE() \
+	WINAPI_COM_CATCH_INTERFACE(interface_is)
 
 #endif

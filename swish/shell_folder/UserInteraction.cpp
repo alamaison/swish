@@ -27,10 +27,10 @@
 #include "UserInteraction.h"
 
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
-#include "swish/catch_com.hpp" // catchCom
 #include "swish/debug.hpp"
 #include "swish/forms/password.hpp" // password_prompt
 
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 #include <winapi/gui/message_box.hpp> // message_box
 
@@ -99,7 +99,7 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 		wstring password = password_prompt(m_hwnd, bstrRequest);
 		*pbstrPassword = bstr_t::detach(bstr_t(password));
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 		
 	return S_OK;
 }
@@ -223,7 +223,7 @@ STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
 	{
 		return on_confirm_overwrite(bstrOldFile, bstrNewFile, m_hwnd);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
 
 
@@ -385,7 +385,7 @@ STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
 		return on_hostkey_mismatch(
 			bstrHostName, bstrHostKey, bstrHostKeyType, m_hwnd);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
 
 STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
@@ -396,5 +396,5 @@ STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
 		return on_hostkey_unknown(
 			bstrHostName, bstrHostKey, bstrHostKeyType, m_hwnd);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 }

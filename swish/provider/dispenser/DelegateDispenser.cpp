@@ -36,8 +36,9 @@
 
 #include "DelegateDispenser.hpp"
 
-#include "swish/catch_com.hpp" // catchCom
 #include "swish/utils.hpp" // class_object
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error_fwd.h> // com_error
 #include <comet/interface.h> // uuidof, comtype
@@ -99,7 +100,7 @@ STDMETHODIMP CDelegateDispenser::ParseDisplayName(
 		return dispenser()->ParseDisplayName(
 			pbc, pszDisplayName, pchEaten, ppmkOut) | raise_exception;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
@@ -112,7 +113,7 @@ STDMETHODIMP CDelegateDispenser::EnumObjects(
 	{
 		return dispenser()->EnumObjects(grfFlags, ppenum) | raise_exception;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
@@ -126,7 +127,7 @@ STDMETHODIMP CDelegateDispenser::LockContainer(BOOL fLock)
 			module().unlock();
 		return dispenser()->LockContainer(fLock) | raise_exception;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
@@ -141,7 +142,7 @@ STDMETHODIMP CDelegateDispenser::GetObject(
 		return dispenser()->GetObject(
 			pszItem, dwSpeedNeeded, pbc, riid, ppvObject) | raise_exception;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
@@ -153,7 +154,7 @@ STDMETHODIMP CDelegateDispenser::GetObjectStorage(
 		return dispenser()->GetObjectStorage(
 			pszItem, pbc, riid, ppvStorage) | raise_exception;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
@@ -163,7 +164,7 @@ STDMETHODIMP CDelegateDispenser::IsRunning(LPOLESTR pszItem)
 	{
 		return dispenser()->IsRunning(pszItem) | raise_exception;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 

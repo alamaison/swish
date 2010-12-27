@@ -53,7 +53,7 @@ public:
 	 * have a reference count of 0.
 	 *
 	 * @returns  Smart pointer to the CComObject<T>-based COM object.
-	 * @throws   com_exception if creation fails.
+	 * @throws   com_error if creation fails.
 	 */
 	static ATL::CComPtr<T> CreateCoObject() throw(...)
 	{

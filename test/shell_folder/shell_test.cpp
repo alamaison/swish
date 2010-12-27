@@ -25,7 +25,6 @@
 */
 
 #include "swish/shell_folder/shell.hpp"  // Test subject
-#include "swish/exception.hpp"  // com_exception
 
 // use PidlFormat to inspect DataObjects produces by the Windows Shell
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"

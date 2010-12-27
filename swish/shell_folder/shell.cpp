@@ -26,19 +26,19 @@
 
 #include "shell.hpp"
 
-#include "swish/exception.hpp"  // com_exception
-
 #include <winapi/shell/shell.hpp> // strret_to_string
+
+#include <comet/error.h> // com_error
+
+#include <string>
 
 #include <shlobj.h>  // SHGetDesktopFolder, SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
-#include <string>
-
-using swish::exception::com_exception;
-
 using winapi::shell::strret_to_string;
 
+using comet::com_error;
+using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::uuidof;
 
@@ -58,7 +58,7 @@ com_ptr<IShellFolder> desktop_folder()
 	com_ptr<IShellFolder> folder;
 	HRESULT hr = ::SHGetDesktopFolder(folder.out());
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 	return folder;
 }
 
@@ -74,7 +74,7 @@ shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
 	HRESULT hr = ::SHILCreateFromPath(
 		filesystem_path.file_string().c_str(), &pidl, NULL);
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 
 	return shared_ptr<ITEMIDLIST_ABSOLUTE>(pidl, ::ILFree);
 }
@@ -102,12 +102,12 @@ wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
 		pidl, uuidof(folder.in()), reinterpret_cast<void**>(folder.out()), 
 		&child_pidl);
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 
 	STRRET str;
 	hr = folder->GetDisplayNameOf(child_pidl, SHGDN_FORPARSING, &str);
 	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
 
 	return strret_to_string<wchar_t>(str, child_pidl);
 }

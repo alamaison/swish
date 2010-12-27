@@ -35,15 +35,17 @@
 */
 
 #include "swish/provider/SftpStream.hpp"  // Test subject
-#include "swish/exception.hpp"  // com_exception
 
 #include "test/provider/StreamFixture.hpp"
+
+#include <comet/error.h> // com_error
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 
-using swish::exception::com_exception;
 using test::provider::StreamFixture;
+
+using comet::com_error;
 
 BOOST_FIXTURE_TEST_SUITE(StreamCreate, StreamFixture)
 
@@ -75,7 +77,7 @@ BOOST_AUTO_TEST_CASE( new_file_fail )
 
 	BOOST_REQUIRE(!exists(m_local_path));
 
-	BOOST_REQUIRE_THROW(GetStream(), com_exception);
+	BOOST_REQUIRE_THROW(GetStream(), com_error);
 
 	BOOST_REQUIRE(!exists(m_local_path));
 }

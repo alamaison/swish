@@ -38,8 +38,10 @@
 
 #include "swish/debug.hpp"                   // Debug macros
 #include "swish/trace.hpp" // trace_f: Debug trace function
-#include "swish/catch_com.hpp"               // COM Exception handler
-#include "swish/exception.hpp"               // com_exception
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+
+#include <comet/error.h> // com_error
 
 #include <boost/throw_exception.hpp>         // BOOST_THROW_EXCEPTION
 
@@ -48,11 +50,12 @@
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-using swish::exception::com_exception;
 using swish::tracing::trace_f;
 
 using ATL::CA2W;
 using ATL::CString;
+
+using comet::com_error;
 
 using boost::shared_ptr;
 
@@ -275,7 +278,7 @@ CSftpStream::CSftpStream(
 			file.c_str(), GetLastErrorMessage(*m_session));
 		
 		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 	}
 
 	m_strFilename = file.substr(file.find_last_of('/')+1);
@@ -326,7 +329,7 @@ STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
 			pcbRead = &cbTemp;
 		_Read(static_cast<char*>(pv), cb, *pcbRead);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -359,7 +362,7 @@ STDMETHODIMP CSftpStream::Write(
 			pcbWritten = &cbTemp;
 		_Write(static_cast<const char*>(pv), cb, *pcbWritten);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -403,7 +406,7 @@ STDMETHODIMP CSftpStream::CopyTo(
 			(pcbRead) ? pcbRead->QuadPart : cbRead,
 			(pcbWritten) ? pcbWritten->QuadPart : cbWritten);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -438,7 +441,7 @@ STDMETHODIMP CSftpStream::Seek(
 		if (plibNewPosition)
 			plibNewPosition->QuadPart = uNewPosition;
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -476,7 +479,7 @@ STDMETHODIMP CSftpStream::Stat(STATSTG *pstatstg, DWORD grfStatFlag)
 	{
 		*pstatstg = _Stat(!(grfStatFlag & STATFLAG_NONAME));
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -561,7 +564,7 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  * @returns  Number of bytes actually read in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
- * @throws   com_exception with STG_E_* code if an error occurs.
+ * @throws   com_error with STG_E_* code if an error occurs.
  */
 void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
@@ -571,7 +574,7 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 		cbRead = 0;
 		TRACE("libssh2_sftp_read() failed: %ws", 
 			GetLastErrorMessage(*m_session));
-		BOOST_THROW_EXCEPTION(com_exception(last_storage_error(*m_session)));
+		BOOST_THROW_EXCEPTION(com_error(last_storage_error(*m_session)));
 	}
 	cbRead = rc;
 }
@@ -585,7 +588,7 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
  * @returns  Number of bytes actually written in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
- * @throws   com_exception with STG_E_* code if an error occurs.
+ * @throws   com_error with STG_E_* code if an error occurs.
  */
 void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 {
@@ -612,7 +615,7 @@ ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
 
 		// XXX: maybe we have to return STG_E_CANTSAVE here (see MSDN)
 		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 	}
 	return rc;
 }
@@ -623,7 +626,7 @@ ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly
  *           even if the call fails (throws an exception).
- * @throws   com_exception with STG_E_* code if an error occurs.
+ * @throws   com_error with STG_E_* code if an error occurs.
  */
 void CSftpStream::_CopyTo(
 	IStream *pstm, ULONGLONG cb, 
@@ -665,7 +668,7 @@ void CSftpStream::_CopyTo(
  * @returns  Number of bytes actaully read and written in out-parameters
  *           cbRead and cbWritten.  These should be set correctly 
  *           even if the call fails (throws an exception).
- * @throws   com_exception with STG_E_* code if an error occurs.
+ * @throws   com_error with STG_E_* code if an error occurs.
  *
  * @todo  Performance could be improved by continuing the _Read() operation
  *        in the background while writing the buffer to the target stream.
@@ -698,7 +701,7 @@ void CSftpStream::_CopyOne(
  * Move the seek pointer by nMove bytes (may be negative).
  *
  * @returns  New location of seek pointer.
- * @throws   com_exception with STG_E_* code if an error occurs.
+ * @throws   com_error with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
@@ -712,7 +715,7 @@ ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 /**
  * Create STATSTG structure for the stream.
  *
- * @throws  com_exception with STG_E_* code if an error occurs.
+ * @throws  com_error with STG_E_* code if an error occurs.
  */
 STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 {	
@@ -733,7 +736,7 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 			GetLastErrorMessage(*m_session));
 
 		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(com_exception(hr));
+		BOOST_THROW_EXCEPTION(com_error(hr));
 	}
 
 	statstg.cbSize.QuadPart = attrs.filesize;
@@ -777,7 +780,7 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
 /**
  * Calculate new position of the seek pointer.
  *
- * @throws  com_exception with STG_E_* code if an error occurs.
+ * @throws  com_error with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_CalculateNewFilePosition(
 	LONGLONG nMove, DWORD dwOrigin) throw(...)
@@ -806,7 +809,7 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
 		if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
 		{		
 			HRESULT hr = last_storage_error(*m_session);
-			BOOST_THROW_EXCEPTION(com_exception(hr));
+			BOOST_THROW_EXCEPTION(com_error(hr));
 		}
 
 		nNewPosition = attrs.filesize - nOffset;

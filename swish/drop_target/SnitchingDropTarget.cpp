@@ -28,7 +28,7 @@
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/gui/message_box.hpp> // message_box
 
 #include <boost/locale.hpp> // translate
@@ -69,7 +69,7 @@ STDMETHODIMP CSnitchingDropTarget::SetSite(IUnknown* pUnkSite)
 		com_ptr<IObjectWithSite> obj = try_cast(m_inner);
 		return obj->SetSite(pUnkSite);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -81,7 +81,7 @@ STDMETHODIMP CSnitchingDropTarget::GetSite(REFIID riid, void** ppvSite)
 		com_ptr<IObjectWithSite> obj = try_cast(m_inner);
 		return obj->GetSite(riid, ppvSite);
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }
@@ -130,7 +130,7 @@ STDMETHODIMP CSnitchingDropTarget::Drop(
 
 		return hr;
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }

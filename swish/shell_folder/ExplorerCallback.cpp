@@ -30,7 +30,7 @@
 #include "swish/shell_folder/commands/Command.hpp" // MenuCommandTitleAdapter
 #include "swish/shell_folder/commands/host/host.hpp" // host commands
 
-#include <winapi/com/catch.hpp> // COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/error.hpp> // last_error
 #include <winapi/trace.hpp> // trace
 
@@ -533,7 +533,7 @@ STDMETHODIMP CExplorerCallback::MessageSFVCB(
 				BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
 		}
 	}
-	COM_CATCH_AUTO_INTERFACE();
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
 	return S_OK;
 }

@@ -36,9 +36,8 @@
 
 #include "Dispenser.hpp"
 
-#include "swish/utils.hpp" // running_object_table
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider
-#include "swish/catch_com.hpp" // catchCom
+#include "swish/utils.hpp" // running_object_table
 #include "swish/trace.hpp" // trace
 
 #include <comet/ptr.h> // com_ptr
@@ -46,6 +45,8 @@
 #include <comet/error_fwd.h> // com_error
 #include <comet/interface.h> // uuidof, comtype
 #include <comet/threading.h> // critical_section, auto_cs
+
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/regex.hpp> // Regular expressions
@@ -233,7 +234,7 @@ STDMETHODIMP CDispenser::GetObject(
 		auto_cs cs(lock);
 		get_object(pszItem, dwSpeedNeeded, pbc, riid, ppvObject);
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
@@ -267,7 +268,7 @@ STDMETHODIMP CDispenser::IsRunning(LPOLESTR pszItem)
 				throw com_error(MK_E_NOOBJECT); // Not one of our monikers
 		}
 	}
-	catchCom()
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
 	return S_OK;
 }
 
