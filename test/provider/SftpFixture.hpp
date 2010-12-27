@@ -3,7 +3,7 @@
 
     Fixture for tests that need to access a server using SFTP.
 
-    @if licence
+    @if license
 
     Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

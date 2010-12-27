@@ -3,7 +3,7 @@
 
     Fixture for tests that need a backend data provider.
 
-    @if licence
+    @if license
 
     Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

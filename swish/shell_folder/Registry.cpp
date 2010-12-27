@@ -3,7 +3,7 @@
 
     Helper class for Swish registry access.
 
-    @if licence
+    @if license
 
     Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

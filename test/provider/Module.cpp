@@ -3,7 +3,7 @@
 
     ATL Module required for ATL support.
 
-    @if licence
+    @if license
 
     Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

@@ -3,7 +3,7 @@
 
     Fixture that runs local OpenSSH server for testing.
 
-    @if licence
+    @if license
 
     Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

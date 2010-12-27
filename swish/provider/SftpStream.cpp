@@ -3,7 +3,7 @@
 
     IStream interface around the libssh2 SFTP file access functions.
 
-    @if licence
+    @if license
 
     Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

@@ -3,7 +3,7 @@
 
     Unit tests for Explorer command implementation classes.
 
-    @if licence
+    @if license
 
     Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

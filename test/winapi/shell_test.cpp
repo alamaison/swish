@@ -3,7 +3,7 @@
 
     Tests for shell utility functions.
 
-    @if licence
+    @if license
 
     Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

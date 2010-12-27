@@ -3,7 +3,7 @@
 
     Translate between COM errors and C++ exceptions for folder interfaces.
 
-    @if licence
+    @if license
 
     Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

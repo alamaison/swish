@@ -3,7 +3,7 @@
 
 	PIDL wrapper class with accessors for remote folder PIDL fields.
 
-    @if licence
+    @if license
 
     Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

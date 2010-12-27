@@ -3,7 +3,7 @@
 
     Windows XP web view task pane expandos.
 
-    @if licence
+    @if license
 
     Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 

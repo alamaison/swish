@@ -3,7 +3,7 @@
 
     Explorer folder to handle SFTP connection items.
 
-    @if licence
+    @if license
 
     Copyright (C) 2007, 2008, 2009, 2010
     Alexander Lamaison <awl03@doc.ic.ac.uk>

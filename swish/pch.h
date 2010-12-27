@@ -3,7 +3,7 @@
 	
 	Precompiled-header.
 
-    @if licence
+    @if license
 
     Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
