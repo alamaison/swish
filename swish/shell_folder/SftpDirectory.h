@@ -30,8 +30,14 @@
 #include "HostPidl.h"  // PIDL wrapper classes
 #include "RemotePidl.h"
 
+#include <winapi/shell/pidl.hpp> // apidl_t
+
 #include <comet/bstr.h> // bstr_t
 #include <comet/ptr.h> // com_ptr
+
+#include <boost/filesystem.hpp> // wpath
+
+#include <string>
 
 struct ISftpConsumer;
 struct ISftpProvider;
@@ -40,24 +46,25 @@ class CSftpDirectory
 {
 public:
 	CSftpDirectory(
-		CAbsolutePidlHandle pidlDirectory,
+		const winapi::shell::pidl::apidl_t& directory,
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer);
 
-	ATL::CComPtr<IEnumIDList> GetEnum(SHCONTF grfFlags);
-	CSftpDirectory GetSubdirectory(__in CRemoteItemHandle pidl);
-	ATL::CComPtr<IStream> GetFile(
-		__in CRemoteItemHandle pidl, bool writeable);
-	ATL::CComPtr<IStream> GetFileByPath(
-		PCWSTR pwszPath, bool writeable);
+	comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
+	CSftpDirectory GetSubdirectory(CRemoteItemHandle directory);
+	comet::com_ptr<IStream> GetFile(
+		CRemoteItemHandle file, bool writeable);
+	comet::com_ptr<IStream> GetFileByPath(
+		const boost::filesystem::wpath& file, bool writeable);
 
 	bool Rename(
-		__in CRemoteItemHandle pidlOldFile, __in PCWSTR pwszNewFilename);
-	void Delete(__in CRemoteItemHandle pidl);
+		CRemoteItemHandle old_file, const std::wstring& new_filename);
+	void Delete(CRemoteItemHandle file);
 
 private:
 	comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider
 	comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
-	comet::bstr_t m_directory;        ///< Absolute path to this directory.
-	CAbsolutePidl m_pidlDirectory;    ///< Absolute PIDL to this directory.
+	boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
+	const winapi::shell::pidl::apidl_t& m_directory_pidl;
+	                             ///< Absolute PIDL to this directory.
 };

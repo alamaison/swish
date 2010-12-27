@@ -34,18 +34,20 @@
 
 using swish::SmartListing;
 
+using winapi::shell::pidl::apidl_t;
+
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::make_smart_enumeration;
 
+using boost::filesystem::wpath;
 using boost::make_shared;
 using boost::shared_ptr;
 
 using std::vector;
-
-using ATL::CComPtr;
+using std::wstring;
 
 namespace comet {
 
@@ -84,21 +86,15 @@ template<> struct impl::type_policy<PITEMID_CHILD>
 /**
  * Creates and initialises directory instance from a PIDL. 
  *
- * @param pidlDirectory  PIDL to the directory this object represents.  Must
- *                       start at or before a HostItemId.
- * @param conn           SFTP connection container.
+ * @param directory_pidl  PIDL to the directory this object represents.  Must
+ *                        start at or before a HostItemId.
  */
 CSftpDirectory::CSftpDirectory(
-	CAbsolutePidlHandle pidlDirectory,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) : 
-m_provider(provider), 
-m_consumer(consumer), 
-m_pidlDirectory(pidlDirectory),
-m_directory( // Trim trailing slashes and append single slash
-			   CHostItemAbsoluteHandle(
-			   pidlDirectory).GetFullPath().TrimRight(L'/')+L'/')
-{
-}
+	const apidl_t& directory_pidl,
+	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer)
+: 
+m_provider(provider), m_consumer(consumer), m_directory_pidl(directory_pidl),
+m_directory(CHostItemAbsoluteHandle(directory_pidl.get()).GetFullPath()) {}
 
 namespace {
 
@@ -135,21 +131,22 @@ namespace {
  * changes.  In order to obtain an up-to-date listing, this function must be 
  * called again to get a new enumerator.
  *
- * @param grfFlags  Flags specifying nature of files to fetch.
+ * @param flags  Flags specifying nature of files to fetch.
  *
  * @returns  Smart pointer to the IEnumIDList.
  * @throws  com_error if an error occurs.
  */
-CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
+com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 {
 	// Interpret supported SHCONTF flags
-	bool fIncludeFolders = (grfFlags & SHCONTF_FOLDERS) != 0;
-	bool fIncludeNonFolders = (grfFlags & SHCONTF_NONFOLDERS) != 0;
-	bool fIncludeHidden = (grfFlags & SHCONTF_INCLUDEHIDDEN) != 0;
+	bool include_folders = (flags & SHCONTF_FOLDERS) != 0;
+	bool include_non_folders = (flags & SHCONTF_NONFOLDERS) != 0;
+	bool include_hidden = (flags & SHCONTF_INCLUDEHIDDEN) != 0;
 
 	com_ptr<IEnumListing> directory_enum;
 	HRESULT hr = m_provider->GetListing(
-		m_consumer.in(), m_directory.in(), directory_enum.out());
+		m_consumer.in(), bstr_t(m_directory.string()).in(),
+		directory_enum.out());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
 
@@ -158,15 +155,15 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 
 	do {
 		SmartListing lt;
-		ULONG cElementsFetched = 0;
-		hr = directory_enum->Next(1, lt.out(), &cElementsFetched);
+		ULONG fetched = 0;
+		hr = directory_enum->Next(1, lt.out(), &fetched);
 		if (hr == S_OK)
 		{
-			if (!fIncludeFolders && directory(lt))
+			if (!include_folders && directory(lt))
 				continue;
-			if (!fIncludeNonFolders && !directory(lt))
+			if (!include_non_folders && !directory(lt))
 				continue;
-			if (!fIncludeHidden && dotted(lt))
+			if (!include_hidden && dotted(lt))
 				continue;
 
 			pidls->push_back(to_pidl(lt));
@@ -179,18 +176,19 @@ CComPtr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF grfFlags)
 /**
  * Get instance of CSftpDirectory for a subdirectory of this directory.
  *
- * @param pidl  Child PIDL of directory within this directory.
+ * @param directory  Child PIDL of directory within this directory.
  *
  * @returns  Instance of the subdirectory.
  * @throws  com_error if error.
  */
-CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle pidl)
+CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle directory)
 {
-	if (!pidl.IsFolder())
+	if (!directory.IsFolder())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	CAbsolutePidl pidlSub(m_pidlDirectory, pidl);
-	return CSftpDirectory(pidlSub, m_provider, m_consumer);
+	apidl_t sub_directory =
+		m_directory_pidl + reinterpret_cast<PCITEMID_CHILD>(directory.Get());
+	return CSftpDirectory(sub_directory, m_provider, m_consumer);
 }
 
 /**
@@ -199,21 +197,22 @@ CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle pidl)
  * This 'file' may also be a directory but the IStream does not give access
  * to its subitems.
  *
- * @param pidl  Child PIDL of item within this directory.
+ * @param file  Child PIDL of item within this directory.
  *
  * @returns  Smart pointer of an IStream interface to the file.
  * @throws  com_error if error.
  */
-CComPtr<IStream> CSftpDirectory::GetFile(
-	CRemoteItemHandle pidl, bool writeable)
+com_ptr<IStream> CSftpDirectory::GetFile(
+	CRemoteItemHandle file, bool writeable)
 {
-	CComPtr<IStream> spStream;
+	bstr_t file_path = (m_directory / file.GetFilename()).string();
+
+	com_ptr<IStream> stream;
 	HRESULT hr = m_provider->GetFile(
-		m_consumer.in(),
-		(m_directory + pidl.GetFilename()).in(), writeable, &spStream);
+		m_consumer.in(), file_path.in(), writeable, stream.out());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
-	return spStream;
+	return stream;
 }
 
 /**
@@ -222,47 +221,47 @@ CComPtr<IStream> CSftpDirectory::GetFile(
  * This 'file' may also be a directory but the IStream does not give access
  * to its subitems.
  *
- * @param pidl  Path of item relative to this directory (may be at a level
+ * @param file  Path of item relative to this directory (may be at a level
  *              below this directory).
  *
  * @returns  Smart pointer of an IStream interface to the file.
  * @throws  com_error if error.
  */
-CComPtr<IStream> CSftpDirectory::GetFileByPath(
-	PCWSTR pwszPath, bool writeable)
+com_ptr<IStream> CSftpDirectory::GetFileByPath(
+	const wpath& file, bool writeable)
 {
-	CComPtr<IStream> spStream;
+	bstr_t file_path = (m_directory / file).string();
+
+	com_ptr<IStream> stream;
 	HRESULT hr = m_provider->GetFile(
-		m_consumer.in(), 
-		(m_directory + pwszPath).in(), writeable, &spStream);
+		m_consumer.in(), file_path.in(), writeable, stream.out());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
-	return spStream;
+	return stream;
 }
 
 bool CSftpDirectory::Rename(
-	CRemoteItemHandle pidlOldFile, PCWSTR pwszNewFilename)
+	CRemoteItemHandle old_file, const wstring& new_filename)
 {
-	VARIANT_BOOL fWasTargetOverwritten = VARIANT_FALSE;
+	VARIANT_BOOL was_target_overwritten = VARIANT_FALSE;
+	bstr_t old_file_path = (m_directory / old_file.GetFilename()).string();
+	bstr_t new_file_path = (m_directory / new_filename).string();
 
 	HRESULT hr = m_provider->Rename(
-		m_consumer.in(), 
-		(m_directory + pidlOldFile.GetFilename()).in(),
-		(m_directory + pwszNewFilename).in(),
-		&fWasTargetOverwritten
-	);
+		m_consumer.in(), old_file_path.in(), new_file_path.in(),
+		&was_target_overwritten);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
 
-	return (fWasTargetOverwritten == VARIANT_TRUE);
+	return (was_target_overwritten == VARIANT_TRUE);
 }
 
-void CSftpDirectory::Delete(CRemoteItemHandle pidl)
+void CSftpDirectory::Delete(CRemoteItemHandle file)
 {
-	bstr_t target_path = m_directory + pidl.GetFilename();
+	bstr_t target_path = (m_directory / file.GetFilename()).string();
 	
 	HRESULT hr;
-	if (pidl.IsFolder())
+	if (file.IsFolder())
 		hr = m_provider->DeleteDirectory(m_consumer.in(), target_path.in());
 	else
 		hr = m_provider->Delete(m_consumer.in(), target_path.in());

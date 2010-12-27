@@ -33,11 +33,13 @@
 #include <boost/iterator/transform_iterator.hpp> // transform_iterator
 #include <boost/mem_fn.hpp> // mem_fn
 
-using ATL::CComPtr;
 using swish::shell_folder::data_object::FileGroupDescriptor;
 using swish::shell_folder::data_object::Descriptor;
 using swish::shell_folder::data_object::StorageMedium;
 using swish::shell_folder::data_object::group_descriptor_from_range;
+
+using comet::com_ptr;
+
 using boost::make_transform_iterator;
 using boost::mem_fn;
 
@@ -259,12 +261,12 @@ throw(...)
 	if (!m_pidls.empty())
 	{
 		// Create an IStream from the cached PIDL list
-		CComPtr<IStream> stream = _CreateFileContentsStream(lindex);
+		com_ptr<IStream> stream = _CreateFileContentsStream(lindex);
 		ATLENSURE(stream);
 
 		// Pack into a STGMEDIUM which will be returned to the client
 		stg.tymed = TYMED_ISTREAM;
-		stg.pstm = stream.Detach();
+		stg.pstm = stream.detach();
 	}
 	else
 	{
@@ -300,7 +302,7 @@ HGLOBAL CSftpDataObject::_CreateFileGroupDescriptor()
  * @note Asking for an IStream to folder may not break (libssh2 can do 
  * this) but it is a waste of effort. Explorer won't use it, nor should it.
  */
-CComPtr<IStream> CSftpDataObject::_CreateFileContentsStream(long lindex)
+com_ptr<IStream> CSftpDataObject::_CreateFileContentsStream(long lindex)
 throw(...)
 {
 	ATLENSURE(m_fRenderedDescriptor);
@@ -449,7 +451,7 @@ void CSftpDataObject::_ExpandDirectoryTreeInto(
 	ExpandedList& descriptors)
 const throw(...)
 {
-	CComPtr<IEnumIDList> spEnum = _GetEnumAll(
+	com_ptr<IEnumIDList> listing = _GetEnumAll(
 		CAbsolutePidl(pidlParent, pidlDirectory));
 
 	// Add all items below this directory (this directory added by caller)
@@ -457,7 +459,7 @@ const throw(...)
 	while(true)
 	{
 		CRemoteItem pidl;
-		hr = spEnum->Next(1, &pidl, NULL);
+		hr = listing->Next(1, &pidl, NULL);
 		if (hr != S_OK)
 			break;
 
@@ -479,7 +481,7 @@ const throw(...)
 	ATLENSURE(hr == S_FALSE);
 }
 
-CComPtr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
+com_ptr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
 const throw(...)
 {
 	CSftpDirectory dir(pidl, m_spProvider.p, m_spConsumer.p);

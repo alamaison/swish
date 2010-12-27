@@ -110,7 +110,7 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 		// Create directory handler and get listing as PIDL enumeration
 		CSftpDirectory directory(
 			root_pidl().get(), provider.get(), m_consumer.get());
-		return directory.GetEnum(flags).Detach();
+		return directory.GetEnum(flags).detach();
 	}
 	catch (...)
 	{

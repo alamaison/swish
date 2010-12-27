@@ -22,7 +22,10 @@
 #include "DataObject.h"
 #include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
 #include "RemotePidl.h"
+
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+
+#include <comet/ptr.h> // com_ptr
 
 #include <vector>
 
@@ -110,7 +113,7 @@ private:
 	// @}
 
 	/**
-	 * Expanded types.  The are the types that the top-levl PIDLs are expanded
+	 * Expanded types.  The are the types that the top-level PIDLs are expanded
 	 * into when a file group descriptor is requested.  They can represent all
 	 * the items in or below the top-level and are needed in order to store 
 	 * entire directory trees in an IDataObject.
@@ -147,7 +150,7 @@ private:
 	STGMEDIUM _DelayRenderCfFileContents(long lindex) throw(...);
 
 	HGLOBAL _CreateFileGroupDescriptor();
-	ATL::CComPtr<IStream> _CreateFileContentsStream(long lindex) throw(...);
+	comet::com_ptr<IStream> _CreateFileContentsStream(long lindex) throw(...);
 
 	void _ExpandPidlsInto(__inout ExpandedList& descriptors) const throw(...);
 	void _ExpandTopLevelPidlInto(
@@ -156,7 +159,7 @@ private:
 	void _ExpandDirectoryTreeInto(
 		const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
 		__inout ExpandedList& descriptors) const throw(...);
-	ATL::CComPtr<IEnumIDList> _GetEnumAll(const CAbsolutePidl& pidl)
+	comet::com_ptr<IEnumIDList> _GetEnumAll(const CAbsolutePidl& pidl)
 		const throw(...);
 	inline bool _WantProgressDialogue() const throw();
 	// @}
