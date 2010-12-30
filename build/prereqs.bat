@@ -69,11 +69,12 @@ del openssl-1.0.0a-swish.zip
 
 echo.
 echo ===- Downloading WTL ...
-%WGET% "http://downloads.sourceforge.net/wtl/WTL80_7161_Final.zip?download" || (
+
+%WGET% "http://downloads.sourceforge.net/project/wtl/WTL%%208.1/WTL%%208.1.9127/WTL81_9127.zip" || (
 	echo ===- Error while trying to download WTL. & goto error)
-%SEVENZ% x WTL80_7161_Final.zip -owtl -aoa || (
+%SEVENZ% x WTL81_9127.zip -owtl -aoa || (
 	echo ===- Error while trying to extract WTL. & goto error)
-del WTL80_7161_Final.zip
+del WTL81_9127.zip
 
 :: comet
 
