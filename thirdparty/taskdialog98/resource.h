@@ -5,12 +5,7 @@
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDD_MAINDLG                     129
-#define IDS_TASKDLG_OK                  129
-#define IDS_TASKDLG_YES                 130
-#define IDS_TASKDLG_NO                  131
-#define IDS_TASKDLG_RETRY               132
 #define IDS_TASKDLG_CANCEL              133
-#define IDS_TASKDLG_CLOSE               134
 #define IDC_BUTTON1                     1000
 #define IDC_BUTTON2                     1001
 #define IDC_BUTTON3                     1002

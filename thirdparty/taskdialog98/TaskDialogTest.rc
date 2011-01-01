@@ -208,12 +208,7 @@ END
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
     IDR_MAINFRAME           "TaskDialogTest"
-    IDS_TASKDLG_OK          "&OK"
-    IDS_TASKDLG_YES         "&Yes"
-    IDS_TASKDLG_NO          "&No"
-    IDS_TASKDLG_RETRY       "&Retry"
     IDS_TASKDLG_CANCEL      "Cancel"
-    IDS_TASKDLG_CLOSE       "Close"
 END
 
 STRINGTABLE DISCARDABLE 

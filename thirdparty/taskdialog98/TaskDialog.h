@@ -44,21 +44,14 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
-// The dialog requires a few string and icon resources to be defined. Ironic isn't it: the dialog
-// is dynamically constructed but we still need resources.
-// Here is a list:
-//   IDS_TASKDLG_OK            "&OK"
-//   IDS_TASKDLG_YES           "&Yes"
-//   IDS_TASKDLG_NO            "&No"
-//   IDS_TASKDLG_CANCEL        "&Cancel"
-//   IDS_TASKDLG_RETRY         "&Retry"
-//   IDS_TASKDLG_CLOSE         "Close"
-//
-#include "resource.h"
 #include "icons.h"
 
-
+#define USER32_IDS_OK      800
+#define USER32_IDS_CANCEL  801
+#define USER32_IDS_RETRY   803
+#define USER32_IDS_YES     805
+#define USER32_IDS_NO      806
+#define USER32_IDS_CLOSE   807
 
 /////////////////////////////////////////////////////////////////////////
 // TaskDialog declares
@@ -1436,16 +1429,16 @@ public:
 
       if( m_cfg.dwCommonButtons != 0 ) {
          int buttons[] = { 
-            TDCBF_OK_BUTTON,     IDOK,     IDS_TASKDLG_OK,
-            TDCBF_YES_BUTTON,    IDYES,    IDS_TASKDLG_YES,
-            TDCBF_NO_BUTTON,     IDNO,     IDS_TASKDLG_NO,
-            TDCBF_RETRY_BUTTON,  IDRETRY,  IDS_TASKDLG_RETRY,
-            TDCBF_CANCEL_BUTTON, IDCANCEL, IDS_TASKDLG_CANCEL,
-            TDCBF_CLOSE_BUTTON,  IDCLOSE,  IDS_TASKDLG_CLOSE,
+            TDCBF_OK_BUTTON,     IDOK,     USER32_IDS_OK,
+            TDCBF_YES_BUTTON,    IDYES,    USER32_IDS_YES,
+            TDCBF_NO_BUTTON,     IDNO,     USER32_IDS_NO,
+            TDCBF_RETRY_BUTTON,  IDRETRY,  USER32_IDS_RETRY,
+            TDCBF_CANCEL_BUTTON, IDCANCEL, USER32_IDS_CANCEL,
+            TDCBF_CLOSE_BUTTON,  IDCLOSE,  USER32_IDS_CLOSE,
          };
          for( n = 0; n < sizeof(buttons) / sizeof(buttons[0]); n += 3 ) {
             if( (m_cfg.dwCommonButtons & buttons[n]) == 0 ) continue;
-            sizeText = _GetTextSize(MAKEINTRESOURCEW(buttons[n + 2]), pstrBuffer, MAX_TEXT_LENGTH, DT_WORDBREAK, m_fontText, 9999);
+            sizeText = _GetTextSize(buttons[n + 2], pstrBuffer, MAX_TEXT_LENGTH, DT_WORDBREAK, m_fontText, 9999);
             if( sizeText.cx < m_Metrics.cxMinButton ) sizeText.cx = m_Metrics.cxMinButton;
             RECT rcButton = { xpos, ypos, xpos + sizeText.cx + (m_Metrics.sizeButtonPadding.cx * 2), ypos + sizeText.cy + (m_Metrics.sizeButtonPadding.cy * 2) };
             _AlignDLU(rcButton.right, HTRIGHT);
@@ -1791,6 +1784,16 @@ public:
       else ::lstrcpyn(pszBuffer, W2CT(pstr), cchMax);
    }
 
+   /**
+    * Variation of _LoadString that loads a resource from user32.dll.
+	*/
+   void _LoadString(int id, LPTSTR pszBuffer, SIZE_T cchMax) const
+   {
+      USES_CONVERSION;
+      ::ZeroMemory(pszBuffer, cchMax * sizeof(TCHAR));
+	  ::LoadString(::GetModuleHandle(_T("user32.dll")), id, pszBuffer, cchMax);
+   }
+
    void _SplitCommandText(LPTSTR pstrBuffer, LPCTSTR& pstrTitle, SIZE_T& cchTitle, LPCTSTR& pstrText, SIZE_T& cchText) const
    {
       LPTSTR pstrSel = pstrBuffer;
@@ -1822,6 +1825,15 @@ public:
    SIZE _GetTextSize(LPCWSTR pstr, LPTSTR pszBuffer, SIZE_T cchMax, UINT uStyle, HFONT hFont, int cxMax) const
    {
       _LoadString(pstr, pszBuffer, cchMax);
+      return _GetTextSize(pszBuffer, (UINT) -1, uStyle, hFont, cxMax);
+   }
+
+   /**
+    * Variation of _GetTextSize() that loads string from user32.dll resources.
+	*/
+   SIZE _GetTextSize(int id, LPTSTR pszBuffer, SIZE_T cchMax, UINT uStyle, HFONT hFont, int cxMax) const
+   {
+      _LoadString(id, pszBuffer, cchMax);
       return _GetTextSize(pszBuffer, (UINT) -1, uStyle, hFont, cxMax);
    }
 
