@@ -11,10 +11,6 @@
 #define IDS_TASKDLG_RETRY               132
 #define IDS_TASKDLG_CANCEL              133
 #define IDS_TASKDLG_CLOSE               134
-#define IDI_TASKDLG_ARROW_NORMAL        201
-#define IDI_TASKDLG_ARROW_HOT           202
-#define IDI_TASKDLG_CHEVRON_MORE        203
-#define IDI_TASKDLG_CHEVRON_LESS        204
 #define IDC_BUTTON1                     1000
 #define IDC_BUTTON2                     1001
 #define IDC_BUTTON3                     1002

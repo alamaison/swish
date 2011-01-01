@@ -26,7 +26,7 @@
 // Beware of bugs.
 
 
-// Dual Licenced under the GPL with permission:
+// Dual licensed under the GPL with permission:
 //
 // Copyright (c) 2007 Bjarke Viksoe <bjarke@viksoe.dk>
 // 
@@ -55,12 +55,8 @@
 //   IDS_TASKDLG_RETRY         "&Retry"
 //   IDS_TASKDLG_CLOSE         "Close"
 //
-//   IDI_TASKDLG_CHEVRON_LESS  Expander icon (less)
-//   IDI_TASKDLG_CHEVRON_MORE  Expander icon (more)
-//   IDI_TASKDLG_ARROW_NORMAL  Green Link Arrow
-//   IDI_TASKDLG_ARROW_HOT     Green Link Arrow (hover)
-//
 #include "resource.h"
+#include "icons.h"
 
 
 
@@ -261,141 +257,6 @@ typedef struct _TASKDIALOGCONFIG
 #endif // _WIN32
 
 #endif // _WIN32_WINNT
-
-
-/////////////////////////////////////////////////////////////////////////
-// CDialogBaseUnits - Dialog helper
-//
-
-class CDialogBaseUnits
-{
-public:
-   SIZE m_sizeUnits;
-
-   // Constructors
-
-   CDialogBaseUnits()
-   {
-      // The base units of the out-dated System Font
-      LONG nDlgBaseUnits = ::GetDialogBaseUnits();
-      m_sizeUnits.cx = LOWORD(nDlgBaseUnits);
-      m_sizeUnits.cy = HIWORD(nDlgBaseUnits);
-   }
-
-   CDialogBaseUnits(HWND hWnd)
-   {
-      m_sizeUnits.cx = m_sizeUnits.cy = 0;
-      InitDialogBaseUnits(hWnd);
-   }
-
-   CDialogBaseUnits(HFONT hFont, HWND hWnd = NULL)
-   {
-      m_sizeUnits.cx = m_sizeUnits.cy = 0;
-      InitDialogBaseUnits(hFont, hWnd);
-   }
-
-   CDialogBaseUnits(LOGFONT lf, HWND hWnd = NULL)
-   {
-      m_sizeUnits.cx = m_sizeUnits.cy = 0;
-      InitDialogBaseUnits(lf, hWnd);
-   }
-
-   // Operations
-
-   BOOL InitDialogBaseUnits(HWND hWnd)
-   {
-      ATLASSERT(::IsWindow(hWnd));
-      RECT rc = { 0, 0, 4, 8 };
-      if( !::MapDialogRect(hWnd, &rc) ) return FALSE;
-      m_sizeUnits.cx = rc.right;
-      m_sizeUnits.cy = rc.bottom;
-      return TRUE;
-   }
-
-   BOOL InitDialogBaseUnits(LOGFONT lf, HWND hWnd = NULL)
-   {
-      CFont font;
-      font.CreateFontIndirect(&lf);
-      if( font.IsNull() ) return FALSE;
-      return InitDialogBaseUnits(font, hWnd);
-   }
-
-   BOOL InitDialogBaseUnits(HFONT hFont, HWND hWnd = NULL)
-   {
-      ATLASSERT(hFont != NULL);
-      CWindowDC dc = hWnd;
-      HFONT hFontOld = dc.SelectFont(hFont);
-      TEXTMETRIC tmText = { 0 };
-      dc.GetTextMetrics(&tmText);
-      m_sizeUnits.cy = tmText.tmHeight + tmText.tmExternalLeading;
-      SIZE sizeText = { 0 };
-      dc.GetTextExtent(_T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"), 52, &sizeText);
-      m_sizeUnits.cx = (sizeText.cx + 26) / 52;
-      dc.SelectFont(hFontOld);
-      return TRUE;
-   }
-
-   SIZE GetDialogBaseUnits() const
-   {
-      return m_sizeUnits;
-   }
-
-   INT MapDialogPixelsX(INT x) const
-   {
-      return MulDiv(x, 4, m_sizeUnits.cx);  // Pixels X to DLU
-   }
-
-   INT MapDialogPixelsY(INT y) const
-   {
-      return MulDiv(y, 8, m_sizeUnits.cy);  // Pixels Y to DLU
-   }
-
-   POINT MapDialogPixels(POINT pt) const
-   {
-      POINT out = { MapDialogPixelsX(pt.x), MapDialogPixelsY(pt.y) };
-      return out;
-   }
-
-   SIZE MapDialogPixels(SIZE input) const
-   {
-      SIZE out = { MapDialogPixelsX(input.cx), MapDialogPixelsY(input.cy) };
-      return out;
-   }
-
-   RECT MapDialogPixels(RECT input) const
-   {
-      RECT out = { MapDialogPixelsX(input.left), MapDialogPixelsY(input.top), MapDialogPixelsX(input.right), MapDialogPixelsY(input.bottom) };
-      return out;
-   }
-
-   INT MapDialogUnitsX(INT x) const
-   {
-      return MulDiv(x, m_sizeUnits.cx, 4);  // DLU to Pixels X
-   }
-
-   INT MapDialogUnitsY(INT y) const
-   {
-      return MulDiv(y, m_sizeUnits.cx, 8);  // DLU to Pixels Y
-   }
-
-   POINT MapDialogUnits(POINT pt) const
-   {
-      POINT out = { MapDialogUnitsX(pt.x), MapDialogUnitsY(pt.y) };
-      return out;
-   }
-
-   SIZE MapDialogUnits(SIZE input) const
-   {
-      SIZE out = { MapDialogUnitsX(input.cx), MapDialogUnitsY(input.cy) };
-      return out;
-   }
-
-   RECT MapDialogUnits(RECT input) const
-   {
-      RECT out = { MapDialogUnitsX(input.left), MapDialogUnitsY(input.top), MapDialogUnitsX(input.right), MapDialogUnitsY(input.bottom) };
-      return out;
-   }
-};
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -998,10 +859,10 @@ public:
       // Get icons...
       m_iconMain = (HICON) ((m_cfg.dwFlags & TDF_USE_HICON_MAIN) != 0 ? m_cfg.hMainIcon : _LoadIcon(m_cfg.pszMainIcon, m_Metrics.cxyLargeIcon));
       m_iconFooter = (HICON) ((m_cfg.dwFlags & TDF_USE_HICON_FOOTER) != 0 ? m_cfg.hFooterIcon : _LoadIcon(m_cfg.pszFooterIcon, m_Metrics.cxySmallIcon));
-      m_iconArrowHot = _LoadIcon(MAKEINTRESOURCEW(IDI_TASKDLG_ARROW_HOT), 20);
-      m_iconArrowNormal = _LoadIcon(MAKEINTRESOURCEW(IDI_TASKDLG_ARROW_NORMAL), 20);
-      m_iconChevronLess = _LoadIcon(MAKEINTRESOURCEW(IDI_TASKDLG_CHEVRON_LESS), 20);
-      m_iconChevronMore = _LoadIcon(MAKEINTRESOURCEW(IDI_TASKDLG_CHEVRON_MORE), 20);
+      m_iconArrowHot = _LoadIcon(TaskDlgArrowHot_ico, TaskDlgArrowHot_ico_len, 20);
+      m_iconArrowNormal = _LoadIcon(TaskDlgArrowNormal_ico, TaskDlgArrowNormal_ico_len, 20);
+      m_iconChevronLess = _LoadIcon(TaskDlgChevronLess_ico, TaskDlgChevronLess_ico_len, 20);
+      m_iconChevronMore = _LoadIcon(TaskDlgChevronMore_ico, TaskDlgChevronMore_ico_len, 20);
       if( !m_iconMain.IsNull() && GetParent() == NULL ) SetIcon(m_iconMain, FALSE);
       // Play that funky music...
       _PlaySound();
@@ -1856,10 +1717,6 @@ public:
 #endif // _WIN_WINNT
       else if( pstr == TD_WARNING_ICON ) pstr = MAKEINTRESOURCEW(IDI_EXCLAMATION), hInst = NULL;
       else if( pstr == TD_INFORMATION_ICON ) pstr = MAKEINTRESOURCEW(IDI_ASTERISK), hInst = NULL;
-      else if( pstr == MAKEINTRESOURCEW(IDI_TASKDLG_ARROW_HOT) ) hInst = ModuleHelper::GetResourceInstance();
-      else if( pstr == MAKEINTRESOURCEW(IDI_TASKDLG_ARROW_NORMAL) ) hInst = ModuleHelper::GetResourceInstance();
-      else if( pstr == MAKEINTRESOURCEW(IDI_TASKDLG_CHEVRON_LESS) ) hInst = ModuleHelper::GetResourceInstance();
-      else if( pstr == MAKEINTRESOURCEW(IDI_TASKDLG_CHEVRON_MORE) ) hInst = ModuleHelper::GetResourceInstance();
       // Load icon...
       UINT fuLoad = LR_DEFAULTCOLOR | LR_LOADTRANSPARENT;
       if( hInst == NULL ) fuLoad |= LR_SHARED;
@@ -1867,6 +1724,62 @@ public:
       HICON hIcon = (HICON) ::LoadImage(hInst, pstrIcon, IMAGE_ICON, cxy, cxy, fuLoad);
       if( hIcon == NULL ) hIcon = (HICON) ::LoadImage(NULL, MAKEINTRESOURCE(IDI_APPLICATION), IMAGE_ICON, cxy, cxy, LR_DEFAULTCOLOR | LR_SHARED | LR_LOADTRANSPARENT);
       return hIcon;
+   }
+
+   /**
+    * Icon offset in GRPICONDIRENTRY structure.
+    */
+   SIZE_T _InMemoryOffset(WORD i) const { return 6 + (i * 0x0e); }
+
+   /**
+    * Icon offset in ICONDIRENTRY structure.
+    */
+   SIZE_T _InFileOffset(WORD i) const { return 6 + (i * 0x10); }
+
+   /**
+    * Load icon from raw .ico file bytes.
+    *
+    * @warning  This does no error checking and will cause a General
+    *           protection fault if the data passed in is not valid.
+	*
+	* @bug  Won't work if icon file data > 64k.
+    *
+    * @see http://www.ragestorm.net/blogs/?p=12
+    */
+   HICON _LoadIcon(const BYTE bytes[], SIZE_T size, int cxy) const
+   {
+       HICON icon = NULL;
+
+       BYTE* grpicondirentry =
+           static_cast<BYTE*>(::HeapAlloc(::GetProcessHeap(), 0, size));
+
+       if (grpicondirentry)
+       {
+           ::CopyMemory(grpicondirentry, bytes, size);
+
+           // Convert incoming ICONDIRENTRY to GRPICONDIRENTRY
+           WORD count = bytes[4];
+           for (WORD i = 0; i < count; i++)
+           {
+               ::CopyMemory(
+                   grpicondirentry + _InMemoryOffset(i),
+                   bytes + _InFileOffset(i), 0x0e);
+           }
+
+           // Create HICON
+           int offset = ::LookupIconIdFromDirectoryEx(
+               grpicondirentry, TRUE, cxy, cxy, LR_DEFAULTCOLOR);
+           if (offset > 0)
+           {
+               icon = ::CreateIconFromResourceEx(
+                   grpicondirentry + offset, 0, TRUE, 0x00030000, cxy, cxy,
+                   LR_DEFAULTCOLOR);
+           }
+
+           ::HeapFree(::GetProcessHeap(), 0, grpicondirentry);
+       }
+
+       return icon;
    }
 
    void _LoadString(LPCWSTR pstr, LPTSTR pszBuffer, SIZE_T cchMax) const
