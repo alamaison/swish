@@ -29,6 +29,7 @@
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 #include "swish/debug.hpp"
 #include "swish/forms/password.hpp" // password_prompt
+#include "swish/shell_folder/bind_best_taskdialog.hpp" // bind_best_taskdialog
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/gui/task_dialog.hpp> // task_dialog
@@ -52,6 +53,7 @@ using ATL::CString;
 using ATL::CComSafeArray;
 
 using swish::forms::password_prompt;
+using swish::shell_folder::bind_best_taskdialog;
 
 using namespace winapi::gui;
 
@@ -253,58 +255,27 @@ HRESULT on_hostkey_mismatch(
 		"It is important to check this is the right key fingerprint:");
 	message << wformat(L"\n\n        %1%    %2%") % key_type % key;
 
-	try
-	{
-		task_dialog::task_dialog<HRESULT> td(
-			hwnd, instruction, message.str(), title,
-			winapi::gui::task_dialog::icon_type::warning, true,
-			boost::bind(return_hr, E_ABORT));
-		td.add_button(
-			translate(
-				"I trust this key: &update and connect\n"
-				"You won't have to verify this key again unless it changes"),
-			boost::bind(return_hr, S_OK));
-		td.add_button(
-			translate(
-				"I trust this key: &just connect\n"
-				"You will be warned about this key again next time you "
-				"connect"),
-			boost::bind(return_hr, S_FALSE));
-		td.add_button(
-			translate(
-				"&Cancel\n"
-				"Choose this option unless you are sure the key is correct"),
-			boost::bind(return_hr, E_ABORT), true);
-		return td.show();
-	}
-	catch (std::exception)
-	{
-		wformat choices(L"\n\n%1%\n%2%\n%3%");
-		choices
-			% translate(
-				"To update the known key for this host click Yes.")
-			% translate(
-				"To connect to the server without updating the key click No.")
-			% translate(
-				"Click Cancel unless you are sure the key is correct.");
-
-		wstring text = (wformat(L"%1%\n\n%2%%3%")
-			% instruction % message % choices).str();
-
-		message_box::button_type::type button = message_box::message_box(
-			hwnd, text, title, message_box::box_type::yes_no_cancel,
-			message_box::icon_type::warning, 3);
-		switch (button)
-		{
-		case message_box::button_type::yes:
-			return S_OK;
-		case message_box::button_type::no:
-			return S_FALSE;
-		case message_box::button_type::cancel:
-		default:
-			return E_ABORT;
-		}
-	}
+	task_dialog::task_dialog<HRESULT> td(
+		hwnd, instruction, message.str(), title,
+		winapi::gui::task_dialog::icon_type::warning, true,
+		boost::bind(return_hr, E_ABORT), bind_best_taskdialog());
+	td.add_button(
+		translate(
+			"I trust this key: &update and connect\n"
+			"You won't have to verify this key again unless it changes"),
+		boost::bind(return_hr, S_OK));
+	td.add_button(
+		translate(
+			"I trust this key: &just connect\n"
+			"You will be warned about this key again next time you "
+			"connect"),
+		boost::bind(return_hr, S_FALSE));
+	td.add_button(
+		translate(
+			"&Cancel\n"
+			"Choose this option unless you are sure the key is correct"),
+		boost::bind(return_hr, E_ABORT), true);
+	return td.show();
 }
 
 HRESULT on_hostkey_unknown(
@@ -324,56 +295,28 @@ HRESULT on_hostkey_unknown(
 		"If you are not expecting this key, a third-party may be pretending "
 		"to be the computer you're trying to connect to.");
 
-	try
-	{
-		wstring instruction = translate("Verify unknown SSH host-key");
-		task_dialog::task_dialog<HRESULT> td(
-			hwnd, instruction, message.str(), title,
-			winapi::gui::task_dialog::icon_type::information, true,
-			boost::bind(return_hr, E_ABORT));
-		td.add_button(
-			translate(
-				"I trust this key: &store and connect\n"
-				"You won't have to verify this key again unless it changes"),
-			boost::bind(return_hr, S_OK));
-		td.add_button(
-			translate(
-				"I trust this key: &just connect\n"
-				"You will be asked to verify the key again next time you "
-				"connect"),
-			boost::bind(return_hr, S_FALSE));
-		td.add_button(
-			translate(
-				"&Cancel\n"
-				"Choose this option unless you are sure the key is correct"),
-			boost::bind(return_hr, E_ABORT), true);
-		return td.show();
-	}
-	catch (std::exception)
-	{
-		wformat choices(L"\n\n%1%\n%2%\n%3%");
-		choices
-			% translate(
-				"To store this as the known key for this server click Yes.")
-			% translate(
-				"To connect to the server without storing the key click No.")
-			% translate(
-				"Click Cancel unless you are sure the key is correct.");
-		message_box::button_type::type button = message_box::message_box(
-			hwnd, message.str() + choices.str(), title,
-			message_box::box_type::yes_no_cancel,
-			message_box::icon_type::information, 3);
-		switch (button)
-		{
-		case message_box::button_type::yes:
-			return S_OK;
-		case message_box::button_type::no:
-			return S_FALSE;
-		case message_box::button_type::cancel:
-		default:
-			return E_ABORT;
-		}
-	}
+	wstring instruction = translate("Verify unknown SSH host-key");
+	task_dialog::task_dialog<HRESULT> td(
+		hwnd, instruction, message.str(), title,
+		winapi::gui::task_dialog::icon_type::information, true,
+		boost::bind(return_hr, E_ABORT), bind_best_taskdialog());
+	td.add_button(
+		translate(
+			"I trust this key: &store and connect\n"
+			"You won't have to verify this key again unless it changes"),
+		boost::bind(return_hr, S_OK));
+	td.add_button(
+		translate(
+			"I trust this key: &just connect\n"
+			"You will be asked to verify the key again next time you "
+			"connect"),
+		boost::bind(return_hr, S_FALSE));
+	td.add_button(
+		translate(
+			"&Cancel\n"
+			"Choose this option unless you are sure the key is correct"),
+		boost::bind(return_hr, E_ABORT), true);
+	return td.show();
 }
 }
 

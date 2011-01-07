@@ -52,7 +52,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
 				PreprocessorDefinitions="_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -127,7 +127,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
 				PreprocessorDefinitions="_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -198,7 +198,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
@@ -269,7 +269,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
 				PreprocessorDefinitions="NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				DebugInformationFormat="3"
@@ -441,6 +441,10 @@
 			>
 			<File
 				RelativePath=".\announce_error.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\bind_best_taskdialog.hpp"
 				>
 			</File>
 			<File

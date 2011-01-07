@@ -56,9 +56,7 @@
     "publicKeyToken='6595b64144ccf1df' "\
     "language='*'\"")
 
-namespace winapi {
-namespace gui {
-namespace task_dialog {
+#if _WIN32_WINNT < 0x0600 && !defined(TD_WARNING_ICON)
 
 //
 // Our task dialog class is designed to fail gracefully even on versions of
@@ -160,9 +158,17 @@ namespace task_dialog {
 #include <poppack.h>
 #endif
 
+#endif
+
+
+namespace winapi {
+namespace gui {
+namespace task_dialog {
+
+typedef boost::function<
+	HRESULT (const TASKDIALOGCONFIG*, int*, int*, BOOL*)> tdi_function;
+
 namespace detail {
-	typedef boost::function<
-		HRESULT (const TASKDIALOGCONFIG*, int*, int*, BOOL*)> tdi_function;
 
 	tdi_function bind_task_dialog_indirect()
 	{
@@ -286,15 +292,21 @@ public:
 	 *                               body of the dialog.  Otherwise, display
 	 *                               them with the common buttons arranged
 	 *                               horizontally at the bottom.
+	 * @param td_implementation      Implementation of TaskDialogIndirect. By
+	 *                               default this is the stock implementation
+	 *                               from comctl32.dll but can be changed to a
+	 *                               custom implementation (e.g. a TaskDialog
+	 *                               emulator for earlier versions of Windows).
 	 */
 	task_dialog(
 		HWND parent_hwnd, const std::wstring& main_instruction,
 		const std::wstring& content, const std::wstring& window_title,
 		icon_type::type icon=icon_type::none,
 		bool use_command_links=true,
-		button_callback cancellation_callback=button_callback())
+		button_callback cancellation_callback=button_callback(),
+		tdi_function td_implementation=detail::bind_task_dialog_indirect())
 		:
-		m_task_dialog_indirect(detail::bind_task_dialog_indirect()),
+		m_task_dialog_indirect(td_implementation),
 		m_hwnd(parent_hwnd),
 		m_main_instruction(main_instruction),
 		m_content(content),
@@ -455,7 +467,7 @@ public:
 	}
 
 private:
-	detail::tdi_function m_task_dialog_indirect;
+	tdi_function m_task_dialog_indirect;
 	HWND m_hwnd;
 	std::wstring m_main_instruction;
 	std::wstring m_content;
