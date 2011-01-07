@@ -6,10 +6,10 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="$(SolutionDir)thirdparty\wtl\include"
+		AdditionalIncludeDirectories="$(SolutionDir)thirdparty\wtl-fix\include;$(SolutionDir)thirdparty\wtl\include"
 	/>
 	<Tool
 		Name="VCResourceCompilerTool"
-		AdditionalIncludeDirectories="$(SolutionDir)thirdparty\wtl\include"
+		AdditionalIncludeDirectories="$(SolutionDir)thirdparty\wtl-fix\include;$(SolutionDir)thirdparty\wtl\include"
 	/>
 </VisualStudioPropertySheet>
