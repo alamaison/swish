@@ -46,6 +46,10 @@
 
 #include "icons.h"
 
+#include "atlapp.h"
+#include "atlctrls.h"
+#include "atldlgs.h"
+
 #define USER32_IDS_OK      800
 #define USER32_IDS_CANCEL  801
 #define USER32_IDS_RETRY   803
@@ -257,7 +261,7 @@ typedef struct _TASKDIALOGCONFIG
 //
 
 template< class T >
-class CTask98DialogImpl : public CIndirectDialogImpl<T>, public CDialogBaseUnits
+class CTask98DialogImpl : public WTL::CIndirectDialogImpl<T>, public WTL::CDialogBaseUnits
 {
 public:
    enum
