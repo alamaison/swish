@@ -216,7 +216,7 @@ typedef boost::function<
 
 namespace detail {
 
-	tdi_function bind_task_dialog_indirect()
+	inline tdi_function bind_task_dialog_indirect()
 	{
 		return winapi::proc_address<
 			HRESULT (WINAPI *)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
@@ -251,7 +251,7 @@ namespace icon_type
 
 namespace detail {
 
-	TASKDIALOG_COMMON_BUTTON_FLAGS button_to_tdcbf(button_type::type id)
+	inline TASKDIALOG_COMMON_BUTTON_FLAGS button_to_tdcbf(button_type::type id)
 	{
 		switch (id)
 		{
@@ -273,7 +273,7 @@ namespace detail {
 		}
 	}
 
-	const wchar_t* icon_to_tdicon(icon_type::type type)
+	inline const wchar_t* icon_to_tdicon(icon_type::type type)
 	{
 		switch (type)
 		{
@@ -293,7 +293,7 @@ namespace detail {
 		}
 	}
 
-	TASKDIALOG_BUTTON convert_td_button(
+	inline TASKDIALOG_BUTTON convert_td_button(
 		const std::pair<int, std::wstring>& button)
 	{
 		TASKDIALOG_BUTTON tdb;

@@ -37,7 +37,7 @@
 namespace swish {
 namespace shell_folder {
 
-winapi::gui::task_dialog::tdi_function bind_best_taskdialog()
+inline winapi::gui::task_dialog::tdi_function bind_best_taskdialog()
 {
 	try
 	{
