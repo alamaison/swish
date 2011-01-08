@@ -77,4 +77,108 @@ BOOST_AUTO_TEST_CASE( create_with_radio_buttons )
 	//td.show();
 }
 
+/**
+ * Create a TaskDialog with collapsed extended text area above fold.
+ */
+BOOST_AUTO_TEST_CASE( create_with_collapsed_extended_text_above )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(L"Detailed explanation");
+	//td.show();
+}
+
+/**
+ * Create a TaskDialog with expanded extended text area above fold.
+ */
+BOOST_AUTO_TEST_CASE( create_with_expanded_extended_text_above )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(
+		L"Detailed explanation",
+		winapi::gui::task_dialog::expansion_position::above,
+		winapi::gui::task_dialog::initial_expansion_state::expanded);
+	//td.show();
+}
+
+/**
+ * Create a TaskDialog with collapsed extended text area below the fold.
+ */
+BOOST_AUTO_TEST_CASE( create_with_collapsed_extended_text_below )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(
+		L"Detailed explanation",
+		winapi::gui::task_dialog::expansion_position::below);
+	//td.show();
+}
+
+/**
+ * Create a TaskDialog with expanded extended text area below the fold.
+ */
+BOOST_AUTO_TEST_CASE( create_with_expanded_extended_text_below )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(
+		L"Detailed explanation",
+		winapi::gui::task_dialog::expansion_position::below,
+		winapi::gui::task_dialog::initial_expansion_state::expanded);
+	//td.show();
+}
+
+/**
+ * Create a TaskDialog with custom collapsed expander text.
+ */
+BOOST_AUTO_TEST_CASE( create_with_custom_collapsed_expander )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(
+		L"Detailed explanation",
+		winapi::gui::task_dialog::expansion_position::default,
+		winapi::gui::task_dialog::initial_expansion_state::default,
+		L"Here be there &dragons");
+	//td.show();
+}
+
+/**
+ * Create a TaskDialog with custom expanded expander text.
+ */
+BOOST_AUTO_TEST_CASE( create_with_custom_expanded_expander )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(
+		L"Detailed explanation",
+		winapi::gui::task_dialog::expansion_position::default,
+		winapi::gui::task_dialog::initial_expansion_state::default,
+		L"", L"See! &Dragons");
+	//td.show();
+}
+
+/**
+ * Create a TaskDialog with both expander labels customised.
+ */
+BOOST_AUTO_TEST_CASE( create_with_custom_expander )
+{
+	winapi::gui::task_dialog::task_dialog<> td(
+		NULL, L"Test instruction", L"Some content text\nAnd some more",
+		L"Test TaskDialog");
+	td.extended_text(
+		L"Detailed explanation",
+		winapi::gui::task_dialog::expansion_position::default,
+		winapi::gui::task_dialog::initial_expansion_state::default,
+		L"Here be there &dragons", L"See! &Dragons");
+	//td.show();
+}
+
 BOOST_AUTO_TEST_SUITE_END();

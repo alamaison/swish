@@ -249,6 +249,26 @@ namespace icon_type
 	};
 }
 
+namespace initial_expansion_state
+{
+	enum state
+	{
+		collapsed,
+		expanded,
+		default = collapsed
+	};
+}
+
+namespace expansion_position
+{
+	enum position
+	{
+		above,
+		below,
+		default = above
+	};
+}
+
 namespace detail {
 
 	inline TASKDIALOG_COMMON_BUTTON_FLAGS button_to_tdcbf(button_type::type id)
@@ -363,7 +383,9 @@ public:
 		m_use_command_links(use_command_links),
 		m_common_buttons(0),
 		m_default_button(0),
-		m_default_radio_button(0)
+		m_default_radio_button(0),
+		m_expansion_state(initial_expansion_state::default),
+		m_expansion_position(expansion_position::default)
 		{}
 
 	/**
@@ -421,6 +443,35 @@ public:
 			tdc.pRadioButtons = &radio_buttons[0];
 		}
 		tdc.nDefaultRadioButton = m_default_radio_button;
+
+		// extended text area
+		if (!m_extended_text.empty())
+		{
+			tdc.pszExpandedInformation = m_extended_text.c_str();
+
+			if (m_expansion_state == initial_expansion_state::collapsed)
+				tdc.dwFlags &= ~TDF_EXPANDED_BY_DEFAULT;
+			else if (m_expansion_state == initial_expansion_state::expanded)
+				tdc.dwFlags |= TDF_EXPANDED_BY_DEFAULT;
+			else
+				BOOST_THROW_EXCEPTION(
+					std::invalid_argument("Unknown initial expansion state"));
+
+			if (m_expansion_position == expansion_position::above)
+				tdc.dwFlags &= ~TDF_EXPAND_FOOTER_AREA;
+			else if (m_expansion_position == expansion_position::below)
+				tdc.dwFlags |= TDF_EXPAND_FOOTER_AREA;
+			else
+				BOOST_THROW_EXCEPTION(
+					std::invalid_argument("Unknown expansion position"));
+
+			if (!m_expander_label_collapsed.empty())
+				tdc.pszCollapsedControlText =
+					m_expander_label_collapsed.c_str();
+			if (!m_expander_label_expanded.empty())
+				tdc.pszExpandedControlText =
+					m_expander_label_expanded.c_str();
+		}
 
 		int which_button;
 		HRESULT hr = m_task_dialog_indirect(&tdc, &which_button, NULL, NULL);
@@ -513,6 +564,33 @@ public:
 			m_default_radio_button = id;
 	}
 
+	/**
+	 * Set text for the optional extended text area of the dialogue.
+	 *
+	 * You can choose whether the text expands above or below the expander
+	 * button and whether it is collapsed or expanded when the dialogue first
+	 * appears.  The default is collapsed initially and expands above the button,
+	 * just below the main text.
+	 *
+	 * Also, you can customise the text that labels the expander button.  This
+	 * normally says "See details" when collapsed and "Hide details" when
+	 * expanded (or translated equivalent).  If you only customise one of these
+	 * labels, the same text is used for both.
+	 */
+	void extended_text(
+		const std::wstring& text,
+		expansion_position::position position=expansion_position::default,
+		initial_expansion_state::state state=initial_expansion_state::default,
+		const std::wstring& expander_label_collapsed=std::wstring(),
+		const std::wstring& expander_label_expanded=std::wstring())
+	{
+		m_extended_text = text;
+		m_expansion_position = position;
+		m_expansion_state = state;
+		m_expander_label_collapsed = expander_label_collapsed;
+		m_expander_label_expanded = expander_label_expanded;
+	}
+
 private:
 	tdi_function m_task_dialog_indirect;
 	HWND m_hwnd;
@@ -531,6 +609,15 @@ private:
 	std::vector<button> m_radio_buttons; ///< Radio buttons, strings owned by us
 	int m_default_button;
 	int m_default_radio_button;
+	// @}
+
+	/** @name  Extended text area */
+	// @{
+	std::wstring m_extended_text;
+	initial_expansion_state::state m_expansion_state;
+	expansion_position::position m_expansion_position;
+	std::wstring m_expander_label_collapsed;
+	std::wstring m_expander_label_expanded;
 	// @}
 
 	static T button_noop() { return T(); }
