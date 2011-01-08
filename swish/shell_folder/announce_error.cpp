@@ -46,14 +46,17 @@ using std::wstringstream;
 namespace swish {
 namespace shell_folder {
 
-void announce_error(HWND hwnd, const wstring& title, const wstring& details)
+void announce_error(
+	HWND hwnd, const wstring& problem, const wstring& suggested_resolution,
+	const wstring& details)
 {
-	wstringstream message;
-	message << translate("Details (may not be in your language):");
-	message << L"\n";
-	message << details;
-
-	task_dialog<> td(hwnd, title, message.str(), L"Swish", icon_type::error);
+	task_dialog<> td(
+		hwnd, problem, suggested_resolution, L"Swish", icon_type::error);
+	td.extended_text(
+		details, expansion_position::below,
+		initial_expansion_state::default,
+		translate("Show &details (which may not be in your language)"),
+		translate("Hide &details"));
 	td.show();
 }
 
@@ -72,7 +75,7 @@ void rethrow_and_announce(HWND hwnd, const wstring& title)
 		wstringstream message;
 		message << error.what();
 
-		announce_error(hwnd, title, message.str());
+		announce_error(hwnd, title, L"", message.str());
 		throw;
 	}
 }

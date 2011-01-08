@@ -36,7 +36,8 @@ namespace swish {
 namespace shell_folder {
 
 void announce_error(
-	HWND hwnd, const std::wstring& title, const std::wstring& details);
+	HWND hwnd, const std::wstring& problem,
+	const std::wstring& suggested_resolution, const std::wstring& details);
 
 __declspec(noreturn) void rethrow_and_announce(
 	HWND hwnd, const std::wstring& title);
