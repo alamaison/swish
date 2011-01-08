@@ -332,7 +332,8 @@ public:
 	 *                               common cancel button to the dialogue but
 	 *                               still want it to respond to Alt+F4, Esc,
 	 *                               etc., as though a cancel button had been
-	 *                               clicked.
+	 *                               clicked.  To disable this default
+	 *                               behaviour, use an empty button_callback.
 	 * @param use_command_links      If true (default) display custom buttons
 	 *                               as large panes arranged vertically in the
 	 *                               body of the dialog.  Otherwise, display
@@ -349,7 +350,7 @@ public:
 		const std::wstring& content, const std::wstring& window_title,
 		icon_type::type icon=icon_type::none,
 		bool use_command_links=true,
-		button_callback cancellation_callback=button_callback(),
+		button_callback cancellation_callback=button_noop,
 		tdi_function td_implementation=detail::bind_task_dialog_indirect())
 		:
 		m_task_dialog_indirect(td_implementation),
@@ -461,8 +462,8 @@ public:
 	 * Add a custom button to the dialogue.
 	 *
 	 * Buttons will be displayed in the order they are added.  If this
-	 * task_dialog was contructed with command links enabled then these
-	 * buttons will be diplayed in the bopdy of the dialogue arranged
+	 * task_dialog was constructed with command links enabled then these
+	 * buttons will be displayed in the body of the dialogue arranged
 	 * vertically.  Otherwise, they will appear with the common buttons
 	 * at the bottom of the dialogue, arrange horizontally.
 	 *
@@ -484,7 +485,7 @@ public:
 		// the next available index in the table is the maximum int minus
 		// the number of custom buttons we have already added
 		// adding common buttons won't affect the next index because they're
-		// stored seperately.
+		// stored separately.
 
 		int next_id = 
 			boost::integer_traits<int>::const_max - 
@@ -531,6 +532,8 @@ private:
 	int m_default_button;
 	int m_default_radio_button;
 	// @}
+
+	static T button_noop() { return T(); }
 };
 
 }}} // namespace winapi::gui::task_dialog
