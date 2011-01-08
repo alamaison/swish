@@ -26,14 +26,16 @@
 
 #include "announce_error.hpp"
 
-#include <winapi/gui/message_box.hpp> // message_box
+#include "swish/shell_folder/bind_best_taskdialog.hpp" // bind_best_taskdialog
+
+#include <winapi/gui/task_dialog.hpp> // task_dialog
 
 #include <boost/locale.hpp> // translate
 
 #include <exception>
 #include <sstream> // wstringstream
 
-using namespace winapi::gui::message_box;
+using namespace winapi::gui::task_dialog;
 
 using boost::locale::translate;
 
@@ -47,17 +49,12 @@ namespace shell_folder {
 void announce_error(HWND hwnd, const wstring& title, const wstring& details)
 {
 	wstringstream message;
-
-	message << title;
-
-	message << L"\n\n";
-
 	message << translate("Details (may not be in your language):");
 	message << L"\n";
 	message << details;
 
-	message_box(
-		hwnd, message.str(), L"Swish", box_type::ok, icon_type::error);
+	task_dialog<> td(hwnd, title, message.str(), L"Swish", icon_type::error);
+	td.show();
 }
 
 void rethrow_and_announce(HWND hwnd, const wstring& title)
