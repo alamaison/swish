@@ -280,6 +280,7 @@ public:
       IDC_TASKDLG_VERIFYBUTTON,
       IDC_TASKDLG_EXPANDERICON,
       IDC_TASKDLG_EXPANDERTEXT,
+      IDC_TASKDLG_EXPANDERHIDDENBUTTON,
       IDC_TASKDLG_EXTRATEXT,
       IDC_TASKDLG_FOOTERTEXT,
       IDC_TASKDLG_FOOTERICON,
@@ -336,8 +337,10 @@ public:
       MESSAGE_HANDLER(TDM_UPDATE_ELEMENT_TEXT, OnMsgUpdateElementText)
       COMMAND_HANDLER(IDC_TASKDLG_EXPANDERICON, STN_CLICKED, OnMsgExpandoClick);
       COMMAND_HANDLER(IDC_TASKDLG_EXPANDERTEXT, STN_CLICKED, OnMsgExpandoClick);
+      COMMAND_HANDLER(IDC_TASKDLG_EXPANDERHIDDENBUTTON, STN_CLICKED, OnMsgExpandoClick);
       COMMAND_HANDLER(IDC_TASKDLG_EXPANDERICON, STN_DBLCLK, OnMsgExpandoClick);
       COMMAND_HANDLER(IDC_TASKDLG_EXPANDERTEXT, STN_DBLCLK, OnMsgExpandoClick);
+      COMMAND_HANDLER(IDC_TASKDLG_EXPANDERHIDDENBUTTON, STN_DBLCLK, OnMsgExpandoClick);
       COMMAND_ID_HANDLER(IDC_TASKDLG_VERIFYBUTTON, OnMsgVerificationClick);
       COMMAND_RANGE_HANDLER(1, 64, OnMsgCommonButtonClick)
       COMMAND_RANGE_HANDLER(IDC_TASKDLG_CUSTOMBUTTON_FIRST, IDC_TASKDLG_CUSTOMBUTTON_LAST, OnMsgCustomButtonClick)
@@ -356,8 +359,8 @@ public:
       if( m_cfg.cButtons > 20 ) return false;
       if( m_cfg.cRadioButtons > 20 ) return false;
       if( (m_cfg.dwFlags & (TDF_USE_COMMAND_LINKS|TDF_USE_COMMAND_LINKS_NO_ICON)) != 0 && m_cfg.cButtons == 0 ) return FALSE;
-      if( m_cfg.pszExpandedInformation != NULL && m_cfg.pszExpandedControlText == NULL ) m_cfg.pszExpandedControlText = L"Hide details";
-      if( m_cfg.pszExpandedInformation != NULL && m_cfg.pszCollapsedControlText == NULL ) m_cfg.pszCollapsedControlText= L"Show details";
+      if( m_cfg.pszExpandedInformation != NULL && m_cfg.pszExpandedControlText == NULL ) m_cfg.pszExpandedControlText = L"Hide &details";
+      if( m_cfg.pszExpandedInformation != NULL && m_cfg.pszCollapsedControlText == NULL ) m_cfg.pszCollapsedControlText= L"Show &details";
       return true;
    }
 
@@ -1376,13 +1379,20 @@ public:
          if( sizeText.cy < m_Metrics.cxyExpanderIcon ) yoffset = (m_Metrics.cxyExpanderIcon / 2) - (sizeText.cy / 2);
          RECT rcItem = { xpos + xoffset, ypos + yoffset, xpos + xoffset + sizeText.cx, ypos + yoffset + sizeText.cy };
          if( bCreateControls ) {
-            dwStyle = WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX | SS_NOTIFY;
+            dwStyle = WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOTIFY;
             dwExStyle = 0;
             _AddControl(CStatic::GetWndClassName(), IDC_TASKDLG_EXPANDERTEXT, rcItem, dwStyle, dwExStyle, pstrBuffer);
          }
          if( rcItem.right > cxExpander ) cxExpander = rcItem.right;
          cyExpander += (rcItem.bottom - rcItem.top) + (yoffset * 2);
          if( m_cfg.pszVerificationText != NULL ) cyExpander += m_Metrics.cyExpanderGap;
+         // Add hidden button which we use to catch accelerator
+         if( bCreateControls ) {
+            dwStyle = WS_CHILD  | WS_TABSTOP;
+            dwExStyle = 0;
+            RECT rcZero = { 0 };
+            _AddControl(CButton::GetWndClassName(), IDC_TASKDLG_EXPANDERHIDDENBUTTON, rcZero, dwStyle, dwExStyle, _T(""));
+         }
       }
 
       // Verification text
@@ -1738,8 +1748,8 @@ public:
     *
     * @warning  This does no error checking and will cause a General
     *           protection fault if the data passed in is not valid.
-	*
-	* @bug  Won't work if icon file data > 64k.
+    *
+    * @bug  Won't work if icon file data > 64k.
     *
     * @see http://www.ragestorm.net/blogs/?p=12
     */
@@ -1790,12 +1800,12 @@ public:
 
    /**
     * Variation of _LoadString that loads a resource from user32.dll.
-	*/
+    */
    void _LoadString(int id, LPTSTR pszBuffer, SIZE_T cchMax) const
    {
       USES_CONVERSION;
       ::ZeroMemory(pszBuffer, cchMax * sizeof(TCHAR));
-	  ::LoadString(::GetModuleHandle(_T("user32.dll")), id, pszBuffer, cchMax);
+      ::LoadString(::GetModuleHandle(_T("user32.dll")), id, pszBuffer, cchMax);
    }
 
    void _SplitCommandText(LPTSTR pstrBuffer, LPCTSTR& pstrTitle, SIZE_T& cchTitle, LPCTSTR& pstrText, SIZE_T& cchText) const
@@ -1834,7 +1844,7 @@ public:
 
    /**
     * Variation of _GetTextSize() that loads string from user32.dll resources.
-	*/
+    */
    SIZE _GetTextSize(int id, LPTSTR pszBuffer, SIZE_T cchMax, UINT uStyle, HFONT hFont, int cxMax) const
    {
       _LoadString(id, pszBuffer, cchMax);
