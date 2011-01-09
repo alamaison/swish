@@ -40,6 +40,7 @@
 #include <comet/error.h>
 
 #include <algorithm> // transform
+#include <cassert> // assert
 #include <stdexcept> // invalid_argument
 #include <string>
 #include <vector>
@@ -432,6 +433,15 @@ public:
 		}
 		tdc.nDefaultButton = m_default_button;
 
+		// When no buttons have been specified, the TaskDialog implementation
+		// will add an OK button with an id of IDOK.  We add a no-op callback
+		// here for that ID so that clicking the button doesn't cause us to
+		// throw an exception.
+		if (m_common_buttons == 0 && m_buttons.empty())
+		{
+			m_callbacks[IDOK] = button_noop;
+		}
+
 		// radio buttons
 		std::vector<TASKDIALOG_BUTTON> radio_buttons;
 		if (!m_radio_buttons.empty())
@@ -480,8 +490,7 @@ public:
 				boost::enable_error_info(comet::com_error(hr)) << 
 				boost::errinfo_api_function("TaskDialogIndirect"));
 
-		if (m_callbacks.empty())
-			return T(); // windows may add a default button if we didn't
+		assert(!m_callbacks.empty()); // windows will add a button if we didn't
 
 		return m_callbacks[which_button]();
 	}

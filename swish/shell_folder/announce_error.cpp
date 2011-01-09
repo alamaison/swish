@@ -32,6 +32,7 @@
 
 #include <boost/locale.hpp> // translate
 
+#include <cassert> // assert
 #include <exception>
 #include <sstream> // wstringstream
 
@@ -72,10 +73,23 @@ void rethrow_and_announce(HWND hwnd, const wstring& title)
 	}
 	catch (const std::exception& error)
 	{
-		wstringstream message;
-		message << error.what();
+		try
+		{
+			wstringstream message;
+			message << error.what();
+			announce_error(hwnd, title, L"", message.str());
+		}
+		catch (...)
+		{
+			// I've tested this catch handler and it works the way I
+			// expected: it swallows the newly thrown exception allowing the
+			// throw below to rethrow the original exception.
+			// XXX: I can't find whether this is guaranteed by the C++
+			// standard.  Implementing this behaviour must mean maintaining
+			// some form of thrown exception stack.
+			assert(!"Exception announcer threw new exception");
+		}
 
-		announce_error(hwnd, title, L"", message.str());
 		throw;
 	}
 }
