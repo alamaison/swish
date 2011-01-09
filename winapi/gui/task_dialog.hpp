@@ -215,14 +215,37 @@ namespace task_dialog {
 typedef boost::function<
 	HRESULT (const TASKDIALOGCONFIG*, int*, int*, BOOL*)> tdi_function;
 
+class tdi_implementation
+{
+public:
+	tdi_implementation(const tdi_function& tdi) : m_tdi(tdi) {}
+
+	HRESULT operator()(
+		const TASKDIALOGCONFIG* config, int* button, int* radio_button,
+		BOOL* verification_flag_checked)
+	{
+		return m_tdi(
+			config, button, radio_button, verification_flag_checked);
+	}
+
+	virtual ~tdi_implementation() {}
+
+private:
+	tdi_function m_tdi;
+};
+
 namespace detail {
 
-	inline tdi_function bind_task_dialog_indirect()
+	class bind_task_dialog_indirect : public tdi_implementation
 	{
-		return winapi::proc_address<
-			HRESULT (WINAPI *)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
-			"comctl32.dll", "TaskDialogIndirect");
-	}
+	public:
+		bind_task_dialog_indirect()
+			:
+		tdi_implementation(
+			winapi::proc_address<
+				HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
+				"comctl32.dll", "TaskDialogIndirect")) {}
+	};
 }
 
 namespace button_type
@@ -330,9 +353,13 @@ namespace detail {
  * It calls TaskDialogIndirect by binding to it dynamically so will fail
  * gracefully by throwing an exception on versions of Windows prior to Vista.
  *
- * @param T  Type of value returned by the button callbacks and @c show().
+ * @param T     Type of value returned by the button callbacks and @c show().
+ * @param Impl  Functor returning a TaskDialogIndirect implementation. By
+ *              default this is the stock implementation from comctl32.dll
+ *              but can be changed to a custom implementation (e.g. a 
+ *              TaskDialog emulator for earlier versions of Windows).
  */
-template<typename T=void>
+template<typename T=void, typename Impl=detail::bind_task_dialog_indirect>
 class task_dialog
 {
 public:
@@ -360,21 +387,14 @@ public:
 	 *                               body of the dialog.  Otherwise, display
 	 *                               them with the common buttons arranged
 	 *                               horizontally at the bottom.
-	 * @param td_implementation      Implementation of TaskDialogIndirect. By
-	 *                               default this is the stock implementation
-	 *                               from comctl32.dll but can be changed to a
-	 *                               custom implementation (e.g. a TaskDialog
-	 *                               emulator for earlier versions of Windows).
 	 */
 	task_dialog(
 		HWND parent_hwnd, const std::wstring& main_instruction,
 		const std::wstring& content, const std::wstring& window_title,
 		icon_type::type icon=icon_type::none,
 		bool use_command_links=true,
-		button_callback cancellation_callback=button_noop,
-		tdi_function td_implementation=detail::bind_task_dialog_indirect())
+		button_callback cancellation_callback=button_noop)
 		:
-		m_task_dialog_indirect(td_implementation),
 		m_hwnd(parent_hwnd),
 		m_main_instruction(main_instruction),
 		m_content(content),
@@ -484,7 +504,7 @@ public:
 		}
 
 		int which_button;
-		HRESULT hr = m_task_dialog_indirect(&tdc, &which_button, NULL, NULL);
+		HRESULT hr = Impl()(&tdc, &which_button, NULL, NULL);
 		if (hr != S_OK)
 			BOOST_THROW_EXCEPTION(
 				boost::enable_error_info(comet::com_error(hr)) << 
@@ -601,7 +621,6 @@ public:
 	}
 
 private:
-	tdi_function m_task_dialog_indirect;
 	HWND m_hwnd;
 	std::wstring m_main_instruction;
 	std::wstring m_content;

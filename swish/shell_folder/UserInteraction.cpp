@@ -29,7 +29,7 @@
 #include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 #include "swish/debug.hpp"
 #include "swish/forms/password.hpp" // password_prompt
-#include "swish/shell_folder/bind_best_taskdialog.hpp" // bind_best_taskdialog
+#include "swish/shell_folder/bind_best_taskdialog.hpp" // best_taskdialog
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/gui/task_dialog.hpp> // task_dialog
@@ -53,7 +53,7 @@ using ATL::CString;
 using ATL::CComSafeArray;
 
 using swish::forms::password_prompt;
-using swish::shell_folder::bind_best_taskdialog;
+using swish::shell_folder::best_taskdialog;
 
 using namespace winapi::gui;
 
@@ -255,10 +255,10 @@ HRESULT on_hostkey_mismatch(
 		"It is important to check this is the right key fingerprint:");
 	message << wformat(L"\n\n        %1%    %2%") % key_type % key;
 
-	task_dialog::task_dialog<HRESULT> td(
+	task_dialog::task_dialog<HRESULT, best_taskdialog> td(
 		hwnd, instruction, message.str(), title,
 		winapi::gui::task_dialog::icon_type::warning, true,
-		boost::bind(return_hr, E_ABORT), bind_best_taskdialog());
+		boost::bind(return_hr, E_ABORT));
 	td.add_button(
 		translate(
 			"I trust this key: &update and connect\n"
@@ -296,10 +296,10 @@ HRESULT on_hostkey_unknown(
 		"to be the computer you're trying to connect to.");
 
 	wstring instruction = translate("Verify unknown SSH host-key");
-	task_dialog::task_dialog<HRESULT> td(
+	task_dialog::task_dialog<HRESULT, best_taskdialog> td(
 		hwnd, instruction, message.str(), title,
 		winapi::gui::task_dialog::icon_type::information, true,
-		boost::bind(return_hr, E_ABORT), bind_best_taskdialog());
+		boost::bind(return_hr, E_ABORT));
 	td.add_button(
 		translate(
 			"I trust this key: &store and connect\n"

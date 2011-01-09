@@ -32,6 +32,7 @@
 #include <winapi/gui/task_dialog.hpp> // tdi_function
 
 #include <TaskDialog.h> // Task98DialogIndirect
+
 #include <exception>
 
 namespace swish {
@@ -42,14 +43,22 @@ inline winapi::gui::task_dialog::tdi_function bind_best_taskdialog()
 	try
 	{
 		return winapi::proc_address<
-			HRESULT (WINAPI *)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
-			"comctl32.dll", "TaskDialogIndirect");
+			HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
+				"comctl32.dll", "TaskDialogIndirect");
 	}
 	catch (const std::exception&)
 	{
 		return ::Task98DialogIndirect;
 	}
 }
+
+class best_taskdialog : public winapi::gui::task_dialog::tdi_implementation
+{
+public:
+	best_taskdialog()
+		: winapi::gui::task_dialog::tdi_implementation(bind_best_taskdialog())
+	{}
+};
 
 }} // namespace swish::shell_folder
 
