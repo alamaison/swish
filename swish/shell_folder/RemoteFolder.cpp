@@ -115,7 +115,8 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 	catch (...)
 	{
 		rethrow_and_announce(
-			hwnd, translate("Unable to access the directory"));
+			hwnd, translate("Unable to access the directory"),
+			translate("You might not have permission."));
 	}
 }
 
@@ -186,7 +187,9 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
 	}
 	catch (...)
 	{
-		rethrow_and_announce(hwnd, translate("Path not recognised"));
+		rethrow_and_announce(
+			hwnd, translate("Path not recognised"),
+			translate("Check that the path was entered correctly."));
 	}
 }
 
@@ -301,7 +304,9 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 	}
 	catch (...)
 	{
-		rethrow_and_announce(hwnd, translate("Unable to rename the item"));
+		rethrow_and_announce(
+			hwnd, translate("Unable to rename the item"),
+			translate("You might not have permission."));
 	}
 }
 
@@ -698,7 +703,9 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 		}
 		catch (...)
 		{
-			rethrow_and_announce(hwnd, translate("Unable to delete the item"));
+			rethrow_and_announce(
+				hwnd, translate("Unable to delete the item"),
+				translate("You might not have permission."));
 		}
 	}
 	WINAPI_COM_CATCH();

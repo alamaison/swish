@@ -40,7 +40,8 @@ void announce_error(
 	const std::wstring& suggested_resolution, const std::wstring& details);
 
 __declspec(noreturn) void rethrow_and_announce(
-	HWND hwnd, const std::wstring& title);
+	HWND hwnd, const std::wstring& title,
+	const std::wstring& suggested_resolution);
 
 }} // namespace swish::shell_folder
 
