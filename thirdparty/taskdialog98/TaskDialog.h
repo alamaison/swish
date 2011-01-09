@@ -769,6 +769,8 @@ public:
       m_brWhite.CreateSolidBrush(m_Metrics.clrBkTop);
       m_brGrey.CreateSolidBrush(m_Metrics.clrBkBottom);
 
+      if( m_cfg.dwCommonButtons == 0 && m_cfg.cButtons == 0 ) m_cfg.dwCommonButtons = TDCBF_OK_BUTTON;
+
       // Determine size of dialog. First try to determine the optimal width of
       // the dialog. Then calculate the height of the dialog based on that width.
       m_sizeDialog = _LayoutControls(WIDTH_PROBE, false);
@@ -779,7 +781,6 @@ public:
       m_sizeDialog = _LayoutControls(cxWidth, false);
       m_sizeDialog.cx = cxWidth;
 
-      if( m_cfg.dwCommonButtons == 0 && m_cfg.cButtons == 0 ) m_cfg.dwCommonButtons = TDCBF_OK_BUTTON;
       if( (m_cfg.dwCommonButtons & TDCBF_CANCEL_BUTTON) != 0 ) m_cfg.dwFlags |= TDF_ALLOW_DIALOG_CANCELLATION;
 
       DWORD dwHelpID = 0;
