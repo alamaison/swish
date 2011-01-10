@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -153,8 +153,9 @@ void rethrow_and_announce(
 	{
 		try
 		{
-			announce_error(
-				hwnd, title, suggested_resolution, format_exception(error));
+			if (error.hr() != E_ABORT)
+				announce_error(
+					hwnd, title, suggested_resolution, format_exception(error));
 		}
 		catch (...) { assert(!"Exception announcer threw new exception"); }
 

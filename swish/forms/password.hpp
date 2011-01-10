@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,9 @@
 namespace swish {
 namespace forms {
 
-std::wstring password_prompt(HWND hwnd_owner, const std::wstring& prompt);
+
+bool password_prompt(
+	HWND hwnd_owner, const std::wstring& prompt, std::wstring& password_out);
 	
 }} // namespace swish::forms
 

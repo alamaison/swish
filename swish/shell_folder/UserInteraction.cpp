@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2011
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +37,7 @@
 #include <winapi/gui/message_box.hpp> // message_box
 
 #include <comet/bstr.h> // bstr_t
+#include <comet/error.h> // com_error
 
 #include <boost/bind.hpp> // bind
 #include <boost/format.hpp> // format
@@ -58,6 +60,7 @@ using swish::shell_folder::best_taskdialog;
 using namespace winapi::gui;
 
 using comet::bstr_t;
+using comet::com_error;
 
 using boost::locale::translate;
 using boost::wformat;
@@ -98,7 +101,10 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
 
 	try
 	{
-		wstring password = password_prompt(m_hwnd, bstrRequest);
+		wstring password;
+		if (!password_prompt(m_hwnd, bstrRequest, password))
+			BOOST_THROW_EXCEPTION(com_error(E_ABORT));
+
 		*pbstrPassword = bstr_t::detach(bstr_t(password));
 	}
 	WINAPI_COM_CATCH_AUTO_INTERFACE();

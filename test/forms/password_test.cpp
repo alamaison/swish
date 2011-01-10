@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,16 +56,11 @@ BOOST_AUTO_TEST_CASE( show )
 	HANDLE thread = ::CreateThread(
 		NULL, 0, click_cancel_thread, NULL, 0, &thread_id);
 
-	try
-	{
-		std::wstring pword = swish::forms::password_prompt(
-			NULL, L"Oi! Gimme a password");
-	}
-	catch (const std::exception& e)
-	{
-		BOOST_REQUIRE_EQUAL(
-			e.what(), "user cancelled without entering password");
-	}
+	std::wstring password;
+	BOOST_CHECK(
+		!swish::forms::password_prompt(
+			NULL, L"Oi! Gimme a password", password));
+	BOOST_CHECK(password.empty());
 
 	::CloseHandle(thread);
 }

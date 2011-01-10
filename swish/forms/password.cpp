@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,9 +33,7 @@
 
 #include <boost/bind.hpp> // bind
 #include <boost/locale.hpp> // translate
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <exception> // exception
 #include <string>
 
 using ezel::form;
@@ -93,14 +91,18 @@ namespace {
 	};
 }
 
-wstring password_prompt(HWND hwnd_owner, const wstring& prompt)
+bool password_prompt(
+	HWND hwnd_owner, const wstring& prompt, wstring& password_out)
 {
 	PasswordForm pass_form(hwnd_owner, prompt);
 	if (pass_form.was_cancelled())
-		BOOST_THROW_EXCEPTION(
-			std::exception("user cancelled without entering password"));
-	else
-		return pass_form.password();
+	{
+		password_out.clear();
+		return false;
+	}
+
+	password_out = pass_form.password();
+	return true;
 }
 	
 }} // namespace swish::forms
