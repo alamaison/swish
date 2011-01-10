@@ -32,7 +32,6 @@
 
 #include <comet/error.h> // com_error
 
-#include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/locale.hpp> // translate
 
 #include <cassert> // assert
@@ -98,9 +97,6 @@ namespace {
 		wstringstream details;
 
 		details << error.what();
-#ifdef DEBUG
-		details << "\n" << boost::diagnostic_information(error).c_str();
-#endif
 
 		return details.str();
 	}
