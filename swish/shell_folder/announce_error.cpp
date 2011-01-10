@@ -108,7 +108,7 @@ namespace {
 #ifdef DEBUG
 		details << L"HRESULT " << hresult_code(error.hr()) << L": ";
 #endif
-		details << format_exception(static_cast<const exception&>(error));
+		details << error.w_str();
 
 		return details.str();
 	}
