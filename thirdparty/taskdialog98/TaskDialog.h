@@ -1354,11 +1354,22 @@ public:
          }
          ypos += (m_Metrics.cyContentGap / 2);
       }
-     
-      // Expander area
+
+      // Position the 'fold' - the line between white and grey areas
 
       m_Metrics.iButtonLinePos = ypos;
-      ypos += m_Metrics.cyButtonLineGap;
+
+      if( m_cfg.pszExpandedInformation != NULL ||
+          m_cfg.pszVerificationText != NULL ||
+          m_cfg.cButtons > 0 && (m_cfg.dwFlags & (TDF_USE_COMMAND_LINKS|TDF_USE_COMMAND_LINKS_NO_ICON)) == 0  ||
+          m_cfg.dwCommonButtons != 0 ||
+          m_cfg.pszFooter != NULL )
+          // only add padding if something actually comes below the fold
+      {
+          ypos += m_Metrics.cyButtonLineGap;
+      }
+
+      // Expander area
 
       xpos = m_Metrics.sizeDialogPadding.cx;
       cyExpander = 0;
@@ -1532,7 +1543,12 @@ public:
       }
 
       cxDialog += m_Metrics.sizeDialogPadding.cx;
-      ypos += m_Metrics.sizeDialogPadding.cy;
+      
+      // only add padding if anything was actually added below the fold
+      if(ypos > m_Metrics.iButtonLinePos)
+      {
+          ypos += m_Metrics.sizeDialogPadding.cy;
+      }
 
       free(pstrBuffer);
 
