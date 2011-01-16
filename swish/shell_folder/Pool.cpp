@@ -136,16 +136,10 @@ public:
  * connection with the given parameters.  In the future this may be extended to
  * give a choice of the type of connection to make.
  *
- * @param hwnd  Owner Window for any elevation dialogues.  If NULL, Windows
- *              will call GetActiveWindow in order to find a suitable owner.
- *              This may cause problems with focus.
- *
- * @throws AtlException if any error occurs.
- *
  * @returns pointer to the session (ISftpProvider).
  */
 com_ptr<ISftpProvider> CPool::GetSession(
-	const wstring& host, const wstring& user, int port, HWND hwnd)
+	const wstring& host, const wstring& user, int port, HWND /*hwnd*/)
 {
 	if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 	if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
@@ -156,30 +150,14 @@ com_ptr<ISftpProvider> CPool::GetSession(
 	// Try to get the session from the global pool
 	wstring display_name = provider_moniker_name(user, host, port);
 
-	// Just in case elevation is needed (it shouldn't be) we pass our
-	// windows handle so that the elevation dialogue will be correctly
-	// rooted.  We probably don't need this but as we've implemented
-	// it, is can't hurt.
-	BIND_OPTS3 bo;
-	std::memset(&bo, 0, sizeof(bo));
-	bo.cbStruct = sizeof(bo);
-	bo.hwnd = hwnd;
-	bo.dwClassContext = CLSCTX_ALL;
-	bo.grfMode = STGM_READWRITE;
-
-	com_ptr<IBindCtx> bind_context = create_bind_context();
-	HRESULT hr = bind_context->SetBindOptions(&bo);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(
-			comet::com_error_from_interface(bind_context, hr));
-
 	// The default class moniker's BindStatusCallback creates a progress
 	// dialogue which steals window focus even though it's never
 	// displayed!!  The only way I've found to prevent this is to use a
 	// custom callback object which does nothing except specify that
 	// UI is forbidden.
+	com_ptr<IBindCtx> bind_context = create_bind_context();
 	com_ptr<IBindStatusCallback> callback = new CBindCallbackStub();
-	hr = ::RegisterBindStatusCallback(
+	HRESULT hr = ::RegisterBindStatusCallback(
 		bind_context.get(), callback.get(), NULL, 0);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(
