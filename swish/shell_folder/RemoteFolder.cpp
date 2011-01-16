@@ -60,7 +60,7 @@ using swish::remote_folder::property_key_from_column_index;
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::shell_folder::CExplorerCallback;
-using swish::shell_folder::commands::remote::remote_folder_command_provider;
+//using swish::shell_folder::commands::remote::remote_folder_command_provider;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::rethrow_and_announce;
 using swish::tracing::trace;
@@ -541,12 +541,23 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 	TRACE("Request: IDataObject");
 	assert(cpidl > 0);
 
-	// Create connection for this folder with hwnd for UI
-	CComPtr<ISftpProvider> spProvider =
-		_CreateConnectionForFolder(hwnd);
+	try
+	{
+		// Create connection for this folder with hwnd for UI
+		CComPtr<ISftpProvider> spProvider =
+			_CreateConnectionForFolder(hwnd);
 
-	return CSftpDataObject::Create(
-		cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
+		return CSftpDataObject::Create(
+			cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
+	}
+	catch (...)
+	{
+		rethrow_and_announce(
+			hwnd,
+			(cpidl > 1) ? translate("Unable to access the item") :
+			              translate("Unable to access the items"),
+			translate("You might not have permission."));
+	}
 }
 
 /**
@@ -558,12 +569,21 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 {
 	TRACE("Request: IDropTarget");
 
-	// Create connection for this folder with hwnd for UI
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
-	CHostItemAbsoluteHandle pidl = root_pidl().get();
-	return new CSnitchingDropTarget(
-		hwnd, provider, m_consumer, pidl.GetFullPath().GetString(),
-		make_shared<DropUI>(hwnd));
+	try
+	{
+		// Create connection for this folder with hwnd for UI
+		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+		CHostItemAbsoluteHandle pidl = root_pidl().get();
+		return new CSnitchingDropTarget(
+			hwnd, provider, m_consumer, pidl.GetFullPath().GetString(),
+			make_shared<DropUI>(hwnd));
+	}
+	catch (...)
+	{
+		rethrow_and_announce(
+			hwnd, translate("Unable to access the folder"),
+			translate("You might not have permission."));
+	}
 }
 
 /**
