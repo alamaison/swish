@@ -60,6 +60,7 @@ using swish::remote_folder::property_key_from_column_index;
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::shell_folder::CExplorerCallback;
+using swish::shell_folder::commands::remote::remote_folder_command_provider;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::rethrow_and_announce;
 using swish::tracing::trace;
@@ -458,7 +459,7 @@ CComPtr<IExtractIconW> CRemoteFolder::extract_icon_w(
  * @implementing CSwishFolder
  */
 CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
-	HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+	HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
 {
 	TRACE("Request: IQueryAssociations");
 	ATLENSURE(cpidl > 0);
@@ -474,7 +475,7 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 	{
 		// Initialise default assoc provider for Folders
 		hr = spAssoc->Init(
-			ASSOCF_INIT_DEFAULTTOFOLDER, L"Folder", NULL, NULL);
+			ASSOCF_INIT_DEFAULTTOFOLDER, L"Folder", NULL, hwnd);
 		ATLENSURE_SUCCEEDED(hr);
 	}
 	else
@@ -482,7 +483,7 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 		// Initialise default assoc provider for given file extension
 		CString strExt = L"." + pidl.GetExtension();
 		hr = spAssoc->Init(
-			ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, NULL);
+			ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, hwnd);
 		ATLENSURE_SUCCEEDED(hr);
 	}
 
@@ -865,15 +866,35 @@ namespace {
 	/**
 	 * Gets connection for given SFTP session parameters.
 	 */
-	CComPtr<ISftpProvider> connection(PCWSTR szHost, PCWSTR szUser, int port)
+	CComPtr<ISftpProvider> connection(
+		const wstring& host, const wstring& user, int port, HWND hwnd)
 	{
 		// Get SFTP Provider from session pool
 		CPool pool;
 		CComPtr<ISftpProvider> spProvider = 
-			pool.GetSession(szHost, szUser, port).get();
+			pool.GetSession(host, user, port, hwnd).get();
 
 		return spProvider;
 	}
+}
+
+namespace {
+
+	void params_from_pidl(
+		apidl_t pidl, wstring& user, wstring& host, int& port)
+	{
+		// Find HOSTPIDL part of this folder's absolute pidl to extract server info
+		CHostItemListHandle pidlHost(
+			CHostItemListHandle(pidl.get()).FindHostPidl());
+		assert(pidlHost.IsValid());
+
+		user = pidlHost.GetUser();
+		host = pidlHost.GetHost();
+		port = pidlHost.GetPort();
+		assert(!user.empty());
+		assert(!host.empty());
+	}
+
 }
 
 /**
@@ -904,14 +925,10 @@ CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 	ATLASSERT(pidlHost.IsValid());
 
 	// Extract connection info from PIDL
-	CString strUser, strHost, strPath;
-	USHORT uPort;
-	strHost = pidlHost.GetHost();
-	uPort = pidlHost.GetPort();
-	strUser = pidlHost.GetUser();
-	ATLASSERT(!strUser.IsEmpty());
-	ATLASSERT(!strHost.IsEmpty());
+	wstring user, host, path;
+	int port;
+	params_from_pidl(root_pidl(), user, host, port);
 
 	// Return connection from session pool
-	return connection(strHost, strUser, uPort);
+	return connection(host, user, port, hwndUserInteraction);
 }

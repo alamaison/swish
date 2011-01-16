@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -79,7 +79,8 @@ namespace { // private
 			CPool pool;
 			return pool.GetSession(
 				Utf8StringToWideString(GetHost()).c_str(), 
-				Utf8StringToWideString(GetUser()).c_str(), GetPort()).get();
+				Utf8StringToWideString(GetUser()).c_str(), GetPort(),
+				NULL).get();
 		}
 
 		com_ptr<ISftpConsumer> Consumer()

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010
+    Copyright (C) 2007, 2008, 2009, 2010, 2011
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -39,7 +39,8 @@ class CPool
 public:
 
 	comet::com_ptr<ISftpProvider> GetSession(
-		const std::wstring& host, const std::wstring& user, int port);
+		const std::wstring& host, const std::wstring& user, int port,
+		HWND hwnd);
 
 private:
 	static comet::critical_section m_cs;
