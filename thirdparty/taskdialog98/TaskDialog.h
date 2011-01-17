@@ -705,6 +705,7 @@ public:
       ::InitCommonControls();
 
       bool bIsCommCtrl6 = RunTimeHelper::IsCommCtrl6();
+      bool bIsVista = RunTimeHelper::IsVista();
 
       CWindowDC dc = HWND_DESKTOP;
       if( !m_fontTitle.IsNull() ) m_fontTitle.DeleteObject();
@@ -758,7 +759,7 @@ public:
       m_Metrics.cxBestRadioButton = baseUnit.cx * 60;
       m_Metrics.clrTitleText = bIsCommCtrl6 ? RGB(0,51,153) : ::GetSysColor(COLOR_BTNTEXT);
       m_Metrics.clrCmdLinkSelect = bIsCommCtrl6 ? RGB(140,232,255) : RGB(140,140,140);
-      m_Metrics.clrBkTop = ::GetSysColor(bIsCommCtrl6 ? COLOR_WINDOW : COLOR_BTNFACE);
+      m_Metrics.clrBkTop = ::GetSysColor(bIsVista ? COLOR_WINDOW : COLOR_BTNFACE);
       m_Metrics.clrBkBottom = ::GetSysColor(COLOR_BTNFACE);
       m_Metrics.clrDividerDark = ::GetSysColor(COLOR_BTNSHADOW);
       m_Metrics.clrDividerLight = ::GetSysColor(COLOR_BTNHIGHLIGHT);
@@ -1573,19 +1574,19 @@ public:
       HFONT hOldFont = dc.GetCurrentFont();
       HPEN hOldPen = dc.GetCurrentPen();
 
-      if( lpDIS->CtlID == m_nHoverId ) {
-         dc.DrawFrameControl(&rc, DFC_BUTTON, DFCS_BUTTONPUSH);
-         RECT rcInteriour = rc;
-         ::InflateRect(&rcInteriour, -2, -2);
-         dc.FillSolidRect(&rcInteriour, m_Metrics.clrBkTop);
-      }
-      else if( (lpDIS->itemAction & ODA_DRAWENTIRE) != 0 ) {
-         dc.FillSolidRect(&rc, m_Metrics.clrBkTop);
-      }
-
       COLORREF clrBorder = CLR_INVALID;
-      if( m_nDefCtlId == lpDIS->CtlID ) clrBorder = m_Metrics.clrCmdLinkSelect;
-      if( (lpDIS->itemState & ODS_SELECTED) != 0 ) clrBorder = ::GetSysColor(COLOR_3DSHADOW);
+      if( lpDIS->CtlID == m_nHoverId ) {
+         clrBorder = ::GetSysColor(COLOR_BTNSHADOW);
+      }
+      else {
+         if( (lpDIS->itemAction & ODA_DRAWENTIRE ) != 0 )
+            dc.FillSolidRect(&rc, m_Metrics.clrBkTop);
+
+         if( m_nDefCtlId == lpDIS->CtlID ) clrBorder = m_Metrics.clrCmdLinkSelect;
+         else if( (lpDIS->itemState & ODS_FOCUS) != 0 ) clrBorder = ::GetSysColor(COLOR_HIGHLIGHT);
+      }
+      if( (lpDIS->itemState & ODS_SELECTED) != 0 ) clrBorder = ::GetSysColor(COLOR_3DDKSHADOW);
+
       if( clrBorder != CLR_INVALID ) {
          POINT ptArc = { 6, 6 };
          CPen penBorder;
