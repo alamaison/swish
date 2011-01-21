@@ -670,6 +670,14 @@
 					RelativePath=".\commands\host\host.hpp"
 					>
 				</File>
+				<File
+					RelativePath=".\commands\remote\remote.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\commands\remote\remote.hpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>

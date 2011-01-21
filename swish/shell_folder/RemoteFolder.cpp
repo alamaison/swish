@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010
+    Copyright (C) 2007, 2008, 2009, 2010, 2011
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,8 @@
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/shell_folder/announce_error.hpp" // rethrow_and_announce
+#include "swish/shell_folder/commands/remote/remote.hpp"
+                                             // remote_folder_command_provider
 #include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
@@ -438,6 +440,17 @@ variant_t CRemoteFolder::property(const property_key& key, const cpidl_t& pidl)
 /* These method override the (usually no-op) implementations of some        */
 /* in the CSwishFolder base class                                           */
 /*--------------------------------------------------------------------------*/
+
+/**
+ * Create a toolbar command provider for the folder.
+ */
+CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
+{
+	TRACE("Request: IExplorerCommandProvider");
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd).p;
+	return remote_folder_command_provider(
+		root_pidl(), provider, m_consumer).get();
+}
 
 /**
  * Create an icon extraction helper object for the selected item.

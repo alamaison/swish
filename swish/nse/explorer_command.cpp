@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
 
 #pragma endregion
 
-#pragma region CExplorerCommandImpl implementation
+#pragma region CExplorerCommandErrorAdapter implementation
 
 /**
  * Return command's title string.
@@ -131,7 +131,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
  * @param[out] ppszName      Location in which to return character buffer
  *                           allocated with CoTaskMemAlloc.
  */
-STDMETHODIMP CExplorerCommandImpl::GetTitle(
+STDMETHODIMP CExplorerCommandErrorAdapter::GetTitle(
 	IShellItemArray* psiItemArray, wchar_t** ppszName)
 {
 	if (ppszName)
@@ -160,7 +160,7 @@ STDMETHODIMP CExplorerCommandImpl::GetTitle(
  * @param[out] ppszIcon      Location in which to return character buffer
  *                           allocated with CoTaskMemAlloc.
  */
-STDMETHODIMP CExplorerCommandImpl::GetIcon(
+STDMETHODIMP CExplorerCommandErrorAdapter::GetIcon(
 	IShellItemArray* psiItemArray, wchar_t** ppszIcon)
 {
 	if (ppszIcon)
@@ -187,7 +187,7 @@ STDMETHODIMP CExplorerCommandImpl::GetIcon(
  * @param[out] ppszInfotip   Location in which to return character buffer
  *                           allocated with CoTaskMemAlloc.
  */
-STDMETHODIMP CExplorerCommandImpl::GetToolTip(
+STDMETHODIMP CExplorerCommandErrorAdapter::GetToolTip(
 	IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
 {
 	if (ppszInfotip)
@@ -211,7 +211,8 @@ STDMETHODIMP CExplorerCommandImpl::GetToolTip(
  *
  * @param[out] pguidCommandName   Location in which to return GUID.
  */
-STDMETHODIMP CExplorerCommandImpl::GetCanonicalName(GUID* pguidCommandName)
+STDMETHODIMP CExplorerCommandErrorAdapter::GetCanonicalName(
+	GUID* pguidCommandName)
 {
 	if (pguidCommandName)
 		*pguidCommandName = GUID_NULL;
@@ -236,7 +237,7 @@ STDMETHODIMP CExplorerCommandImpl::GetCanonicalName(GUID* pguidCommandName)
  *                           when calculating the state.
  * @param[out] pCmdState     Location in which to return the state flags.
  */
-STDMETHODIMP CExplorerCommandImpl::GetState(
+STDMETHODIMP CExplorerCommandErrorAdapter::GetState(
 	IShellItemArray* psiItemArray, BOOL fOkToBeSlow, EXPCMDSTATE* pCmdState)
 {
 	if (pCmdState)
@@ -260,7 +261,7 @@ STDMETHODIMP CExplorerCommandImpl::GetState(
  *                          executed upon.
  * @param[in] pbc           Optional bind context.
  */
-STDMETHODIMP CExplorerCommandImpl::Invoke(
+STDMETHODIMP CExplorerCommandErrorAdapter::Invoke(
 	IShellItemArray* psiItemArray, IBindCtx* pbc)
 {
 	try
@@ -272,7 +273,7 @@ STDMETHODIMP CExplorerCommandImpl::Invoke(
 	return S_OK;
 }
 
-STDMETHODIMP CExplorerCommandImpl::GetFlags(EXPCMDFLAGS* pFlags)
+STDMETHODIMP CExplorerCommandErrorAdapter::GetFlags(EXPCMDFLAGS* pFlags)
 {
 	if (pFlags)
 		*pFlags = 0;
@@ -288,7 +289,7 @@ STDMETHODIMP CExplorerCommandImpl::GetFlags(EXPCMDFLAGS* pFlags)
 	return S_OK;
 }
 
-STDMETHODIMP CExplorerCommandImpl::EnumSubCommands(
+STDMETHODIMP CExplorerCommandErrorAdapter::EnumSubCommands(
 	IEnumExplorerCommand** ppEnum)
 {
 	if (ppEnum)

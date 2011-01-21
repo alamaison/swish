@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,6 +65,31 @@ template<> struct enumerated_type_of<IEnumListing>
 
 namespace swish {
 
+namespace detail {
+
+inline Listing copy_listing(const Listing& other)
+{
+	Listing lt;
+
+	lt.bstrFilename = ::SysAllocStringLen(
+		other.bstrFilename, ::SysStringLen(other.bstrFilename));
+	lt.uPermissions = other.uPermissions;
+	lt.bstrOwner = ::SysAllocStringLen(
+		other.bstrOwner, ::SysStringLen(other.bstrOwner));
+	lt.bstrGroup = ::SysAllocStringLen(
+		other.bstrGroup, ::SysStringLen(other.bstrGroup));
+	lt.uUid = other.uUid;
+	lt.uGid = other.uGid;
+	lt.uSize = other.uSize;
+	lt.cHardLinks = other.cHardLinks;
+	lt.dateModified = other.dateModified;
+	lt.dateAccessed = other.dateAccessed;
+
+	return lt;
+}
+
+}
+
 /**
  * Wrapped version of Listing that cleans up its string resources on
  * destruction.
@@ -75,22 +100,10 @@ public:
 
 	SmartListing() : lt(Listing()) {}
 
-	SmartListing(const SmartListing& other)
-	{
-		lt.bstrFilename = ::SysAllocStringLen(
-			other.lt.bstrFilename, ::SysStringLen(other.lt.bstrFilename));
-		lt.uPermissions = other.lt.uPermissions;
-		lt.bstrOwner = ::SysAllocStringLen(
-			other.lt.bstrOwner, ::SysStringLen(other.lt.bstrOwner));
-		lt.bstrGroup = ::SysAllocStringLen(
-			other.lt.bstrGroup, ::SysStringLen(other.lt.bstrGroup));
-		lt.uUid = other.lt.uUid;
-		lt.uGid = other.lt.uGid;
-		lt.uSize = other.lt.uSize;
-		lt.cHardLinks = other.lt.cHardLinks;
-		lt.dateModified = other.lt.dateModified;
-		lt.dateAccessed = other.lt.dateAccessed;
-	}
+	SmartListing(const SmartListing& other) : lt(detail::copy_listing(other.lt))
+	{}
+
+	SmartListing(const Listing& other) : lt(detail::copy_listing(other)) {}
 
 	SmartListing& operator=(const SmartListing& other)
 	{
@@ -183,6 +196,11 @@ template<> struct impl::type_policy<Listing>
 		t.dateAccessed = s.dateAccessed;
 	}
 
+	static void init(swish::SmartListing& t, const Listing& s) 
+	{
+		t = swish::SmartListing(s);
+	}
+
 	static void clear(Listing& t)
 	{
 		::SysFreeString(t.bstrFilename);
@@ -190,6 +208,8 @@ template<> struct impl::type_policy<Listing>
 		::SysFreeString(t.bstrGroup);
 		t = Listing();
 	}
+
+	static void clear(swish::SmartListing&) {}
 };
 
 } // namespace comet

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,7 +40,8 @@
 #include <string>
 
 using swish::nse::CExplorerCommandProvider;
-using swish::nse::make_explorer_command;
+using swish::nse::CExplorerCommand;
+using swish::nse::CExplorerCommandWithSite;
 using swish::shell_folder::commands::Command;
 
 using comet::com_error;
@@ -91,8 +92,8 @@ namespace {
 	CExplorerCommandProvider::ordered_commands dummy_commands()
 	{
 		CExplorerCommandProvider::ordered_commands commands;
-		commands.push_back(make_explorer_command(DummyCommand1()));
-		commands.push_back(make_explorer_command(DummyCommand2()));
+		commands.push_back(new CExplorerCommand<DummyCommand1>());
+		commands.push_back(new CExplorerCommand<DummyCommand2>());
 		return commands;
 	}
 }
@@ -196,8 +197,8 @@ namespace {
 
 	com_ptr<IExplorerCommand> host_command()
 	{
-		com_ptr<IExplorerCommand> command = make_explorer_command(
-			HostCommand());
+		com_ptr<IExplorerCommand> command =
+			new CExplorerCommand<HostCommand>();
 
 		BOOST_REQUIRE(command);
 		return command;
@@ -293,6 +294,48 @@ BOOST_AUTO_TEST_CASE( invoke )
 	com_ptr<IExplorerCommand> command = host_command();
 
 	BOOST_REQUIRE_EQUAL(command->Invoke(NULL, NULL), E_ABORT);
+}
+
+
+namespace {
+
+	const GUID TEST_GUID2 = 
+		{ 0xae4792b2, 0x3b35, 0x4c07,
+		{ 0x9a, 0x96, 0x2f, 0x33, 0xc5, 0x56, 0xdb, 0x4a } };
+
+	struct CommandNeedingSite : public Command
+	{
+		CommandNeedingSite() : Command(L"title", TEST_GUID2, L"tool-tip") {}
+
+		bool disabled(const com_ptr<IDataObject>&, bool) const
+		{ return false; }
+
+		bool hidden(const com_ptr<IDataObject>&, bool) const
+		{ return false; }
+
+		void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+			const
+		{
+			throw com_error(E_ABORT);
+		}
+
+		void set_site(com_ptr<IUnknown> ole_site) {}
+	};
+
+}
+
+/**
+ * A CExplorerCommandWithSite must support IObjectWithSite.
+ */
+BOOST_AUTO_TEST_CASE( support_ole_site )
+{
+	com_ptr<IExplorerCommand> command =
+		new CExplorerCommandWithSite<CommandNeedingSite>();
+
+	com_ptr<IObjectWithSite> object_with_site = try_cast(command);
+	BOOST_REQUIRE(object_with_site);
+
+	BOOST_REQUIRE_OK(object_with_site->SetSite(NULL));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

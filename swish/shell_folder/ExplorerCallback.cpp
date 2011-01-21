@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2011
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,9 +33,8 @@
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/error.hpp> // last_error
+#include <winapi/shell/services.hpp> // shell_browser, shell_view
 #include <winapi/trace.hpp> // trace
-
-#include <comet/interface.h> // comtype
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
@@ -58,6 +58,8 @@ using comet::com_ptr;
 
 using winapi::last_error;
 using winapi::shell::pidl::apidl_t;
+using winapi::shell::shell_browser;
+using winapi::shell::shell_view;
 using winapi::trace;
 
 using boost::diagnostic_information;
@@ -66,18 +68,6 @@ using boost::errinfo_api_function;
 
 using std::pair;
 using std::wstring;
-
-template<> struct comet::comtype<IServiceProvider>
-{
-	static const IID& uuid() throw() { return IID_IServiceProvider; }
-	typedef IUnknown base;
-};
-
-template<> struct comet::comtype<IShellBrowser>
-{
-	static const IID& uuid() throw() { return IID_IShellBrowser; }
-	typedef IUnknown base;
-};
 
 namespace swish {
 namespace shell_folder {
@@ -136,36 +126,7 @@ namespace {
 		}
 	}
 
-	/**
-	 * Return the parent IShellBrowser from an OLE site.
-	 */
-	com_ptr<IShellBrowser> shell_browser(com_ptr<IUnknown> ole_site)
-	{
-		if (!ole_site)
-			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-		com_ptr<IServiceProvider> sp = try_cast(ole_site);
-
-		com_ptr<IShellBrowser> browser;
-		HRESULT hr = sp->QueryService(SID_SShellBrowser, browser.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(sp, hr));
-
-		return browser;
-	}
-
-	/**
-	 * Return the parent IShellView of a shell browser.
-	 */
-	com_ptr<IShellView> shell_view(com_ptr<IShellBrowser> browser)
-	{
-		com_ptr<IShellView> view;
-		HRESULT hr = browser->QueryActiveShellView(view.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(browser, hr));
-
-		return view;
-	}
 	
 	/**
 	 * Return a DataObject representing the items currently selected.
@@ -236,7 +197,7 @@ bool CExplorerCallback::on_get_notify(
 	// Tell the shell that we might notify it of update events that
 	// apply to this folder (specified using our absolute PIDL)
 	events = SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
-		SHCNE_DELETE | SHCNE_RMDIR;
+		SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
 	pidl_monitor = m_folder_pidl.get(); // Owned by us
 	return true;
 }

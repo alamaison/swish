@@ -80,15 +80,15 @@ del WTL81_9127.zip
 
 echo.
 echo ===- Downloading comet ...
-%WGET% "http://bitbucket.org/alamaison/swish_comet/get/c4c37bdab4c9.zip" || (
+%WGET% "http://bitbucket.org/alamaison/swish_comet/get/bd51035cab59.zip" || (
 	echo ===- Error while trying to download comet. & goto error)
-%SEVENZ% x c4c37bdab4c9.zip -aoa || (
+%SEVENZ% x bd51035cab59.zip -aoa || (
 	echo ===- Error while trying to extract comet. & goto error)
 xcopy /E /Q /Y swish_comet comet || (
 	echo ===- Error while trying to copy comet files & goto error)
 rd /S /Q swish_comet || (
 	echo ===- Error while trying to clean up comet files & goto error)
-del c4c37bdab4c9.zip
+del bd51035cab59.zip
 
 :: Boost.Locale
 

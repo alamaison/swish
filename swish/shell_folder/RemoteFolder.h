@@ -1,6 +1,6 @@
 /*  Explorer folder handling remote files and folders in a directory.
 
-    Copyright (C) 2007, 2008, 2009, 2010
+    Copyright (C) 2007, 2008, 2009, 2010, 2011
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -90,6 +90,7 @@ protected:
 		const winapi::shell::property_key& key,
 		const winapi::shell::pidl::cpidl_t& pidl);
 
+	ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
 	ATL::CComPtr<IExtractIconW> extract_icon_w(
 		HWND hwnd, PCUITEMID_CHILD pidl);
 	ATL::CComPtr<IQueryAssociations> query_associations(

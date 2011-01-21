@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include "host.hpp"
 
 #include "swish/forms/add_host.hpp" // add_host
-#include "swish/nse/explorer_command.hpp" // CExplorerCommandProvider
+#include "swish/nse/explorer_command.hpp" // CExplorerCommand*
 #include "swish/nse/task_pane.hpp" // CUIElementImpl, make_ui_command
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/host_management.hpp" // AddConnectionToRegistry
@@ -50,12 +50,12 @@
 using swish::forms::add_host;
 using swish::forms::host_info;
 using swish::nse::CExplorerCommandProvider;
+using swish::nse::CExplorerCommand;
+using swish::nse::CUICommand;
 using swish::nse::CUIElementImpl;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
-using swish::nse::make_explorer_command;
-using swish::nse::CUICommand;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::commands::Command;
 using swish::shell_folder::commands::WebtaskCommandTitleAdapter;
@@ -184,8 +184,8 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
 	HWND hwnd, const apidl_t& folder_pidl)
 {
 	CExplorerCommandProvider::ordered_commands commands;
-	commands.push_back(make_explorer_command(Add(hwnd, folder_pidl)));
-	commands.push_back(make_explorer_command(Remove(hwnd, folder_pidl)));
+	commands.push_back(new CExplorerCommand<Add>(hwnd, folder_pidl));
+	commands.push_back(new CExplorerCommand<Remove>(hwnd, folder_pidl));
 	return new CExplorerCommandProvider(commands);
 }
 

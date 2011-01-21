@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008, 2009, 2010
+    Copyright (C) 2007, 2008, 2009, 2010, 2011
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -20,8 +20,6 @@
 
 #include "SftpDirectory.h"
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
-
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // comtype
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -40,6 +38,7 @@ using comet::bstr_t;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
+using comet::enum_iterator;
 using comet::make_smart_enumeration;
 
 using boost::filesystem::wpath;
@@ -173,6 +172,24 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 	return make_smart_enumeration<IEnumIDList>(pidls).get();
 }
 
+
+enum_iterator<IEnumListing, SmartListing> CSftpDirectory::begin() const
+{
+	com_ptr<IEnumListing> directory_enum;
+	HRESULT hr = m_provider->GetListing(
+		m_consumer.in(), bstr_t(m_directory.string()).in(),
+		directory_enum.out());
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+
+	return enum_iterator<IEnumListing, SmartListing>(directory_enum);
+}
+
+enum_iterator<IEnumListing, SmartListing> CSftpDirectory::end() const
+{
+	return enum_iterator<IEnumListing, SmartListing>();
+}
+
 /**
  * Get instance of CSftpDirectory for a subdirectory of this directory.
  *
@@ -265,6 +282,16 @@ void CSftpDirectory::Delete(CRemoteItemHandle file)
 		hr = m_provider->DeleteDirectory(m_consumer.in(), target_path.in());
 	else
 		hr = m_provider->Delete(m_consumer.in(), target_path.in());
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+}
+
+void CSftpDirectory::CreateDirectory(const wstring& name)
+{
+	bstr_t target_path = (m_directory / name).string();
+
+	HRESULT hr = m_provider->CreateNewDirectory(
+		m_consumer.in(), target_path.in());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
 }

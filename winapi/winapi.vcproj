@@ -173,6 +173,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shell\services.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\shell\shell.hpp"
 				>
 			</File>

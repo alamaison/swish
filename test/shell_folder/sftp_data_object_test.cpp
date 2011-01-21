@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,31 +27,26 @@
 /**
  * @file
  *
- * Unlike the tests in drop_target_test.cpp, these tests do not excercise
- * the CDropTarget component alone.  Nor do they excercise it directly.
+ * Unlike the tests in drop_target_test.cpp, these tests do not exercise
+ * the CDropTarget component alone.  Nor do they exercise it directly.
  * Instead the simulate the calls the shell itself would make to drag
- * a file making use of the whole Shell Namespace Folder heirarchy.
+ * a file making use of the whole Shell Namespace Folder hierarchy.
  */
 
 #include "swish/shell_folder/SftpDataObject.h"  // test subject
 #include "swish/shell_folder/data_object/FileGroupDescriptor.hpp"  // accessor
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // accessor
 #include "swish/shell_folder/data_object/StorageMedium.hpp"  // accessor
-#include "swish/shell_folder/SftpDirectory.h"  // listing pidls in a folder
-#include "swish/shell_folder/shell.hpp"  // shell utility functions
-#include "swish/shell_folder/HostPidl.h"  // Host PIDL wrapper
-#include "swish/utils.hpp"  // character conversion
+#include "swish/shell_folder/shell.hpp" // parsing_name_from_pidl
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
-#include "test/common_boost/ProviderFixture.hpp"  // ProviderFixture
+#include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
-#include <winapi/shell/pidl.hpp>  // PIDL wrapper
-#include <winapi/shell/pidl_array.hpp>  // PIDL array wrapper
+#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/system/system_error.hpp>
 #pragma warning(push)
@@ -66,12 +61,10 @@
 
 #include <sys/stat.h>  // _S_IREAD
 
-using swish::shell_folder::desktop_folder;
 using swish::shell_folder::parsing_name_from_pidl;
-using swish::utils::Utf8StringToWideString;
 using namespace swish::shell_folder::data_object;
 
-using test::ProviderFixture;
+using test::PidlFixture;
 
 using namespace winapi::shell::pidl;
 
@@ -92,73 +85,9 @@ using std::istreambuf_iterator;
 
 namespace { // private
 
-	/**
-	 * Return the PIDL to the Swish HostFolder in Explorer.
-	 */
-	apidl_t swish_pidl()
-	{
-		com_ptr<IShellFolder> desktop = desktop_folder();
-
-		apidl_t pidl;
-		HRESULT hr = desktop->ParseDisplayName(
-			NULL, NULL, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-			L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL, 
-			reinterpret_cast<PIDLIST_RELATIVE*>(&pidl), NULL);
-		BOOST_REQUIRE_OK(hr);
-
-		return pidl;
-	}
-
-	class DataObjectFixture : public ProviderFixture
+	class DataObjectFixture : public PidlFixture
 	{
 	public:
-		/**
-		 * Return an absolute PIDL to a remote directory.
-		 *
-		 * We cheat by returning a PIDL to a HostFolder item with the
-		 * shortcut path set to the remote directory.
-		 */
-		apidl_t directory_pidl(wpath directory)
-		{
-			CHostItem item(
-				Utf8StringToWideString(GetUser()).c_str(),
-				Utf8StringToWideString(GetHost()).c_str(),
-				directory.string().c_str(), 
-				static_cast<USHORT>(GetPort()));
-
-			return swish_pidl() + cpidl_t(item);
-		}
-
-		/**
-		 * Return an absolute PIDL to the sandbox on the remote end.
-		 *
-		 * This is, of course, the local sandbox but the PIDL points to
-		 * it via Swish rather than via the local filesystem.
-		 */
-		apidl_t sandbox_pidl()
-		{
-			return directory_pidl(ToRemotePath(Sandbox()));
-		}
-
-		/**
-		 * Return pidls for all the items in the sandbox directory.
-		 */
-		vector<cpidl_t> pidls_in_sandbox()
-		{
-			CSftpDirectory dir(
-				sandbox_pidl().get(), Provider().get(), Consumer().get());
-			com_ptr<IEnumIDList> pidl_enum = dir.GetEnum(
-				SHCONTF_FOLDERS | SHCONTF_NONFOLDERS);
-
-			vector<cpidl_t> pidls;
-			cpidl_t pidl;
-			while (pidl_enum->Next(1, pidl.out(), NULL) == S_OK)
-			{
-				pidls.push_back(pidl);
-			}
-
-			return pidls;
-		}
 
 		vector<wpath> make_test_files(bool readonly=false)
 		{
@@ -185,23 +114,6 @@ namespace { // private
 			}
 
 			return files;
-		}
-
-		/**
-		 * Make a DataObject to all the items in the sandbox, via the SFTP 
-		 * connection.
-		 */
-		com_ptr<IDataObject> data_object_from_sandbox()
-		{
-			vector<cpidl_t> pidls = pidls_in_sandbox();
-			pidl_array<cpidl_t> array(pidls.begin(), pidls.end());
-			BOOST_REQUIRE_EQUAL(array.size(), 2U);
-
-			com_ptr<IDataObject> data_object = CSftpDataObject::Create(
-				array.size(), array.as_array(), 
-				sandbox_pidl().get(), Provider().get(), Consumer().get());
-			BOOST_REQUIRE(data_object);
-			return data_object;
 		}
 	};
 

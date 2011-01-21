@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,11 +30,14 @@
 
 #include "swish/nse/data_object_util.hpp" // data_object_from_item_array
 
+#include <winapi/object_with_site.hpp> // object_with_site
+
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
 #include <comet/uuid_fwd.h> // uuid
 
+#include <boost/preprocessor.hpp> // creating variadic pass-through contructors
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <shobjidl.h> // IExplorerCommandProvider/IExplorerCommand
@@ -111,9 +114,11 @@ private:
  * Wraps a C++ implementation of IExplorerCommand with code to convert it
  * to the external COM interface.  This is an NVI style approach.
  */
-class CExplorerCommandImpl : public comet::simple_object<IExplorerCommand>
+class CExplorerCommandErrorAdapter : public IExplorerCommand
 {
 public:
+
+	typedef IExplorerCommand interface_is;
 
 	/** @name IExplorerCommand external COM methods. */
 	// @{
@@ -167,18 +172,38 @@ private:
 	// @}
 };
 
-/**
- * Implements IExplorerCommands by wrapping command functors.
- *
- * @param T  Functor which provides the same interface as Command.  It must
- *           be copyable and all methods must be const.
- */
-template<typename T>
-class CExplorerCommand : public CExplorerCommandImpl
+
+#ifndef SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS
+#define SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS 10
+#endif
+
+#define EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, classname, initialiser) \
+	BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
+	explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
+		: initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
+
+template<typename COMET_LIST_TEMPLATE>
+class CExplorerCommandImplAux :
+	public comet::simple_object<COMET_LIST_ARG_1> {};
+
+template<COMET_LIST_TEMPLATE>
+class CExplorerCommandImpl :
+	public comet::simple_object<CExplorerCommandErrorAdapter, COMET_LIST_ARG_0>
 {
 public:
 
-	CExplorerCommand(const T& command) : m_command(command) {}
+// Define pass-through constructors with variable numbers of arguments
+#define BOOST_PP_LOCAL_MACRO(N) \
+	EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommandImpl, m_command)
+
+#define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
+#include BOOST_PP_LOCAL_ITERATE()
+
+protected:
+
+	typedef X00 command_type;
+
+	command_type& command() { return m_command; }
 
 private:
 
@@ -273,17 +298,66 @@ private:
 		m_command(data_object_from_item_array(items, bind_ctx), bind_ctx);
 	}
 
-	T m_command;
+	command_type m_command;
 };
 
 /**
- * Create an CExplorerCommand implementation from a Command instance.
+ * Implements IExplorerCommands by wrapping command functors.
+ *
+ * @param T  Functor which provides the same interface as Command.
  */
 template<typename T>
-inline comet::com_ptr<IExplorerCommand> make_explorer_command(T command)
+class CExplorerCommand : public CExplorerCommandImpl<T>
 {
-	return new CExplorerCommand<T>(command);
-}
+public:
+
+	typedef CExplorerCommandImpl<T> super;
+
+	// Define pass-through constructors with variable numbers of arguments
+#define BOOST_PP_LOCAL_MACRO(N) \
+	EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommand, super)
+
+#define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
+#include BOOST_PP_LOCAL_ITERATE()
+};
+
+/**
+ * Implements IExplorerCommands by wrapping command functors.
+ *
+ * This is a variation on CExplorerCommandErrorAdapter that implements the command as
+ * an OLE object embedded in a site.  This is necessary, for instance,
+ * if the command wants to manipulate the folder view that it is part of.
+ *
+ * @param T  Functor which provides the same interface as Command plus a
+ *           set_site method.
+ */
+template<typename T>
+class CExplorerCommandWithSite :
+	public CExplorerCommandImpl<T, winapi::object_with_site>
+{
+public:
+
+	typedef CExplorerCommandImpl<T, winapi::object_with_site> super;
+
+// Define pass-through constructors with variable numbers of arguments
+#define BOOST_PP_LOCAL_MACRO(N) \
+	EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommandWithSite, super)
+
+#define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
+#include BOOST_PP_LOCAL_ITERATE()
+
+private:
+
+	/**
+	 * Notify the command functor of the site we have been embedded in.
+	 */
+	virtual void on_set_site(comet::com_ptr<IUnknown> ole_site)
+	{
+		command().set_site(ole_site);
+	}
+};
+
+#undef SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS
 
 }} // namespace swish::nse
 

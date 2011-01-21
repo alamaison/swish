@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010
+    Copyright (C) 2007, 2008, 2009, 2010, 2011
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -30,17 +30,16 @@
 #include "HostPidl.h"  // PIDL wrapper classes
 #include "RemotePidl.h"
 
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer/SmartListing
+
 #include <winapi/shell/pidl.hpp> // apidl_t
 
-#include <comet/bstr.h> // bstr_t
+#include <comet/enum_iterator.h> // enum_iterator
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/filesystem.hpp> // wpath
 
 #include <string>
-
-struct ISftpConsumer;
-struct ISftpProvider;
 
 class CSftpDirectory
 {
@@ -60,6 +59,10 @@ public:
 	bool Rename(
 		CRemoteItemHandle old_file, const std::wstring& new_filename);
 	void Delete(CRemoteItemHandle file);
+	void CreateDirectory(const std::wstring& name);
+
+	comet::enum_iterator<IEnumListing, swish::SmartListing> begin() const;
+	comet::enum_iterator<IEnumListing, swish::SmartListing> end() const;
 
 private:
 	comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider

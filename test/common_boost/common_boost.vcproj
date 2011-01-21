@@ -317,6 +317,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\PidlFixture.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -345,6 +349,10 @@
 			</File>
 			<File
 				RelativePath=".\MockProvider.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PidlFixture.hpp"
 				>
 			</File>
 			<File
