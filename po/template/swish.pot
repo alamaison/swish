@@ -1,9 +1,9 @@
 # Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: Swish 0.3.2.0\n"
+"Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-09 15:40-0000\n"
+"POT-Creation-Date: 2011-01-28 15:04-0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: \n"
@@ -19,19 +19,19 @@ msgstr ""
 msgid "An error occurred while transferring files:"
 msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:344
+#: ../../swish/drop_target/DropUI.cpp:349
 msgid "This folder already contains a file named '{1}'."
 msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:347
+#: ../../swish/drop_target/DropUI.cpp:352
 msgid "Would you like to replace it?"
 msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:355
+#: ../../swish/drop_target/DropUI.cpp:360
 msgid "Confirm File Replace"
 msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:394
+#: ../../swish/drop_target/DropUI.cpp:399
 msgctxt "Progress"
 msgid "Copying..."
 msgstr ""
@@ -86,7 +86,7 @@ msgid "Example: /home/yourusername"
 msgstr ""
 
 #: ../../swish/forms/add_host.cpp:185
-#: ../../swish/forms/password.cpp:70
+#: ../../swish/forms/password.cpp:68
 msgid "Cancel"
 msgstr ""
 
@@ -118,11 +118,11 @@ msgstr ""
 msgid "Complete all fields."
 msgstr ""
 
-#: ../../swish/forms/password.cpp:59
+#: ../../swish/forms/password.cpp:57
 msgid "Password"
 msgstr ""
 
-#: ../../swish/forms/password.cpp:66
+#: ../../swish/forms/password.cpp:64
 msgid "OK"
 msgstr ""
 
@@ -201,16 +201,65 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr ""
 
+#: ../../swish/shell_folder/announce_error.cpp:129
+msgid "Show &details (which may not be in your language)"
+msgstr ""
+
+#: ../../swish/shell_folder/announce_error.cpp:130
+msgid "Hide &details"
+msgstr ""
+
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:195
+#: ../../swish/shell_folder/RemoteFolder.cpp:121
+msgid "Unable to access the directory"
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:122
+#: ../../swish/shell_folder/RemoteFolder.cpp:312
+#: ../../swish/shell_folder/RemoteFolder.cpp:572
+#: ../../swish/shell_folder/RemoteFolder.cpp:598
+#: ../../swish/shell_folder/RemoteFolder.cpp:742
+#: ../../swish/shell_folder/commands/remote/remote.cpp:285
+msgid "You might not have permission."
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:194
+msgid "Path not recognised"
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:195
+msgid "Check that the path was entered correctly."
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:311
+msgid "Unable to rename the item"
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:570
+msgid "Unable to access the item"
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:571
+msgid "Unable to access the items"
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:597
+msgid "Unable to access the folder"
+msgstr ""
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:741
+msgid "Unable to delete the item"
+msgstr ""
+
+#: ../../swish/shell_folder/UserInteraction.cpp:203
 #, boost-format
 msgid "The folder already contains a file named '%1%'"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:200
+#: ../../swish/shell_folder/UserInteraction.cpp:208
 #, boost-format
 msgid ""
 "Would you like to replace the existing file\n"
@@ -222,94 +271,73 @@ msgid ""
 "\t%2%"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:204
+#: ../../swish/shell_folder/UserInteraction.cpp:212
 msgid "File already exists"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:249
+#: ../../swish/shell_folder/UserInteraction.cpp:247
 msgid "Mismatched host-key"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:250
+#: ../../swish/shell_folder/UserInteraction.cpp:248
 msgid "WARNING: the SSH host-key has changed!"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:256
+#: ../../swish/shell_folder/UserInteraction.cpp:254
 #, boost-format
 msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:263
+#: ../../swish/shell_folder/UserInteraction.cpp:261
 msgid "It is important to check this is the right key fingerprint:"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:274
+#: ../../swish/shell_folder/UserInteraction.cpp:270
 msgid ""
 "I trust this key: &update and connect\n"
 "You won't have to verify this key again unless it changes"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:279
+#: ../../swish/shell_folder/UserInteraction.cpp:275
 msgid ""
 "I trust this key: &just connect\n"
 "You will be warned about this key again next time you connect"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:285
-#: ../../swish/shell_folder/UserInteraction.cpp:357
+#: ../../swish/shell_folder/UserInteraction.cpp:281
+#: ../../swish/shell_folder/UserInteraction.cpp:322
 msgid ""
 "&Cancel\n"
 "Choose this option unless you are sure the key is correct"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:295
-msgid "To update the known key for this host click Yes."
-msgstr ""
-
-#: ../../swish/shell_folder/UserInteraction.cpp:297
-msgid "To connect to the server without updating the key click No."
-msgstr ""
-
-#: ../../swish/shell_folder/UserInteraction.cpp:299
-#: ../../swish/shell_folder/UserInteraction.cpp:371
-msgid "Click Cancel unless you are sure the key is correct."
-msgstr ""
-
-#: ../../swish/shell_folder/UserInteraction.cpp:324
+#: ../../swish/shell_folder/UserInteraction.cpp:291
 msgid "Unknown host-key"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:330
+#: ../../swish/shell_folder/UserInteraction.cpp:297
 #, boost-format
 msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:334
+#: ../../swish/shell_folder/UserInteraction.cpp:301
 msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:339
+#: ../../swish/shell_folder/UserInteraction.cpp:304
 msgid "Verify unknown SSH host-key"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:346
+#: ../../swish/shell_folder/UserInteraction.cpp:311
 msgid ""
 "I trust this key: &store and connect\n"
 "You won't have to verify this key again unless it changes"
 msgstr ""
 
-#: ../../swish/shell_folder/UserInteraction.cpp:351
+#: ../../swish/shell_folder/UserInteraction.cpp:316
 msgid ""
 "I trust this key: &just connect\n"
 "You will be asked to verify the key again next time you connect"
-msgstr ""
-
-#: ../../swish/shell_folder/UserInteraction.cpp:367
-msgid "To store this as the known key for this server click Yes."
-msgstr ""
-
-#: ../../swish/shell_folder/UserInteraction.cpp:369
-msgid "To connect to the server without storing the key click No."
 msgstr ""
 
 #: ../../swish/shell_folder/commands/host/host.cpp:109
@@ -350,5 +378,34 @@ msgstr ""
 
 #: ../../swish/shell_folder/commands/host/host.cpp:212
 msgid "These tasks help you manage Swish SFTP connections."
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:209
+msgid "New &folder"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:210
+msgid "Create a new, empty folder in the folder you have open."
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:212
+msgid "Make a new folder"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:251
+msgctxt "Initial name"
+msgid "New folder"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:284
+msgid "Could not create a new folder"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:312
+msgid "File and Folder Tasks"
+msgstr ""
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:324
+msgid "These tasks help you manage your remote files."
 msgstr ""
 
