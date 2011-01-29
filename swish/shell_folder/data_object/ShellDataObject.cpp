@@ -29,11 +29,14 @@
 #include "GlobalLocker.hpp" // GlobalLocker
 #include "StorageMedium.hpp" // StorageMedium
 
+#include <winapi/clipboard.hpp> // register_format
+
 #include <comet/error.h> // com_error
 
 #include <boost/shared_ptr.hpp>  // share_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
+using winapi::clipboard::register_format;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 
@@ -47,13 +50,6 @@ namespace shell_folder {
 namespace data_object {
 
 namespace { // private
-
-	const CLIPFORMAT CF_SHELLIDLIST = 
-		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_SHELLIDLIST));
-	const CLIPFORMAT CF_FILEDESCRIPTORA = 
-		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORA));
-	const CLIPFORMAT CF_FILEDESCRIPTORW = 
-		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW));
 
 	/**
 	 * Lifetime-management class for a CIDA held in global memory in a
@@ -100,7 +96,8 @@ namespace { // private
 		const com_ptr<IDataObject> data_object)
 	{
 		FORMATETC fetc = {
-			CF_SHELLIDLIST, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+			register_format(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1,
+			TYMED_HGLOBAL
 		};
 
 		StorageMedium medium;
@@ -167,7 +164,8 @@ ShellDataObject::~ShellDataObject()
 bool ShellDataObject::has_pidl_format() const
 {
 	FORMATETC fetc = {
-		CF_SHELLIDLIST, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+		register_format(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1,
+		TYMED_HGLOBAL
 	};
 
 	return m_spDataObj->QueryGetData(&fetc) == S_OK;
@@ -216,7 +214,8 @@ bool ShellDataObject::has_file_group_descriptor_format() const
 bool ShellDataObject::has_unicode_file_group_descriptor_format() const
 {
 	FORMATETC fetc = {
-		CF_FILEDESCRIPTORW, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+		register_format(CFSTR_FILEDESCRIPTORW), NULL, DVASPECT_CONTENT, -1,
+		TYMED_HGLOBAL
 	};
 
 	return m_spDataObj->QueryGetData(&fetc) == S_OK;
@@ -233,7 +232,8 @@ bool ShellDataObject::has_unicode_file_group_descriptor_format() const
 bool ShellDataObject::has_ansi_file_group_descriptor_format() const
 {
 	FORMATETC fetc = {
-		CF_FILEDESCRIPTORA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+		register_format(CFSTR_FILEDESCRIPTORA), NULL, DVASPECT_CONTENT, -1,
+		TYMED_HGLOBAL
 	};
 
 	return m_spDataObj->QueryGetData(&fetc) == S_OK;
