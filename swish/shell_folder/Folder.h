@@ -453,7 +453,7 @@ public: // IShellFolder methods
 	 *
 	 * We deal with the request as follows:
 	 * - If the request is for an object associated with this folder, we
-	 *   call folder_item_object() with the requested IID.  You should override
+	 *   call folder_object() with the requested IID.  You should override
 	 *   that method if your folder supports any associated objects.
 	 *
 	 * - If the request is for items in this in this folder we call

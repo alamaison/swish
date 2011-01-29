@@ -58,11 +58,13 @@ protected:
 	/**
 	 * Create one of the objects associated with the current folder.
 	 *
-	 * Currently, only requests for the current objects are displatched to the
+	 * Currently, only requests for the current objects are dispatched to the
 	 * subclasses:
 	 * - IShellView
 	 * - IShellDetails
 	 * - IDropTarget
+	 * - IExplorerCommandProvider
+	 * - IContextMenu
 	 */
 	ATL::CComPtr<IUnknown> folder_object(HWND hwnd, REFIID riid)
 	{
@@ -83,6 +85,10 @@ protected:
 		else if (riid == __uuidof(IExplorerCommandProvider))
 		{
 			object = command_provider(hwnd);
+		}
+		else if (riid == __uuidof(IContextMenu))
+		{
+			object = background_context_menu(hwnd);
 		}
 
 		// QueryInterface could fail at any point above and it *doesn't* throw
@@ -203,6 +209,16 @@ protected:
 		HWND /*hwnd*/)
 	{
 		TRACE("Request: IExplorerCommandProvider");
+		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+	}
+
+	/**
+	 * Create a context menu for the folder background.
+	 * Pasting into a Swish window requires this.
+	 */
+	virtual ATL::CComPtr<IContextMenu> background_context_menu(HWND /*hwnd*/)
+	{
+		TRACE("Request: IContextMenu");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
 	}
 

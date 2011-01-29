@@ -62,7 +62,7 @@ using swish::remote_folder::property_key_from_column_index;
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::shell_folder::CExplorerCallback;
-//using swish::shell_folder::commands::remote::remote_folder_command_provider;
+using swish::shell_folder::commands::remote::remote_folder_command_provider;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::rethrow_and_announce;
 using swish::tracing::trace;
@@ -523,11 +523,15 @@ CComPtr<IContextMenu> CRemoteFolder::context_menu(
 	// browse_thread/thread/6f07525eaddea29d/
 	// but we do for the context menu to appear in versions of Windows 
 	// earlier than Vista.
-	HKEY *akeys; UINT ckeys;
-	ATLENSURE_THROW(SUCCEEDED(
-		CRegistry::GetRemoteFolderAssocKeys(apidl[0], &ckeys, &akeys)),
-		E_UNEXPECTED  // Might fail if registry is corrupted
-	);
+	HKEY *akeys = NULL;
+	UINT ckeys = 0;
+	if (cpidl > 0)
+	{
+		ATLENSURE_THROW(SUCCEEDED(
+			CRegistry::GetRemoteFolderAssocKeys(apidl[0], &ckeys, &akeys)),
+			E_UNEXPECTED  // Might fail if registry is corrupted
+		);
+	}
 
 	CComPtr<IShellFolder> spThisFolder = this;
 	ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
@@ -536,6 +540,37 @@ CComPtr<IContextMenu> CRemoteFolder::context_menu(
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
 		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
+		MenuCallback, ckeys, akeys, &spMenu);
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_error(hr));
+
+	return spMenu;
+}
+
+CComPtr<IContextMenu> CRemoteFolder::background_context_menu(HWND hwnd)
+{
+	TRACE("Request: IContextMenu");
+
+	// Get keys associated with directory background menus from registry.
+	//
+	// This article says that we don't need to specify the keys:
+	// http://groups.google.com/group/microsoft.public.platformsdk.shell/
+	// browse_thread/thread/6f07525eaddea29d/
+	// but we do for the context menu to appear in versions of Windows 
+	// earlier than Vista.
+	HKEY *akeys; UINT ckeys;
+	ATLENSURE_THROW(SUCCEEDED(
+		CRegistry::GetRemoteFolderBackgroundAssocKeys(&ckeys, &akeys)),
+		E_UNEXPECTED  // Might fail if registry is corrupted
+		);
+
+	CComPtr<IShellFolder> spThisFolder = this;
+	ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
+
+	// Create default context menu from list of PIDLs
+	CComPtr<IContextMenu> spMenu;
+	HRESULT hr = ::CDefFolderMenu_Create2(
+		root_pidl().get(), hwnd, 0, NULL, spThisFolder, 
 		MenuCallback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error(hr));

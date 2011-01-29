@@ -39,9 +39,11 @@ public:
 	static HRESULT GetRemoteFolderAssocKeys(
 		__in CRemoteItemHandle pidl, 
 		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+	static HRESULT GetRemoteFolderBackgroundAssocKeys(
+		UINT *pcKeys, HKEY **paKeys);
+	typedef std::vector<ATL::CString> KeyNames;
 
 private:
-	typedef std::vector<ATL::CString> KeyNames;
 
 	static KeyNames _GetHostFolderAssocKeynames() throw();
 	static KeyNames _GetRemoteFolderAssocKeynames(

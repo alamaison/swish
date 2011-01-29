@@ -91,6 +91,7 @@ protected:
 		const winapi::shell::pidl::cpidl_t& pidl);
 
 	ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
+	ATL::CComPtr<IContextMenu> background_context_menu(HWND hwnd);
 	ATL::CComPtr<IExtractIconW> extract_icon_w(
 		HWND hwnd, PCUITEMID_CHILD pidl);
 	ATL::CComPtr<IQueryAssociations> query_associations(

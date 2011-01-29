@@ -104,6 +104,30 @@ throw()
 	WINAPI_COM_CATCH();
 }
 
+namespace {
+
+CRegistry::KeyNames remote_folder_background_key_names() 
+{
+	CRegistry::KeyNames names;
+
+	names.push_back(L"Directory\\Background");
+
+	return names;
+}
+
+}
+
+HRESULT CRegistry::GetRemoteFolderBackgroundAssocKeys(
+	UINT *pcKeys, HKEY **paKeys)
+{
+	try
+	{
+		return _GetHKEYArrayFromKeynames(
+			remote_folder_background_key_names(), pcKeys, paKeys);
+	}
+	WINAPI_COM_CATCH();
+}
+
 
 /*----------------------------------------------------------------------------*
  * Private functions
