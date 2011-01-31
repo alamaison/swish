@@ -85,7 +85,7 @@ protected:
 	{
 		super::push();
 
-		winapi::send_message<wchar_t, HICON>(
+		winapi::send_message<wchar_t>(
 			hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
 	}
 

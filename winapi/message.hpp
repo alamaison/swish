@@ -52,7 +52,7 @@ namespace detail {
 }
 
 template<typename T, typename R, typename W, typename L>
-inline R send_message(HWND hwnd, UINT message, W wparam, L lparam)
+inline R send_message_return(HWND hwnd, UINT message, W wparam, L lparam)
 {
 	return (R)(
 		detail::native::send_message<T>(
@@ -62,7 +62,7 @@ inline R send_message(HWND hwnd, UINT message, W wparam, L lparam)
 template<typename T, typename W, typename L>
 inline void send_message(HWND hwnd, UINT message, W wparam, L lparam)
 {
-	send_message<T, LRESULT, W, L>(hwnd, message, wparam, lparam);
+	send_message_return<T, LRESULT, W, L>(hwnd, message, wparam, lparam);
 }
 
 } // namespace winapi

@@ -86,7 +86,7 @@ public:
 		if (!is_active())
 			m_value = v;
 		else
-			return winapi::send_message<wchar_t, boost::int32_t>(
+			return winapi::send_message_return<wchar_t, boost::int32_t>(
 				hwnd(), UDM_SETPOS32, 0, v);
 	}
 

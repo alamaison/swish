@@ -56,7 +56,7 @@ public:
 
 	HICON change_icon(HICON new_icon)
 	{
-		return winapi::send_message<T, HICON>(
+		return winapi::send_message_return<T, HICON>(
 			hwnd(), STM_SETIMAGE, IMAGE_ICON, new_icon);
 	}
 };
