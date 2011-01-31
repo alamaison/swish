@@ -94,17 +94,17 @@ del bd51035cab59.zip
 
 echo.
 echo ===- Dowloading Boost.Locale ...
-%WGET% -O boost_locale.tar.gz "http://cppcms.svn.sourceforge.net/viewvc/cppcms/boost_locale/trunk.tar.gz" || (
+%WGET% -O boost_locale.tar.bz2 "http://downloads.sourceforge.net/project/cppcms/boost_locale/boost_locale_v2.92.tar.bz2" || (
 	echo ===- Error while trying to download Boost.Locale & goto error)
-%SEVENZ% x boost_locale.tar.gz -aoa || (
+%SEVENZ% x boost_locale.tar.bz2 -aoa || (
 	echo ===- Error while trying to extract Boost.Locale & goto error)
 %SEVENZ% x boost_locale.tar -aoa || (
 	echo ===- Error while trying to extract Boost.Locale & goto error)
-xcopy /E /Q /Y trunk boost.locale || (
+xcopy /E /Q /Y boost_locale_v2.92 boost.locale || (
 	echo ===- Error while trying to copy Boost.Locale files & goto error)
-rd /S /Q trunk || (
+rd /S /Q boost_locale_v2.92 || (
 	echo ===- Error while trying to clean up Boost.Locale files & goto error)
-del boost_locale.tar.gz
+del boost_locale.tar.bz2
 del boost_locale.tar
 
 echo.
