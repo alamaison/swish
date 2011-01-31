@@ -20,11 +20,13 @@ rem 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 setlocal
 echo.
 
-cd ../thirdparty/boost
+cd ..\thirdparty\boost
+
+call "%VS80COMNTOOLS%\vsvars32.bat"
 
 call bootstrap
 
-set WITH_LIBRARIES=--with-date_time --with-filesystem --with-regex --with-signals --with-system --with-test
+set WITH_LIBRARIES=--with-date_time --with-filesystem --with-regex --with-signals --with-system --with-test --without-python
 set COMMON_ARGS=--toolset=msvc-8.0 --link=static %WITH_LIBRARIES%
 
 bjam %COMMON_ARGS% address-model=32 --stagedir=lib\Win32 stage
