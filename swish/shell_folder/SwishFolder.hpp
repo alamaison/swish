@@ -202,6 +202,7 @@ protected:
 	{
 		TRACE("Request: IDropTarget");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	/** Create a toolbar command provider for the folder. */
@@ -210,6 +211,7 @@ protected:
 	{
 		TRACE("Request: IExplorerCommandProvider");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	/**
@@ -220,6 +222,7 @@ protected:
 	{
 		TRACE("Request: IContextMenu");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	// @}
@@ -234,6 +237,7 @@ protected:
 	{
 		TRACE("Request: IExtractIconW");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	/**
@@ -257,6 +261,7 @@ protected:
 	{
 		TRACE("Request: IContextMenu");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	/** Create a file association handler for the selected items. */
@@ -265,6 +270,7 @@ protected:
 	{
 		TRACE("Request: IQueryAssociations");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	/** Create a data object for the selected items. */
@@ -273,6 +279,7 @@ protected:
 	{
 		TRACE("Request: IDataObject");
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+		return NULL;
 	}
 
 	/**

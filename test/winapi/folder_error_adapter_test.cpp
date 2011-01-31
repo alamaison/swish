@@ -67,6 +67,7 @@ namespace {
 				BOOST_THROW_EXCEPTION(std::exception("Test error message"));
 			else
 				BOOST_THROW_EXCEPTION(com_error("Wibble", E_NOTIMPL));
+			return NULL;
 		}
 		
 		void bind_to_object(

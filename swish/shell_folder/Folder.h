@@ -589,6 +589,7 @@ public: // IShellFolder2 methods
 	GUID get_default_search_guid()
 	{
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
+		return GUID();
 	}
 
 	/**
@@ -601,6 +602,7 @@ public: // IShellFolder2 methods
 	IEnumExtraSearch* enum_searches()
 	{
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
+		return NULL;
 	}
 
 	/**

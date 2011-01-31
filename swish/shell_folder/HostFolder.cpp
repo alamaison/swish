@@ -303,6 +303,7 @@ PITEMID_CHILD CHostFolder::set_name_of(
 	SHGDNF /*flags*/)
 {
 	BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
+	return NULL;
 }
 
 /**

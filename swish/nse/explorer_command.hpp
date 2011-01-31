@@ -283,6 +283,7 @@ private:
 	comet::com_ptr<IEnumExplorerCommand> subcommands() const
 	{
 		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
+		return NULL;
 	}
 
 	/**
