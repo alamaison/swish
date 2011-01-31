@@ -80,7 +80,7 @@ del WTL81_9127.zip
 
 echo.
 echo ===- Downloading comet ...
-%WGET% "http://bitbucket.org/alamaison/swish_comet/get/bd51035cab59.zip" || (
+%WGET% --no-check-certificate "http://bitbucket.org/alamaison/swish_comet/get/bd51035cab59.zip" || (
 	echo ===- Error while trying to download comet. & goto error)
 %SEVENZ% x bd51035cab59.zip -aoa || (
 	echo ===- Error while trying to extract comet. & goto error)
