@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish 0.3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-09 15:40-0000\n"
+"POT-Creation-Date: 2011-01-28 15:04-0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Alexey Khromov <zxalexis@gmail.com>\n"
 "Language-Team: zxalexis <zxalexis@gmail.com>\n"
@@ -20,21 +20,21 @@ msgstr ""
 #: ../../swish/drop_target/DropTargetErrorUI.cpp:122
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:122
 msgid "An error occurred while transferring files:"
-msgstr ""
+msgstr "Возникла ошибка передачи файлов:"
 
-#: ../../swish/drop_target/DropUI.cpp:344
+#: ../../swish/drop_target/DropUI.cpp:349
 msgid "This folder already contains a file named '{1}'."
 msgstr "Каталог уже содержит файл с именем '{1}'"
 
-#: ../../swish/drop_target/DropUI.cpp:347
+#: ../../swish/drop_target/DropUI.cpp:352
 msgid "Would you like to replace it?"
-msgstr ""
+msgstr "Вы хотите заменить его?"
 
-#: ../../swish/drop_target/DropUI.cpp:355
+#: ../../swish/drop_target/DropUI.cpp:360
 msgid "Confirm File Replace"
-msgstr ""
+msgstr "Подтверждение замены файла"
 
-#: ../../swish/drop_target/DropUI.cpp:394
+#: ../../swish/drop_target/DropUI.cpp:399
 msgctxt "Progress"
 msgid "Copying..."
 msgstr "Копирую..."
@@ -89,7 +89,7 @@ msgid "Example: /home/yourusername"
 msgstr "Пример: /home/вашлогин"
 
 #: ../../swish/forms/add_host.cpp:185
-#: ../../swish/forms/password.cpp:70
+#: ../../swish/forms/password.cpp:68
 msgid "Cancel"
 msgstr "Отмена"
 
@@ -121,11 +121,11 @@ msgstr "Соединение с таким именем уже существу�
 msgid "Complete all fields."
 msgstr "Заполните все поля."
 
-#: ../../swish/forms/password.cpp:59
+#: ../../swish/forms/password.cpp:57
 msgid "Password"
 msgstr "Пароль"
 
-#: ../../swish/forms/password.cpp:66
+#: ../../swish/forms/password.cpp:64
 msgid "OK"
 msgstr "ОК"
 
@@ -202,18 +202,67 @@ msgstr "ID владельца"
 #: ../../swish/remote_folder/columns.cpp:108
 msgctxt "Property"
 msgid "Group ID"
-msgstr "Username"
+msgstr "ID группы"
+
+#: ../../swish/shell_folder/announce_error.cpp:129
+msgid "Show &details (which may not be in your language)"
+msgstr "Показать &детали (могут быть не на вашем языке)"
+
+#: ../../swish/shell_folder/announce_error.cpp:130
+msgid "Hide &details"
+msgstr "Спрятать &детали"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
 msgstr "Ввод с клавиатуры"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:195
+#: ../../swish/shell_folder/RemoteFolder.cpp:121
+msgid "Unable to access the directory"
+msgstr "Ошибка доступа к каталогу"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:122
+#: ../../swish/shell_folder/RemoteFolder.cpp:312
+#: ../../swish/shell_folder/RemoteFolder.cpp:572
+#: ../../swish/shell_folder/RemoteFolder.cpp:598
+#: ../../swish/shell_folder/RemoteFolder.cpp:742
+#: ../../swish/shell_folder/commands/remote/remote.cpp:285
+msgid "You might not have permission."
+msgstr "У вас не хватает прав."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:194
+msgid "Path not recognised"
+msgstr "Путь не опознан"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:195
+msgid "Check that the path was entered correctly."
+msgstr "Проверьте, чтобы путь был введен правильно."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:311
+msgid "Unable to rename the item"
+msgstr "Невозможно переименовать объект"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:570
+msgid "Unable to access the item"
+msgstr "Ошибка доступа к объекту"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:571
+msgid "Unable to access the items"
+msgstr "Ошибка доступа к объектам"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:597
+msgid "Unable to access the folder"
+msgstr "Ошибка доступа к каталогу"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:741
+msgid "Unable to delete the item"
+msgstr "Ошибка удаления объекта"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:203
 #, boost-format
 msgid "The folder already contains a file named '%1%'"
 msgstr "Каталог уже содержит файл с именем '%1%'"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:200
+#: ../../swish/shell_folder/UserInteraction.cpp:208
 #, boost-format
 msgid ""
 "Would you like to replace the existing file\n"
@@ -232,28 +281,28 @@ msgstr ""
 "\n"
 "\t%2%"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:204
+#: ../../swish/shell_folder/UserInteraction.cpp:212
 msgid "File already exists"
 msgstr "Файл уже существует"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:249
+#: ../../swish/shell_folder/UserInteraction.cpp:247
 msgid "Mismatched host-key"
 msgstr "Не совпадает ключ хоста"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:250
+#: ../../swish/shell_folder/UserInteraction.cpp:248
 msgid "WARNING: the SSH host-key has changed!"
 msgstr "ВНИМАНИЕ: ключ SSH сервера изменился!"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:256
+#: ../../swish/shell_folder/UserInteraction.cpp:254
 #, boost-format
 msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
 msgstr "Ключ SSH хоста '%1%' не совпадает с известным ключем от этого сервера.  Это может означать присутствие третьей стороны в канале передачи данных или смену ключа администратором системы."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:263
+#: ../../swish/shell_folder/UserInteraction.cpp:261
 msgid "It is important to check this is the right key fingerprint:"
 msgstr "Важно проверить отпечаток ключа:"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:274
+#: ../../swish/shell_folder/UserInteraction.cpp:270
 msgid ""
 "I trust this key: &update and connect\n"
 "You won't have to verify this key again unless it changes"
@@ -261,7 +310,7 @@ msgstr ""
 "Я доверяю этому ключу: &Обновить и соединить\n"
 "Вам не надо будет проверять этот ключ, пока он не сменится"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:279
+#: ../../swish/shell_folder/UserInteraction.cpp:275
 msgid ""
 "I trust this key: &just connect\n"
 "You will be warned about this key again next time you connect"
@@ -269,8 +318,8 @@ msgstr ""
 "Я доверяю этому ключу: &Просто соединить\n"
 "В следующий раз вы будете снова предупреждены о ключе"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:285
-#: ../../swish/shell_folder/UserInteraction.cpp:357
+#: ../../swish/shell_folder/UserInteraction.cpp:281
+#: ../../swish/shell_folder/UserInteraction.cpp:322
 msgid ""
 "&Cancel\n"
 "Choose this option unless you are sure the key is correct"
@@ -278,37 +327,24 @@ msgstr ""
 "О&тмена\n"
 "Выбирайте эту опцию, пока Вы не уверены в ключе сервера"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:295
-msgid "To update the known key for this host click Yes."
-msgstr "Чтобы обновить известный ключ хоста, нажмите Да."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:297
-msgid "To connect to the server without updating the key click No."
-msgstr "Чтобы соединиться с сервером без обновления ключа нажмите Нет."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:299
-#: ../../swish/shell_folder/UserInteraction.cpp:371
-msgid "Click Cancel unless you are sure the key is correct."
-msgstr "Нажмите Отмена, пока вы не будете уверены в ключе."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:324
+#: ../../swish/shell_folder/UserInteraction.cpp:291
 msgid "Unknown host-key"
 msgstr "Неизвестный ключ хоста"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:330
+#: ../../swish/shell_folder/UserInteraction.cpp:297
 #, boost-format
 msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
 msgstr "Сервер  '%1%' идентифицировал себя с SSH хост-ключем с отпечатком:"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:334
+#: ../../swish/shell_folder/UserInteraction.cpp:301
 msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
 msgstr "Если вы ожидаете не этого ключа, третья сторона может присутствовать в канале передачи данных."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:339
+#: ../../swish/shell_folder/UserInteraction.cpp:304
 msgid "Verify unknown SSH host-key"
 msgstr "Проверьте неизвестный SSH хост-ключ"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:346
+#: ../../swish/shell_folder/UserInteraction.cpp:311
 msgid ""
 "I trust this key: &store and connect\n"
 "You won't have to verify this key again unless it changes"
@@ -316,21 +352,13 @@ msgstr ""
 "Я доверяю этому ключу: &Сохранить и соединить\n"
 "Вам не надо будет проверять этот ключ, пока он не сменится"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:351
+#: ../../swish/shell_folder/UserInteraction.cpp:316
 msgid ""
 "I trust this key: &just connect\n"
 "You will be asked to verify the key again next time you connect"
 msgstr ""
 "Я доверяю этому ключу: &Просто соединить\n"
 "В следующий раз вы будете снова предупреждены о ключе"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:367
-msgid "To store this as the known key for this server click Yes."
-msgstr "Чтобы сохранить этот ключ в списке известных, нажмите Да."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:369
-msgid "To connect to the server without storing the key click No."
-msgstr "Чтобы соединиться с сервером, не сохраняя ключ, нажмите Нет."
 
 #: ../../swish/shell_folder/commands/host/host.cpp:109
 msgid "&Add SFTP Connection"
@@ -366,9 +394,49 @@ msgstr "Удалить соединение"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:199
 msgid "SFTP Tasks"
-msgstr ""
+msgstr "Задачи SFTP"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:212
 msgid "These tasks help you manage Swish SFTP connections."
-msgstr ""
+msgstr "Эти задачи управляют соединениями Swish SFTP"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:209
+msgid "New &folder"
+msgstr "&Новый каталог"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:210
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Создает новый чистый каталог в текущем каталоге."
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:212
+msgid "Make a new folder"
+msgstr "Создание нового каталога"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:251
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Новый каталог"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:284
+msgid "Could not create a new folder"
+msgstr "Ошибка создания каталога"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:312
+msgid "File and Folder Tasks"
+msgstr "Задачи файлов и папок"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:324
+msgid "These tasks help you manage your remote files."
+msgstr "Эти задачи управляют вашими удаленными файлами."
+
+#~ msgid "To update the known key for this host click Yes."
+#~ msgstr "Чтобы обновить известный ключ хоста, нажмите Да."
+#~ msgid "To connect to the server without updating the key click No."
+#~ msgstr "Чтобы соединиться с сервером без обновления ключа нажмите Нет."
+#~ msgid "Click Cancel unless you are sure the key is correct."
+#~ msgstr "Нажмите Отмена, пока вы не будете уверены в ключе."
+#~ msgid "To store this as the known key for this server click Yes."
+#~ msgstr "Чтобы сохранить этот ключ в списке известных, нажмите Да."
+#~ msgid "To connect to the server without storing the key click No."
+#~ msgstr "Чтобы соединиться с сервером, не сохраняя ключ, нажмите Нет."
 
