@@ -46,7 +46,7 @@
 				AdditionalOptions=" /Zm1000"
 				Optimization="0"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories=".;&quot;C:\Users\awl03\Documents\Visual Studio 2005\Projects\swish_trunk\thirdparty\boost&quot;"
+				AdditionalIncludeDirectories="."
 				PreprocessorDefinitions="_DEBUG;BOOST_LOCALE_NO_STD_BACKEND;BOOST_LOCALE_NO_POSIX_BACKEND;BOOST_ALL_NO_LIB;BOOST_LOCALE_NO_ICONV;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
