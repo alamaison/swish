@@ -16,6 +16,6 @@
 	/>
 	<Tool
 		Name="VCMIDLTool"
-		ValidateParameters="false"
+		GenerateStublessProxies="true"
 	/>
 </VisualStudioPropertySheet>

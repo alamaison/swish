@@ -120,6 +120,7 @@ namespace { // private
 }
 
 namespace swish {
+namespace host_folder {
 namespace host_management {
 
 /**
@@ -227,4 +228,4 @@ bool ConnectionExists(wstring label)
 
 }
 
-}} // namespace swish::host_management
+}}} // namespace swish::host_folder::host_management

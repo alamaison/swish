@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include "add_host.hpp"
 
 #include "swish/remotelimits.h"
-#include "swish/shell_folder/host_management.hpp" // ConnectionExists
+#include "swish/host_folder/host_management.hpp" // ConnectionExists
 
 #include <ezel/controls/button.hpp> // button
 #include <ezel/controls/edit.hpp> // edit
@@ -48,7 +48,7 @@
 #include <exception> // exception
 #include <string>
 
-using swish::host_management::ConnectionExists;
+using swish::host_folder::host_management::ConnectionExists;
 
 using winapi::module_handle;
 using ezel::form;

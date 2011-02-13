@@ -4,4 +4,27 @@
 	Version="8.00"
 	Name="swish-Release"
 	>
+	<Tool
+		Name="VCCLCompilerTool"
+		Optimization="2"
+		PreprocessorDefinitions="_NDEBUG;"
+		BasicRuntimeChecks="0"
+		RuntimeLibrary="2"
+		DebugInformationFormat="3"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		LinkIncremental="1"
+		GenerateDebugInformation="true"
+		OptimizeReferences="2"
+		EnableCOMDATFolding="2"
+	/>
+	<Tool
+		Name="VCMIDLTool"
+		PreprocessorDefinitions="NDEBUG"
+	/>
+	<Tool
+		Name="VCResourceCompilerTool"
+		PreprocessorDefinitions="NDEBUG"
+	/>
 </VisualStudioPropertySheet>

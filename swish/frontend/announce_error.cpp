@@ -26,7 +26,7 @@
 
 #include "announce_error.hpp"
 
-#include "swish/shell_folder/bind_best_taskdialog.hpp" // best_taskdialog
+#include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 
@@ -38,7 +38,7 @@
 #include <exception>
 #include <sstream> // wstringstream
 
-using swish::shell_folder::best_taskdialog;
+using swish::frontend::best_taskdialog;
 
 using namespace winapi::gui::task_dialog;
 
@@ -115,7 +115,7 @@ namespace {
 }
 
 namespace swish {
-namespace shell_folder {
+namespace frontend {
 
 void announce_error(
 	HWND hwnd, const wstring& problem, const wstring& suggested_resolution,
@@ -189,4 +189,4 @@ void rethrow_and_announce(
 #endif
 }
 
-}} // namespace swish::shell_folder
+}} // namespace swish::frontend

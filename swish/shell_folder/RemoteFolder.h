@@ -22,14 +22,11 @@
 
 #include "SwishFolder.hpp"      // Superclass
 
-#include <swish/remote_folder/columns.hpp> // Column
-
-#include "resource.h"           // main symbols
-#include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
-#include "RemotePidl.h"         // RemoteItemId handling
-#include "Pool.h"               // Access to SFTP global session pool
 #include "swish/CoFactory.hpp"  // CComObject factory
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/remote_folder/columns.hpp" // Column
+#include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
+#include "swish/shell_folder/RemotePidl.h" // RemoteItemId handling
 
 #include "swish/atl.hpp"        // Common ATL setup
 
@@ -132,7 +129,7 @@ private:
 
 	typedef std::vector<CRemoteItem> RemotePidls;
 
-	ATL::CComPtr<ISftpProvider> _CreateConnectionForFolder(
+	comet::com_ptr<ISftpProvider> _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);
 	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
 		throw(...);

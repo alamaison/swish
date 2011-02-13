@@ -1,11 +1,11 @@
 /**
     @file
 
-    Management functions for host entries saved in the registry.
+    Reporting exceptions to the user.
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,24 +24,25 @@
     @endif
 */
 
+#ifndef SWISH_FRONTEND_ANNOUNCE_ERROR_HPP
+#define SWISH_FRONTEND_ANNOUNCE_ERROR_HPP
 #pragma once
 
-#include "HostPidl.h"
-
 #include <string>
-#include <vector>
+
+#include <WinDef.h> // HWND
 
 namespace swish {
-namespace host_management {
+namespace frontend {
 
-std::vector<CHostItem> LoadConnectionsFromRegistry();
+void announce_error(
+	HWND hwnd, const std::wstring& problem,
+	const std::wstring& suggested_resolution, const std::wstring& details);
 
-void AddConnectionToRegistry(
-	std::wstring label, std::wstring host, int port, 
-	std::wstring username, std::wstring path);
+__declspec(noreturn) void rethrow_and_announce(
+	HWND hwnd, const std::wstring& title,
+	const std::wstring& suggested_resolution);
 
-void RemoveConnectionFromRegistry(std::wstring label);
+}} // namespace swish::frontend
 
-bool ConnectionExists(std::wstring label);
-
-}} // namespace swish::host_management
+#endif

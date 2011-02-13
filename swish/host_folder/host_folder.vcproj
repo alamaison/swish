@@ -41,12 +41,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="4"
+				PreprocessorDefinitions="WIN32;_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -100,12 +95,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="WIN32;_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -159,9 +149,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="WIN32;_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -216,9 +204,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="WIN32;_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -254,6 +240,10 @@
 			ReferencedProjectIdentifier="{23FF8881-F180-4389-A903-DFAB308CBF08}"
 			RelativePathToProject=".\swish\nse\nse.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{58F5F798-25C4-4769-BF8C-8646BA44C349}"
+			RelativePathToProject=".\swish\frontend\frontend.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -263,6 +253,14 @@
 			>
 			<File
 				RelativePath=".\columns.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\host_management.cpp"
 				>
 			</File>
 			<File
@@ -305,6 +303,10 @@
 				RelativePath=".\properties.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ViewCallback.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -316,7 +318,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\commands.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\host_management.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\properties.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ViewCallback.hpp"
 				>
 			</File>
 		</Filter>

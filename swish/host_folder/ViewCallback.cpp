@@ -1,7 +1,7 @@
 /**
     @file
 
-    Handler for Shell Folder View's interaction with Explorer.
+    Handler for host folder's interaction with Explorer Shell Folder View.
 
     @if license
 
@@ -25,35 +25,31 @@
     @endif
 */
 
-#include "ExplorerCallback.hpp"
+#include "ViewCallback.hpp"
 
-#include "swish/nse/task_pane.hpp" // make_ui_command
-#include "swish/shell_folder/commands/Command.hpp" // MenuCommandTitleAdapter
-#include "swish/shell_folder/commands/host/host.hpp" // host commands
+#include "swish/host_folder/commands.hpp" // host commands
+#include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/error.hpp> // last_error
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
 #include <winapi/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
-#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 #include <stdexcept> // logic_error
 #include <string>
 
+using swish::host_folder::commands::Add;
+using swish::host_folder::commands::Remove;
+using swish::host_folder::commands::host_folder_task_pane_tasks;
+using swish::host_folder::commands::host_folder_task_pane_titles;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUIElement;
-using swish::shell_folder::commands::host::Add;
-using swish::shell_folder::commands::host::Remove;
-using swish::shell_folder::commands::host::host_folder_task_pane_tasks;
-using swish::shell_folder::commands::host::host_folder_task_pane_titles;
-using swish::shell_folder::commands::MenuCommandTitleAdapter;
+using swish::nse::MenuCommandTitleAdapter;
 
-using comet::com_error;
 using comet::com_ptr;
 
 using winapi::last_error;
@@ -69,17 +65,16 @@ using boost::errinfo_api_function;
 using std::pair;
 using std::wstring;
 
+template<> struct comet::comtype<IDataObject>
+{
+	static const IID& uuid() throw() { return IID_IDataObject; }
+	typedef IUnknown base;
+};
+
 namespace swish {
-namespace shell_folder {
+namespace host_folder {
 
 namespace {
-
-	/// @name  Undocumented messages
-	// @{
-	const UINT SFVM_SELECTIONCHANGED = 8;
-	const UINT SFVM_GET_WEBVIEW_CONTENT = 83;
-	const UINT SFVM_GET_WEBVIEW_TASKS = 84;
-	// @}
 
 	// Menu command ID offsets for Explorer Tools menu
 	enum MENUOFFSET
@@ -126,8 +121,6 @@ namespace {
 		}
 	}
 
-
-	
 	/**
 	 * Return a DataObject representing the items currently selected.
 	 *
@@ -168,7 +161,7 @@ namespace {
  * @param folder_pidl  Absolute PIDL to the folder for whom we are
  *                     creating this callback object.
  */
-CExplorerCallback::CExplorerCallback(const apidl_t& folder_pidl) :
+CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
 	m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_tools_menu(NULL),
 	m_first_command_id(0) {}
 
@@ -177,25 +170,24 @@ CExplorerCallback::CExplorerCallback(const apidl_t& folder_pidl) :
  *
  * The shell is notifying us of the folder view's window handle.
  */
-bool CExplorerCallback::on_window_created(HWND hwnd_view)
+bool CViewCallback::on_window_created(HWND hwnd_view)
 {
 	m_hwnd_view = hwnd_view;
 	return true;
 }
 
 /**
- * Which events should the shell monitor for changes?
+ * Tell the shell that we might notify it of update events that apply to this
+ * folder (specified using our absolute PIDL).
  *
  * We are notified via SFVM_FSNOTIFY if any events indicated here occurr.
  *
  * @TODO: It's possible that @a events already has events set in its bitmask
  *        so maybe we should 'or' our extra events with it.
  */
-bool CExplorerCallback::on_get_notify(
+bool CViewCallback::on_get_notify(
 	PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
 {
-	// Tell the shell that we might notify it of update events that
-	// apply to this folder (specified using our absolute PIDL)
 	events = SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
 		SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
 	pidl_monitor = m_folder_pidl.get(); // Owned by us
@@ -203,25 +195,16 @@ bool CExplorerCallback::on_get_notify(
 }
 
 /**
- * An event has occurred affecting one of our items.
- *
- * Returning false prevents the default view from refreshing to reflect the
- * change.
+ * The shell is telling us that an event (probably a SHChangeNotify of some
+ * sort) has affected one of our item.  Just nod. If we don't it doesn't work.
  */
-bool CExplorerCallback::on_fs_notify(
+bool CViewCallback::on_fs_notify(
 	PCIDLIST_ABSOLUTE /*pidl*/, LONG /*event*/)
 {
-	// The shell is telling us that an event (probably a SHChangeNotify
-	// of some sort) has affected one of our item.  Just nod.
-	// If we don't it doesn't work.
 	return true;
 }
 
-/**
- * The DEFVIEW is asking us if we want to merge any items into
- * the menu it has created before it adds it to the Explorer window.
- */
-bool CExplorerCallback::on_merge_menu(QCMINFO& menu_info)
+bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
 {
 	assert(menu_info.idCmdFirst >= FCIDM_SHVIEWFIRST);
 	assert(menu_info.idCmdLast <= FCIDM_SHVIEWLAST);
@@ -263,34 +246,21 @@ bool CExplorerCallback::on_merge_menu(QCMINFO& menu_info)
 	// in SFVM_UNMERGEMENU but this seems to happen automatically
 }
 
-bool CExplorerCallback::on_selection_changed(
+bool CViewCallback::on_selection_changed(
 	SFV_SELECTINFO& /*selection_info*/)
 {
 	update_menus();
 	return true;
 }
 
-/**
- * The view is about to display a popup menu.
- *
- * This gives us the chance to modify the menu before it is displayed.
- *
- * @param first_command_id  First ID reserved for client commands.
- * @param menu_index        Menu's index.
- * @param menu              Menu's handle.
- */
-bool CExplorerCallback::on_init_menu_popup(
+bool CViewCallback::on_init_menu_popup(
 	UINT /*first_command_id*/, int /*menu_index*/, HMENU /*menu*/)
 {
 	update_menus();
 	return true;
 }
 
-/**
- * DEFVIEW is telling us that a menu or toolbar item has been invoked 
- * in the Explorer window and is giving us a chance to react to it.
- */
-bool CExplorerCallback::on_invoke_command(UINT command_id)
+bool CViewCallback::on_invoke_command(UINT command_id)
 {
 	if (command_id == MENUIDOFFSET_ADD)
 	{
@@ -311,10 +281,7 @@ bool CExplorerCallback::on_invoke_command(UINT command_id)
 #pragma warning(push)
 #pragma warning(disable:4996) // std::copy ... may be unsafe
 
-/**
- * Specify help text for menu or toolbar items.
- */
-bool CExplorerCallback::on_get_help_text(
+bool CViewCallback::on_get_help_text(
 	UINT command_id, UINT buffer_size, LPTSTR buffer)
 {
 	wstring help_text;
@@ -340,14 +307,7 @@ bool CExplorerCallback::on_get_help_text(
 
 #pragma warning(pop)
 
-/**
- * The shell view is requesting our expando title info.
- * Undocumented by Microsoft.
- *
- * @see http://www.codeproject.com/KB/shell/foldertasks.aspx
- * @see http://www.eggheadcafe.com/forumarchives/platformsdkshell/Feb2006/post25949644.asp
- */
-bool CExplorerCallback::on_get_webview_content(
+bool CViewCallback::on_get_webview_content(
 	SFV_WEBVIEW_CONTENT_DATA& content_out)
 {
 	assert(content_out.pFolderTasksExpando == NULL);
@@ -367,14 +327,7 @@ bool CExplorerCallback::on_get_webview_content(
 	return true;
 }
 
-/**
- * The shell view is requesting our expando members.
- * Undocumented by Microsoft.
- *
- * @see http://www.codeproject.com/KB/shell/foldertasks.aspx
- * @see http://www.eggheadcafe.com/forumarchives/platformsdkshell/Feb2006/post25949644.asp
- */
-bool CExplorerCallback::on_get_webview_tasks(
+bool CViewCallback::on_get_webview_tasks(
 	SFV_WEBVIEW_TASKSECTION_DATA& tasks_out)
 {
 	//for some reason this fails on 64-bit
@@ -397,112 +350,9 @@ bool CExplorerCallback::on_get_webview_tasks(
 }
 
 /**
- * Callback method for shell DEFVIEW to inform HostFolder as things happen.
- *
- * This is the way in which the default @c IShellView object that we created
- * using @c SHCreateShellFolderView allows us to still have a say in what is 
- * going on.  As things happen in the view, messages are sent to this
- * callback allowing us to react to them.
- *
- * @param message  The @c SFVM_* message type that the view is sending us.
- * @param wparam   One of the possible parameters (varies with message type).
- * @param lparam   Another possible parameter (varies with message type).
- *
- * @returns @c S_OK if we handled the message or @c E_NOTIMPL if we did not.
- */
-STDMETHODIMP CExplorerCallback::MessageSFVCB(
-	UINT message, WPARAM wparam, LPARAM lparam)
-{
-	bool handled = false;
-	try
-	{
-		switch (message)
-		{
-		case SFVM_WINDOWCREATED:
-			handled = on_window_created(reinterpret_cast<HWND>(wparam));
-			break;
-
-		case SFVM_GETNOTIFY:
-			if (wparam == 0 || lparam == 0)
-				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-			handled = on_get_notify(
-				*reinterpret_cast<PCIDLIST_ABSOLUTE*>(wparam),
-				*reinterpret_cast<LONG*>(lparam));
-			break;
-
-		case SFVM_FSNOTIFY:
-			handled = on_fs_notify(
-				reinterpret_cast<PCIDLIST_ABSOLUTE>(wparam), lparam);
-			break;
-
-		case SFVM_MERGEMENU:
-			if (lparam == 0)
-				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-			handled = on_merge_menu(*reinterpret_cast<QCMINFO*>(lparam));
-			break;
-		  
-		case SFVM_SELECTIONCHANGED:
-			// wparam's meaning is unknown
-			if (lparam == 0)
-				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-			handled = on_selection_changed(
-				*reinterpret_cast<SFV_SELECTINFO*>(lparam));
-			break;
-
-		case SFVM_INITMENUPOPUP:
-			handled = on_init_menu_popup(
-				LOWORD(wparam), HIWORD(wparam),
-				reinterpret_cast<HMENU>(lparam));
-			break;
-
-		case SFVM_INVOKECOMMAND:
-			handled = on_invoke_command(wparam);
-			break;
-
-		case SFVM_GETHELPTEXT:
-			handled = on_get_help_text(
-				LOWORD(wparam), HIWORD(wparam), 
-				reinterpret_cast<LPTSTR>(lparam));
-			break;
-
-		case SFVM_GET_WEBVIEW_CONTENT:
-			if (lparam == 0)
-				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-			handled = on_get_webview_content(
-				*reinterpret_cast<SFV_WEBVIEW_CONTENT_DATA*>(lparam));
-			break;
-
-		case SFVM_GET_WEBVIEW_TASKS:
-			if (lparam == 0)
-				BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-			handled = on_get_webview_tasks(
-				*reinterpret_cast<SFV_WEBVIEW_TASKSECTION_DATA*>(lparam));
-			break;
-
-		default:
-			handled = false;
-			break;
-		}
-
-		if (!handled)
-		{
-			// special treatment fo FSNOTIFY because it uses S_FALSE to
-			// suppress default processing.
-			if (message == SFVM_FSNOTIFY)
-				BOOST_THROW_EXCEPTION(com_error(S_FALSE));
-			else
-				BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
-		}
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-	return S_OK;
-}
-
-/**
  * Items currently selected in the folder view.
  */
-com_ptr<IDataObject> CExplorerCallback::selection()
+com_ptr<IDataObject> CViewCallback::selection()
 {
 	com_ptr<IShellBrowser> browser = shell_browser(ole_site());
 
@@ -512,7 +362,7 @@ com_ptr<IDataObject> CExplorerCallback::selection()
 /**
  * Update the menus to match the current selection.
  */
-void CExplorerCallback::update_menus()
+void CViewCallback::update_menus()
 {
 	if (!m_tools_menu)
 		BOOST_THROW_EXCEPTION(std::logic_error("Missing menu"));
@@ -537,4 +387,4 @@ void CExplorerCallback::update_menus()
 	assert(rc > -1);
 }
 
-}} // namespace swish::shell_folder
+}} // namespace swish::host_folder

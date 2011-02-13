@@ -26,7 +26,7 @@
 
 #include "swish/atl.hpp"
 
-#include "swish/shell_folder/Pool.h"  // Test subject
+#include "swish/remote_folder/connection.hpp"  // Test subject
 #include "swish/utils.hpp"
 
 #include "test/common_boost/helpers.hpp"
@@ -48,6 +48,7 @@
 #include <vector>
 #include <algorithm>
 
+using swish::remote_folder::CPool;
 using swish::utils::Utf8StringToWideString;
 
 using test::ComFixture;

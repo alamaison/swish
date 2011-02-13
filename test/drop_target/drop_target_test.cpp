@@ -48,6 +48,7 @@ using swish::drop_target::copy_data_to_provider;
 using swish::drop_target::Progress;
 using swish::shell_folder::data_object_for_files;
 
+using test::ComFixture;
 using test::data_object_utils::data_object_for_zipfile;
 using test::data_object_utils::create_test_zip_file;
 using test::ProviderFixture;
@@ -180,7 +181,7 @@ namespace { // private
 		bool can_overwrite(const wpath&) { return true; }
 	};
 
-	class DropTargetFixture : public ProviderFixture
+	class DropTargetFixture : public ProviderFixture, public ComFixture
 	{
 	public:
 		comet::com_ptr<IDropTarget> create_drop_target() 
@@ -209,7 +210,7 @@ BOOST_AUTO_TEST_CASE( create )
 }
 
 #pragma region DataObject copy tests
-BOOST_FIXTURE_TEST_SUITE(drop_target_copy_tests, ProviderFixture)
+BOOST_FIXTURE_TEST_SUITE(drop_target_copy_tests, DropTargetFixture)
 
 /**
  * Copy single regular file.

@@ -25,11 +25,12 @@
     @endif
 */
 
-#include "Pool.h"
+#include "connection.hpp"
 
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/shell_folder/HostPidl.h" // CHostItemListHandle
 #include "swish/remotelimits.h" // Text field limits
 #include "swish/utils.hpp" // running_object_table
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <winapi/com/object.hpp> // object_from_moniker_name
 
@@ -43,6 +44,7 @@
 
 using winapi::com::create_bind_context;
 using winapi::com::object_from_moniker_name;
+using winapi::shell::pidl::apidl_t;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -60,6 +62,9 @@ template<> struct comet::comtype<IBindStatusCallback>
 	static const IID& uuid() throw() { return IID_IBindStatusCallback; }
 	typedef IUnknown base;
 };
+
+namespace swish {
+namespace remote_folder {
 
 namespace {
 
@@ -136,6 +141,9 @@ public:
  * connection with the given parameters.  In the future this may be extended to
  * give a choice of the type of connection to make.
  *
+ * @param hwnd  Isn't used but could be in future to correctly parent any
+ *              elevation window.
+ *
  * @returns pointer to the session (ISftpProvider).
  */
 com_ptr<ISftpProvider> CPool::GetSession(
@@ -167,3 +175,43 @@ com_ptr<ISftpProvider> CPool::GetSession(
 	return object_from_moniker_name<ISftpProvider>(
 		display_name, bind_context);
 }
+
+namespace {
+
+	void params_from_pidl(
+		const apidl_t& pidl, wstring& user, wstring& host, int& port)
+	{
+		// Find HOSTPIDL part of this folder's absolute pidl to extract server info
+		CHostItemListHandle pidlHost(
+			CHostItemListHandle(pidl.get()).FindHostPidl());
+		assert(pidlHost.IsValid());
+
+		user = pidlHost.GetUser();
+		host = pidlHost.GetHost();
+		port = pidlHost.GetPort();
+		assert(!user.empty());
+		assert(!host.empty());
+	}
+
+	/**
+	 * Gets connection for given SFTP session parameters.
+	 */
+	com_ptr<ISftpProvider> connection(
+		const wstring& host, const wstring& user, int port, HWND hwnd)
+	{
+		CPool pool;
+		return pool.GetSession(host, user, port, hwnd);
+	}
+}
+
+com_ptr<ISftpProvider> connection_from_pidl(const apidl_t& pidl, HWND hwnd)
+{
+	// Extract connection info from PIDL
+	wstring user, host, path;
+	int port;
+	params_from_pidl(pidl, user, host, port);
+
+	return connection(host, user, port, hwnd);
+}
+
+}} // namespace swish::remote_folder

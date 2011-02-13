@@ -24,33 +24,16 @@
     @endif
 */
 
-#ifndef SWISH_SHELL_FOLDER_BIND_BEST_TASKDIALOG
-#define SWISH_SHELL_FOLDER_BIND_BEST_TASKDIALOG
+#ifndef SWISH_FRONTEND_BIND_BEST_TASKDIALOG
+#define SWISH_FRONTEND_BIND_BEST_TASKDIALOG
 #pragma once
 
-#include <winapi/dynamic_link.hpp> // proc_address
-#include <winapi/gui/task_dialog.hpp> // tdi_function
-
-#include <TaskDialog.h> // Task98DialogIndirect
-
-#include <exception>
+#include <winapi/gui/task_dialog.hpp> // tdi_function, tdi_implementation
 
 namespace swish {
-namespace shell_folder {
+namespace frontend {
 
-inline winapi::gui::task_dialog::tdi_function bind_best_taskdialog()
-{
-	try
-	{
-		return winapi::proc_address<
-			HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
-				"comctl32.dll", "TaskDialogIndirect");
-	}
-	catch (const std::exception&)
-	{
-		return ::Task98DialogIndirect;
-	}
-}
+winapi::gui::task_dialog::tdi_function bind_best_taskdialog();
 
 class best_taskdialog : public winapi::gui::task_dialog::tdi_implementation
 {
@@ -60,6 +43,6 @@ public:
 	{}
 };
 
-}} // namespace swish::shell_folder
+}} // namespace swish::frontend
 
 #endif

@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE( create_with_custom_expander )
 		L"Detailed explanation",
 		winapi::gui::task_dialog::expansion_position::default,
 		winapi::gui::task_dialog::initial_expansion_state::default,
-		L"Here be there &dragons", L"See! &Dragons");
+		L"Here be there &dragons with really really really really really long tails", L"See! &Dragons");
 	//td.show();
 }
 

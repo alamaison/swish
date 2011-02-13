@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2011
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,30 +25,24 @@
     @endif
 */
 
+#ifndef SWISH_FRONTEND_USERINTERACTION_HPP
+#define SWISH_FRONTEND_USERINTERACTION_HPP
 #pragma once
 
 #include "swish/interfaces/SftpProvider.h" // ISftpConsumer
 
-#include "swish/atl.hpp"  // Common ATL setup
+#include <comet/server.h> // simple_object
 
-#include "swish/CoFactory.hpp"
+namespace swish {
+namespace frontend {
 
-class ATL_NO_VTABLE CUserInteraction :
-	public ISftpConsumer,
-	public ATL::CComObjectRoot,
-	public swish::CCoFactory<CUserInteraction> // Needs to be public
+class CUserInteraction : public comet::simple_object<ISftpConsumer>
 {
 public:
 
-	BEGIN_COM_MAP(CUserInteraction)
-		COM_INTERFACE_ENTRY(ISftpConsumer)
-	END_COM_MAP()
-
 	typedef ISftpConsumer interface_is;
 
-	CUserInteraction();
-	void SetHWND(__in_opt HWND hwnd);
-	void ClearHWND();
+	CUserInteraction(HWND hwnd);
 
 	/**
 	 * User interaction callbacks.
@@ -89,3 +84,6 @@ private:
 	HWND m_hwnd;      ///< Window to use as parent for user interaction.
 };
 
+}} // namespace swish::frontend
+
+#endif

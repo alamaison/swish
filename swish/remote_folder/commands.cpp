@@ -24,13 +24,14 @@
     @endif
 */
 
-#include "remote.hpp"
+#include "commands.hpp"
 
+#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
-#include "swish/nse/task_pane.hpp" // CUIElementImpl, make_ui_command
+#include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommandWithSite
 #include "swish/shell_folder/RemotePidl.h" // CRemoteItem
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/announce_error.hpp" // rethrow_and_announce
 
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
 #include <winapi/trace.hpp> // trace
@@ -43,7 +44,7 @@
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/locale.hpp> // translate
 #include <boost/foreach.hpp> // BOOST_FOREACH
-#include <boost/format/format_fwd.hpp> // wformat
+#include <boost/format.hpp> // wformat
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/regex.hpp> // wregex, smatch, regex_match
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -54,16 +55,17 @@
 #include <utility> // make_pair
 #include <vector>
 
+using swish::frontend::rethrow_and_announce;
+using swish::frontend::CUserInteraction;
+using swish::nse::Command;
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CExplorerCommandWithSite;
-using swish::nse::CUIElementImpl;
-using swish::nse::CUICommand;
+using swish::nse::CUIElementErrorAdapter;
+using swish::nse::CUICommandWithSite;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
-using swish::shell_folder::commands::Command;
-using swish::shell_folder::commands::WebtaskCommandTitleAdapter;
-using swish::shell_folder::rethrow_and_announce;
+using swish::nse::WebtaskCommandTitleAdapter;
 using swish::SmartListing;
 
 using winapi::shell::pidl::apidl_t;
@@ -79,6 +81,7 @@ using comet::make_smart_enumeration;
 using comet::simple_object;
 using comet::uuid_t;
 
+using boost::function;
 using boost::lexical_cast;
 using boost::locale::translate;
 using boost::make_shared;
@@ -92,14 +95,6 @@ using std::exception;
 using std::make_pair;
 using std::vector;
 using std::wstring;
-
-/*
-template<> struct ::comet::comtype<::IObjectWithSite>
-{
-	static const ::IID& uuid() throw() { return ::IID_IObjectWithSite; }
-	typedef ::IUnknown base;
-};
-*/
 
 namespace {
 
@@ -179,9 +174,8 @@ wstring prefix_if_necessary(
 }
 
 namespace swish {
-namespace shell_folder {
+namespace remote_folder {
 namespace commands {
-namespace remote {
 
 namespace {
 	const uuid_t NEW_FOLDER_COMMAND_ID(L"b816a882-5022-11dc-9153-0090f5284f85");
@@ -192,19 +186,22 @@ namespace {
 	 * Inform shell that something in our folder changed (we don't know
 	 * exactly what the new PIDL is until we reload from the registry, hence
 	 * UPDATEDIR).
+	 *
+	 * We wait for the event to flush because setting the edit text afterwards
+	 * depends on this.
 	 */
 	void notify_shell(const apidl_t folder_pidl)
 	{
 		assert(folder_pidl);
 		::SHChangeNotify(
-			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-			folder_pidl.get(), NULL);
+			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, folder_pidl.get(), NULL);
 	}
 }
 
 NewFolder::NewFolder(
 	const apidl_t& folder_pidl,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) :
+	const function<com_ptr<ISftpProvider>()>& provider,
+	const function<com_ptr<ISftpConsumer>()>& consumer) :
 	Command(
 		translate("New &folder"), NEW_FOLDER_COMMAND_ID,
 		translate("Create a new, empty folder in the folder you have open."),
@@ -244,7 +241,7 @@ const
 			trace("WARNING: couldn't get current IShellView or HWND");
 		}
 
-		CSftpDirectory directory(m_folder_pidl, m_provider, m_consumer);
+		CSftpDirectory directory(m_folder_pidl, m_provider(), m_consumer());
 
 		// The default New Folder name may already exist in the folder. If it
 		// does, we append a number to it to make it unique
@@ -292,8 +289,9 @@ void NewFolder::set_site(com_ptr<IUnknown> ole_site)
 }
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-	const apidl_t& folder_pidl,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer)
+	HWND /*hwnd*/, const apidl_t& folder_pidl,
+	const function<com_ptr<ISftpProvider>()>& provider,
+	const function<com_ptr<ISftpConsumer>()>& consumer)
 {
 	CExplorerCommandProvider::ordered_commands commands;
 	commands.push_back(
@@ -302,7 +300,7 @@ com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
 	return new CExplorerCommandProvider(commands);
 }
 
-class CSftpTasksTitle : public simple_object<CUIElementImpl>
+class CSftpTasksTitle : public simple_object<CUIElementErrorAdapter>
 {
 public:
 
@@ -326,23 +324,37 @@ public:
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
-remote_folder_task_pane_titles()
+remote_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
 {
 	return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
-	const apidl_t& folder_pidl, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer)
+	HWND /*hwnd*/, const apidl_t& folder_pidl,
+	com_ptr<IUnknown> ole_site,
+	const function<com_ptr<ISftpProvider>()>& provider,
+	const function<com_ptr<ISftpConsumer>()>& consumer)
 {
 	typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
 	shared_command_vector commands =
 		make_shared< vector< com_ptr<IUICommand> > >();
 
-	commands->push_back(
-		new CUICommand< WebtaskCommandTitleAdapter<NewFolder> >(
-			folder_pidl, provider, consumer));
+	com_ptr<IUICommand> new_folder =
+		new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
+				folder_pidl, provider, consumer);
+
+	com_ptr<IObjectWithSite> object_with_site = com_cast(new_folder);
+
+	// Explorer doesn't seem to call SetSite on the command object which is odd
+	// because any command that needs to change the view would need it.  We do
+	// it instead.
+	// XXX: We never unset the site.  Explorer normally does if it sets it.
+	//      I don't know if this is a problem.
+	if (object_with_site)
+		object_with_site->SetSite(ole_site.get());
+
+	commands->push_back(new_folder);
 
 	com_ptr<IEnumUICommand> e = 
 		make_smart_enumeration<IEnumUICommand>(commands);
@@ -350,4 +362,4 @@ remote_folder_task_pane_tasks(
 	return make_pair(e, com_ptr<IEnumUICommand>());
 }
 
-}}}} // namespace swish::shell_folder::commands::remote
+}}} // namespace swish::remote_folder::commands

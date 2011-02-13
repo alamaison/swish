@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010
+    Copyright (C) 2007, 2008, 2009, 2010, 2011
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -29,14 +29,14 @@
 
 #include "RemoteFolder.h"
 #include "Registry.h"             // For saved connection details
-#include "host_management.hpp"
 #include "swish/debug.hpp"
-#include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
+#include "swish/host_folder/commands.hpp" // host_folder_commands
+#include "swish/host_folder/host_management.hpp"
+#include "swish/host_folder/properties.hpp" // property_from_pidl
+#include "swish/host_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/windows_api.hpp" // SHBindToParent
-#include "swish/shell_folder/commands/host/host.hpp" // host_folder_commands
-#include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
 #include "swish/trace.hpp" // trace
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
@@ -72,11 +72,11 @@ using boost::shared_ptr;
 using std::vector;
 using std::wstring;
 
-using swish::host_management::LoadConnectionsFromRegistry;
+using swish::host_folder::CViewCallback;
+using swish::host_folder::commands::host_folder_command_provider;
+using swish::host_folder::host_management::LoadConnectionsFromRegistry;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
-using swish::shell_folder::CExplorerCallback;
-using swish::shell_folder::commands::host::host_folder_command_provider;
 using swish::tracing::trace;
 
 using winapi::shell::pidl::cpidl_t;
@@ -568,7 +568,7 @@ CComPtr<IDataObject> CHostFolder::data_object(
  */
 CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return new CExplorerCallback(root_pidl());
+	return new CViewCallback(root_pidl());
 }
 
 

@@ -30,24 +30,25 @@
 #include "SftpDirectory.h"
 #include "SftpDataObject.h"
 #include "IconExtractor.h"
-#include "UserInteraction.h"       // Implementation of ISftpConsumer
 #include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
 #include "swish/debug.hpp"
 #include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
-#include "swish/remote_folder/properties.hpp" // property_from_pidl
+#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
-#include "swish/shell_folder/announce_error.hpp" // rethrow_and_announce
-#include "swish/shell_folder/commands/remote/remote.hpp"
-                                             // remote_folder_command_provider
-#include "swish/shell_folder/ExplorerCallback.hpp" // CExplorerCallback
+#include "swish/remote_folder/commands.hpp" // remote_folder_command_provider
+#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/properties.hpp" // property_from_pidl
+#include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/gui/message_box.hpp> // message_box
 #include <winapi/shell/shell.hpp> // string_to_strret
 
+#include <boost/bind.hpp> // bind
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/locale.hpp> // translate
@@ -57,14 +58,16 @@
 #include <cassert> // assert
 #include <string>
 
-using swish::remote_folder::property_from_pidl;
-using swish::remote_folder::property_key_from_column_index;
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
-using swish::shell_folder::CExplorerCallback;
-using swish::shell_folder::commands::remote::remote_folder_command_provider;
+using swish::frontend::CUserInteraction;
+using swish::frontend::rethrow_and_announce;
+using swish::remote_folder::commands::remote_folder_command_provider;
+using swish::remote_folder::connection_from_pidl;
+using swish::remote_folder::CViewCallback;
+using swish::remote_folder::property_from_pidl;
+using swish::remote_folder::property_key_from_column_index;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::rethrow_and_announce;
 using swish::tracing::trace;
 
 using namespace winapi::gui::message_box;
@@ -79,6 +82,7 @@ using comet::com_error;
 using comet::throw_com_error;
 using comet::variant_t;
 
+using boost::bind;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
@@ -88,6 +92,13 @@ using ATL::CComBSTR;
 using ATL::CString;
 
 using std::wstring;
+
+namespace {
+	com_ptr<ISftpConsumer> consumer(HWND hwnd)
+	{
+		return new CUserInteraction(hwnd);
+	}
+}
 
 /*--------------------------------------------------------------------------*/
 /*      Functions implementing IShellFolder via folder_error_adapter.       */
@@ -447,9 +458,11 @@ variant_t CRemoteFolder::property(const property_key& key, const cpidl_t& pidl)
 CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 {
 	TRACE("Request: IExplorerCommandProvider");
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd).p;
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 	return remote_folder_command_provider(
-		root_pidl(), provider, m_consumer).get();
+		hwnd, root_pidl(),
+		bind(&connection_from_pidl, root_pidl(), hwnd),
+		bind(&consumer, hwnd)).get();
 }
 
 /**
@@ -593,7 +606,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 	{
 		// Create connection for this folder with hwnd for UI
 		CComPtr<ISftpProvider> spProvider =
-			_CreateConnectionForFolder(hwnd);
+			_CreateConnectionForFolder(hwnd).get();
 
 		return CSftpDataObject::Create(
 			cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
@@ -639,7 +652,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
  */
 CComPtr<IShellFolderViewCB> CRemoteFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return new CExplorerCallback(root_pidl());
+	return new CViewCallback(root_pidl());
 }
 
 
@@ -844,10 +857,11 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 		AtlThrow(E_FAIL);
 
 	// Create SFTP connection object for this folder using hwndOwner for UI
-	CComPtr<ISftpProvider> spProvider = _CreateConnectionForFolder( hwnd );
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 
 	// Create instance of our directory handler class
-	CSftpDirectory directory(root_pidl().get(), spProvider.p, m_consumer.get());
+	CSftpDirectory directory(
+		root_pidl().get(), provider.get(), m_consumer.get());
 
 	// Delete each item and notify shell
 	RemotePidls::const_iterator it = vecDeathRow.begin();
@@ -929,42 +943,6 @@ bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
 	return (ret == IDYES);
 }
 
-namespace {
-
-	/**
-	 * Gets connection for given SFTP session parameters.
-	 */
-	CComPtr<ISftpProvider> connection(
-		const wstring& host, const wstring& user, int port, HWND hwnd)
-	{
-		// Get SFTP Provider from session pool
-		CPool pool;
-		CComPtr<ISftpProvider> spProvider = 
-			pool.GetSession(host, user, port, hwnd).get();
-
-		return spProvider;
-	}
-}
-
-namespace {
-
-	void params_from_pidl(
-		apidl_t pidl, wstring& user, wstring& host, int& port)
-	{
-		// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-		CHostItemListHandle pidlHost(
-			CHostItemListHandle(pidl.get()).FindHostPidl());
-		assert(pidlHost.IsValid());
-
-		user = pidlHost.GetUser();
-		host = pidlHost.GetHost();
-		port = pidlHost.GetPort();
-		assert(!user.empty());
-		assert(!host.empty());
-	}
-
-}
-
 /**
  * Creates an SFTP connection.
  *
@@ -979,24 +957,11 @@ namespace {
  *                             as the parent window for any user interaction.
  * @throws ATL exceptions on failure.
  */
-CComPtr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
-	HWND hwndUserInteraction )
+com_ptr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
+	HWND hwndUserInteraction)
 {
 	// Create SFTP Consumer for this HWNDs lifetime
-	CComPtr<CUserInteraction> spConsumer = CUserInteraction::CreateCoObject();
-	spConsumer->SetHWND(hwndUserInteraction);
-	m_consumer = spConsumer;
+	m_consumer = new CUserInteraction(hwndUserInteraction);
 
-	// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-	CHostItemListHandle pidlHost(
-		CHostItemListHandle(root_pidl().get()).FindHostPidl());
-	ATLASSERT(pidlHost.IsValid());
-
-	// Extract connection info from PIDL
-	wstring user, host, path;
-	int port;
-	params_from_pidl(root_pidl(), user, host, port);
-
-	// Return connection from session pool
-	return connection(host, user, port, hwndUserInteraction);
+	return connection_from_pidl(root_pidl(), hwndUserInteraction);
 }

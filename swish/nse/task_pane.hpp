@@ -68,7 +68,7 @@ namespace nse {
  * to the external COM interface.  This is an NVI style approach.
  */
 template<typename Interface>
-class CUIElementImplBase : public Interface
+class CUIElementErrorAdapterBase : public Interface
 {
 	BOOST_STATIC_ASSERT((boost::is_base_of<IUIElement, Interface>::value));
 
@@ -189,7 +189,8 @@ public:
  * Wraps a C++ implementation of IUIElement with code to convert it
  * to the external COM interface.  This is an NVI style approach.
  */
-class CUIElementImpl : public CUIElementImplBase<IUIElement> {};
+class CUIElementErrorAdapter :
+	public CUIElementErrorAdapterBase<IUIElement> {};
 
 /**
  * Abstract IUICommand implementation wrapper.
@@ -197,7 +198,7 @@ class CUIElementImpl : public CUIElementImplBase<IUIElement> {};
  * Wraps a C++ implementation of IUICommand with code to convert it
  * to the external COM interface.  This is an NVI style approach.
  */
-class CUICommandImpl : public CUIElementImplBase<IUICommand>
+class CUICommandErrorAdapter : public CUIElementErrorAdapterBase<IUICommand>
 {
 public:
 
@@ -295,28 +296,33 @@ private:
 	// @}
 };
 
+#ifndef SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS
+#define SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS 10
+#endif
+
 #define COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, classname, initialiser) \
 	BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
 	explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
 		: initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
-/**
- * Implements IUICommands by wrapping command functors.
- *
- * @param T  Functor which provides the same interface as Command.  It must
- *           be copyable and all methods must be const.
- */
-template<typename T>
-class CUICommand : public comet::simple_object<CUICommandImpl>
+
+template<COMET_LIST_TEMPLATE>
+class CUICommandImpl :
+	public comet::simple_object<CUICommandErrorAdapter, COMET_LIST_ARG_0>
 {
 public:
 
 // Define pass-through contructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
-	explicit CUICommand(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
-		: m_command(BOOST_PP_ENUM_PARAMS(N, a)) {}
-#define BOOST_PP_LOCAL_LIMITS (0, 10)
+	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommandImpl, m_command)
+
+#define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
+
+protected:
+
+	typedef X00 command_type;
+
+	command_type& command() { return m_command; }
 
 private:
 
@@ -401,17 +407,68 @@ private:
 		m_command(data_object_from_item_array(items, bind_ctx), bind_ctx);
 	}
 
-	T m_command;
+	command_type m_command;
+};
+
+
+/**
+ * Implements IUICommands by wrapping command functors.
+ *
+ * @param T  Functor which provides the same interface as Command.  It must
+ *           be copyable and all methods must be const.
+ */
+template<typename T>
+class CUICommand : public CUICommandImpl<T>
+{
+public:
+
+	typedef CUICommandImpl<T> super;
+
+// Define pass-through constructors with variable numbers of arguments
+#define BOOST_PP_LOCAL_MACRO(N) \
+	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommand, super)
+
+#define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
+#include BOOST_PP_LOCAL_ITERATE()
 };
 
 /**
- * Create an CUICommand implementation from a Command instance.
+ * Implements IUICommands by wrapping command functors.
+ *
+ * This is a variation on CUICommand that implements the command as
+ * an OLE object embedded in a site.  This is necessary, for instance,
+ * if the command wants to manipulate the folder view that it is part of.
+ *
+ * @param T  Functor which provides the same interface as Command plus a
+ *           set_site method.
  */
 template<typename T>
-inline comet::com_ptr<IUICommand> make_ui_command(T command)
+class CUICommandWithSite : public CUICommandImpl<T, winapi::object_with_site>
 {
-	return new CUICommand<T>(command);
-}
+public:
+
+	typedef CUICommandImpl<T, winapi::object_with_site> super;
+
+// Define pass-through constructors with variable numbers of arguments
+#define BOOST_PP_LOCAL_MACRO(N) \
+	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommandWithSite, super)
+
+#define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
+#include BOOST_PP_LOCAL_ITERATE()
+
+private:
+
+	/**
+	 * Notify the command functor of the site we have been embedded in.
+	 */
+	virtual void on_set_site(comet::com_ptr<IUnknown> ole_site)
+	{
+		command().set_site(ole_site);
+	}
+};
+
+#undef COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR
+#undef SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS
 
 }} // namespace swish::nse
 

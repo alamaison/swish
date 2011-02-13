@@ -15,5 +15,11 @@
 	<Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="unicows.lib"
+		TargetMachine="1"
+	/>
+	<Tool
+		Name="VCMIDLTool"
+		TargetEnvironment="1"
+		ValidateParameters="false"
 	/>
 </VisualStudioPropertySheet>

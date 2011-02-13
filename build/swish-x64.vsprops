@@ -8,4 +8,13 @@
 		Name="VCCLCompilerTool"
 		PreprocessorDefinitions="_WIN32_WINNT=0x0501"
 	/>
+	<Tool
+		Name="VCLinkerTool"
+		TargetMachine="17"
+	/>
+	<Tool
+		Name="VCMIDLTool"
+		TargetEnvironment="3"
+		ValidateParameters="true"
+	/>
 </VisualStudioPropertySheet>

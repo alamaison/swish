@@ -41,12 +41,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -61,9 +56,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="shell_folder.res"
 				AdditionalLibraryDirectories="$(OutDir)"
-				GenerateDebugInformation="true"
 				SubSystem="1"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -115,12 +108,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -135,9 +123,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="shell_folder.res"
 				AdditionalLibraryDirectories="$(OutDir)"
-				GenerateDebugInformation="true"
 				SubSystem="1"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -190,8 +176,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -205,13 +189,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="shell_folder.res"
-				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(OutDir)"
-				GenerateDebugInformation="true"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -265,8 +244,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -280,13 +257,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="shell_folder.res"
-				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(OutDir)"
-				GenerateDebugInformation="true"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -322,6 +294,10 @@
 		<ProjectReference
 			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
 			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
+			RelativePathToProject=".\swish\provider\com_dll\com_dll.vcproj"
 		/>
 	</References>
 	<Files>
@@ -372,14 +348,6 @@
 					UsePrecompiledHeader="1"
 				/>
 			</FileConfiguration>
-		</File>
-		<File
-			RelativePath=".\pool_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\remote_commands_test.cpp"
-			>
 		</File>
 		<File
 			RelativePath=".\sftp_data_object_test.cpp"

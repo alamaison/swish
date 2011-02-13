@@ -38,20 +38,11 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				GenerateStublessProxies="true"
-				GenerateTypeLibrary="false"
-				OutputDirectory="$(OutDir)\swish\interfaces"
-				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
-				MinimalRebuild="true"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -66,11 +57,8 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				AdditionalDependencies="rpcrt4.lib"
-				LinkIncremental="2"
 				ModuleDefinitionFile="interfaces.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -117,21 +105,11 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
-				GenerateTypeLibrary="false"
-				OutputDirectory="$(OutDir)\swish\interfaces"
-				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
-				MinimalRebuild="true"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -146,11 +124,8 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				AdditionalDependencies="rpcrt4.lib"
-				LinkIncremental="2"
 				ModuleDefinitionFile="interfaces.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -198,18 +173,11 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				GenerateStublessProxies="true"
-				GenerateTypeLibrary="false"
-				OutputDirectory="$(OutDir)\swish\interfaces"
-				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -224,14 +192,8 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				AdditionalDependencies="rpcrt4.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="interfaces.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -279,19 +241,11 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
-				GenerateTypeLibrary="false"
-				OutputDirectory="$(OutDir)\swish\interfaces"
-				HeaderFileName="$(InputName).h"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
-				RuntimeLibrary="2"
+				PreprocessorDefinitions="_USRDLL;INTERFACES_EXPORTS;REGISTER_PROXY_DLL"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -306,14 +260,8 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				AdditionalDependencies="rpcrt4.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="interfaces.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

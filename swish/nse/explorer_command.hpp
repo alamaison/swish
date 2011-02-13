@@ -325,7 +325,7 @@ public:
 /**
  * Implements IExplorerCommands by wrapping command functors.
  *
- * This is a variation on CExplorerCommandErrorAdapter that implements the command as
+ * This is a variation on CExplorerCommand that implements the command as
  * an OLE object embedded in a site.  This is necessary, for instance,
  * if the command wants to manipulate the folder view that it is part of.
  *
@@ -358,6 +358,7 @@ private:
 	}
 };
 
+#undef EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR
 #undef SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS
 
 }} // namespace swish::nse

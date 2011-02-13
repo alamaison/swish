@@ -26,7 +26,7 @@
 
 #include "swish/nse/explorer_command.hpp" // test subject
 
-#include "swish/shell_folder/commands/Command.hpp" // Command
+#include "swish/nse/Command.hpp" // Command
 
 #include "test/common_boost/helpers.hpp"
 #include <boost/test/unit_test.hpp>
@@ -42,7 +42,7 @@
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CExplorerCommand;
 using swish::nse::CExplorerCommandWithSite;
-using swish::shell_folder::commands::Command;
+using swish::nse::Command;
 
 using comet::com_error;
 using comet::com_ptr;

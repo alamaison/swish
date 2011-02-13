@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,8 +36,7 @@ using comet::uuid_t;
 using std::wstring;
 
 namespace swish {
-namespace shell_folder {
-namespace commands {
+namespace nse {
 
 Command::Command(
 	const wstring& title, const uuid_t& guid,
@@ -68,4 +67,4 @@ wstring Command::webtask_title(
 { return (m_webtask_title.empty()) ? title(data_object) : m_webtask_title; }
 
 
-}}} // namespace swish::shell_folder::commands
+}} // namespace swish::nse

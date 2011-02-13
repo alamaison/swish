@@ -40,28 +40,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				EnableErrorChecks="2"
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="4"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
 				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
@@ -71,12 +59,9 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="com_dll.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -126,27 +111,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				EnableErrorChecks="2"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
 				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
@@ -156,12 +130,9 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="com_dll.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -211,24 +182,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
-				DLLDataFileName=""
-				ValidateParameters="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
 				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
@@ -238,13 +201,9 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="com_dll.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -294,23 +253,16 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
-				DLLDataFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
 				AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\swish\shell_folder;$(IntDir);$(IntDir)\..\..\shell_folder\$(ConfigurationName)-$(PlatformName)"
 			/>
 			<Tool
@@ -320,13 +272,9 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile="com_dll.def"
 				MergedIDLBaseFileName="_$(TargetName).idl"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

@@ -27,7 +27,7 @@
 #pragma once
 
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
-#include "test/common_boost/fixtures.hpp"  // SandboxFixture
+#include "test/common_boost/fixtures.hpp"  // SandboxFixture, ComFixture
 
 #include "swish/interfaces/SftpProvider.h"  // ISftpProvider
 
@@ -206,7 +206,8 @@ private:
 };
 
 template<typename MortalityPolicy>
-class ProviderFixtureT : public test::SandboxFixture
+class ProviderFixtureT :
+	public test::ComFixture, public test::SandboxFixture
 {
 public:
 

@@ -1,12 +1,11 @@
 /**
     @file
 
-	Pool of reusuable SFTP connections.
+    Management functions for host entries saved in the registry.
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,23 +24,29 @@
     @endif
 */
 
+#ifndef SWISH_HOST_FOLDER_HOST_MANAGEMENT_HPP
+#define SWISH_HOST_FOLDER_HOST_MANAGEMENT_HPP
 #pragma once
 
-#include <comet/ptr.h> // com_ptr
-#include <comet/threading.h> // critical_section
+#include "swish/shell_folder/HostPidl.h"
 
 #include <string>
+#include <vector>
 
-struct ISftpProvider;
+namespace swish {
+namespace host_folder {
+namespace host_management {
 
-class CPool
-{
-public:
+std::vector<CHostItem> LoadConnectionsFromRegistry();
 
-	comet::com_ptr<ISftpProvider> GetSession(
-		const std::wstring& host, const std::wstring& user, int port,
-		HWND hwnd);
+void AddConnectionToRegistry(
+	std::wstring label, std::wstring host, int port, 
+	std::wstring username, std::wstring path);
 
-private:
-	static comet::critical_section m_cs;
-};
+void RemoveConnectionFromRegistry(std::wstring label);
+
+bool ConnectionExists(std::wstring label);
+
+}}} // namespace swish::host_folder::host_management
+
+#endif

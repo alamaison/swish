@@ -32,6 +32,7 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
+#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -72,6 +73,9 @@ inline comet::com_ptr<IBindCtx> create_bind_context()
 	return bind_context;
 }
 
+typedef boost::error_info<struct errinfo_display_name_, std::wstring>
+	errinfo_display_name;
+
 /**
  * Get an object instance by its moniker display name.
  *
@@ -95,7 +99,8 @@ inline comet::com_ptr<T> object_from_moniker_name(
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(
 			boost::enable_error_info(comet::com_error(hr)) <<
-			boost::errinfo_api_function("MkParseDisplayName"));
+			boost::errinfo_api_function("MkParseDisplayName") <<
+			errinfo_display_name(display_name));
 
 	comet::com_ptr<T> object;
 	hr = moniker->BindToObject(

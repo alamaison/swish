@@ -1,11 +1,11 @@
 /**
     @file
 
-    Reporting exceptions to the user.
+    TaskDialogIndirect implementation selector.
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,25 +24,34 @@
     @endif
 */
 
-#ifndef SWISH_SHELL_FOLDER_ANNOUNCE_EXCEPTION_HPP
-#define SWISH_SHELL_FOLDER_ANNOUNCE_EXCEPTION_HPP
-#pragma once
+#include "bind_best_taskdialog.hpp"
 
-#include <string>
+#include <winapi/dynamic_link.hpp> // proc_address
 
-#include <WinDef.h> // HWND
+#include <TaskDialog.h> // Task98DialogIndirect
+
+#include <exception>
+
+using winapi::gui::task_dialog::tdi_function;
+using winapi::proc_address;
+
+using std::exception;
 
 namespace swish {
-namespace shell_folder {
+namespace frontend {
 
-void announce_error(
-	HWND hwnd, const std::wstring& problem,
-	const std::wstring& suggested_resolution, const std::wstring& details);
+tdi_function bind_best_taskdialog()
+{
+	try
+	{
+		return proc_address<
+			HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
+				"comctl32.dll", "TaskDialogIndirect");
+	}
+	catch (const exception&)
+	{
+		return ::Task98DialogIndirect;
+	}
+}
 
-__declspec(noreturn) void rethrow_and_announce(
-	HWND hwnd, const std::wstring& title,
-	const std::wstring& suggested_resolution);
-
-}} // namespace swish::shell_folder
-
-#endif
+}} // namespace swish::frontend

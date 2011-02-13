@@ -25,12 +25,13 @@
     @endif
 */
 
-#include "UserInteraction.h"
+#include "UserInteraction.hpp"
 
-#include "KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
+#include "swish/atl.hpp"  // Common ATL setup
 #include "swish/debug.hpp"
 #include "swish/forms/password.hpp" // password_prompt
-#include "swish/shell_folder/bind_best_taskdialog.hpp" // best_taskdialog
+#include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
+#include "swish/shell_folder/KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/gui/task_dialog.hpp> // task_dialog
@@ -55,7 +56,7 @@ using ATL::CString;
 using ATL::CComSafeArray;
 
 using swish::forms::password_prompt;
-using swish::shell_folder::best_taskdialog;
+using swish::frontend::best_taskdialog;
 
 using namespace winapi::gui;
 
@@ -69,19 +70,10 @@ using std::wstringstream;
 using std::string;
 using std::wstring;
 
-CUserInteraction::CUserInteraction() : m_hwnd(NULL)
-{
-}
+namespace swish {
+namespace frontend {
 
-void CUserInteraction::SetHWND(HWND hwnd)
-{
-	m_hwnd = hwnd;
-}
-
-void CUserInteraction::ClearHWND()
-{
-	SetHWND(NULL);
-}
+CUserInteraction::CUserInteraction(HWND hwnd) : m_hwnd(hwnd) {}
 
 /**
  * Displays UI dialog to get password from user and returns it.
@@ -195,7 +187,7 @@ HRESULT on_confirm_overwrite(
 {
 	assert(hwnd);
 	if (!hwnd)
-		return E_FAIL;
+		BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
 	wstringstream message;
 	
@@ -244,6 +236,9 @@ HRESULT on_hostkey_mismatch(
 	const wstring& host, const wstring& key, const wstring& key_type,
 	HWND hwnd)
 {
+	if (!hwnd)
+		BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
+
 	wstring title = translate("Mismatched host-key");
 	wstring instruction = translate("WARNING: the SSH host-key has changed!");
 
@@ -288,6 +283,9 @@ HRESULT on_hostkey_unknown(
 	const wstring& host, const wstring& key, const wstring& key_type,
 	HWND hwnd)
 {
+	if (!hwnd)
+		BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
+
 	wstring title = translate("Unknown host-key");
 
 	wstringstream message;
@@ -347,3 +345,5 @@ STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
 	}
 	WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
+
+}} // namespace swish::frontend

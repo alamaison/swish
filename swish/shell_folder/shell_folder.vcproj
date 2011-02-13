@@ -40,8 +40,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -51,20 +49,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
-				PreprocessorDefinitions="_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="4"
+				PreprocessorDefinitions="_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
 				AdditionalIncludeDirectories="$(OutDir);$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
@@ -114,9 +105,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -126,20 +114,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
-				PreprocessorDefinitions="_DEBUG;_LIB"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
 				AdditionalIncludeDirectories="$(OutDir);$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
@@ -188,8 +169,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -198,17 +177,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
-				PreprocessorDefinitions="NDEBUG;_LIB"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
 				AdditionalIncludeDirectories="$(OutDir);$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
@@ -258,9 +233,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/Swish.tlb"
 				HeaderFileName="Swish.h"
 				DLLDataFileName=""
@@ -269,17 +241,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\thirdparty\taskdialog98&quot;"
-				PreprocessorDefinitions="NDEBUG;_LIB"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_LIB"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
 				AdditionalIncludeDirectories="$(OutDir);$(IntDir)"
 				ResourceOutputFileName="$(OutDir)/$(InputName).res"
 			/>
@@ -321,16 +289,16 @@
 			RelativePathToProject=".\swish\remote_folder\remote_folder.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{F0D481E1-ED53-4833-878B-4EFE1368A6F5}"
-			RelativePathToProject=".\swish\forms\forms.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{AA48A6A1-1790-46CB-8C76-AAB52F684D8C}"
 			RelativePathToProject=".\swish\drop_target\drop_target.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
 			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{58F5F798-25C4-4769-BF8C-8646BA44C349}"
+			RelativePathToProject=".\swish\frontend\frontend.vcproj"
 		/>
 	</References>
 	<Files>
@@ -339,19 +307,7 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\announce_error.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\DataObject.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ExplorerCallback.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\host_management.cpp"
 				>
 			</File>
 			<File
@@ -403,10 +359,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Pool.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Registry.cpp"
 				>
 			</File>
@@ -430,37 +382,17 @@
 				RelativePath=".\Swish.idl"
 				>
 			</File>
-			<File
-				RelativePath=".\UserInteraction.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
-				RelativePath=".\announce_error.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\bind_best_taskdialog.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\DataObject.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ExplorerCallback.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Folder.h"
-				>
-			</File>
-			<File
-				RelativePath=".\host_management.hpp"
 				>
 			</File>
 			<File
@@ -520,10 +452,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Pool.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Registry.h"
 				>
 			</File>
@@ -553,10 +481,6 @@
 			</File>
 			<File
 				RelativePath=".\SwishFolder.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\UserInteraction.h"
 				>
 			</File>
 			<File
@@ -644,38 +568,6 @@
 				>
 				<File
 					RelativePath=".\data_object\ShellDataObject.cpp"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="commands"
-			>
-			<File
-				RelativePath=".\commands\Command.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\commands\Command.hpp"
-				>
-			</File>
-			<Filter
-				Name="host"
-				>
-				<File
-					RelativePath=".\commands\host\host.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\commands\host\host.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\commands\remote\remote.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\commands\remote\remote.hpp"
 					>
 				</File>
 			</Filter>

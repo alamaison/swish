@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@
     @endif
 */
 
+#ifndef SWISH_NSE_COMMAND_HPP
+#define SWISH_NSE_COMMAND_HPP
 #pragma once
 
 #include <winapi/shell/pidl.hpp> // apidl_t
@@ -40,8 +42,7 @@
 #include <string>
 
 namespace swish {
-namespace shell_folder {
-namespace commands {
+namespace nse {
 
 class Command
 {
@@ -73,18 +74,18 @@ public:
 	/** @name Attributes. */
 	// @{
 	const comet::uuid_t& guid() const;
-	std::wstring title(
+	virtual std::wstring title(
 		const comet::com_ptr<IDataObject>& data_object) const;
-	std::wstring tool_tip(
+	virtual std::wstring tool_tip(
 		const comet::com_ptr<IDataObject>& data_object) const;
-	std::wstring icon_descriptor(
+	virtual std::wstring icon_descriptor(
 		const comet::com_ptr<IDataObject>& data_object) const;
 
 	/** @name Optional title variants. */
 	// @{
-	std::wstring menu_title(
+	virtual std::wstring menu_title(
 		const comet::com_ptr<IDataObject>& data_object) const;
-	std::wstring webtask_title(
+	virtual std::wstring webtask_title(
 		const comet::com_ptr<IDataObject>& data_object) const;
 	// @}
 
@@ -120,86 +121,44 @@ private:
 		: initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
 
 template<typename CommandImpl>
-class CommandTitleAdapter
-{
-public:
-
-// Define pass-through contructors with variable numbers of arguments
-#define BOOST_PP_LOCAL_MACRO(N) \
-	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CommandTitleAdapter, m_command)
-
-#define BOOST_PP_LOCAL_LIMITS (0, COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS)
-#include BOOST_PP_LOCAL_ITERATE()
-
-	void operator()(
-		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const
-	{ return m_command(data_object, bind_ctx); }
-
-	const comet::uuid_t& guid() const { return m_command.guid(); }
-
-	std::wstring tool_tip(
-		const comet::com_ptr<IDataObject>& data_object) const
-	{ return m_command.tool_tip(data_object); }
-
-	std::wstring icon_descriptor(
-		const comet::com_ptr<IDataObject>& data_object) const
-	{ return m_command.icon_descriptor(data_object); }
-
-	bool disabled(
-		const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const
-	{ return m_command.disabled(data_object, ok_to_be_slow); }
-
-	bool hidden(
-		const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const
-	{ return m_command.hidden(data_object, ok_to_be_slow); }
-
-protected:
-	CommandImpl& command() { return m_command; }
-	const CommandImpl& command() const { return m_command; }
-
-private:
-	CommandImpl m_command;
-};
-
-template<typename CommandImpl>
-class MenuCommandTitleAdapter : public CommandTitleAdapter<CommandImpl>
+class MenuCommandTitleAdapter : public CommandImpl
 {
 public:
 
 // Define pass-through contructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
 	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
-		N, MenuCommandTitleAdapter, CommandTitleAdapter<CommandImpl>)
+		N, MenuCommandTitleAdapter, CommandImpl)
 
 #define BOOST_PP_LOCAL_LIMITS (0, COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
-	std::wstring title(const comet::com_ptr<IDataObject>& data_object) const
-	{ return command().menu_title(data_object); }
+	virtual std::wstring title(
+		const comet::com_ptr<IDataObject>& data_object) const
+	{ return menu_title(data_object); }
 };
 
-
 template<typename CommandImpl>
-class WebtaskCommandTitleAdapter : public CommandTitleAdapter<CommandImpl>
+class WebtaskCommandTitleAdapter : public CommandImpl
 {
 public:
 
 // Define pass-through contructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
 	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
-		N, WebtaskCommandTitleAdapter, CommandTitleAdapter<CommandImpl>)
+		N, WebtaskCommandTitleAdapter, CommandImpl)
 
 #define BOOST_PP_LOCAL_LIMITS (0, COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
-	std::wstring title(const comet::com_ptr<IDataObject>& data_object) const
-	{ return command().webtask_title(data_object); }
+	virtual std::wstring title(
+		const comet::com_ptr<IDataObject>& data_object) const
+	{ return webtask_title(data_object); }
 };
 
 #undef COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS
 #undef COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR
 
-}}} // namespace swish::shell_folder::commands
+}} // namespace swish::nse
+
+#endif

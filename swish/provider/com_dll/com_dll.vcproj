@@ -40,10 +40,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories=""
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
 				HeaderFileName="com_dll.h"
 				InterfaceIdentifierFileName="com_dll_i.c"
@@ -52,19 +48,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="4"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -75,9 +65,7 @@
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
 				ModuleDefinitionFile="com_dll.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -127,10 +115,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				AdditionalIncludeDirectories=""
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
+
 				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
 				HeaderFileName="com_dll.h"
 				InterfaceIdentifierFileName="com_dll_i.c"
@@ -138,19 +123,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;_USRDLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -161,9 +140,7 @@
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
 				ModuleDefinitionFile="com_dll.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -213,10 +190,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=""
-				TargetEnvironment="1"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
 				HeaderFileName="com_dll.h"
 				InterfaceIdentifierFileName="com_dll_i.c"
@@ -225,17 +198,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -245,13 +214,8 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				LinkIncremental="1"
 				ModuleDefinitionFile="com_dll.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -300,10 +264,6 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				AdditionalIncludeDirectories=""
-				TargetEnvironment="3"
-				GenerateStublessProxies="true"
 				TypeLibraryName="$(IntDir)/swish-provider-com_dll.tlb"
 				HeaderFileName="com_dll.h"
 				InterfaceIdentifierFileName="com_dll_i.c"
@@ -311,17 +271,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				PreprocessorDefinitions="NDEBUG;_USRDLL"
-				RuntimeLibrary="2"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_USRDLL"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
@@ -331,13 +287,8 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				LinkIncremental="1"
 				ModuleDefinitionFile="com_dll.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

@@ -24,13 +24,13 @@
     @endif
 */
 
-#include "host.hpp"
+#include "commands.hpp"
 
 #include "swish/forms/add_host.hpp" // add_host
+#include "swish/host_folder/host_management.hpp" // AddConnectionToRegistry
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
-#include "swish/nse/task_pane.hpp" // CUIElementImpl, make_ui_command
+#include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
-#include "swish/shell_folder/host_management.hpp" // AddConnectionToRegistry
 #include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
 
 #include <comet/error.h> // com_error
@@ -51,17 +51,17 @@ using swish::forms::add_host;
 using swish::forms::host_info;
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CExplorerCommand;
+using swish::nse::Command;
 using swish::nse::CUICommand;
-using swish::nse::CUIElementImpl;
+using swish::nse::CUIElementErrorAdapter;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
+using swish::nse::WebtaskCommandTitleAdapter;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::commands::Command;
-using swish::shell_folder::commands::WebtaskCommandTitleAdapter;
-using swish::host_management::AddConnectionToRegistry;
-using swish::host_management::RemoveConnectionFromRegistry;
-using swish::host_management::ConnectionExists;
+using swish::host_folder::host_management::AddConnectionToRegistry;
+using swish::host_folder::host_management::RemoveConnectionFromRegistry;
+using swish::host_folder::host_management::ConnectionExists;
 
 using winapi::shell::pidl::apidl_t;
 
@@ -80,9 +80,8 @@ using std::vector;
 using std::wstring;
 
 namespace swish {
-namespace shell_folder {
+namespace host_folder {
 namespace commands {
-namespace host {
 
 namespace {
 	const uuid_t ADD_COMMAND_ID(L"b816a880-5022-11dc-9153-0090f5284f85");
@@ -189,7 +188,7 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
 	return new CExplorerCommandProvider(commands);
 }
 
-class CSftpTasksTitle : public simple_object<CUIElementImpl>
+class CSftpTasksTitle : public simple_object<CUIElementErrorAdapter>
 {
 public:
 
@@ -237,4 +236,4 @@ host_folder_task_pane_tasks(HWND hwnd, const apidl_t& folder_pidl)
 	return make_pair(e, com_ptr<IEnumUICommand>());
 }
 
-}}}} // namespace swish::shell_folder::commands::host
+}}} // namespace swish::host_folder::commands

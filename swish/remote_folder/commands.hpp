@@ -1,11 +1,11 @@
 /**
     @file
 
-    Swish host folder commands.
+    Swish remote folder commands.
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,27 +24,34 @@
     @endif
 */
 
+#ifndef SWISH_REMOTE_FOLDER_COMMANDS_HPP
+#define SWISH_REMOTE_FOLDER_COMMANDS_HPP
 #pragma once
 
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/nse/Command.hpp" // Command
 #include "swish/nse/UICommand.hpp" // IUIElement
-#include "swish/shell_folder/commands/Command.hpp" // Command
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 
+#include <boost/function.hpp> // function
+
 #include <ObjIdl.h> // IDataObject, IBindCtx
 #include <shobjidl.h> // IExplorerCommandProvider, IShellItemArray
 
 namespace swish {
-namespace shell_folder {
+namespace remote_folder {
 namespace commands {
-namespace host {
 
-class Add : public swish::shell_folder::commands::Command
+class NewFolder : public swish::nse::Command
 {
 public:
-	Add(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+	NewFolder(
+		const winapi::shell::pidl::apidl_t& folder_pidl,
+		const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+		const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 	
 	bool disabled(const comet::com_ptr<IDataObject>& data_object,
 		bool ok_to_be_slow) const;
@@ -55,42 +62,34 @@ public:
 		const comet::com_ptr<IDataObject>& data_object,
 		const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
-private:
-	HWND m_hwnd;
-	winapi::shell::pidl::apidl_t m_folder_pidl;
-};
-
-class Remove : public swish::shell_folder::commands::Command
-{
-public:
-	Remove(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
-	
-	bool disabled(
-		const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const;
-	bool hidden(const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const;
-
-	void operator()(
-		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const;
+	void set_site(comet::com_ptr<IUnknown> ole_site);
 
 private:
 	HWND m_hwnd;
 	winapi::shell::pidl::apidl_t m_folder_pidl;
+	boost::function<comet::com_ptr<ISftpProvider>()> m_provider;
+	boost::function<comet::com_ptr<ISftpConsumer>()> m_consumer;
+	comet::com_ptr<IUnknown> m_site;
 };
 
-comet::com_ptr<IExplorerCommandProvider> host_folder_command_provider(
-	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+comet::com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
+	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
+	const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+	const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 
 std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
-host_folder_task_pane_titles(
+remote_folder_task_pane_titles(
 	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 
 std::pair<
 	comet::com_ptr<nse::IEnumUICommand>,
 	comet::com_ptr<nse::IEnumUICommand> >
-host_folder_task_pane_tasks(
-	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+remote_folder_task_pane_tasks(
+	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
+	comet::com_ptr<IUnknown> ole_site,
+	const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+	const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 
-}}}} // namespace swish::shell_folder::commands::host
+}}} // namespace swish::remote_folder::commands
+
+#endif
