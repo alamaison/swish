@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@
 
 #include "fixtures.hpp"
 
+#include "swish/port_conversion.hpp" // port_to_string
 #include "swish/utils.hpp"
 
 #include <boost/filesystem.hpp>
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/shared_ptr.hpp>
 #pragma warning(push)
@@ -47,6 +47,7 @@
 
 #include <cstdio>
 
+using swish::port_to_string;
 using swish::utils::Utf8StringToWideString;
 using swish::utils::current_user_a;
 
@@ -60,7 +61,6 @@ using boost::process::child;
 using boost::process::self;
 using boost::process::find_executable_in_path;
 using boost::assign::list_of;
-using boost::lexical_cast;
 using boost::numeric_cast;
 using boost::shared_ptr;
 using boost::uniform_int;
@@ -212,7 +212,7 @@ namespace { // private
 			"-o", "AuthorizedKeysFile \"" +
 			      Cygdriveify(auth_key_file).string() + "\"",
 			"-o", "ListenAddress " + SSHD_LISTEN_ADDRESS + ":" +
-			       lexical_cast<string>(port),
+			       port_to_string(port),
 			"-o", "Protocol 2",
 			"-o", "UsePrivilegeSeparation no",
 			"-o", "StrictModes no",

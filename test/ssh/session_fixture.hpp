@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,14 +43,36 @@
 #include <ssh/session.hpp> // session
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
-#include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/system/system_error.hpp> // system_error
 #include <boost/test/unit_test.hpp>
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <locale> // locale::classic
+#include <sstream> // basic_ostringstream
+#include <stdexcept> // logic_error
 #include <string>
 
 namespace test {
 namespace ssh {
+
+namespace detail {
+
+/**
+ * Locale-independent port number to port string conversion.
+ */
+inline std::string port_to_string(long port)
+{
+	std::ostringstream stream;
+	stream.imbue(std::locale::classic()); // force locale-independence
+	stream << port;
+	if (!stream)
+		BOOST_THROW_EXCEPTION(
+			std::logic_error("Unable to convert port number to string"));
+
+	return stream.str();
+}
+
+}
 
 /**
  * Fixture serving ssh::session objects connected to a running server.
@@ -67,7 +89,7 @@ public:
 
 		tcp::resolver resolver(m_io);
 		typedef tcp::resolver::query Lookup;
-		Lookup query(host_name, boost::lexical_cast<std::string>(port));
+		Lookup query(host_name, detail::port_to_string(port));
 
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 		tcp::resolver::iterator end;

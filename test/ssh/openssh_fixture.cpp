@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,10 +36,10 @@
 
 #include "openssh_fixture.hpp"
 
+#include "swish/port_conversion.hpp" // port_to_string
 #include "swish/utils.hpp"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/lexical_cast.hpp>
 #pragma warning(push)
 #pragma warning(disable:4100) // unreferenced formal parameter
 #include <boost/random/uniform_int.hpp>
@@ -51,6 +51,7 @@
 #include <vector>
 #include <map>
 
+using swish::port_to_string;
 using swish::utils::current_user_a;
 
 using boost::filesystem::path;
@@ -60,7 +61,6 @@ using boost::process::child;
 using boost::process::self;
 using boost::process::find_executable_in_path;
 using boost::assign::list_of;
-using boost::lexical_cast;
 using boost::uniform_int;
 using boost::variate_generator;
 using boost::mt19937;
@@ -203,7 +203,7 @@ namespace { // private
 			"-o", "AuthorizedKeysFile \"" +
 			      Cygdriveify(auth_key_file).string() + "\"",
 			"-o", "ListenAddress " + SSHD_LISTEN_ADDRESS + ":" +
-			       lexical_cast<string>(port),
+			       port_to_string(port),
 			"-o", "Protocol 2",
 			"-o", "UsePrivilegeSeparation no",
 			"-o", "StrictModes no",

@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2011
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,17 +39,18 @@
 
 #include "swish/remotelimits.h"
 #include "swish/debug.hpp"        // Debug macros
+#include "swish/port_conversion.hpp" // port_to_string
 #include "swish/utils.hpp" // WideStringToUtf8String
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
-#include <boost/lexical_cast.hpp> // lexical_cast: convert port num to string
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
 
+using swish::port_to_string;
 using swish::utils::WideStringToUtf8String;
 
 using boost::asio::ip::tcp;
@@ -57,7 +59,6 @@ using boost::shared_ptr;
 using boost::system::get_system_category;
 using boost::system::system_error;
 using boost::system::error_code;
-using boost::lexical_cast;
 
 using std::string;
 
@@ -251,7 +252,7 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 
 	tcp::resolver resolver(m_io);
 	typedef tcp::resolver::query Lookup;
-	Lookup query(host_name, lexical_cast<string>(uPort));
+	Lookup query(host_name, port_to_string(uPort));
 
 	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 	tcp::resolver::iterator end;

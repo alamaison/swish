@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2011
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,6 +42,7 @@
 #include "SftpStream.hpp"
 #include "listing/listing.hpp"   // SFTP directory listing helper functions
 
+#include "swish/port_conversion.hpp" // port_to_wstring
 #include "swish/remotelimits.h"
 #include "swish/utils.hpp" // running_object_table, WideStringToUtf8String
 #include "swish/trace.hpp" // trace
@@ -55,7 +57,6 @@
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
-#include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/make_shared.hpp> // make_shared<provider>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error, system_category
@@ -75,7 +76,6 @@ using comet::com_ptr;
 using comet::stl_enumeration;
 
 using boost::filesystem::wpath;
-using boost::lexical_cast;
 using boost::make_filter_iterator;
 using boost::make_shared;
 using boost::system::system_error;
@@ -169,7 +169,7 @@ namespace {
 		const wstring& user, const wstring& host, int port)
 	{
 		wstring moniker_name = 
-			user + L'@' + host + L':' + lexical_cast<wstring>(port);
+			user + L'@' + host + L':' + port_to_wstring(port);
 
 		com_ptr<IMoniker> moniker;
 		HRESULT hr = ::CreateItemMoniker(

@@ -28,6 +28,7 @@
 #include "connection.hpp"
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/port_conversion.hpp" // port_to_wstring
 #include "swish/shell_folder/HostPidl.h" // CHostItemListHandle
 #include "swish/remotelimits.h" // Text field limits
 #include "swish/utils.hpp" // running_object_table
@@ -37,7 +38,6 @@
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // uuidof, comtype
 
-#include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cstring> // memset
@@ -51,8 +51,6 @@ using comet::com_ptr;
 using comet::critical_section;
 using comet::auto_cs;
 using comet::uuidof;
-
-using boost::lexical_cast;
 
 using std::wstring;
 
@@ -78,7 +76,7 @@ namespace {
 	{
 		wstring item_name = 
 			L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L'@' + 
-			host + L':' + lexical_cast<wstring>(port);
+			host + L':' + port_to_wstring(port);
 		return item_name;
 	}
 

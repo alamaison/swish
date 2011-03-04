@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, ComFixture
 
 #include "swish/interfaces/SftpProvider.h"  // ISftpProvider
+#include "swish/port_conversion.hpp" // port_to_wstring
 
 #include <winapi/com/object.hpp> // object_from_moniker_name
 
@@ -39,7 +40,6 @@
 #include <comet/util.h> // auto_coinit
 
 #include <boost/filesystem/path.hpp> // path
-#include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -54,7 +54,7 @@ namespace detail {
 	{
 		std::wstring item_name = 
 			L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L"@" + 
-			host + L":" + boost::lexical_cast<std::wstring>(port);
+			host + L":" + swish::port_to_wstring(port);
 
 		return winapi::com::object_from_moniker_name<ISftpProvider>(item_name);
 	}
