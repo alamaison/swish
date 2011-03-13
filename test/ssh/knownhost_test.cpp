@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -677,8 +677,8 @@ BOOST_AUTO_TEST_CASE( add )
 }
 
 /**
- * Lines but be written back exactly as they are read with exception of:
- *  - ip-address,hostname being split into two lines
+ * Lines must be written back exactly as they are read with exception of:
+ *  - comma-separated host names being split into separate lines
  *  - newlines stripped
  *  - tabs replaced with spaces
  */
@@ -686,6 +686,8 @@ BOOST_AUTO_TEST_CASE( load_save )
 {
 	const vector<string> lines = list_of
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("host.example.com,192.0.32.10 ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("hostalias1,hostalias2 ssh-rsa AAAAB3NzaC1yc2EAA==")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\t")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\n")
@@ -695,9 +697,17 @@ BOOST_AUTO_TEST_CASE( load_save )
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\ttest swish")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish\n")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
-		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish \n");
+		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish \n")
+		("|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
+		 "ssh-rsa AAAAB3NzaC1yc2EAA==")
+		// this one will fail with libssh2 < 1.2.8
+		("host1,host2,host3,192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA==");
 	const vector<string> expected_output = list_of
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("192.0.32.10 ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("hostalias2 ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("hostalias1 ssh-rsa AAAAB3NzaC1yc2EAA==")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
@@ -707,7 +717,13 @@ BOOST_AUTO_TEST_CASE( load_save )
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
 		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
-		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ");
+		("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
+		("|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
+		 "ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("host3 ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("host2 ssh-rsa AAAAB3NzaC1yc2EAA==")
+		("host1 ssh-rsa AAAAB3NzaC1yc2EAA==");
 
 	openssh_knownhost_collection kh(
 		new_session(), lines.begin(), lines.end());
