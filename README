@@ -52,8 +52,13 @@ Requirements to build:
     
     Visual C++ 2005
         Express edition is unlikely to work but feel free to try.
+	If building on Windows Vista or later you will need two updates:
+	- VS 2005 SP1: http://msdn.microsoft.com/en-us/vstudio/bb265237
+	- VS 2005 SP1: Update for Windows Vista http://go.microsoft.com/?linkid=6366078
     A recent version of the Windows SDK 
         (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
+	The latest version requires an hotfix to Visual Studio 2005: 
+	https://connect.microsoft.com/VisualStudio/Downloads/DownloadDetails.aspx?DownloadID=18623
     Comet
         A modern C++ template library for COM.
         http://bitbucket.org/alamaison/swish_comet/overview/ (custom Swish fork)
@@ -63,9 +68,12 @@ Requirements to build:
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
         Common Public Licence: http://sourceforge.net/projects/wtl/.
     Boost
-        The recommended method is to use the installer from BoostPro Computing:
-        http://www.boostpro.com/products/free.  For more information see
-        http://www.boost.org.
+        You can get an installer from BoostPro Computing:
+        http://www.boostpro.com/products/free.  However, for a 64-bit build
+	of Swish you will have to build Boost yourself from source.  For more
+	information see http://www.boost.org.
+	Currently Boost 1.43 is the latest supported version.  Later versions
+	may work for Swish itself, but the tests will fail to build.
     Boost.Locale
         Candidate boost library handling internationalisation.
         http://cppcms.sourceforge.net/boost_locale/html/index.html
