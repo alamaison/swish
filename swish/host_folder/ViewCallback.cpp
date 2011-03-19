@@ -42,6 +42,7 @@
 #include <stdexcept> // logic_error
 #include <string>
 
+using swish::frontend::winsparkle_shower;
 using swish::host_folder::commands::Add;
 using swish::host_folder::commands::Remove;
 using swish::host_folder::commands::host_folder_task_pane_tasks;
@@ -163,7 +164,10 @@ namespace {
  */
 CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
 	m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_tools_menu(NULL),
-	m_first_command_id(0) {}
+	m_first_command_id(0),
+	m_winsparkle(
+		"http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
+		L"0.4.4", L"", "Software\\Swish\\Updates") {}
 
 /**
  * The folder window is being created.
@@ -173,6 +177,10 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
 bool CViewCallback::on_window_created(HWND hwnd_view)
 {
 	m_hwnd_view = hwnd_view;
+
+	if (hwnd_view)
+		m_winsparkle.show();
+
 	return true;
 }
 

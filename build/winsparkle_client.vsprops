@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="winsparkle_client"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="$(SolutionDir)\thirdparty\winsparkle"
+	/>
+	<Tool
+		Name="VCLibrarianTool"
+		AdditionalLibraryDirectories="&quot;$(SolutionDir)\thirdparty\winsparkle\$(PlatformName)&quot;"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalLibraryDirectories="&quot;$(SolutionDir)\thirdparty\winsparkle\$(PlatformName)&quot;"
+	/>
+	<Tool
+		Name="VCPreLinkEventTool"
+		Description="Copying WinSparkle DLL to target directory ..."
+		CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+	/>
+</VisualStudioPropertySheet>

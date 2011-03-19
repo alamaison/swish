@@ -145,6 +145,10 @@
 			</Component>
 			<?endif?>
 
+			<Component Id="WinSparkle" Guid="*" Win64="$(var.Win64)">
+				<File Id="WinSparkleDll" Source="$(var.TargetDir)WinSparkle.dll" KeyPath="yes" />
+			</Component>
+
 			<Component Id="AUTHORS" Guid="*" Win64="$(var.Win64)">
 				<File Id="AUTHORSDoc"
 					  Source="$(var.SolutionDir)AUTHORS" KeyPath="yes" Vital="no" />
@@ -204,6 +208,7 @@
 			<ComponentRef Id="ShellFolder" />
 			<ComponentRef Id="Provider" />
 			<ComponentRef Id="Libssh2" />
+			<ComponentRef Id="WinSparkle" />
 			<ComponentRef Id="AUTHORS" />
 			<ComponentRef Id="NEWS" />
 			<ComponentRef Id="COPYING" />

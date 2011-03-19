@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Debug-Win32.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\..\build\wtl_client.vsprops;..\..\..\build\swish-Debug-Win32.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops;..\..\..\build\winsparkle_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -92,7 +92,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Debug-x64.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\..\build\wtl_client.vsprops;..\..\..\build\swish-Debug-x64.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops;..\..\..\build\winsparkle_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -163,7 +163,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Release-Win32.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\..\build\wtl_client.vsprops;..\..\..\build\swish-Release-Win32.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops;..\..\..\build\winsparkle_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -234,7 +234,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\..\build\swish-Release-x64.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\..\build\wtl_client.vsprops;..\..\..\build\swish-Release-x64.vsprops;..\..\..\build\boost_client.vsprops;..\..\..\build\boost_locale_client.vsprops;..\..\..\build\winsparkle_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"

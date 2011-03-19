@@ -29,6 +29,7 @@
 #define SWISH_HOST_FOLDER_VIEW_CALLBACK_HPP
 #pragma once
 
+#include "swish/frontend/winsparkle_shower.hpp" // winsparkle_shower
 #include "swish/nse/view_callback.hpp" // CViewCallback
 
 #include <winapi/object_with_site.hpp> // object_with_site
@@ -75,6 +76,7 @@ private:
 	UINT m_first_command_id;  ///< Start of our tools menu ID range
 	winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
 	                                            ///< folder
+	swish::frontend::winsparkle_shower m_winsparkle; ///< Autoupdate checker
 };
 
 }} // namespace swish::host_folder

@@ -1,6 +1,6 @@
 :: Script to fetch Swish build prerequisites
 :: 
-:: Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+:: Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 :: 
 :: This program is free software; you can redistribute it and/or modify
 :: it under the terms of the GNU General Public License as published by
@@ -84,9 +84,9 @@ echo ===- Downloading comet ...
 	echo ===- Error while trying to download comet. & goto error)
 %SEVENZ% x bd51035cab59.zip -aoa || (
 	echo ===- Error while trying to extract comet. & goto error)
-xcopy /E /Q /Y swish_comet comet || (
+xcopy /E /Q /Y alamaison-swish_comet-bd51035cab59 comet || (
 	echo ===- Error while trying to copy comet files & goto error)
-rd /S /Q swish_comet || (
+rd /S /Q alamaison-swish_comet-bd51035cab59 || (
 	echo ===- Error while trying to clean up comet files & goto error)
 del bd51035cab59.zip
 
@@ -106,6 +106,16 @@ rd /S /Q boost_locale_v2.92 || (
 	echo ===- Error while trying to clean up Boost.Locale files & goto error)
 del boost_locale.tar.bz2
 del boost_locale.tar
+
+:: Winsparkle
+
+echo.
+echo ===- Downloading Winsparkle ...
+%WGET% "http://sourceforge.net/projects/swish/files/winsparkle-swish/winsparkle.zip/download" || (
+	echo ===- Error while trying to download Winsparkle. & goto error)
+%SEVENZ% x winsparkle.zip -owinsparkle -aoa || (
+	echo ===- Error while trying to extract Winsparkle. & goto error)
+del winsparkle.zip
 
 echo.
 echo ===- All build prerequisites successfully created.
