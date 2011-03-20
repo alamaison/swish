@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<configurations lcid_type="UserExe" show_language_selector="False" language_selector_title="" language_selector_ok="OK" language_selector_cancel="Cancel" configuration_no_match_message="" ui_level="full" fileversion="0.4.4.0" productversion="0.4.4.0" log_enabled="False" log_file="#TEMPPATH\dotNetInstallerLog.txt">
+<configurations lcid_type="UserExe" show_language_selector="False" language_selector_title="" language_selector_ok="OK" language_selector_cancel="Cancel" configuration_no_match_message="" ui_level="full" fileversion="0.4.5.0" productversion="0.4.5.0" log_enabled="False" log_file="#TEMPPATH\dotNetInstallerLog.txt">
   <schema version="1.10.1525.0" generator="dotNetInstaller InstallerEditor" />
   <fileattributes>
     <fileattribute name="ProductName" value="Swish" />
-    <fileattribute name="LegalCopyright" value="Copyright (C) 2010  Alexander Lamaison &amp; Contributors" />
+    <fileattribute name="LegalCopyright" value="Copyright (C) 2011  Alexander Lamaison &amp; Contributors" />
     <fileattribute name="FileDescription" value="Swish x86/x64 installer" />
     <fileattribute name="CompanyName" value="Swish.org" />
   </fileattributes>

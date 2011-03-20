@@ -1,3 +1,14 @@
+swish-0.4.5
+-Added ability to create new folders.
+-Added auto-updater.
+-More useful error messages.
+-Better error dialogues.
+-Fixed pasting files to the server.  This may have been broken for a long time!
+-Fixed problem with port numbers above 999 in some locales.
+-Fixed bug where pressing Cancel showed an error message.
+-Fixed bug causing Explorer Window to flash when navigating between folders.
+-Italian translation.
+
 swish-0.4.4
 -64-bit support.
 -Windows XP 'webtask' pane.
@@ -130,5 +141,3 @@ swish-0.1.1
 
 swish-0.1-gcc
 -Experimentation using gcc, wxWidgets and libssh-0.11
-
-$Id$
