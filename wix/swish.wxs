@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define Swish_ProductVersion = "0.4.5" ?>
+<?define Swish_ProductVersion = "0.4.6" ?>
 
 <?if $(var.Platform) = x64?>
 <?define Win64 = "yes"?>
@@ -62,7 +62,8 @@
 				<File Id="InterfacesDll" Source="$(var.TargetDir)interfaces_dll.dll" KeyPath="yes">
 					<Class Id="B816A843-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
 				</File>
-				<Interface Id="F01E103A-6C4B-4f70-9FC7-6E79B2A3F99F" Name="ISftpConsumer" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="13" />
+				<!-- CHANGE THESE IF THE INTERFACE DEFINITIONS CHANGE! -->
+				<Interface Id="0AEE1A06-7327-4a82-B52C-A7B2531F93EC" Name="ISftpConsumer" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="10" />
 				<Interface Id="B816A843-5022-11DC-9153-0090F5284F85" Name="IEnumListing" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="7" />
 				<Interface Id="CC3D4BAA-1BF8-4A34-848E-6D00A6EA09C3" Name="ISftpProvider" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="11" />
 			</Component>

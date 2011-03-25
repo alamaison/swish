@@ -1,3 +1,8 @@
+swish-0.4.6
+-Fixed major installer problem which broke all new installations as it failed
+ to register an interface.
+-Fixed problem that left assertion checks in release builds.
+
 swish-0.4.5
 -Added ability to create new folders.
 -Added auto-updater.
