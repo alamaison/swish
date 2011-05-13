@@ -1,0 +1,433 @@
+# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
+# kuroda <pandalex@cloudlabs.jp>, 2011.
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-28 15:04-0000\n"
+"PO-Revision-Date: 2011-04-19 10:58-0000\n"
+"Last-Translator: kuroda <pandalex@cloudlabs.jp>\n"
+"Language-Team: Cloudlabs\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Virtaal 0.6.1\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ../../swish\n"
+
+#: ../../swish/drop_target/DropTargetErrorUI.cpp:122
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:122
+msgid "An error occurred while transferring files:"
+msgstr "転送中にエラーが発生しました"
+
+#: ../../swish/drop_target/DropUI.cpp:349
+msgid "This folder already contains a file named '{1}'."
+msgstr "既に '{1}' という名前のファイルが存在します"
+
+#: ../../swish/drop_target/DropUI.cpp:352
+msgid "Would you like to replace it?"
+msgstr "上書きしてよろしいですか？"
+
+#: ../../swish/drop_target/DropUI.cpp:360
+msgid "Confirm File Replace"
+msgstr "上書きの確認"
+
+#: ../../swish/drop_target/DropUI.cpp:399
+msgctxt "Progress"
+msgid "Copying..."
+msgstr "コピー中"
+
+#: ../../swish/forms/add_host.cpp:102
+msgid "New SFTP Connection"
+msgstr "新規接続(SFTP)"
+
+#: ../../swish/forms/add_host.cpp:122
+msgid "Create"
+msgstr "作成する"
+
+#: ../../swish/forms/add_host.cpp:143
+msgctxt "New Host"
+msgid "&Label:"
+msgstr "ラベル:"
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "For example: \"Home Computer\"."
+msgstr "例： \"Home Computer\""
+
+#: ../../swish/forms/add_host.cpp:151
+msgid "Specify the details of the computer and account you would like to connect to:"
+msgstr "接続したいコンピュータとアカウントの詳細を確認してください"
+
+#: ../../swish/forms/add_host.cpp:155
+msgctxt "New Host"
+msgid "&Host:"
+msgstr "ホスト名："
+
+#: ../../swish/forms/add_host.cpp:159
+msgctxt "New Host"
+msgid "&Port:"
+msgstr "ポート番号："
+
+#: ../../swish/forms/add_host.cpp:164
+msgctxt "New Host"
+msgid "&User:"
+msgstr "ユーザーアカウント："
+
+#: ../../swish/forms/add_host.cpp:169
+msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgstr "Swishで接続を開始するサーバーのディレクトリを確認して下さい"
+
+#: ../../swish/forms/add_host.cpp:173
+msgctxt "New Host"
+msgid "P&ath:"
+msgstr "パス(Path)"
+
+#: ../../swish/forms/add_host.cpp:177
+msgid "Example: /home/yourusername"
+msgstr "例： /home/yourusername"
+
+#: ../../swish/forms/add_host.cpp:185
+#: ../../swish/forms/password.cpp:68
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The label cannot be longer than 30 characters."
+msgstr "ラベルは30文字以内で指定してください"
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The host name is invalid."
+msgstr "ホスト名に誤りがあります"
+
+#: ../../swish/forms/add_host.cpp:341
+msgid "The port is not valid (between 0 and 65535)."
+msgstr "ポート番号の指定に誤りがあります(0-65535)"
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "The username is invalid."
+msgstr "ユーザー名に誤りがあります"
+
+#: ../../swish/forms/add_host.cpp:349
+msgid "The path is invalid."
+msgstr "パスの指定に誤りがあります"
+
+#: ../../swish/forms/add_host.cpp:355
+msgid "A connection with the same label already exists. Please try another."
+msgstr "その接続名は既に存在していますので別の名前で登録してください"
+
+#: ../../swish/forms/add_host.cpp:361
+msgid "Complete all fields."
+msgstr "完了"
+
+#: ../../swish/forms/password.cpp:57
+msgid "Password"
+msgstr "パスワード"
+
+#: ../../swish/forms/password.cpp:64
+msgid "OK"
+msgstr "OK"
+
+#: ../../swish/host_folder/columns.cpp:57
+msgctxt "Property (filename/label)"
+msgid "Name"
+msgstr "ファイル名/ラベル"
+
+#: ../../swish/host_folder/columns.cpp:60
+msgctxt "Property"
+msgid "Host"
+msgstr "ホスト名"
+
+#: ../../swish/host_folder/columns.cpp:63
+msgctxt "Property"
+msgid "Username"
+msgstr "ユーザーアカウント"
+
+#: ../../swish/host_folder/columns.cpp:66
+msgctxt "Property"
+msgid "Port"
+msgstr "ポート番号"
+
+#: ../../swish/host_folder/columns.cpp:69
+msgctxt "Property"
+msgid "Remote path"
+msgstr "接続先のパス"
+
+#: ../../swish/host_folder/columns.cpp:72
+msgctxt "Property"
+msgid "Type"
+msgstr "タイプ"
+
+#: ../../swish/host_folder/properties.cpp:79
+msgctxt "FileType"
+msgid "Network Drive"
+msgstr "ネットワークドライブ"
+
+#: ../../swish/remote_folder/columns.cpp:82
+msgctxt "Property"
+msgid "Size"
+msgstr "サイズ"
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgctxt "Property"
+msgid "Date Modified"
+msgstr "変更日付"
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgctxt "Property"
+msgid "Date Accessed"
+msgstr "最終アクセス日付"
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgctxt "Property"
+msgid "Permissions"
+msgstr "権限(パーミッション)"
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgctxt "Property"
+msgid "Owner"
+msgstr "オーナー"
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgctxt "Property"
+msgid "Group"
+msgstr "グループ"
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgctxt "Property"
+msgid "Owner ID"
+msgstr "オーナーID"
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgctxt "Property"
+msgid "Group ID"
+msgstr "グループID"
+
+#: ../../swish/shell_folder/announce_error.cpp:129
+msgid "Show &details (which may not be in your language)"
+msgstr "詳細表示(日本語ではないかもしれません)"
+
+#: ../../swish/shell_folder/announce_error.cpp:130
+msgid "Hide &details"
+msgstr "詳細を表示しない"
+
+#: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
+msgid "Keyboard-interactive request"
+msgstr "対話式でキーボードから入力する"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:121
+msgid "Unable to access the directory"
+msgstr "ディレクトリにアクセスできません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:122
+#: ../../swish/shell_folder/RemoteFolder.cpp:312
+#: ../../swish/shell_folder/RemoteFolder.cpp:572
+#: ../../swish/shell_folder/RemoteFolder.cpp:598
+#: ../../swish/shell_folder/RemoteFolder.cpp:742
+#: ../../swish/shell_folder/commands/remote/remote.cpp:285
+msgid "You might not have permission."
+msgstr "権限(パーミッション)がありません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:194
+msgid "Path not recognised"
+msgstr "パスが認識されません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:195
+msgid "Check that the path was entered correctly."
+msgstr "パスに誤りがないか確認してください"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:311
+msgid "Unable to rename the item"
+msgstr "名前の変更はできません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:570
+msgid "Unable to access the item"
+msgstr "アクセスできません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:571
+msgid "Unable to access the items"
+msgstr "アクセスできません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:597
+msgid "Unable to access the folder"
+msgstr "フォルダーにアクセスできません"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:741
+msgid "Unable to delete the item"
+msgstr "削除できません"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:203
+#, boost-format
+msgid "The folder already contains a file named '%1%'"
+msgstr "既に '%1%' という名前のファイルが存在します"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:208
+#, boost-format
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr ""
+"すでに存在しているファイルを置き換えてよろしいですか？\n"
+"\t%1%\n"
+"\n"
+"置き換えるファイル\n"
+"\n"
+"\t%2%"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:212
+msgid "File already exists"
+msgstr "ファイルは既に存在しています"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:247
+msgid "Mismatched host-key"
+msgstr "サーバー側の鍵(host-key)が一致しません"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:248
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "WARNING:ホスト側の鍵(host-key)が変更されました"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:254
+#, boost-format
+msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
+msgstr ""
+" '%1%' から送信されてきたサーバー側の鍵(host-"
+"key)が一致しません。管理者が変更しただけの可能性もありますが、何者かが接続先に「なりすまし」ている可能性もあります"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:261
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "この鍵の指紋(fingerprint)が正しい確認してください"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+"この鍵を信頼します： 鍵情報を更新して接続する\n"
+"鍵が変更されるまでこの鍵を確認する必要はありません"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:275
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr ""
+"この鍵を信頼します： このまま接続する\n"
+"次回接続時もこのメッセージが表示されます"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:281
+#: ../../swish/shell_folder/UserInteraction.cpp:322
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr ""
+"キャンセル\n"
+"この鍵が正しいものであると確信できない場合はこちらを選んでください"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:291
+msgid "Unknown host-key"
+msgstr "サーバー側の鍵(host-key)が不明です"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:297
+#, boost-format
+msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
+msgstr "サーバー '%1%' は自身の以下の指紋(fingerprint)のSSH鍵(SSH host-key)で特定されています："
+
+#: ../../swish/shell_folder/UserInteraction.cpp:301
+msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
+msgstr "あなたが接続しようとしているこの鍵が予期できない鍵である場合、何者かがなりすましている可能性があります"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:304
+msgid "Verify unknown SSH host-key"
+msgstr "不明なSSH鍵(SSH host-key)を確認してください"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:311
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr ""
+"この鍵を信頼します：鍵情報を保管して接続する\n"
+"鍵が変更されるまでこの鍵を確認する必要はありません"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:316
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr ""
+"この鍵を信頼します： このまま接続する\n"
+"次回接続時もこのメッセージが表示されます"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:109
+msgid "&Add SFTP Connection"
+msgstr "接続(SFTP)を追加する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:110
+msgid "Create a new SFTP connection with Swish."
+msgstr "Swishで新規SFTP接続をおこなう"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:111
+msgid "&Add SFTP Connection..."
+msgstr "接続(SFTP)を追加する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:112
+msgid "Add Connection"
+msgstr "接続を追加する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:142
+msgid "&Remove SFTP Connection"
+msgstr "接続を削除する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:143
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Seishで作成したSFTP接続を削除する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:144
+msgid "&Remove SFTP Connection..."
+msgstr "接続を削除する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:145
+msgid "Remove Connection"
+msgstr "接続を削除する"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:199
+msgid "SFTP Tasks"
+msgstr "SFTPタスク"
+
+#: ../../swish/shell_folder/commands/host/host.cpp:212
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "これらのタスクでSFTP接続を管理できます"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:209
+msgid "New &folder"
+msgstr "新規フォルダー"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:210
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "現在開いているフォルダーに新規フォルダーを作成します"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:212
+msgid "Make a new folder"
+msgstr "新規フォルダーを作成する"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:251
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "新規フォルダー"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:284
+msgid "Could not create a new folder"
+msgstr "新規フォルダーを作成できません"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:312
+msgid "File and Folder Tasks"
+msgstr "ファイルとフォルダーのタスク"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:324
+msgid "These tasks help you manage your remote files."
+msgstr "これらのタスクで接続先のファイルを管理できます"
+

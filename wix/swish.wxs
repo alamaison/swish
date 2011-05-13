@@ -202,6 +202,7 @@
 			<ComponentGroupRef Id="HETrans" />
 			<ComponentGroupRef Id="CSTrans" />
 			<ComponentGroupRef Id="ITTrans" />
+			<ComponentGroupRef Id="JATrans" />
 		</ComponentGroup>
 
 		<Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>
