@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,14 +30,6 @@
 
 #include <winapi/error.hpp> // last_error
 #include <winapi/gui/hwnd.hpp> // set_window_field, window_field
-
-#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
-#include <boost/exception/info.hpp> // errinfo
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
-#include <boost/type_traits/remove_pointer.hpp> // remove_pointer
-
-#include <Winuser.h> // SetWindowsHookEx
-#include <Winbase.h> // GetCurrentThreadId
 
 namespace ezel {
 namespace detail {
@@ -65,7 +57,7 @@ inline void store_dialog_window_data(HWND hwnd, const U& data)
 }
 
 /**
- * Get a value previously stored in the GWLP_USERDATA segment of the 
+ * Get a value previously stored in the GWLP_USERDATA segment of the
  * window descriptor.
  *
  * The value type must be no bigger than a LONG_PTR.
@@ -82,7 +74,7 @@ inline U fetch_user_window_data(HWND hwnd)
 }
 
 /**
- * Get a value previously stored in the DWLP_USER segment of the 
+ * Get a value previously stored in the DWLP_USER segment of the
  * window descriptor.
  *
  * The value type must be no bigger than a LONG_PTR.
@@ -96,25 +88,6 @@ template<typename T, typename U>
 inline U fetch_dialog_window_data(HWND hwnd)
 {
 	return winapi::gui::window_field<T, U>(hwnd, DWLP_USER);
-}
-
-typedef boost::shared_ptr<boost::remove_pointer<HHOOK>::type> hhook;
-
-/**
- * Install a windows hook function for the current thread.
- *
- * The hook is uninstalled when the returned hhook goes out of scope.
- */
-inline hhook windows_hook(int type, HOOKPROC hook_function)
-{
-	HHOOK hook = ::SetWindowsHookExW(
-		type, hook_function, NULL, ::GetCurrentThreadId());
-	if (hook == NULL)
-		BOOST_THROW_EXCEPTION(
-			boost::enable_error_info(winapi::last_error()) << 
-			boost::errinfo_api_function("SetWindowsHookExW"));
-
-	return hhook(hook, ::UnhookWindowsHookEx);
 }
 
 }} // namespace ezel::detail

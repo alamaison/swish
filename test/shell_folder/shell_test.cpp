@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
 
+#include <winapi/shell/shell.hpp> // desktop_folder
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/test/unit_test.hpp>
@@ -43,7 +44,6 @@
 #include <string>
 #include <algorithm>  // transform
 
-using swish::shell_folder::desktop_folder;
 using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::ui_object_of_item;
 using swish::shell_folder::ui_object_of_items;
@@ -55,6 +55,7 @@ using swish::shell_folder::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
 
 using winapi::shell::pidl::apidl_t;
+using winapi::shell::desktop_folder;
 
 using test::ComFixture;
 using test::SandboxFixture;

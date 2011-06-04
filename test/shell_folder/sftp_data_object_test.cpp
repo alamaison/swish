@@ -37,12 +37,12 @@
 #include "swish/shell_folder/data_object/FileGroupDescriptor.hpp"  // accessor
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // accessor
 #include "swish/shell_folder/data_object/StorageMedium.hpp"  // accessor
-#include "swish/shell_folder/shell.hpp" // parsing_name_from_pidl
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <winapi/shell/shell.hpp> // parsing_name_from_pidl
 
 #include <comet/ptr.h>  // com_ptr
 
@@ -61,12 +61,12 @@
 
 #include <sys/stat.h>  // _S_IREAD
 
-using swish::shell_folder::parsing_name_from_pidl;
 using namespace swish::shell_folder::data_object;
 
 using test::PidlFixture;
 
 using namespace winapi::shell::pidl;
+using winapi::shell::parsing_name_from_pidl;
 
 using comet::com_ptr;
 

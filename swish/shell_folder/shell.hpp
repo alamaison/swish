@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/iterator/indirect_iterator.hpp>
 
+#include <winapi/shell/shell.hpp> // desktop_folder
 #include <winapi/shell/pidl.hpp> // pidl_t, PIDL wrapper types
 
 #include <shobjidl.h>  // IShellFolder
@@ -60,12 +61,6 @@ namespace { // private
 
 namespace comet {
 
-template<> struct comtype<IShellFolder>
-{
-	static const IID& uuid() throw() { return IID_IShellFolder; }
-	typedef IUnknown base;
-};
-
 template<> struct comtype<IDataObject>
 {
 	static const IID& uuid() throw() { return IID_IDataObject; }
@@ -76,11 +71,6 @@ template<> struct comtype<IDataObject>
 
 namespace swish {
 namespace shell_folder {
-
-/**
- * Return the desktop folder IShellFolder handler.
- */
-comet::com_ptr<IShellFolder> desktop_folder();
 
 /**
  * Return the filesystem path represented by the given PIDL.
@@ -218,7 +208,7 @@ template<typename T>
 comet::com_ptr<T> bind_to_handler_object(
 	const winapi::shell::pidl::pidl_t& pidl)
 {
-	comet::com_ptr<IShellFolder> desktop = desktop_folder();
+	comet::com_ptr<IShellFolder> desktop = winapi::shell::desktop_folder();
 	comet::com_ptr<T> handler;
 
 	if (pidl.empty()) // get handler via QI
@@ -235,12 +225,5 @@ comet::com_ptr<T> bind_to_handler_object(
 
 	return handler;
 }
-
-/**
- * Return the FORPARSING name of the given PIDL.
- *
- * For filesystem items this will be the absolute path.
- */
-std::wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl);
 
 }} // namespace swish::shell_folder

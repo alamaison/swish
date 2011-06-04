@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,8 +28,9 @@
 #define EZEL_HOOKS_HPP
 #pragma once
 
-#include <ezel/detail/hwnd_linking.hpp> // windows_hook
 #include <ezel/detail/window_impl.hpp> // window_impl
+
+#include <winapi/hook.hpp> // windows_hook
 
 #include <iostream> // cerr
 
@@ -69,7 +70,7 @@ inline void handle_create(
 	HWND hwnd, HWND /*insert_after*/,
 	typename native::create_struct<T>::type& create_info)
 {
-	UNALIGNED wchar_t* data = 
+	UNALIGNED wchar_t* data =
 		static_cast<UNALIGNED wchar_t*>(create_info.lpCreateParams);
 
 	if (data)
@@ -142,10 +143,10 @@ class creation_hooks
 public:
 	creation_hooks()
 		:
-		m_cbt_hook(windows_hook(WH_CBT, &cbt_hook_function<T>)) {}
+		m_cbt_hook(winapi::windows_hook(WH_CBT, &cbt_hook_function<T>)) {}
 
 private:
-	hhook m_cbt_hook;
+	winapi::hhook m_cbt_hook;
 };
 
 }} // namespace ezel::detail

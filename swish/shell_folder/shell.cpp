@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #include "shell.hpp"
 
-#include <winapi/shell/shell.hpp> // strret_to_string
+#include <winapi/shell/shell.hpp> // strret_to_string, parsing_name_from_pidl
 
 #include <comet/error.h> // com_error
 
@@ -35,6 +35,7 @@
 #include <shlobj.h>  // SHGetDesktopFolder, SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
+using winapi::shell::parsing_name_from_pidl;
 using winapi::shell::strret_to_string;
 
 using comet::com_error;
@@ -52,15 +53,6 @@ using std::vector;
 
 namespace swish {
 namespace shell_folder {
-
-com_ptr<IShellFolder> desktop_folder()
-{
-	com_ptr<IShellFolder> folder;
-	HRESULT hr = ::SHGetDesktopFolder(folder.out());
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error(hr));
-	return folder;
-}
 
 wpath path_from_pidl(PIDLIST_ABSOLUTE pidl)
 {
@@ -94,22 +86,5 @@ com_ptr<IDataObject> data_object_for_directory(const wpath& directory)
 		wdirectory_iterator(directory), wdirectory_iterator());
 }
 
-wstring parsing_name_from_pidl(PCIDLIST_ABSOLUTE pidl)
-{
-	com_ptr<IShellFolder> folder;
-	PCUITEMID_CHILD child_pidl;
-	HRESULT hr = swish::windows_api::SHBindToParent(
-		pidl, uuidof(folder.in()), reinterpret_cast<void**>(folder.out()), 
-		&child_pidl);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error(hr));
-
-	STRRET str;
-	hr = folder->GetDisplayNameOf(child_pidl, SHGDN_FORPARSING, &str);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
-
-	return strret_to_string<wchar_t>(str, child_pidl);
-}
 
 }} // namespace swish::shell_folder

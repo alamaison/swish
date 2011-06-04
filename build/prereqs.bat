@@ -90,6 +90,20 @@ rd /S /Q alamaison-swish_comet-bd51035cab59 || (
 	echo ===- Error while trying to clean up comet files & goto error)
 del bd51035cab59.zip
 
+:: winapi
+
+echo.
+echo ===- Downloading winapi ...
+%WGET% -O winapi_master.zip --no-check-certificate "https://github.com/alamaison/winapi/zipball/master" || (
+	echo ===- Error while trying to download winapi. & goto error)
+%SEVENZ% x winapi_master.zip -aoa || (
+	echo ===- Error while trying to extract winapi. & goto error)
+xcopy /E /Q /Y alamaison-winapi-ab67cf9 winapi\ || (
+	echo ===- Error while trying to copy winapi files & goto error)
+rd /S /Q alamaison-winapi-ab67cf9 || (
+	echo ===- Error while trying to clean up winapi files & goto error)
+del winapi_master.zip
+
 :: Boost.Locale
 
 echo.
