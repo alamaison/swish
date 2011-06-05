@@ -105,6 +105,46 @@ namespace { // private
 			return TEST_DATA;
 		}
 	};
+
+	void read_and_verify_return(
+		char* data, ULONG data_size, IStream* stream)
+	{
+		ULONG total_bytes_read = 0;
+		HRESULT hr = E_FAIL;
+		do {
+			ULONG bytes_requested = data_size - total_bytes_read;
+			ULONG bytes_read = 0;
+
+			hr = stream->Read(
+				data + total_bytes_read, bytes_requested, &bytes_read);
+			if (hr == S_OK)
+			{
+				// S_OK indicates a complete read so make sure this read
+				// however many bytes were left from any previous (possibly
+				// none) short reads
+				BOOST_REQUIRE_EQUAL(bytes_read, bytes_requested);
+				return;
+			}
+			else if (hr == S_FALSE)
+			{
+				// S_FALSE indicated a 'short' read so make sure it really
+				// is short
+				BOOST_CHECK_LT(bytes_read, bytes_requested);
+				total_bytes_read += bytes_read;
+			}
+			else
+			{
+				// not really requiring S_OK; S_FALSE is fine too
+				BOOST_REQUIRE_OK(hr);
+			}
+		} while (SUCCEEDED(hr) && (total_bytes_read < data_size));
+
+		// Trying to read more should succeed but return 0 bytes read
+		char buf[10];
+		BOOST_REQUIRE_OK(stream->Read(buf, sizeof(buf), &total_bytes_read));
+		BOOST_REQUIRE_EQUAL(total_bytes_read, 0U);
+	}
+
 }
 
 BOOST_FIXTURE_TEST_SUITE(StreamRead, StreamReadFixture)
@@ -140,20 +180,12 @@ BOOST_AUTO_TEST_CASE( read_a_string )
 	CComPtr<IStream> spStream = GetReadStream();
 
 	string expected = ExpectedData();
-	ULONG cbRead = 0;
 	vector<char> buf(expected.size());
-	BOOST_REQUIRE_OK(
-		spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, expected.size());
+	read_and_verify_return(&buf[0], numeric_cast<ULONG>(buf.size()), spStream);
 
 	// Test that the bytes we read match
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		buf.begin(), buf.end(), expected.begin(), expected.end());
-	
-	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(
-		spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
 /**
@@ -167,10 +199,8 @@ BOOST_AUTO_TEST_CASE( read_a_string_readonly )
 	CComPtr<IStream> spStream = GetReadStream();
 
 	string expected = ExpectedData();
-	ULONG cbRead = 0;
 	vector<char> buf(expected.size());
-	BOOST_REQUIRE_OK(
-		spStream->Read(&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
+	read_and_verify_return(&buf[0], numeric_cast<ULONG>(buf.size()), spStream);
 
 	// Test that the bytes we read match
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(

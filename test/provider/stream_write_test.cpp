@@ -70,6 +70,47 @@ using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(StreamWrite, StreamFixture)
 
+namespace {
+	void read_and_verify_return(
+		char* data, ULONG data_size, IStream* stream)
+	{
+		ULONG total_bytes_read = 0;
+		HRESULT hr = E_FAIL;
+		do {
+			ULONG bytes_requested = data_size - total_bytes_read;
+			ULONG bytes_read = 0;
+
+			hr = stream->Read(
+				data + total_bytes_read, bytes_requested, &bytes_read);
+			if (hr == S_OK)
+			{
+				// S_OK indicates a complete read so make sure this read
+				// however many bytes were left from any previous (possibly
+				// none) short reads
+				BOOST_REQUIRE_EQUAL(bytes_read, bytes_requested);
+				return;
+			}
+			else if (hr == S_FALSE)
+			{
+				// S_FALSE indicated a 'short' read so make sure it really
+				// is short
+				BOOST_CHECK_LT(bytes_read, bytes_requested);
+				total_bytes_read += bytes_read;
+			}
+			else
+			{
+				// not really requiring S_OK; S_FALSE is fine too
+				BOOST_REQUIRE_OK(hr);
+			}
+		} while (SUCCEEDED(hr) && (total_bytes_read < data_size));
+
+		// Trying to read more should succeed but return 0 bytes read
+		char buf[10];
+		BOOST_REQUIRE_OK(stream->Read(buf, sizeof(buf), &total_bytes_read));
+		BOOST_REQUIRE_EQUAL(total_bytes_read, 0U);
+	}
+}
+
 /**
  * Simply get a stream.
  */
@@ -109,14 +150,8 @@ BOOST_AUTO_TEST_CASE( write_one_byte )
 	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
 
 	char out[1];
-	ULONG cbRead = 0;
-	BOOST_REQUIRE_OK(spStream->Read(out, sizeof(out), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, sizeof(out));
+	read_and_verify_return(out, sizeof(out), spStream);
 	BOOST_REQUIRE_EQUAL('M', out[0]);
-	
-	// Reading another byte should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(out, sizeof(out), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
 /**
@@ -137,17 +172,9 @@ BOOST_AUTO_TEST_CASE( write_a_string )
 	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
 
 	vector<char> out(in.size());
-	ULONG cbRead = 0;
-	BOOST_REQUIRE_OK(
-		spStream->Read(&out[0], numeric_cast<ULONG>(out.size()), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, numeric_cast<ULONG>(out.size()));
+	read_and_verify_return(&out[0], numeric_cast<ULONG>(out.size()), spStream);
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		out.begin(), out.end(), in.begin(), in.end());
-	
-	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(
-		spStream->Read(&out[0], numeric_cast<ULONG>(out.size()), &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
 /**
@@ -169,16 +196,9 @@ BOOST_AUTO_TEST_CASE( write_large )
 	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
 
 	vector<char> out(in.size());
-	ULONG cbRead = 0;
-	ULONG out_size = numeric_cast<ULONG>(out.size());
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out_size, &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, out_size);
+	read_and_verify_return(&out[0], numeric_cast<ULONG>(out.size()), spStream);
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		out.begin(), out.end(), in.begin(), in.end());
-	
-	// Trying to read more should succeed but return 0 bytes read
-	BOOST_REQUIRE_OK(spStream->Read(&out[0], out_size, &cbRead));
-	BOOST_REQUIRE_EQUAL(cbRead, 0U);
 }
 
 /**

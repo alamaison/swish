@@ -313,8 +313,15 @@ CSftpStream::~CSftpStream()
  *                      actually read.  This should be correct even if the call 
  *                      results in a failure.  Optional.
  *
- * @return S_OK if successful or an STG_E_* error code if an error occurs.
+ * @return S_OK if successful, S_FALSE if successful but fewer bytes were read 
+ *         than requested or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pv is NULL.
+ *
+ * Unlike Write(), MSDN makes clear that Read() can return short [1].  Therefore
+ * we don't block until all the data has been read and instead just return
+ * the (possibly short) number of bytes read.
+ *
+ * [1] http://msdn.microsoft.com/en-us/library/aa380011%28v=vs.85%29.aspx
  */
 STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
 {
@@ -331,7 +338,7 @@ STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
 	}
 	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+	return (*pcbRead < cb) ? S_FALSE : S_OK;
 }
 
 /**
@@ -347,6 +354,12 @@ STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
  *
  * @return S_OK if successful or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pv is NULL.
+ *
+ * MSDN seems to imply that, unlike POSIX write(), Write() cannot return
+ * short except in the error case [1].  Therefore we err on the side of caution
+ * and block until all the data has been written.
+ *
+ * [1] http://msdn.microsoft.com/en-us/library/aa380014%28v=VS.85%29.aspx
  */
 STDMETHODIMP CSftpStream::Write(
 	const void* pv, ULONG cb, ULONG* pcbWritten)
@@ -368,7 +381,7 @@ STDMETHODIMP CSftpStream::Write(
 }
 
 /**
- * Copy a given number of bytes from the current IStream another IStream.
+ * Copy a given number of bytes from the current IStream to another IStream.
  *
  * The bytes are read starting from the current seek position of this stream
  * and are copied into the target stream (pstm) starting at its current
@@ -382,7 +395,7 @@ STDMETHODIMP CSftpStream::Write(
  *                         stream.  This may differ from cb if the end-of-file
  *                         was reached.  This should be correct even if the 
  *                         call results in a failure.  Optional.
- * @param[out] pcbWritten  Number of byted that were actually written to the
+ * @param[out] pcbWritten  Number of bytes that were actually written to the
  *                         target stream.  This should be correct even if the 
  *                         call results in a failure.  Optional.
  *
@@ -592,16 +605,14 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
  */
 void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 {
-	ULONG cbChunk;
 	ULONG rc;
 	
 	cbWritten = 0;
 	do {
-		cbChunk = min(cb - cbWritten, WRITE_CHUNK);
-		rc = _WriteOne(pbuf + cbWritten, cbChunk);
+		rc = _WriteOne(pbuf + cbWritten, min(cb - cbWritten, WRITE_CHUNK));
 		cbWritten += rc;
 	}
-	while (rc == cbChunk && cbWritten < cb);
+	while (cbWritten < cb);
 }
 
 
