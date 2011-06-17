@@ -1,0 +1,6 @@
+[submodule "thirdparty/libssh2"]
+	path = thirdparty/libssh2
+	url = git://git.libssh2.org/libssh2.git
+[submodule "thirdparty/winapi"]
+	path = thirdparty/winapi
+	url = git://github.com/alamaison/winapi.git

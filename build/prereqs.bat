@@ -20,26 +20,23 @@
 setlocal
 echo.
 
-cd ..\thirdparty
+cd ..
+
+:: Git submodules: libssh2, winapi
+
+echo ===- Initialising GIT submodules ...
+call git submodule init || (
+	echo ===- Error while Initialising GIT submodules & goto error)
+
+echo ===- Cloning GIT submodules ...
+call git submodule update || (
+	echo ===- Error while Initialising GIT submodules & goto error)
+	
+
+cd thirdparty
+
 set WGET=..\build\wget\wget.exe -N
 set SEVENZ=..\build\7za\7za.exe
-
-:: libssh2
-
-echo ===- Dowloading libssh2 ...
-%WGET% -O libssh2.tar.gz "http://www.libssh2.org/download/libssh2-1.2.8.tar.gz" || (
-	echo ===- Error while trying to download libssh2 & goto error)
-%SEVENZ% x libssh2.tar.gz -aoa || (
-	echo ===- Error while trying to extract libssh2 & goto error)
-%SEVENZ% x libssh2.tar -aoa || (
-	echo ===- Error while trying to extract libssh2 & goto error)
-xcopy /E /Q /Y libssh2-1.2.8 libssh2 || (
-	echo ===- Error while trying to copy libssh2 files & goto error)
-rd /S /Q libssh2-1.2.8 || (
-	echo ===- Error while trying to clean up libssh2 files & goto error)
-del pax_global_header
-del libssh2.tar
-del libssh2.tar.gz
 
 :: zlib
 
@@ -89,20 +86,6 @@ xcopy /E /Q /Y alamaison-swish_comet-bd51035cab59 comet || (
 rd /S /Q alamaison-swish_comet-bd51035cab59 || (
 	echo ===- Error while trying to clean up comet files & goto error)
 del bd51035cab59.zip
-
-:: winapi
-
-echo.
-echo ===- Downloading winapi ...
-%WGET% -O winapi_master.zip --no-check-certificate "https://github.com/alamaison/winapi/zipball/master" || (
-	echo ===- Error while trying to download winapi. & goto error)
-%SEVENZ% x winapi_master.zip -aoa || (
-	echo ===- Error while trying to extract winapi. & goto error)
-xcopy /E /Q /Y alamaison-winapi-ab67cf9 winapi\ || (
-	echo ===- Error while trying to copy winapi files & goto error)
-rd /S /Q alamaison-winapi-ab67cf9 || (
-	echo ===- Error while trying to clean up winapi files & goto error)
-del winapi_master.zip
 
 :: Boost.Locale
 

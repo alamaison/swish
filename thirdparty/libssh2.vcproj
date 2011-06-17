@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -122,7 +122,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -201,7 +201,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -280,7 +280,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include;win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -344,87 +344,87 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath=".\src\agent.c"
+				RelativePath="libssh2\src\agent.c"
 				>
 			</File>
 			<File
-				RelativePath="src\channel.c"
+				RelativePath="libssh2\src\channel.c"
 				>
 			</File>
 			<File
-				RelativePath="src\comp.c"
+				RelativePath="libssh2\src\comp.c"
 				>
 			</File>
 			<File
-				RelativePath="src\crypt.c"
+				RelativePath="libssh2\src\crypt.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\global.c"
+				RelativePath="libssh2\src\global.c"
 				>
 			</File>
 			<File
-				RelativePath="src\hostkey.c"
+				RelativePath="libssh2\src\hostkey.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\keepalive.c"
+				RelativePath="libssh2\src\keepalive.c"
 				>
 			</File>
 			<File
-				RelativePath="src\kex.c"
+				RelativePath="libssh2\src\kex.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\knownhost.c"
+				RelativePath="libssh2\src\knownhost.c"
 				>
 			</File>
 			<File
-				RelativePath="src\mac.c"
+				RelativePath="libssh2\src\mac.c"
 				>
 			</File>
 			<File
-				RelativePath="src\misc.c"
+				RelativePath="libssh2\src\misc.c"
 				>
 			</File>
 			<File
-				RelativePath="src\openssl.c"
+				RelativePath="libssh2\src\openssl.c"
 				>
 			</File>
 			<File
-				RelativePath="src\packet.c"
+				RelativePath="libssh2\src\packet.c"
 				>
 			</File>
 			<File
-				RelativePath="src\pem.c"
+				RelativePath="libssh2\src\pem.c"
 				>
 			</File>
 			<File
-				RelativePath="src\publickey.c"
+				RelativePath="libssh2\src\publickey.c"
 				>
 			</File>
 			<File
-				RelativePath="src\scp.c"
+				RelativePath="libssh2\src\scp.c"
 				>
 			</File>
 			<File
-				RelativePath="src\session.c"
+				RelativePath="libssh2\src\session.c"
 				>
 			</File>
 			<File
-				RelativePath="src\sftp.c"
+				RelativePath="libssh2\src\sftp.c"
 				>
 			</File>
 			<File
-				RelativePath="src\transport.c"
+				RelativePath="libssh2\src\transport.c"
 				>
 			</File>
 			<File
-				RelativePath="src\userauth.c"
+				RelativePath="libssh2\src\userauth.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\version.c"
+				RelativePath="libssh2\src\version.c"
 				>
 			</File>
 		</Filter>
@@ -433,15 +433,15 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="include\libssh2.h"
+				RelativePath="libssh2\include\libssh2.h"
 				>
 			</File>
 			<File
-				RelativePath="win32\libssh2_config.h"
+				RelativePath="libssh2\win32\libssh2_config.h"
 				>
 			</File>
 			<File
-				RelativePath="include\libssh2_sftp.h"
+				RelativePath="libssh2\include\libssh2_sftp.h"
 				>
 			</File>
 		</Filter>
