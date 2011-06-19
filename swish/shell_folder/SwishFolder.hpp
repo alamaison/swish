@@ -35,6 +35,7 @@
 
 #include <comet/error.h> // com_error
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
@@ -159,7 +160,12 @@ protected:
 	 */
 	virtual ATL::CComPtr<IShellView> folder_view(HWND hwnd)
 	{
+		::MessageBoxA(NULL, "Shell view requested", NULL, MB_OK);
 		TRACE("Request: IShellView");
+
+		try
+		{
+
 
 		SFV_CREATE sfvdata = { sizeof(sfvdata), 0 };
 
@@ -182,6 +188,13 @@ protected:
 			BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
 		return view;
+		}
+		catch (const std::exception& e)
+		{
+			std::string message = "View creation failed: "+ boost::diagnostic_information(e);
+			::MessageBoxA(NULL, message.c_str(), NULL, MB_OK);
+			throw;
+		}
 	}
 
 	/**
