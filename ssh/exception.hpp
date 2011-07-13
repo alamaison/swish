@@ -81,6 +81,17 @@ public:
 		}
 	}
 
+	int error_code() const
+	{
+		return m_error_code;
+	}
+
+protected:
+	std::string& message()
+	{
+		return m_message;
+	}
+
 private:
 	std::string m_message;
 	int m_error_code;

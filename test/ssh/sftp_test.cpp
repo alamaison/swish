@@ -39,8 +39,12 @@
 
 #include <ssh/sftp.hpp> // test subject
 
+#include <boost/bind.hpp> // bind
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm> // find
+#include <string>
 
 using ssh::exception::ssh_error;
 using ssh::session;
@@ -48,8 +52,21 @@ using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_file;
 using ssh::sftp::directory_iterator;
 
+using boost::bind;
+using boost::filesystem::path;
+
 using test::ssh::sandbox_fixture;
 using test::ssh::session_fixture;
+
+using std::find;
+using std::string;
+
+namespace {
+
+bool filename_matches(const string& filename, const sftp_file& remote_file)
+{
+	return filename == remote_file.name();
+}
 
 class sftp_fixture : public session_fixture, public sandbox_fixture
 {
@@ -63,7 +80,28 @@ public:
 
 		return channel;
 	}
+
+	sftp_file find_file_in_remote_sandbox(const string& filename)
+	{
+		// Search for path in directory because we need the 'remote' form of it,
+		// not the local filesystem version.
+		directory_iterator it(channel(), to_remote_path(sandbox()));
+		directory_iterator pos = find_if(
+			it, directory_iterator(), bind(filename_matches, filename, _1));
+		BOOST_REQUIRE(pos != directory_iterator());
+
+		return *pos;
+	}
+
+	void create_symlink(path link, path target)
+	{
+		// Passing arguments in the wrong order to work around OpenSSH bug
+		ssh::sftp::create_symlink(
+			channel(), to_remote_path(target), to_remote_path(link));
+	}
 };
+
+}
 
 BOOST_FIXTURE_TEST_SUITE(sftp_tests, sftp_fixture)
 
@@ -96,28 +134,112 @@ BOOST_AUTO_TEST_CASE( missing_dir )
  */
 BOOST_AUTO_TEST_CASE( dir_with_one_file )
 {
-	boost::filesystem::path test_file = new_file_in_sandbox();
+	path test_file = new_file_in_sandbox();
 
 	directory_iterator it(channel(), to_remote_path(sandbox()));
 
 	sftp_file file = *it;
-	BOOST_CHECK(file.name() == ".");
-	BOOST_CHECK(it->name() == ".");
+	BOOST_CHECK_EQUAL(file.name(), ".");
+	BOOST_CHECK_EQUAL(it->name(), ".");
 	BOOST_CHECK_GT(it->long_entry().size(), 0U);
 
 	it++;
 	
-	BOOST_CHECK((*it).name() == "..");
+	BOOST_CHECK_EQUAL((*it).name(), "..");
 	file = *it;
-	BOOST_CHECK(file.name() == "..");
+	BOOST_CHECK_EQUAL(file.name(), "..");
 
 	it++;
 
-	BOOST_CHECK(it->name() == test_file.filename());
+	BOOST_CHECK_EQUAL(it->name(), test_file.filename());
 
 	it++;
 
 	BOOST_CHECK(it == directory_iterator());
+}
+
+/**
+ * Create a symbolic link.
+ */
+BOOST_AUTO_TEST_CASE( symlink_creation )
+{
+	create_symlink(sandbox() / "link", new_file_in_sandbox());
+	BOOST_CHECK(exists(sandbox() / "link") || exists(sandbox() / "link.lnk"));
+}
+
+/**
+ * Recognise a symbolic link.
+ */
+BOOST_AUTO_TEST_CASE( symlink_recognition )
+{
+	create_symlink(sandbox() / "link", new_file_in_sandbox());
+
+	BOOST_CHECK(is_symlink(find_file_in_remote_sandbox("link")));
+}
+
+/**
+ * Resolve a symbolic link.
+ */
+BOOST_AUTO_TEST_CASE( symlink_resolution )
+{
+	path target =  new_file_in_sandbox();
+	create_symlink(sandbox() / "link", target);
+
+	path remote_target = to_remote_path(target);
+	path resolved_target = 
+		resolve_link_target(channel(), find_file_in_remote_sandbox("link"));
+	BOOST_CHECK_EQUAL(resolved_target, remote_target);
+}
+
+/**
+ * Canonicalise path.
+ */
+BOOST_AUTO_TEST_CASE( canonicalisation )
+{
+	path target =  new_file_in_sandbox();
+	create_symlink(sandbox() / "link", target);
+
+	path remote_target = to_remote_path(target);
+	path resolved_target = 
+		canonical_path(channel(), find_file_in_remote_sandbox("link"));
+	BOOST_CHECK_EQUAL(resolved_target, remote_target);
+}
+
+/**
+ * Canonicalise a path that consists of two symlinks.
+ */
+BOOST_AUTO_TEST_CASE( two_hop_canonicalisation )
+{
+	path target =  new_file_in_sandbox();
+	create_symlink(sandbox() / "link1", target);
+	create_symlink(sandbox() / "link2", sandbox() / "link1");
+
+	path remote_target = to_remote_path(target);
+	path resolved_target = 
+		canonical_path(channel(), find_file_in_remote_sandbox("link2"));
+	BOOST_CHECK_EQUAL(resolved_target, remote_target);
+}
+
+/**
+ * Resolve a symlink to a symlink.  The result should be the path of the
+ * second symlink, rather than the second symlink's target.
+ */
+BOOST_AUTO_TEST_CASE( symlink_to_symlink )
+{
+	path target =  new_file_in_sandbox();
+	create_symlink(sandbox() / "link1", target);
+	create_symlink(sandbox() / "link2", sandbox() / "link1");
+
+	path remote_target = to_remote_path(sandbox() / "link1");
+	path resolved_target = 
+		resolve_link_target(channel(), find_file_in_remote_sandbox("link2"));
+	BOOST_CHECK_EQUAL(resolved_target, remote_target);
+}
+
+BOOST_AUTO_TEST_CASE( default_directory )
+{
+	path resolved_target = canonical_path(channel(), "");
+	BOOST_CHECK(!resolved_target.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END();
