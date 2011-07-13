@@ -28,7 +28,6 @@
 
 #include "Pidl.h"
 
-#include "swish/atl.hpp" // Common ATL setup
 #include "swish/debug.hpp" // METHOD_TRACE
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
@@ -69,10 +68,28 @@
 
 namespace comet {
 
-template<> struct comtype<IPersistFolder2>
+template<> struct comtype<IPersistIDList>
+{
+	static const IID& uuid() { return IID_IPersistIDList; }
+	typedef IPersist base;
+};
+
+template<> struct comtype<IPersistFolder>
 {
 	static const IID& uuid() { return IID_IPersistFolder; }
+	typedef IPersist base;
+};
+
+template<> struct comtype<IPersistFolder2>
+{
+	static const IID& uuid() { return IID_IPersistFolder2; }
 	typedef IPersistFolder base;
+};
+
+template<> struct comtype<IPersistFolder3>
+{
+	static const IID& uuid() { return IID_IPersistFolder3; }
+	typedef IPersistFolder2 base;
 };
 
 }
@@ -121,24 +138,11 @@ namespace detail {
 
 template<typename ColumnType>
 class CFolder :
-	public ATL::CComObjectRoot,
 	public winapi::shell::folder2_error_adapter,
-	public winapi::shell::shell_details_error_adapter,
-	public IPersistFolder3,
+	public winapi::shell::shell_details_error_adapter, public IPersistFolder3,
 	public IPersistIDList
 {
 public:
-
-	BEGIN_COM_MAP(CFolder)
-		COM_INTERFACE_ENTRY(IPersistFolder3)
-		COM_INTERFACE_ENTRY(IShellFolder2)
-		COM_INTERFACE_ENTRY(IShellDetails)
-		COM_INTERFACE_ENTRY(IPersistIDList)
-		COM_INTERFACE_ENTRY2(IPersist,        IPersistFolder3)
-		COM_INTERFACE_ENTRY2(IPersistFolder,  IPersistFolder3)
-		COM_INTERFACE_ENTRY2(IPersistFolder2, IPersistFolder3)
-		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)
-	END_COM_MAP()
 
 	CFolder() {}
 

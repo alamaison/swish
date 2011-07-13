@@ -34,23 +34,16 @@
 #include "resource.h"            // main symbols
 #include "swish/shell_folder/Swish.h" // For CHostFolder UUID
 #include "HostPidl.h"            // HostItemId handling
-#include "swish/CoFactory.hpp"   // CComObject factory
 
-#include "swish/atl.hpp"         // Common ATL setup
+#include <comet/server.h> // simple_object
 
 #include <vector>
 
-class ATL_NO_VTABLE CHostFolder :
-	public IExtractIconW,
-	public swish::shell_folder::folder::CSwishFolder<
-		swish::host_folder::Column>
+class CHostFolder :
+	public comet::simple_object<
+		IExtractIconW,
+		swish::shell_folder::folder::CSwishFolder<swish::host_folder::Column>>
 {
-public:
-
-	BEGIN_COM_MAP(CHostFolder)
-		COM_INTERFACE_ENTRY(IExtractIconW)
-		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
-	END_COM_MAP()
 
 protected:
 

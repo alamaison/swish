@@ -149,7 +149,7 @@ IEnumIDList* CHostFolder::enum_objects(HWND hwnd, SHCONTF flags)
 	// is in use.
 	return new stl_enumeration_t<
 		IEnumIDList, vector<CHostItem>, PITEMID_CHILD>(
-		m_vecConnData, GetUnknown());
+			m_vecConnData, get_unknown());
 }
 
 /**

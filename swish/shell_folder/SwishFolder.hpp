@@ -28,7 +28,6 @@
 
 #include "Folder.h" // Superclass
 
-#include "swish/atl.hpp" // Common ATL setup
 #include "swish/debug.hpp" // METHOD_TRACE
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
@@ -46,13 +45,6 @@ namespace folder {
 template<typename ColumnType>
 class CSwishFolder : public swish::shell_folder::folder::CFolder<ColumnType>
 {
-public:
-
-	BEGIN_COM_MAP(CSwishFolder)
-		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(CFolder)
-	END_COM_MAP()
-
 protected:
 
 	/**

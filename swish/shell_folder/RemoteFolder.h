@@ -22,29 +22,22 @@
 
 #include "SwishFolder.hpp"      // Superclass
 
-#include "swish/CoFactory.hpp"  // CComObject factory
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/remote_folder/columns.hpp" // Column
 #include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
 #include "swish/shell_folder/RemotePidl.h" // RemoteItemId handling
 
-#include "swish/atl.hpp"        // Common ATL setup
-
 #include <comet/ptr.h> // com_ptr
+#include <comet/server.h> // simple_object
 
 #include <vector>
 
-class ATL_NO_VTABLE CRemoteFolder :
-	public swish::shell_folder::folder::CSwishFolder<
-		swish::remote_folder::Column>,
-	private swish::CCoFactory<CRemoteFolder>
+class CRemoteFolder :
+	public comet::simple_object<IShellFolder2,
+		swish::shell_folder::folder::CSwishFolder<swish::remote_folder::Column>
+	>
 {
 public:
-
-	BEGIN_COM_MAP(CRemoteFolder)
-		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
-	END_COM_MAP()
 
 	/*
 	We can assume that the PIDLs contained in this folder (i.e. any PIDL
@@ -67,11 +60,11 @@ public:
 	static ATL::CComPtr<IShellFolder> Create(__in PCIDLIST_ABSOLUTE pidl)
 	throw(...)
 	{
-		ATL::CComPtr<CRemoteFolder> spObject = spObject->CreateCoObject();
+		comet::com_ptr<CRemoteFolder> folder = new CRemoteFolder();
 		
-		HRESULT hr = spObject->Initialize(pidl);
+		HRESULT hr = folder->Initialize(pidl);
 		ATLENSURE_SUCCEEDED(hr);
-		return spObject.p;
+		return folder.get();
 	}
 
 protected:
