@@ -36,7 +36,6 @@
 #include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
-#include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands.hpp" // remote_folder_command_provider
 #include "swish/remote_folder/connection.hpp" // connection_from_pidl
@@ -60,7 +59,6 @@
 
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
-using swish::frontend::CUserInteraction;
 using swish::frontend::rethrow_and_announce;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
@@ -92,13 +90,6 @@ using ATL::CComBSTR;
 using ATL::CString;
 
 using std::wstring;
-
-namespace {
-	com_ptr<ISftpConsumer> consumer(HWND hwnd)
-	{
-		return new CUserInteraction(hwnd);
-	}
-}
 
 /*--------------------------------------------------------------------------*/
 /*      Functions implementing IShellFolder via folder_error_adapter.       */
@@ -432,7 +423,8 @@ void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 CComPtr<IShellFolder> CRemoteFolder::subfolder(const apidl_t& pidl) const
 {
 	// Create CRemoteFolder initialised with its root PIDL
-	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl.get());
+	CComPtr<IShellFolder> folder = CRemoteFolder::Create(
+		pidl.get(), m_consumer_factory);
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;
@@ -462,7 +454,7 @@ CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 	return remote_folder_command_provider(
 		hwnd, root_pidl(),
 		bind(&connection_from_pidl, root_pidl(), hwnd),
-		bind(&consumer, hwnd)).get();
+		bind(m_consumer_factory, hwnd)).get();
 }
 
 /**
@@ -961,7 +953,7 @@ com_ptr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
 	HWND hwndUserInteraction)
 {
 	// Create SFTP Consumer for this HWNDs lifetime
-	m_consumer = new CUserInteraction(hwndUserInteraction);
+	m_consumer = m_consumer_factory(hwndUserInteraction);
 
 	return connection_from_pidl(root_pidl(), hwndUserInteraction);
 }

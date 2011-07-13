@@ -30,6 +30,7 @@
 #include "RemoteFolder.h"
 #include "Registry.h"             // For saved connection details
 #include "swish/debug.hpp"
+#include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
 #include "swish/host_folder/commands.hpp" // host_folder_commands
 #include "swish/host_folder/host_management.hpp"
@@ -72,6 +73,7 @@ using boost::shared_ptr;
 using std::vector;
 using std::wstring;
 
+using swish::frontend::CUserInteraction;
 using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
 using swish::host_folder::host_management::LoadConnectionsFromRegistry;
@@ -407,6 +409,14 @@ void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 }
 
+namespace {
+
+	com_ptr<ISftpConsumer> consumer_factory(HWND hwnd)
+	{
+		return new CUserInteraction(hwnd);
+	}
+}
+
 /**
  * Create and initialise new folder object for subfolder.
  *
@@ -417,7 +427,8 @@ void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
  */
 CComPtr<IShellFolder> CHostFolder::subfolder(const apidl_t& pidl) const
 {
-	CComPtr<IShellFolder> folder = CRemoteFolder::Create(pidl.get());
+	CComPtr<IShellFolder> folder = CRemoteFolder::Create(
+		pidl.get(), consumer_factory);
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;

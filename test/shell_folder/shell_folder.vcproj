@@ -350,6 +350,10 @@
 			</FileConfiguration>
 		</File>
 		<File
+			RelativePath=".\remote_folder_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\sftp_data_object_test.cpp"
 			>
 		</File>

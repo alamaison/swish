@@ -32,6 +32,8 @@
 
 #include <comet/ptr.h> // com_ptr
 
+#include <boost/function.hpp> // function
+
 #include <vector>
 
 class ATL_NO_VTABLE CRemoteFolder :
@@ -60,14 +62,20 @@ public:
 	 *
 	 * @param pidl  Absolute PIDL at which to root the folder instance (passed
 	 *              to Initialize).
+	 * @param consumer_factory  Callable that returns a consumer instance to
+	 *                          use for a single request.
 	 *
 	 * @returns Smart pointer to the CRemoteFolder's IShellFolder interface.
 	 * @throws  com_error if creation fails.
 	 */
-	static ATL::CComPtr<IShellFolder> Create(__in PCIDLIST_ABSOLUTE pidl)
+	static ATL::CComPtr<IShellFolder> Create(
+		PCIDLIST_ABSOLUTE pidl,
+		boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory)
 	throw(...)
 	{
 		ATL::CComPtr<CRemoteFolder> spObject = spObject->CreateCoObject();
+
+		spObject->set_consumer_factory(consumer_factory);
 		
 		HRESULT hr = spObject->Initialize(pidl);
 		ATLENSURE_SUCCEEDED(hr);
@@ -125,9 +133,16 @@ public:
 	virtual SHCOLUMNID map_column_to_scid(UINT column_index);
 
 private:
+	boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 	comet::com_ptr<ISftpConsumer> m_consumer;
 
 	typedef std::vector<CRemoteItem> RemotePidls;
+
+	void set_consumer_factory(
+		boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory)
+	{
+		m_consumer_factory = consumer_factory;
+	}
 
 	comet::com_ptr<ISftpProvider> _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);

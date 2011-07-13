@@ -68,8 +68,7 @@ public:
 	boost::shared_ptr<CSession> Session()
 	{
 		comet::com_ptr<test::CConsumerStub> consumer =
-			new test::CConsumerStub();
-		consumer->SetKeyPaths(PrivateKeyPath(), PublicKeyPath());
+			new test::CConsumerStub(PrivateKeyPath(), PublicKeyPath());
 
 		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
 			swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),

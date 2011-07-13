@@ -47,12 +47,9 @@ public:
 
 	typedef ISftpConsumer interface_is;
 
-	void SetKeyPaths(
+	CConsumerStub(
 		boost::filesystem::path privatekey, boost::filesystem::path publickey)
-	{
-		m_privateKey = privatekey;
-		m_publicKey = publickey;
-	}
+		: m_privateKey(privatekey), m_publicKey(publickey) {}
 
 	// ISftpConsumer methods
 	IFACEMETHODIMP OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
