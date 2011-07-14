@@ -100,6 +100,8 @@ protected:
 	ATL::CComPtr<IContextMenu> background_context_menu(HWND hwnd);
 	ATL::CComPtr<IExtractIconW> extract_icon_w(
 		HWND hwnd, PCUITEMID_CHILD pidl);
+	ATL::CComPtr<IShellLinkW> shell_link_w(
+		HWND hwnd, PCUITEMID_CHILD pidl);
 	ATL::CComPtr<IQueryAssociations> query_associations(
 		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
 	ATL::CComPtr<IContextMenu> context_menu(

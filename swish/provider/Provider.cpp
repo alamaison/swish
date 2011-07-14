@@ -85,6 +85,7 @@ using boost::shared_ptr;
 using ssh::sftp::directory_iterator;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_file;
+using ssh::sftp::canonical_path;
 
 using std::exception;
 using std::string;
@@ -120,6 +121,8 @@ public:
 
 	void create_new_directory(
 		com_ptr<ISftpConsumer> consumer, const wpath& path);
+
+	BSTR resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path);
 
 private:
 	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
@@ -284,6 +287,9 @@ void CProvider::create_new_file(ISftpConsumer* consumer, BSTR path)
 
 void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
 { m_provider->create_new_directory(consumer, path); }
+
+BSTR CProvider::resolve_link(ISftpConsumer* consumer, BSTR path)
+{ return m_provider->resolve_link(consumer, path); }
 
 /**
  * Create libssh2-based data provider.
@@ -814,6 +820,19 @@ void provider::create_new_directory(
 	string utf8_path = WideStringToUtf8String(path.string());
 	if (libssh2_sftp_mkdir(*m_session, utf8_path.c_str(), 0755) != 0)
 		BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
+}
+
+BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
+{
+	_Connect(consumer);
+
+	string utf8_path = WideStringToUtf8String(path.string());
+
+	sftp_channel channel(m_session->get(), m_session->sftp());
+	bstr_t target =
+		Utf8StringToWideString(canonical_path(channel, utf8_path).string());
+
+	return target.detach();
 }
 
 /**

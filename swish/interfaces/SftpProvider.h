@@ -84,6 +84,8 @@ inline Listing copy_listing(const Listing& other)
 	lt.cHardLinks = other.cHardLinks;
 	lt.dateModified = other.dateModified;
 	lt.dateAccessed = other.dateAccessed;
+	lt.fIsDirectory = other.fIsDirectory;
+	lt.fIsLink = other.fIsLink;
 
 	return lt;
 }
@@ -180,20 +182,7 @@ template<> struct impl::type_policy<Listing>
 
 	static void init(Listing& t, const Listing& s) 
 	{
-		t = Listing();
-		t.bstrFilename = ::SysAllocStringLen(
-			s.bstrFilename, ::SysStringLen(s.bstrFilename));
-		t.uPermissions = s.uPermissions;
-		t.bstrOwner = ::SysAllocStringLen(
-			s.bstrOwner, ::SysStringLen(s.bstrOwner));
-		t.bstrGroup = ::SysAllocStringLen(
-			s.bstrGroup, ::SysStringLen(s.bstrGroup));
-		t.uUid = s.uUid;
-		t.uGid = s.uGid;
-		t.uSize = s.uSize;
-		t.cHardLinks = s.cHardLinks;
-		t.dateModified = s.dateModified;
-		t.dateAccessed = s.dateAccessed;
+		t = swish::detail::copy_listing(s);
 	}
 
 	static void init(swish::SmartListing& t, const Listing& s) 

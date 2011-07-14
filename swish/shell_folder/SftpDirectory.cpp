@@ -20,9 +20,12 @@
 
 #include "SftpDirectory.h"
 
+#include "swish/host_folder/host_pidl.hpp" // host_itemid_view, create_host_item
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view,
                                                // create_remote_itemid
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
+
+#include <winapi/shell/pidl_iterator.hpp> // pidl_iterator, find_host_itemid
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
@@ -40,8 +43,14 @@ using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::remote_itemid_view;
 using swish::SmartListing;
 
+using swish::host_folder::create_host_itemid;
+using swish::host_folder::find_host_itemid;
+using swish::host_folder::host_itemid_view;
+
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
+using winapi::shell::pidl::pidl_iterator;
+using winapi::shell::pidl::raw_pidl_iterator;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -87,11 +96,6 @@ template<> struct impl::type_policy<PITEMID_CHILD>
 
 }
 
-
-#define S_IFMT     0170000 /* type of file */
-#define S_IFDIR    0040000 /* directory 'd' */
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-
 /**
  * Creates and initialises directory instance from a PIDL. 
  *
@@ -108,7 +112,7 @@ m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 namespace {
 
 	bool directory(const SmartListing& lt)
-	{ return S_ISDIR(lt.get().uPermissions); }
+	{ return lt.get().fIsDirectory != FALSE; }
 
 	bool dotted(const SmartListing& lt)
 	{ return lt.get().bstrFilename[0] == OLECHAR('.'); }
@@ -117,8 +121,8 @@ namespace {
 	{
 		return create_remote_itemid(
 			lt.get().bstrFilename,
-			S_ISDIR(lt.get().uPermissions),
-			false,
+			lt.get().fIsDirectory != FALSE,
+			lt.get().fIsLink != FALSE,
 			lt.get().bstrOwner,
 			lt.get().bstrGroup,
 			lt.get().uUid,
@@ -304,4 +308,51 @@ void CSftpDirectory::CreateDirectory(const wstring& name)
 		m_consumer.in(), target_path.in());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+}
+
+apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
+{
+	remote_itemid_view symlink(item);
+	bstr_t link_path = (m_directory / symlink.filename()).string();
+	bstr_t target_path;
+
+	HRESULT hr = m_provider->ResolveLink(
+		m_consumer.in(), link_path.in(), target_path.out());
+	if (FAILED(hr))
+		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+
+	// XXX: HACK:
+	// Currently, we create the new PIDL for the resolved path by copying all
+	// the items up to (not including) the host itemid, then appending a new
+	// host itemid containing the full resolved path.  This is a horrible hack
+	// and is likely to fail miserably if the resolved target is a file rather
+	// than a directory.
+	//
+	// The proper solution would be to have three types of Item ID (PIDL items):
+	// - Server items that just maintain the details of the server connection.
+	//   They don't store any path information.
+	// - Remote items that hold the details of one segment of the remote path.
+	//   Combined in a list after a server item, they identify an absolute
+	//   path to a file or directory on a remote server.
+	// - Host items that are just shortcuts that resolve to a server item and
+	//   one or more remote items.  They hold server information and a starting
+	//   path.
+	// ... or something like this.  A host item could, in some magical, way hold
+	// an absolute PIDL that contains a server items followed by several remote
+	// items.  Symlink items could even be a fourth type of item.
+
+	pidl_iterator itemids(m_directory_pidl);
+	apidl_t pidl_to_link_target;
+	raw_pidl_iterator host_itemid = find_host_itemid(m_directory_pidl);
+	while (itemids != host_itemid)
+	{
+		pidl_to_link_target += *itemids++;
+	}
+
+	host_itemid_view old_item(*host_itemid);
+	cpidl_t new_host_item = create_host_itemid(
+		old_item.host(), old_item.user(), target_path.w_str(), old_item.port(),
+		old_item.label());
+	
+	return pidl_to_link_target + new_host_item;
 }

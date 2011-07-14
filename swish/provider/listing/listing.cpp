@@ -138,7 +138,10 @@ Listing fill_listing_entry(
 
 		// Permissions
 		if (attributes.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
+		{
 			lt.uPermissions = attributes.permissions;
+			lt.fIsLink = LIBSSH2_SFTP_S_ISLNK(attributes.permissions);
+		}
 
 		// User & Group
 		if (attributes.flags & LIBSSH2_SFTP_ATTR_UIDGID)
@@ -165,6 +168,15 @@ Listing fill_listing_entry(
 			COleDateTime dateAccessed(static_cast<time_t>(attributes.atime));
 			lt.dateModified = dateModified;
 			lt.dateAccessed = dateAccessed;
+		}
+
+		// Type
+		if (!lt.fIsLink)
+			lt.fIsDirectory = LIBSSH2_SFTP_S_ISDIR(lt.uPermissions);
+		else
+		{
+			// TODO: Don't assume all links are directories - actually check
+			lt.fIsDirectory = TRUE;
 		}
 	}
 	catch (const std::exception&) { /* ignore */ }

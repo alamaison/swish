@@ -63,9 +63,9 @@
 					<Class Id="B816A843-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
 				</File>
 				<!-- CHANGE THESE IF THE INTERFACE DEFINITIONS CHANGE! -->
-				<Interface Id="0AEE1A06-7327-4a82-B52C-A7B2531F93EC" Name="ISftpConsumer" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="10" />
-				<Interface Id="B816A843-5022-11DC-9153-0090F5284F85" Name="IEnumListing" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="7" />
-				<Interface Id="CC3D4BAA-1BF8-4A34-848E-6D00A6EA09C3" Name="ISftpProvider" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="11" />
+				<Interface Id="3E46C9D1-2032-4D86-80D8-8C8599A4599B" Name="ISftpConsumer" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="10" />
+				<Interface Id="E1D3B1A3-F4B4-41B3-8CB2-8179DA638D27" Name="IEnumListing" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="7" />
+				<Interface Id="948A4C68-3F59-4D75-9ED9-21CDCBF7939F" Name="ISftpProvider" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="12" />
 			</Component>
 
 			<Component Id="ShellFolder" Guid="*" Win64="$(var.Win64)">

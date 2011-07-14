@@ -61,6 +61,8 @@ public:
 	void Delete(
 		const winapi::shell::pidl::cpidl_t& file);
 	void CreateDirectory(const std::wstring& name);
+	winapi::shell::pidl::apidl_t ResolveLink(
+		const winapi::shell::pidl::cpidl_t& item);
 
 	comet::enum_iterator<IEnumListing, swish::SmartListing> begin() const;
 	comet::enum_iterator<IEnumListing, swish::SmartListing> end() const;

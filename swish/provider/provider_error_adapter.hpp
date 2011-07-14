@@ -72,6 +72,8 @@ public:
 	virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
 
 	virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
+
+	virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
 };
 
 /**
@@ -249,6 +251,28 @@ public:
 				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
 			impl().create_new_directory(pConsumer, bstrPath);
+		}
+		WINAPI_COM_CATCH_AUTO_INTERFACE();
+
+		return S_OK;
+	}
+
+	virtual IFACEMETHODIMP ResolveLink(
+		ISftpConsumer* pConsumer, BSTR bstrLinkPath, BSTR* pbstrTargetPathOut)
+	{
+		try
+		{
+			if (!pbstrTargetPathOut)
+				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+			*pbstrTargetPathOut = NULL;
+
+			if (!pConsumer)
+				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+
+
+			*pbstrTargetPathOut = impl().resolve_link(pConsumer, bstrLinkPath);
+
+			assert(*pbstrTargetPathOut || !"No error but no retval");
 		}
 		WINAPI_COM_CATCH_AUTO_INTERFACE();
 

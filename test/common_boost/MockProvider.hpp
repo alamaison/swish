@@ -93,10 +93,9 @@ namespace detail {
 		return current_dir;
 	}
 
-	swish::SmartListing make_directory_item(
-		comet::bstr_t name, ULONG permissions=040777, ULONGLONG size=42,
-		ULONG hardlink_count=7,
-		comet::datetime_t date=comet::datetime_t(1601, 10, 5, 13, 54, 22))
+	swish::SmartListing make_file_listing(
+		comet::bstr_t name, ULONG permissions, ULONGLONG size,
+		ULONG hardlink_count, comet::datetime_t date)
 	{
 		swish::SmartListing lt;
 		lt.out()->bstrFilename = name.detach();
@@ -107,6 +106,14 @@ namespace detail {
 		lt.out()->cHardLinks = hardlink_count;
 		lt.out()->dateModified = date.get();
 
+		return lt;
+	}
+
+	swish::SmartListing make_directory_listing(comet::bstr_t name)
+	{
+		swish::SmartListing lt = make_file_listing(
+			name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
+		lt.out()->fIsDirectory = TRUE;
 		return lt;
 	}
 
@@ -173,7 +180,7 @@ namespace detail {
 
 			make_item_in(
 				filesystem, directory,
-				make_directory_item(
+				make_file_listing(
 					filenames.back(), permissions, size, cycle, dates.back()));
 
 			dates.pop_back();
@@ -195,7 +202,7 @@ namespace detail {
 		{
 			make_item_in(
 				filesystem, directory,
-				make_directory_item(folder_names.back()));
+				make_directory_listing(folder_names.back()));
 			folder_names.pop_back();
 		}
 
@@ -235,16 +242,16 @@ public:
 	{
 		// Create filesystem root
 		detail::FilesystemLocation root = m_filesystem.insert(
-			m_filesystem.begin(), detail::make_directory_item(L"/"));
+			m_filesystem.begin(), detail::make_directory_listing(L"/"));
 
 		// Create two subdirectories and fill them with an expected set of items
 		// whose names are 'tagged' with the directory name
 		detail::FilesystemLocation tmp =
 			m_filesystem.append_child(
-				root, detail::make_directory_item(L"tmp"));
+				root, detail::make_directory_listing(L"tmp"));
 		detail::FilesystemLocation swish =
 			m_filesystem.append_child(
-				tmp, detail::make_directory_item(L"swish"));
+				tmp, detail::make_directory_listing(L"swish"));
 		detail::fill_mock_listing(m_filesystem, L"/tmp");
 		detail::fill_mock_listing(m_filesystem, L"/tmp/swish");
 	}
@@ -363,6 +370,11 @@ public:
 	virtual void create_new_directory(
 		ISftpConsumer* /*consumer*/, BSTR /*path*/)
 	{};
+
+	virtual BSTR resolve_link(ISftpConsumer* /*consumer*/, BSTR /*path*/)
+	{
+		return NULL;
+	};
 
 private:
 

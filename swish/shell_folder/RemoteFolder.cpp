@@ -42,6 +42,7 @@
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
                                                // create_remote_itemdid
+#include "swish/remote_folder/symlink.hpp" // pidl_to_shell_link
 #include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/trace.hpp" // trace
@@ -71,6 +72,7 @@ using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::CViewCallback;
+using swish::remote_folder::pidl_to_shell_link;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::remote_folder::remote_itemid_view;
@@ -391,6 +393,17 @@ void CRemoteFolder::get_attributes_of(
 		}
 	}
 
+	// Search through all PIDLs and check if they are all links
+	bool fAreAllLinks = true;
+	for (UINT i = 0; i < pidl_count; i++)
+	{
+		if (!remote_itemid_view(pidl_array[i]).is_link())
+		{
+			fAreAllLinks = false;
+			break;
+		}
+	}
+
 	// Search through all PIDLs and check if they are all 'dot' files
 	bool fAllAreDotFiles = true;
 	for (UINT i = 0; i < pidl_count; i++)
@@ -414,6 +427,10 @@ void CRemoteFolder::get_attributes_of(
 	{
 		dwAttribs |= SFGAO_GHOSTED;
 		dwAttribs |= SFGAO_HIDDEN;
+	}
+	if (fAreAllLinks)
+	{
+		dwAttribs |= SFGAO_LINK;
 	}
 	dwAttribs |= SFGAO_CANRENAME;
 	dwAttribs |= SFGAO_CANDELETE;
@@ -524,6 +541,20 @@ CComPtr<IExtractIconW> CRemoteFolder::extract_icon_w(
 	remote_itemid_view itemid(pidl);
 	return CIconExtractor::Create(
 		itemid.filename().c_str(), itemid.is_folder());
+}
+
+/**
+ * @implementing CSwishFolder
+ */
+CComPtr<IShellLinkW> CRemoteFolder::shell_link_w(
+	HWND hwnd, PCUITEMID_CHILD pidl)
+{
+	assert(remote_itemid_view(pidl).is_link());
+
+	// Create connection for this folder with hwnd for UI
+	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+
+	return pidl_to_shell_link(root_pidl(), pidl, provider, m_consumer).get();
 }
 
 /**

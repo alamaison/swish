@@ -9,7 +9,7 @@ b816a83f-5022-11dc-9153-0090f5284f85   *REMOVED*  IHostContextMenu Interface
 b816a840-5022-11dc-9153-0090f5284f85   *REMOVED*  CHostContextMenu Class
 b816a841-5022-11dc-9153-0090f5284f85 ISftpProvider Interface
 b816a842-5022-11dc-9153-0090f5284f85   *REMOVED*  CPuttyProvider Class
-b816a843-5022-11dc-9153-0090f5284f85 IEnumListing Interface
+b816a843-5022-11dc-9153-0090f5284f85   *CHANGED*  IEnumListing Interface
 b816a844-5022-11dc-9153-0090f5284f85 ISftpConsumer Interface
 b816a845-5022-11dc-9153-0090f5284f85   *REMOVED*  PuttyProvider Type Library
 b816a846-5022-11dc-9153-0090f5284f85   *CHANGED*  Libssh2Provider Type Library (DLL module UUID)

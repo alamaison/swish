@@ -40,11 +40,14 @@ struct Listing {
 	                      ///< last modified in automation-compatible format
 	DATE dateAccessed;    ///< The date and time at which the file was 
 	                      ///< last accessed in automation-compatible format
+	BOOL fIsDirectory;    ///< This filesystem item can be listed for items
+	                      ///< under it.
+	BOOL fIsLink;         ///< This file is a link to another file or directory
 };
 
 // IEnumListing
 [
-	object, uuid("b816a843-5022-11dc-9153-0090f5284f85"),
+	object, uuid("E1D3B1A3-F4B4-41B3-8CB2-8179DA638D27"),
 	oleautomation,
 	helpstring("IEnumListing Interface")
 ]
@@ -62,7 +65,7 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("0AEE1A06-7327-4a82-B52C-A7B2531F93EC"),
+	object, uuid("3E46C9D1-2032-4D86-80D8-8C8599A4599B"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
 	helpstring("ISftpConsumer Interface")
@@ -104,7 +107,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("CC3D4BAA-1BF8-4a34-848E-6D00A6EA09C3"),
+	object, uuid("948A4C68-3F59-4D75-9ED9-21CDCBF7939F"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface")
@@ -169,4 +172,16 @@ interface ISftpProvider : IUnknown
 		[in] BSTR bstrPath
 	);
 	// @}
+
+	/**
+	 * Return the canonical path of the given non-canonical path.
+	 *
+	 * While generally used to resolve symlinks, it can also be used to
+	 * convert paths relative to the startup directory into absolute paths.
+	 */
+	HRESULT ResolveLink(
+		[in] ISftpConsumer *pConsumer,
+		[in] BSTR bstrLinkPath,
+		[out, retval] BSTR *pbstrTargetPathOut
+	);
 };
