@@ -25,8 +25,7 @@
 */
 
 #include <swish/host_folder/columns.hpp> // test subject, Column
-
-#include <swish/shell_folder/HostPidl.h> // CHostItem
+#include <swish/host_folder/host_pidl.hpp> // create_host_itemid
 
 #include <test/common_boost/helpers.hpp> // wide-string output
 
@@ -35,6 +34,9 @@
 #include <string>
 
 using swish::host_folder::Column;
+using swish::host_folder::create_host_itemid;
+
+using winapi::shell::pidl::cpidl_t;
 
 using std::wstring;
 
@@ -42,10 +44,10 @@ BOOST_AUTO_TEST_SUITE(column_tests)
 
 namespace {
 
-	CHostItem gimme_pidl()
+	cpidl_t gimme_pidl()
 	{
-		return CHostItem(
-			L"bobuser", L"myhost", L"/home/bobuser", 25, L"My Label");
+		return create_host_itemid(
+			L"myhost", L"bobuser", L"/home/bobuser", 25, L"My Label");
 	}
 
 	wstring header(size_t index)

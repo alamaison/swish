@@ -28,10 +28,10 @@
 
 #include "swish/forms/add_host.hpp" // add_host
 #include "swish/host_folder/host_management.hpp" // AddConnectionToRegistry
+#include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_item_view
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
 #include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
-#include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
 
 #include <comet/error.h> // com_error
 #include <comet/server.h> // simple_object
@@ -59,6 +59,8 @@ using swish::nse::IUICommand;
 using swish::nse::IUIElement;
 using swish::nse::WebtaskCommandTitleAdapter;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::host_folder::find_host_itemid;
+using swish::host_folder::host_itemid_view;
 using swish::host_folder::host_management::AddConnectionToRegistry;
 using swish::host_folder::host_management::RemoveConnectionFromRegistry;
 using swish::host_folder::host_management::ConnectionExists;
@@ -169,8 +171,8 @@ const
 	if (format.pidl_count() != 1)
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	CHostItemAbsolute pidl_selected = format.file(0).get();
-	wstring label = pidl_selected.FindHostPidl().GetLabel();
+	apidl_t pidl_selected = format.file(0);
+	wstring label = host_itemid_view(*find_host_itemid(pidl_selected)).label();
 	assert(!label.empty());
 	if (label.empty())
 		BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));

@@ -380,10 +380,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HostPidl_test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Pidl_test.cpp"
 				>
 			</File>

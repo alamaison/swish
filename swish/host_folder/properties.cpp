@@ -26,7 +26,7 @@
 
 #include "properties.hpp"
 
-#include <swish/shell_folder/HostPidl.h> // CHostItemHandle
+#include "swish/host_folder/host_pidl.hpp" // host_itemid_view
 
 #include <boost/assign.hpp> // map_list_of
 #include <boost/function.hpp> // function
@@ -71,24 +71,24 @@ namespace {
 
 	typedef map<
 		property_key,
-		boost::function<variant_t (const CHostItemHandle& pidl)> >
+		boost::function<variant_t (const cpidl_t& pidl)> >
 		host_property_map;
 
-	variant_t net_drive_returner(const CHostItemHandle& /*pidl*/)
+	variant_t net_drive_returner(const cpidl_t& /*pidl*/)
 	{
 		return translate("FileType", "Network Drive").str<wchar_t>();
 	}
 
-	variant_t label_getter(const CHostItemHandle& pidl)
-	{ return pidl.GetLabel().GetString(); }
-	variant_t host_getter(const CHostItemHandle& pidl)
-	{ return pidl.GetHost().GetString(); }
-	variant_t user_getter(const CHostItemHandle& pidl)
-	{ return pidl.GetUser().GetString(); }
-	variant_t port_getter(const CHostItemHandle& pidl)
-	{ return pidl.GetPortStr().GetString(); }
-	variant_t path_getter(const CHostItemHandle& pidl)
-	{ return pidl.GetPath().GetString(); }
+	variant_t label_getter(const cpidl_t& pidl)
+	{ return host_itemid_view(pidl).label(); }
+	variant_t host_getter(const cpidl_t& pidl)
+	{ return host_itemid_view(pidl).host(); }
+	variant_t user_getter(const cpidl_t& pidl)
+	{ return host_itemid_view(pidl).user(); }
+	variant_t port_getter(const cpidl_t& pidl)
+	{ return host_itemid_view(pidl).port(); }
+	variant_t path_getter(const cpidl_t& pidl)
+	{ return host_itemid_view(pidl).path().string(); }
 
 	const host_property_map host_property_getters = map_list_of
 		(PKEY_ItemNameDisplay, label_getter) // Display name (Label)

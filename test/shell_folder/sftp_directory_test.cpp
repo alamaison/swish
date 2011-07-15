@@ -27,22 +27,24 @@
 #include "swish/shell_folder/SftpDirectory.h"  // test subject
 
 #include "swish/atl.hpp"   // Common ATL setup
-#include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
+#include "swish/host_folder/host_pidl.hpp" // create_host_itemid
 #include "swish/shell_folder/RemotePidl.h" // RemoteItemId
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 #include "test/common_boost/MockConsumer.hpp" // MockConsumer
 #include "test/common_boost/MockProvider.hpp" // MockProvider
 
-#include <winapi/shell/pidl.hpp>  // PIDL wrapper
-#include <winapi/shell/pidl_array.hpp>  // PIDL array wrapper
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/test/unit_test.hpp>
-#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+
+using swish::host_folder::create_host_itemid;
+
+using winapi::shell::pidl::apidl_t;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -53,9 +55,10 @@ using test::MockConsumer;
 
 namespace { // private
 
-	CAbsolutePidl test_pidl()
+	apidl_t test_pidl()
 	{
-		return CHostItemAbsolute(L"testuser", L"testhost", L"/tmp", 22);
+		return apidl_t() + create_host_itemid(
+			L"testhost", L"testuser", L"/tmp", 22);
 	}
 
 	class SftpDirectoryFixture
@@ -74,9 +77,9 @@ namespace { // private
 			return directory(test_pidl());
 		}
 
-		CSftpDirectory directory(const CAbsolutePidl& pidl)
+		CSftpDirectory directory(const apidl_t& pidl)
 		{
-			return CSftpDirectory(pidl, provider(), consumer());
+			return CSftpDirectory(pidl.get(), provider(), consumer());
 		}
 
 		com_ptr<MockProvider> provider()
@@ -246,8 +249,8 @@ BOOST_AUTO_TEST_CASE( rename_in_subfolder )
 
 	BOOST_CHECK_EQUAL(
 		directory(
-			CHostItemAbsolute(
-				L"testuser", L"testhost", L"/tmp/swish", 22)).Rename(
+			apidl_t() + create_host_itemid(
+				L"testhost", L"testuser", L"/tmp/swish", 22)).Rename(
 					pidl, L"renamed to"),
 		false);
 }

@@ -326,6 +326,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\host_pidl.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\properties.hpp"
 				>
 			</File>

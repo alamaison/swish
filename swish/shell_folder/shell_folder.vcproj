@@ -432,10 +432,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\HostPidl.h"
-				>
-			</File>
-			<File
 				RelativePath=".\IconExtractor.h"
 				>
 			</File>

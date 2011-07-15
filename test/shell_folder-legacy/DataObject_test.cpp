@@ -6,9 +6,11 @@ typedef CMockSftpConsumer MC;
 #include "test/common/TestConfig.h"
 #include "DataObjectTests.h"
 
+#include "swish/host_folder/host_pidl.hpp" // create_host_itemid
 #include "swish/shell_folder/DataObject.h"
 #include "swish/shell_folder/RemotePidl.h"
-#include "swish/shell_folder/HostPidl.h"
+
+using swish::host_folder::create_host_itemid;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -437,13 +439,11 @@ private:
 	{
 		// Create absolute PIDL to Swish icon
 		CAbsolutePidl pidlSwish = _GetSwishPidl();
-		
-		// Create test child HOSTPIDL
-		CHostItem pidlHost(
-			L"user", L"test.example.com", L"/tmp", 22, L"Test PIDL");
 
 		// Concatenate to make absolute pidl to RemoteFolder root
-		return CAbsolutePidl(pidlSwish, pidlHost);
+		return CAbsolutePidl(
+			pidlSwish, create_host_itemid(
+				L"test.example.com", L"user", L"/tmp", 22, L"Test PIDL").get());
 	}
 
 	/**

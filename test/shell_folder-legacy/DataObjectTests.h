@@ -2,7 +2,7 @@
 
 #include "test/common/CppUnitExtensions.h"
 
-#include "swish/shell_folder/HostPidl.h"
+#include "swish/host_folder/host_pidl.hpp" // host_itemid_view
 #include "swish/shell_folder/RemotePidl.h"
 #include "swish/shell_folder/DataObject.h"
 
@@ -105,8 +105,8 @@ static void _testShellPIDLFolder(IDataObject *pDo, ATL::CString strExpected)
 	}
 	else
 	{
-		CHostItemHandle pidl = pidlActual;
-		CPPUNIT_ASSERT_EQUAL(strExpected, pidl.GetPath());
+		swish::host_folder::host_itemid_view itemid(pidlActual.m_pidl);
+		CPPUNIT_ASSERT_EQUAL(strExpected, itemid.path().string().c_str());
 	}
 	::GlobalUnlock(stg.hGlobal);
 	pida = NULL;

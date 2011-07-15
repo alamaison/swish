@@ -36,6 +36,7 @@
 #include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/host_folder/host_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands.hpp" // remote_folder_command_provider
 #include "swish/remote_folder/connection.hpp" // connection_from_pidl
@@ -60,6 +61,7 @@
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::frontend::rethrow_and_announce;
+using swish::host_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
 using swish::remote_folder::CViewCallback;
@@ -626,9 +628,9 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 	{
 		// Create connection for this folder with hwnd for UI
 		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
-		CHostItemAbsoluteHandle pidl = root_pidl().get();
 		return new CSnitchingDropTarget(
-			hwnd, provider, m_consumer, pidl.GetFullPath().GetString(),
+			hwnd, provider, m_consumer,
+			absolute_path_from_swish_pidl(root_pidl()),
 			make_shared<DropUI>(hwnd));
 	}
 	catch (...)

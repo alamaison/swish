@@ -25,8 +25,7 @@
 */
 
 #include <swish/host_folder/properties.hpp> // test subject
-
-#include <swish/shell_folder/HostPidl.h> // CHostItem
+#include <swish/host_folder/host_pidl.hpp> // create_host_itemid
 
 #include <winapi/shell/property_key.hpp> // property_key
 
@@ -36,9 +35,11 @@
 
 #include <Propkey.h> // PKEY_ *
 
-using swish::host_folder::property_from_pidl;
 using swish::host_folder::compare_pidls_by_property;
+using swish::host_folder::create_host_itemid;
+using swish::host_folder::property_from_pidl;
 
+using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
 
 using comet::variant_t;
@@ -48,10 +49,10 @@ BOOST_AUTO_TEST_SUITE(properties_tests)
 
 namespace {
 
-	CHostItem gimme_pidl()
+	cpidl_t gimme_pidl()
 	{
-		return CHostItem(
-			L"bobuser", L"myhost", L"/home/bobuser", 25, L"My Label");
+		return create_host_itemid(
+			L"myhost", L"bobuser", L"/home/bobuser", 25, L"My Label");
 	}
 }
 
@@ -95,11 +96,11 @@ BOOST_AUTO_TEST_CASE( prop_type )
 
 namespace {
 	
-	CHostItem comp_pidl()
+	cpidl_t comp_pidl()
 	{
-		return CHostItem(
-			L"boxuser", L"myhost", L"/home/aobuser", 24, L"Your Label");
-		    //  >         ==               <         <     >
+		return create_host_itemid(
+			L"myhost", L"boxuser", L"/home/aobuser", 24, L"Your Label");
+		    //   ==        >               <         <     >
 	}
 
 	int compare(const property_key& key)

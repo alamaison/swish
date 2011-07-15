@@ -19,7 +19,6 @@
 
 #include "SftpDataObject.h"
 
-#include "HostPidl.h"
 #include "RemotePidl.h"
 #include "SftpDirectory.h"
 #include "data_object/StorageMedium.hpp"  // StorageMedium

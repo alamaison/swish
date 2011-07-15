@@ -20,6 +20,8 @@
 
 #include "SftpDirectory.h"
 
+#include "swish/host_folder/host_pidl.hpp" // absolute_path_from_swish_pidl
+
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // comtype
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -30,6 +32,7 @@
 
 #include <vector>
 
+using swish::host_folder::absolute_path_from_swish_pidl;
 using swish::SmartListing;
 
 using winapi::shell::pidl::apidl_t;
@@ -93,7 +96,7 @@ CSftpDirectory::CSftpDirectory(
 	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer)
 : 
 m_provider(provider), m_consumer(consumer), m_directory_pidl(directory_pidl),
-m_directory(CHostItemAbsoluteHandle(directory_pidl.get()).GetFullPath()) {}
+m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
 namespace {
 

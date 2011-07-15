@@ -34,6 +34,8 @@
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
 #include "swish/host_folder/commands.hpp" // host_folder_commands
 #include "swish/host_folder/host_management.hpp"
+#include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
+                                           // url_from_host_itemid
 #include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remotelimits.h"   // Text field limits
@@ -43,12 +45,13 @@
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
 
-#include <comet/enum.h> // stl_enumeration
+#include <comet/smart_enum.h> // make_smart_enumeration
 #include <comet/error.h> // com_error
 
 #include <strsafe.h>  // For StringCchCopy
 
 #include <boost/locale.hpp> // translate
+#include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -63,11 +66,12 @@ using ATL::CComObject;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
-using comet::stl_enumeration_t;
+using comet::make_smart_enumeration;
 using comet::throw_com_error;
 using comet::variant_t;
 
 using boost::locale::translate;
+using boost::make_shared;
 using boost::shared_ptr;
 
 using std::vector;
@@ -76,9 +80,12 @@ using std::wstring;
 using swish::frontend::CUserInteraction;
 using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
+using swish::host_folder::create_host_itemid;
+using swish::host_folder::host_itemid_view;
 using swish::host_folder::host_management::LoadConnectionsFromRegistry;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
+using swish::host_folder::url_from_host_itemid;
 using swish::tracing::trace;
 
 using winapi::shell::pidl::cpidl_t;
@@ -96,27 +103,29 @@ template<> struct comtype<::IEnumIDList>
 	typedef ::IUnknown base;
 };
 
+template<> struct enumerated_type_of<IEnumIDList>
+{ typedef PITEMID_CHILD is; };
+
 template<> struct comtype<IQueryAssociations>
 {
 	static const IID& uuid() { return IID_IQueryAssociations; }
 	typedef ::IUnknown base;
 };
 
-}
-
 /**
- * Copy policy used to create IEnumIDList from CHostItems.
+ * Copy policy used to create IEnumIDList from cpidl_t.
  */
-template<> struct ::comet::impl::type_policy<PITEMID_CHILD>
+template<> struct impl::type_policy<PITEMID_CHILD>
 {
-	static void init(PITEMID_CHILD& raw_pidl, const CHostItem& pidl) 
+	static void init(PITEMID_CHILD& raw_pidl, const cpidl_t& pidl) 
 	{
-		assert(pidl.IsValid());
-		raw_pidl = pidl.CopyTo();
+		pidl.copy_to(raw_pidl);
 	}
 
 	static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }	
 };
+
+}
 
 /*--------------------------------------------------------------------------*/
 /*      Functions implementing IShellFolder via folder_error_adapter.       */
@@ -144,14 +153,8 @@ IEnumIDList* CHostFolder::enum_objects(HWND hwnd, SHCONTF flags)
 		return NULL;
 
 	// Load connections from HKCU\Software\Swish\Connections
-	m_vecConnData = LoadConnectionsFromRegistry();
-
-    // Create an enumerator from the member vector.  We pass in a pointer to
-	// this object so that the vector remains valid as long as the enumerator
-	// is in use.
-	return new stl_enumeration_t<
-		IEnumIDList, vector<CHostItem>, PITEMID_CHILD>(
-		m_vecConnData, GetUnknown());
+	return make_smart_enumeration<IEnumIDList>(
+		make_shared< vector<cpidl_t> >(LoadConnectionsFromRegistry())).detach();
 }
 
 /**
@@ -217,13 +220,11 @@ PIDLIST_RELATIVE CHostFolder::parse_display_name(
 		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
 	// Create child PIDL for this path segment
-	CHostItem pidl(
-		strUser.c_str(), strHost.c_str(), strPath.c_str(),
-		static_cast<USHORT>(nPort));
+	cpidl_t pidl = create_host_itemid(strHost, strUser, strPath, nPort);
 
 	com_ptr<IShellFolder> subfolder;
 	bind_to_object(
-		pidl, bind_ctx, subfolder.iid(),
+		pidl.get(), bind_ctx, subfolder.iid(),
 		reinterpret_cast<void**>(subfolder.out()));
 
 	wchar_t wszPath[MAX_PATH];
@@ -250,7 +251,6 @@ STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
 	wstring name;
-	CHostItem hpidl(pidl);
 
 	if (flags & SHGDN_FORPARSING)
 	{
@@ -276,15 +276,15 @@ STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 				strret, pidlThisFolder) + L'\\';
 		}
 
-		name += hpidl.GetLongName(true);
+		name += url_from_host_itemid(pidl, true);
 	}
 	else if (flags == SHGDN_NORMAL || flags & SHGDN_FORADDRESSBAR)
 	{
-		name = hpidl.GetLongName(false);
+		name = url_from_host_itemid(pidl, false);
 	}
 	else if (flags == SHGDN_INFOLDER || flags & SHGDN_FOREDITING)
 	{
-		name = hpidl.GetLabel();
+		name = host_itemid_view(pidl).label();
 	}
 	else
 	{
@@ -405,7 +405,7 @@ void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 	if (pidl == NULL)
 		BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-	if (!CHostItemList::IsValid(pidl))
+	if (!host_itemid_view(pidl).valid())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 }
 

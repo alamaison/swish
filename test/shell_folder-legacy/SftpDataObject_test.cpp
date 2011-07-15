@@ -4,12 +4,14 @@
 #include "test/common/TestConfig.h"
 #include "DataObjectTests.h"
 
+#include "swish/host_folder/host_pidl.hpp" // create_host_itemid
 #include "swish/shell_folder/SftpDataObject.h"
 #include "swish/shell_folder/RemotePidl.h"
-#include "swish/shell_folder/HostPidl.h"
 
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
+
+using swish::host_folder::create_host_itemid;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -307,10 +309,9 @@ protected:
 		// Create absolute PIDL to Swish icon
 		CAbsolutePidl pidlSwish = _GetSwishPidl();
 		
-		// Create test child HOSTPIDL to Unix root directory
-		CHostItem pidlHostRoot(
-			L"user", L"test.example.com", L"/", 22, L"Test PIDL");
-		CAbsolutePidl pidlRoot(pidlSwish, pidlHostRoot);
+		CAbsolutePidl pidlRoot(
+			pidlSwish, create_host_itemid(
+				L"test.example.com", L"user", L"/", 22, L"Test PIDL").get());
 
 		CRemoteItem pidl(
 			L"tmp", true, L"mockowner", L"mockgroup", 1001, 1002,
@@ -433,13 +434,11 @@ private:
 	{
 		// Create absolute PIDL to Swish icon
 		CAbsolutePidl pidlSwish = _GetSwishPidl();
-		
-		// Create test child HOSTPIDL
-		CHostItem pidlHost(
-			L"user", L"test.example.com", L"/tmp", 22, L"Test PIDL");
 
 		// Concatenate to make absolute pidl to RemoteFolder root
-		return CAbsolutePidl(pidlSwish, pidlHost);
+		return CAbsolutePidl(
+			pidlSwish, create_host_itemid(
+				L"test.example.com", L"user", L"/tmp", 22, L"Test PIDL").get());
 	}
 
 	/**

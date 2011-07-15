@@ -26,34 +26,19 @@
 
 #include "swish/shell_folder/RemoteFolder.h" // test subject
 
-#include "swish/shell_folder/HostPidl.h" // CHostItemAbsolute
 #include "swish/shell_folder/RemotePidl.h" // RemoteItemId
-#include "swish/utils.hpp" // Utf8StringToWideString
 
-#include "test/common_boost/ConsumerStub.hpp" // CConsumerStub
-#include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
-#include "test/common_boost/fixtures.hpp" // SandboxFixture
-
-#include <winapi/shell/pidl.hpp>  // apidl_t
+#include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
+#include "test/common_boost/PidlFixture.hpp" // PidlFixture
 
 #include <comet/datetime.h> // datetime_t
-#include <comet/error.h> // com_error
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/bind.hpp> // bind
 #include <boost/test/unit_test.hpp>
-#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
-using test::CConsumerStub;
-using test::ComFixture;
-using test::OpenSshFixture;
-using test::SandboxFixture;
+using test::PidlFixture;
 
-using swish::utils::Utf8StringToWideString;
-
-using winapi::shell::pidl::apidl_t;
-
-using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
 
@@ -61,8 +46,7 @@ using boost::filesystem::wpath;
 
 namespace { // private
 
-	class RemoteFolderFixture :
-		public SandboxFixture, public OpenSshFixture, private ComFixture
+	class RemoteFolderFixture : public PidlFixture
 	{
 	private:
 		com_ptr<IShellFolder> m_folder;
@@ -72,7 +56,7 @@ namespace { // private
 		RemoteFolderFixture()
 			: m_folder(
 			    CRemoteFolder::Create(
-					test_pidl().get(),
+					sandbox_pidl().get(),
 					boost::bind(
 						&RemoteFolderFixture::consumer_factory, this, _1)))
 		{}
@@ -82,17 +66,9 @@ namespace { // private
 			return m_folder;
 		}
 
-		apidl_t test_pidl()
-		{
-			return CHostItemAbsolute(
-				Utf8StringToWideString(GetUser()).c_str(),
-				Utf8StringToWideString(GetHost()).c_str(),
-				ToRemotePath(Sandbox()).string().c_str(), GetPort());
-		}
-
 		comet::com_ptr<ISftpConsumer> consumer_factory(HWND)
 		{
-			return new CConsumerStub(PrivateKeyPath(), PublicKeyPath());
+			return Consumer();
 		}
 	};
 

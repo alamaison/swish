@@ -33,7 +33,6 @@
 
 #include "resource.h"            // main symbols
 #include "swish/shell_folder/Swish.h" // For CHostFolder UUID
-#include "HostPidl.h"            // HostItemId handling
 #include "swish/CoFactory.hpp"   // CComObject factory
 
 #include "swish/atl.hpp"         // Common ATL setup
@@ -108,7 +107,6 @@ public:
 								int *piIndex, UINT *pwFlags );
 
 private:
-	std::vector<CHostItem>  m_vecConnData;
 
 	/**
 	 * Static dispatcher for Default Context Menu callback

@@ -26,7 +26,7 @@
 
 #include "PidlFixture.hpp"
 
-#include "swish/shell_folder/HostPidl.h"  // CHostItem
+#include "swish/host_folder/host_pidl.hpp" // create_host_itemid
 #include "swish/shell_folder/SftpDataObject.h" // CSftpDataObject
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell_folder/shell.hpp" // desktop_folder
@@ -39,6 +39,7 @@
 
 #include <string>
 
+using swish::host_folder::create_host_itemid;
 using swish::utils::Utf8StringToWideString;
 
 using namespace winapi::shell::pidl;
@@ -74,13 +75,10 @@ namespace {
 
 apidl_t PidlFixture::directory_pidl(const wpath& directory)
 {
-	CHostItem item(
-		Utf8StringToWideString(GetUser()).c_str(),
-		Utf8StringToWideString(GetHost()).c_str(),
-		directory.string().c_str(), 
-		static_cast<USHORT>(GetPort()));
-
-	return swish_pidl() + cpidl_t(item);
+	return swish_pidl() + create_host_itemid(
+		Utf8StringToWideString(GetHost()),
+		Utf8StringToWideString(GetUser()),
+		directory, GetPort());
 }
 
 apidl_t PidlFixture::sandbox_pidl()

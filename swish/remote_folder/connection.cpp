@@ -29,7 +29,7 @@
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/port_conversion.hpp" // port_to_wstring
-#include "swish/shell_folder/HostPidl.h" // CHostItemListHandle
+#include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_item_view
 #include "swish/remotelimits.h" // Text field limits
 #include "swish/utils.hpp" // running_object_table
 
@@ -41,6 +41,9 @@
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cstring> // memset
+
+using swish::host_folder::find_host_itemid;
+using swish::host_folder::host_itemid_view;
 
 using winapi::com::create_bind_context;
 using winapi::com::object_from_moniker_name;
@@ -179,14 +182,14 @@ namespace {
 	void params_from_pidl(
 		const apidl_t& pidl, wstring& user, wstring& host, int& port)
 	{
-		// Find HOSTPIDL part of this folder's absolute pidl to extract server info
-		CHostItemListHandle pidlHost(
-			CHostItemListHandle(pidl.get()).FindHostPidl());
-		assert(pidlHost.IsValid());
+		// Find HOSTPIDL part of this folder's absolute pidl to extract server
+		// info
+		host_itemid_view host_itemid(*find_host_itemid(pidl));
+		assert(host_itemid.valid());
 
-		user = pidlHost.GetUser();
-		host = pidlHost.GetHost();
-		port = pidlHost.GetPort();
+		user = host_itemid.user();
+		host = host_itemid.host();
+		port = host_itemid.port();
 		assert(!user.empty());
 		assert(!host.empty());
 	}

@@ -28,6 +28,8 @@
 
 #include "swish/atl.hpp"
 #include "swish/debug.hpp"
+#include "swish/host_folder/host_pidl.hpp" // create_host_itemid,
+                                           // host_itemid_view
 
 #include <algorithm>
 
@@ -38,8 +40,15 @@
 #include <boost/bind.hpp>
 #pragma warning(pop)
 
+using swish::host_folder::create_host_itemid;
+using swish::host_folder::host_itemid_view;
+
+using winapi::shell::pidl::cpidl_t;
+
 using ATL::CRegKey;
+
 using boost::numeric_cast;
+
 using std::wstring;
 using std::vector;
 
@@ -68,7 +77,7 @@ namespace { // private
 	 * @throws  com_error: E_FAIL if the registry key does not exist
 	 *          and E_UNEXPECTED if the registry is corrupted.
 	 */
-	CHostItem GetConnectionDetailsFromRegistry(wstring label)
+	cpidl_t GetConnectionDetailsFromRegistry(wstring label)
 	{
 		CRegKey registry;
 		LSTATUS rc;
@@ -113,9 +122,8 @@ namespace { // private
 
 		ATLENSURE(host.size() > 0 && user.size() > 0 && path.size() > 0);
 
-		return CHostItem(
-			&user[0], &host[0], &path[0], numeric_cast<USHORT>(port), 
-			&label[0]);
+		return create_host_itemid(
+			&host[0], &user[0], &path[0], port, &label[0]);
 	}
 }
 
@@ -135,11 +143,11 @@ namespace host_management {
  * @throws  com_error if something unexpected happens such as corrupt
  *          registry structure.
  */
-vector<CHostItem> LoadConnectionsFromRegistry()
+vector<cpidl_t> LoadConnectionsFromRegistry()
 {
 	CRegKey registry;
 	LSTATUS rc;
-	vector<CHostItem> connections;
+	vector<cpidl_t> connections;
 
 	rc = registry.Open(
 		HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
@@ -213,6 +221,24 @@ void RemoveConnectionFromRegistry(wstring label)
 	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 }
 
+namespace {
+
+	class label_matches
+	{
+	public:
+
+		label_matches(const wstring& label) : m_label(label) {}
+
+		bool operator()(const cpidl_t& connection)
+		{
+			return host_itemid_view(connection).label() == m_label;
+		}
+
+	private:
+		wstring m_label;
+	};
+}
+
 /**
  * Returns whether a host entry with the given label exists in the registry.
  */
@@ -221,11 +247,11 @@ bool ConnectionExists(wstring label)
 	if (label.size() < 1)
 		return false;
 
-	vector<CHostItem> connections = LoadConnectionsFromRegistry();
+	vector<cpidl_t> connections = LoadConnectionsFromRegistry();
 
-	return find_if(connections.begin(), connections.end(), 
-		bind(&CHostItem::GetLabel, _1) == label.c_str()) != connections.end();
-
+	return find_if(
+		connections.begin(), connections.end(), label_matches(label))
+		!= connections.end();
 }
 
 }}} // namespace swish::host_folder::host_management

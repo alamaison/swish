@@ -27,7 +27,6 @@
 
 #pragma once
 
-#include "HostPidl.h"  // PIDL wrapper classes
 #include "RemotePidl.h"
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer/SmartListing
