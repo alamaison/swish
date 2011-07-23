@@ -19,11 +19,15 @@
 
 #include "SftpDataObject.h"
 
-#include "RemotePidl.h"
 #include "SftpDirectory.h"
 #include "data_object/StorageMedium.hpp"  // StorageMedium
 
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
+                                               // path_from_remote_pidl
+
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <winapi/shell/pidl.hpp> // cpidl_t, pidl_t
+#include <winapi/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
 #pragma warning(push)
 #pragma warning(disable:4244) // conversion from uint64_t to uint32_t
@@ -31,16 +35,29 @@
 #pragma warning(pop)
 #include <boost/iterator/transform_iterator.hpp> // transform_iterator
 #include <boost/mem_fn.hpp> // mem_fn
+#include <boost/utility.hpp> // next
 
+#include <stdexcept> // runtime_error
+
+using swish::remote_folder::path_from_remote_pidl;
+using swish::remote_folder::remote_itemid_view;
 using swish::shell_folder::data_object::FileGroupDescriptor;
 using swish::shell_folder::data_object::Descriptor;
 using swish::shell_folder::data_object::StorageMedium;
 using swish::shell_folder::data_object::group_descriptor_from_range;
 
+using winapi::shell::pidl::basic_pidl;
+using winapi::shell::pidl::cpidl_t;
+using winapi::shell::pidl::pidl_t;
+using winapi::shell::pidl::raw_pidl_iterator;
+
 using comet::com_ptr;
 
 using boost::make_transform_iterator;
 using boost::mem_fn;
+using boost::next;
+
+using std::runtime_error;
 
 namespace comet {
 
@@ -344,24 +361,39 @@ namespace {
 
 	const int SHOW_PROGRESS_THRESHOLD = 10000;
 
-	Descriptor make_descriptor(const CRemoteItemList& pidl, bool dialogue)
+	template<typename T, typename U>
+	remote_itemid_view view_of_last_item(const basic_pidl<T, U>& pidl)
+	{
+		raw_pidl_iterator it(pidl.get());
+		while (it != raw_pidl_iterator())
+		{
+			if (next(it) == raw_pidl_iterator())
+				return remote_itemid_view(*it);
+		}
+
+		BOOST_THROW_EXCEPTION(runtime_error("Empty iterator"));
+	}
+
+	template<typename T, typename U>
+	Descriptor make_descriptor(const basic_pidl<T, U>& pidl, bool dialogue)
 	{
 		Descriptor d;
 
 		// Filename
-		d.path(pidl.GetFilePath().GetString());
+		d.path(path_from_remote_pidl(pidl));
 
 		// The PIDL we have been passed may be multilevel, representing a
 		// path to the file.  Get last item in PIDL to get properties of the
 		// file itself.
-		CRemoteItemHandle pidlEnd = pidl.GetLast();
+		
+		remote_itemid_view itemid = view_of_last_item(pidl);
 
 		// Size
-		d.file_size(pidlEnd.GetFileSize());
+		d.file_size(itemid.size());
 
 		// Date
 		SYSTEMTIME st;
-		ATLVERIFY(pidlEnd.GetDateModified().GetAsSystemTime(st));
+		ATLVERIFY(itemid.date_modified().to_systemtime(&st));
 		FILETIME ftLastWriteTime;
 		ATLVERIFY(::SystemTimeToFileTime(&st, &ftLastWriteTime));
 		d.last_write_time(from_ftime<ptime>(ftLastWriteTime));
@@ -372,12 +404,12 @@ namespace {
 
 		// Attributes
 		DWORD dwFileAttributes = 0;
-		if (pidlEnd.IsFolder())
+		if (itemid.is_folder())
 			dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 		else
 			dwFileAttributes |= FILE_ATTRIBUTE_NORMAL;
 
-		if (pidlEnd.GetFilename()[0] == L'.')
+		if (itemid.filename()[0] == L'.')
 			dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 
 		d.attributes(dwFileAttributes);
@@ -404,9 +436,9 @@ const throw(...)
 	descriptors.push_back(make_descriptor(pidl, _WantProgressDialogue()));
 
 	// Explode the contents of subfolders into the list
-	if (pidl.IsFolder())
+	if (remote_itemid_view(pidl).is_folder())
 	{
-		_ExpandDirectoryTreeInto(m_pidlCommonParent, pidl, descriptors);
+		_ExpandDirectoryTreeInto(m_pidlCommonParent, pidl.get(), descriptors);
 	}
 }
 
@@ -457,24 +489,25 @@ const throw(...)
 	HRESULT hr;
 	while(true)
 	{
-		CRemoteItem pidl;
-		hr = listing->Next(1, &pidl, NULL);
+		cpidl_t pidl;
+		hr = listing->Next(1, pidl.out(), NULL);
 		if (hr != S_OK)
 			break;
 
 		// Create version of pidl relative to the common root (pidlParent)
-		CRelativePidl pidlRelative(pidlDirectory, pidl);
+		pidl_t relative_pidl = pidlDirectory.m_pidl + pidl;
 
 		// Add simple item - common case
 		ATLENSURE_THROW(
 			descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
-		descriptors.push_back(make_descriptor(pidlRelative, true));
+		descriptors.push_back(make_descriptor(relative_pidl, true));
 
 		// Explode the contents of subfolders into the list
-		if (pidl.IsFolder())
+		if (remote_itemid_view(pidl).is_folder())
 		{
-			pidl.Delete(); // Reduce recursion footprint
-			_ExpandDirectoryTreeInto(pidlParent, pidlRelative, descriptors);
+			pidl = NULL; // Reduce recursion footprint
+			_ExpandDirectoryTreeInto(
+				pidlParent, relative_pidl.get(), descriptors);
 		}
 	}
 	ATLENSURE(hr == S_FALSE);
@@ -498,5 +531,5 @@ inline bool CSftpDataObject::_WantProgressDialogue()
 const throw()
 {
 	return m_pidls.size() > 1
-		|| (m_pidls.size() == 1 && m_pidls[0].IsFolder());
+		|| (m_pidls.size() == 1 && remote_itemid_view(m_pidls[0]).is_folder());
 }

@@ -28,10 +28,9 @@
 #define SWISH_HOST_FOLDER_HOST_PIDL_HPP
 #pragma once
 
-#include "swish/shell_folder/RemotePidl.h" // CRemoteItemListHandle
 #include "swish/remotelimits.h"  // Text field limits
 
-#include <winapi/shell/pidl.hpp> // pidl_t
+#include <winapi/shell/pidl.hpp> // pidl_t, apidl_t, cpidl_t
 #include <winapi/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
 #include <boost/filesystem/path.hpp> // wpath
@@ -148,18 +147,6 @@ public:
 private:
 	PCUIDLIST_RELATIVE m_pidl;
 };
-
-/**
- * Helper to make host_item_views from a templated PIDL.
- */
-/*
-template<typename T, typename Alloc>
-inline host_item_view<T, Alloc> host_item_view_of(
-	const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
-{
-	return host_item_view<T, Alloc>(pidl);
-}
-*/
 
 namespace detail {
 	struct is_valid_host_item
@@ -281,33 +268,6 @@ inline std::wstring url_from_host_itemid(
 			boost::wformat(L"sftp://%s@%s/%s")
 			% host_pidl.user() % host_pidl.host() % host_pidl.path());
 	}
-}
-
-/**
- * Return the absolute path made by the items in this PIDL.
- * e.g. "/path/dir2/dir2/dir3/filename.ext"
- *
- * @TODO: Move out of host_pidl.hpp
- */
-inline boost::filesystem::wpath absolute_path_from_swish_pidl(
-	const winapi::shell::pidl::apidl_t& pidl)
-{
-	winapi::shell::pidl::raw_pidl_iterator host_item_pos =
-		find_host_itemid(pidl);
-	host_itemid_view host_itemid(*host_item_pos);
-
-	boost::filesystem::wpath path = host_itemid.path();
-
-	if (++host_item_pos != winapi::shell::pidl::raw_pidl_iterator())
-	{
-		CRemoteItemListHandle pidlNext = *host_item_pos;
-		if (pidlNext.IsValid())
-		{
-			path /= pidlNext.GetFilePath();
-		}
-	}
-
-	return path;
 }
 
 }} // namespace swish::host_folder

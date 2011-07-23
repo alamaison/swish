@@ -37,7 +37,6 @@
 #include <stdexcept> // runtime_error
 #include <string>
 
-using swish::host_folder::absolute_path_from_swish_pidl;
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::host_itemid_view;
 using swish::host_folder::find_host_itemid;
@@ -190,21 +189,6 @@ BOOST_AUTO_TEST_CASE( hostitem_to_url_default_port_canonical )
 	BOOST_CHECK_EQUAL(
 		url_from_host_itemid(item, true),
 		L"sftp://bobuser@host.example.com:22//p");
-}
-
-/**
- * Test that a Swish PIDL ending in just a host itemid results in the
- * correct path.
- *
- * @TODO: test with remote itemids as well.
- */
-BOOST_AUTO_TEST_CASE( pidl_to_absolute_path_host_item_only )
-{
-	apidl_t pidl = swish_pidl() + create_host_itemid(
-		L"host.example.com", L"bobuser", L"/p/q", 22);
-
-	BOOST_CHECK_EQUAL(
-		absolute_path_from_swish_pidl(pidl), L"/p/q");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

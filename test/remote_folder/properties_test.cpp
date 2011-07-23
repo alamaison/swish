@@ -25,8 +25,7 @@
 */
 
 #include <swish/remote_folder/properties.hpp> // test subject
-
-#include <swish/shell_folder/RemotePidl.h> // CRemoteItem
+#include <swish/remote_folder/remote_pidl.hpp> // create_remote_itemid
 
 #include <winapi/shell/property_key.hpp> // property_key
 
@@ -38,9 +37,11 @@
 
 #include <Propkey.h> // PKEY_ *
 
-using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::compare_pidls_by_property;
+using swish::remote_folder::create_remote_itemid;
+using swish::remote_folder::property_from_pidl;
 
+using winapi::shell::pidl::cpidl_t;
 using winapi::shell::property_key;
 
 using comet::variant_t;
@@ -52,13 +53,12 @@ BOOST_AUTO_TEST_SUITE(properties_tests)
 
 namespace {
 
-	CRemoteItem gimme_pidl()
+	cpidl_t gimme_pidl()
 	{
-		return CRemoteItem(
-			L"some filename.txt", false, L"bobowner", L"mygroup", 578, 1001,
-			false, 0100666, 1024,
-			datetime_t(2010, 1, 1, 12, 30, 17, 42).get(), 
-			datetime_t(2010, 1, 1, 0, 0, 5, 7).get());
+		return create_remote_itemid(
+			L"some filename.txt", false, false, L"bobowner", L"mygroup",
+			578, 1001, 0100666, 1024, datetime_t(2010, 1, 1, 12, 30, 17, 42),
+			datetime_t(2010, 1, 1, 0, 0, 5, 7));
 	}
 }
 
@@ -129,15 +129,15 @@ BOOST_AUTO_TEST_CASE( prop_type )
 
 namespace {
 	
-	CRemoteItem comp_pidl()
+	cpidl_t comp_pidl()
 	{
-		return CRemoteItem(
-			L"sane filename.txt", false, L"booowner", L"mygroup", 0, 1001,
-		    // <                         >          ==        <  ==
-			false, 0100666, 1023,
-			//     ==   <
-			datetime_t(2010, 1, 1, 12, 30, 17, 43).get(), // >
-			datetime_t(2010, 1, 1, 0, 0, 5, 7).get()); // ==
+		return create_remote_itemid(
+			L"sane filename.txt", false, false, L"booowner", L"mygroup",0, 1001,
+		    // <                                   >          ==        <  ==
+			0100666, 1023,
+			//  ==   <
+			datetime_t(2010, 1, 1, 12, 30, 17, 43), // >
+			datetime_t(2010, 1, 1, 0, 0, 5, 7)); // ==
 	}
 
 	int compare(const property_key& key)

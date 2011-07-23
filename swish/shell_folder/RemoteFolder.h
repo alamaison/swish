@@ -26,9 +26,10 @@
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/remote_folder/columns.hpp" // Column
 #include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
-#include "swish/shell_folder/RemotePidl.h" // RemoteItemId handling
 
 #include "swish/atl.hpp"        // Common ATL setup
+
+#include <winapi/shell/pidl.hpp> // cpidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -136,8 +137,6 @@ private:
 	boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 	comet::com_ptr<ISftpConsumer> m_consumer;
 
-	typedef std::vector<CRemoteItem> RemotePidls;
-
 	void set_consumer_factory(
 		boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory)
 	{
@@ -146,10 +145,10 @@ private:
 
 	comet::com_ptr<ISftpProvider> _CreateConnectionForFolder(
 		__in_opt  HWND hwndUserInteraction ) throw(...);
-	void _Delete( __in_opt HWND hwnd, __in const RemotePidls& vecDeathRow )
-		throw(...);
+	void _Delete(
+		HWND hwnd, const std::vector<winapi::shell::pidl::cpidl_t>& death_row);
 	void _DoDelete(
-		__in_opt HWND hwnd, __in const RemotePidls& vecDeathRow ) throw(...);
+		HWND hwnd, const std::vector<winapi::shell::pidl::cpidl_t>& death_row);
 	bool _ConfirmDelete(
 		__in_opt HWND hwnd, __in BSTR bstrName, __in bool fIsFolder ) throw();
 	bool _ConfirmMultiDelete( __in_opt HWND hwnd, size_t cItems ) throw();

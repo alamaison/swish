@@ -388,10 +388,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RemotePidl_test.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SftpDataObject_test.cpp"
 				>
 			</File>

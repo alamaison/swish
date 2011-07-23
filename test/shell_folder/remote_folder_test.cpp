@@ -26,7 +26,7 @@
 
 #include "swish/shell_folder/RemoteFolder.h" // test subject
 
-#include "swish/shell_folder/RemotePidl.h" // RemoteItemId
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp" // PidlFixture
@@ -47,6 +47,7 @@
 
 using test::PidlFixture;
 
+using swish::remote_folder::remote_itemid_view;
 using swish::utils::Utf8StringToWideString;
 
 using winapi::shell::pidl::apidl_t;
@@ -131,29 +132,28 @@ namespace { // private
 		BOOST_CHECK_EQUAL(fetched, 1U);
 
 		do {
-			RemoteItemId *item = reinterpret_cast<RemoteItemId *>(pidl);
+			remote_itemid_view itemid(pidl);
 
 			// Check REMOTEPIDLness
-			BOOST_REQUIRE_EQUAL(item->cb, sizeof(RemoteItemId));
-			BOOST_REQUIRE_EQUAL(item->dwFingerprint, RemoteItemId::FINGERPRINT);
+			BOOST_REQUIRE(itemid.valid());
 
 			// Check filename
-			BOOST_REQUIRE_GT(::wcslen(item->wszFilename), 0U);
+			BOOST_CHECK_GT(itemid.filename().size(), 0);
 			if (!(flags & SHCONTF_INCLUDEHIDDEN))
-				BOOST_REQUIRE_NE(item->wszFilename[0], L'.');
+				BOOST_CHECK_NE(itemid.filename(), L".");
 
 			// Check folderness
 			if (!(flags & SHCONTF_FOLDERS))
-				BOOST_REQUIRE(!item->fIsFolder);
+				BOOST_CHECK(!itemid.is_folder());
 			if (!(flags & SHCONTF_NONFOLDERS))
-				BOOST_REQUIRE(item->fIsFolder);
+				BOOST_CHECK(itemid.is_folder());
 
 			// Check group and owner exist
-			BOOST_REQUIRE_GT(::wcslen(item->wszGroup), 0U);
-			BOOST_REQUIRE_GT(::wcslen(item->wszOwner), 0U);
+			BOOST_CHECK_GT(itemid.owner().size(), 0U);
+			BOOST_CHECK_GT(itemid.group().size(), 0U);
 
 			// Check date validity
-			BOOST_REQUIRE(datetime_t(item->dateModified).good());
+			BOOST_CHECK(itemid.date_modified().good());
 			
 			hr = pidls->Next(1, &pidl, &fetched);
 		} while (hr == S_OK);

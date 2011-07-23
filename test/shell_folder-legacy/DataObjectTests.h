@@ -3,7 +3,8 @@
 #include "test/common/CppUnitExtensions.h"
 
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view
-#include "swish/shell_folder/RemotePidl.h"
+#include "swish/remote_folder/remote_pidl.hpp" // path_from_remote_pidl
+                                               // remote_itemid_view
 #include "swish/shell_folder/DataObject.h"
 
 /**
@@ -62,8 +63,10 @@ static void _testShellPIDL(
 	CIDA *pida = (CIDA *)::GlobalLock(stg.hGlobal);
 	CPPUNIT_ASSERT(pida);
 
-	CRemoteItemListHandle pidlActual = GetPIDLItem(pida, iFile);
-	CPPUNIT_ASSERT_EQUAL(strExpected, pidlActual.GetFilePath());
+	CPPUNIT_ASSERT_EQUAL(
+		strExpected,
+		swish::remote_folder::path_from_remote_pidl(
+			GetPIDLItem(pida, iFile)).c_str());
 
 	::GlobalUnlock(stg.hGlobal);
 	pida = NULL;
@@ -98,10 +101,12 @@ static void _testShellPIDLFolder(IDataObject *pDo, ATL::CString strExpected)
 
 	// Test folder PIDL which may be a RemoteItemId or a HostItemId
 	CChildPidl pidlActual = ::ILFindLastID(GetPIDLFolder(pida));
-	if (CRemoteItem::IsValid(pidlActual))
+	if (swish::remote_folder::remote_itemid_view(pidlActual.m_pidl).is_folder())
 	{
-		CRemoteItemHandle pidl = pidlActual;
-		CPPUNIT_ASSERT_EQUAL(strExpected, pidl.GetFilename());
+		CPPUNIT_ASSERT_EQUAL(
+			strExpected,
+			swish::remote_folder::remote_itemid_view(
+				pidlActual.m_pidl).filename().c_str());
 	}
 	else
 	{

@@ -21,9 +21,11 @@
 
 #include "DataObject.h"
 #include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
-#include "RemotePidl.h"
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/shell_folder/Pidl.h"
+
+#include <winapi/shell/pidl.hpp> // cpidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -108,7 +110,7 @@ private:
 	 * and will always be single-level children of m_pidlCommonParent.
 	 */
 	// @{
-	typedef CRemoteItem TopLevelPidl;
+	typedef winapi::shell::pidl::cpidl_t TopLevelPidl;
 	typedef std::vector<TopLevelPidl> TopLevelList;
 	// @}
 

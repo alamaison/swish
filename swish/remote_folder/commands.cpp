@@ -30,12 +30,13 @@
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
 #include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommandWithSite
-#include "swish/shell_folder/RemotePidl.h" // CRemoteItem
+#include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
 #include <winapi/trace.hpp> // trace
 
+#include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
 #include <comet/server.h> // simple_object
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -66,9 +67,11 @@ using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
 using swish::nse::WebtaskCommandTitleAdapter;
+using swish::remote_folder::create_remote_itemid;
 using swish::SmartListing;
 
 using winapi::shell::pidl::apidl_t;
+using winapi::shell::pidl::cpidl_t;
 using winapi::shell::shell_browser;
 using winapi::shell::shell_view;
 using winapi::trace;
@@ -76,6 +79,7 @@ using winapi::trace;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
+using comet::datetime_t;
 using comet::enum_iterator;
 using comet::make_smart_enumeration;
 using comet::simple_object;
@@ -255,16 +259,19 @@ const
 			// A failure after this point is not worth reporting.  The folder
 			// was created even if we didn't update the shell or allow the
 			// user a chance to pick a name.
-			CRemoteItem pidl(initial_name.c_str(), true);
-			apidl_t initial_pidl =
-				m_folder_pidl + reinterpret_cast<PCITEMID_CHILD>(pidl.Get());
-			notify_shell(initial_pidl);
+
+			// TODO: stat new folder for actual parameters
+
+			cpidl_t pidl = create_remote_itemid(
+				initial_name, true, false, L"", L"", 0, 0, 0, 0, datetime_t(),
+				datetime_t());
+			notify_shell(m_folder_pidl + pidl);
 
 			// TODO: date modified should be now
 
 			// Put item into 'rename' mode
 			HRESULT hr = view->SelectItem(
-				reinterpret_cast<PCITEMID_CHILD>(pidl.Get()),
+				pidl.get(),
 				SVSI_EDIT | SVSI_SELECT | SVSI_DESELECTOTHERS |
 				SVSI_ENSUREVISIBLE | SVSI_FOCUSED);
 			if (FAILED(hr))

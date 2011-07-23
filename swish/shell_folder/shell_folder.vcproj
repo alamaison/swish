@@ -456,10 +456,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\RemotePidl.h"
-				>
-			</File>
-			<File
 				RelativePath=".\resource.h"
 				>
 			</File>

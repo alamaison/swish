@@ -351,6 +351,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\remote_pidl_test.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\swish_pidl_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\test.cpp"
 			>
 		</File>

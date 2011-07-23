@@ -20,8 +20,11 @@
 
 #include "SftpDirectory.h"
 
-#include "swish/host_folder/host_pidl.hpp" // absolute_path_from_swish_pidl
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view,
+                                               // create_remote_itemid
+#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 
+#include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // comtype
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -32,15 +35,19 @@
 
 #include <vector>
 
-using swish::host_folder::absolute_path_from_swish_pidl;
+using swish::remote_folder::absolute_path_from_swish_pidl;
+using swish::remote_folder::create_remote_itemid;
+using swish::remote_folder::remote_itemid_view;
 using swish::SmartListing;
 
 using winapi::shell::pidl::apidl_t;
+using winapi::shell::pidl::cpidl_t;
 
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
+using comet::datetime_t;
 using comet::enum_iterator;
 using comet::make_smart_enumeration;
 
@@ -67,9 +74,9 @@ template<> struct enumerated_type_of<IEnumIDList>
  */
 template<> struct impl::type_policy<PITEMID_CHILD>
 {
-	static void init(PITEMID_CHILD& t, const CChildPidl& s) 
+	static void init(PITEMID_CHILD& t, const cpidl_t& s) 
 	{
-		t = s.CopyTo();
+		s.copy_to(t);
 	}
 
 	static void clear(PITEMID_CHILD& t)
@@ -106,20 +113,20 @@ namespace {
 	bool dotted(const SmartListing& lt)
 	{ return lt.get().bstrFilename[0] == OLECHAR('.'); }
 
-	CRemoteItem to_pidl(const SmartListing& lt)
+	cpidl_t to_pidl(const SmartListing& lt)
 	{
-		return CRemoteItem(
-			bstr_t(lt.get().bstrFilename).c_str(),
+		return create_remote_itemid(
+			lt.get().bstrFilename,
 			S_ISDIR(lt.get().uPermissions),
-			bstr_t(lt.get().bstrOwner).c_str(),
-			bstr_t(lt.get().bstrGroup).c_str(),
+			false,
+			lt.get().bstrOwner,
+			lt.get().bstrGroup,
 			lt.get().uUid,
 			lt.get().uGid,
-			false,
 			lt.get().uPermissions,
 			lt.get().uSize,
-			lt.get().dateModified,
-			lt.get().dateAccessed);
+			datetime_t(lt.get().dateModified),
+			datetime_t(lt.get().dateAccessed));
 	}
 
 }
@@ -152,8 +159,7 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
 
-	shared_ptr< vector<CChildPidl> > pidls = 
-		make_shared< vector<CChildPidl> >();
+	shared_ptr< vector<cpidl_t> > pidls = make_shared< vector<cpidl_t> >();
 
 	do {
 		SmartListing lt;
@@ -201,13 +207,12 @@ enum_iterator<IEnumListing, SmartListing> CSftpDirectory::end() const
  * @returns  Instance of the subdirectory.
  * @throws  com_error if error.
  */
-CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle directory)
+CSftpDirectory CSftpDirectory::GetSubdirectory(const cpidl_t& directory)
 {
-	if (!directory.IsFolder())
+	if (!remote_itemid_view(directory).is_folder())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	apidl_t sub_directory =
-		m_directory_pidl + reinterpret_cast<PCITEMID_CHILD>(directory.Get());
+	apidl_t sub_directory = m_directory_pidl + directory;
 	return CSftpDirectory(sub_directory, m_provider, m_consumer);
 }
 
@@ -222,10 +227,10 @@ CSftpDirectory CSftpDirectory::GetSubdirectory(CRemoteItemHandle directory)
  * @returns  Smart pointer of an IStream interface to the file.
  * @throws  com_error if error.
  */
-com_ptr<IStream> CSftpDirectory::GetFile(
-	CRemoteItemHandle file, bool writeable)
+com_ptr<IStream> CSftpDirectory::GetFile(const cpidl_t& file, bool writeable)
 {
-	bstr_t file_path = (m_directory / file.GetFilename()).string();
+	bstr_t file_path =
+		(m_directory / remote_itemid_view(file).filename()).string();
 
 	com_ptr<IStream> stream;
 	HRESULT hr = m_provider->GetFile(
@@ -261,10 +266,11 @@ com_ptr<IStream> CSftpDirectory::GetFileByPath(
 }
 
 bool CSftpDirectory::Rename(
-	CRemoteItemHandle old_file, const wstring& new_filename)
+	const cpidl_t& old_file, const wstring& new_filename)
 {
 	VARIANT_BOOL was_target_overwritten = VARIANT_FALSE;
-	bstr_t old_file_path = (m_directory / old_file.GetFilename()).string();
+	bstr_t old_file_path =
+		(m_directory / remote_itemid_view(old_file).filename()).string();
 	bstr_t new_file_path = (m_directory / new_filename).string();
 
 	HRESULT hr = m_provider->Rename(
@@ -276,12 +282,13 @@ bool CSftpDirectory::Rename(
 	return (was_target_overwritten == VARIANT_TRUE);
 }
 
-void CSftpDirectory::Delete(CRemoteItemHandle file)
+void CSftpDirectory::Delete(const cpidl_t& file)
 {
-	bstr_t target_path = (m_directory / file.GetFilename()).string();
+	bstr_t target_path =
+		(m_directory / remote_itemid_view(file).filename()).string();
 	
 	HRESULT hr;
-	if (file.IsFolder())
+	if (remote_itemid_view(file).is_folder())
 		hr = m_provider->DeleteDirectory(m_consumer.in(), target_path.in());
 	else
 		hr = m_provider->Delete(m_consumer.in(), target_path.in());

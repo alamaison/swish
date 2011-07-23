@@ -28,13 +28,14 @@
 
 #include "swish/atl.hpp"   // Common ATL setup
 #include "swish/host_folder/host_pidl.hpp" // create_host_itemid
-#include "swish/shell_folder/RemotePidl.h" // RemoteItemId
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view,
+                                               // create_remote_itemid
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 #include "test/common_boost/MockConsumer.hpp" // MockConsumer
 #include "test/common_boost/MockProvider.hpp" // MockProvider
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
@@ -42,9 +43,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <string>
+
 using swish::host_folder::create_host_itemid;
+using swish::remote_folder::create_remote_itemid;
+using swish::remote_folder::remote_itemid_view;
 
 using winapi::shell::pidl::apidl_t;
+using winapi::shell::pidl::cpidl_t;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -52,6 +58,8 @@ using comet::datetime_t;
 
 using test::MockProvider;
 using test::MockConsumer;
+
+using std::wstring;
 
 namespace { // private
 
@@ -102,30 +110,29 @@ namespace { // private
 		BOOST_CHECK_EQUAL(fetched, 1U);
 
 		do {
-			RemoteItemId *item = reinterpret_cast<RemoteItemId *>(pidl);
+			remote_itemid_view itemid(pidl);
 
 			// Check REMOTEPIDLness
-			BOOST_REQUIRE_EQUAL(item->cb, sizeof(RemoteItemId));
-			BOOST_REQUIRE_EQUAL(item->dwFingerprint, RemoteItemId::FINGERPRINT);
+			BOOST_REQUIRE(itemid.valid());
 
 			// Check filename
-			BOOST_REQUIRE_GT(::wcslen(item->wszFilename), 0U);
+			BOOST_CHECK_GT(itemid.filename().size(), 0);
 			if (!(flags & SHCONTF_INCLUDEHIDDEN))
-				BOOST_REQUIRE_NE(item->wszFilename[0], L'.');
+				BOOST_CHECK_NE(itemid.filename(), L".");
 
 			// Check folderness
 			if (!(flags & SHCONTF_FOLDERS))
-				BOOST_REQUIRE(!item->fIsFolder);
+				BOOST_CHECK(!itemid.is_folder());
 			if (!(flags & SHCONTF_NONFOLDERS))
-				BOOST_REQUIRE(item->fIsFolder);
+				BOOST_CHECK(itemid.is_folder());
 
 			// Check group and owner exist
-			BOOST_REQUIRE_GT(::wcslen(item->wszGroup), 0U);
-			BOOST_REQUIRE_GT(::wcslen(item->wszOwner), 0U);
+			BOOST_CHECK_GT(itemid.owner().size(), 0U);
+			BOOST_CHECK_GT(itemid.group().size(), 0U);
 
 			// Check date validity
-			BOOST_REQUIRE(datetime_t(item->dateModified).good());
-			
+			BOOST_CHECK(itemid.date_modified().good());
+
 			hr = pidls->Next(1, &pidl, &fetched);
 		} while (hr == S_OK);
 
@@ -136,6 +143,13 @@ namespace { // private
 	void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
 	{
 		test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
+	}
+
+	cpidl_t create_test_pidl(const wstring& filename)
+	{
+		return create_remote_itemid(
+			filename, false, false, L"", L"", 0, 0, 040666, 42, datetime_t(),
+			datetime_t());
 	}
 }
 
@@ -232,7 +246,7 @@ BOOST_AUTO_TEST_CASE( rename )
 	provider()->set_rename_behaviour(MockProvider::RenameOK);
 
 	// PIDL of old file.  Would normally come from GetEnum()
-	CRemoteItem pidl(L"testtmpfile");
+	cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
 	BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), false);
 }
@@ -245,7 +259,7 @@ BOOST_AUTO_TEST_CASE( rename_in_subfolder )
 	provider()->set_rename_behaviour(MockProvider::RenameOK);
 
 	// PIDL of old file.  Would normally come from GetEnum()
-	CRemoteItem pidl(L"testswishfile");
+	cpidl_t pidl = create_test_pidl(L"testswishfile");
 
 	BOOST_CHECK_EQUAL(
 		directory(
@@ -264,7 +278,7 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_granted )
 	provider()->set_rename_behaviour(MockProvider::ConfirmOverwrite);
 	consumer()->set_confirm_overwrite_behaviour(MockConsumer::AllowOverwrite);
 
-	CRemoteItem pidl(L"testtmpfile");
+	cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
 	BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), true);
 	BOOST_CHECK(consumer()->confirmed_overwrite());
@@ -292,7 +306,7 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_denied )
 	provider()->set_rename_behaviour(MockProvider::ConfirmOverwrite);
 	consumer()->set_confirm_overwrite_behaviour(MockConsumer::PreventOverwrite);
 
-	CRemoteItem pidl(L"testtmpfile");
+	cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
 	BOOST_CHECK_EXCEPTION(
 		directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
@@ -306,7 +320,7 @@ BOOST_AUTO_TEST_CASE( rename_provider_aborts )
 {
 	provider()->set_rename_behaviour(MockProvider::AbortRename);
 
-	CRemoteItem pidl(L"testtmpfile");
+	cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
 	BOOST_CHECK_EXCEPTION(
 		directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
@@ -320,7 +334,7 @@ BOOST_AUTO_TEST_CASE( rename_provider_fail )
 {
 	provider()->set_rename_behaviour(MockProvider::FailRename);
 
-	CRemoteItem pidl(L"testtmpfile");
+	cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
 	BOOST_CHECK_EXCEPTION(
 		directory().Rename(pidl, L"renamed to"), com_error, is_com_fail);

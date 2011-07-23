@@ -5,13 +5,20 @@
 #include "DataObjectTests.h"
 
 #include "swish/host_folder/host_pidl.hpp" // create_host_itemid
+#include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid,
+                                               // remote_item_view
 #include "swish/shell_folder/SftpDataObject.h"
-#include "swish/shell_folder/RemotePidl.h"
+
+#include <winapi/shell/pidl.hpp> // cpidl_t
 
 typedef CMockSftpProvider MP;
 typedef CMockSftpConsumer MC;
 
 using swish::host_folder::create_host_itemid;
+using swish::remote_folder::create_remote_itemid;
+using swish::remote_folder::remote_itemid_view;
+
+using winapi::shell::pidl::cpidl_t;
 
 using ATL::CComObject;
 using ATL::CComPtr;
@@ -100,21 +107,21 @@ protected:
 	void testCreate()
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
-		CRemoteItem pidl(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl = create_remote_itemid(
+			L"testswishfile.ext", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
 			CSftpDataObject::Create(
-			1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
+			1, pidl.get(), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
 
 		// Test CFSTR_SHELLIDLIST (PIDL array) format
-		CRemoteItemHandle pidlFolder = ::ILFindLastID(pidlRoot);
-		_testShellPIDLFolder(spDo, pidlFolder.GetFilename());
-		_testShellPIDL(spDo, pidl.GetFilename(), 0);
+		remote_itemid_view pidlFolder(::ILFindLastID(pidlRoot));
+		_testShellPIDLFolder(spDo, pidlFolder.filename());
+		_testShellPIDL(spDo, pidl.filename(), 0);
 
 		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
 		_testFileDescriptor(spDo, L"testswishfile.ext", 0);
@@ -126,19 +133,19 @@ protected:
 	void testCreateMulti()
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
-		CRemoteItem pidl1(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
-		CRemoteItem pidl2(
-			L"testswishfile.txt", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
-		CRemoteItem pidl3(
-			L"testswishFile", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl1 = create_remote_itemid
+			L"testswishfile.ext", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
+		cpidl_t pidl2 = create_remote_itemid(
+			L"testswishfile.txt", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
+		cpidl_t pidl3 = create_remote_itemid(
+			L"testswishFile", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
 		PCITEMID_CHILD aPidl[3];
-		aPidl[0] = pidl1;
-		aPidl[1] = pidl2;
-		aPidl[2] = pidl3;
+		aPidl[0] = pidl1.get();
+		aPidl[1] = pidl2.get();
+		aPidl[2] = pidl3.get();
 
 		CComPtr<IDataObject> spDo =
 			CSftpDataObject::Create(
@@ -149,11 +156,11 @@ protected:
 		m_pDo->AddRef();
 
 		// Test CFSTR_SHELLIDLIST (PIDL array) format
-		CRemoteItemHandle pidlFolder = ::ILFindLastID(pidlRoot);
-		_testShellPIDLFolder(spDo, pidlFolder.GetFilename());
-		_testShellPIDL(spDo, pidl1.GetFilename(), 0);
-		_testShellPIDL(spDo, pidl2.GetFilename(), 1);
-		_testShellPIDL(spDo, pidl3.GetFilename(), 2);
+		remote_itemid_view pidlFolder(::ILFindLastID(pidlRoot));
+		_testShellPIDLFolder(spDo, pidlFolder.filename());
+		_testShellPIDL(spDo, remote_itemid_view(pidl1).filename(), 0);
+		_testShellPIDL(spDo, remote_itemid_view(pidl2).filename(), 1);
+		_testShellPIDL(spDo, remote_itemid_view(pidl3).filename(), 2);
 
 		// Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
 		_testFileDescriptor(spDo, L"testswishfile.ext", 0);
@@ -204,9 +211,9 @@ protected:
 	void testQueryFormats()
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
-		CRemoteItem pidl(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl = create_remote_itemid(
+			L"testswishfile.ext", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
 			CSftpDataObject::Create(
@@ -225,13 +232,13 @@ protected:
 	void testEnumFormats()
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
-		CRemoteItem pidl(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl = create_remote_itemid(
+			L"testswishfile.ext", false, false, L"mockowner", L"mockgroup",
+			1001, 1002,	0677, 1024);
 
 		CComPtr<IDataObject> spDo = 
 			CSftpDataObject::Create(
-				1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
+				1, pidl.get(), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		spDo.CopyTo(&m_pDo);
@@ -247,15 +254,15 @@ protected:
 	void testQueryFormatsMulti()
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
-		CRemoteItem pidl1(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
-		CRemoteItem pidl2(
-			L"testswishfile.txt", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
-		CRemoteItem pidl3(
-			L"testswishFile", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl1 = create_remote_itemid(
+			L"testswishfile.ext", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
+		cpidl_t pidl2 = create_remote_itemid(
+			L"testswishfile.txt", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
+		cpidl_t pidl3 = create_remote_itemid(
+			L"testswishFile", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
 		PCITEMID_CHILD aPidl[3];
 		aPidl[0] = pidl1;
 		aPidl[1] = pidl2;
@@ -279,19 +286,19 @@ protected:
 	void testEnumFormatsMulti()
 	{
 		CAbsolutePidl pidlRoot = _CreateRootRemotePidl();
-		CRemoteItem pidl1(
-			L"testswishfile.ext", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
-		CRemoteItem pidl2(
-			L"testswishfile.txt", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
-		CRemoteItem pidl3(
-			L"testswishFile", false, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl1 = create_remote_itemid(
+			L"testswishfile.ext", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
+		cpidl_t pidl2 = create_remote_itemid(
+			L"testswishfile.txt", false, false, L"mockowner", L"mockgroup",
+			1001, 1002, 0677, 1024);
+		cpidl_t pidl3 = create_remote_itemid(
+			L"testswishFile", false, false, L"mockowner", L"mockgroup", 
+			1001, 1002, 0677, 1024);
 		PCITEMID_CHILD aPidl[3];
-		aPidl[0] = pidl1;
-		aPidl[1] = pidl2;
-		aPidl[2] = pidl3;
+		aPidl[0] = pidl1.get();
+		aPidl[1] = pidl2.get();
+		aPidl[2] = pidl3.get();
 
 		CComPtr<IDataObject> spDo =
 			CSftpDataObject::Create(
@@ -313,20 +320,20 @@ protected:
 			pidlSwish, create_host_itemid(
 				L"test.example.com", L"user", L"/", 22, L"Test PIDL").get());
 
-		CRemoteItem pidl(
-			L"tmp", true, L"mockowner", L"mockgroup", 1001, 1002,
-			false, 0677, 1024);
+		cpidl_t pidl = create_remote_itemid(
+			L"tmp", true, false, L"mockowner", L"mockgroup", 1001, 1002,
+			0677, 1024);
 
 		CComPtr<IDataObject> spDo =
 			CSftpDataObject::Create(
-				1, &(pidl.m_pidl), pidlRoot, m_pProvider, m_pConsumer);
+				1, pidl.get(), pidlRoot, m_pProvider, m_pConsumer);
 
 		// Keep extra reference to check for leaks in tearDown()
 		m_pDo = spDo.p;
 		m_pDo->AddRef();
 
 		// Test CFSTR_SHELLIDLIST (PIDL array) format.  
-		CRemoteItemHandle pidlFolder = ::ILFindLastID(pidlRoot);
+		remote_itemid_view pidlFolder(::ILFindLastID(pidlRoot));
 		_testShellPIDLFolder(spDo, L"/");
 		_testShellPIDLCount(spDo, 1);
 		_testShellPIDL(spDo, L"tmp", 0);
@@ -420,11 +427,11 @@ private:
 		CAbsolutePidl pidlHost = _CreateRootHostPidl();
 		
 		// Create root child REMOTEPIDL
-		CRemoteItem pidlRemote(
-			L"swish", true, L"owner", L"group", 1001, 1002, false, 0677, 1024);
+		cpidl_t pidlRemote = create_remote_itemid(
+			L"swish", true, false, L"owner", L"group", 1001, 1002, 0677, 1024);
 
 		// Concatenate to make absolute pidl to RemoteFolder root
-		return CAbsolutePidl(pidlHost, pidlRemote);
+		return CAbsolutePidl(pidlHost, pidlRemote.get());
 	}
 
 	/**

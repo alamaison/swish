@@ -26,15 +26,24 @@
 
 #include "Registry.h"
 
-#include "RemotePidl.h"
 #include "swish/debug.hpp"
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+
+#include <boost/filesystem/path.hpp> // wpath
+
+#include <string>
+
+using swish::remote_folder::remote_itemid_view;
 
 using ATL::CRegKey;
 using ATL::CString;
 
+using boost::filesystem::wpath;
+
 using std::vector;
+using std::wstring;
 
 /**
  * Get registry keys for HostFolder connection association info.
@@ -87,19 +96,18 @@ throw()
  *   HKCU\\AllFileSystemObjects
  * for a folder.
  *
- * @param[in]  pidl    Remote PIDL representing the file whose association 
+ * @param[in]  itemid  Remote PIDL representing the file whose association 
  *                     information is being requested.
  * @param[out] pcKeys  Number of HKEYS allocated in the array @p paKeys.
  * @param[out] paKeys  Location in which to return th allocated array.
  */
 HRESULT CRegistry::GetRemoteFolderAssocKeys(
-	CRemoteItemHandle pidl, UINT *pcKeys, HKEY **paKeys)
-throw()
+	remote_itemid_view itemid, UINT *pcKeys, HKEY **paKeys)
 {
 	try
 	{
 		return _GetHKEYArrayFromKeynames(
-			_GetRemoteFolderAssocKeynames(pidl), pcKeys, paKeys);
+			_GetRemoteFolderAssocKeynames(itemid), pcKeys, paKeys);
 	}
 	WINAPI_COM_CATCH();
 }
@@ -171,22 +179,27 @@ throw()
  *   HKCU\\AllFileSystemObjects
  * for a folder.
  *
- * @param pidl  Remote PIDL representing the file whose association 
- *              information is being requested.
+ * @param itemid  Remote PIDL representing the file whose association 
+ *                information is being requested.
  */
 /* static */ CRegistry::KeyNames CRegistry::_GetRemoteFolderAssocKeynames(
-	CRemoteItemHandle pidl)
+	remote_itemid_view itemid)
 throw(...)
 {
 	KeyNames vecNames;
 
 	// If this is a directory, add directory-specific items
-	if (pidl.IsFolder())
+	if (itemid.is_folder())
 	{
 		vecNames = _GetKeynamesForFolder();
 	}
 	else
 	{
+		wstring extension = wpath(itemid.filename()).extension();
+		wstring::size_type dot_index = extension.find(L".");
+		if (dot_index != wstring::npos)
+			extension.erase(dot_index);
+
 		// Get extension-specific keys
 		// We don't want to add the {.ext} key itself to the list
 		// of keys but rather, we should use it's default value to 
@@ -195,7 +208,7 @@ throw(...)
 		//   HKCR\.txt => (Default) txtfile
 		// so we look up the following key
 		//   HKCR\txtfile
-		vecNames = _GetKeynamesForExtension(pidl.GetExtension());
+		vecNames = _GetKeynamesForExtension(extension.c_str());
 	}
 
 	// Add names of keys that apply to items of all types

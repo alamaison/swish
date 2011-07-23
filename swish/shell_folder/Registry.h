@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "RemotePidl.h"
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <vector>
 
@@ -35,33 +35,33 @@ class CRegistry
 
 public:
 	static HRESULT GetHostFolderAssocKeys(
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 	static HRESULT GetRemoteFolderAssocKeys(
-		__in CRemoteItemHandle pidl, 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+		swish::remote_folder::remote_itemid_view itemid, 
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 	static HRESULT GetRemoteFolderBackgroundAssocKeys(
 		UINT *pcKeys, HKEY **paKeys);
 	typedef std::vector<ATL::CString> KeyNames;
 
 private:
 
-	static KeyNames _GetHostFolderAssocKeynames() throw();
+	static KeyNames _GetHostFolderAssocKeynames();
 	static KeyNames _GetRemoteFolderAssocKeynames(
-		__in CRemoteItemHandle pidl) throw(...);
+		swish::remote_folder::remote_itemid_view itemid);
 
-	static KeyNames _GetKeynamesForFolder() throw();
-	static KeyNames _GetKeynamesCommonToAll() throw();
+	static KeyNames _GetKeynamesForFolder();
+	static KeyNames _GetKeynamesCommonToAll();
 	static KeyNames _GetKeynamesForExtension(__in PCWSTR pwszExtension)
 		throw();
 
 	static HRESULT _GetHKEYArrayFromKeynames(
 		__in const KeyNames vecNames, 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 
 	static HRESULT _GetHKEYArrayFromVector(
 		__in const std::vector<HKEY> vecKeys, 
-		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys) throw();
+		__out UINT *pcKeys, __deref_out_ecount(pcKeys) HKEY **paKeys);
 
 	static std::vector<HKEY> _GetKeysFromKeynames(
-		__in const KeyNames vecKeynames) throw();
+		__in const KeyNames vecKeynames);
 };

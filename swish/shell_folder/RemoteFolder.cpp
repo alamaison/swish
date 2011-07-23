@@ -36,17 +36,22 @@
 #include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
-#include "swish/host_folder/host_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands.hpp" // remote_folder_command_provider
 #include "swish/remote_folder/connection.hpp" // connection_from_pidl
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
+                                               // create_remote_itemdid
 #include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
+#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/gui/message_box.hpp> // message_box
 #include <winapi/shell/shell.hpp> // string_to_strret
+
+#include <comet/bstr.h> // bstr_t
+#include <comet/datetime.h> // datetime_t
 
 #include <boost/bind.hpp> // bind
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
@@ -61,12 +66,14 @@
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::frontend::rethrow_and_announce;
-using swish::host_folder::absolute_path_from_swish_pidl;
+using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
+using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::CViewCallback;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
+using swish::remote_folder::remote_itemid_view;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::tracing::trace;
 
@@ -77,8 +84,10 @@ using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::string_to_strret;
 
+using comet::bstr_t;
 using comet::com_ptr;
 using comet::com_error;
+using comet::datetime_t;
 using comet::throw_com_error;
 using comet::variant_t;
 
@@ -88,10 +97,20 @@ using boost::locale::translate;
 using boost::make_shared;
 
 using ATL::CComPtr;
-using ATL::CComBSTR;
 using ATL::CString;
 
+using std::vector;
 using std::wstring;
+
+namespace {
+
+	cpidl_t create_filename_only_pidl(const wstring& filename)
+	{
+		return create_remote_itemid(
+			filename, false, false, L"", L"", 0, 0, 0, 0, datetime_t(),
+			datetime_t());
+	}
+}
 
 /*--------------------------------------------------------------------------*/
 /*      Functions implementing IShellFolder via folder_error_adapter.       */
@@ -164,7 +183,7 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
 		}
 
 		// Create child PIDL for this path segment
-		CRemoteItem pidl(strSegment.c_str());
+		cpidl_t pidl = create_filename_only_pidl(strSegment);
 
 		// Bind to subfolder and recurse if there were other path segments
 		if (nSlash != wstring::npos)
@@ -173,7 +192,7 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
 
 			com_ptr<IShellFolder> subfolder;
 			bind_to_object(
-				pidl, bind_ctx, subfolder.iid(),
+				pidl.get(), bind_ctx, subfolder.iid(),
 				reinterpret_cast<void**>(subfolder.out()));
 
 			wchar_t wszRest[MAX_PATH];
@@ -185,11 +204,11 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
 			if (FAILED(hr))
 				throw_com_error(subfolder.get(), hr);
 
-			return (pidl_t(pidl.m_pidl) + rest).detach();
+			return (pidl + rest).detach();
 		}
 		else
 		{
-			return pidl.Detach();
+			return pidl.detach();
 		}
 	}
 	catch (...)
@@ -211,7 +230,7 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
 	wstring name;
-	CRemoteItem rpidl(pidl);
+	remote_itemid_view itemid(pidl);
 
 	bool fForParsing = (flags & SHGDN_FORPARSING) != 0;
 
@@ -242,17 +261,21 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 		}
 
 		// Add child path - include extension if FORPARSING
-		name += rpidl.GetFilename(fForParsing);
+		if (fForParsing)
+			name += itemid.filename();
+		else
+			name += wpath(itemid.filename()).stem(); // no extension
+
 	}
 	else if (flags & SHGDN_FOREDITING)
 	{
-		name = rpidl.GetFilename();
+		name = itemid.filename();
 	}
 	else
 	{
 		ATLASSERT(flags == SHGDN_NORMAL || flags == SHGDN_INFOLDER);
 
-		name = rpidl.GetFilename(false);
+		name = wpath(itemid.filename()).stem(); // filename without extension
 	}
 
 	return string_to_strret(name);
@@ -276,18 +299,20 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 			root_pidl().get(), provider.get(), m_consumer.get());
 		bool fOverwritten = directory.Rename(pidl, name);
 
-		// Create new PIDL from old one
-		CRemoteItem pidlNewFile;
-		pidlNewFile.Attach(::ILCloneChild(pidl));
-		pidlNewFile.SetFilename(name);
+		// Create new PIDL from old one with new filename
+		remote_itemid_view itemid(pidl);
+		cpidl_t new_file = create_remote_itemid(
+			name, itemid.is_folder(), itemid.is_link(),
+			itemid.owner(), itemid.group(), itemid.owner_id(),
+			itemid.group_id(), itemid.permissions(), itemid.size(),
+			itemid.date_modified(), itemid.date_accessed());
 
 		// A failure to notify the shell shouldn't prevent us returning the PIDL
 		try
 		{
-
 			// Make PIDLs absolute
 			apidl_t old_pidl = root_pidl() + pidl;
-			apidl_t new_pidl = root_pidl() + pidlNewFile.m_pidl;
+			apidl_t new_pidl = root_pidl() + new_file;
 
 			// Update the shell by passing both PIDLs
 			if (fOverwritten)
@@ -296,9 +321,9 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 					SHCNE_DELETE, SHCNF_IDLIST | SHCNF_FLUSH, new_pidl.get(),
 					NULL);
 			}
-			CRemoteItemHandle rpidl(pidl);
 			::SHChangeNotify(
-				(rpidl.IsFolder()) ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
+				(remote_itemid_view(pidl).is_folder()) ?
+					SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
 				SHCNF_IDLIST | SHCNF_FLUSH, old_pidl.get(), new_pidl.get());
 		}
 		catch (const std::exception& e)
@@ -307,7 +332,7 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 			trace("%s") % boost::diagnostic_information(e);
 		}
 
-		return pidlNewFile.Detach();
+		return new_file.detach();
 	}
 	catch (...)
 	{
@@ -330,9 +355,7 @@ void CRemoteFolder::get_attributes_of(
 	bool fAllAreFolders = true;
 	for (UINT i = 0; i < pidl_count; i++)
 	{
-		CRemoteItemHandle rpidl(pidl_array[i]);
-		ATLASSERT(rpidl.IsValid());
-		if (!rpidl.IsFolder())
+		if (!remote_itemid_view(pidl_array[i]).is_folder())
 		{
 			fAllAreFolders = false;
 			break;
@@ -343,8 +366,8 @@ void CRemoteFolder::get_attributes_of(
 	bool fAllAreDotFiles = true;
 	for (UINT i = 0; i < pidl_count; i++)
 	{
-		CRemoteItemHandle rpidl(pidl_array[i]);
-		if (rpidl.GetFilename()[0] != L'.')
+		wstring filename = remote_itemid_view(pidl_array[i]).filename();
+		if (filename[0] != L'.')
 		{
 			fAllAreDotFiles = false;
 			break;
@@ -410,7 +433,7 @@ void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 	if (pidl == NULL)
 		BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-	if (!CRemoteItemList::IsValid(pidl))
+	if (!remote_itemid_view(pidl).valid())
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 }
 
@@ -469,8 +492,9 @@ CComPtr<IExtractIconW> CRemoteFolder::extract_icon_w(
 {
 	TRACE("Request: IExtractIconW");
 
-	CRemoteItemHandle rpidl(pidl);
-	return CIconExtractor::Create(rpidl.GetFilename(), rpidl.IsFolder());
+	remote_itemid_view itemid(pidl);
+	return CIconExtractor::Create(
+		itemid.filename().c_str(), itemid.is_folder());
 }
 
 /**
@@ -489,9 +513,9 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 		CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
 	ATLENSURE_SUCCEEDED(hr);
 
-	CRemoteItemHandle pidl(apidl[0]);
+	remote_itemid_view itemid(apidl[0]);
 	
-	if (pidl.IsFolder())
+	if (itemid.is_folder())
 	{
 		// Initialise default assoc provider for Folders
 		hr = spAssoc->Init(
@@ -501,9 +525,11 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 	else
 	{
 		// Initialise default assoc provider for given file extension
-		CString strExt = L"." + pidl.GetExtension();
+		wstring extension = wpath(itemid.filename()).extension();
+		if (extension.empty())
+			extension = L".";
 		hr = spAssoc->Init(
-			ASSOCF_INIT_DEFAULTTOSTAR, strExt, NULL, hwnd);
+			ASSOCF_INIT_DEFAULTTOSTAR, extension.c_str(), NULL, hwnd);
 		ATLENSURE_SUCCEEDED(hr);
 	}
 
@@ -535,7 +561,8 @@ CComPtr<IContextMenu> CRemoteFolder::context_menu(
 	if (cpidl > 0)
 	{
 		ATLENSURE_THROW(SUCCEEDED(
-			CRegistry::GetRemoteFolderAssocKeys(apidl[0], &ckeys, &akeys)),
+			CRegistry::GetRemoteFolderAssocKeys(
+				remote_itemid_view(apidl[0]), &ckeys, &akeys)),
 			E_UNEXPECTED  // Might fail if registry is corrupted
 		);
 	}
@@ -757,25 +784,15 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
 			assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
 
 			// Build up a list of PIDLs for all the items to be deleted
-			RemotePidls vecDeathRow;
+			vector<cpidl_t> death_row;
 			for (UINT i = 0; i < format.pidl_count(); i++)
 			{
-				CRemoteItemList pidlFile = format.relative_file(i).get();
-
-				// May be overkill (it should always be a child) but check anyway
-				// because we don't want to accidentally recursively delete the root
-				// of a folder tree
-				if (::ILIsChild(pidlFile) && !::ILIsEmpty(pidlFile))
-				{
-					CRemoteItem pidlChild = 
-						static_cast<PCITEMID_CHILD>(
-						static_cast<PCIDLIST_RELATIVE>(pidlFile));
-					vecDeathRow.push_back(pidlChild);
-				}
+				death_row.push_back(
+					winapi::shell::pidl::pidl_cast<cpidl_t>(format.relative_file(i)));
 			}
 
 			// Delete
-			_Delete(hwnd, vecDeathRow);
+			_Delete(hwnd, death_row);
 		}
 		catch (...)
 		{
@@ -805,20 +822,20 @@ HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
  * is displayed asking if the number of items are to be deleted.
  *
  * @param hwnd         Handle to the window used for UI.
- * @param vecDeathRow  Collection of items to be deleted as PIDLs.
+ * @param death_row    Collection of items to be deleted as PIDLs.
  *
  * @throws AtlException if a failure occurs.
  */
-void CRemoteFolder::_Delete( HWND hwnd, const RemotePidls& vecDeathRow )
+void CRemoteFolder::_Delete(HWND hwnd, const vector<cpidl_t>& death_row)
 {
-	size_t cItems = vecDeathRow.size();
+	size_t cItems = death_row.size();
 
 	BOOL fGoAhead = false;
 	if (cItems == 1)
 	{
-		const CRemoteItem& pidl = vecDeathRow[0];
+		remote_itemid_view itemid(death_row[0]);
 		fGoAhead = _ConfirmDelete(
-			hwnd, CComBSTR(pidl.GetFilename()), pidl.IsFolder());
+			hwnd, bstr_t(itemid.filename()).in(), itemid.is_folder());
 	}
 	else if (cItems > 1)
 	{
@@ -831,7 +848,7 @@ void CRemoteFolder::_Delete( HWND hwnd, const RemotePidls& vecDeathRow )
 	}
 
 	if (fGoAhead)
-		_DoDelete(hwnd, vecDeathRow);
+		_DoDelete(hwnd, death_row);
 }
 
 /**
@@ -841,11 +858,11 @@ void CRemoteFolder::_Delete( HWND hwnd, const RemotePidls& vecDeathRow )
  * a mix of files and folder.
  *
  * @param hwnd         Handle to the window used for UI.
- * @param vecDeathRow  Collection of items to be deleted as PIDLs.
+ * @param death_row    Collection of items to be deleted as PIDLs.
  *
  * @throws AtlException if a failure occurs.
  */
-void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
+void CRemoteFolder::_DoDelete(HWND hwnd, const vector<cpidl_t>& death_row)
 {
 	if (hwnd == NULL)
 		AtlThrow(E_FAIL);
@@ -858,16 +875,16 @@ void CRemoteFolder::_DoDelete( HWND hwnd, const RemotePidls& vecDeathRow )
 		root_pidl().get(), provider.get(), m_consumer.get());
 
 	// Delete each item and notify shell
-	RemotePidls::const_iterator it = vecDeathRow.begin();
-	while (it != vecDeathRow.end())
+	vector<cpidl_t>::const_iterator it = death_row.begin();
+	while (it != death_row.end())
 	{
-		directory.Delete( *it );
+		directory.Delete(*it);
 
 		// Notify the shell
 		::SHChangeNotify(
-			((*it).IsFolder()) ? SHCNE_RMDIR : SHCNE_DELETE,
+			(remote_itemid_view(*it).is_folder()) ? SHCNE_RMDIR : SHCNE_DELETE,
 			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-			(root_pidl() + (*it).m_pidl).get(), NULL
+			(root_pidl() + *it).get(), NULL
 		);
 
 		it++;

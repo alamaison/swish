@@ -27,9 +27,8 @@
 
 #pragma once
 
-#include "RemotePidl.h"
-
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer/SmartListing
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
@@ -49,15 +48,18 @@ public:
 		comet::com_ptr<ISftpConsumer> consumer);
 
 	comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
-	CSftpDirectory GetSubdirectory(CRemoteItemHandle directory);
+	CSftpDirectory GetSubdirectory(
+		const winapi::shell::pidl::cpidl_t& directory);
 	comet::com_ptr<IStream> GetFile(
-		CRemoteItemHandle file, bool writeable);
+		const winapi::shell::pidl::cpidl_t& file, bool writeable);
 	comet::com_ptr<IStream> GetFileByPath(
 		const boost::filesystem::wpath& file, bool writeable);
 
 	bool Rename(
-		CRemoteItemHandle old_file, const std::wstring& new_filename);
-	void Delete(CRemoteItemHandle file);
+		const winapi::shell::pidl::cpidl_t& old_file,
+		const std::wstring& new_filename);
+	void Delete(
+		const winapi::shell::pidl::cpidl_t& file);
 	void CreateDirectory(const std::wstring& name);
 
 	comet::enum_iterator<IEnumListing, swish::SmartListing> begin() const;

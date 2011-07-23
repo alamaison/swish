@@ -27,7 +27,7 @@
 #include "properties.hpp"
 #include "Mode.h"          // Unix-style permissions
 
-#include <swish/shell_folder/RemotePidl.h> // CRemoteItemHandle
+#include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <boost/assign.hpp> // map_list_of
 #include <boost/function.hpp> // function
@@ -81,17 +81,17 @@ namespace {
 	 * something.txt is given the type name "Text Document" and a directory
 	 * is called a "File Folder" regardless of its name.
 	 */
-	std::wstring lookup_friendly_typename(CRemoteItemHandle pidl)
+	std::wstring lookup_friendly_typename(const cpidl_t& pidl)
 	{
 		DWORD dwAttributes = 
-			(pidl.IsFolder()) ?
+			(remote_itemid_view(pidl).is_folder()) ?
 				FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 
 		UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME;
 
 		SHFILEINFO shfi;
 		ATLENSURE(::SHGetFileInfo(
-			pidl.GetFilename(), dwAttributes, 
+			remote_itemid_view(pidl).filename().c_str(), dwAttributes, 
 			&shfi, sizeof(shfi), uInfoFlags));
 		
 		return shfi.szTypeName;
@@ -105,39 +105,39 @@ namespace {
 
 	typedef map<
 		property_key,
-		boost::function<variant_t (const CRemoteItemHandle& pidl)> >
+		boost::function<variant_t (const cpidl_t& pidl)> >
 		remote_property_map;
 
-	variant_t label_getter(const CRemoteItemHandle& pidl)
-	{ return pidl.GetFilename().GetString(); }
+	variant_t label_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).filename(); }
 
-	variant_t owner_getter(const CRemoteItemHandle& pidl)
-	{ return pidl.GetOwner().GetString(); }
+	variant_t owner_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).owner(); }
 
-	variant_t group_getter(const CRemoteItemHandle& pidl)
-	{ return pidl.GetGroup().GetString(); }
+	variant_t group_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).group(); }
 
-	variant_t owner_id_getter(const CRemoteItemHandle& pidl)
-	{ return pidl.GetOwnerId(); }
+	variant_t owner_id_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).owner_id(); }
 
-	variant_t group_id_getter(const CRemoteItemHandle& pidl)
-	{ return pidl.GetGroupId(); }
+	variant_t group_id_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).group_id(); }
 
-	variant_t size_getter(const CRemoteItemHandle& pidl)
-	{ return pidl.GetFileSize(); }
+	variant_t size_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).size(); }
 
-	variant_t modified_date_getter(const CRemoteItemHandle& pidl)
-	{ return variant_t(pidl.GetDateModified().m_dt, VT_DATE); }
+	variant_t modified_date_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).date_modified(); }
 
-	variant_t accessed_date_getter(const CRemoteItemHandle& pidl)
-	{ return variant_t(pidl.GetDateAccessed().m_dt, VT_DATE); }
+	variant_t accessed_date_getter(const cpidl_t& pidl)
+	{ return remote_itemid_view(pidl).date_accessed(); }
 
-	variant_t type_getter(const CRemoteItemHandle& pidl)
+	variant_t type_getter(const cpidl_t& pidl)
 	{ return lookup_friendly_typename(pidl); }
 
-	variant_t permissions_getter(const CRemoteItemHandle& pidl)
+	variant_t permissions_getter(const cpidl_t& pidl)
 	{
-		DWORD dwPerms = pidl.GetPermissions();
+		DWORD dwPerms = remote_itemid_view(pidl).permissions();
 		return mode::Mode(dwPerms).toString();
 	}
 
