@@ -79,11 +79,6 @@ struct remote_item_id
 
 BOOST_STATIC_ASSERT((sizeof(remote_item_id) % sizeof(DWORD)) == 0);
 
-inline const remote_item_id& as_remote_item_id(PCUIDLIST_RELATIVE pidl) 
-{
-	return *reinterpret_cast<const remote_item_id*>(pidl);
-}
-
 }
 
 /**
@@ -103,101 +98,100 @@ public:
 	template<typename T, typename Alloc>
 	explicit remote_itemid_view(
 		const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
-		: m_pidl(pidl.get()) {}
+		: m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl.get()))
+	{}
 
-	explicit remote_itemid_view(PCUIDLIST_RELATIVE pidl) : m_pidl(pidl) {}
+	explicit remote_itemid_view(PCUIDLIST_RELATIVE pidl)
+		: m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl)) {}
 
 	bool valid() const
 	{
-		if (m_pidl == NULL)
+		if (m_itemid == NULL)
 			return false;
 
-		const detail::remote_item_id& id = detail::as_remote_item_id(m_pidl);
-		return ((id.cb == sizeof(detail::remote_item_id)) &&
-			(id.dwFingerprint == detail::remote_item_id::FINGERPRINT));
+		return ((m_itemid->cb == sizeof(detail::remote_item_id)) &&
+			(m_itemid->dwFingerprint == detail::remote_item_id::FINGERPRINT));
 	}
 
 	std::wstring filename() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).wszFilename;
+		return m_itemid->wszFilename;
 	}
 
 	std::wstring owner() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).wszOwner;
+		return m_itemid->wszOwner;
 	}
 
 	std::wstring group() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).wszGroup;
+		return m_itemid->wszGroup;
 	}
 
 	ULONG owner_id() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).uUid;
+		return m_itemid->uUid;
 	}
 
 	ULONG group_id() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).uGid;
+		return m_itemid->uGid;
 	}
 
 	bool is_folder() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).fIsFolder;
+		return m_itemid->fIsFolder;
 	}
 
 	bool is_link() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).fIsLink;
+		return m_itemid->fIsLink;
 	}
 
 	DWORD permissions() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).dwPermissions;
+		return m_itemid->dwPermissions;
 	}
 
 	ULONGLONG size() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::as_remote_item_id(m_pidl).uSize;
+		return m_itemid->uSize;
 	}
 
 	comet::datetime_t date_modified() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return comet::datetime_t(
-			detail::as_remote_item_id(m_pidl).dateModified);
+		return comet::datetime_t(m_itemid->dateModified);
 	}
 
 	comet::datetime_t date_accessed() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return comet::datetime_t(
-			detail::as_remote_item_id(m_pidl).dateAccessed);
+		return comet::datetime_t(m_itemid->dateAccessed);
 	}
 
 private:
-	PCUIDLIST_RELATIVE m_pidl;
+	const detail::remote_item_id __unaligned* m_itemid;
 };
 
 namespace detail {

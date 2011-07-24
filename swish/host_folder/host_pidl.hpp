@@ -71,11 +71,6 @@ struct host_item_id
 
 BOOST_STATIC_ASSERT((sizeof(host_item_id) % sizeof(DWORD)) == 0);
 
-inline const host_item_id& as_host_item_id(PCUIDLIST_RELATIVE pidl) 
-{
-	return *reinterpret_cast<const host_item_id*>(pidl);
-}
-
 }
 
 /**
@@ -95,57 +90,57 @@ public:
 	template<typename T, typename Alloc>
 	explicit host_itemid_view(
 		const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
-		: m_pidl(pidl.get()) {}
+		: m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl.get())) {}
 
-	explicit host_itemid_view(PCUIDLIST_RELATIVE pidl) : m_pidl(pidl) {}
+	explicit host_itemid_view(PCUIDLIST_RELATIVE pidl)
+		: m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl)) {}
 
 	bool valid() const
 	{
-		if (m_pidl == NULL)
+		if (m_itemid == NULL)
 			return false;
 
-		const detail::host_item_id& id = detail::as_host_item_id(m_pidl);
-		return ((id.cb == sizeof(detail::host_item_id)) &&
-			(id.dwFingerprint == detail::host_item_id::FINGERPRINT));
+		return ((m_itemid->cb == sizeof(detail::host_item_id)) &&
+			(m_itemid->dwFingerprint == detail::host_item_id::FINGERPRINT));
 	}
 
 	std::wstring host() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::as_host_item_id(m_pidl).wszHost;
+		return m_itemid->wszHost;
 	}
 
 	std::wstring user() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::as_host_item_id(m_pidl).wszUser;
+		return m_itemid->wszUser;
 	}
 
 	std::wstring label() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::as_host_item_id(m_pidl).wszLabel;
+		return m_itemid->wszLabel;
 	}
 
 	boost::filesystem::wpath path() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::as_host_item_id(m_pidl).wszPath;
+		return m_itemid->wszPath;
 	}
 
 	int port() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::as_host_item_id(m_pidl).uPort;
+		return m_itemid->uPort;
 	}
 
 private:
-	PCUIDLIST_RELATIVE m_pidl;
+	const detail::host_item_id __unaligned* m_itemid;
 };
 
 namespace detail {
