@@ -114,6 +114,7 @@ public:
 
 	boost::filesystem::wpath Sandbox();
 	boost::filesystem::wpath NewFileInSandbox();
+	boost::filesystem::wpath NewFileInSandbox(std::wstring name);
 
 private:
 	boost::filesystem::wpath m_sandbox;

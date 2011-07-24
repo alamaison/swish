@@ -31,18 +31,68 @@
 #include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp" // PidlFixture
 
+#include <winapi/shell/pidl.hpp> // apidl_t
+#include <winapi/shell/shell.hpp> // strret_to_string
+
 #include <comet/datetime.h> // datetime_t
+#include <comet/enum_iterator.h> // enum_iterator
+#include <comet/error.h> // com_error
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/bind.hpp> // bind
+#include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm> // find_if
 
 using test::PidlFixture;
 
+using swish::utils::Utf8StringToWideString;
+
+using winapi::shell::pidl::apidl_t;
+using winapi::shell::pidl::cpidl_t;
+using winapi::shell::strret_to_string;
+
+using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
+using comet::enum_iterator;
 
 using boost::filesystem::wpath;
+using boost::lexical_cast;
+using boost::test_tools::predicate_result;
+
+using std::find_if;
+using std::wstring;
+
+namespace comet {
+
+template<> struct comtype<IEnumIDList>
+{
+	static const IID& uuid() throw() { return IID_IEnumIDList; }
+	typedef IUnknown base;
+};
+
+template<> struct enumerated_type_of<IEnumIDList>
+{ typedef PITEMID_CHILD is; };
+
+/**
+ * Copy-policy for use by enumerators of child PIDLs.
+ */
+template<> struct impl::type_policy<PITEMID_CHILD>
+{
+	static void init(PITEMID_CHILD& t, const cpidl_t& s) 
+	{
+		s.copy_to(t);
+	}
+
+	static void clear(PITEMID_CHILD& t)
+	{
+		::ILFree(t);
+	}	
+};
+
+}
 
 namespace { // private
 
@@ -159,6 +209,259 @@ BOOST_AUTO_TEST_CASE( enum_everything )
 	BOOST_REQUIRE_OK(hr);
 
 	test_enum(listing, flags);
+}
+
+
+namespace {
+
+	bool pidl_matches_filename(PCUITEMID_CHILD remote_pidl, wstring name)
+	{
+		CRemoteItemHandle item(remote_pidl);
+		return item.GetFilename().GetString() == name;
+	}
+
+	cpidl_t pidl_for_file(com_ptr<IShellFolder> folder, wstring name)
+	{
+		SHCONTF flags = 
+			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+
+		com_ptr<IEnumIDList> listing;
+		HRESULT hr = folder->EnumObjects(NULL, flags, listing.out());
+		BOOST_REQUIRE_OK(hr);
+
+		enum_iterator<IEnumIDList> pos = std::find_if(
+			enum_iterator<IEnumIDList>(listing), enum_iterator<IEnumIDList>(),
+			bind(pidl_matches_filename, _1, name));
+		BOOST_REQUIRE_MESSAGE(pos != enum_iterator<IEnumIDList>(), "PIDL not found");
+
+		return *pos;
+	}
+
+	predicate_result display_name_matches(
+		com_ptr<IShellFolder> folder, SHGDNF flags, const wstring& filename,
+		const wstring& expected_display_name)
+	{
+		cpidl_t pidl = pidl_for_file(folder, filename);
+
+		STRRET strret;
+		HRESULT hr = folder->GetDisplayNameOf(pidl.get(), flags, &strret);
+		BOOST_REQUIRE_OK(hr);
+
+		wstring display_name = strret_to_string<wchar_t>(strret);
+		if (display_name != expected_display_name)
+		{
+			predicate_result res(false);
+			res.message()
+				<< L"Display name for '" << filename << L"' unexpected: ["
+				<< display_name << L" != " << expected_display_name << L"]";
+			return res;
+		}
+
+		return true;
+	}
+}
+
+/**
+ * Request the display name for a file.
+ *
+ * This is the name of the file in a form suitable displaying to the user
+ * anywhere in Windows and therefore may need disambiguation information
+ * included.  For example 'filename on host' rather than just 'filename'.
+ *
+ * Currently we don't support disambiguation information in Swish.
+ *
+ * This name does not have to be parseable.
+ */
+BOOST_AUTO_TEST_CASE( display_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_NORMAL;
+	wstring expected = L"testfile";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+/**
+ * Request the editing name for a file as though it were being edited elsewhere
+ * than within its parent folder view.
+ * I'm not sure how this situation would work but I don't think it matters for
+ * us so we just return the usual editing name.
+ */
+BOOST_AUTO_TEST_CASE( editing_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_NORMAL | SHGDN_FOREDITING;
+	wstring expected = L"testfile.txt";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+/**
+ * Request the name for a file as though it were shown in the address bar
+ * somewhere that isn't necessarily the parent folder.
+ */
+BOOST_AUTO_TEST_CASE( address_bar_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR;
+	wstring expected = L"sftp://" + 
+		Utf8StringToWideString(GetUser()) + L"@" +
+		Utf8StringToWideString(GetHost()) + L":" +
+		lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+/**
+ * Check the display name for a file as it should be shown in a listing
+ * of its containing folder.
+ * In particular, this doesn't need disambiguation information that relates
+ * to the folder it is in as this name is only used within the parent folder.
+ *
+ * This name does not have to be parseable.
+ */
+BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_INFOLDER;
+	wstring expected = L"testfile";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+
+/**
+ * Check the parsing name of a file relative to its containing folder.
+ * In other words, return the name of the file in such a form that it can
+ * be uniquely identified given that we know the folder it is in.
+ * Effectively, this means return the filename with its extension but any
+ * decorative text that isn't part of its real name should be removed.
+ *
+ * Our files over SFTP don't have any decorative text but we do have to deal
+ * with the extension.
+ */
+BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_INFOLDER | SHGDN_FORPARSING;
+	wstring expected = L"testfile.txt";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+/**
+ * Request the editing name for a file as though it were being renamed in-place.
+ * Normally in Windows this is different from the in-folder parsing name in that
+ * it wouldn't include the extension but we tweak this slightly so that
+ * renaming a file shows the extension even if that isn't the default user
+ * setting.
+ */
+BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_INFOLDER | SHGDN_FOREDITING;
+	wstring expected = L"testfile.txt";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+// NORMAL + FORPARSING = ABSOLUTE
+//
+// ... or so it would seem
+
+/**
+ * Request the absolute name of a file as shown in the address bar.
+ *
+ * This should be a 'pretty' version of the name rather than the
+ * truly parseable version that includes GUIDs etc.
+ */
+BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
+	wstring expected = L"Computer\\Swish\\sftp://" + 
+		Utf8StringToWideString(GetUser()) + L"@" +
+		Utf8StringToWideString(GetHost()) + L":" +
+		lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+/**
+ * Request the absolute parsing name for a file.
+ *
+ * It must be possible to pass this to the @b desktop folder's ParseDisplayName
+ * and get back a pidl for this item.
+ */
+BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
+{
+	wpath file = NewFileInSandbox(L"testfile.txt");
+
+	SHGDNF flags = SHGDN_NORMAL | SHGDN_FORPARSING;
+	wstring expected = 
+		L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
+		L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\sftp://" + 
+		Utf8StringToWideString(GetUser()) + L"@" +
+		Utf8StringToWideString(GetHost()) + L":" +
+		lexical_cast<wstring>(GetPort()) + L"/" +
+		ToRemotePath(file).string();
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file.filename(), expected));
+}
+
+/**
+ * Request the display name for a folder.
+ *
+ * This is the name of the file in a form suitable displaying to the user
+ * anywhere in Windows and therefore may need disambiguation information
+ * included.  For example 'folder on host' rather than just 'folder'.
+ *
+ * Currently we don't support disambiguation information in Swish.
+ *
+ * This name does not have to be parseable.
+ */
+BOOST_AUTO_TEST_CASE( display_name_folder )
+{
+	wpath directory = Sandbox() / L"testfolder";
+	create_directory(directory);
+
+	SHGDNF flags = SHGDN_NORMAL;
+	wstring expected = L"testfolder";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, directory.filename(), expected));
+}
+
+/**
+ * Request the display name for a folder within its parent folder view.
+ *
+ * This name does not have to be parseable.
+ */
+BOOST_AUTO_TEST_CASE( in_folder_name_folder )
+{
+	wpath directory = Sandbox() / L"testfolder";
+	create_directory(directory);
+
+	SHGDNF flags = SHGDN_INFOLDER;
+	wstring expected = L"testfolder";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, directory.filename(), expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

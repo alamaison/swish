@@ -30,6 +30,7 @@
 #include "swish/utils.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp> // wofstream
 #include "swish/boost_process.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
@@ -53,6 +54,7 @@ using swish::utils::current_user_a;
 
 using boost::system::get_system_category;
 using boost::system::system_error;
+using boost::filesystem::wofstream;
 using boost::filesystem::path;
 using boost::filesystem::wpath;
 using boost::process::environment;
@@ -289,25 +291,6 @@ namespace { // private
 
 	const wstring SANDBOX_NAME = L"swish-sandbox";
 
-	wpath NewTempFilePath()
-	{
-		vector<wchar_t> buffer(MAX_PATH);
-		DWORD len = ::GetTempPath(
-			numeric_cast<DWORD>(buffer.size()), &buffer[0]);
-		BOOST_REQUIRE_LE(len, buffer.size());
-		
-		wpath directory(wstring(&buffer[0], buffer.size()));
-		directory /= SANDBOX_NAME;
-		create_directory(directory);
-
-		if (!GetTempFileName(
-			directory.directory_string().c_str(), NULL, 0, &buffer[0]))
-			throw boost::system::system_error(
-				::GetLastError(), boost::system::get_system_category());
-		
-		return wpath(wstring(&buffer[0], buffer.size()));
-	}
-
 	/**
 	 * Return the path to the sandbox directory.
 	 */
@@ -338,6 +321,15 @@ SandboxFixture::~SandboxFixture()
 wpath SandboxFixture::Sandbox()
 {
 	return m_sandbox;
+}
+
+wpath SandboxFixture::NewFileInSandbox(wstring name)
+{
+	wpath p = Sandbox() / name;
+	BOOST_REQUIRE(!exists(p));
+	wofstream file(p);
+	BOOST_CHECK(exists(p));
+	return p;
 }
 
 /**

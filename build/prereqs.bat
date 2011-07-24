@@ -77,15 +77,15 @@ del WTL81_9127.zip
 
 echo.
 echo ===- Downloading comet ...
-%WGET% --no-check-certificate "http://bitbucket.org/alamaison/swish_comet/get/bd51035cab59.zip" || (
+%WGET% --no-check-certificate "http://bitbucket.org/alamaison/swish_comet/get/1174e9540bae.zip" || (
 	echo ===- Error while trying to download comet. & goto error)
-%SEVENZ% x bd51035cab59.zip -aoa || (
+%SEVENZ% x 1174e9540bae.zip -aoa || (
 	echo ===- Error while trying to extract comet. & goto error)
-xcopy /E /Q /Y alamaison-swish_comet-bd51035cab59 comet || (
+xcopy /E /Q /Y alamaison-swish_comet-1174e9540bae comet || (
 	echo ===- Error while trying to copy comet files & goto error)
-rd /S /Q alamaison-swish_comet-bd51035cab59 || (
+rd /S /Q alamaison-swish_comet-1174e9540bae || (
 	echo ===- Error while trying to clean up comet files & goto error)
-del bd51035cab59.zip
+del 1174e9540bae.zip
 
 :: Boost.Locale
 
