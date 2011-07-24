@@ -284,6 +284,28 @@ BOOST_AUTO_TEST_CASE( display_name_file )
 }
 
 /**
+ * Request the display name for a Unix 'hidden' file.
+ *
+ * On Unix files are considered to be hidden if they start with a full-stop.
+ * We adhere to this convention and should not treat an initial dot dot as part
+ * of the extension.
+ */
+BOOST_AUTO_TEST_CASE( display_name_hidden_file )
+{
+	wpath file1 = NewFileInSandbox(L".hidden");
+	wpath file2 = NewFileInSandbox(L".testfile.txt");
+
+	SHGDNF flags = SHGDN_NORMAL;
+	wstring expected1 = L".hidden";
+	wstring expected2 = L".testfile";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file1.filename(), expected1));
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, file2.filename(), expected2));
+}
+
+/**
  * Request the editing name for a file as though it were being edited elsewhere
  * than within its parent folder view.
  * I'm not sure how this situation would work but I don't think it matters for
@@ -462,6 +484,67 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder )
 
 	BOOST_CHECK(
 		display_name_matches(folder(), flags, directory.filename(), expected));
+}
+
+/**
+ * Request the display name for a folder that looks like it has an extension.
+ *
+ * Dots in a folder don't really indicate an extension so we should return
+ * the whole thing.
+ */
+BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
+{
+	wpath directory = Sandbox() / L"testfolder.txt";
+	create_directory(directory);
+
+	SHGDNF flags = SHGDN_NORMAL;
+	wstring expected = L"testfolder.txt";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, directory.filename(), expected));
+}
+
+/**
+ * Request the display name for a folder that looks like it has an extension
+ * in a form for use within its parent folder view.
+ *
+ * Dots in a folder don't really indicate an extension so we should return
+ * the whole thing.
+ */
+BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
+{
+	wpath directory = Sandbox() / L"testfolder.txt";
+	create_directory(directory);
+
+	SHGDNF flags = SHGDN_INFOLDER;
+	wstring expected = L"testfolder.txt";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, directory.filename(), expected));
+}
+
+/**
+ * Request the display name for a Unix 'hidden' directory.
+ *
+ * On Unix files are considered to be hidden if they start with a full-stop.
+ * Although we shouldn't treat any part of a folder name as an extension, we
+ * test the initial-dot case here specially just to make sure.
+ */
+BOOST_AUTO_TEST_CASE( display_name_hidden_folder )
+{
+	wpath dir1 = Sandbox() / L".hidden";
+	create_directory(dir1);
+	wpath dir2 = Sandbox() / L".testfolder.txt";
+	create_directory(dir2);
+
+	SHGDNF flags = SHGDN_NORMAL;
+	wstring expected1 = L".hidden";
+	wstring expected2 = L".testfolder.txt";
+
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, dir1.filename(), expected1));
+	BOOST_CHECK(
+		display_name_matches(folder(), flags, dir2.filename(), expected2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

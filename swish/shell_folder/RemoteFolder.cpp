@@ -110,6 +110,36 @@ namespace {
 			filename, false, false, L"", L"", 0, 0, 0, 0, datetime_t(),
 			datetime_t());
 	}
+
+	/**
+	 * Remove the extension from the remote item's filename *if appropriate*.
+	 */
+	wstring filename_without_extension(const cpidl_t remote_item)
+	{
+		remote_itemid_view itemid(remote_item);
+		wstring full_name = itemid.filename();
+
+		if (full_name.empty() || itemid.is_folder())
+		{
+			return full_name;
+		}
+		else
+		{
+			if (full_name[0] != L'.')
+			{
+				return wpath(full_name).stem();
+			}
+			else
+			{
+				// File might look something like '.hidden.txt' or it might
+				// just be '.hidden'.  In the first case we only want to remove
+				// the '.txt' extension.  In the second case we don't want
+				// to remove anything.
+				wstring bit_after_initial_dot = full_name.substr(1);
+				return L'.' + wpath(bit_after_initial_dot).stem();
+			}
+		}
+	}
 }
 
 /*--------------------------------------------------------------------------*/
@@ -230,7 +260,6 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
 	wstring name;
-	remote_itemid_view itemid(pidl);
 
 	bool fForParsing = (flags & SHGDN_FORPARSING) != 0;
 
@@ -262,20 +291,20 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 
 		// Add child path - include extension if FORPARSING
 		if (fForParsing)
-			name += itemid.filename();
+			name += remote_itemid_view(pidl).filename();
 		else
-			name += wpath(itemid.filename()).stem(); // no extension
+			name += filename_without_extension(pidl);
 
 	}
 	else if (flags & SHGDN_FOREDITING)
 	{
-		name = itemid.filename();
+		name = remote_itemid_view(pidl).filename();
 	}
 	else
 	{
 		ATLASSERT(flags == SHGDN_NORMAL || flags == SHGDN_INFOLDER);
 
-		name = wpath(itemid.filename()).stem(); // filename without extension
+		name = filename_without_extension(pidl);
 	}
 
 	return string_to_strret(name);
