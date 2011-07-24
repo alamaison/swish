@@ -216,8 +216,8 @@ namespace {
 
 	bool pidl_matches_filename(PCUITEMID_CHILD remote_pidl, wstring name)
 	{
-		CRemoteItemHandle item(remote_pidl);
-		return item.GetFilename().GetString() == name;
+		remote_itemid_view item(remote_pidl);
+		return item.filename() == name;
 	}
 
 	cpidl_t pidl_for_file(com_ptr<IShellFolder> folder, wstring name)
