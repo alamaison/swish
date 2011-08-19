@@ -141,6 +141,7 @@ Listing fill_listing_entry(
 		{
 			lt.uPermissions = attributes.permissions;
 			lt.fIsLink = LIBSSH2_SFTP_S_ISLNK(attributes.permissions);
+			lt.fIsDirectory = LIBSSH2_SFTP_S_ISDIR(attributes.permissions);
 		}
 
 		// User & Group
@@ -171,13 +172,13 @@ Listing fill_listing_entry(
 		}
 
 		// Type
-		if (!lt.fIsLink)
+		/*if (!lt.fIsLink)
 			lt.fIsDirectory = LIBSSH2_SFTP_S_ISDIR(lt.uPermissions);
 		else
 		{
 			// TODO: Don't assume all links are directories - actually check
 			lt.fIsDirectory = TRUE;
-		}
+		}*/
 	}
 	catch (const std::exception&) { /* ignore */ }
 

@@ -90,6 +90,10 @@ protected:
 		{
 			object = background_context_menu(hwnd);
 		}
+		else if (riid == __uuidof(IResolveShellLink))
+		{
+			assert(false);
+		}
 
 		// QueryInterface could fail at any point above and it *doesn't* throw
 		// an exception.  We have to check for NULL once we are sure it can't
@@ -152,6 +156,10 @@ protected:
 			assert(cpidl == 1);
 			if (cpidl == 1)
 				object = shell_link_a(hwnd, apidl[0]);
+		}
+		else if (riid == __uuidof(IResolveShellLink))
+		{
+			assert(false);
 		}
 		
 		// QueryInterface could fail at any point above and it *doesn't* throw

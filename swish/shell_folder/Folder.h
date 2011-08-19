@@ -36,8 +36,10 @@
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 #include <winapi/shell/shell.hpp> // string_to_strret
+#include <winapi/trace.hpp> // trace
 
 #include <comet/error.h> // com_error
+#include <comet/regkey.h> // regkey
 #include <comet/variant.h> // variant_t
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -117,6 +119,28 @@ namespace detail {
 
 		return hr;
 	}
+}
+
+namespace detail {
+
+	inline comet::regkey interfaces_key()
+	{
+		comet::regkey interfaces(HKEY_CLASSES_ROOT);
+		return interfaces.open(_T("Interface"));
+	}
+
+	inline std::wstring iid_to_interface_name(const comet::uuid_t& iid)
+	{
+		static comet::regkey interfaces(interfaces_key());
+		LONG error = 0;
+		comet::regkey i = interfaces.open_nothrow(
+			_T("{") + iid.t_str() + _T("}"), KEY_QUERY_VALUE, &error);
+		if (error == 0)
+			return i[_T("")].str();
+		else
+			return L"<unknown interface>";
+	}
+
 }
 
 template<typename ColumnType>
@@ -300,6 +324,14 @@ public: // IShellFolder methods
 		PCUIDLIST_RELATIVE pidl, IBindCtx* bind_ctx, const IID& iid,
 		void** interface_out)
 	{
+		winapi::trace("BindToObject request for interface %s") %
+			detail::iid_to_interface_name(iid);
+
+		comet::uuid_t iid2(iid);
+		if (iid2 == IID_IPropertyStore || iid2 == IID_IPropertyStoreFactory ||
+			iid2 == IID_IPropertyStoreCache)
+			BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
+
 		if (::ILIsEmpty(pidl))
 			BOOST_THROW_EXCEPTION(comet::com_error(E_INVALIDARG));
 
@@ -313,8 +345,8 @@ public: // IShellFolder methods
 
 		if (::ILIsChild(pidl)) // Our child subfolder is the target
 		{
-			comet::com_ptr<IShellFolder> folder =
-				subfolder(root_pidl() + pidl);
+			comet::com_ptr<IShellFolder> folder = subfolder(
+				reinterpret_cast<PCUITEMID_CHILD>(pidl));
 
 			// Create absolute PIDL to the subfolder by combining with 
 			// our root
@@ -433,6 +465,11 @@ public: // IShellFolder methods
 	 */
 	void create_view_object(HWND hwnd_owner, REFIID iid, void** interface_out)
 	{
+		winapi::trace("CreateViewObject request for interface %s") %
+			detail::iid_to_interface_name(iid);
+
+		comet::uuid_t iid2(iid);
+
 		comet::com_ptr<IUnknown> object = folder_object(hwnd_owner, iid);
 
 		HRESULT hr = object.get()->QueryInterface(iid, interface_out);
@@ -488,6 +525,11 @@ public: // IShellFolder methods
 		HWND hwnd_owner, UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
 		const IID& iid, void** interface_out)
 	{
+		winapi::trace("GetUIObjectOf request for interface %s") %
+			detail::iid_to_interface_name(iid);
+
+		comet::uuid_t iid2(iid);
+
 		comet::com_ptr<IUnknown> object;
 
 		if (pidl_count == 0)
@@ -771,8 +813,8 @@ protected:
 	/**
 	 * The caller is asking for an IShellFolder handler for a subfolder.
 	 *
-	 * The pidl passed to this method will be the @b absolute PIDL that
-	 * the folder is root.  It may not end in one of our own PIDLs if this
+	 * The pidl passed to this method will be the @b child item whose folder
+	 * is being requested.  It may not end in one of our own PIDLs if this
 	 * is the root folder of our own hierarchy.  In that case it will be
 	 * the PIDL of the external hosting folder such as 'Desktop' or
 	 * 'My Computer'
@@ -785,7 +827,7 @@ protected:
 	 * in the current folder (not a grandchild).
 	 */
 	virtual ATL::CComPtr<IShellFolder> subfolder(
-		const winapi::shell::pidl::apidl_t& pidl) const = 0;
+		const winapi::shell::pidl::cpidl_t& pidl) = 0;
 
 	/**
 	 * The caller is asking for some property of an item in this folder.

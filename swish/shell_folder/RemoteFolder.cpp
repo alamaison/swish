@@ -491,11 +491,24 @@ void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
  * Create new CRemoteFolder initialised with its root PIDL.  CRemoteFolder
  * only have instances of themselves as subfolders.
  */
-CComPtr<IShellFolder> CRemoteFolder::subfolder(const apidl_t& pidl) const
+CComPtr<IShellFolder> CRemoteFolder::subfolder(const cpidl_t& pidl)
 {
+	apidl_t new_root;
+
+	//if (!remote_itemid_view(pidl).is_link())
+	{
+		new_root = root_pidl() + pidl;
+	}
+	/*else
+	{
+		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(NULL);
+		CSftpDirectory directory(root_pidl(), provider, m_consumer);
+		new_root = directory.ResolveLink(pidl);
+	}*/
+
 	// Create CRemoteFolder initialised with its root PIDL
 	CComPtr<IShellFolder> folder = CRemoteFolder::Create(
-		pidl.get(), m_consumer_factory);
+		new_root.get(), m_consumer_factory);
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;
@@ -549,7 +562,11 @@ CComPtr<IExtractIconW> CRemoteFolder::extract_icon_w(
 CComPtr<IShellLinkW> CRemoteFolder::shell_link_w(
 	HWND hwnd, PCUITEMID_CHILD pidl)
 {
-	assert(remote_itemid_view(pidl).is_link());
+	// When navigating into a folder it seems that explorer requests the
+	// folder's IShellLinkW interface even if we didn't say that it was a link
+	// in its attributes.  Therefore we don't assert there but throw instead.
+	if (!remote_itemid_view(pidl).is_link())
+		BOOST_THROW_EXCEPTION(com_error(E_NOINTERFACE));
 
 	// Create connection for this folder with hwnd for UI
 	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
@@ -580,6 +597,14 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 		// Initialise default assoc provider for Folders
 		hr = spAssoc->Init(
 			ASSOCF_INIT_DEFAULTTOFOLDER, L"Folder", NULL, hwnd);
+		ATLENSURE_SUCCEEDED(hr);
+	}
+	else if (itemid.is_link())
+	{
+		// Initialise default assoc provider for Folders
+		hr = spAssoc->Init(
+			ASSOCF_INIT_DEFAULTTOFOLDER,
+			L"{0AFACED1-E828-11D1-9187-B532F1E9575D}", NULL, hwnd);
 		ATLENSURE_SUCCEEDED(hr);
 	}
 	else

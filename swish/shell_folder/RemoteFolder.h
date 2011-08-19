@@ -90,7 +90,7 @@ protected:
 	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
 
 	ATL::CComPtr<IShellFolder> subfolder(
-		const winapi::shell::pidl::apidl_t& pidl) const;
+		const winapi::shell::pidl::cpidl_t& pidl);
 
 	comet::variant_t property(
 		const winapi::shell::property_key& key,

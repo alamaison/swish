@@ -425,10 +425,10 @@ namespace {
  * Create CRemoteFolder initialised with its root PIDL.  CHostFolders
  * don't have any other types of subfolder.
  */
-CComPtr<IShellFolder> CHostFolder::subfolder(const apidl_t& pidl) const
+CComPtr<IShellFolder> CHostFolder::subfolder(const cpidl_t& pidl)
 {
 	CComPtr<IShellFolder> folder = CRemoteFolder::Create(
-		pidl.get(), consumer_factory);
+		(root_pidl() + pidl).get(), consumer_factory);
 	ATLENSURE_THROW(folder, E_NOINTERFACE);
 
 	return folder;

@@ -188,9 +188,15 @@ throw(...)
 {
 	KeyNames vecNames;
 
-	// If this is a directory, add directory-specific items
-	if (itemid.is_folder())
+	if (itemid.is_link())
 	{
+		//vecNames = _GetKeynamesForExtension(L".lnk");
+		vecNames.push_back(L"CLSID\\{0AFACED1-E828-11D1-9187-B532F1E9575D}");
+		vecNames.push_back(L"Directory");
+	}
+	else if (itemid.is_folder())
+	{
+		// If this is a directory, add directory-specific items
 		vecNames = _GetKeynamesForFolder();
 	}
 	else

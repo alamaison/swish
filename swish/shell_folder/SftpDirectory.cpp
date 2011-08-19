@@ -32,6 +32,7 @@
 #include <comet/interface.h> // comtype
 #include <comet/smart_enum.h> // make_smart_enumeration
 
+#include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -351,8 +352,16 @@ apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
 
 	host_itemid_view old_item(*host_itemid);
 	cpidl_t new_host_item = create_host_itemid(
-		old_item.host(), old_item.user(), target_path.w_str(), old_item.port(),
+		old_item.host(), old_item.user(), L"/", old_item.port(),
 		old_item.label());
 	
-	return pidl_to_link_target + new_host_item;
+	apidl_t resolved_target = pidl_to_link_target + new_host_item;
+	BOOST_FOREACH(const wpath& segment, wpath(target_path.w_str()))
+	{
+		resolved_target += create_remote_itemid(
+			segment.filename(), true, false, L"", L"", 0, 0, 0, 0,
+			datetime_t(), datetime_t());
+	}
+
+	return resolved_target;
 }

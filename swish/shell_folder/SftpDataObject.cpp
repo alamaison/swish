@@ -369,6 +369,8 @@ namespace {
 		{
 			if (next(it) == raw_pidl_iterator())
 				return remote_itemid_view(*it);
+			else
+				++it;
 		}
 
 		BOOST_THROW_EXCEPTION(runtime_error("Empty iterator"));
