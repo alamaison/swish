@@ -177,6 +177,14 @@ private:
 		HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pwszArgs );
 	HRESULT OnInvokeCommandEx(
 		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
+	HRESULT OnGetVerbA(
+		HWND hwnd, IDataObject* data_object, int command_id,
+		UINT buffer_size, char* buffer);
+	HRESULT OnGetVerbW(
+		HWND hwnd, IDataObject* data_object, int command_id,
+		UINT buffer_size, wchar_t* buffer);
+	HRESULT OnGetDefStaticId(
+		HWND hwnd, IDataObject* data_object, UINT& command_id_out);
 	// @}
 
 	/** @name Invoked command handlers */

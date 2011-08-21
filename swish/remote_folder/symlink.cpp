@@ -51,7 +51,7 @@ com_ptr<IShellLinkW> pidl_to_shell_link(
 	// This is not the best way to do it.  It would be better to reimplement
 	// IShellLink so that it resolved the symlink on demand.  The current method
 	// means that listing a directory resolves every link in it
-	com_ptr<IShellLinkW> link(CLSID_ShellLink);
+	com_ptr<IShellLinkW> link(CLSID_FolderShortcut);
 	HRESULT hr = link->SetIDList(target.get());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(link, hr));

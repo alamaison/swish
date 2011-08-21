@@ -71,6 +71,6 @@ private:
 	comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider
 	comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
 	boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
-	const winapi::shell::pidl::apidl_t& m_directory_pidl;
+	const winapi::shell::pidl::apidl_t m_directory_pidl;
 	                             ///< Absolute PIDL to this directory.
 };

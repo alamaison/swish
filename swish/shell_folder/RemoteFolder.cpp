@@ -56,13 +56,17 @@
 
 #include <boost/bind.hpp> // bind
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <algorithm> // copy
 #include <cassert> // assert
 #include <string>
+
+#include "ShellApi.h" // ShellExecuteEx
 
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
@@ -80,6 +84,7 @@ using swish::shell_folder::data_object::PidlFormat;
 using swish::tracing::trace;
 
 using namespace winapi::gui::message_box;
+using winapi::last_error;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
@@ -94,6 +99,8 @@ using comet::throw_com_error;
 using comet::variant_t;
 
 using boost::bind;
+using boost::enable_error_info;
+using boost::errinfo_api_function;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
@@ -101,8 +108,22 @@ using boost::make_shared;
 using ATL::CComPtr;
 using ATL::CString;
 
+using std::copy;
+using std::string;
 using std::vector;
 using std::wstring;
+
+
+namespace comet {
+
+template<> struct comtype<::IContextMenu>
+{
+	static const ::IID& uuid() throw() { return ::IID_IContextMenu; }
+	typedef ::IUnknown base;
+};
+
+}
+
 
 namespace {
 
@@ -430,6 +451,7 @@ void CRemoteFolder::get_attributes_of(
 	}
 	if (fAreAllLinks)
 	{
+		dwAttribs |= SFGAO_FOLDER;
 		dwAttribs |= SFGAO_LINK;
 	}
 	dwAttribs |= SFGAO_CANRENAME;
@@ -592,19 +614,11 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 
 	remote_itemid_view itemid(apidl[0]);
 	
-	if (itemid.is_folder())
+	if (itemid.is_link() || itemid.is_folder())
 	{
 		// Initialise default assoc provider for Folders
 		hr = spAssoc->Init(
 			ASSOCF_INIT_DEFAULTTOFOLDER, L"Folder", NULL, hwnd);
-		ATLENSURE_SUCCEEDED(hr);
-	}
-	else if (itemid.is_link())
-	{
-		// Initialise default assoc provider for Folders
-		hr = spAssoc->Init(
-			ASSOCF_INIT_DEFAULTTOFOLDER,
-			L"{0AFACED1-E828-11D1-9187-B532F1E9575D}", NULL, hwnd);
 		ATLENSURE_SUCCEEDED(hr);
 	}
 	else
@@ -798,11 +812,53 @@ HRESULT CRemoteFolder::OnMenuCallback(
 			static_cast<int>(wParam),
 			reinterpret_cast<PDFMICS>(lParam)
 		);
+	case DFM_GETVERBA:
+		return this->OnGetVerbA(
+			hwnd, pdtobj, static_cast<int>(LOWORD(wParam)),
+			static_cast<UINT>(HIWORD(wParam)),
+			reinterpret_cast<char*>(lParam));
+	case DFM_GETVERBW:
+		return this->OnGetVerbW(
+			hwnd, pdtobj, static_cast<int>(LOWORD(wParam)),
+			static_cast<UINT>(HIWORD(wParam)),
+			reinterpret_cast<wchar_t*>(lParam));
 	case DFM_GETDEFSTATICID:
-		return S_FALSE;
+		{
+			UINT* command_id_out = reinterpret_cast<UINT*>(lParam);
+			if (command_id_out == NULL)
+				return E_POINTER;
+
+			return this->OnGetDefStaticId(hwnd, pdtobj, *command_id_out);
+		}
 	default:
 		return E_NOTIMPL;
 	}
+}
+
+namespace {
+
+	bool is_single_link(IDataObject* data_object)
+	{
+		PidlFormat format(data_object);
+
+		if (format.pidl_count() != 1)
+		{
+			return false;
+		}
+		else
+		{
+			for (UINT i = 0; i < format.pidl_count(); ++i)
+			{
+				if (!remote_itemid_view(format.relative_file(i)).is_link())
+					return false;
+			}
+
+			return true;
+		}
+	}
+
+	const UINT MENU_OFFSET_OPEN = 0;
+
 }
 
 /**
@@ -816,8 +872,70 @@ HRESULT CRemoteFolder::OnMergeContextMenu(
 	UNREFERENCED_PARAMETER(uFlags);
 	UNREFERENCED_PARAMETER(info);
 
-	// It seems we have to return S_OK even if we do nothing else or Explorer
-	// won't put Open as the default item and in the right order
+	try
+	{
+		if (is_single_link(pDataObj))
+		{
+			::InsertMenu(
+				info.hmenu, info.indexMenu, MF_BYPOSITION | MF_DEFAULT,
+				info.idCmdFirst + MENU_OFFSET_OPEN, L"Open Link");
+			::SetMenuDefaultItem(
+				info.hmenu, info.idCmdFirst + MENU_OFFSET_OPEN, FALSE);
+
+			++info.idCmdFirst;
+
+			// Return S_FALSE so that Explorer won't add its own 'open'
+			// and 'explore' menu items.
+			// TODO: Find out what else we lose.
+			return S_FALSE;
+		}
+		else
+		{
+			// We have to return S_OK even if we do nothing else or Explorer
+			// won't put Open as the default item and in the right order
+			return S_OK;
+		}
+	}
+	WINAPI_COM_CATCH();
+}
+
+HRESULT CRemoteFolder::OnGetVerbA(
+	HWND hwnd, IDataObject* data_object, int command_id,
+	UINT buffer_size, char* buffer)
+{
+	if (!is_single_link(data_object))
+		return S_FALSE;
+
+	if (command_id != MENU_OFFSET_OPEN)
+		return S_FALSE;
+
+	string verb = "open";
+	if ((verb.size() + 1) > buffer_size)
+		return E_FAIL;
+
+	std::copy(verb.begin(), verb.end(), buffer);
+	buffer[buffer_size - 1] = char();
+
+	return S_OK;
+}
+
+HRESULT CRemoteFolder::OnGetVerbW(
+	HWND hwnd, IDataObject* data_object, int command_id,
+	UINT buffer_size, wchar_t* buffer)
+{
+	if (!is_single_link(data_object))
+		return S_FALSE;
+
+	if (command_id != MENU_OFFSET_OPEN)
+		return S_FALSE;
+
+	wstring verb = L"open";
+	if ((verb.size() + 1) > buffer_size)
+		return E_FAIL;
+
+	std::copy(verb.begin(), verb.end(), buffer);
+	buffer[buffer_size - 1] = wchar_t();
+
 	return S_OK;
 }
 
@@ -845,11 +963,88 @@ HRESULT CRemoteFolder::OnInvokeCommandEx(
 
 	pdfmics; // Unused in Release build
 
-	switch (idCmd)
+	if (idCmd == DFM_CMD_DELETE)
 	{
-	case DFM_CMD_DELETE:
 		return this->OnCmdDelete(hwnd, pDataObj);
-	default:
+	}
+	else if (idCmd == MENU_OFFSET_OPEN && is_single_link(pDataObj))
+	{
+		try
+		{
+			try
+			{
+			PidlFormat format(pDataObj);
+			assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
+
+			com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+			CSftpDirectory directory(
+				root_pidl().get(), provider, m_consumer);
+			apidl_t target = directory.ResolveLink(
+				winapi::shell::pidl::pidl_cast<cpidl_t>(format.relative_file(0)));
+
+			SHELLEXECUTEINFO sei = SHELLEXECUTEINFO();
+			sei.cbSize = sizeof(SHELLEXECUTEINFO);
+			sei.fMask = SEE_MASK_IDLIST;
+			sei.hwnd = hwnd;
+			sei.lpIDList = const_cast<void*>(reinterpret_cast<const void*>(target.get()));
+			sei.lpVerb = L"open";
+			if (!::ShellExecuteEx(&sei))
+				BOOST_THROW_EXCEPTION(
+					enable_error_info(last_error()) << 
+					errinfo_api_function("ShellExecuteEx"));
+			
+
+			/*
+			
+			com_ptr<IShellFolder> target_parent;
+			PCUITEMID_CHILD item;
+			HRESULT hr = ::SHBindToParent(
+				target.get(), target_parent.iid(),
+				reinterpret_cast<void**>(target_parent.out()), &item);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(
+					boost::enable_error_info(comet::com_error(hr)) <<
+					boost::errinfo_api_function("SHBindToParent"));
+
+			com_ptr<IContextMenu> target_menu;
+			hr = target_parent->GetUIObjectOf(
+				hwnd, 1, &item, target_menu.iid(), NULL,
+				reinterpret_cast<void**>(target_menu.out()));
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error_from_interface(target_parent, hr));
+
+			hr = target_menu->InvokeCommand(pdfmics->pici);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error_from_interface(target_menu, hr));
+			*/
+			}
+			catch (...)
+			{
+				rethrow_and_announce(
+					hwnd, translate("Unable to open the item"),
+					translate("You might not have permission."));
+			}
+		}
+		WINAPI_COM_CATCH();
+
+		return S_OK;
+	}
+	else
+	{
+		return S_FALSE;
+	}
+}
+
+HRESULT CRemoteFolder::OnGetDefStaticId(
+	HWND hwnd, IDataObject* data_object, UINT& command_id_out)
+{
+	if (is_single_link(data_object))
+	{
+		command_id_out = MENU_OFFSET_OPEN;
+		return S_OK;
+	}
+	else
+	{
 		return S_FALSE;
 	}
 }

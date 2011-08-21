@@ -151,19 +151,29 @@ namespace detail {
 		::ssh::exception::ssh_error error =
 			::ssh::exception::last_error(session);
 
+		// TODO: Most of the two branches is identical. Can we share the
+		// code without introducing slicing?
 		if (error.error_code() == LIBSSH2_ERROR_SFTP_PROTOCOL)
 		{
 			sftp_error derived_error = 
 				sftp_error(error, libssh2_sftp_last_error(sftp.get()));
-			derived_error << boost::errinfo_api_function(api_function);
+			derived_error <<
+				boost::errinfo_api_function(api_function) <<
+				boost::throw_function(current_function) <<
+				boost::throw_file(file) <<
+				boost::throw_line(line);
 
-			boost::exception_detail::throw_exception_(
-				derived_error, current_function, file, line);
+			boost::throw_exception(derived_error);
 		}
 		else
 		{
-			boost::exception_detail::throw_exception_(
-				error, current_function, file, line);
+			error <<
+				boost::errinfo_api_function(api_function) <<
+				boost::throw_function(current_function) <<
+				boost::throw_file(file) <<
+				boost::throw_line(line);
+
+			boost::throw_exception(error);
 		}
 	}
 }

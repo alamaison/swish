@@ -153,7 +153,7 @@ class CFolder :
 {
 public:
 
-	BEGIN_COM_MAP(CFolder)
+	BEGIN_COM_MAP(CFolder)/*
 		COM_INTERFACE_ENTRY(IPersistFolder3)
 		COM_INTERFACE_ENTRY(IShellFolder2)
 		COM_INTERFACE_ENTRY(IShellDetails)
@@ -161,6 +161,13 @@ public:
 		COM_INTERFACE_ENTRY2(IPersist,        IPersistFolder3)
 		COM_INTERFACE_ENTRY2(IPersistFolder,  IPersistFolder3)
 		COM_INTERFACE_ENTRY2(IPersistFolder2, IPersistFolder3)
+		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)*/
+		COM_INTERFACE_ENTRY(IPersistFolder2)
+		COM_INTERFACE_ENTRY(IShellFolder2)
+		COM_INTERFACE_ENTRY(IShellDetails)
+		COM_INTERFACE_ENTRY(IPersistIDList)
+		COM_INTERFACE_ENTRY2(IPersist,        IPersistFolder2)
+		COM_INTERFACE_ENTRY2(IPersistFolder,  IPersistFolder2)
 		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)
 	END_COM_MAP()
 
