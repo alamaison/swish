@@ -115,7 +115,10 @@ HRESULT default_context_menu_callback::operator()(
 				if (buffer == NULL)
 					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-				result.copy(reinterpret_cast<char*>(lparam), buffer_len);
+#pragma warning(push)
+#pragma warning(disable: 4996)
+				result.copy(buffer, buffer_len);
+#pragma warning(pop)
 				buffer[buffer_len - 1] = char();
 				return S_OK;
 			}
@@ -134,7 +137,10 @@ HRESULT default_context_menu_callback::operator()(
 				if (buffer == NULL)
 					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-				result.copy(reinterpret_cast<wchar_t*>(lparam), buffer_len);
+#pragma warning(push)
+#pragma warning(disable: 4996)
+				result.copy(buffer, buffer_len);
+#pragma warning(pop)
 				buffer[buffer_len - 1] = wchar_t();
 				return S_OK;
 			}
@@ -158,33 +164,33 @@ HRESULT default_context_menu_callback::operator()(
 }
 
 HRESULT default_context_menu_callback::on_unknown_dfm(
-	HWND hwnd_view, com_ptr<IDataObject> data_object, 
-	UINT menu_message_id, WPARAM wparam, LPARAM lparam)
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/, 
+	UINT /*menu_message_id*/, WPARAM /*wparam*/, LPARAM /*lparam*/)
 {
 	return E_NOTIMPL; // Required for Windows 7 to show any menu at all
 }
 
 bool default_context_menu_callback::merge_context_menu(
-	HWND hwnd_view, com_ptr<IDataObject> data_object,
-	HMENU menu, UINT first_item_index, UINT minimum_id, UINT maximum_id,
-	UINT allowed_changes_flags)
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/, HMENU /*menu*/,
+	UINT /*first_item_index*/, UINT /*minimum_id*/, UINT /*maximum_id*/,
+	UINT /*allowed_changes_flags*/)
 {
 	return true;
 }
 
 bool default_context_menu_callback::invoke_command(
-	HWND hwnd_view, com_ptr<IDataObject> data_object,
-	UINT item_offset, const wstring& arguments)
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/,
+	UINT /*item_offset*/, const wstring& /*arguments*/)
 {
 	return false;
 }
 
 bool default_context_menu_callback::invoke_command(
-	HWND hwnd_view, com_ptr<IDataObject> data_object,
-	UINT item_offset, const wstring& arguments,
-	DWORD behaviour_flags, UINT minimum_id, UINT maximum_id,
-	const CMINVOKECOMMANDINFO& invocation_details,
-	comet::com_ptr<IUnknown> context_menu_site)
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/,
+	UINT /*item_offset*/, const wstring& /*arguments*/,
+	DWORD /*behaviour_flags*/, UINT /*minimum_id*/, UINT /*maximum_id*/,
+	const CMINVOKECOMMANDINFO& /*invocation_details*/,
+	comet::com_ptr<IUnknown> /*context_menu_site*/)
 {
 	return false;
 }
