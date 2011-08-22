@@ -280,19 +280,15 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
-			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{23FF8881-F180-4389-A903-DFAB308CBF08}"
 			RelativePathToProject=".\swish\nse\nse.vcproj"
 		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
-			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
-		/>
 	</References>
 	<Files>
+		<File
+			RelativePath=".\default_context_menu_callback_tests.cpp"
+			>
+		</File>
 		<File
 			RelativePath=".\explorer_command_tests.cpp"
 			>

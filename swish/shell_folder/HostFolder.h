@@ -29,7 +29,7 @@
 
 #include "SwishFolder.hpp"       // Superclass
 
-#include <swish/host_folder/columns.hpp> // Column
+#include "swish/host_folder/columns.hpp" // Column
 
 #include "resource.h"            // main symbols
 #include "swish/shell_folder/Swish.h" // For CHostFolder UUID
@@ -105,24 +105,4 @@ public:
 						HICON *phiconSmall, UINT nIconSize );
 	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
 								int *piIndex, UINT *pwFlags );
-
-private:
-
-	/**
-	 * Static dispatcher for Default Context Menu callback
-	 */
-	static HRESULT __callback CALLBACK MenuCallback(
-		__in_opt IShellFolder *psf, HWND hwnd, __in_opt IDataObject *pdtobj, 
-		UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-		ATLENSURE_RETURN(psf);
-		return static_cast<CHostFolder *>(psf)->OnMenuCallback(
-			hwnd, pdtobj, uMsg, wParam, lParam);
-	}
-
-	/** @name Default context menu event handlers */
-	// @{
-	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
-		UINT uMsg, WPARAM wParam, LPARAM lParam );
-	// @}
 };

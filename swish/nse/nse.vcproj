@@ -252,6 +252,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\default_context_menu_callback.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\explorer_command.cpp"
 				>
 			</File>
@@ -311,6 +315,10 @@
 			</File>
 			<File
 				RelativePath=".\data_object_util.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\default_context_menu_callback.hpp"
 				>
 			</File>
 			<File

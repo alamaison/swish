@@ -38,6 +38,8 @@
                                            // url_from_host_itemid
 #include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
+#include "swish/nse/default_context_menu_callback.hpp"
+                                               // default_context_menu_callback
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/trace.hpp" // trace
@@ -86,6 +88,7 @@ using swish::host_folder::host_management::LoadConnectionsFromRegistry;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::host_folder::url_from_host_itemid;
+using swish::nse::default_context_menu_callback;
 using swish::tracing::trace;
 
 using winapi::shell::pidl::cpidl_t;
@@ -507,6 +510,17 @@ CComPtr<IQueryAssociations> CHostFolder::query_associations(
 	return spAssoc;
 }
 
+namespace {
+
+	HRESULT CALLBACK menu_callback(
+		IShellFolder* /*psf*/, HWND hwnd, IDataObject* pdtobj, 
+		UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		default_context_menu_callback callback;
+		return callback(hwnd, pdtobj, uMsg, wParam, lParam);
+	}
+}
+
 /**
  * Create a context menu for the selected items.
  *
@@ -540,7 +554,7 @@ CComPtr<IContextMenu> CHostFolder::context_menu(
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
 		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
-		MenuCallback, ckeys, akeys, &spMenu);
+		menu_callback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error(hr));
 
@@ -582,31 +596,3 @@ CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
 	return new CViewCallback(root_pidl());
 }
 
-
-/*--------------------------------------------------------------------------*/
-/*                         Context menu handlers.                           */
-/*--------------------------------------------------------------------------*/
-
-/**
- * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
- */
-HRESULT CHostFolder::OnMenuCallback(
-	HWND /*hwnd*/, IDataObject* /*pdtobj*/, UINT uMsg, WPARAM /*wParam*/,
-	LPARAM /*lParam*/)
-{
-	METHOD_TRACE("(uMsg=%d)\n", uMsg);
-
-	switch (uMsg)
-	{
-	case DFM_MERGECONTEXTMENU:
-		// Must return S_OK even if we do nothing else or Vista and later
-		// won't add standard verbs
-		return S_OK;
-	case DFM_INVOKECOMMAND: // Required to invoke default action
-	case DFM_INVOKECOMMANDEX:
-	case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
-		return S_FALSE; 
-	default:
-		return E_NOTIMPL; // Required for Windows 7 to show any menu at all
-	}
-}
