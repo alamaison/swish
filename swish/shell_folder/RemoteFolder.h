@@ -145,51 +145,14 @@ private:
 		m_consumer_factory = consumer_factory;
 	}
 
-	comet::com_ptr<ISftpProvider> _CreateConnectionForFolder(
-		__in_opt  HWND hwndUserInteraction ) throw(...);
-	void _Delete(
-		HWND hwnd, const std::vector<winapi::shell::pidl::cpidl_t>& death_row);
-	void _DoDelete(
-		HWND hwnd, const std::vector<winapi::shell::pidl::cpidl_t>& death_row);
-	bool _ConfirmDelete(
-		__in_opt HWND hwnd, __in BSTR bstrName, __in bool fIsFolder ) throw();
-	bool _ConfirmMultiDelete( __in_opt HWND hwnd, size_t cItems ) throw();
 
-	/**
-	 * Static dispatcher for Default Context Menu callback
-	 */
-	static HRESULT __callback CALLBACK MenuCallback(
-		__in_opt IShellFolder *psf, HWND hwnd, __in_opt IDataObject *pdtobj, 
-		UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-		ATLENSURE_RETURN(psf);
-		return static_cast<CRemoteFolder *>(psf)->OnMenuCallback(
-			hwnd, pdtobj, uMsg, wParam, lParam);
-	}
-
-	/** @name Default context menu event handlers */
+	/** @name Default Context Menu event handler */
 	// @{
-	HRESULT OnMenuCallback( HWND hwnd, IDataObject *pdtobj, 
+	static HRESULT CALLBACK menu_callback(
+		IShellFolder* folder, HWND hwnd_view, IDataObject* selection, 
+		UINT message_id, WPARAM wparam, LPARAM lparam);
+	HRESULT MenuCallback( HWND hwnd, IDataObject *pdtobj, 
 		UINT uMsg, WPARAM wParam, LPARAM lParam );
-	HRESULT OnMergeContextMenu(
-		HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info );
-	HRESULT OnInvokeCommand(
-		HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pwszArgs );
-	HRESULT OnInvokeCommandEx(
-		HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics );
-	HRESULT OnGetVerbA(
-		HWND hwnd, IDataObject* data_object, int command_id,
-		UINT buffer_size, char* buffer);
-	HRESULT OnGetVerbW(
-		HWND hwnd, IDataObject* data_object, int command_id,
-		UINT buffer_size, wchar_t* buffer);
-	HRESULT OnGetDefStaticId(
-		HWND hwnd, IDataObject* data_object, UINT& command_id_out);
-	// @}
-
-	/** @name Invoked command handlers */
-	// @{
-	HRESULT OnCmdDelete( HWND hwnd, IDataObject *pDataObj );
 	// @}
 
 };

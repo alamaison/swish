@@ -47,7 +47,7 @@ public:
 	 * Cracks the @c DFM_* callback messages and dispatches them to handlers.
 	 */
 	HRESULT operator()(
-		HWND hwnd, comet::com_ptr<IDataObject> data_object, 
+		HWND hwnd, comet::com_ptr<IDataObject> selection, 
 		UINT menu_message_id, WPARAM wparam, LPARAM lparam);
 
 private:
@@ -69,11 +69,15 @@ private:
 	 *           context menu to fail entirely.
 	 */
 	virtual HRESULT on_unknown_dfm(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object, 
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection, 
 		UINT menu_message_id, WPARAM wparam, LPARAM lparam);
 
 	/**
 	 * The default context menu is giving us a chance to add custom items.
+	 *
+	 * Before returning you must set @a minimum_id to be higher than the 
+	 * highest command ID you added to the menu.  The best way to do this is
+	 * to increment @minimum_id for each menu item you add.
 	 *
 	 * Any changes we make should respect the rules specified via the flags.
 	 *
@@ -84,8 +88,8 @@ private:
 	 * Override this method in a subclass to change the behaviour.
 	 */
 	virtual bool merge_context_menu(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object,
-		HMENU menu, UINT first_item_index, UINT minimum_id, UINT maximum_id,
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
+		HMENU hmenu, UINT first_item_index, UINT& minimum_id, UINT maximum_id,
 		UINT allowed_changes_flags);
 
 	/**
@@ -102,7 +106,7 @@ private:
 	 * behaviour. Override this method in a subclass to change the behaviour.
 	 */
 	virtual bool invoke_command(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object,
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
 		UINT item_offset, const std::wstring& arguments);
 
 	/**
@@ -115,14 +119,14 @@ private:
 	 * have an inbuilt action or it may just do nothing.  Return true means
 	 * that we completely handled the action.
 	 *
-	 * The default implementation just returns true to get default shell
+	 * The default implementation just returns false to get default shell
 	 * behaviour. Override this method in a subclass to change the behaviour.
 	 *
 	 * @note The context menu site will not be set if compiled with
 	 *       NTDDI_VERSION < NTDDI_VISTA.
 	 */
 	virtual bool invoke_command(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object,
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
 		UINT item_offset, const std::wstring& arguments,
 		DWORD behaviour_flags, UINT minimum_id, UINT maximum_id,
 		const CMINVOKECOMMANDINFO& invocation_details,
@@ -132,10 +136,10 @@ private:
 	 * Convert menu command ID offset to verb string.
 	 */
 	virtual void verb(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object, 
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection, 
 		UINT command_id_offset, std::string& verb_out);
 	virtual void verb(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object, 
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection, 
 		UINT command_id_offset, std::wstring& verb_out);
 
 	/**
@@ -148,7 +152,7 @@ private:
 	 * default.  Override this method in a subclass to change the behaviour.
 	 */
 	virtual bool default_menu_item(
-		HWND hwnd_view, comet::com_ptr<IDataObject> data_object,
+		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
 		UINT& default_command_id);
 
 	// @}

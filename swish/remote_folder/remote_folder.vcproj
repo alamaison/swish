@@ -254,11 +254,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\commands.cpp"
+				RelativePath=".\connection.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\connection.cpp"
+				RelativePath=".\context_menu_callback.cpp"
 				>
 			</File>
 			<File
@@ -360,11 +360,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\commands.hpp"
+				RelativePath=".\connection.hpp"
 				>
 			</File>
 			<File
-				RelativePath=".\connection.hpp"
+				RelativePath=".\context_menu_callback.hpp"
 				>
 			</File>
 			<File
@@ -393,6 +393,26 @@
 			</File>
 			<File
 				RelativePath=".\ViewCallback.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="commands"
+			>
+			<File
+				RelativePath=".\commands\commands.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\commands.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\delete.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\delete.hpp"
 				>
 			</File>
 		</Filter>

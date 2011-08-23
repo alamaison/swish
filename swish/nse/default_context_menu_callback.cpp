@@ -47,7 +47,7 @@ namespace nse {
 default_context_menu_callback::~default_context_menu_callback() {}
 
 HRESULT default_context_menu_callback::operator()(
-	HWND hwnd, com_ptr<IDataObject> data_object, 
+	HWND hwnd, com_ptr<IDataObject> selection, 
 	UINT menu_message_id, WPARAM wparam, LPARAM lparam)
 {
 	try
@@ -61,7 +61,7 @@ HRESULT default_context_menu_callback::operator()(
 					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
 				bool also_add_default_verbs = merge_context_menu(
-					hwnd, data_object, info->hmenu, info->indexMenu,
+					hwnd, selection, info->hmenu, info->indexMenu,
 					info->idCmdFirst, info->idCmdLast,
 					static_cast<UINT>(wparam));
 
@@ -71,7 +71,7 @@ HRESULT default_context_menu_callback::operator()(
 			{
 				const wchar_t* arguments = reinterpret_cast<PCWSTR>(lparam);
 				bool handled = invoke_command(
-					hwnd, data_object, static_cast<UINT>(wparam),
+					hwnd, selection, static_cast<UINT>(wparam),
 					(arguments == NULL) ? wstring() : arguments);
 
 				return (handled) ? S_OK : S_FALSE;
@@ -89,7 +89,7 @@ HRESULT default_context_menu_callback::operator()(
 					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
 				bool handled = invoke_command(
-					hwnd, data_object, static_cast<UINT>(wparam),
+					hwnd, selection, static_cast<UINT>(wparam),
 					(arguments == NULL) ? wstring() : arguments, dfmics->fMask,
 					dfmics->idCmdFirst, dfmics->idDefMax, *(dfmics->pici),
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -104,7 +104,7 @@ HRESULT default_context_menu_callback::operator()(
 			{
 				string result;
 				verb(
-					hwnd, data_object, static_cast<UINT>(LOWORD(wparam)),
+					hwnd, selection, static_cast<UINT>(LOWORD(wparam)),
 					result);
 
 				UINT buffer_len = static_cast<UINT>(HIWORD(wparam));
@@ -126,7 +126,7 @@ HRESULT default_context_menu_callback::operator()(
 			{
 				wstring result;
 				verb(
-					hwnd, data_object, static_cast<UINT>(LOWORD(wparam)),
+					hwnd, selection, static_cast<UINT>(LOWORD(wparam)),
 					result);
 
 				UINT buffer_len = static_cast<UINT>(HIWORD(wparam));
@@ -151,42 +151,42 @@ HRESULT default_context_menu_callback::operator()(
 					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
 				bool use_default = !default_menu_item(
-					hwnd, data_object, *command_id_out);
+					hwnd, selection, *command_id_out);
 
 				return (use_default) ? S_FALSE : S_OK;
 			}
 		default:
 			return on_unknown_dfm(
-				hwnd, data_object, menu_message_id, wparam, lparam);
+				hwnd, selection, menu_message_id, wparam, lparam);
 		}
 	}
 	WINAPI_COM_CATCH();
 }
 
 HRESULT default_context_menu_callback::on_unknown_dfm(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/, 
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
 	UINT /*menu_message_id*/, WPARAM /*wparam*/, LPARAM /*lparam*/)
 {
 	return E_NOTIMPL; // Required for Windows 7 to show any menu at all
 }
 
 bool default_context_menu_callback::merge_context_menu(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/, HMENU /*menu*/,
-	UINT /*first_item_index*/, UINT /*minimum_id*/, UINT /*maximum_id*/,
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, HMENU /*hmenu*/,
+	UINT /*first_item_index*/, UINT& /*minimum_id*/, UINT /*maximum_id*/,
 	UINT /*allowed_changes_flags*/)
 {
 	return true;
 }
 
 bool default_context_menu_callback::invoke_command(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/,
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
 	UINT /*item_offset*/, const wstring& /*arguments*/)
 {
 	return false;
 }
 
 bool default_context_menu_callback::invoke_command(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/,
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
 	UINT /*item_offset*/, const wstring& /*arguments*/,
 	DWORD /*behaviour_flags*/, UINT /*minimum_id*/, UINT /*maximum_id*/,
 	const CMINVOKECOMMANDINFO& /*invocation_details*/,
@@ -196,19 +196,19 @@ bool default_context_menu_callback::invoke_command(
 }
 	
 void default_context_menu_callback::verb(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/, 
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
 	UINT /*command_id_offset*/, string& /*verb_out*/)
 {
 }
 
 void default_context_menu_callback::verb(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/, 
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
 	UINT /*command_id_offset*/, wstring& /*verb_out*/)
 {
 }
 
 bool default_context_menu_callback::default_menu_item(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*data_object*/,
+	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
 	UINT& /*default_command_id*/)
 {
 	return false;

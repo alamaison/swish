@@ -30,43 +30,39 @@
 #include "SftpDirectory.h"
 #include "SftpDataObject.h"
 #include "IconExtractor.h"
-#include "data_object/ShellDataObject.hpp"  // PidlFormat
 #include "Registry.h"
 #include "swish/debug.hpp"
 #include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
-#include "swish/remote_folder/commands.hpp" // remote_folder_command_provider
+#include "swish/remote_folder/commands/commands.hpp"
+                                           // remote_folder_command_provider
 #include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/context_menu_callback.hpp"
+                                                       // context_menu_callback
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
-                                               // create_remote_itemdid
+                                               // create_remote_itemid
 #include "swish/remote_folder/symlink.hpp" // pidl_to_shell_link
 #include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
-#include <winapi/gui/message_box.hpp> // message_box
 #include <winapi/shell/shell.hpp> // string_to_strret
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
 
 #include <boost/bind.hpp> // bind
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
-#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <algorithm> // copy
 #include <cassert> // assert
 #include <string>
-
-#include "ShellApi.h" // ShellExecuteEx
 
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
@@ -74,24 +70,21 @@ using swish::frontend::rethrow_and_announce;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
+using swish::remote_folder::context_menu_callback;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::CViewCallback;
 using swish::remote_folder::pidl_to_shell_link;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::remote_folder::remote_itemid_view;
-using swish::shell_folder::data_object::PidlFormat;
 using swish::tracing::trace;
 
-using namespace winapi::gui::message_box;
-using winapi::last_error;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::string_to_strret;
 
-using comet::bstr_t;
 using comet::com_ptr;
 using comet::com_error;
 using comet::datetime_t;
@@ -99,18 +92,13 @@ using comet::throw_com_error;
 using comet::variant_t;
 
 using boost::bind;
-using boost::enable_error_info;
-using boost::errinfo_api_function;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
 
 using ATL::CComPtr;
-using ATL::CString;
 
-using std::copy;
 using std::string;
-using std::vector;
 using std::wstring;
 
 
@@ -183,12 +171,12 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
 	try
 	{
-		// Create SFTP connection for this folder using hwndOwner for UI
-		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+		com_ptr<ISftpProvider> provider =
+			connection_from_pidl(root_pidl(), hwnd);
+		com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
 		// Create directory handler and get listing as PIDL enumeration
-		CSftpDirectory directory(
-			root_pidl().get(), provider.get(), m_consumer.get());
+		CSftpDirectory directory(root_pidl(), provider, consumer);
 		return directory.GetEnum(flags).detach();
 	}
 	catch (...)
@@ -343,12 +331,12 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
 	try
 	{
-		// Create SFTP connection object for this folder using hwnd for UI
-		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+		com_ptr<ISftpProvider> provider =
+			connection_from_pidl(root_pidl(), hwnd);
+		com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
 		// Rename file
-		CSftpDirectory directory(
-			root_pidl().get(), provider.get(), m_consumer.get());
+		CSftpDirectory directory(root_pidl(), provider, consumer);
 		bool fOverwritten = directory.Rename(pidl, name);
 
 		// Create new PIDL from old one with new filename
@@ -556,10 +544,8 @@ variant_t CRemoteFolder::property(const property_key& key, const cpidl_t& pidl)
 CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 {
 	TRACE("Request: IExplorerCommandProvider");
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
 	return remote_folder_command_provider(
-		hwnd, root_pidl(),
-		bind(&connection_from_pidl, root_pidl(), hwnd),
+		hwnd, root_pidl(), bind(&connection_from_pidl, root_pidl(), hwnd),
 		bind(m_consumer_factory, hwnd)).get();
 }
 
@@ -590,10 +576,11 @@ CComPtr<IShellLinkW> CRemoteFolder::shell_link_w(
 	if (!remote_itemid_view(pidl).is_link())
 		BOOST_THROW_EXCEPTION(com_error(E_NOINTERFACE));
 
-	// Create connection for this folder with hwnd for UI
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+	com_ptr<ISftpProvider> provider =
+		connection_from_pidl(root_pidl(), hwnd);
+	com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
-	return pidl_to_shell_link(root_pidl(), pidl, provider, m_consumer).get();
+	return pidl_to_shell_link(root_pidl(), pidl, provider, consumer).get();
 }
 
 /**
@@ -635,6 +622,18 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 	return spAssoc;
 }
 
+HRESULT CALLBACK CRemoteFolder::menu_callback(
+	IShellFolder* folder, HWND hwnd_view, IDataObject* selection, 
+	UINT message_id, WPARAM wparam, LPARAM lparam)
+{
+	assert(folder);
+	if (!folder)
+		return E_POINTER;
+
+	return static_cast<CRemoteFolder*>(folder)->MenuCallback(
+		hwnd_view, selection, message_id, wparam, lparam);
+}
+
 /**
  * Create a context menu for the selected items.
  *
@@ -673,7 +672,7 @@ CComPtr<IContextMenu> CRemoteFolder::context_menu(
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
 		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
-		MenuCallback, ckeys, akeys, &spMenu);
+		menu_callback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error(hr));
 
@@ -704,7 +703,7 @@ CComPtr<IContextMenu> CRemoteFolder::background_context_menu(HWND hwnd)
 	CComPtr<IContextMenu> spMenu;
 	HRESULT hr = ::CDefFolderMenu_Create2(
 		root_pidl().get(), hwnd, 0, NULL, spThisFolder, 
-		MenuCallback, ckeys, akeys, &spMenu);
+		menu_callback, ckeys, akeys, &spMenu);
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error(hr));
 
@@ -724,12 +723,12 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
 	try
 	{
-		// Create connection for this folder with hwnd for UI
-		CComPtr<ISftpProvider> spProvider =
-			_CreateConnectionForFolder(hwnd).get();
+		com_ptr<ISftpProvider> provider =
+			connection_from_pidl(root_pidl(), hwnd);
+		com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
 		return CSftpDataObject::Create(
-			cpidl, apidl, root_pidl().get(), spProvider, m_consumer.get());
+			cpidl, apidl, root_pidl().get(), provider.get(), consumer.get());
 	}
 	catch (...)
 	{
@@ -752,10 +751,12 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
 	try
 	{
-		// Create connection for this folder with hwnd for UI
-		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
+		com_ptr<ISftpProvider> provider =
+			connection_from_pidl(root_pidl(), hwnd);
+		com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
+
 		return new CSnitchingDropTarget(
-			hwnd, provider, m_consumer,
+			hwnd, provider, consumer,
 			absolute_path_from_swish_pidl(root_pidl()),
 			make_shared<DropUI>(hwnd));
 	}
@@ -775,484 +776,10 @@ CComPtr<IShellFolderViewCB> CRemoteFolder::folder_view_callback(HWND /*hwnd*/)
 	return new CViewCallback(root_pidl());
 }
 
-
-/*--------------------------------------------------------------------------*/
-/*                         Context menu handlers.                           */
-/*--------------------------------------------------------------------------*/
-
-/**
- * Cracks open the @c DFM_* callback messages and dispatched them to handlers.
- */
-HRESULT CRemoteFolder::OnMenuCallback(
+HRESULT CRemoteFolder::MenuCallback(
 	HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-	ATLTRACE(__FUNCTION__" called (uMsg=%d)\n", uMsg);
-	UNREFERENCED_PARAMETER(hwnd);
-
-	switch (uMsg)
-	{
-	case DFM_MERGECONTEXTMENU:
-		return this->OnMergeContextMenu(
-			hwnd,
-			pdtobj,
-			static_cast<UINT>(wParam),
-			*reinterpret_cast<QCMINFO *>(lParam)
-		);
-	case DFM_INVOKECOMMAND:
-		return this->OnInvokeCommand(
-			hwnd,
-			pdtobj,
-			static_cast<int>(wParam),
-			reinterpret_cast<PCWSTR>(lParam)
-		);
-	case DFM_INVOKECOMMANDEX:
-		return this->OnInvokeCommandEx(
-			hwnd,
-			pdtobj,
-			static_cast<int>(wParam),
-			reinterpret_cast<PDFMICS>(lParam)
-		);
-	case DFM_GETVERBA:
-		return this->OnGetVerbA(
-			hwnd, pdtobj, static_cast<int>(LOWORD(wParam)),
-			static_cast<UINT>(HIWORD(wParam)),
-			reinterpret_cast<char*>(lParam));
-	case DFM_GETVERBW:
-		return this->OnGetVerbW(
-			hwnd, pdtobj, static_cast<int>(LOWORD(wParam)),
-			static_cast<UINT>(HIWORD(wParam)),
-			reinterpret_cast<wchar_t*>(lParam));
-	case DFM_GETDEFSTATICID:
-		{
-			UINT* command_id_out = reinterpret_cast<UINT*>(lParam);
-			if (command_id_out == NULL)
-				return E_POINTER;
-
-			return this->OnGetDefStaticId(hwnd, pdtobj, *command_id_out);
-		}
-	default:
-		return E_NOTIMPL;
-	}
-}
-
-namespace {
-
-	bool is_single_link(IDataObject* data_object)
-	{
-		PidlFormat format(data_object);
-
-		if (format.pidl_count() != 1)
-		{
-			return false;
-		}
-		else
-		{
-			for (UINT i = 0; i < format.pidl_count(); ++i)
-			{
-				if (!remote_itemid_view(format.relative_file(i)).is_link())
-					return false;
-			}
-
-			return true;
-		}
-	}
-
-	const UINT MENU_OFFSET_OPEN = 0;
-
-}
-
-/**
- * Handle @c DFM_MERGECONTEXTMENU callback.
- */
-HRESULT CRemoteFolder::OnMergeContextMenu(
-	HWND hwnd, IDataObject *pDataObj, UINT uFlags, QCMINFO& info )
-{
-	UNREFERENCED_PARAMETER(hwnd);
-	UNREFERENCED_PARAMETER(pDataObj);
-	UNREFERENCED_PARAMETER(uFlags);
-	UNREFERENCED_PARAMETER(info);
-
-	try
-	{
-		if (is_single_link(pDataObj))
-		{
-			::InsertMenu(
-				info.hmenu, info.indexMenu, MF_BYPOSITION | MF_DEFAULT,
-				info.idCmdFirst + MENU_OFFSET_OPEN, L"Open Link");
-			::SetMenuDefaultItem(
-				info.hmenu, info.idCmdFirst + MENU_OFFSET_OPEN, FALSE);
-
-			++info.idCmdFirst;
-
-			// Return S_FALSE so that Explorer won't add its own 'open'
-			// and 'explore' menu items.
-			// TODO: Find out what else we lose.
-			return S_FALSE;
-		}
-		else
-		{
-			// We have to return S_OK even if we do nothing else or Explorer
-			// won't put Open as the default item and in the right order
-			return S_OK;
-		}
-	}
-	WINAPI_COM_CATCH();
-}
-
-HRESULT CRemoteFolder::OnGetVerbA(
-	HWND hwnd, IDataObject* data_object, int command_id,
-	UINT buffer_size, char* buffer)
-{
-	if (!is_single_link(data_object))
-		return S_FALSE;
-
-	if (command_id != MENU_OFFSET_OPEN)
-		return S_FALSE;
-
-	string verb = "open";
-	if ((verb.size() + 1) > buffer_size)
-		return E_FAIL;
-
-	std::copy(verb.begin(), verb.end(), buffer);
-	buffer[buffer_size - 1] = char();
-
-	return S_OK;
-}
-
-HRESULT CRemoteFolder::OnGetVerbW(
-	HWND hwnd, IDataObject* data_object, int command_id,
-	UINT buffer_size, wchar_t* buffer)
-{
-	if (!is_single_link(data_object))
-		return S_FALSE;
-
-	if (command_id != MENU_OFFSET_OPEN)
-		return S_FALSE;
-
-	wstring verb = L"open";
-	if ((verb.size() + 1) > buffer_size)
-		return E_FAIL;
-
-	std::copy(verb.begin(), verb.end(), buffer);
-	buffer[buffer_size - 1] = wchar_t();
-
-	return S_OK;
-}
-
-/**
- * Handle @c DFM_INVOKECOMMAND callback.
- */
-HRESULT CRemoteFolder::OnInvokeCommand(
-	HWND hwnd, IDataObject *pDataObj, int idCmd, PCWSTR pwszArgs )
-{
-	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p, idCmd=%d, "
-		"pwszArgs=%ls)\n", hwnd, pDataObj, idCmd, pwszArgs);
-
-	hwnd; pDataObj; idCmd; pwszArgs; // Unused in Release build
-	return S_FALSE;
-}
-
-/**
- * Handle @c DFM_INVOKECOMMANDEX callback.
- */
-HRESULT CRemoteFolder::OnInvokeCommandEx(
-	HWND hwnd, IDataObject *pDataObj, int idCmd, PDFMICS pdfmics )
-{
-	ATLTRACE(__FUNCTION__" called (pDataObj=%p, idCmd=%d, pdfmics=%p)\n",
-		pDataObj, idCmd, pdfmics);
-
-	pdfmics; // Unused in Release build
-
-	if (idCmd == DFM_CMD_DELETE)
-	{
-		return this->OnCmdDelete(hwnd, pDataObj);
-	}
-	else if (idCmd == MENU_OFFSET_OPEN && is_single_link(pDataObj))
-	{
-		try
-		{
-			try
-			{
-			PidlFormat format(pDataObj);
-			assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
-
-			com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
-			CSftpDirectory directory(
-				root_pidl().get(), provider, m_consumer);
-			apidl_t target = directory.ResolveLink(
-				winapi::shell::pidl::pidl_cast<cpidl_t>(format.relative_file(0)));
-
-			SHELLEXECUTEINFO sei = SHELLEXECUTEINFO();
-			sei.cbSize = sizeof(SHELLEXECUTEINFO);
-			sei.fMask = SEE_MASK_IDLIST;
-			sei.hwnd = hwnd;
-			sei.lpIDList = const_cast<void*>(reinterpret_cast<const void*>(target.get()));
-			sei.lpVerb = L"open";
-			if (!::ShellExecuteEx(&sei))
-				BOOST_THROW_EXCEPTION(
-					enable_error_info(last_error()) << 
-					errinfo_api_function("ShellExecuteEx"));
-			
-
-			/*
-			
-			com_ptr<IShellFolder> target_parent;
-			PCUITEMID_CHILD item;
-			HRESULT hr = ::SHBindToParent(
-				target.get(), target_parent.iid(),
-				reinterpret_cast<void**>(target_parent.out()), &item);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					boost::enable_error_info(comet::com_error(hr)) <<
-					boost::errinfo_api_function("SHBindToParent"));
-
-			com_ptr<IContextMenu> target_menu;
-			hr = target_parent->GetUIObjectOf(
-				hwnd, 1, &item, target_menu.iid(), NULL,
-				reinterpret_cast<void**>(target_menu.out()));
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(target_parent, hr));
-
-			hr = target_menu->InvokeCommand(pdfmics->pici);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(target_menu, hr));
-			*/
-			}
-			catch (...)
-			{
-				rethrow_and_announce(
-					hwnd, translate("Unable to open the item"),
-					translate("You might not have permission."));
-			}
-		}
-		WINAPI_COM_CATCH();
-
-		return S_OK;
-	}
-	else
-	{
-		return S_FALSE;
-	}
-}
-
-HRESULT CRemoteFolder::OnGetDefStaticId(
-	HWND hwnd, IDataObject* data_object, UINT& command_id_out)
-{
-	if (is_single_link(data_object))
-	{
-		command_id_out = MENU_OFFSET_OPEN;
-		return S_OK;
-	}
-	else
-	{
-		return S_FALSE;
-	}
-}
-
-/**
- * Handle @c DFM_CMD_DELETE verb.
- */
-HRESULT CRemoteFolder::OnCmdDelete( HWND hwnd, IDataObject *pDataObj )
-{
-	ATLTRACE(__FUNCTION__" called (hwnd=%p, pDataObj=%p)\n", hwnd, pDataObj);
-
-	try
-	{
-		try
-		{
-			PidlFormat format(pDataObj);
-			assert(::ILIsEqual(root_pidl().get(), format.parent_folder().get()));
-
-			// Build up a list of PIDLs for all the items to be deleted
-			vector<cpidl_t> death_row;
-			for (UINT i = 0; i < format.pidl_count(); i++)
-			{
-				death_row.push_back(
-					winapi::shell::pidl::pidl_cast<cpidl_t>(format.relative_file(i)));
-			}
-
-			// Delete
-			_Delete(hwnd, death_row);
-		}
-		catch (...)
-		{
-			rethrow_and_announce(
-				hwnd, translate("Unable to delete the item"),
-				translate("You might not have permission."));
-		}
-	}
-	WINAPI_COM_CATCH();
-
-	return S_OK;
-}
-
-
-/*----------------------------------------------------------------------------*/
-/*                           Private functions                                */
-/*----------------------------------------------------------------------------*/
-
-/**
- * Deletes one or more files or folders after seeking confirmation from user.
- *
- * The list of items to delete is supplied as a list of PIDLs and may contain
- * a mix of files and folders.
- *
- * If just one item is chosen, a specific confirmation message for that item is
- * shown.  If multiple items are to be deleted, a general confirmation message 
- * is displayed asking if the number of items are to be deleted.
- *
- * @param hwnd         Handle to the window used for UI.
- * @param death_row    Collection of items to be deleted as PIDLs.
- *
- * @throws AtlException if a failure occurs.
- */
-void CRemoteFolder::_Delete(HWND hwnd, const vector<cpidl_t>& death_row)
-{
-	size_t cItems = death_row.size();
-
-	BOOL fGoAhead = false;
-	if (cItems == 1)
-	{
-		remote_itemid_view itemid(death_row[0]);
-		fGoAhead = _ConfirmDelete(
-			hwnd, bstr_t(itemid.filename()).in(), itemid.is_folder());
-	}
-	else if (cItems > 1)
-	{
-		fGoAhead = _ConfirmMultiDelete(hwnd, cItems);
-	}
-	else
-	{
-		UNREACHABLE;
-		AtlThrow(E_UNEXPECTED);
-	}
-
-	if (fGoAhead)
-		_DoDelete(hwnd, death_row);
-}
-
-/**
- * Deletes files or folders.
- *
- * The list of items to delete is supplied as a list of PIDLs and may contain
- * a mix of files and folder.
- *
- * @param hwnd         Handle to the window used for UI.
- * @param death_row    Collection of items to be deleted as PIDLs.
- *
- * @throws AtlException if a failure occurs.
- */
-void CRemoteFolder::_DoDelete(HWND hwnd, const vector<cpidl_t>& death_row)
-{
-	if (hwnd == NULL)
-		AtlThrow(E_FAIL);
-
-	// Create SFTP connection object for this folder using hwndOwner for UI
-	com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(hwnd);
-
-	// Create instance of our directory handler class
-	CSftpDirectory directory(
-		root_pidl().get(), provider.get(), m_consumer.get());
-
-	// Delete each item and notify shell
-	vector<cpidl_t>::const_iterator it = death_row.begin();
-	while (it != death_row.end())
-	{
-		directory.Delete(*it);
-
-		// Notify the shell
-		::SHChangeNotify(
-			(remote_itemid_view(*it).is_folder()) ? SHCNE_RMDIR : SHCNE_DELETE,
-			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-			(root_pidl() + *it).get(), NULL
-		);
-
-		it++;
-	}
-}
-
-/**
- * Displays dialog seeking confirmation from user to delete a single item.
- *
- * The dialog differs depending on whether the item is a file or a folder.
- *
- * @param hwnd       Handle to the window used for UI.
- * @param bstrName   Name of the file or folder being deleted.
- * @param fIsFolder  Is the item in question a file or a folder?
- *
- * @returns  Whether confirmation was given or denied.
- */
-bool CRemoteFolder::_ConfirmDelete( HWND hwnd, BSTR bstrName, bool fIsFolder )
-{
-	if (hwnd == NULL)
-		return false;
-
-	CString strMessage;
-	if (!fIsFolder)
-	{
-		strMessage = L"Are you sure you want to permanently delete '";
-		strMessage += bstrName;
-		strMessage += L"'?";
-	}
-	else
-	{
-		strMessage = L"Are you sure you want to permanently delete the "
-			L"folder '";
-		strMessage += bstrName;
-		strMessage += L"' and all of its contents?";
-	}
-
-	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
-		(fIsFolder) ?
-			L"Confirm Folder Delete" : L"Confirm File Delete", 
-		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
-
-	return (ret == IDYES);
-}
-
-/**
- * Displays dialog seeking confirmation from user to delete multiple items.
- *
- * @param hwnd    Handle to the window used for UI.
- * @param cItems  Number of items selected for deletion.
- *
- * @returns  Whether confirmation was given or denied.
- */
-bool CRemoteFolder::_ConfirmMultiDelete( HWND hwnd, size_t cItems )
-{
-	if (hwnd == NULL)
-		return false;
-
-	CString strMessage;
-	strMessage.Format(
-		L"Are you sure you want to permanently delete these %d items?", cItems);
-
-	int ret = ::IsolationAwareMessageBox(hwnd, strMessage,
-		L"Confirm Multiple Item Delete",
-		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
-
-	return (ret == IDYES);
-}
-
-/**
- * Creates an SFTP connection.
- *
- * The connection is created from the information stored in this
- * folder's PIDL, @c m_pidl, and the window handle to be used as the owner
- * window for any user interaction. This window handle can be NULL but (in order
- * to enforce good UI etiquette - we shouldn't attempt to interact with the user
- * if Explorer isn't expecting us to) any operation which requires user 
- * interaction should quietly fail.  
- *
- * @param hwndUserInteraction  A handle to the window which should be used
- *                             as the parent window for any user interaction.
- * @throws ATL exceptions on failure.
- */
-com_ptr<ISftpProvider> CRemoteFolder::_CreateConnectionForFolder(
-	HWND hwndUserInteraction)
-{
-	// Create SFTP Consumer for this HWNDs lifetime
-	m_consumer = m_consumer_factory(hwndUserInteraction);
-
-	return connection_from_pidl(root_pidl(), hwndUserInteraction);
+	context_menu_callback callback(
+		bind(&connection_from_pidl, root_pidl(), _1), m_consumer_factory);
+	return callback(hwnd, pdtobj, uMsg, wParam, lParam);
 }

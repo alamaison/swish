@@ -28,7 +28,7 @@
 #include "ViewCallback.hpp"
 
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
-#include "swish/remote_folder/commands.hpp" // NewFolder
+#include "swish/remote_folder/commands/commands.hpp" // NewFolder
 #include "swish/remote_folder/connection.hpp" // connection_from_pidl
 
 #include <winapi/error.hpp> // last_error

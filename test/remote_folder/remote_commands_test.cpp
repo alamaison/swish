@@ -24,7 +24,7 @@
     @endif
 */
 
-#include "swish/remote_folder/commands.hpp" // test subject
+#include "swish/remote_folder/commands/commands.hpp" // test subject
 
 #include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
