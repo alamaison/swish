@@ -513,12 +513,13 @@ CComPtr<IQueryAssociations> CHostFolder::query_associations(
 namespace {
 
 	HRESULT CALLBACK menu_callback(
-		IShellFolder* /*psf*/, HWND hwnd, IDataObject* pdtobj, 
-		UINT uMsg, WPARAM wParam, LPARAM lParam)
+		IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection, 
+		UINT message_id, WPARAM wparam, LPARAM lparam)
 	{
 		default_context_menu_callback callback;
-		return callback(hwnd, pdtobj, uMsg, wParam, lParam);
+		return callback(hwnd_view, selection, message_id, wparam, lparam);
 	}
+
 }
 
 /**
