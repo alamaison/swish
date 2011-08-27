@@ -107,7 +107,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("948A4C68-3F59-4D75-9ED9-21CDCBF7939F"),
+	object, uuid("F42BE60C-070E-4FE5-BEAC-24A96B26D6BC"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface")
@@ -183,5 +183,11 @@ interface ISftpProvider : IUnknown
 		[in] ISftpConsumer *pConsumer,
 		[in] BSTR bstrLinkPath,
 		[out, retval] BSTR *pbstrTargetPathOut
+	);
+
+	HRESULT Stat(
+		[in] ISftpConsumer *pConsumer,
+		[in] BSTR bstrPath, [in] BOOL fFollowLinks,
+		[out, retval] struct Listing * pplt
 	);
 };

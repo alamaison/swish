@@ -112,10 +112,13 @@ m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
 namespace {
 
-	bool directory(const SmartListing& lt)
+	bool is_directory(const SmartListing& lt)
 	{ return lt.get().fIsDirectory != FALSE; }
 
-	bool dotted(const SmartListing& lt)
+	bool is_link(const SmartListing& lt)
+	{ return lt.get().fIsLink != FALSE; }
+
+	bool is_dotted(const SmartListing& lt)
 	{ return lt.get().bstrFilename[0] == OLECHAR('.'); }
 
 	cpidl_t to_pidl(const SmartListing& lt)
@@ -172,11 +175,43 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 		hr = directory_enum->Next(1, lt.out(), &fetched);
 		if (hr == S_OK)
 		{
-			if (!include_folders && directory(lt))
+			if (!include_hidden && is_dotted(lt))
 				continue;
-			if (!include_non_folders && !directory(lt))
+
+			bool is_dir;
+			if (is_link(lt))
+			{
+				// Links don't indicate anything about their target such as
+				// whether it is a file or folder so we have to interrogate
+				// its target
+				bstr_t link_path =
+					(m_directory / lt.get().bstrFilename).string();
+
+				SmartListing ltTarget;
+				if (FAILED(
+					m_provider->Stat(
+						m_consumer.in(), link_path.in(), TRUE, ltTarget.out())))
+				{
+					// Broken links are treated like files.  There isn't really
+					// anything else sensible to do with them.
+					lt.out()->fIsDirectory = false;
+				}
+				else
+				{
+					// TODO: consider what other properties we might want to
+					// take from the target instead of the link.  Currently
+					// we only take on folderness.
+					lt.out()->fIsDirectory = ltTarget.get().fIsDirectory;
+				}
+
+				assert(lt.get().fIsLink);
+			}
+
+			is_dir = is_directory(lt);
+
+			if (!include_folders && is_dir)
 				continue;
-			if (!include_hidden && dotted(lt))
+			if (!include_non_folders && !is_dir)
 				continue;
 
 			pidls->push_back(to_pidl(lt));

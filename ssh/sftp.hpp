@@ -42,6 +42,8 @@
 #include "host_key.hpp" // host_key
 #include "session.hpp" // session
 
+#include <boost/cstdint.hpp> // uint64_t
+#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
@@ -137,6 +139,23 @@ private:
 
 namespace detail {
 
+	template<typename T>
+	inline void throw_error(
+		T& error, const char* current_function, const char* source_file,
+		int source_line, const char* api_function,
+		const char* path, size_t path_len)
+	{
+		error <<
+			boost::errinfo_api_function(api_function) <<
+			boost::throw_function(current_function) <<
+			boost::throw_file(source_file) <<
+			boost::throw_line(source_line);
+		if (path && path_len > 0)
+			error << boost::errinfo_file_name(std::string(path, path_len));
+
+		boost::throw_exception(error);
+	}
+
 	/**
 	 * Throw whatever the most appropriate type of exception is.
 	 *
@@ -146,34 +165,25 @@ namespace detail {
 	inline void throw_last_error(
 		boost::shared_ptr<LIBSSH2_SESSION> session,
 		boost::shared_ptr<LIBSSH2_SFTP> sftp, const char* current_function,
-		const char* file, int line, const char* api_function)
+		const char* source_file, int source_line, const char* api_function,
+		const char* path=NULL, size_t path_len=0U)
 	{
 		::ssh::exception::ssh_error error =
 			::ssh::exception::last_error(session);
 
-		// TODO: Most of the two branches is identical. Can we share the
-		// code without introducing slicing?
 		if (error.error_code() == LIBSSH2_ERROR_SFTP_PROTOCOL)
 		{
 			sftp_error derived_error = 
 				sftp_error(error, libssh2_sftp_last_error(sftp.get()));
-			derived_error <<
-				boost::errinfo_api_function(api_function) <<
-				boost::throw_function(current_function) <<
-				boost::throw_file(file) <<
-				boost::throw_line(line);
-
-			boost::throw_exception(derived_error);
+			throw_error(
+				derived_error, current_function, source_file, source_line,
+				api_function, path, path_len);
 		}
 		else
 		{
-			error <<
-				boost::errinfo_api_function(api_function) <<
-				boost::throw_function(current_function) <<
-				boost::throw_file(file) <<
-				boost::throw_line(line);
-
-			boost::throw_exception(error);
+			throw_error(
+				error, current_function, source_file, source_line, api_function,
+				path, path_len);
 		}
 	}
 }
@@ -182,6 +192,12 @@ namespace detail {
 	::ssh::sftp::detail::throw_last_error( \
 		session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
 		api_function)
+
+#define SSH_THROW_LAST_SFTP_ERROR_WITH_PATH( \
+	session, sftp_session, api_function, path, path_len) \
+	::ssh::sftp::detail::throw_last_error( \
+		session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
+		api_function, path, path_len)
 
 namespace detail {
 
@@ -216,8 +232,9 @@ namespace detail {
 			LIBSSH2_SFTP_HANDLE* handle = libssh2_sftp_open_ex(
 				sftp.get(), filename, filename_len, flags, mode, open_type);
 			if (!handle)
-				SSH_THROW_LAST_SFTP_ERROR(
-					session, sftp, "libssh2_sftp_open_ex");
+				SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+					session, sftp, "libssh2_sftp_open_ex", filename,
+					filename_len);
 
 			return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
 				handle, libssh2_sftp_close_handle);
@@ -338,6 +355,22 @@ namespace detail {
 				session, sftp, path, path_len, LIBSSH2_SFTP_READLINK);
 		}
 
+		/**
+		 * Thin exception wrapper around libssh2_sftp_stat_ex.
+		 */
+		inline void stat(
+			boost::shared_ptr<LIBSSH2_SESSION> session,
+			boost::shared_ptr<LIBSSH2_SFTP> sftp,
+			const char* path, unsigned int path_len, int stat_type,
+			LIBSSH2_SFTP_ATTRIBUTES* attributes)
+		{
+			int rc = libssh2_sftp_stat_ex(
+				sftp.get(), path, path_len, stat_type, attributes);
+			if (rc < 0)
+				SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+					session, sftp, "libssh2_sftp_stat_ex", path, path_len);
+		}
+
 	}}
 }
 
@@ -383,6 +416,161 @@ namespace detail {
 			session, channel, path_string.data(), path_string.size(),
 			0, 0, LIBSSH2_SFTP_OPENDIR);
 	}
+
+	std::string attribute_type_to_string(unsigned long attribute_type)
+	{
+		switch (attribute_type)
+		{
+		case LIBSSH2_SFTP_ATTR_SIZE:
+			return "Size";
+		case LIBSSH2_SFTP_ATTR_UIDGID:
+			return "UID/GID";
+		case LIBSSH2_SFTP_ATTR_PERMISSIONS:
+			return "Permissions";
+		case LIBSSH2_SFTP_ATTR_ACMODTIME:
+			return "Access & modification times";
+		case LIBSSH2_SFTP_ATTR_EXTENDED:
+			return "Extended";
+		default:
+			return "Unknown";
+		}
+	}
+}
+
+class unsupported_attribute_error : public std::runtime_error
+{
+public:
+	unsupported_attribute_error(unsigned long attribute_type) :
+	  std::runtime_error(
+		  detail::attribute_type_to_string(attribute_type) +
+		  " attribute not supported") {}
+};
+
+class file_attributes
+{
+public:
+
+	enum file_type
+	{
+		normal_file,
+		symbolic_link,
+		directory,
+		character_device,
+		block_device,
+		named_pipe,
+		socket,
+		unknown
+	};
+
+	file_type type() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_PERMISSIONS);
+
+		switch (m_attributes.permissions & LIBSSH2_SFTP_S_IFMT)
+		{
+		case LIBSSH2_SFTP_S_IFIFO:
+			return named_pipe;
+		case LIBSSH2_SFTP_S_IFCHR:
+			return character_device;
+		case LIBSSH2_SFTP_S_IFDIR:
+			return directory;
+		case LIBSSH2_SFTP_S_IFBLK:
+			return block_device;
+		case LIBSSH2_SFTP_S_IFREG:
+			return normal_file;
+		case LIBSSH2_SFTP_S_IFLNK:
+			return symbolic_link;
+		case LIBSSH2_SFTP_S_IFSOCK:
+			return socket;
+		default:
+			return unknown;
+		}
+	}
+
+	unsigned long permissions() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_PERMISSIONS);
+		return m_attributes.permissions;
+	}
+
+	boost::uint64_t size() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_SIZE);
+		return m_attributes.filesize;
+	}
+
+	unsigned long uid() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_UIDGID);
+		return m_attributes.uid;
+	}
+
+	unsigned long gid() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_UIDGID);
+		return m_attributes.gid;
+	}
+
+	/**
+	 * @todo  Use Boost.DateTime or other decent datatype.
+	 */
+	unsigned long atime() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_ACMODTIME);
+		return m_attributes.atime;
+	}
+
+	/**
+	 * @todo  Use Boost.DateTime or other decent datatype.
+	 */
+	unsigned long mtime() const
+	{
+		throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_ACMODTIME);
+		return m_attributes.mtime;
+	}
+
+private:
+	friend class sftp_file;
+	friend file_attributes attributes(
+		sftp_channel channel, const boost::filesystem::path& file,
+		bool follow_links);
+
+	explicit file_attributes(const LIBSSH2_SFTP_ATTRIBUTES& raw_attributes) :
+	   m_attributes(raw_attributes) {}
+
+	bool is_valid_attribute(unsigned long attribute_type) const
+	{
+		return (m_attributes.flags & attribute_type) != 0;
+	}
+
+	void throw_if_not_valid_attribute(unsigned long attribute_type) const
+	{
+		if (!is_valid_attribute(attribute_type))
+			BOOST_THROW_EXCEPTION(
+				unsupported_attribute_error(attribute_type));
+	}
+
+	LIBSSH2_SFTP_ATTRIBUTES m_attributes;
+};
+
+/**
+ * Query a file for its attributes.
+ *
+ * If @a follow_links is @c true, the file that is queried is the target of
+ * any chain of links.  Otherwise, it is the link itself.
+ */
+inline file_attributes attributes(
+	sftp_channel channel, const boost::filesystem::path& file,
+	bool follow_links)
+{
+	std::string file_path = file.string();
+	LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
+	detail::libssh2::sftp::stat(
+		channel.session().get(), channel.get(), file_path.data(),
+		file_path.size(),
+		(follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT, &attributes);
+
+	return file_attributes(attributes);
 }
 
 class sftp_file
@@ -398,20 +586,26 @@ public:
 	const boost::filesystem::path& path() const { return m_file; }
 	const std::string& long_entry() const { return m_long_entry; }
 
-	/// @todo Why are these exposed? Instead, expose the individual fields?
-	LIBSSH2_SFTP_ATTRIBUTES raw_attributes() const { return m_attributes; }
+	/**
+	 * @todo Get rid of this ASAP!
+	 */
+	const LIBSSH2_SFTP_ATTRIBUTES& raw_attributes() const
+	{
+		return m_attributes.m_attributes;
+	}
+
+	const file_attributes& attributes() const
+	{
+		return m_attributes;
+	}
+
 private:
 	boost::filesystem::path m_file;
 	std::string m_long_entry;
-	LIBSSH2_SFTP_ATTRIBUTES m_attributes;
+	file_attributes m_attributes;
 };
 
-bool is_symlink(const sftp_file& file)
-{
-	return LIBSSH2_SFTP_S_ISLNK(file.raw_attributes().permissions);
-}
-
-boost::filesystem::path resolve_link_target(
+inline boost::filesystem::path resolve_link_target(
 	sftp_channel channel, const boost::filesystem::path& link)
 {
 	std::string link_string = link.string();
@@ -420,13 +614,13 @@ boost::filesystem::path resolve_link_target(
 		link_string.size());
 }
 
-boost::filesystem::path resolve_link_target(
+inline boost::filesystem::path resolve_link_target(
 	sftp_channel channel, const sftp_file& link)
 {
 	return resolve_link_target(channel, link.path());
 }
 
-boost::filesystem::path canonical_path(
+inline boost::filesystem::path canonical_path(
 	sftp_channel channel, const boost::filesystem::path& link)
 {
 	std::string link_string = link.string();
@@ -435,7 +629,7 @@ boost::filesystem::path canonical_path(
 		link_string.size());
 }
 
-boost::filesystem::path canonical_path(
+inline boost::filesystem::path canonical_path(
 	sftp_channel channel, const sftp_file& link)
 {
 	return canonical_path(channel, link.path());
@@ -454,7 +648,7 @@ boost::filesystem::path canonical_path(
  *           @p target parameters.  To connect to these servers you will have
  *           to pass the parameters to this function in the wrong order!
  */
-void create_symlink(
+inline void create_symlink(
 	sftp_channel channel, const boost::filesystem::path& link,
 	const boost::filesystem::path& target)
 {
@@ -527,8 +721,9 @@ private:
 		if (rc == 0) // end of files
 			m_handle.reset();
 		else if (rc < 0)
-			SSH_THROW_LAST_SFTP_ERROR(
-				m_session, m_channel, "libssh2_sftp_readdir_ex");
+			SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+				m_session, m_channel, "libssh2_sftp_readdir_ex",
+				m_directory.string().data(), m_directory.string().size());
 		else
 		{
 			// copy attributes to member one we know we're overwriting the
@@ -574,6 +769,7 @@ private:
 	// @}
 };
 
+#undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
 #undef SSH_THROW_LAST_SFTP_ERROR
 
 }} // namespace ssh::sftp

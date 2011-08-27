@@ -117,6 +117,14 @@ namespace detail {
 		return lt;
 	}
 
+	swish::SmartListing make_link_listing(comet::bstr_t name)
+	{
+		swish::SmartListing lt = make_file_listing(
+			name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
+		lt.out()->fIsLink = TRUE;
+		return lt;
+	}
+
 	comet::bstr_t tag_filename(
 		const wchar_t* filename, const boost::filesystem::wpath& directory)
 	{
@@ -206,6 +214,20 @@ namespace detail {
 			folder_names.pop_back();
 		}
 
+		// Last but not least, links
+		std::vector<comet::bstr_t> link_names;
+		link_names.push_back(tag_filename(L"link%sfolder", directory));
+		link_names.push_back(tag_filename(L"another link%sfolder", directory));
+		link_names.push_back(tag_filename(L"p%s", directory));
+		link_names.push_back(tag_filename(L".q%s", directory));
+		link_names.push_back(tag_filename(L"this_link_is_broken_%s", directory));
+
+		while (!link_names.empty())
+		{
+			make_item_in(
+				filesystem, directory, make_link_listing(link_names.back()));
+			link_names.pop_back();
+		}
 	}
 }
 
@@ -371,10 +393,45 @@ public:
 		ISftpConsumer* /*consumer*/, BSTR /*path*/)
 	{};
 
-	virtual BSTR resolve_link(ISftpConsumer* /*consumer*/, BSTR /*path*/)
+	virtual BSTR resolve_link(ISftpConsumer* /*consumer*/, BSTR path)
 	{
-		return NULL;
+		std::wstring p(path);
+
+		// link names with 'broken' in their name we pretend to resolve to
+		// a target that doesn't exist
+		if (p.find(L"broken") != std::wstring::npos)
+			return comet::bstr_t(L"/tmp/broken_link_target").detach();
+
+		// link names with 'folder' in their name we pretend target a directory
+		// (/tmp/testtmpfolder) and the others we target at a file
+		// (/tmp/testfile)
+		else if (p.find(L"folder") != std::wstring::npos)
+			return comet::bstr_t(L"/tmp/Testtmpfolder").detach();
+		else
+			return comet::bstr_t(L"/tmp/testtmpfile").detach();
 	};
+
+	virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL fFollowLinks)
+	{
+		boost::filesystem::wpath target;
+		if (fFollowLinks)
+		{
+			target =
+				comet::bstr_t(
+					comet::auto_attach(resolve_link(consumer, path))).w_str();
+		}
+		else
+		{
+			target = comet::bstr_t(path).w_str();
+		}
+
+		detail::FilesystemLocation dir =
+			detail::find_location_from_path(m_filesystem, target);
+
+		// copy listing because caller gets ownership
+		swish::SmartListing return_listing = *dir;
+		return return_listing.detach();
+	}
 
 private:
 

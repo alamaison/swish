@@ -38,12 +38,14 @@
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 
 #include <comet/datetime.h> // datetime_t
+#include <comet/enum_iterator.h> // enum_iterator
 #include <comet/error.h> // com_error
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <vector>
 
 using swish::host_folder::create_host_itemid;
 using swish::remote_folder::create_remote_itemid;
@@ -55,11 +57,43 @@ using winapi::shell::pidl::cpidl_t;
 using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
+using comet::enum_iterator;
 
 using test::MockProvider;
 using test::MockConsumer;
 
+using std::vector;
 using std::wstring;
+
+
+namespace comet {
+
+template<> struct comtype<IEnumIDList>
+{
+	static const IID& uuid() throw() { return IID_IEnumIDList; }
+	typedef IUnknown base;
+};
+
+template<> struct enumerated_type_of<IEnumIDList>
+{ typedef PITEMID_CHILD is; };
+
+/**
+ * Copy-policy for use by enumerators of child PIDLs.
+ */
+template<> struct impl::type_policy<PITEMID_CHILD>
+{
+	static void init(PITEMID_CHILD& t, const cpidl_t& s) 
+	{
+		s.copy_to(t);
+	}
+
+	static void clear(PITEMID_CHILD& t)
+	{
+		::ILFree(t);
+	}	
+};
+
+}
 
 namespace { // private
 
@@ -112,9 +146,6 @@ namespace { // private
 		do {
 			remote_itemid_view itemid(pidl);
 
-			// Check REMOTEPIDLness
-			BOOST_REQUIRE(itemid.valid());
-
 			// Check filename
 			BOOST_CHECK_GT(itemid.filename().size(), 0);
 			if (!(flags & SHCONTF_INCLUDEHIDDEN))
@@ -151,6 +182,39 @@ namespace { // private
 			filename, false, false, L"", L"", 0, 0, 040666, 42, datetime_t(),
 			datetime_t());
 	}
+
+	void standard_checks(remote_itemid_view itemid)
+	{
+		// Check filename is sensible
+		BOOST_CHECK_GT(itemid.filename().size(), 0);
+
+		// Check group and owner exist
+		BOOST_CHECK_GT(itemid.owner().size(), 0U);
+		BOOST_CHECK_GT(itemid.group().size(), 0U);
+
+		// Check date validity
+		BOOST_CHECK(itemid.date_modified().good());
+	}
+
+	template<size_t size>
+	void expected_filenames(
+		com_ptr<IEnumIDList> listing, const wchar_t* (&expected)[size])
+	{
+		vector<wstring> sorted_expected(expected, expected + size);
+		std::sort(sorted_expected.begin(), sorted_expected.end());
+
+		vector<wstring> actual;
+		enum_iterator<IEnumIDList> e(listing);
+		for (; e != enum_iterator<IEnumIDList>(); ++e)
+		{
+			actual.push_back(remote_itemid_view(*e).filename());
+		}
+		std::sort(actual.begin(), actual.end());
+
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			actual.begin(), actual.end(), sorted_expected.begin(),
+			sorted_expected.end());
+	}
 }
 
 #pragma region SftpDirectory tests
@@ -181,17 +245,73 @@ BOOST_AUTO_TEST_CASE( everything )
 	SHCONTF flags = 
 		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	test_enum(directory().GetEnum(flags), flags);
+	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+	for (; e != enum_iterator<IEnumIDList>(); ++e)
+	{
+		standard_checks(remote_itemid_view(*e));
+	}
 }
 
 /**
- * Requesting just folders must only return folders.
+ * Check that link are correctly PIDLed.
+ */
+BOOST_AUTO_TEST_CASE( links )
+{
+	SHCONTF flags = 
+		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+
+	// Keep list of what is a link to test against
+	vector<wstring> link_names;
+	link_names.push_back(L"linktmpfolder");
+	link_names.push_back(L"another linktmpfolder");
+	link_names.push_back(L"ptmp");
+	link_names.push_back(L".qtmp");
+	link_names.push_back(L"this_link_is_broken_tmp");
+
+	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+	for (; e != enum_iterator<IEnumIDList>(); ++e)
+	{
+		remote_itemid_view itemid(*e);
+
+		if (std::find(
+			link_names.begin(), link_names.end(), itemid.filename()) !=
+			link_names.end())
+		{
+			BOOST_CHECK_MESSAGE(
+				itemid.is_link(),
+				itemid.filename() + L" is not recognised as a link");
+		}
+		else
+		{
+			BOOST_CHECK_MESSAGE(
+				!itemid.is_link(),
+				itemid.filename() + L" is incorrectly recognised as a link");
+		}
+	}
+}
+
+/**
+ * Requesting just folders must only return folders but must return links
+ * that target folders.
  */
 BOOST_AUTO_TEST_CASE( only_folder )
 {
 	SHCONTF flags = SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	test_enum(directory().GetEnum(flags), flags);
+	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+	for (; e != enum_iterator<IEnumIDList>(); ++e)
+	{
+		remote_itemid_view itemid(*e);
+		BOOST_CHECK(itemid.is_folder());
+		standard_checks(itemid);
+	}
+
+	const wchar_t* expected[] = {
+		L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
+		L"testtmpfolder with spaces", L".testtmphiddenfolder", L"linktmpfolder",
+		L"another linktmpfolder", L"swish"};
+
+	expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -201,7 +321,22 @@ BOOST_AUTO_TEST_CASE( only_files )
 {
 	SHCONTF flags = SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	test_enum(directory().GetEnum(flags), flags);
+	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+	for (; e != enum_iterator<IEnumIDList>(); ++e)
+	{
+		remote_itemid_view itemid(*e);
+		BOOST_CHECK(!itemid.is_folder());
+		standard_checks(itemid);
+	}
+
+	const wchar_t* expected[] = {
+		L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
+		L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
+		L"testtmpfile.ext.txt", L"testtmpfile..", L".testtmphiddenfile",
+		L"ptmp", L".qtmp", L"this_link_is_broken_tmp"};
+		// broken link is considered a file
+
+	expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -211,7 +346,16 @@ BOOST_AUTO_TEST_CASE( no_hidden )
 {
 	SHCONTF flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
 
-	test_enum(directory().GetEnum(flags), flags);
+	const wchar_t* expected[] = {
+		L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
+		L"testtmpfolder with spaces", L"linktmpfolder",
+		L"another linktmpfolder", L"swish",
+		L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
+		L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
+		L"testtmpfile.ext.txt", L"testtmpfile..", 
+		L"ptmp", L"this_link_is_broken_tmp"};
+
+	expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -222,7 +366,12 @@ BOOST_AUTO_TEST_CASE( no_hidden_only_folders )
 {
 	SHCONTF flags = SHCONTF_FOLDERS;
 
-	test_enum(directory().GetEnum(flags), flags);
+	const wchar_t* expected[] = {
+		L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
+		L"testtmpfolder with spaces", L"linktmpfolder",
+		L"another linktmpfolder", L"swish"};
+
+	expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -233,7 +382,13 @@ BOOST_AUTO_TEST_CASE( no_hidden_only_files )
 {
 	SHCONTF flags = SHCONTF_NONFOLDERS;
 
-	test_enum(directory().GetEnum(flags), flags);
+	const wchar_t* expected[] = {
+		L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
+		L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
+		L"testtmpfile.ext.txt", L"testtmpfile..", 
+		L"ptmp", L"this_link_is_broken_tmp"};
+
+	expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**

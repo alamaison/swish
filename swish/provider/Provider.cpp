@@ -48,6 +48,7 @@
 #include "swish/trace.hpp" // trace
 
 #include <comet/bstr.h> // bstr_t
+#include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 #include <comet/enum.h> // stl_enumeration
@@ -73,6 +74,7 @@ using swish::tracing::trace;
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
+using comet::datetime_t;
 using comet::stl_enumeration;
 
 using boost::filesystem::wpath;
@@ -82,10 +84,13 @@ using boost::system::system_error;
 using boost::system::system_category;
 using boost::shared_ptr;
 
+using ssh::sftp::attributes;
+using ssh::sftp::canonical_path;
 using ssh::sftp::directory_iterator;
+using ssh::sftp::file_attributes;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_file;
-using ssh::sftp::canonical_path;
+using ssh::sftp::unsupported_attribute_error;
 
 using std::exception;
 using std::string;
@@ -123,6 +128,8 @@ public:
 		com_ptr<ISftpConsumer> consumer, const wpath& path);
 
 	BSTR resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path);
+
+	virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
 
 private:
 	boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
@@ -290,6 +297,11 @@ void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
 
 BSTR CProvider::resolve_link(ISftpConsumer* consumer, BSTR path)
 { return m_provider->resolve_link(consumer, path); }
+
+Listing CProvider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
+{
+	return m_provider->stat(consumer, path, follow_links);
+}
 
 /**
  * Create libssh2-based data provider.
@@ -833,6 +845,59 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
 		Utf8StringToWideString(canonical_path(channel, utf8_path).string());
 
 	return target.detach();
+}
+
+/**
+ * Get the details of a file by path.
+ *
+ * The Listing returned by this function doesn't include a long entry or
+ * owner and group names as string (these being derived from the long entry).
+ */
+Listing provider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
+{
+	_Connect(consumer);
+	
+	string utf8_path = WideStringToUtf8String(bstr_t(path).w_str());
+	sftp_channel channel(m_session->get(), m_session->sftp());
+
+	file_attributes attr = attributes(
+		channel, utf8_path, follow_links != FALSE);
+
+	Listing lt = Listing();
+
+	// Permissions
+	try
+	{
+		lt.uPermissions = attr.permissions();
+		lt.fIsLink = attr.type() == file_attributes::symbolic_link;
+		lt.fIsDirectory = attr.type() == file_attributes::directory;
+	} catch (const unsupported_attribute_error&) {}
+
+	// User & Group
+	try
+	{
+		lt.uUid = attr.uid();
+		lt.uGid = attr.gid();
+	} catch (const unsupported_attribute_error&) {}
+
+	// Size of file
+	try
+	{
+		lt.uSize = attr.size();
+	} catch (const unsupported_attribute_error&) {}
+
+	// Access & Modification time
+	try
+	{
+		datetime_t modified(static_cast<time_t>(attr.mtime()));
+		datetime_t accessed(static_cast<time_t>(attr.atime()));
+		lt.dateModified = modified.detach();
+		lt.dateAccessed = accessed.detach();
+	} catch (const unsupported_attribute_error&) {}
+
+	lt.bstrFilename = bstr_t(wpath(bstr_t(path).w_str()).filename()).detach();
+
+	return lt;
 }
 
 /**

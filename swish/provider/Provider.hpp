@@ -77,6 +77,8 @@ public:
 	virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
 
 	virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
+
+	virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
 	// @}
 
 	virtual provider_interface& impl();

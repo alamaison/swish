@@ -48,7 +48,9 @@
 
 using ssh::exception::ssh_error;
 using ssh::session;
+using ssh::sftp::file_attributes;
 using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_error;
 using ssh::sftp::sftp_file;
 using ssh::sftp::directory_iterator;
 
@@ -174,7 +176,9 @@ BOOST_AUTO_TEST_CASE( symlink_recognition )
 {
 	create_symlink(sandbox() / "link", new_file_in_sandbox());
 
-	BOOST_CHECK(is_symlink(find_file_in_remote_sandbox("link")));
+	BOOST_CHECK_EQUAL(
+		find_file_in_remote_sandbox("link").attributes().type(),
+		file_attributes::symbolic_link);
 }
 
 /**
@@ -234,6 +238,82 @@ BOOST_AUTO_TEST_CASE( symlink_to_symlink )
 	path resolved_target = 
 		resolve_link_target(channel(), find_file_in_remote_sandbox("link2"));
 	BOOST_CHECK_EQUAL(resolved_target, remote_target);
+}
+
+BOOST_AUTO_TEST_CASE( attributes_file )
+{
+	path subject = new_file_in_sandbox();
+
+	file_attributes attrs = attributes(
+		channel(), to_remote_path(subject), false);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::normal_file);
+
+	attrs = attributes(channel(), to_remote_path(subject), true);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::normal_file);
+}
+
+BOOST_AUTO_TEST_CASE( attributes_directory )
+{
+	path subject = sandbox() / "testdir";
+	create_directory(subject);
+
+	file_attributes attrs = attributes(
+		channel(), to_remote_path(subject), false);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::directory);
+
+	attrs = attributes(channel(), to_remote_path(subject), true);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::directory);
+}
+
+BOOST_AUTO_TEST_CASE( attributes_link )
+{
+	path target = new_file_in_sandbox();
+	path link = sandbox() / "link";
+	create_symlink(link, target);
+
+	file_attributes attrs = attributes(channel(), to_remote_path(link), false);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::symbolic_link);
+
+	attrs = attributes(channel(), to_remote_path(link), true);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::normal_file);
+}
+
+BOOST_AUTO_TEST_CASE( attributes_double_link )
+{
+	path target = new_file_in_sandbox();
+	path middle_link = sandbox() / "link1";
+	path link = sandbox() / "link2";
+	create_symlink(middle_link, target);
+	create_symlink(link, middle_link);
+
+	file_attributes attrs = attributes(channel(), to_remote_path(link), false);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::symbolic_link);
+
+	attrs = attributes(channel(), to_remote_path(link), true);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::normal_file);
+}
+
+BOOST_AUTO_TEST_CASE( attributes_broken_link )
+{
+	path target = new_file_in_sandbox();
+	path link = sandbox() / "link";
+	create_symlink(link, target);
+	remove(target);
+
+	file_attributes attrs = attributes(channel(), to_remote_path(link), false);
+
+	BOOST_CHECK_EQUAL(attrs.type(), file_attributes::symbolic_link);
+
+	BOOST_CHECK_THROW(
+		attributes(channel(), to_remote_path(link), true), sftp_error);
 }
 
 BOOST_AUTO_TEST_CASE( default_directory )
