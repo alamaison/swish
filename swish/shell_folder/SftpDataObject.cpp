@@ -51,6 +51,7 @@ using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::raw_pidl_iterator;
 
+using comet::com_error;
 using comet::com_ptr;
 
 using boost::make_transform_iterator;
@@ -69,32 +70,8 @@ template<> struct comtype<IDataObject>
 
 }
 
-CSftpDataObject::CSftpDataObject() :
-	m_fExpandedPidlList(false),
-	m_fRenderedDescriptor(false),
-	m_cfPreferredDropEffect(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT))),
-	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
-	m_cfFileContents(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_FILECONTENTS)))
-{
-}
-
-CSftpDataObject::~CSftpDataObject()
-{
-}
-
-HRESULT CSftpDataObject::FinalConstruct()
-{
-	ATLENSURE_RETURN_HR(m_cfPreferredDropEffect, E_UNEXPECTED);
-	ATLENSURE_RETURN_HR(m_cfFileDescriptor, E_UNEXPECTED);
-	ATLENSURE_RETURN_HR(m_cfFileContents, E_UNEXPECTED);
-	return S_OK;
-}
-
 /**
- * Initialise the DataObject with the top-level PIDLs.
+ * Create the DataObject with the top-level PIDLs.
  *
  * These PIDLs represent, for instance, the current group of files and
  * directories which have been selected in an Explorer window.  This list
@@ -104,23 +81,26 @@ HRESULT CSftpDataObject::FinalConstruct()
  * @param aPidl             The selected PIDLs.
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
  * @param pProvider         Backend to communicate with remote server.
- *
- * @throws  com_error on error.
  */
-void CSftpDataObject::Initialize(
+CSftpDataObject::CSftpDataObject(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-	PCIDLIST_ABSOLUTE pidlCommonParent, ISftpProvider *pProvider,
-	ISftpConsumer* pConsumer)
-throw(...)
-{
-	ATLENSURE_THROW(!m_pidlCommonParent, E_UNEXPECTED); // Initialised twice
-
-	// Initialise superclass which will create inner IDataObject
-	__super::Initialize(cPidl, aPidl, pidlCommonParent);
-
+	PCIDLIST_ABSOLUTE pidlCommonParent, com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer)
+	: CDataObject(cPidl, aPidl, pidlCommonParent),
 	// Make a copy of the PIDLs.  These are used to delay-render the 
 	// CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS format in GetData().
-	m_pidlCommonParent = pidlCommonParent;
+	m_pidlCommonParent(pidlCommonParent),
+	m_consumer(consumer),
+	m_provider(provider),
+	m_fExpandedPidlList(false),
+	m_fRenderedDescriptor(false),
+	m_cfPreferredDropEffect(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT))),
+	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
+	m_cfFileContents(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_FILECONTENTS)))
+{
 	std::copy(aPidl, aPidl + cPidl, std::back_inserter(m_pidls));
 
 	// Prod the inner object with the formats whose data we will delay-
@@ -128,20 +108,18 @@ throw(...)
 	if (cPidl > 0)
 	{
 		HRESULT hr;
-		hr = ProdInnerWithFormat(m_cfFileDescriptor);
-		ATLENSURE_SUCCEEDED(hr);
-		hr = ProdInnerWithFormat(m_cfFileContents);
-		ATLENSURE_SUCCEEDED(hr);
+		hr = ProdInnerWithFormat(m_cfFileDescriptor, TYMED_HGLOBAL);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(hr));
+		hr = ProdInnerWithFormat(m_cfFileContents, TYMED_ISTREAM);
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(hr));
 	}
 
 	// Set preferred drop effect.  This prevents any calls to GetData of FGD or
 	// FILECONTENTS until drag is complete, thereby preventing interruptions
 	// caused by delay-rendering.
 	_RenderCfPreferredDropEffect();
-
-	// Save backend session instance
-	m_spProvider = pProvider;
-	m_spConsumer = pConsumer;
 }
 
 /*----------------------------------------------------------------------------*
@@ -331,7 +309,7 @@ throw(...)
 	FileGroupDescriptor fgd(medium.get().hGlobal);
 
 	// Get stream from relative path stored in the lindexth FILEDESCRIPTOR
-	CSftpDirectory dir(m_pidlCommonParent, m_spProvider.p, m_spConsumer.p);
+	CSftpDirectory dir(m_pidlCommonParent, m_provider, m_consumer);
 	return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
 }
 
@@ -518,7 +496,7 @@ const throw(...)
 com_ptr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
 const throw(...)
 {
-	CSftpDirectory dir(pidl, m_spProvider.p, m_spConsumer.p);
+	CSftpDirectory dir(pidl, m_provider, m_consumer);
 	return dir.GetEnum(
 		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 }

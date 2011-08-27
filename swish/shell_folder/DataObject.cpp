@@ -1,6 +1,11 @@
-/*  Wrapper around shell-created IDataObject adding support for FILECONTENTS.
+/**
+    @file
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Wrapper around shell-created IDataObject adding support for FILECONTENTS.
+
+    @if license
+
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,11 +20,22 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #include "DataObject.h"
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+
+#include <comet/error.h> // com_error_from_interface
+#include <comet/ptr.h> // com_ptr
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
+using comet::com_error;
+using comet::com_error_from_interface;
+using comet::com_ptr;
 
 namespace comet {
 
@@ -31,27 +47,29 @@ template<> struct comtype<IDataObject>
 
 }
 
-CDataObject::CDataObject() :
-	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
-	m_cfFileContents(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_FILECONTENTS)))
-{
-}
+namespace {
 
-CDataObject::~CDataObject()
-{
-}
+	com_ptr<IDataObject> shell_data_object_from_pidls(
+		UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
+		PCIDLIST_ABSOLUTE pidlCommonParent)
+	{
+		// Create the default shell IDataObject implementation which we 
+		// are wrapping.
+		com_ptr<IDataObject> data_object;
+		HRESULT hr = ::CIDLData_CreateFromIDArray(
+			pidlCommonParent, cPidl, 
+			reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl),
+			data_object.out());
+		if (FAILED(hr))
+			BOOST_THROW_EXCEPTION(com_error(hr));
 
-HRESULT CDataObject::FinalConstruct()
-{
-	ATLENSURE_RETURN_HR(m_cfFileDescriptor, E_UNEXPECTED);
-	ATLENSURE_RETURN_HR(m_cfFileContents, E_UNEXPECTED);
-	return S_OK;
+		return data_object;
+	}
+
 }
 
 /**
- * Initialise the DataObject with the top-level PIDLs.
+ * Construct the DataObject with the top-level PIDLs.
  *
  * These PIDLs represent, for instance, the current group of files and
  * directories which have been selected in an Explorer window.  This list
@@ -60,24 +78,17 @@ HRESULT CDataObject::FinalConstruct()
  * @param cPidl             Number of PIDLs in the selection.
  * @param aPidl             The selected PIDLs.
  * @param pidlCommonParent  PIDL to the common parent of all the PIDLs.
- *
- * @throws  com_error on error.
  */
-void CDataObject::Initialize(
+CDataObject::CDataObject(
 	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-	PCIDLIST_ABSOLUTE pidlCommonParent)
-throw(...)
+	PCIDLIST_ABSOLUTE pidlCommonParent) :
+	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
+	m_cfFileContents(static_cast<CLIPFORMAT>(
+		::RegisterClipboardFormat(CFSTR_FILECONTENTS))),
+	m_inner(shell_data_object_from_pidls(cPidl, aPidl, pidlCommonParent))
 {
-	ATLENSURE_THROW(!m_spDoInner, E_UNEXPECTED); // Initialised twice
-
-	// Create the default shell IDataObject implementation which we 
-	// are wrapping.
-	HRESULT hr = ::CIDLData_CreateFromIDArray(
-		pidlCommonParent, cPidl, 
-		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(aPidl), &m_spDoInner);
-	ATLENSURE_SUCCEEDED(hr);
 }
-
 
 /*----------------------------------------------------------------------------*
  * IDataObject methods
@@ -85,45 +96,48 @@ throw(...)
 
 STDMETHODIMP CDataObject::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 {
+	HRESULT hr = S_OK;
 	try
 	{
-		ATLENSURE_THROW(m_spDoInner, E_UNEXPECTED); // Not initialised
-
 		if (pformatetcIn->cfFormat == m_cfFileContents)
 		{
 			// Validate FORMATETC
-			ATLENSURE_THROW(pformatetcIn->tymed & TYMED_ISTREAM, DV_E_TYMED);
-			ATLENSURE_THROW(
-				pformatetcIn->dwAspect == DVASPECT_CONTENT, DV_E_DVASPECT);
-			ATLENSURE_THROW(!pformatetcIn->ptd, DV_E_DVTARGETDEVICE);
+			if (!(pformatetcIn->tymed & TYMED_ISTREAM))
+				BOOST_THROW_EXCEPTION(com_error(DV_E_TYMED));
+			if (pformatetcIn->dwAspect != DVASPECT_CONTENT)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_DVASPECT));
+			if (pformatetcIn->ptd)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_DVTARGETDEVICE));
 
 			long lindex = pformatetcIn->lindex;
 
 			// Handle incorrect lindex if possible
 			if (lindex == -1)
 			{
-				ATLENSURE_THROW(m_streams.size() == 1, DV_E_LINDEX);
+				if (m_streams.size() != 1)
+					BOOST_THROW_EXCEPTION(com_error(DV_E_LINDEX));
 				lindex = 0;
 			}
 
 			// Ensure that the item is actually in our (sparse) local store
 			if (m_streams.find(lindex) == m_streams.end())
-				AtlThrow(DV_E_LINDEX);
+				BOOST_THROW_EXCEPTION(com_error(DV_E_LINDEX));
 
 			// Fill STGMEDIUM with IStream
 			pmedium->pUnkForRelease = NULL;
 			m_streams[lindex].CopyTo(&(pmedium->pstm));
 			pmedium->tymed = TYMED_ISTREAM;
-
-			return S_OK;
 		}
 		else
 		{
 			// Delegate all other requests to the inner IDataObject
-			return m_spDoInner->GetData(pformatetcIn, pmedium);
+			hr = m_inner->GetData(pformatetcIn, pmedium);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error_from_interface(m_inner, hr));
 		}
 	}
 	WINAPI_COM_CATCH_AUTO_INTERFACE();
+	return hr;
 }
 
 /**
@@ -145,75 +159,88 @@ STDMETHODIMP CDataObject::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 STDMETHODIMP CDataObject::SetData( 
 	FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
 {
-	ATLENSURE_RETURN_HR(m_spDoInner, E_UNEXPECTED); // Not initialised
-
-	if (pformatetc->cfFormat == m_cfFileContents)
+	HRESULT hr = S_OK;
+	try
 	{
-		// Validate FORMATETC
-		ATLENSURE_RETURN_HR(pformatetc->tymed == TYMED_ISTREAM, DV_E_TYMED);
-		ATLENSURE_RETURN_HR(
-			pformatetc->dwAspect == DVASPECT_CONTENT, DV_E_DVASPECT);
-		ATLENSURE_RETURN_HR(!pformatetc->ptd, DV_E_DVTARGETDEVICE);
-		ATLENSURE_RETURN_HR(pformatetc->lindex >= 0, DV_E_LINDEX);
-
-		// Validate STGMEDIUM
-		ATLENSURE_RETURN_HR(pmedium->tymed == pformatetc->tymed, DV_E_TYMED);
-		ATLENSURE_RETURN_HR(pmedium->pstm, DV_E_STGMEDIUM);
-
-		// Add IStream to our local store
-		m_streams[pformatetc->lindex] = pmedium->pstm;
-
-		if (fRelease) // Release STGMEDIUM if we own it now
+		if (pformatetc->cfFormat == m_cfFileContents)
 		{
-			::ReleaseStgMedium(pmedium);
-		}
+			// Validate FORMATETC
+			if (pformatetc->tymed != TYMED_ISTREAM)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_TYMED));
+			if (pformatetc->dwAspect != DVASPECT_CONTENT)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_DVASPECT));
+			if (pformatetc->ptd)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_DVTARGETDEVICE));
+			if (pformatetc->lindex < 0)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_LINDEX));
 
-		// Prod inner IDataObject with empty CFSTR_FILECONTENTS format
-		return ProdInnerWithFormat(pformatetc->cfFormat);
+			// Validate STGMEDIUM
+			if (pmedium->tymed != pformatetc->tymed)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_TYMED));
+			if (!pmedium->pstm)
+				BOOST_THROW_EXCEPTION(com_error(DV_E_STGMEDIUM));
+
+			// Add IStream to our local store
+			m_streams[pformatetc->lindex] = pmedium->pstm;
+
+			if (fRelease) // Release STGMEDIUM if we own it now
+			{
+				::ReleaseStgMedium(pmedium);
+			}
+
+			// Prod inner IDataObject with empty CFSTR_FILECONTENTS format
+			hr = ProdInnerWithFormat(pformatetc->cfFormat, pformatetc->tymed);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error_from_interface(m_inner, hr));
+		}
+		else
+		{
+			// Delegate all other requests to the inner IDataObject
+			hr = m_inner->SetData(pformatetc, pmedium, fRelease);
+			if (FAILED(hr))
+				BOOST_THROW_EXCEPTION(com_error_from_interface(m_inner, hr));
+		}
 	}
-	else
-	{
-		// Delegate all other requests to the inner IDataObject
-		return m_spDoInner->SetData(pformatetc, pmedium, fRelease);
-	}
+	WINAPI_COM_CATCH_AUTO_INTERFACE();
+	return hr;
 }
 
 STDMETHODIMP CDataObject::GetDataHere(FORMATETC *pformatetc, STGMEDIUM *pmedium)
 {
-	return m_spDoInner->GetDataHere(pformatetc, pmedium);
+	return m_inner->GetDataHere(pformatetc, pmedium);
 }
 
 STDMETHODIMP CDataObject::QueryGetData(FORMATETC *pformatetc)
 {
-	return m_spDoInner->QueryGetData(pformatetc);
+	return m_inner->QueryGetData(pformatetc);
 }
 
 STDMETHODIMP CDataObject::GetCanonicalFormatEtc( 
 	FORMATETC *pformatetcIn, FORMATETC *pformatetcOut)
 {
-	return m_spDoInner->GetCanonicalFormatEtc(pformatetcIn, pformatetcOut);
+	return m_inner->GetCanonicalFormatEtc(pformatetcIn, pformatetcOut);
 }
 STDMETHODIMP CDataObject::EnumFormatEtc( 
 	DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc)
 {
-	return m_spDoInner->EnumFormatEtc(dwDirection, ppenumFormatEtc);
+	return m_inner->EnumFormatEtc(dwDirection, ppenumFormatEtc);
 }
 
 STDMETHODIMP CDataObject::DAdvise( 
 	FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, 
 	DWORD *pdwConnection)
 {
-	return m_spDoInner->DAdvise(pformatetc, advf, pAdvSink, pdwConnection);
+	return m_inner->DAdvise(pformatetc, advf, pAdvSink, pdwConnection);
 }
 
 STDMETHODIMP CDataObject::DUnadvise(DWORD dwConnection)
 {
-	return m_spDoInner->DUnadvise(dwConnection);
+	return m_inner->DUnadvise(dwConnection);
 }
 
 STDMETHODIMP CDataObject::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
 {
-	return m_spDoInner->EnumDAdvise(ppenumAdvise);
+	return m_inner->EnumDAdvise(ppenumAdvise);
 }
 
 
@@ -229,13 +256,13 @@ STDMETHODIMP CDataObject::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
  * the IEnumFORMATETC enumeration---both of which are delegated to the inner
  * object---respond correctly.
  */
-HRESULT CDataObject::ProdInnerWithFormat(CLIPFORMAT nFormat)
+HRESULT CDataObject::ProdInnerWithFormat(CLIPFORMAT nFormat, DWORD tymed)
 throw()
 {
-	CFormatEtc fetc(nFormat);
+	CFormatEtc fetc(nFormat, tymed);
 
 	STGMEDIUM stgEmpty;
 	::ZeroMemory(&stgEmpty, sizeof stgEmpty);
 
-	return m_spDoInner->SetData(&fetc, &stgEmpty, true);
+	return m_inner->SetData(&fetc, &stgEmpty, true);
 }

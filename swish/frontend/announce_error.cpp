@@ -132,10 +132,11 @@ void announce_error(
 }
 
 void rethrow_and_announce(
-	HWND hwnd, const wstring& title, const wstring& suggested_resolution)
+	HWND hwnd, const wstring& title, const wstring& suggested_resolution,
+	bool force_ui)
 {
 	// Only try and announce if we have an owner window
-	if (hwnd == NULL)
+	if (!force_ui && hwnd == NULL)
 		throw; 
 
 	// Each call to announce_error below is guarded with a try/catch.

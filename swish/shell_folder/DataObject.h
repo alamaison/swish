@@ -1,6 +1,11 @@
-/*  Wrapper around shell-created IDataObject adding support for FILECONTENTS.
+/**
+    @file
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Wrapper around shell-created IDataObject adding support for FILECONTENTS.
+
+    @if license
+
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,13 +20,14 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #pragma once
 
-#include "swish/CoFactory.hpp"  // CComObject factory
-
-#include "swish/atl.hpp"  // Common ATL setup
+#include <comet/ptr.h> // com_ptr
+#include <comet/server.h> // simple_object
 
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
@@ -40,7 +46,7 @@
  * of the value of @p lindex passed in the FORMATETC into SetData().
  *
  * This class works around the problem by intercepting calls to the
- * shell DataObject (stored in @p m_spDoInner) and performing custom 
+ * shell DataObject (stored in @p m_inner) and performing custom 
  * processing for CFSTR_FILECONTENTS formats.  All other requests are simply 
  * forwarded to the inner IDataObject.
  *
@@ -48,40 +54,15 @@
  * @p lindex value (not necessarily a continuous series), a std::map is
  * used as a sparse array.
  */
-class CDataObject :
-	public ATL::CComObjectRoot,
-	public IDataObject,
-	private swish::CCoFactory<CDataObject>
+class CDataObject : public comet::simple_object<IDataObject>
 {
 public:
 
-	BEGIN_COM_MAP(CDataObject)
-		COM_INTERFACE_ENTRY(IDataObject)
-	END_COM_MAP()
-
 	typedef IDataObject interface_is;
 
-	static ATL::CComPtr<IDataObject> Create(
+	CDataObject(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent)
-	throw(...)
-	{
-		ATL::CComPtr<CDataObject> spObject = spObject->CreateCoObject();
-		
-		spObject->Initialize(cPidl, aPidl, pidlCommonParent);
-
-		return spObject.p;
-	}
-
-	CDataObject();
-	virtual ~CDataObject();
-
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	HRESULT FinalConstruct();
-
-	void Initialize(
-		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent) throw(...);
+		__in PCIDLIST_ABSOLUTE pidlCommonParent);
 
 public: // IDataObject methods
 
@@ -123,16 +104,15 @@ public: // IDataObject methods
 
 protected:
 	
-	HRESULT ProdInnerWithFormat(CLIPFORMAT nFormat) throw();
+	HRESULT ProdInnerWithFormat(CLIPFORMAT nFormat, DWORD tymed) throw();
 
 private:
 
 	/** @name Stores */
 	// @{
 	typedef std::map<long, ATL::CComPtr<IStream> > StreamStore;
-	StreamStore m_streams;            ///< Local FILECONTENTS IStream store
-	ATL::CComPtr<IDataObject> m_spDoInner;
-	                                  ///< Wrapped inner DataObject
+	StreamStore m_streams;                ///< Local FILECONTENTS IStream store
+	comet::com_ptr<IDataObject> m_inner;  ///< Wrapped inner DataObject
 	// @}
 
 	/** @name Explicitly recognised CLIPFORMATS */

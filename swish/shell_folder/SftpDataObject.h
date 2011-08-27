@@ -1,6 +1,11 @@
-/*  DataObject creating FILE_DESCRIPTOR/FILE_CONTENTS formats from remote data.
+/**
+    @file
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    DataObject creating FILE_DESCRIPTOR/FILE_CONTENTS formats from remote data.
+
+    @if license
+
+    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +20,8 @@
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+    @endif
 */
 
 #pragma once
@@ -59,44 +66,15 @@
  * expensive operation but the shell design doesn't give any way to provide
  * a partial file group descriptor.
  */
-class CSftpDataObject :
-	public CDataObject,
-	private swish::CCoFactory<CSftpDataObject>
+class CSftpDataObject : public CDataObject
 {
 public:
 
-	BEGIN_COM_MAP(CSftpDataObject)
-		COM_INTERFACE_ENTRY(IUnknown)
-		COM_INTERFACE_ENTRY_CHAIN(CDataObject)
-	END_COM_MAP()
-
-	using swish::CCoFactory<CSftpDataObject>::CreateCoObject;
-
-	static ATL::CComPtr<IDataObject> Create(
+	CSftpDataObject(
 		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
 		__in PCIDLIST_ABSOLUTE pidlCommonParent,
-		__in ISftpProvider *pProvider, __in ISftpConsumer* pConsumer)
-	throw(...)
-	{
-		ATL::CComPtr<CSftpDataObject> spObject = spObject->CreateCoObject();
-		
-		spObject->Initialize(
-			cPidl, aPidl, pidlCommonParent, pProvider, pConsumer);
-
-		return spObject.p;
-	}
-
-	CSftpDataObject();
-	virtual ~CSftpDataObject();
-
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	HRESULT FinalConstruct();
-
-	void Initialize(
-		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent,
-		__in ISftpProvider *pProvider, __in ISftpConsumer *pConsumer)
-	throw(...);
+		comet::com_ptr<ISftpProvider> provider,
+		comet::com_ptr<ISftpConsumer> consumer);
 
 public: // IDataObject methods
 
@@ -125,8 +103,8 @@ private:
 	typedef std::vector<ExpandedItem> ExpandedList;
 	// @}
 
-	ATL::CComPtr<ISftpProvider> m_spProvider; ///< Connection to backend
-	ATL::CComPtr<ISftpConsumer> m_spConsumer; ///< UI callback
+	comet::com_ptr<ISftpProvider> m_provider; ///< Connection to backend
+	comet::com_ptr<ISftpConsumer> m_consumer; ///< UI callback
 
 	/** @name Cached PIDLs */
 	// @{

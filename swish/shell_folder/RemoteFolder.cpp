@@ -47,6 +47,7 @@
 #include "swish/remote_folder/symlink.hpp" // pidl_to_shell_link
 #include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
+#include "swish/shell_folder/SnitchingDataObject.hpp" // CSnitchingDataObject
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
@@ -727,8 +728,9 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 			connection_from_pidl(root_pidl(), hwnd);
 		com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
-		return CSftpDataObject::Create(
-			cpidl, apidl, root_pidl().get(), provider.get(), consumer.get());
+		return new swish::shell_folder::CSnitchingDataObject(
+			new CSftpDataObject(
+				cpidl, apidl, root_pidl().get(), provider, consumer));
 	}
 	catch (...)
 	{

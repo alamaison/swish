@@ -41,7 +41,7 @@ void announce_error(
 
 __declspec(noreturn) void rethrow_and_announce(
 	HWND hwnd, const std::wstring& title,
-	const std::wstring& suggested_resolution);
+	const std::wstring& suggested_resolution, bool force_ui=false);
 
 }} // namespace swish::frontend
 

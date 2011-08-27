@@ -83,6 +83,16 @@ using std::wstring;
 using std::vector;
 using std::istreambuf_iterator;
 
+namespace comet {
+
+template<> struct comtype<::IDataObject>
+{
+	static const ::IID& uuid() throw() { return ::IID_IDataObject; }
+	typedef ::IUnknown base;
+};
+
+}
+
 namespace { // private
 
 	class DataObjectFixture : public PidlFixture
@@ -188,8 +198,8 @@ BOOST_FIXTURE_TEST_SUITE(sftp_data_object_tests, DataObjectFixture)
 
 BOOST_AUTO_TEST_CASE( create )
 {
-	com_ptr<IDataObject> data_object = CSftpDataObject::Create(
-		0, NULL, sandbox_pidl().get(), Provider().get(), Consumer().get());
+	com_ptr<IDataObject> data_object = new CSftpDataObject(
+		0, NULL, sandbox_pidl().get(), Provider(), Consumer());
 	BOOST_REQUIRE(data_object);
 }
 

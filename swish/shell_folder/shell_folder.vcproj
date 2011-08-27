@@ -472,6 +472,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnitchingDataObject.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SwishFolder.hpp"
 				>
 			</File>

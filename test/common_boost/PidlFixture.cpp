@@ -109,9 +109,9 @@ com_ptr<IDataObject> PidlFixture::data_object_from_sandbox()
 	pidl_array<cpidl_t> array(pidls.begin(), pidls.end());
 	BOOST_REQUIRE_EQUAL(array.size(), 2U);
 
-	com_ptr<IDataObject> data_object = CSftpDataObject::Create(
-		array.size(), array.as_array(), 
-		sandbox_pidl().get(), Provider().get(), Consumer().get());
+	com_ptr<IDataObject> data_object = new CSftpDataObject(
+		array.size(), array.as_array(), sandbox_pidl().get(), Provider(),
+		Consumer());
 	BOOST_REQUIRE(data_object);
 	return data_object;
 }
