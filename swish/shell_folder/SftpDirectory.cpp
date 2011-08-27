@@ -387,7 +387,7 @@ apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
 
 	host_itemid_view old_item(*host_itemid);
 	cpidl_t new_host_item = create_host_itemid(
-		old_item.host(), old_item.user(), L"/", old_item.port(),
+		old_item.host(), old_item.user(), L"", old_item.port(),
 		old_item.label());
 	
 	apidl_t resolved_target = pidl_to_link_target + new_host_item;
