@@ -1,7 +1,7 @@
 /**
     @file
 
-	RemoteFolder context menu implementation (basically that what it does).
+    RemoteFolder context menu implementation (basically that what it does).
 
     @if license
 
@@ -96,6 +96,9 @@ context_menu_callback::context_menu_callback(
 	: m_provider_factory(provider_factory),
 	m_consumer_factory(consumer_factory) {}
 
+/**
+ * @todo  Take account of allowed changes flags.
+ */
 bool context_menu_callback::merge_context_menu(
 	HWND hwnd_view, com_ptr<IDataObject> selection, HMENU hmenu,
 	UINT first_item_index, UINT& minimum_id, UINT maximum_id,
@@ -151,99 +154,96 @@ void context_menu_callback::verb(
 	verb_out = "open";
 }
 
+namespace {
+
+	bool do_invoke_command(
+		function<com_ptr<ISftpProvider>(HWND)> provider_factory,
+		function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+		HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
+		const wstring& /*arguments*/, int window_mode)
+	{
+		if (item_offset == DFM_CMD_DELETE)
+		{
+			commands::Delete deletion_command(
+				provider_factory, consumer_factory);
+			deletion_command(hwnd_view, selection);
+			return true;
+		}
+		else if (item_offset == MENU_OFFSET_OPEN && is_single_link(selection))
+		{
+			try
+			{
+				PidlFormat format(selection);
+
+				// Create SFTP Consumer for this HWNDs lifetime
+				com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
+
+				com_ptr<ISftpProvider> provider = connection_from_pidl(
+					format.parent_folder(), hwnd_view);
+				CSftpDirectory directory(
+					format.parent_folder(), provider, consumer);
+
+				apidl_t target = directory.ResolveLink(
+					pidl_cast<cpidl_t>(format.relative_file(0)));
+
+				SHELLEXECUTEINFO sei = SHELLEXECUTEINFO();
+				sei.cbSize = sizeof(SHELLEXECUTEINFO);
+				sei.fMask = SEE_MASK_IDLIST;
+				sei.hwnd = hwnd_view;
+				sei.nShow = window_mode;
+				sei.lpIDList =
+					const_cast<void*>(
+						reinterpret_cast<const void*>(target.get()));
+				sei.lpVerb = L"open";
+				if (!::ShellExecuteEx(&sei))
+					BOOST_THROW_EXCEPTION(
+						enable_error_info(last_error()) << 
+						errinfo_api_function("ShellExecuteEx"));
+			}
+			catch (...)
+			{
+				rethrow_and_announce(
+					hwnd_view, translate("Unable to open the link"),
+					translate("You might not have permission."));
+			}
+
+			return true; // Even if the above fails, we don't want to invoke
+			// any default action provided by Explorer
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+}
+
 bool context_menu_callback::invoke_command(
 	HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
 	const wstring& arguments)
 {
-	return false;
+	return do_invoke_command(
+		m_provider_factory, m_consumer_factory, hwnd_view, selection,
+		item_offset, arguments, SW_NORMAL);
 }
 
+/**
+ * @todo  Take account of the behaviour flags.
+ */
 bool context_menu_callback::invoke_command(
 	HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
-	const wstring& /*arguments*/, DWORD behaviour_flags, UINT minimum_id,
-	UINT maximum_id, const CMINVOKECOMMANDINFO& invocation_details,
-	com_ptr<IUnknown> context_menu_site)
+	const wstring& arguments, DWORD /*behaviour_flags*/, UINT /*minimum_id*/,
+	UINT /*maximum_id*/, const CMINVOKECOMMANDINFO& invocation_details,
+	com_ptr<IUnknown> /*context_menu_site*/)
 {
-	if (item_offset == DFM_CMD_DELETE)
-	{
-		commands::Delete deletion_command(
-			m_provider_factory, m_consumer_factory);
-		deletion_command(hwnd_view, selection);
-		return true;
-	}
-	else if (item_offset == MENU_OFFSET_OPEN && is_single_link(selection))
-	{
-		try
-		{
-			PidlFormat format(selection);
-
-			// Create SFTP Consumer for this HWNDs lifetime
-			com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd_view);
-
-			com_ptr<ISftpProvider> provider = connection_from_pidl(
-				format.parent_folder(), hwnd_view);
-			CSftpDirectory directory(
-				format.parent_folder(), provider, consumer);
-
-			apidl_t target = directory.ResolveLink(
-				pidl_cast<cpidl_t>(format.relative_file(0)));
-
-			SHELLEXECUTEINFO sei = SHELLEXECUTEINFO();
-			sei.cbSize = sizeof(SHELLEXECUTEINFO);
-			sei.fMask = SEE_MASK_IDLIST;
-			sei.hwnd = hwnd_view;
-			sei.lpIDList =
-				const_cast<void*>(
-					reinterpret_cast<const void*>(target.get()));
-			sei.lpVerb = L"open";
-			if (!::ShellExecuteEx(&sei))
-				BOOST_THROW_EXCEPTION(
-					enable_error_info(last_error()) << 
-					errinfo_api_function("ShellExecuteEx"));
-			
-
-			/*
-			
-			com_ptr<IShellFolder> target_parent;
-			PCUITEMID_CHILD item;
-			HRESULT hr = ::SHBindToParent(
-				target.get(), target_parent.iid(),
-				reinterpret_cast<void**>(target_parent.out()), &item);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					boost::enable_error_info(comet::com_error(hr)) <<
-					boost::errinfo_api_function("SHBindToParent"));
-
-			com_ptr<IContextMenu> target_menu;
-			hr = target_parent->GetUIObjectOf(
-				hwnd, 1, &item, target_menu.iid(), NULL,
-				reinterpret_cast<void**>(target_menu.out()));
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(target_parent, hr));
-
-			hr = target_menu->InvokeCommand(pdfmics->pici);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(target_menu, hr));
-			*/
-		}
-		catch (...)
-		{
-			rethrow_and_announce(
-				hwnd_view, translate("Unable to open the link"),
-				translate("You might not have permission."));
-		}
-
-		return true; // Even if the above fails, we don't want to invoke
-		             // any default action provided by Explorer
-	}
-	else
-	{
-		return false;
-	}
+	return do_invoke_command(
+		m_provider_factory, m_consumer_factory, hwnd_view, selection,
+		item_offset, arguments, invocation_details.nShow);
 }
 
 bool context_menu_callback::default_menu_item(
-	HWND hwnd_view, com_ptr<IDataObject> selection, UINT& default_command_id)
+	HWND /*hwnd_view*/, com_ptr<IDataObject> selection,
+	UINT& default_command_id)
 {
 	if (is_single_link(selection))
 	{
