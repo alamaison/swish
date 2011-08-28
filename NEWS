@@ -1,3 +1,8 @@
+swish-0.5.4
+-Added support for symlinks.
+-Display error message if drag-and-drop fails.
+-Japanese, Polish, Slovak, Hungarian and Chinese translations.
+
 swish-0.4.6
 -Fixed major installer problem which broke all new installations as it failed
  to register an interface.

@@ -5,7 +5,7 @@
     <ProductVersion>3.0</ProductVersion>
     <ProjectGuid>{b11052ed-f8b3-487c-b265-ee8a2363d523}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>swish-0.4.6</OutputName>
+    <OutputName>swish-0.5.4</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -37,6 +37,7 @@
     <Compile Include="hu.wxs" />
     <Compile Include="nl.wxs" />
     <Compile Include="ru.wxs" />
+    <Compile Include="sk.wxs" />
     <Compile Include="swish.wxs" />
     <Compile Include="tr.wxs" />
     <Compile Include="it.wxs" />

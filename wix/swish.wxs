@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define Swish_ProductVersion = "0.4.6" ?>
+<?define Swish_ProductVersion = "0.5.4" ?>
 
 <?if $(var.Platform) = x64?>
 <?define Win64 = "yes"?>
@@ -26,11 +26,9 @@
 				 Description="Secure remote access from Windows Explorer via SFTP"/>
 		<?endif?>
 
-		<Upgrade Id="97CF376F-FFDE-472A-946B-E3F5D45229DA">
-			<UpgradeVersion OnlyDetect="no" Property="PREVIOUSFOUND"
-			  Minimum="0.1.0" IncludeMinimum="yes"
-			  Maximum="$(var.Swish_ProductVersion)" IncludeMaximum="no" />
-		</Upgrade>
+		<MajorUpgrade
+			DowngradeErrorMessage="A newer version on Swish is already installed.  Please uninstall it first and try again"
+			Schedule="afterInstallInitialize" />
 
 		<!-- Prevent installing 32-bit version on 64-bit Windows -->
 		<?if $(var.Platform) != x64?>
@@ -38,10 +36,6 @@
 			<![CDATA[Not VersionNT64]]>
 		</Condition>
 		<?endif?>
-
-		<InstallExecuteSequence>
-			<RemoveExistingProducts After="InstallInitialize"/>
-		</InstallExecuteSequence>
 
 		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
@@ -60,12 +54,17 @@
 		<DirectoryRef Id="INSTALLDIR">
 			<Component Id="Interfaces" Guid="*" Win64="$(var.Win64)">
 				<File Id="InterfacesDll" Source="$(var.TargetDir)interfaces_dll.dll" KeyPath="yes">
-					<Class Id="B816A843-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
+					<Class Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
 				</File>
 				<!-- CHANGE THESE IF THE INTERFACE DEFINITIONS CHANGE! -->
-				<Interface Id="3E46C9D1-2032-4D86-80D8-8C8599A4599B" Name="ISftpConsumer" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="10" />
-				<Interface Id="E1D3B1A3-F4B4-41B3-8CB2-8179DA638D27" Name="IEnumListing" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="7" />
-				<Interface Id="F42BE60C-070E-4FE5-BEAC-24A96B26D6BC" Name="ISftpProvider" ProxyStubClassId32="B816A843-5022-11DC-9153-0090F5284F85" NumMethods="12" />
+				<!-- *EXTRA CAREFUL*: If the IID of the first interface
+					 changes, ProxyStubClassId32 of all the interfaces must
+					 change too as well as the CLSDID of the PSFactoryBuffer
+					 above.  It seems to be picked from this first
+					 interface. -->
+				<Interface Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Name="IEnumListing" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="7" />
+				<Interface Id="8BEDB4C6-16D4-4EA6-9685-64DAC2A8A189" Name="ISftpConsumer" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="10" />
+				<Interface Id="E2D6A1D6-48EB-4F38-9D00-3C4536416C49" Name="ISftpProvider" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="13" />
 			</Component>
 
 			<Component Id="ShellFolder" Guid="*" Win64="$(var.Win64)">

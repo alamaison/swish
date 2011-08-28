@@ -1,0 +1,15 @@
+Update version number in
+- NEWS
+- Doxyfile
+- appcast.xml (x5 and date)
+- setup_conf.xml (x4)
+- swish/host_folder/ViewCallback.cpp
+- swish/provider/com_dll/com_dll.rc (x4)
+- swish/shell_folder/com_dll/com_dll.rc (x4)
+- swish/wix/swish.wxs
+- swish/wix/wix.wixproj
+
+Change IIDs in swish/interfaces/SftpProvider.idl if the interface APIs have changed in any way.
+Make the matching changes to wix/swish.wxs.
+
+Add notable changes to NEWS.

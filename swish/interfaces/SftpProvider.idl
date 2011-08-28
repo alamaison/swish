@@ -1,6 +1,6 @@
 /*  Declaration of the ISftpProvider and ISftpConsumer interfaces.
 
-    Copyright (C) 2008, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ struct Listing {
 
 // IEnumListing
 [
-	object, uuid("E1D3B1A3-F4B4-41B3-8CB2-8179DA638D27"),
+	object, uuid("304982B4-4FB1-4C2E-A892-3536DF59ACF5"),
 	oleautomation,
 	helpstring("IEnumListing Interface")
 ]
@@ -65,7 +65,7 @@ interface IEnumListing : IUnknown
 
 // ISftpConsumer
 [
-	object, uuid("3E46C9D1-2032-4D86-80D8-8C8599A4599B"),
+	object, uuid("8BEDB4C6-16D4-4EA6-9685-64DAC2A8A189"),
 	//uuid("b816a844-5022-11dc-9153-0090f5284f85"),
 	oleautomation, 
 	helpstring("ISftpConsumer Interface")
@@ -107,7 +107,7 @@ interface ISftpConsumer : IUnknown
 
 // ISftpProvider
 [
-	object, uuid("F42BE60C-070E-4FE5-BEAC-24A96B26D6BC"),
+	object, uuid("E2D6A1D6-48EB-4F38-9D00-3C4536416C49"),
 	//uuid("b816a841-5022-11dc-9153-0090f5284f85"),
 	oleautomation,
 	helpstring("ISftpProvider Interface")
