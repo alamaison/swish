@@ -89,7 +89,7 @@ public: // IDataObject methods
 				// and for some formats an error from GetData is standard
 				// operating procedure, not something that we should report.
 				if (pformatetcIn->cfFormat == m_file_descriptor_format_w ||
-//					pformatetcIn->cfFormat == m_file_descriptor_format_a ||
+					pformatetcIn->cfFormat == m_file_descriptor_format_a ||
 					pformatetcIn->cfFormat == m_file_contents_format)
 				{
 					if (FAILED(hr))
