@@ -44,7 +44,6 @@
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
                                                // create_remote_itemid
-#include "swish/remote_folder/symlink.hpp" // pidl_to_shell_link
 #include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SnitchingDataObject.hpp" // CSnitchingDataObject
@@ -74,7 +73,6 @@ using swish::remote_folder::connection_from_pidl;
 using swish::remote_folder::context_menu_callback;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::CViewCallback;
-using swish::remote_folder::pidl_to_shell_link;
 using swish::remote_folder::property_from_pidl;
 using swish::remote_folder::property_key_from_column_index;
 using swish::remote_folder::remote_itemid_view;
@@ -440,7 +438,6 @@ void CRemoteFolder::get_attributes_of(
 	}
 	if (fAreAllLinks)
 	{
-		dwAttribs |= SFGAO_FOLDER;
 		dwAttribs |= SFGAO_LINK;
 	}
 	dwAttribs |= SFGAO_CANRENAME;
@@ -504,18 +501,7 @@ void CRemoteFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
  */
 CComPtr<IShellFolder> CRemoteFolder::subfolder(const cpidl_t& pidl)
 {
-	apidl_t new_root;
-
-	//if (!remote_itemid_view(pidl).is_link())
-	{
-		new_root = root_pidl() + pidl;
-	}
-	/*else
-	{
-		com_ptr<ISftpProvider> provider = _CreateConnectionForFolder(NULL);
-		CSftpDirectory directory(root_pidl(), provider, m_consumer);
-		new_root = directory.ResolveLink(pidl);
-	}*/
+	apidl_t new_root = root_pidl() + pidl;
 
 	// Create CRemoteFolder initialised with its root PIDL
 	CComPtr<IShellFolder> folder = CRemoteFolder::Create(
@@ -566,25 +552,6 @@ CComPtr<IExtractIconW> CRemoteFolder::extract_icon_w(
 }
 
 /**
- * @implementing CSwishFolder
- */
-CComPtr<IShellLinkW> CRemoteFolder::shell_link_w(
-	HWND hwnd, PCUITEMID_CHILD pidl)
-{
-	// When navigating into a folder it seems that explorer requests the
-	// folder's IShellLinkW interface even if we didn't say that it was a link
-	// in its attributes.  Therefore we don't assert there but throw instead.
-	if (!remote_itemid_view(pidl).is_link())
-		BOOST_THROW_EXCEPTION(com_error(E_NOINTERFACE));
-
-	com_ptr<ISftpProvider> provider =
-		connection_from_pidl(root_pidl(), hwnd);
-	com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
-
-	return pidl_to_shell_link(root_pidl(), pidl, provider, consumer).get();
-}
-
-/**
  * Create a file association handler for the selected items.
  *
  * @implementing CSwishFolder
@@ -602,7 +569,7 @@ CComPtr<IQueryAssociations> CRemoteFolder::query_associations(
 
 	remote_itemid_view itemid(apidl[0]);
 	
-	if (itemid.is_link() || itemid.is_folder())
+	if (itemid.is_folder())
 	{
 		// Initialise default assoc provider for Folders
 		hr = spAssoc->Init(

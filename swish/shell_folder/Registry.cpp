@@ -188,9 +188,9 @@ throw(...)
 {
 	KeyNames vecNames;
 
-	if (itemid.is_link() || itemid.is_folder())
+	// If this is a directory, add directory-specific items
+	if (itemid.is_folder())
 	{
-		// If this is a directory, add directory-specific items
 		vecNames = _GetKeynamesForFolder();
 	}
 	else

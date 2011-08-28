@@ -90,11 +90,7 @@ protected:
 		{
 			object = background_context_menu(hwnd);
 		}
-/*		else if (riid == __uuidof(IResolveShellLink))
-		{
-			assert(false);
-		}
-*/
+
 		// QueryInterface could fail at any point above and it *doesn't* throw
 		// an exception.  We have to check for NULL once we are sure it can't
 		// fail again: IUnknown returned as IUnknown shouldn't be able to fail.
@@ -145,23 +141,6 @@ protected:
 			if (cpidl == 1)
 				object = extract_icon_a(hwnd, apidl[0]);
 		}
-		else if (riid == __uuidof(IShellLinkW))
-		{
-			assert(cpidl == 1);
-			if (cpidl == 1)
-				object = shell_link_w(hwnd, apidl[0]);
-		}
-		else if (riid == __uuidof(IShellLinkA))
-		{
-			assert(cpidl == 1);
-			if (cpidl == 1)
-				object = shell_link_a(hwnd, apidl[0]);
-		}
-/*		else if (riid == __uuidof(IResolveShellLink))
-		{
-			assert(false);
-		}
-		*/
 		
 		// QueryInterface could fail at any point above and it *doesn't* throw
 		// an exception.  We have to check for NULL once we are sure it can't
@@ -274,24 +253,6 @@ protected:
 		ATL::CComPtr<IExtractIconA> extractor;
 		extractor = extract_icon_w(hwnd, pidl);
 		return extractor;
-	}
-
-	/** Create a link resolver for the given item. */
-	virtual ATL::CComPtr<IShellLinkW> shell_link_w(
-		HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
-	{
-		TRACE("Request: IShellLinkW");
-		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
-		return NULL;
-	}
-
-	/** Create a link resolver (ANSI) for the given item. */
-	virtual ATL::CComPtr<IShellLinkA> shell_link_a(
-		HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
-	{
-		TRACE("Request: IShellLinkA");
-		BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
-		return NULL;
 	}
 
 	/** Create a context menu for the selected items. */

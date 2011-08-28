@@ -36,10 +36,8 @@
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 #include <winapi/shell/shell.hpp> // string_to_strret
-#include <winapi/trace.hpp> // trace
 
 #include <comet/error.h> // com_error
-#include <comet/regkey.h> // regkey
 #include <comet/variant.h> // variant_t
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -121,28 +119,6 @@ namespace detail {
 	}
 }
 
-namespace detail {
-
-	inline comet::regkey interfaces_key()
-	{
-		comet::regkey interfaces(HKEY_CLASSES_ROOT);
-		return interfaces.open(_T("Interface"));
-	}
-
-	inline std::wstring iid_to_interface_name(const comet::uuid_t& iid)
-	{
-		static comet::regkey interfaces(interfaces_key());
-		LONG error = 0;
-		comet::regkey i = interfaces.open_nothrow(
-			_T("{") + iid.t_str() + _T("}"), KEY_QUERY_VALUE, &error);
-		if (error == 0)
-			return i[_T("")].str();
-		else
-			return L"<unknown interface>";
-	}
-
-}
-
 template<typename ColumnType>
 class CFolder :
 	public ATL::CComObjectRoot,
@@ -153,7 +129,7 @@ class CFolder :
 {
 public:
 
-	BEGIN_COM_MAP(CFolder)/*
+	BEGIN_COM_MAP(CFolder)
 		COM_INTERFACE_ENTRY(IPersistFolder3)
 		COM_INTERFACE_ENTRY(IShellFolder2)
 		COM_INTERFACE_ENTRY(IShellDetails)
@@ -161,13 +137,6 @@ public:
 		COM_INTERFACE_ENTRY2(IPersist,        IPersistFolder3)
 		COM_INTERFACE_ENTRY2(IPersistFolder,  IPersistFolder3)
 		COM_INTERFACE_ENTRY2(IPersistFolder2, IPersistFolder3)
-		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)*/
-		COM_INTERFACE_ENTRY(IPersistFolder2)
-		COM_INTERFACE_ENTRY(IShellFolder2)
-		COM_INTERFACE_ENTRY(IShellDetails)
-		COM_INTERFACE_ENTRY(IPersistIDList)
-		COM_INTERFACE_ENTRY2(IPersist,        IPersistFolder2)
-		COM_INTERFACE_ENTRY2(IPersistFolder,  IPersistFolder2)
 		COM_INTERFACE_ENTRY2(IShellFolder,    IShellFolder2)
 	END_COM_MAP()
 
@@ -331,14 +300,6 @@ public: // IShellFolder methods
 		PCUIDLIST_RELATIVE pidl, IBindCtx* bind_ctx, const IID& iid,
 		void** interface_out)
 	{
-		winapi::trace("BindToObject request for interface %s") %
-			detail::iid_to_interface_name(iid);
-
-		comet::uuid_t iid2(iid);
-		if (iid2 == IID_IPropertyStore || iid2 == IID_IPropertyStoreFactory ||
-			iid2 == IID_IPropertyStoreCache)
-			BOOST_THROW_EXCEPTION(comet::com_error(E_NOINTERFACE));
-
 		if (::ILIsEmpty(pidl))
 			BOOST_THROW_EXCEPTION(comet::com_error(E_INVALIDARG));
 
@@ -472,11 +433,6 @@ public: // IShellFolder methods
 	 */
 	void create_view_object(HWND hwnd_owner, REFIID iid, void** interface_out)
 	{
-		winapi::trace("CreateViewObject request for interface %s") %
-			detail::iid_to_interface_name(iid);
-
-		comet::uuid_t iid2(iid);
-
 		comet::com_ptr<IUnknown> object = folder_object(hwnd_owner, iid);
 
 		HRESULT hr = object.get()->QueryInterface(iid, interface_out);
@@ -532,11 +488,6 @@ public: // IShellFolder methods
 		HWND hwnd_owner, UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
 		const IID& iid, void** interface_out)
 	{
-		winapi::trace("GetUIObjectOf request for interface %s") %
-			detail::iid_to_interface_name(iid);
-
-		comet::uuid_t iid2(iid);
-
 		comet::com_ptr<IUnknown> object;
 
 		if (pidl_count == 0)

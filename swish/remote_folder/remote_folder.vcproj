@@ -342,10 +342,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\symlink.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ViewCallback.cpp"
 				>
 			</File>
@@ -385,10 +381,6 @@
 			</File>
 			<File
 				RelativePath=".\swish_pidl.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\symlink.hpp"
 				>
 			</File>
 			<File
