@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir1952325D60FC6794E64AD2D94B7ED17F" Name="zh_TW" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="ZHTWTrans">
+      <Component Id="cmpE5354783466A24233674C4471FCD8680" Directory="dirD555350BB03EA69280569E5053E1798D" Guid="*">
+        <File Id="filAC85BF42A2B99A34393FB36671885DB6" KeyPath="yes" Source="$(var.SolutionDir)\po\zh_TW\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dirD555350BB03EA69280569E5053E1798D" />
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir1952325D60FC6794E64AD2D94B7ED17F">
+      <Directory Id="dirD555350BB03EA69280569E5053E1798D" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>
