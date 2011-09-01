@@ -46,7 +46,7 @@ echo ===- Downloading zlib ...
 	echo ===- Error while trying to download zlib. & goto error)
 %SEVENZ% x zlib125.zip -ozlib -aoa || (
 	echo ===- Error while trying to extract zlib. & goto error)
-xcopy /E /Q /Y zlib\zlib-1.2.5 zlib || (
+xcopy /E /Q /Y /I zlib\zlib-1.2.5 zlib || (
 	echo ===- Error while trying to copy zlib files & goto error)
 rd /S /Q zlib\zlib-1.2.5 || (
 	echo ===- Error while trying to clean up zlib files & goto error)
@@ -81,7 +81,7 @@ echo ===- Downloading comet ...
 	echo ===- Error while trying to download comet. & goto error)
 %SEVENZ% x 1174e9540bae.zip -aoa || (
 	echo ===- Error while trying to extract comet. & goto error)
-xcopy /E /Q /Y alamaison-swish_comet-1174e9540bae comet || (
+xcopy /E /Q /Y /I alamaison-swish_comet-1174e9540bae comet || (
 	echo ===- Error while trying to copy comet files & goto error)
 rd /S /Q alamaison-swish_comet-1174e9540bae || (
 	echo ===- Error while trying to clean up comet files & goto error)

@@ -27,35 +27,33 @@ cd ..
 set WGET=build\wget\wget.exe -N
 set SEVENZ=build\7za\7za.exe
 
-rem libssh2
-
-echo ===- Dowloading latest Swish SVN trunk code ...
-%WGET% -O swish.tar.gz "http://swish.svn.sourceforge.net/viewvc/swish/trunk.tar.gz?view=tar" || (
-	echo ===- Error while trying to download Swish SVN trunk & goto error)
-%SEVENZ% x swish.tar.gz -aoa || (
-	echo ===- Error while trying to extract Swish SVN trunk & goto error)
-%SEVENZ% x swish.tar -aoa || (
-	echo ===- Error while trying to extract Swish SVN trunk & goto error)
+echo ===- Copying the local Git repository ...
 if exist %STAGING% rd /S /Q %STAGING%
-ren trunk %STAGING% || (
-	echo ===- Error while trying to create %STAGING% directory & goto error)
-del swish.tar
-del swish.tar.gz
+
+rem Use a second staging dir so we can xcopy removing .gits later
+call git clone -l . %STAGING%2/ || (
+	echo ===- Error while taking a snapshot of the Git repo & goto error)
 
 rem Dowload all prerequs using just checked out prereq scripts
 
-pushd %STAGING%\build
+pushd %STAGING%2\build
 call prereqs.bat "nopause" || (echo ===- Error downloading prerequs & goto error)
 call testingprereqs.bat "nopause" || (
 	echo ===- Error downloading testing prerequs & goto error)
 popd
+
+call echo .git > excludefile.txt
+call xcopy /E /Q /Y /I /EXCLUDE:excludefile.txt %STAGING%2 %STAGING% || (
+    echo ===- Error filtering .git directories & goto error)
+call rm excludefile.txt
+call rd /S /Q %STAGING%2
 
 rem Package code
 
 if not exist %DIST% md %DIST%
 
 pushd %STAGING%
-set VERSION=trunk
+set VERSION=git
 set PKG_NAME=swish-%VERSION%-src
 if exist ..\%DIST%.\%PKG_NAME%.7z del ..\%DIST%.\%PKG_NAME%.7z
 ..\%SEVENZ% a -t7z ..\%DIST%.\%PKG_NAME%.7z * || (
