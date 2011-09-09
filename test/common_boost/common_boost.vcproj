@@ -307,6 +307,10 @@
 				RelativePath=".\PidlFixture.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\stream_utils.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -343,6 +347,14 @@
 			</File>
 			<File
 				RelativePath=".\ProviderFixture.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\remote_test_config.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stream_utils.hpp"
 				>
 			</File>
 			<File

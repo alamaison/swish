@@ -28,6 +28,8 @@
 
 #include <swish/utils.hpp>
 
+#include <comet/error.h>
+
 #include <boost/system/error_code.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
@@ -59,19 +61,28 @@ namespace std {
 	}
 }
 
+namespace test {
+namespace detail {
+
+	inline void boost_require_ok(HRESULT hr)
+	{
+		if (hr != S_OK)
+		{
+			std::string message("COM return status was not S_OK: ");
+			message += comet::com_error(hr).s_str();
+			BOOST_FAIL(message);
+		}
+	}
+}
+}
+
 /**
  * COM HRESULT-specific assertions
  * @{
  */
-#define BOOST_REQUIRE_OK(hr)                                    \
-do                                                              \
-{                                                               \
-	boost::system::error_code hr_error(                         \
-		(hr), boost::system::get_system_category());            \
-                                                                \
-	std::string message("COM return status was not S_OK: ");    \
-	message += hr_error.message();                              \
-                                                                \
-	BOOST_REQUIRE_MESSAGE(hr_error.value() == S_OK, message);   \
+#define BOOST_REQUIRE_OK(hr)                 \
+do                                           \
+{                                            \
+	test::detail::boost_require_ok( (hr) );  \
 } while (0)
 /* @} */

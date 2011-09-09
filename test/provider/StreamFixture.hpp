@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@
 #include "swish/provider/SessionFactory.hpp"  // CSessionFactory
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
+#include <comet/ptr.h> // com_ptr
+
 #include <boost/shared_ptr.hpp>  // shared_ptr
 
 #include <memory>  // auto_ptr
@@ -78,14 +80,12 @@ public:
 	 * By default the stream is open for reading and writing but different
 	 * flags can be passed to change this.
 	 */
-	ATL::CComPtr<IStream> GetStream(
+	comet::com_ptr<IStream> GetStream(
 		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
 	{
 		boost::shared_ptr<CSession> session(Session());
 
-		ATL::CComPtr<IStream> stream = new CSftpStream(
-			session, m_remote_path, flags);
-		return stream;
+		return new CSftpStream(session, m_remote_path, flags);
 	}
 };
 

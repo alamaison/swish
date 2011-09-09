@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,10 +38,10 @@
 
 #include "test/provider/StreamFixture.hpp"
 #include "test/common_boost/helpers.hpp"
-
-#include "swish/atl.hpp"
+#include "test/common_boost/stream_utils.hpp" // verify_stream_read
 
 #include <comet/error.h> // com_error
+#include <comet/ptr.h> // com_ptr
 
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/test/unit_test.hpp>
@@ -55,10 +55,10 @@
 #include <sys/stat.h>  // _S_IREAD
 
 using test::provider::StreamFixture;
-
-using ATL::CComPtr;
+using test::stream_utils::verify_stream_read;
 
 using comet::com_error;
+using comet::com_ptr;
 
 using boost::numeric_cast;
 using boost::system::system_error;
@@ -70,54 +70,13 @@ using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(StreamWrite, StreamFixture)
 
-namespace {
-	void read_and_verify_return(
-		char* data, ULONG data_size, IStream* stream)
-	{
-		ULONG total_bytes_read = 0;
-		HRESULT hr = E_FAIL;
-		do {
-			ULONG bytes_requested = data_size - total_bytes_read;
-			ULONG bytes_read = 0;
-
-			hr = stream->Read(
-				data + total_bytes_read, bytes_requested, &bytes_read);
-			if (hr == S_OK)
-			{
-				// S_OK indicates a complete read so make sure this read
-				// however many bytes were left from any previous (possibly
-				// none) short reads
-				BOOST_REQUIRE_EQUAL(bytes_read, bytes_requested);
-				return;
-			}
-			else if (hr == S_FALSE)
-			{
-				// S_FALSE indicated a 'short' read so make sure it really
-				// is short
-				BOOST_CHECK_LT(bytes_read, bytes_requested);
-				total_bytes_read += bytes_read;
-			}
-			else
-			{
-				// not really requiring S_OK; S_FALSE is fine too
-				BOOST_REQUIRE_OK(hr);
-			}
-		} while (SUCCEEDED(hr) && (total_bytes_read < data_size));
-
-		// Trying to read more should succeed but return 0 bytes read
-		char buf[10];
-		BOOST_REQUIRE_OK(stream->Read(buf, sizeof(buf), &total_bytes_read));
-		BOOST_REQUIRE_EQUAL(total_bytes_read, 0U);
-	}
-}
-
 /**
  * Simply get a stream.
  */
 BOOST_AUTO_TEST_CASE( get )
 {
-	CComPtr<IStream> spStream = GetStream();
-	BOOST_REQUIRE(spStream);
+	com_ptr<IStream> stream = GetStream();
+	BOOST_REQUIRE(stream);
 }
 
 /**
@@ -137,20 +96,20 @@ BOOST_AUTO_TEST_CASE( get_readonly )
  */
 BOOST_AUTO_TEST_CASE( write_one_byte )
 {
-	CComPtr<IStream> spStream = GetStream();
+	com_ptr<IStream> stream = GetStream();
 
 	// Write the character 'M' to the file
 	char in[1] = {'M'};
 	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(spStream->Write(in, sizeof(in), &cbWritten));
+	BOOST_REQUIRE_OK(stream->Write(in, sizeof(in), &cbWritten));
 	BOOST_REQUIRE_EQUAL(cbWritten, sizeof(in));
 
 	// Reset seek pointer to beginning and read back
 	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
+	BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
 	char out[1];
-	read_and_verify_return(out, sizeof(out), spStream);
+	verify_stream_read(out, sizeof(out), stream);
 	BOOST_REQUIRE_EQUAL('M', out[0]);
 }
 
@@ -159,20 +118,20 @@ BOOST_AUTO_TEST_CASE( write_one_byte )
  */
 BOOST_AUTO_TEST_CASE( write_a_string )
 {
-	CComPtr<IStream> spStream = GetStream();
+	com_ptr<IStream> stream = GetStream();
 
 	string in = "Lorem ipsum dolor sit amet. ";
 	ULONG cbWritten = 0;
 	BOOST_REQUIRE_OK(
-		spStream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
+		stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
 	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
 
 	// Reset seek pointer to beginning and read back
 	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
+	BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
 	vector<char> out(in.size());
-	read_and_verify_return(&out[0], numeric_cast<ULONG>(out.size()), spStream);
+	verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		out.begin(), out.end(), in.begin(), in.end());
 }
@@ -182,21 +141,21 @@ BOOST_AUTO_TEST_CASE( write_a_string )
  */
 BOOST_AUTO_TEST_CASE( write_large )
 {
-	CComPtr<IStream> spStream = GetStream();
+	com_ptr<IStream> stream = GetStream();
 
 	vector<char> in(1000000); // Doesn't need to be initialised
 
 	ULONG cbWritten = 0;
 	BOOST_REQUIRE_OK(
-		spStream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
+		stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
 	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
 
 	// Reset seek pointer to beginning and read back
 	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(spStream->Seek(move, STREAM_SEEK_SET, NULL));
+	BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
 	vector<char> out(in.size());
-	read_and_verify_return(&out[0], numeric_cast<ULONG>(out.size()), spStream);
+	verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(
 		out.begin(), out.end(), in.begin(), in.end());
 }
@@ -209,7 +168,7 @@ BOOST_AUTO_TEST_CASE( write_large )
  */
 BOOST_AUTO_TEST_CASE( write_fail )
 {
-	CComPtr<IStream> spStream = GetStream();
+	com_ptr<IStream> stream = GetStream();
 
 	// Open stream's file
 	shared_ptr<void> file_handle(
@@ -231,7 +190,7 @@ BOOST_AUTO_TEST_CASE( write_fail )
 		string in = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
 		ULONG cbWritten = 0;
 		BOOST_REQUIRE(FAILED(
-			spStream->Write(&in[0], numeric_cast<ULONG>(in.size()),
+			stream->Write(&in[0], numeric_cast<ULONG>(in.size()),
 			&cbWritten)));
 		BOOST_REQUIRE_EQUAL(cbWritten, 0U);
 	}

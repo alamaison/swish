@@ -30,7 +30,10 @@
 
 #include "swish/interfaces/SftpProvider.h"
 
+#include <comet/bstr.h> // bstr_t
 #include <comet/server.h> // simple_object
+
+#include <boost/test/test_tools.hpp> // BOOST_ERROR
 
 #include <cassert> // assert
 #include <string>
@@ -56,6 +59,11 @@ public:
 		: m_confirmed_overwrite(false),
 		  m_confirm_overwrite_behaviour(PreventOverwrite) {}
 
+	void set_password(const std::wstring& password)
+	{
+		m_password = password;
+	}
+
 	void set_confirm_overwrite_behaviour(ConfirmOverwriteBehaviour behaviour)
 	{
 		m_confirm_overwrite_behaviour = behaviour;
@@ -67,7 +75,11 @@ public:
 	IFACEMETHODIMP OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
 	{
 		*pbstrPassword = NULL;
-		return E_NOTIMPL;
+		if (m_password.empty())
+			return E_NOTIMPL;
+
+		*pbstrPassword = comet::bstr_t(m_password).detach();
+		return S_OK;
 	}
 
 	IFACEMETHODIMP OnKeyboardInteractiveRequest(
@@ -75,19 +87,16 @@ public:
 		SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
 		SAFEARRAY ** /*ppsaResponses*/)
 	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
 	}
 
 	IFACEMETHODIMP OnPrivateKeyFileRequest(BSTR * /*pbstrPrivateKeyFile*/)
 	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
 	}
 
 	IFACEMETHODIMP OnPublicKeyFileRequest(BSTR * /*pbstrPublicKeyFile*/)
 	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
 		return E_NOTIMPL;
 	}
 
@@ -124,6 +133,7 @@ public:
 private:
 	ConfirmOverwriteBehaviour m_confirm_overwrite_behaviour;
 	bool m_confirmed_overwrite;
+	std::wstring m_password;
 };
 
 } // namespace test
