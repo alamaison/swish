@@ -27,6 +27,7 @@
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
+#include "swish/shell_folder/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
 #include "swish/remote_folder/connection.hpp" // connection_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
@@ -34,32 +35,55 @@
 
 #include <winapi/error.hpp> // last_error
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <winapi/shell/shell.hpp> // pidl_from_parsing_name
+
+#include <comet/uuid.h> // uuid_t
 
 #include <boost/locale.hpp> // translate
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
+#include <boost/filesystem/path.hpp> // wpath
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
+#include <stdexcept> // runtime_error
+#include <vector>
 
 #include <ShellApi.h> // ShellExecuteEx
 #include <Windows.h> // InsertMenu, SetMenuDefaultItem
 
 using swish::frontend::rethrow_and_announce;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::shell_folder::ui_object_of_item;
 
 using winapi::last_error;
+using winapi::shell::pidl_from_parsing_name;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_cast;
 
 using comet::com_error;
 using comet::com_ptr;
+using comet::uuid_t;
 
 using boost::enable_error_info;
 using boost::errinfo_api_function;
+using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
 
+using std::runtime_error;
 using std::string;
+using std::vector;
 using std::wstring;
+
+namespace comet {
+
+template<> struct comtype<IDropTarget>
+{
+	static const IID& uuid() throw() { return IID_IDropTarget; }
+	typedef IUnknown base;
+};
+
+} // namespace comet
 
 namespace swish {
 namespace remote_folder {
@@ -86,6 +110,25 @@ namespace {
 		}
 	}
 
+	bool are_normal_files(com_ptr<IDataObject> selection)
+	{
+		PidlFormat format(selection);
+
+		if (format.pidl_count() < 1)
+			return false;
+
+		for (UINT i = 0; i < format.pidl_count(); ++i)
+		{
+			if (remote_itemid_view(format.relative_file(i)).is_link() ||
+				remote_itemid_view(format.relative_file(i)).is_folder())
+				return false;
+		}
+
+		// FIXME: failure to be a folder or a link does not mean you're a
+		// normal file.
+		return true;
+	}
+
 	const UINT MENU_OFFSET_OPEN = 0;
 
 }
@@ -110,6 +153,28 @@ bool context_menu_callback::merge_context_menu(
 			hmenu, first_item_index, MF_BYPOSITION, 
 			minimum_id + MENU_OFFSET_OPEN,
 			wstring(translate("Open &link")).c_str());
+		if (!success)
+			BOOST_THROW_EXCEPTION(
+				enable_error_info(last_error()) << 
+				errinfo_api_function("InsertMenuW"));
+
+		// It's not worth aborting menu creation just because we can't
+		// set default so ignore return val
+		::SetMenuDefaultItem(hmenu, minimum_id + MENU_OFFSET_OPEN, FALSE);
+
+		++minimum_id;
+
+		// Return false so that Explorer won't add its own 'open'
+		// and 'explore' menu items.
+		// TODO: Find out what else we lose.
+		return false;
+	}
+	else if (are_normal_files(selection))
+	{
+		BOOL success = ::InsertMenuW(
+			hmenu, first_item_index, MF_BYPOSITION, 
+			minimum_id + MENU_OFFSET_OPEN,
+			wstring(translate("&Open")).c_str());
 		if (!success)
 			BOOST_THROW_EXCEPTION(
 				enable_error_info(last_error()) << 
@@ -204,6 +269,110 @@ namespace {
 			{
 				rethrow_and_announce(
 					hwnd_view, translate("Unable to open the link"),
+					translate("You might not have permission."));
+			}
+
+			return true; // Even if the above fails, we don't want to invoke
+			// any default action provided by Explorer
+		}
+		// TODO: handle links so that links to files are resolved and the
+		// targets are opened
+		//
+		// FIXME: what if the selection contains a mix of items?
+		else if (item_offset == MENU_OFFSET_OPEN && are_normal_files(selection))
+		{
+			try
+			{
+				PidlFormat format(selection);
+
+				// XXX: We're only opening the first file even though we copy all 
+				// of them.  Is this what we want?
+
+				vector<wchar_t> system_temp_dir(MAX_PATH + 1, L'\0');
+				DWORD rc = ::GetTempPathW(
+					system_temp_dir.size(), &system_temp_dir[0]);
+				if (rc < 1)
+					BOOST_THROW_EXCEPTION(last_error());
+				
+				// We're using drag-and-drop to do the copy, so we don't
+				// want collisions to be possible as they will throw up
+				// confirmation dialogues.  We create a unique directory to
+				// copy the file into by generating a GUID.  If this already
+				// exists, the universe may be close to collapse in which case
+				// we should probably find our loved ones and stop worrying
+				// about file transfers.
+				wpath temp_dir = &system_temp_dir[0];
+				temp_dir /= uuid_t::create().w_str();
+				if (!create_directory(temp_dir))
+					BOOST_THROW_EXCEPTION(
+						runtime_error(
+							"Temporary download location already exists"));
+				
+				com_ptr<IDropTarget> drop_target =
+					ui_object_of_item<IDropTarget>(
+						pidl_from_parsing_name(
+							temp_dir.external_directory_string()).get());
+
+				POINTL pt = { 0, 0 };
+				DWORD dwEffect = DROPEFFECT_COPY;
+				HRESULT hr = drop_target->DragEnter(
+					selection.get(), MK_LBUTTON, pt, &dwEffect);
+				if (FAILED(hr))
+					BOOST_THROW_EXCEPTION(
+						com_error_from_interface(drop_target, hr));
+
+				dwEffect &= DROPEFFECT_COPY;
+				if (dwEffect)
+				{
+					hr = drop_target->Drop(
+						selection.get(), MK_LBUTTON, pt, &dwEffect);
+					if (FAILED(hr))
+						BOOST_THROW_EXCEPTION(
+							com_error_from_interface(drop_target, hr));
+				}
+				else
+				{
+					hr = drop_target->DragLeave();
+					if (FAILED(hr))
+						BOOST_THROW_EXCEPTION(
+							com_error_from_interface(drop_target, hr));
+					BOOST_THROW_EXCEPTION(
+						runtime_error(
+							"Permission refused to copy remote file to "
+							"temporary location"));
+				}
+
+				wpath target = temp_dir;
+				target /= remote_itemid_view(format.relative_file(0)).filename();
+				wstring target_windows_path = target.external_file_string();
+
+				// Before opening the file we make it read-only to discourage
+				// users from making changes and saving it to the temporary
+				// location - they're likely to forget and then lose their data.
+				// This should force most apps to invoke Save As.
+				::SetFileAttributes(
+					target_windows_path.c_str(),
+					::GetFileAttributes(target_windows_path.c_str())
+						| FILE_ATTRIBUTE_READONLY);
+				// It isn't worth aborting the operation if this fails so we
+				// ignore any error
+
+				SHELLEXECUTEINFO sei = SHELLEXECUTEINFO();
+				sei.cbSize = sizeof(SHELLEXECUTEINFO);
+				//sei.fMask = SEE_
+				sei.hwnd = hwnd_view;
+				sei.nShow = window_mode;
+				sei.lpFile = target_windows_path.c_str();
+				sei.lpVerb = L"open";
+				if (!::ShellExecuteEx(&sei))
+					BOOST_THROW_EXCEPTION(
+						enable_error_info(last_error()) << 
+						errinfo_api_function("ShellExecuteEx"));
+			}
+			catch (...)
+			{
+				rethrow_and_announce(
+					hwnd_view, translate("Unable to open the file"),
 					translate("You might not have permission."));
 			}
 
