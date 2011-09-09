@@ -1,3 +1,7 @@
+swish-0.6.0
+-Added double-click file opening.
+-Downgraded to libssh2 1.2.7 to fix incomplete file transfers.
+
 swish-0.5.4
 -Added support for symlinks.
 -Display error message if drag-and-drop fails.

@@ -167,7 +167,7 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
 	m_first_command_id(0),
 	m_winsparkle(
 		"http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
-		L"0.5.4", L"", "Software\\Swish\\Updates") {}
+		L"0.6.0", L"", "Software\\Swish\\Updates") {}
 
 /**
  * The folder window is being created.
