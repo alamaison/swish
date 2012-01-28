@@ -26,7 +26,7 @@ call "%VS80COMNTOOLS%\vsvars32.bat"
 
 call bootstrap
 
-set WITH_LIBRARIES=--with-date_time --with-filesystem --with-regex --with-signals --with-system --with-test --without-python
+set WITH_LIBRARIES=--with-date_time --with-filesystem --with-regex --with-signals --with-system --with-test
 set COMMON_ARGS=--toolset=msvc-8.0 --link=static %WITH_LIBRARIES%
 
 bjam %COMMON_ARGS% address-model=32 --stagedir=lib\Win32 stage
