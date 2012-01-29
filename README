@@ -1,8 +1,5 @@
 Swish
 
-Author: 
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
 What is Swish?
     Swish is a plugin for Microsoft Windows Explorer that integrates access to 
     remote files via SSH/SFTP.
@@ -52,13 +49,13 @@ Requirements to build:
     
     Visual C++ 2005
         Express edition is unlikely to work but feel free to try.
-	If building on Windows Vista or later you will need two updates:
-	- VS 2005 SP1: http://msdn.microsoft.com/en-us/vstudio/bb265237
-	- VS 2005 SP1: Update for Windows Vista http://go.microsoft.com/?linkid=6366078
+        If building on Windows Vista or later you will need two updates:
+        - VS 2005 SP1: http://msdn.microsoft.com/en-us/vstudio/bb265237
+        - VS 2005 SP1: Update for Windows Vista http://go.microsoft.com/?linkid=6366078
     A recent version of the Windows SDK 
         (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
-	The latest version requires an hotfix to Visual Studio 2005: 
-	https://connect.microsoft.com/VisualStudio/Downloads/DownloadDetails.aspx?DownloadID=18623
+        The latest version requires an hotfix to Visual Studio 2005: 
+        https://connect.microsoft.com/VisualStudio/Downloads/DownloadDetails.aspx?DownloadID=18623
     Comet
         A modern C++ template library for COM.
         http://bitbucket.org/alamaison/swish_comet/overview/ (custom Swish fork)
@@ -70,10 +67,10 @@ Requirements to build:
     Boost
         You can get an installer from BoostPro Computing:
         http://www.boostpro.com/products/free.  However, for a 64-bit build
-	of Swish you will have to build Boost yourself from source.  For more
-	information see http://www.boost.org.
-	Currently Boost 1.43 is the latest supported version.  Later versions
-	may work for Swish itself, but the tests will fail to build.
+        of Swish you will have to build Boost yourself from source.  The
+        build/makeboost.bat script can help with this. For more information 
+        see http://www.boost.org.
+        Currently Boost 1.45 is the tested version.
     Boost.Locale
         Candidate boost library handling internationalisation.
         http://cppcms.sourceforge.net/boost_locale/html/index.html
@@ -136,5 +133,3 @@ Architecture:
     The current Swish backend is based on libssh2 (http://www.libssh2.org).
     While the eventual aim is to offer a choice of back-end implementations
     with different capabilities, this is currently the only one.
-
-$Id$

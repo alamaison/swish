@@ -286,7 +286,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
-			RelativePathToProject=".\thirdparty\libssh2\libssh2.vcproj"
+			RelativePathToProject=".\thirdparty\libssh2.vcproj"
 		/>
 	</References>
 	<Files>
@@ -365,10 +365,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\boost_process.hpp"
-				>
-			</File>
 			<File
 				RelativePath=".\openssh_fixture.hpp"
 				>

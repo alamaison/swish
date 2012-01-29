@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include "swish/boost_process.hpp"
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/process/child.hpp> // child process
 #include <boost/system/system_error.hpp>  // For system_error
 
 #include <Winsock2.h>  // For WSAStartup/Cleanup

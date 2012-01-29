@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2012
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,6 +41,10 @@
 #include "swish/utils.hpp"
 
 #include <boost/assign/list_of.hpp>
+#include <boost/process/context.hpp> // context
+#include <boost/process/environment.hpp> // environment
+#include <boost/process/operations.hpp> // find_executable_in_path
+#include <boost/process/self.hpp> // self
 #pragma warning(push)
 #pragma warning(disable:4100) // unreferenced formal parameter
 #include <boost/random/uniform_int.hpp>
@@ -155,16 +160,21 @@ namespace { // private
 	child StartSshd(vector<string> args)
 	{
 		string sshd_path = GetSshdPath().string();
-		vector<string> full_args = list_of(sshd_path);
-		copy(args.begin(), args.end(), back_inserter(full_args));
 
 		context ctx; 
-		ctx.environment = self::get_environment();
+		ctx.env = self::get_environment();
+
+		// sshd insists on an absolute path but what it actually looks at isn't
+		// what it is invoked as, rather the first argument passed to is.
+		// By default Boost.Filesystem uses just the exe filename for that so 
+		// we force it to use the full path here.
+		ctx.process_name = sshd_path;
+
 		/* Uncomment if needed
 		ctx.stdout_behavior = boost::process::inherit_stream();
 		ctx.stderr_behavior = boost::process::redirect_stream_to_stdout();
 		*/
-		return launch(sshd_path, full_args, ctx);
+		return create_child(sshd_path, args, ctx);
 	}
 
 	path ConfigDir()
@@ -234,7 +244,7 @@ openssh_fixture::~openssh_fixture()
 int openssh_fixture::stop_server()
 {
 	m_sshd.terminate();
-	return m_sshd.wait().exit_status();
+	return m_sshd.wait();
 }
 
 string openssh_fixture::host() const

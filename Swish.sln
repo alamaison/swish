@@ -58,7 +58,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{AAB28A44-0697-484F-980B-F6553EA157BE}"
 	ProjectSection(SolutionItems) = preProject
 		swish\atl.hpp = swish\atl.hpp
-		swish\boost_process.hpp = swish\boost_process.hpp
 		swish\CoFactory.hpp = swish\CoFactory.hpp
 		swish\debug.hpp = swish\debug.hpp
 		swish\pch.cpp = swish\pch.cpp

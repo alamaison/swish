@@ -1,6 +1,6 @@
 :: Script to fetch Swish unit testing build prerequisites
 :: 
-:: Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+:: Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 :: 
 :: This program is free software; you can redistribute it and/or modify
 :: it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ set SEVENZ=..\build\7za\7za.exe
 :: Boost.Process
 
 echo ===- Dowloading Boost.Process ...
-%WGET% "http://www.highscore.de/boost/process.zip" || (
+%WGET% "http://www.highscore.de/boost/gsoc2010/process.zip" || (
 	echo ===- Error while trying to download Boost.Process. & goto error)
 %SEVENZ% x process.zip -oboost.process -aoa || (
 	echo ===- Error while trying to extract Boost.Process. & goto error)
