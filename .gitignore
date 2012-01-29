@@ -1,0 +1,12 @@
+bin/
+thirdparty/boost
+thirdparty/boost.process
+thirdparty/boost.locale
+thirdparty/comet
+thirdparty/openssl
+thirdparty/winsparkle
+thirdparty/wtl
+thirdparty/zlib
+*.user
+*.ncb
+*.suo
