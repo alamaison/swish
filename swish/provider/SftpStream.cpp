@@ -278,7 +278,8 @@ CSftpStream::CSftpStream(
 			file.c_str(), GetLastErrorMessage(*m_session));
 		
 		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(com_error(hr));
+		BOOST_THROW_EXCEPTION(
+			com_error(GetLastErrorMessage(*m_session).GetString(), hr));
 	}
 
 	m_strFilename = file.substr(file.find_last_of('/')+1);

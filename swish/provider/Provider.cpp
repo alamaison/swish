@@ -426,7 +426,7 @@ IStream* provider::get_file(
 	com_ptr<ISftpConsumer> consumer, const wpath& file_path, bool writeable)
 {
 	if (file_path.empty())
-		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+		BOOST_THROW_EXCEPTION(com_error("File cannot be empty", E_INVALIDARG));
 
 	_Connect(consumer);
 

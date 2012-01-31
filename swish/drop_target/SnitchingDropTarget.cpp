@@ -27,9 +27,9 @@
 #include "SnitchingDropTarget.hpp"
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/gui/message_box.hpp> // message_box
 
 #include <boost/locale.hpp> // translate
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
@@ -38,9 +38,7 @@
 #include <comet/error.h> // com_error
 #include <comet/ptr.h>  // com_ptr
 
-#include <iosfwd> // wstringstream
-
-using namespace winapi::gui::message_box;
+using swish::frontend::rethrow_and_announce;
 
 using boost::filesystem::wpath;
 using boost::locale::translate;
@@ -48,8 +46,6 @@ using boost::shared_ptr;
 
 using comet::com_error;
 using comet::com_ptr;
-
-using std::wstringstream;
 
 namespace swish {
 namespace drop_target {
@@ -109,30 +105,30 @@ STDMETHODIMP CSnitchingDropTarget::DragLeave()
 STDMETHODIMP CSnitchingDropTarget::Drop( 
 	IDataObject* pdo, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
+	HRESULT hr = S_OK;
+
 	try
 	{
-		HRESULT hr = m_inner->Drop(pdo, grfKeyState, pt, pdwEffect);
-		if (FAILED(hr))
+		try
 		{
-			com_error error(com_error_from_interface(m_inner, hr));
-			if (m_hwnd_owner && error.hr() != E_ABORT)
+			hr = m_inner->Drop(pdo, grfKeyState, pt, pdwEffect);
+			if (FAILED(hr))
 			{
-				wstringstream message;
-				message << translate(
-					"An error occurred while transferring files:");
-				message << "\n\n";
-				message << error.w_str();
-				message_box(
-					m_hwnd_owner, message.str(), L"Swish", box_type::ok,
-					icon_type::error);
+				BOOST_THROW_EXCEPTION(com_error_from_interface(m_inner, hr));
 			}
 		}
-
-		return hr;
+		catch (...)
+		{
+			rethrow_and_announce(
+				m_hwnd_owner, translate("Unable to transfer files"),
+				translate(
+					"You might not have permission to write to this "
+					"directory."));
+		}
 	}
 	WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+	return hr;
 }
 
 }} // namespace swish::drop_target

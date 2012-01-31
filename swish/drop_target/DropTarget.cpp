@@ -32,12 +32,13 @@
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/shell/shell.hpp> // strret_to_string
+#include <winapi/shell/shell.hpp> // strret_to_string, parsing_name_from_pidl
 #include <winapi/trace.hpp> // trace
 
 #include <boost/bind.hpp> // bind
 #include <boost/cstdint.hpp> // int64_t
 #include <boost/function.hpp> // function
+#include <boost/locale/message.hpp> // translate
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -45,6 +46,7 @@
 #include <comet/ptr.h>  // com_ptr
 #include <comet/bstr.h> // bstr_t
 
+#include <iosfwd> // wstringstream
 #include <string>
 #include <vector>
 
@@ -52,6 +54,7 @@ using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
 
+using winapi::shell::parsing_name_from_pidl;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
@@ -62,6 +65,7 @@ using boost::bind;
 using boost::int64_t;
 using boost::filesystem::wpath;
 using boost::function;
+using boost::locale::translate;
 using boost::numeric_cast;
 using boost::shared_ptr;
 
@@ -71,6 +75,7 @@ using comet::com_ptr;
 
 using std::size_t;
 using std::wstring;
+using std::wstringstream;
 using std::vector;
 
 namespace swish {
@@ -115,7 +120,8 @@ namespace { // private
 			pidl.get(), folder.iid(), reinterpret_cast<void**>(folder.out()),
 			&pidl_child);
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
+			BOOST_THROW_EXCEPTION(
+				com_error("Couldn't get parent folder of source file", hr));
 
 		com_ptr<IStream> stream;
 		
@@ -128,7 +134,10 @@ namespace { // private
 				pidl_child, NULL, stream.iid(),
 				reinterpret_cast<void**>(stream.out()));
 			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(hr));
+				BOOST_THROW_EXCEPTION(
+					com_error(
+						L"Couldn't get stream for source file: " +
+						parsing_name_from_pidl(pidl), hr));
 		}
 
 		return stream;
@@ -252,7 +261,24 @@ namespace { // private
 		hr = provider->GetFile(
 			consumer.get(), target.in(), true, remote_stream.out());
 		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
+		{
+			com_error provider_error = com_error_from_interface(provider, hr);
+
+			// TODO: once we decomtaminate the provider, move this to the
+			// snitching drop target so it can use the info in the task dialog
+
+			wstringstream new_message;
+			new_message <<
+				translate("Unable to create file on the server:") << L"\n";
+			new_message << provider_error.description();
+			new_message << L"\n" << to_path;
+
+			BOOST_THROW_EXCEPTION(
+				com_error(
+					new_message.str(), hr, provider_error.source(),
+					provider_error.guid(), provider_error.help_file(),
+					provider_error.help_context()));
+		}
 
 		// Set both streams back to the start
 		LARGE_INTEGER move = {0};
