@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
 #include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommandWithSite
-#include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
@@ -67,7 +66,6 @@ using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
 using swish::nse::WebtaskCommandTitleAdapter;
-using swish::remote_folder::create_remote_itemid;
 using swish::SmartListing;
 
 using winapi::shell::pidl::apidl_t;
@@ -252,7 +250,7 @@ const
 		wstring initial_name = translate("Initial name", "New folder");
 		initial_name = prefix_if_necessary(initial_name, directory);
 
-		directory.CreateDirectory(initial_name);
+		cpidl_t pidl = directory.CreateDirectory(initial_name);
 
 		try
 		{
@@ -260,14 +258,7 @@ const
 			// was created even if we didn't update the shell or allow the
 			// user a chance to pick a name.
 
-			// TODO: stat new folder for actual parameters
-
-			cpidl_t pidl = create_remote_itemid(
-				initial_name, true, false, L"", L"", 0, 0, 0, 0, datetime_t(),
-				datetime_t());
 			notify_shell(m_folder_pidl + pidl);
-
-			// TODO: date modified should be now
 
 			// Put item into 'rename' mode
 			HRESULT hr = view->SelectItem(

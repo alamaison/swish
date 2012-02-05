@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 #include "SftpStream.hpp"
 
 #include "swish/debug.hpp"                   // Debug macros
-#include "swish/trace.hpp" // trace_f: Debug trace function
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
@@ -49,8 +48,6 @@
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
-
-using swish::tracing::trace_f;
 
 using ATL::CA2W;
 using ATL::CString;
@@ -274,9 +271,6 @@ CSftpStream::CSftpStream(
 		safe_libssh2_sftp_close_handle);
 	if (!m_handle)
 	{
-		trace_f("libssh2_sftp_open(%s) failed: %ws",
-			file.c_str(), GetLastErrorMessage(*m_session));
-		
 		HRESULT hr = last_storage_error(*m_session);
 		BOOST_THROW_EXCEPTION(
 			com_error(GetLastErrorMessage(*m_session).GetString(), hr));

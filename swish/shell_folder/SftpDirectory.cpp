@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 
 #include <winapi/shell/pidl_iterator.hpp> // pidl_iterator, find_host_itemid
+#include <winapi/trace.hpp> // trace
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
@@ -37,6 +38,7 @@
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <exception> // exception
 #include <vector>
 
 using swish::remote_folder::absolute_path_from_swish_pidl;
@@ -52,6 +54,7 @@ using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_iterator;
 using winapi::shell::pidl::raw_pidl_iterator;
+using winapi::trace;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -65,6 +68,7 @@ using boost::filesystem::wpath;
 using boost::make_shared;
 using boost::shared_ptr;
 
+using std::exception;
 using std::vector;
 using std::wstring;
 
@@ -336,7 +340,7 @@ void CSftpDirectory::Delete(const cpidl_t& file)
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
 }
 
-void CSftpDirectory::CreateDirectory(const wstring& name)
+cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 {
 	bstr_t target_path = (m_directory / name).string();
 
@@ -344,6 +348,24 @@ void CSftpDirectory::CreateDirectory(const wstring& name)
 		m_consumer.in(), target_path.in());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+
+	try
+	{
+		// Must not report a failure after this point.  The folder
+		// was created even if creating the new PIDL representation fails.
+
+		// TODO: stat new folder for actual parameters
+		// TODO: date modified should be now
+
+		return create_remote_itemid(
+			name, true, false, L"", L"", 0, 0, 0, 0, datetime_t(),
+			datetime_t());
+	}
+	catch (const exception&)
+	{
+		trace("WARNING: Couldn't create PIDL representation of new directory");
+		return cpidl_t();
+	}
 }
 
 apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)

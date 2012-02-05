@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
 #include "test/common_boost/data_object_utils.hpp"  // DataObjects on zip
-#include "test/common_boost/ProviderFixture.hpp"  // ProviderFixture
+#include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -51,7 +51,7 @@ using swish::shell_folder::data_object_for_files;
 using test::ComFixture;
 using test::data_object_utils::data_object_for_zipfile;
 using test::data_object_utils::create_test_zip_file;
-using test::ProviderFixture;
+using test::PidlFixture;
 
 using comet::com_ptr;
 
@@ -65,6 +65,8 @@ using std::string;
 using std::wstring;
 using std::vector;
 using std::istreambuf_iterator;
+
+using winapi::shell::pidl::apidl_t;
 
 namespace { // private
 
@@ -181,7 +183,7 @@ namespace { // private
 		bool can_overwrite(const wpath&) { return true; }
 	};
 
-	class DropTargetFixture : public ProviderFixture, public ComFixture
+	class DropTargetFixture : public PidlFixture, public ComFixture
 	{
 	public:
 		comet::com_ptr<IDropTarget> create_drop_target() 
@@ -190,8 +192,14 @@ namespace { // private
 			create_directory(target_directory);
 
 			return new CDropTarget(
-				Provider(), Consumer(), ToRemotePath(target_directory),
+				Provider(), Consumer(),
+				absolute_directory_pidl(target_directory),
 				make_shared<CopyCallbackStub>());
+		}
+
+		apidl_t absolute_directory_pidl(wpath local_path)
+		{
+			return directory_pidl(ToRemotePath(local_path));
 		}
 	};
 
@@ -228,7 +236,7 @@ BOOST_AUTO_TEST_CASE( copy_single )
 
 	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	wpath expected = destination / local.filename();
 	BOOST_REQUIRE(exists(expected));
@@ -256,7 +264,7 @@ BOOST_AUTO_TEST_CASE( copy_many )
 
 	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	vector<wpath>::const_iterator it;
 	for (it = locals.begin(); it != locals.end(); ++it)
@@ -319,7 +327,7 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 
 	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	wpath expected;
 
@@ -381,7 +389,7 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 
 	CopyCallbackStub cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	wpath expected;
 
@@ -438,7 +446,7 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
 
 	AllowOverwrite cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	BOOST_CHECK(exists(obstruction));
 	BOOST_CHECK(file_contents_correct(obstruction));
@@ -463,7 +471,7 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_no )
 
 	ForbidOverwrite cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	BOOST_CHECK(exists(obstruction));
 	BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
@@ -495,7 +503,7 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
 
 	AllowOverwrite cb;
 	copy_data_to_provider(
-		spdo, Provider(), Consumer(), ToRemotePath(destination), cb);
+		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
 	BOOST_REQUIRE(exists(obstruction));
 	BOOST_REQUIRE(file_contents_correct(obstruction));
