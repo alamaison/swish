@@ -306,6 +306,8 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 	create_empty_file(second_level_file);
 	fill_file(second_level_file);
 
+	wpath second_level_zip_file = create_test_zip_file(non_empty_folder);
+
 	wpath third_level_file = second_level_folder / L"third-level-file";
 	create_empty_file(third_level_file);
 	fill_file(third_level_file);
@@ -350,6 +352,13 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 	BOOST_REQUIRE(exists(expected));
 	BOOST_REQUIRE(is_directory(expected));
 	BOOST_REQUIRE(!is_empty(expected));
+
+	// The zip file must be copied as-is, not expanded
+	expected = destination / non_empty_folder.filename() /
+		second_level_zip_file.filename();
+	BOOST_REQUIRE(exists(expected));
+	BOOST_REQUIRE(is_regular_file(expected));
+	BOOST_REQUIRE_GT(file_size(expected), 800);
 
 	expected = destination / non_empty_folder.filename() /
 		second_level_folder.filename() / third_level_file.filename();
