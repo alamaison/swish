@@ -318,9 +318,10 @@ CSftpStream::~CSftpStream()
  *         than requested or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pv is NULL.
  *
- * Unlike Write(), MSDN makes clear that Read() can return short [1].  Therefore
- * we don't block until all the data has been read and instead just return
- * the (possibly short) number of bytes read.
+ * Unlike POSIX read(), MSDN makes clear that any short Read() indicates the
+ * end-of-file [1].  POSIX read() allows short reads and only treats 0 as the
+ * end-of-file.  Therefore, if we get a short read from the server, we keep
+ * reading until we fill the buffer on the server return 0.
  *
  * [1] http://msdn.microsoft.com/en-us/library/aa380011%28v=vs.85%29.aspx
  */
@@ -582,15 +583,28 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  */
 void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
+	ULONG rc;
+
+	cbRead = 0;
+	do {
+		rc = _ReadOne(pbuf + cbRead, cb - cbRead);
+		cbRead += rc;
+	} while (rc != 0 && cbRead < cb);
+}
+
+ULONG CSftpStream::_ReadOne(char* pbuf, ULONG cb)
+{
 	ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
 	if (rc < 0)
 	{
-		cbRead = 0;
 		TRACE("libssh2_sftp_read() failed: %ws", 
 			GetLastErrorMessage(*m_session));
 		BOOST_THROW_EXCEPTION(com_error(last_storage_error(*m_session)));
 	}
-	cbRead = rc;
+	else
+	{
+		return rc;
+	}
 }
 
 /**

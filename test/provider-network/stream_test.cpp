@@ -35,9 +35,13 @@
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/shared_ptr.hpp>  // shared_ptr
+#include <boost/filesystem/path.hpp> // wpath
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
+#include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm> // generate
+#include <cstdlib> // rand
 #include <memory>  // auto_ptr
 #include <string>
 #include <vector>
@@ -49,10 +53,14 @@ using test::WinsockFixture;
 
 using comet::com_ptr;
 
+using boost::filesystem::wpath;
+using boost::numeric_cast;
 using boost::shared_ptr;
 
 using std::auto_ptr;
 using std::string;
+using std::generate;
+using std::rand;
 using std::vector;
 
 namespace {
@@ -92,7 +100,7 @@ BOOST_AUTO_TEST_CASE( get )
 	shared_ptr<CSession> session(session());
 
 	com_ptr<IStream> stream = new CSftpStream(
-		session, "/var/log/messages", CSftpStream::read);
+		session, "/var/log/syslog", CSftpStream::read);
 	BOOST_REQUIRE(stream);
 }
 
@@ -221,27 +229,51 @@ BOOST_AUTO_TEST_CASE( read_large_buffer )
 		buffer.begin(), buffer.end(), expected.begin(), expected.end());
 }
 
+namespace {
+
+	vector<int> random_buffer(size_t buffer_size)
+	{
+		vector<int> buffer(buffer_size);
+		generate(buffer.begin(), buffer.end(), rand);
+		return buffer;
+	}
+}
+
 /**
  * This tests a scenario that should *never* block.
  * /dev/zero immediately produces an endless stream of zeroes so the stream
  * should just keep reading until the buffer is full.  If it blocks, something
  * has gone wrong somewhere.
  */
-BOOST_AUTO_TEST_CASE( read_massive_buffer )
+BOOST_AUTO_TEST_CASE( roundtrip )
 {
 	com_ptr<IStream> stream = new CSftpStream(
-		session(), "/dev/zero", CSftpStream::read);
+		session(), "test_file",
+		CSftpStream::read | CSftpStream::write | CSftpStream::create);
 
 	// using int to get legible output when collection comparison fails
-	vector<int> buffer(6543210, 33);
-	size_t size = buffer.size() * sizeof(buffer[0]);
-	size_t bytes_read = verify_stream_read(&buffer[0], size, stream);
+	vector<int> source_data = random_buffer(6543210);
+	ULONG size_in_bytes = numeric_cast<ULONG>(
+		source_data.size() * sizeof(source_data[0]));
 
-	BOOST_CHECK_EQUAL(bytes_read, size);
+	ULONG bytes_written = 0;
+	HRESULT hr = stream->Write(&source_data[0], size_in_bytes, &bytes_written);
+	BOOST_REQUIRE_OK(hr);
+	BOOST_CHECK_EQUAL(bytes_written, size_in_bytes);
 
-	vector<int> expected(6543210, 0);
+	LARGE_INTEGER dlibMove = {0};
+	ULARGE_INTEGER dlibNewPos = {0};
+	hr = stream->Seek(dlibMove, STREAM_SEEK_SET, &dlibNewPos);
+	BOOST_REQUIRE_OK(hr);
+	BOOST_CHECK_EQUAL(dlibNewPos.QuadPart, 0UL);
+
+	vector<int> buffer(source_data.size(), 33);
+	size_t bytes_read = verify_stream_read(&buffer[0], size_in_bytes, stream);
+
+	BOOST_CHECK_EQUAL(bytes_read, size_in_bytes);
+
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		buffer.begin(), buffer.end(), expected.begin(), expected.end());
+		buffer.begin(), buffer.end(), source_data.begin(), source_data.end());
 }
 
 BOOST_AUTO_TEST_CASE( read_empty_file )
