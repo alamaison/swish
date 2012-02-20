@@ -237,6 +237,53 @@ namespace { // private
 			return numeric_cast<int>((done * 100) / total);
 	}
 
+	/**
+	 * A destination (directory or file) on the remote server given as a
+	 * directory PIDL and a filename.
+	 */
+	class resolved_destination
+	{
+	public:
+		resolved_destination(
+			const apidl_t& remote_directory, const wpath& file)
+			: m_remote_directory(remote_directory), m_file(file)
+		{
+			if (m_file.has_parent_path())
+				BOOST_THROW_EXCEPTION(
+				logic_error(
+				"Path not properly resolved; filename expected"));
+		}
+
+		const apidl_t& directory() const
+		{
+			return m_remote_directory;
+		}
+
+		const wstring filename() const
+		{
+			return m_file.filename();
+		}
+
+		wpath as_absolute_path() const
+		{
+			return absolute_path_from_swish_pidl(m_remote_directory) /
+				m_file;
+		}
+
+	private:
+		apidl_t m_remote_directory;
+		wpath m_file;
+	};
+
+	/**
+	 * A destination (directory or file) on the remote server given as a
+	 * path relative to a PIDL.
+	 *
+	 * As in an FGD, the path may be multi-level.  The directories named by the
+	 * intermediate sections may not exist so care must be taken that the,
+	 * destinations are used in the order listed in the FGD which is designed
+	 * to make sure they exist.
+	 */
 	class destination
 	{
 	public:
@@ -248,20 +295,20 @@ namespace { // private
 					logic_error("Path must be relative to root"));
 		}
 
-		wpath as_absolute_path() const
+		resolved_destination resolve_destination() const
 		{
-			return absolute_path_from_swish_pidl(m_remote_root) /
-				m_relative_path;
-		}
+			apidl_t directory = m_remote_root;
 
-		const apidl_t& remote_root() const
-		{
-			return m_remote_root;
-		}
+			BOOST_FOREACH(
+				wstring intermediate_directory_name,
+				m_relative_path.parent_path())
+			{
+				directory += create_remote_itemid(
+					intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
+					datetime_t(), datetime_t());
+			}
 
-		const wpath& relative_path() const
-		{
-			return m_relative_path;
+			return resolved_destination(directory, m_relative_path.filename());
 		}
 
 	private:
@@ -288,7 +335,7 @@ namespace { // private
 	 */
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
-		com_ptr<ISftpConsumer> consumer, const destination& target,
+		com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
 		CopyCallback& callback, function<bool()> cancelled,
 		function<void(int)> report_percent_done )
 	{
@@ -370,24 +417,15 @@ namespace { // private
 
 	apidl_t create_remote_directory(
 		const com_ptr<ISftpProvider>& provider,
-		const com_ptr<ISftpConsumer>& consumer, const destination& target)
+		const com_ptr<ISftpConsumer>& consumer,
+		const resolved_destination& target)
 	{
-		apidl_t directory = target.remote_root();
-
-		BOOST_FOREACH(
-			wstring intermediate_directory_name,
-			target.relative_path().parent_path())
-		{
-			directory += create_remote_itemid(
-				intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
-				datetime_t(), datetime_t());
-		}
+		apidl_t directory = target.directory();
 
 		CSftpDirectory sftp_directory(directory, provider, consumer);
 
 		apidl_t new_directory = 
-			directory + sftp_directory.CreateDirectory(
-				target.as_absolute_path().filename());
+			directory + sftp_directory.CreateDirectory(target.filename());
 
 		::SHChangeNotify(
 			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, new_directory.get(), NULL);
@@ -548,30 +586,31 @@ void copy_format_to_provider(
 		wpath from_path = copy_list[i].relative_path;
 
 		destination target(remote_root, copy_list[i].relative_path);
+		resolved_destination resolved_target(target.resolve_destination());
 
-		assert(from_path.filename() == target.as_absolute_path().filename());
+		assert(
+			from_path.filename() == 
+			resolved_target.as_absolute_path().filename());
 
 		if (copy_list[i].is_folder)
 		{
 			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, target.as_absolute_path());
+			auto_progress->line_path(2, resolved_target.as_absolute_path());
 
-			create_remote_directory(provider, consumer, target);
+			create_remote_directory(provider, consumer, resolved_target);
 			
 			auto_progress->update(i, copy_list.size());
 		}
 		else
 		{
-			com_ptr<IStream> stream;
-
-			stream = stream_from_shell_pidl(
+			com_ptr<IStream> stream = stream_from_shell_pidl(
 				format.parent_folder() + copy_list[i].pidl);
 
 			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, target.as_absolute_path());
+			auto_progress->line_path(2, resolved_target.as_absolute_path());
 
 			copy_stream_to_remote_destination(
-				stream, provider, consumer, target, callback,
+				stream, provider, consumer, resolved_target, callback,
 				bind(&Progress::user_cancelled, boost::ref(*auto_progress)),
 				ProgressMicroUpdater(*auto_progress, i, copy_list.size()));
 			
