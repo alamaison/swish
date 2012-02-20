@@ -52,6 +52,7 @@
 
 #include <cassert> // assert
 #include <iosfwd> // wstringstream
+#include <stdexcept> // logic_error
 #include <string>
 #include <vector>
 
@@ -81,6 +82,7 @@ using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
 
+using std::logic_error;
 using std::size_t;
 using std::wstring;
 using std::wstringstream;
@@ -235,6 +237,38 @@ namespace { // private
 			return numeric_cast<int>((done * 100) / total);
 	}
 
+	class destination
+	{
+	public:
+		destination(const apidl_t& remote_root, const wpath& relative_path)
+			: m_remote_root(remote_root), m_relative_path(relative_path)
+		{
+			if (relative_path.has_root_directory())
+				BOOST_THROW_EXCEPTION(
+					logic_error("Path must be relative to root"));
+		}
+
+		wpath as_absolute_path() const
+		{
+			return absolute_path_from_swish_pidl(m_remote_root) /
+				m_relative_path;
+		}
+
+		const apidl_t& remote_root() const
+		{
+			return m_remote_root;
+		}
+
+		const wpath& relative_path() const
+		{
+			return m_relative_path;
+		}
+
+	private:
+		apidl_t m_remote_root;
+		wpath m_relative_path;
+	};
+
 	/**
 	 * Write a stream to the provider at the given path.
 	 *
@@ -254,20 +288,20 @@ namespace { // private
 	 */
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
-		com_ptr<ISftpConsumer> consumer, const wpath& to_path,
+		com_ptr<ISftpConsumer> consumer, const destination& target,
 		CopyCallback& callback, function<bool()> cancelled,
-		function<void(int)> report_percent_done)
+		function<void(int)> report_percent_done )
 	{
-		com_ptr<IStream> remote_stream;
-		bstr_t target(to_path.string());
+		bstr_t target_path(target.as_absolute_path().string());
 
+		com_ptr<IStream> remote_stream;
 		HRESULT hr = provider->GetFile(
-			consumer.get(), target.in(), false, remote_stream.out());
-		if (SUCCEEDED(hr) && !callback.can_overwrite(to_path))
+			consumer.get(), target_path.in(), false, remote_stream.out());
+		if (SUCCEEDED(hr) && !callback.can_overwrite(target.as_absolute_path()))
 			return;
 
 		hr = provider->GetFile(
-			consumer.get(), target.in(), true, remote_stream.out());
+			consumer.get(), target_path.in(), true, remote_stream.out());
 		if (FAILED(hr))
 		{
 			com_error provider_error = com_error_from_interface(provider, hr);
@@ -279,7 +313,7 @@ namespace { // private
 			new_message <<
 				translate("Unable to create file on the server:") << L"\n";
 			new_message << provider_error.description();
-			new_message << L"\n" << to_path;
+			new_message << L"\n" << target.as_absolute_path();
 
 			BOOST_THROW_EXCEPTION(
 				com_error(
@@ -336,23 +370,24 @@ namespace { // private
 
 	apidl_t create_remote_directory(
 		const com_ptr<ISftpProvider>& provider,
-		const com_ptr<ISftpConsumer>& consumer, apidl_t remote_directory,
-		const wpath& new_directory_path)
+		const com_ptr<ISftpConsumer>& consumer, const destination& target)
 	{
-		assert(!new_directory_path.has_root_directory());
+		apidl_t directory = target.remote_root();
 
 		BOOST_FOREACH(
 			wstring intermediate_directory_name,
-			new_directory_path.parent_path())
+			target.relative_path().parent_path())
 		{
-			remote_directory += create_remote_itemid(
+			directory += create_remote_itemid(
 				intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
 				datetime_t(), datetime_t());
 		}
 
-		CSftpDirectory directory(remote_directory, provider, consumer);
-		apidl_t new_directory = remote_directory + directory.CreateDirectory(
-			new_directory_path.filename());
+		CSftpDirectory sftp_directory(directory, provider, consumer);
+
+		apidl_t new_directory = 
+			directory + sftp_directory.CreateDirectory(
+				target.as_absolute_path().filename());
 
 		::SHChangeNotify(
 			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, new_directory.get(), NULL);
@@ -511,20 +546,17 @@ void copy_format_to_provider(
 			BOOST_THROW_EXCEPTION(com_error(E_ABORT));
 
 		wpath from_path = copy_list[i].relative_path;
-		wpath to_path = 
-			absolute_path_from_swish_pidl(remote_root) /
-			copy_list[i].relative_path;
 
-		assert(from_path.filename() == to_path.filename());
+		destination target(remote_root, copy_list[i].relative_path);
+
+		assert(from_path.filename() == target.as_absolute_path().filename());
 
 		if (copy_list[i].is_folder)
 		{
 			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, to_path);
+			auto_progress->line_path(2, target.as_absolute_path());
 
-			create_remote_directory(
-				provider, consumer, remote_root,
-				copy_list[i].relative_path);
+			create_remote_directory(provider, consumer, target);
 			
 			auto_progress->update(i, copy_list.size());
 		}
@@ -536,10 +568,10 @@ void copy_format_to_provider(
 				format.parent_folder() + copy_list[i].pidl);
 
 			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, to_path);
+			auto_progress->line_path(2, target.as_absolute_path());
 
 			copy_stream_to_remote_destination(
-				stream, provider, consumer, to_path, callback,
+				stream, provider, consumer, target, callback,
 				bind(&Progress::user_cancelled, boost::ref(*auto_progress)),
 				ProgressMicroUpdater(*auto_progress, i, copy_list.size()));
 			
