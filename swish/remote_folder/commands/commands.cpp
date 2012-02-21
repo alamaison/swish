@@ -181,23 +181,6 @@ namespace commands {
 
 namespace {
 	const uuid_t NEW_FOLDER_COMMAND_ID(L"b816a882-5022-11dc-9153-0090f5284f85");
-	
-	/**
-     * Cause Explorer to refresh any windows displaying the owning folder.
-	 *
-	 * Inform shell that something in our folder changed (we don't know
-	 * exactly what the new PIDL is until we reload from the registry, hence
-	 * UPDATEDIR).
-	 *
-	 * We wait for the event to flush because setting the edit text afterwards
-	 * depends on this.
-	 */
-	void notify_shell(const apidl_t folder_pidl)
-	{
-		assert(folder_pidl);
-		::SHChangeNotify(
-			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, folder_pidl.get(), NULL);
-	}
 }
 
 NewFolder::NewFolder(
@@ -255,10 +238,8 @@ const
 		try
 		{
 			// A failure after this point is not worth reporting.  The folder
-			// was created even if we didn't update the shell or allow the
-			// user a chance to pick a name.
-
-			notify_shell(m_folder_pidl + pidl);
+			// was created even if we didn't allow the user a chance to pick a
+			// name.
 
 			// Put item into 'rename' mode
 			HRESULT hr = view->SelectItem(
@@ -268,9 +249,10 @@ const
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
 		}
-		catch (const exception&)
+		catch (const exception& e)
 		{
-			trace("WARNING: Couldn't update shell with new folder");
+			trace("WARNING: Couldn't put folder into rename mode: %s") %
+				e.what();
 		}
 	}
 	catch (...)

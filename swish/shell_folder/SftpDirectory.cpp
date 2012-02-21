@@ -140,7 +140,26 @@ namespace {
 			datetime_t(lt.get().dateModified),
 			datetime_t(lt.get().dateAccessed));
 	}
+	
+	/**
+	 * Notify the shell that a new directory was created.
+	 *
+	 * Primarily, this will cause Explorer to show the new folder in any 
+	 * windows displaying the parent folder.
+	 *
+	 * IMPORTANT: this will only happen if the parent folder is listening for
+	 * SHCNE_MKDIR notifications.
+	 *
+	 * We wait for the event to flush because setting the edit text afterwards
+	 * depends on this.
+	 */
+	void notify_shell_created_directory(const apidl_t& folder_pidl)
+	{
+		assert(folder_pidl);
 
+		::SHChangeNotify(
+			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, folder_pidl.get(), NULL);
+	}
 }
 
 /**
@@ -355,6 +374,10 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 {
 	bstr_t target_path = (m_directory / name).string();
 
+	cpidl_t sub_directory = create_remote_itemid(
+		name, true, false, L"", L"", 0, 0, 0, 0, datetime_t::now(),
+		datetime_t::now());
+
 	HRESULT hr = m_provider->CreateNewDirectory(
 		m_consumer.in(), target_path.in());
 	if (FAILED(hr))
@@ -366,17 +389,15 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 		// was created even if creating the new PIDL representation fails.
 
 		// TODO: stat new folder for actual parameters
-		// TODO: date modified should be now
 
-		return create_remote_itemid(
-			name, true, false, L"", L"", 0, 0, 0, 0, datetime_t(),
-			datetime_t());
+		notify_shell_created_directory(m_directory_pidl + sub_directory);
 	}
-	catch (const exception&)
+	catch (const exception& e)
 	{
-		trace("WARNING: Couldn't create PIDL representation of new directory");
-		return cpidl_t();
+		trace("WARNING: Couldn't notify shell of new folder: %s") % e.what();
 	}
+
+	return sub_directory;
 }
 
 apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)

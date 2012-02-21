@@ -447,22 +447,14 @@ namespace { // private
 		}
 	}
 
-	apidl_t create_remote_directory(
+	void create_remote_directory(
 		const com_ptr<ISftpProvider>& provider,
 		const com_ptr<ISftpConsumer>& consumer,
 		const resolved_destination& target)
 	{
-		apidl_t directory = target.directory();
+		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
 
-		CSftpDirectory sftp_directory(directory, provider, consumer);
-
-		apidl_t new_directory = 
-			directory + sftp_directory.CreateDirectory(target.filename());
-
-		::SHChangeNotify(
-			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, new_directory.get(), NULL);
-
-		return new_directory;
+		sftp_directory.CreateDirectory(target.filename());
 	}
 
 	/**
