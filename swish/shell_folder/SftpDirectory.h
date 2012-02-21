@@ -55,6 +55,8 @@ public:
 	comet::com_ptr<IStream> GetFileByPath(
 		const boost::filesystem::wpath& file, bool writeable);
 
+	bool exists(const winapi::shell::pidl::cpidl_t& file);
+
 	bool Rename(
 		const winapi::shell::pidl::cpidl_t& old_file,
 		const std::wstring& new_filename);

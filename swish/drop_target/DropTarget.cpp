@@ -51,6 +51,7 @@
 #include <comet/ptr.h>  // com_ptr
 
 #include <cassert> // assert
+#include <exception> // exception
 #include <iosfwd> // wstringstream
 #include <stdexcept> // logic_error
 #include <string>
@@ -82,6 +83,7 @@ using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
 
+using std::exception;
 using std::logic_error;
 using std::size_t;
 using std::wstring;
@@ -245,13 +247,13 @@ namespace { // private
 	{
 	public:
 		resolved_destination(
-			const apidl_t& remote_directory, const wpath& file)
-			: m_remote_directory(remote_directory), m_file(file)
+			const apidl_t& remote_directory, const wstring& filename)
+			: m_remote_directory(remote_directory), m_filename(filename)
 		{
-			if (m_file.has_parent_path())
+			if (wpath(m_filename).has_parent_path())
 				BOOST_THROW_EXCEPTION(
-				logic_error(
-				"Path not properly resolved; filename expected"));
+					logic_error(
+						"Path not properly resolved; filename expected"));
 		}
 
 		const apidl_t& directory() const
@@ -261,18 +263,18 @@ namespace { // private
 
 		const wstring filename() const
 		{
-			return m_file.filename();
+			return m_filename;
 		}
 
 		wpath as_absolute_path() const
 		{
 			return absolute_path_from_swish_pidl(m_remote_directory) /
-				m_file;
+				m_filename;
 		}
 
 	private:
 		apidl_t m_remote_directory;
-		wpath m_file;
+		wstring m_filename;
 	};
 
 	/**
@@ -305,7 +307,7 @@ namespace { // private
 			{
 				directory += create_remote_itemid(
 					intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
-					datetime_t(), datetime_t());
+					datetime_t::now(), datetime_t::now());
 			}
 
 			return resolved_destination(directory, m_relative_path.filename());
@@ -339,20 +341,26 @@ namespace { // private
 		CopyCallback& callback, function<bool()> cancelled,
 		function<void(int)> report_percent_done )
 	{
-		bstr_t target_path(target.as_absolute_path().string());
+		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
+
+		cpidl_t file = create_remote_itemid(
+			target.filename(), false, false, L"", L"", 0, 0, 0, 0,
+			datetime_t::now(), datetime_t::now());
+
+		if (sftp_directory.exists(file))
+		{
+			if (!callback.can_overwrite(target.as_absolute_path()))
+				return;
+		}
 
 		com_ptr<IStream> remote_stream;
-		HRESULT hr = provider->GetFile(
-			consumer.get(), target_path.in(), false, remote_stream.out());
-		if (SUCCEEDED(hr) && !callback.can_overwrite(target.as_absolute_path()))
-			return;
-
-		hr = provider->GetFile(
-			consumer.get(), target_path.in(), true, remote_stream.out());
-		if (FAILED(hr))
+		
+		try
 		{
-			com_error provider_error = com_error_from_interface(provider, hr);
-
+			remote_stream = sftp_directory.GetFile(file, true);
+		}
+		catch (const com_error& provider_error)
+		{
 			// TODO: once we decomtaminate the provider, move this to the
 			// snitching drop target so it can use the info in the task dialog
 
@@ -364,14 +372,18 @@ namespace { // private
 
 			BOOST_THROW_EXCEPTION(
 				com_error(
-					new_message.str(), hr, provider_error.source(),
-					provider_error.guid(), provider_error.help_file(),
-					provider_error.help_context()));
+					new_message.str(), provider_error.hr(),
+					provider_error.source(), provider_error.guid(),
+					provider_error.help_file(), provider_error.help_context()));
 		}
+
+		::SHChangeNotify(
+			SHCNE_CREATE, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+			(target.directory() + file).get(), NULL);
 
 		// Set both streams back to the start
 		LARGE_INTEGER move = {0};
-		hr = local_stream->Seek(move, SEEK_SET, NULL);
+		HRESULT hr = local_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_error_from_interface(local_stream, hr));
 
@@ -396,6 +408,26 @@ namespace { // private
 			if (FAILED(hr))
 				BOOST_THROW_EXCEPTION(
 					com_error_from_interface(local_stream, hr));
+
+			try
+			{
+				// We create a different version of the PIDL here whose filesize
+				// is the amount copied so far. Otherwise Explorer shows a
+				// 0-byte file when the copying is done.
+				file = create_remote_itemid(
+					target.filename(), false, false, L"", L"", 0, 0, 0,
+					done, datetime_t::now(), datetime_t::now());
+
+				::SHChangeNotify(
+					SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+					(target.directory() + file).get(), NULL);
+			}
+			catch(const exception& e)
+			{
+				// Ignoring error; failing to update the shell doesn't
+				// warrant aborting the transfer
+				trace("Failed to notify shell of file update %s") % e.what();
+			}
 
 			// A failure to update the progress isn't a good enough reason
 			// to abort the copy so we swallow the exception.

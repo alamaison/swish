@@ -309,6 +309,17 @@ com_ptr<IStream> CSftpDirectory::GetFileByPath(
 	return stream;
 }
 
+bool CSftpDirectory::exists(const cpidl_t& file)
+{
+	bstr_t file_path =
+		(m_directory / remote_itemid_view(file).filename()).string();
+
+	com_ptr<IStream> stream;
+	HRESULT hr = m_provider->GetFile(
+		m_consumer.in(), file_path.in(), false, stream.out());
+	return SUCCEEDED(hr);
+}
+
 bool CSftpDirectory::Rename(
 	const cpidl_t& old_file, const wstring& new_filename)
 {
