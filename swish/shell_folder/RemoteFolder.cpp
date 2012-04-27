@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -45,7 +45,6 @@
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
                                                // create_remote_itemid
 #include "swish/remote_folder/ViewCallback.hpp" // CViewCallback
-#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SnitchingDataObject.hpp" // CSnitchingDataObject
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
@@ -67,7 +66,6 @@
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::frontend::rethrow_and_announce;
-using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
 using swish::remote_folder::context_menu_callback;
@@ -725,8 +723,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 		com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
 		return new CSnitchingDropTarget(
-			hwnd, provider, consumer,
-			absolute_path_from_swish_pidl(root_pidl()),
+			hwnd, provider, consumer, root_pidl(),
 			make_shared<DropUI>(hwnd));
 	}
 	catch (...)

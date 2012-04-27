@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,6 +40,8 @@
 
 using swish::frontend::rethrow_and_announce;
 
+using winapi::shell::pidl::apidl_t;
+
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::shared_ptr;
@@ -52,10 +54,10 @@ namespace drop_target {
 
 CSnitchingDropTarget::CSnitchingDropTarget(
 	HWND hwnd_owner, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
 	shared_ptr<CopyCallback> callback)
 	:
-	m_inner(new CDropTarget(provider, consumer, remote_path, callback)),
+	m_inner(new CDropTarget(provider, consumer, remote_directory, callback)),
 	m_hwnd_owner(hwnd_owner) {}
 
 STDMETHODIMP CSnitchingDropTarget::SetSite(IUnknown* pUnkSite)

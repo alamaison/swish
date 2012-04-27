@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -108,8 +108,9 @@ bool CViewCallback::on_window_created(HWND hwnd_view)
 bool CViewCallback::on_get_notify(
 	PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
 {
-	events = SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
-		SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
+	events = SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR |
+		SHCNE_UPDATEITEM | SHCNE_UPDATEDIR | SHCNE_RENAMEITEM |
+		SHCNE_RENAMEFOLDER;
 	pidl_monitor = m_folder_pidl.get(); // Owned by us
 	return true;
 }

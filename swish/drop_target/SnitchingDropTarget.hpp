@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 #pragma once
 
 #include "DropTarget.hpp" // CDropTarget wrapped inner
+
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <boost/filesystem.hpp>  // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr to UI callback
@@ -54,7 +56,7 @@ public:
 	CSnitchingDropTarget(
 		HWND hwnd_owner, comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
-		const boost::filesystem::wpath& remote_path,
+		const winapi::shell::pidl::apidl_t& remote_directory,
 		boost::shared_ptr<CopyCallback> callback);
 
 	/** @name IDropTarget methods */
