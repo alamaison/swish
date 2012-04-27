@@ -65,13 +65,6 @@ using std::string;
 namespace { // private
 
 /**
- * Maximum size of any single write operation.
- *
- * Currently the largest safe write buffer size supported by libssh2 is 32500.
- */
-static const unsigned int WRITE_CHUNK = 32500;
-
-/**
  * Maximum size of any single copy.
  *
  * Must be smaller than maximum ULONG.  @see CSftpStream::_CopyOne for more
@@ -610,9 +603,6 @@ ULONG CSftpStream::_ReadOne(char* pbuf, ULONG cb)
 /**
  * Write cb bytes from buffer pbuf onto the stream.
  *
- * @todo  Remove piecemeal writing when the libssh2 project fixes
- *        the write problems in the library.
- *
  * @returns  Number of bytes actually written in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
  *           an exception).
@@ -624,7 +614,7 @@ void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 	
 	cbWritten = 0;
 	do {
-		rc = _WriteOne(pbuf + cbWritten, min(cb - cbWritten, WRITE_CHUNK));
+		rc = _WriteOne(pbuf + cbWritten, cb - cbWritten);
 		cbWritten += rc;
 	}
 	while (cbWritten < cb);
