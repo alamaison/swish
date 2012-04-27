@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 
 #include <winapi/shell/pidl_iterator.hpp> // pidl_iterator, find_host_itemid
+#include <winapi/trace.hpp> // trace
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
@@ -37,6 +38,7 @@
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <exception> // exception
 #include <vector>
 
 using swish::remote_folder::absolute_path_from_swish_pidl;
@@ -52,6 +54,7 @@ using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_iterator;
 using winapi::shell::pidl::raw_pidl_iterator;
+using winapi::trace;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -65,6 +68,7 @@ using boost::filesystem::wpath;
 using boost::make_shared;
 using boost::shared_ptr;
 
+using std::exception;
 using std::vector;
 using std::wstring;
 
@@ -135,6 +139,45 @@ namespace {
 			lt.get().uSize,
 			datetime_t(lt.get().dateModified),
 			datetime_t(lt.get().dateAccessed));
+	}
+	
+	/**
+	 * Notify the shell that a new directory was created.
+	 *
+	 * Primarily, this will cause Explorer to show the new folder in any 
+	 * windows displaying the parent folder.
+	 *
+	 * IMPORTANT: this will only happen if the parent folder is listening for
+	 * SHCNE_MKDIR notifications.
+	 *
+	 * We wait for the event to flush because setting the edit text afterwards
+	 * depends on this.
+	 */
+	void notify_shell_created_directory(const apidl_t& folder_pidl)
+	{
+		assert(folder_pidl);
+
+		::SHChangeNotify(
+			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, folder_pidl.get(), NULL);
+	}
+	
+	/**
+	 * Notify the shell that a file or directory was deleted.
+	 *
+	 * Primarily, this will cause Explorer to remove the item from the parent
+	 * folder view.
+	 *
+	 * This function works out whether it was a file or folder removed by
+	 * extracting the flag from the remote item ID.
+	 */
+	void notify_shell_of_deletion(
+		const apidl_t& parent_folder, const cpidl_t& file_or_folder)
+	{
+		bool is_folder = remote_itemid_view(file_or_folder).is_folder();
+		::SHChangeNotify(
+			(is_folder) ? SHCNE_RMDIR : SHCNE_DELETE,
+			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+			(parent_folder + file_or_folder).get(), NULL);
 	}
 
 }
@@ -305,6 +348,17 @@ com_ptr<IStream> CSftpDirectory::GetFileByPath(
 	return stream;
 }
 
+bool CSftpDirectory::exists(const cpidl_t& file)
+{
+	bstr_t file_path =
+		(m_directory / remote_itemid_view(file).filename()).string();
+
+	com_ptr<IStream> stream;
+	HRESULT hr = m_provider->GetFile(
+		m_consumer.in(), file_path.in(), false, stream.out());
+	return SUCCEEDED(hr);
+}
+
 bool CSftpDirectory::Rename(
 	const cpidl_t& old_file, const wstring& new_filename)
 {
@@ -334,16 +388,49 @@ void CSftpDirectory::Delete(const cpidl_t& file)
 		hr = m_provider->Delete(m_consumer.in(), target_path.in());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+
+	try
+	{
+		// Must not report a failure after this point.  The item was deleted
+		// even if notifying the shell fails.
+
+		notify_shell_of_deletion(m_directory_pidl, file);
+	}
+	catch (const exception& e)
+	{
+		trace("WARNING: Couldn't notify shell of deletion: %s") % e.what();
+	}
+
 }
 
-void CSftpDirectory::CreateDirectory(const wstring& name)
+cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 {
 	bstr_t target_path = (m_directory / name).string();
+
+	cpidl_t sub_directory = create_remote_itemid(
+		name, true, false, L"", L"", 0, 0, 0, 0, datetime_t::now(),
+		datetime_t::now());
 
 	HRESULT hr = m_provider->CreateNewDirectory(
 		m_consumer.in(), target_path.in());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+
+	try
+	{
+		// Must not report a failure after this point.  The folder was created 
+		// even if notifying the shell fails.
+
+		// TODO: stat new folder for actual parameters
+
+		notify_shell_created_directory(m_directory_pidl + sub_directory);
+	}
+	catch (const exception& e)
+	{
+		trace("WARNING: Couldn't notify shell of new folder: %s") % e.what();
+	}
+
+	return sub_directory;
 }
 
 apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)

@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2012
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@
 #pragma once
 
 #include <winapi/object_with_site.hpp> // object_with_site
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <boost/filesystem.hpp>  // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr to UI callback
@@ -84,7 +86,7 @@ public:
 	CDropTarget(
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
-		const boost::filesystem::wpath& remote_path,
+		const winapi::shell::pidl::apidl_t& remote_directory,
 		boost::shared_ptr<CopyCallback> callback);
 
 	/** @name IDropTarget methods */
@@ -117,7 +119,8 @@ private:
 
 	comet::com_ptr<ISftpProvider> m_provider;
 	comet::com_ptr<ISftpConsumer> m_consumer;
-	boost::filesystem::wpath m_remote_path;
+
+	winapi::shell::pidl::apidl_t m_remote_directory;
 	comet::com_ptr<IDataObject> m_data_object;
 	boost::shared_ptr<CopyCallback> m_callback;
 };
@@ -126,7 +129,7 @@ void copy_data_to_provider(
 	comet::com_ptr<IDataObject> data_object,
 	comet::com_ptr<ISftpProvider> provider,
 	comet::com_ptr<ISftpConsumer> consumer,
-	const boost::filesystem::wpath& remote_path,
+	const winapi::shell::pidl::apidl_t& remote_directory,
 	CopyCallback& callback);
 
 }} // namespace swish::drop_target

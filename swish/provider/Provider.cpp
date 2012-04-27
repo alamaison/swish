@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -825,7 +825,9 @@ void provider::create_new_directory(
 	com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
 	if (path.empty())
-		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+		BOOST_THROW_EXCEPTION(
+			com_error(
+				"Cannot create a directory without a name", E_INVALIDARG));
 
 	_Connect(consumer);
 

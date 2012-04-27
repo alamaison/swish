@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -55,12 +55,14 @@ public:
 	comet::com_ptr<IStream> GetFileByPath(
 		const boost::filesystem::wpath& file, bool writeable);
 
+	bool exists(const winapi::shell::pidl::cpidl_t& file);
+
 	bool Rename(
 		const winapi::shell::pidl::cpidl_t& old_file,
 		const std::wstring& new_filename);
 	void Delete(
 		const winapi::shell::pidl::cpidl_t& file);
-	void CreateDirectory(const std::wstring& name);
+	winapi::shell::pidl::cpidl_t CreateDirectory(const std::wstring& name);
 	winapi::shell::pidl::apidl_t ResolveLink(
 		const winapi::shell::pidl::cpidl_t& item);
 
