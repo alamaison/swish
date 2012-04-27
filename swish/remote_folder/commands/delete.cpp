@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,26 +64,6 @@ namespace remote_folder {
 namespace commands {
 
 namespace {
-	
-	/**
-     * Cause Explorer to refresh any windows displaying the owning folder.
-	 *
-	 * Inform shell that something in our folder changed (we don't know
-	 * exactly what the new PIDL is until we reload from the registry, hence
-	 * UPDATEDIR).
-	 *
-	 * We wait for the event to flush because setting the edit text afterwards
-	 * depends on this.
-	 */
-	void notify_shell_of_deletion(
-		const apidl_t& parent_folder, const cpidl_t& file_or_folder)
-	{
-		bool is_folder = remote_itemid_view(file_or_folder).is_folder();
-		::SHChangeNotify(
-			(is_folder) ? SHCNE_RMDIR : SHCNE_DELETE,
-			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-			(parent_folder + file_or_folder).get(), NULL);
-	}
 
 	/**
 	 * Deletes files or folders.
@@ -107,11 +87,7 @@ namespace {
 		vector<cpidl_t>::const_iterator it = death_row.begin();
 		while (it != death_row.end())
 		{
-			directory.Delete(*it);
-
-			notify_shell_of_deletion(parent_folder, *it);
-
-			it++;
+			directory.Delete(*it++);
 		}
 	}
 

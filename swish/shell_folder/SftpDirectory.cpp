@@ -160,6 +160,26 @@ namespace {
 		::SHChangeNotify(
 			SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, folder_pidl.get(), NULL);
 	}
+	
+	/**
+	 * Notify the shell that a file or directory was deleted.
+	 *
+	 * Primarily, this will cause Explorer to remove the item from the parent
+	 * folder view.
+	 *
+	 * This function works out whether it was a file or folder removed by
+	 * extracting the flag from the remote item ID.
+	 */
+	void notify_shell_of_deletion(
+		const apidl_t& parent_folder, const cpidl_t& file_or_folder)
+	{
+		bool is_folder = remote_itemid_view(file_or_folder).is_folder();
+		::SHChangeNotify(
+			(is_folder) ? SHCNE_RMDIR : SHCNE_DELETE,
+			SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+			(parent_folder + file_or_folder).get(), NULL);
+	}
+
 }
 
 /**
@@ -368,6 +388,19 @@ void CSftpDirectory::Delete(const cpidl_t& file)
 		hr = m_provider->Delete(m_consumer.in(), target_path.in());
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+
+	try
+	{
+		// Must not report a failure after this point.  The item was deleted
+		// even if notifying the shell fails.
+
+		notify_shell_of_deletion(m_directory_pidl, file);
+	}
+	catch (const exception& e)
+	{
+		trace("WARNING: Couldn't notify shell of deletion: %s") % e.what();
+	}
+
 }
 
 cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
@@ -385,8 +418,8 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 
 	try
 	{
-		// Must not report a failure after this point.  The folder
-		// was created even if creating the new PIDL representation fails.
+		// Must not report a failure after this point.  The folder was created 
+		// even if notifying the shell fails.
 
 		// TODO: stat new folder for actual parameters
 
