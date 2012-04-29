@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,17 +30,13 @@
 
 #include "DropTarget.hpp" // CopyCallback, Progress
 
+#include <winapi/gui/progress.hpp> // comet::comtype<IProgressDialog>, progress
+
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 #include <memory> // auto_ptr
-
-template<> struct comet::comtype<IProgressDialog>
-{
-	static const IID& uuid() throw() { return IID_IProgressDialog; }
-	typedef IUnknown base;
-};
 
 namespace swish {
 namespace drop_target {
