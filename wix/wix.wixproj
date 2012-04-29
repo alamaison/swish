@@ -29,6 +29,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="bg.wxs" />
     <Compile Include="cs.wxs" />
     <Compile Include="de.wxs" />
     <Compile Include="es.wxs" />

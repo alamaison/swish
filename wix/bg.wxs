@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir409B9E667F34505F6E1ACD0620C9A621" Name="bg" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="BGTrans">
+      <Component Id="cmpCA265AA8D1094316044C6795C172E88B" Directory="dir5B1CAF2733276D62A708C012427C8734" Guid="*">
+        <File Id="filE8A6081B7F309C174C79B95BA5B19F77" KeyPath="yes" Source="$(var.SolutionDir)\po\bg\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir409B9E667F34505F6E1ACD0620C9A621">
+      <Directory Id="dir5B1CAF2733276D62A708C012427C8734" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>
