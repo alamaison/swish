@@ -31,6 +31,14 @@
     </WixExtension>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\wix-ba\wix-ba.vcproj">
+      <Name>wix-ba</Name>
+      <Project>{17eda8b2-c19e-4a69-b42e-2d881a7c98be}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\wix\wix.wixproj">
       <Name>wix</Name>
       <Project>{b11052ed-f8b3-487c-b265-ee8a2363d523}</Project>

@@ -3,24 +3,27 @@
 <?define Swish_ProductVersion = "0.6.0" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Bundle Version="$(var.Swish_ProductVersion)"
-          UpgradeCode="d75dc267-756e-4c74-b74a-c336cce94c85" >
 
-    <BootstrapperApplicationRef
-            Id="WixStandardBootstrapperApplication.HyperlinkLicense" />
-    <WixVariable
-            Id="WixStdbaLicenseUrl"
-            Value="http://www.gnu.org/licenses/gpl-2.0.txt" />
+  <Bundle Version="$(var.Swish_ProductVersion)"
+          UpgradeCode="d75dc267-756e-4c74-b74a-c336cce94c85"
+          Name="Swish">
+
+    <BootstrapperApplication
+          SourceFile='$(var.SolutionDir)bin\$(var.Configuration)\wix-ba.dll' />
 
     <Chain>
 
       <MsiPackage
-            Id="Swish_Win32" 
+            Id="Swish_Win32"
+            DisplayInternalUI="yes"
+            Cache="no" 
             SourceFile="$(var.SolutionDir)bin\$(var.Configuration)-Win32\swish-$(var.Swish_ProductVersion).msi"
             InstallCondition="NOT VersionNT64" />
 
       <MsiPackage
             Id="Swish_x64"
+            DisplayInternalUI="yes"
+            Cache="no"
             SourceFile="$(var.SolutionDir)bin\$(var.Configuration)-x64\swish-$(var.Swish_ProductVersion).msi"
             InstallCondition="VersionNT64" />
 
