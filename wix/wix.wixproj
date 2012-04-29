@@ -34,6 +34,7 @@
     <Compile Include="es.wxs" />
     <Compile Include="fr.wxs" />
     <Compile Include="he.wxs" />
+    <Compile Include="hi.wxs" />
     <Compile Include="hu.wxs" />
     <Compile Include="nl.wxs" />
     <Compile Include="ru.wxs" />
