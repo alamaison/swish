@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@
 #include "SftpStream.hpp"
 
 #include "swish/debug.hpp"                   // Debug macros
-#include "swish/trace.hpp" // trace_f: Debug trace function
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
@@ -50,8 +49,6 @@
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-using swish::tracing::trace_f;
-
 using ATL::CA2W;
 using ATL::CString;
 
@@ -63,13 +60,6 @@ using std::string;
 
 
 namespace { // private
-
-/**
- * Maximum size of any single write operation.
- *
- * Currently the largest safe write buffer size supported by libssh2 is 32500.
- */
-static const unsigned int WRITE_CHUNK = 32500;
 
 /**
  * Maximum size of any single copy.
@@ -274,9 +264,6 @@ CSftpStream::CSftpStream(
 		safe_libssh2_sftp_close_handle);
 	if (!m_handle)
 	{
-		trace_f("libssh2_sftp_open(%s) failed: %ws",
-			file.c_str(), GetLastErrorMessage(*m_session));
-		
 		HRESULT hr = last_storage_error(*m_session);
 		BOOST_THROW_EXCEPTION(
 			com_error(GetLastErrorMessage(*m_session).GetString(), hr));
@@ -318,9 +305,10 @@ CSftpStream::~CSftpStream()
  *         than requested or an STG_E_* error code if an error occurs.
  * @retval STG_E_INVALIDPOINTER if pv is NULL.
  *
- * Unlike Write(), MSDN makes clear that Read() can return short [1].  Therefore
- * we don't block until all the data has been read and instead just return
- * the (possibly short) number of bytes read.
+ * Unlike POSIX read(), MSDN makes clear that any short Read() indicates the
+ * end-of-file [1].  POSIX read() allows short reads and only treats 0 as the
+ * end-of-file.  Therefore, if we get a short read from the server, we keep
+ * reading until we fill the buffer on the server return 0.
  *
  * [1] http://msdn.microsoft.com/en-us/library/aa380011%28v=vs.85%29.aspx
  */
@@ -582,22 +570,32 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  */
 void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
+	ULONG rc;
+
+	cbRead = 0;
+	do {
+		rc = _ReadOne(pbuf + cbRead, cb - cbRead);
+		cbRead += rc;
+	} while (rc != 0 && cbRead < cb);
+}
+
+ULONG CSftpStream::_ReadOne(char* pbuf, ULONG cb)
+{
 	ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
 	if (rc < 0)
 	{
-		cbRead = 0;
 		TRACE("libssh2_sftp_read() failed: %ws", 
 			GetLastErrorMessage(*m_session));
 		BOOST_THROW_EXCEPTION(com_error(last_storage_error(*m_session)));
 	}
-	cbRead = rc;
+	else
+	{
+		return rc;
+	}
 }
 
 /**
  * Write cb bytes from buffer pbuf onto the stream.
- *
- * @todo  Remove piecemeal writing when the libssh2 project fixes
- *        the write problems in the library.
  *
  * @returns  Number of bytes actually written in out-parameter cbRead.  This
  *           should contain the correct value even if the call fails (throws 
@@ -610,7 +608,7 @@ void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 	
 	cbWritten = 0;
 	do {
-		rc = _WriteOne(pbuf + cbWritten, min(cb - cbWritten, WRITE_CHUNK));
+		rc = _WriteOne(pbuf + cbWritten, cb - cbWritten);
 		cbWritten += rc;
 	}
 	while (cbWritten < cb);

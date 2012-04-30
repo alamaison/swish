@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,8 +27,10 @@
 #include "DropTarget.hpp"
 
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // ShellDataObject
 #include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
+#include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
@@ -38,18 +40,25 @@
 #include <boost/bind.hpp> // bind
 #include <boost/cstdint.hpp> // int64_t
 #include <boost/function.hpp> // function
+#include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/locale/message.hpp> // translate
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
-#include <comet/ptr.h>  // com_ptr
 #include <comet/bstr.h> // bstr_t
+#include <comet/datetime.h> // datetime_t
+#include <comet/ptr.h>  // com_ptr
 
+#include <cassert> // assert
+#include <exception> // exception
 #include <iosfwd> // wstringstream
+#include <stdexcept> // logic_error
 #include <string>
 #include <vector>
 
+using swish::remote_folder::absolute_path_from_swish_pidl;
+using swish::remote_folder::create_remote_itemid;
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::bind_to_handler_object;
@@ -72,7 +81,10 @@ using boost::shared_ptr;
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
+using comet::datetime_t;
 
+using std::exception;
+using std::logic_error;
 using std::size_t;
 using std::wstring;
 using std::wstringstream;
@@ -228,6 +240,85 @@ namespace { // private
 	}
 
 	/**
+	 * A destination (directory or file) on the remote server given as a
+	 * directory PIDL and a filename.
+	 */
+	class resolved_destination
+	{
+	public:
+		resolved_destination(
+			const apidl_t& remote_directory, const wstring& filename)
+			: m_remote_directory(remote_directory), m_filename(filename)
+		{
+			if (wpath(m_filename).has_parent_path())
+				BOOST_THROW_EXCEPTION(
+					logic_error(
+						"Path not properly resolved; filename expected"));
+		}
+
+		const apidl_t& directory() const
+		{
+			return m_remote_directory;
+		}
+
+		const wstring filename() const
+		{
+			return m_filename;
+		}
+
+		wpath as_absolute_path() const
+		{
+			return absolute_path_from_swish_pidl(m_remote_directory) /
+				m_filename;
+		}
+
+	private:
+		apidl_t m_remote_directory;
+		wstring m_filename;
+	};
+
+	/**
+	 * A destination (directory or file) on the remote server given as a
+	 * path relative to a PIDL.
+	 *
+	 * As in an FGD, the path may be multi-level.  The directories named by the
+	 * intermediate sections may not exist so care must be taken that the,
+	 * destinations are used in the order listed in the FGD which is designed
+	 * to make sure they exist.
+	 */
+	class destination
+	{
+	public:
+		destination(const apidl_t& remote_root, const wpath& relative_path)
+			: m_remote_root(remote_root), m_relative_path(relative_path)
+		{
+			if (relative_path.has_root_directory())
+				BOOST_THROW_EXCEPTION(
+					logic_error("Path must be relative to root"));
+		}
+
+		resolved_destination resolve_destination() const
+		{
+			apidl_t directory = m_remote_root;
+
+			BOOST_FOREACH(
+				wstring intermediate_directory_name,
+				m_relative_path.parent_path())
+			{
+				directory += create_remote_itemid(
+					intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
+					datetime_t::now(), datetime_t::now());
+			}
+
+			return resolved_destination(directory, m_relative_path.filename());
+		}
+
+	private:
+		apidl_t m_remote_root;
+		wpath m_relative_path;
+	};
+
+	/**
 	 * Write a stream to the provider at the given path.
 	 *
 	 * If it already exists, we want to ask the user for confirmation.
@@ -246,24 +337,30 @@ namespace { // private
 	 */
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
-		com_ptr<ISftpConsumer> consumer, const wpath& to_path,
+		com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
 		CopyCallback& callback, function<bool()> cancelled,
-		function<void(int)> report_percent_done)
+		function<void(int)> report_percent_done )
 	{
-		com_ptr<IStream> remote_stream;
-		bstr_t target(to_path.string());
+		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
 
-		HRESULT hr = provider->GetFile(
-			consumer.get(), target.in(), false, remote_stream.out());
-		if (SUCCEEDED(hr) && !callback.can_overwrite(to_path))
-			return;
+		cpidl_t file = create_remote_itemid(
+			target.filename(), false, false, L"", L"", 0, 0, 0, 0,
+			datetime_t::now(), datetime_t::now());
 
-		hr = provider->GetFile(
-			consumer.get(), target.in(), true, remote_stream.out());
-		if (FAILED(hr))
+		if (sftp_directory.exists(file))
 		{
-			com_error provider_error = com_error_from_interface(provider, hr);
+			if (!callback.can_overwrite(target.as_absolute_path()))
+				return;
+		}
 
+		com_ptr<IStream> remote_stream;
+		
+		try
+		{
+			remote_stream = sftp_directory.GetFile(file, true);
+		}
+		catch (const com_error& provider_error)
+		{
 			// TODO: once we decomtaminate the provider, move this to the
 			// snitching drop target so it can use the info in the task dialog
 
@@ -271,18 +368,22 @@ namespace { // private
 			new_message <<
 				translate("Unable to create file on the server:") << L"\n";
 			new_message << provider_error.description();
-			new_message << L"\n" << to_path;
+			new_message << L"\n" << target.as_absolute_path();
 
 			BOOST_THROW_EXCEPTION(
 				com_error(
-					new_message.str(), hr, provider_error.source(),
-					provider_error.guid(), provider_error.help_file(),
-					provider_error.help_context()));
+					new_message.str(), provider_error.hr(),
+					provider_error.source(), provider_error.guid(),
+					provider_error.help_file(), provider_error.help_context()));
 		}
+
+		::SHChangeNotify(
+			SHCNE_CREATE, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+			(target.directory() + file).get(), NULL);
 
 		// Set both streams back to the start
 		LARGE_INTEGER move = {0};
-		hr = local_stream->Seek(move, SEEK_SET, NULL);
+		HRESULT hr = local_stream->Seek(move, SEEK_SET, NULL);
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_error_from_interface(local_stream, hr));
 
@@ -308,6 +409,26 @@ namespace { // private
 				BOOST_THROW_EXCEPTION(
 					com_error_from_interface(local_stream, hr));
 
+			try
+			{
+				// We create a different version of the PIDL here whose filesize
+				// is the amount copied so far. Otherwise Explorer shows a
+				// 0-byte file when the copying is done.
+				file = create_remote_itemid(
+					target.filename(), false, false, L"", L"", 0, 0, 0,
+					done, datetime_t::now(), datetime_t::now());
+
+				::SHChangeNotify(
+					SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+					(target.directory() + file).get(), NULL);
+			}
+			catch(const exception& e)
+			{
+				// Ignoring error; failing to update the shell doesn't
+				// warrant aborting the transfer
+				trace("Failed to notify shell of file update %s") % e.what();
+			}
+
 			// A failure to update the progress isn't a good enough reason
 			// to abort the copy so we swallow the exception.
 			try
@@ -327,15 +448,13 @@ namespace { // private
 	}
 
 	void create_remote_directory(
-		const com_ptr<ISftpProvider>& provider, 
-		const com_ptr<ISftpConsumer>& consumer, const wpath& remote_path)
+		const com_ptr<ISftpProvider>& provider,
+		const com_ptr<ISftpConsumer>& consumer,
+		const resolved_destination& target)
 	{
-		bstr_t path = remote_path.string();
+		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
 
-		HRESULT hr = provider->CreateNewDirectory(
-			consumer.get(), path.get_raw());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
+		sftp_directory.CreateDirectory(target.filename());
 	}
 
 	/**
@@ -469,13 +588,13 @@ namespace { // private
  *
  * @param format  IDataObject wrapper holding the items to be copied.
  * @param provider  SFTP connection to copy data over.
- * @param remote_path  Path on the target filesystem to copy items into.
- *                     This must be a path to a @b directory.
+ * @param remote_root  PIDL to target directory in the remote filesystem
+ *                     to copy items into.
  * @param progress  Optional progress dialogue.
  */
 void copy_format_to_provider(
 	PidlFormat format, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_root,
 	CopyCallback& callback)
 {
 	vector<CopylistEntry> copy_list;
@@ -489,30 +608,33 @@ void copy_format_to_provider(
 			BOOST_THROW_EXCEPTION(com_error(E_ABORT));
 
 		wpath from_path = copy_list[i].relative_path;
-		wpath to_path = remote_path / copy_list[i].relative_path;
-		assert(from_path.filename() == to_path.filename());
+
+		destination target(remote_root, copy_list[i].relative_path);
+		resolved_destination resolved_target(target.resolve_destination());
+
+		assert(
+			from_path.filename() == 
+			resolved_target.as_absolute_path().filename());
 
 		if (copy_list[i].is_folder)
 		{
 			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, to_path);
+			auto_progress->line_path(2, resolved_target.as_absolute_path());
 
-			create_remote_directory(provider, consumer, to_path);
+			create_remote_directory(provider, consumer, resolved_target);
 			
 			auto_progress->update(i, copy_list.size());
 		}
 		else
 		{
-			com_ptr<IStream> stream;
-
-			stream = stream_from_shell_pidl(
+			com_ptr<IStream> stream = stream_from_shell_pidl(
 				format.parent_folder() + copy_list[i].pidl);
 
 			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, to_path);
+			auto_progress->line_path(2, resolved_target.as_absolute_path());
 
 			copy_stream_to_remote_destination(
-				stream, provider, consumer, to_path, callback,
+				stream, provider, consumer, resolved_target, callback,
 				bind(&Progress::user_cancelled, boost::ref(*auto_progress)),
 				ProgressMicroUpdater(*auto_progress, i, copy_list.size()));
 			
@@ -531,19 +653,20 @@ void copy_format_to_provider(
  *
  * @param pdo  IDataObject holding the items to be copied.
  * @param pProvider  SFTP connection to copy data over.
- * @param remote_path  Path on the target filesystem to copy items into.
- *                     This must be a path to a @b directory.
+ * @param remote_directory  PIDL to target directory in the remote filesystem
+ *                          to copy items into.
  */
 void copy_data_to_provider(
 	com_ptr<IDataObject> data_object, com_ptr<ISftpProvider> provider, 
-	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
 	CopyCallback& callback)
 {
 	ShellDataObject data(data_object.get());
 	if (data.has_pidl_format())
 	{
 		copy_format_to_provider(
-			PidlFormat(data_object), provider, consumer, remote_path, callback);
+			PidlFormat(data_object), provider, consumer, remote_directory,
+			callback);
 	}
 	else
 	{
@@ -557,11 +680,11 @@ void copy_data_to_provider(
  */
 CDropTarget::CDropTarget(
 	com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const wpath& remote_path,
+	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
 	shared_ptr<CopyCallback> callback)
 	:
-	m_provider(provider), m_consumer(consumer), m_remote_path(remote_path),
-	m_callback(callback) {}
+	m_provider(provider), m_consumer(consumer),
+	m_remote_directory(remote_directory), m_callback(callback) {}
 
 void CDropTarget::on_set_site(com_ptr<IUnknown> ole_site)
 {
@@ -650,7 +773,7 @@ STDMETHODIMP CDropTarget::Drop(
 
 		if (pdo && *pdwEffect == DROPEFFECT_COPY)
 			copy_data_to_provider(
-				pdo, m_provider, m_consumer, m_remote_path, *m_callback);
+				pdo, m_provider, m_consumer, m_remote_directory, *m_callback);
 	}
 	WINAPI_COM_CATCH_AUTO_INTERFACE();
 

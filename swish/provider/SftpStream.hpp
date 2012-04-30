@@ -124,6 +124,7 @@ private:
 	void _Read(
 		__out_bcount_part(cb, cbRead) char *pbuf, __in ULONG cb, 
 		__out ULONG& cbRead);
+	ULONG _ReadOne(char* pbuf, ULONG cb);
 	void _Write(
 		__out_bcount_part(cb, cbWritten) const char *pbuf, __in ULONG cb,
 		__out ULONG& cbWritten);

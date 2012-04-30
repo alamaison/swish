@@ -64,15 +64,14 @@ size_t verify_stream_read_(
 			// is short
 			BOOST_CHECK_LT(bytes_read, bytes_requested);
 			total_bytes_read += bytes_read;
-			if (bytes_read == 0)
-				break; // end of file
+			break; // end of file
 		}
 		else
 		{
 			// not really requiring S_OK; S_FALSE is fine too
 			BOOST_REQUIRE_OK(hr);
 		}
-	} while (SUCCEEDED(hr) && (total_bytes_read < data_size));
+	} while (hr == S_OK && (total_bytes_read < data_size));
 
 	// Trying to read more should succeed but return 0 bytes read
 	char buf[10];

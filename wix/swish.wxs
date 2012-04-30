@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define Swish_ProductVersion = "0.6.0" ?>
+<?define Swish_ProductVersion = "0.6.1" ?>
 
 <?if $(var.Platform) = x64?>
 <?define Win64 = "yes"?>
@@ -206,6 +206,11 @@
 			<ComponentGroupRef Id="HUTrans" />
 			<ComponentGroupRef Id="SKTrans" />
 			<ComponentGroupRef Id="ZHTWTrans" />
+			<ComponentGroupRef Id="HITrans" />
+			<ComponentGroupRef Id="BGTrans" />
+			<ComponentGroupRef Id="PTTrans" />
+			<ComponentGroupRef Id="SVTrans" />
+			<ComponentGroupRef Id="ZHCNTrans" />
 		</ComponentGroup>
 
 		<Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>

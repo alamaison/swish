@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/locale.hpp> // translate, wformat
-#include <boost/make_shared.hpp> // make_shared
+#include <boost/scoped_ptr.hpp> // scoped_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
@@ -43,13 +43,13 @@
 #include <string>
 
 #include <OleIdl.h> // IOleWindow, IOleInPlaceFrame
-#include <ShlObj.h> // IProgressDialog
 #include <shobjidl.h> // IShellView, IShellBrowser
 
 using swish::tracing::trace;
 
 using namespace winapi::gui::message_box;
 using winapi::gui::window;
+using winapi::gui::progress;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -57,7 +57,7 @@ using comet::com_ptr;
 using boost::locale::translate;
 using boost::locale::wformat;
 using boost::filesystem::wpath;
-using boost::make_shared;
+using boost::scoped_ptr;
 
 using std::auto_ptr;
 using std::wstringstream;
@@ -211,38 +211,25 @@ namespace {
 	{
 	public:
 		AutoStartProgressDialog(
-			com_ptr<IProgressDialog> progress, HWND hwnd, DWORD flags,
+			com_ptr<IProgressDialog> progress_instance, HWND hwnd,
 			const wstring& title, com_ptr<IUnknown> ole_site=NULL)
-			: m_progress(progress)
-		{
-			if (!m_progress) return;
-
-			HRESULT hr;
-
-			hr = m_progress->SetTitle(title.c_str());
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error_from_interface(m_progress, hr));
-
-			hr = m_progress->StartProgressDialog(
-				hwnd, ole_site.get(), flags, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error_from_interface(m_progress, hr));
-		}
-
-		~AutoStartProgressDialog()
-		{
-			if (m_progress)
-				m_progress->StopProgressDialog();
-		}
+			:
+			m_inner(
+				new	progress(
+					progress_instance, hwnd, title,
+					progress::modality::non_modal,
+					progress::time_estimation::automatic_time_estimate,
+					progress::bar_type::progress,
+					progress::minimisable::yes,
+					progress::cancellability::cancellable, ole_site))
+		{}
 
 		/**
 		 * Has the user cancelled the operation via the progress dialogue?
 		 */
 		bool user_cancelled() const
 		{
-			return m_progress && m_progress->HasUserCancelled();
+			return m_inner->user_cancelled();
 		}
 
 		/**
@@ -250,12 +237,7 @@ namespace {
 		 */
 		void line(DWORD index, const wstring& text)
 		{
-			if (!m_progress) return;
-
-			HRESULT hr = m_progress->SetLine(index, text.c_str(), FALSE, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error_from_interface(m_progress, hr));
+			m_inner->line(index, text);
 		}
 
 		/**
@@ -265,13 +247,7 @@ namespace {
 		 */
 		void line_path(DWORD index, const wpath& path)
 		{
-			if (!m_progress) return;
-
-			HRESULT hr = m_progress->SetLine(
-				index, path.string().c_str(), TRUE, NULL);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error_from_interface(m_progress, hr));
+			m_inner->line_as_compressable_path(index, path);
 		}
 
 		/**
@@ -279,20 +255,11 @@ namespace {
 		 */
 		void update(ULONGLONG so_far, ULONGLONG out_of)
 		{
-			if (!m_progress) return;
-
-			HRESULT hr = m_progress->SetProgress64(so_far, out_of);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error_from_interface(m_progress, hr));
+			m_inner->update(so_far, out_of);
 		}
 
 	private:
-		// disable copying
-		AutoStartProgressDialog(const AutoStartProgressDialog&);
-		AutoStartProgressDialog& operator=(const AutoStartProgressDialog&);
-
-		com_ptr<IProgressDialog> m_progress;
+		scoped_ptr<progress> m_inner;
 	};
 
 	/**
@@ -395,7 +362,7 @@ auto_ptr<Progress> DropUI::progress()
 
 	return auto_ptr<Progress>(
 		new AutoStartProgressDialog(
-			m_progress, m_hwnd_owner, PROGDLG_AUTOTIME,
+			m_progress, m_hwnd_owner,
 			translate("Progress", "Copying..."), m_ole_site));
 }
 
