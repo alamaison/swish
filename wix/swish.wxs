@@ -208,6 +208,7 @@
 			<ComponentGroupRef Id="ZHTWTrans" />
 			<ComponentGroupRef Id="HITrans" />
 			<ComponentGroupRef Id="BGTrans" />
+			<ComponentGroupRef Id="PTTrans" />
 		</ComponentGroup>
 
 		<Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>

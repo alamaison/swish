@@ -38,6 +38,7 @@
     <Compile Include="hi.wxs" />
     <Compile Include="hu.wxs" />
     <Compile Include="nl.wxs" />
+    <Compile Include="pt.wxs" />
     <Compile Include="ru.wxs" />
     <Compile Include="sk.wxs" />
     <Compile Include="swish.wxs" />
