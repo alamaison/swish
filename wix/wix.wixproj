@@ -41,6 +41,7 @@
     <Compile Include="pt.wxs" />
     <Compile Include="ru.wxs" />
     <Compile Include="sk.wxs" />
+    <Compile Include="sv.wxs" />
     <Compile Include="swish.wxs" />
     <Compile Include="tr.wxs" />
     <Compile Include="it.wxs" />
