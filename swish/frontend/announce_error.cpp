@@ -52,8 +52,6 @@ using std::wstringstream;
 
 namespace {
 
-#ifdef DEBUG
-
 	wstring hexify_hr(HRESULT hr)
 	{
 		wstringstream stream;
@@ -99,8 +97,6 @@ namespace {
 	}
 
 #undef SWISH_ANNOUNCE_ERROR_HRESULT_CASE
-
-#endif // DEBUG
 
 	/**
 	 * @todo  Convert narrow to wide strings properly.
