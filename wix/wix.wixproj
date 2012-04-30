@@ -47,6 +47,7 @@
     <Compile Include="it.wxs" />
     <Compile Include="ja.wxs" />
     <Compile Include="pl.wxs" />
+    <Compile Include="zh_CN.wxs" />
     <Compile Include="zh_TW.wxs" />
   </ItemGroup>
   <ItemGroup>
