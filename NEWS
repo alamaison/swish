@@ -1,3 +1,11 @@
+swish-0.6.1
+-Significant speed improvement.
+-Installer supports Windows 8.
+-Better error reporting when copying to a remote server.
+-Fixed bug where renaming a folder did not change the name displayed.
+-Fixed bug where files did not appear after copying to remote server.
+-Hindi, Bulgarian, Portuguese, Swedish and Chinese (Simplified) translations.
+
 swish-0.6.0
 -Added double-click file opening.
 -Downgraded to libssh2 1.2.7 to fix incomplete file transfers.
