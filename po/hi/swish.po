@@ -1,4 +1,4 @@
-﻿# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
+# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
 # Administrator <rsharmatalks@yahoo.com>, 2011.
 msgid ""
 msgstr ""
