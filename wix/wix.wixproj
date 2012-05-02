@@ -49,6 +49,7 @@
     <Compile Include="pl.wxs" />
     <Compile Include="zh_CN.wxs" />
     <Compile Include="zh_TW.wxs" />
+    <Compile Include="pt_BR.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\swish\interfaces\interfaces_dll.vcproj">

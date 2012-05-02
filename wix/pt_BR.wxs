@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir381F97AAB30962AEC72351CF363A1E3A" Name="pt_BR" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="PTBRTrans">
+      <Component Id="cmp9B3FE2E7D1FE4727EBEFBA63A91C2733" Directory="dir0003C27E6B4B6D1242C425FE4372CE04" Guid="*">
+        <File Id="fil326CD021AA8E8A8C3E76B6032571EC8B" KeyPath="yes" Source="$(var.SolutionDir)\po\pt_BR\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir381F97AAB30962AEC72351CF363A1E3A">
+      <Directory Id="dir0003C27E6B4B6D1242C425FE4372CE04" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>
