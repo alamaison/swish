@@ -43,6 +43,7 @@
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/locale/message.hpp> // translate
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
+#include <boost/ptr_container/ptr_vector.hpp> // ptr_vector
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
@@ -55,7 +56,6 @@
 #include <iosfwd> // wstringstream
 #include <stdexcept> // logic_error
 #include <string>
-#include <vector>
 
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
@@ -76,6 +76,7 @@ using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
 using boost::numeric_cast;
+using boost::ptr_vector;
 using boost::shared_ptr;
 
 using comet::bstr_t;
@@ -88,7 +89,6 @@ using std::logic_error;
 using std::size_t;
 using std::wstring;
 using std::wstringstream;
-using std::vector;
 
 namespace swish {
 namespace drop_target {
@@ -458,32 +458,106 @@ namespace { // private
 	}
 
 	/**
+	 * Interface of entries in a PidlCopyList.
+	 */
+	class CopyListItem
+	{
+	public:
+		virtual apidl_t pidl() const = 0;
+		virtual wpath relative_path() const = 0;
+		virtual bool is_folder() const = 0;
+
+		CopyListItem* clone() const
+		{
+			CopyListItem* item = do_clone();
+			assert(typeid(*this) == typeid(*item) &&
+				"do_clone() sliced object!");
+			return item;
+		}
+
+	private:
+		virtual CopyListItem* do_clone() const = 0;
+	};
+
+	inline CopyListItem* new_clone(const CopyListItem& item)
+	{
+		return item.clone();
+	}
+
+	/**
 	 * Storage structure for an item in the copy list built by 
 	 * build_copy_list().
 	 */
-	struct CopylistEntry
+	class CopylistEntry : public CopyListItem
 	{
+	public:
+
 		CopylistEntry(
-			const pidl_t& pidl, wpath relative_path, bool is_folder)
+			const apidl_t& root_pidl, const pidl_t& pidl, wpath relative_path,
+			bool is_folder) :
+		m_root_pidl(root_pidl), m_pidl(pidl), m_relative_path(relative_path),
+			m_is_folder(is_folder)
+		{}
+
+		virtual apidl_t pidl() const
 		{
-			this->pidl = pidl;
-			this->relative_path = relative_path;
-			this->is_folder = is_folder;
+			return m_root_pidl + m_pidl;
 		}
 
-		pidl_t pidl;
-		wpath relative_path;
-		bool is_folder;
+		virtual wpath relative_path() const
+		{
+			return m_relative_path;
+		}
+
+		virtual bool is_folder() const
+		{
+			return m_is_folder;
+		}
+
+	private:
+
+		virtual CopylistEntry* do_clone() const
+		{
+			return new CopylistEntry(*this);
+		}
+
+		apidl_t m_root_pidl;
+		pidl_t m_pidl;
+		wpath m_relative_path;
+		bool m_is_folder;
 	};
+
+	class PidlCopyList
+	{
+	public:
+		const CopyListItem& operator[](unsigned int i)
+		{
+			return m_copy_list.at(i);
+		}
+
+		size_t size()
+		{
+			return m_copy_list.size();
+		}
+
+		void add(const CopyListItem& entry)
+		{
+			m_copy_list.push_back(entry.clone());
+		}
+
+	private:
+		ptr_vector<CopyListItem> m_copy_list;
+	};
+
 
 	void build_copy_list_recursively(
 		const apidl_t& parent, const pidl_t& folder_pidl,
-		vector<CopylistEntry>& copy_list_out)
+		PidlCopyList& copy_list_out)
 	{
 		wpath folder_path = parsing_path_from_pidl(parent, folder_pidl);
 
-		copy_list_out.push_back(
-			CopylistEntry(folder_pidl, folder_path, true));
+		copy_list_out.add(
+			CopylistEntry(parent, folder_pidl, folder_path, true));
 
 		com_ptr<IShellFolder> folder = 
 			bind_to_handler_object<IShellFolder>(parent + folder_pidl);
@@ -500,9 +574,9 @@ namespace { // private
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{
 			pidl_t pidl = folder_pidl + item;
-			copy_list_out.push_back(
+			copy_list_out.add(
 				CopylistEntry(
-					pidl, parsing_path_from_pidl(parent, pidl), false));
+					parent, pidl, parsing_path_from_pidl(parent, pidl), false));
 		}
 
 		// Recursively add folders
@@ -522,8 +596,10 @@ namespace { // private
 	/**
 	 * Expand the top-level PIDLs into a list of all items in the hierarchy.
 	 */
-	void build_copy_list(PidlFormat format, vector<CopylistEntry>& copy_list)
+	PidlCopyList build_copy_list(PidlFormat format)
 	{
+		PidlCopyList copy_list;
+
 		for (unsigned int i = 0; i < format.pidl_count(); ++i)
 		{
 			pidl_t pidl = format.relative_file(i);
@@ -534,8 +610,9 @@ namespace { // private
 				stream = stream_from_shell_pidl(format.file(i));
 				
 				CopylistEntry entry(
-					pidl, filename_from_stream(stream), false);
-				copy_list.push_back(entry);
+					format.parent_folder(), pidl, filename_from_stream(stream),
+					false);
+				copy_list.add(entry);
 			}
 			catch (const com_error&)
 			{
@@ -547,6 +624,8 @@ namespace { // private
 					format.parent_folder(), pidl, copy_list);
 			}
 		}
+
+		return copy_list;
 	}
 
 	/**
@@ -593,12 +672,11 @@ namespace { // private
  * @param progress  Optional progress dialogue.
  */
 void copy_format_to_provider(
-	PidlFormat format, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_root,
+	PidlFormat local_source_format, com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_destination_root,
 	CopyCallback& callback)
 {
-	vector<CopylistEntry> copy_list;
-	build_copy_list(format, copy_list);
+	PidlCopyList copy_list = build_copy_list(local_source_format);
 
 	std::auto_ptr<Progress> auto_progress(callback.progress());
 
@@ -607,16 +685,18 @@ void copy_format_to_provider(
 		if (auto_progress->user_cancelled())
 			BOOST_THROW_EXCEPTION(com_error(E_ABORT));
 
-		wpath from_path = copy_list[i].relative_path;
+		const CopyListItem& source = copy_list[i];
 
-		destination target(remote_root, copy_list[i].relative_path);
+		wpath from_path = source.relative_path();
+
+		destination target(remote_destination_root, from_path);
 		resolved_destination resolved_target(target.resolve_destination());
 
 		assert(
 			from_path.filename() == 
 			resolved_target.as_absolute_path().filename());
 
-		if (copy_list[i].is_folder)
+		if (source.is_folder())
 		{
 			auto_progress->line_path(1, from_path);
 			auto_progress->line_path(2, resolved_target.as_absolute_path());
@@ -627,8 +707,7 @@ void copy_format_to_provider(
 		}
 		else
 		{
-			com_ptr<IStream> stream = stream_from_shell_pidl(
-				format.parent_folder() + copy_list[i].pidl);
+			com_ptr<IStream> stream = stream_from_shell_pidl(source.pidl());
 
 			auto_progress->line_path(1, from_path);
 			auto_progress->line_path(2, resolved_target.as_absolute_path());
