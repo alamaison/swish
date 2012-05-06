@@ -253,7 +253,7 @@ PidlFormat::~PidlFormat() {}
  * The absolute PIDL to the common parent of the items in the SHELLIDLIST 
  * format.
  */
-apidl_t PidlFormat::parent_folder()
+apidl_t PidlFormat::parent_folder() const
 {
 	if (!m_data_object)
 		BOOST_THROW_EXCEPTION(std::logic_error("Empty (NULL) Data Object"));
@@ -267,7 +267,7 @@ apidl_t PidlFormat::parent_folder()
 /**
  * The absolute PIDL of the ith item in the SHELLIDLIST format.
  */
-apidl_t PidlFormat::file(UINT i)
+apidl_t PidlFormat::file(UINT i) const
 {
 	if (pidl_count() == 0)
 		BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
@@ -278,7 +278,7 @@ apidl_t PidlFormat::file(UINT i)
 /**
  * The ith relative PIDL in the SHELLIDLIST format.
  */
-pidl_t PidlFormat::relative_file(UINT i)
+pidl_t PidlFormat::relative_file(UINT i) const
 {
 	if (!m_data_object)
 		BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
@@ -297,7 +297,7 @@ pidl_t PidlFormat::relative_file(UINT i)
  * Return the number of PIDLs in the CFSTR_SHELLIDLIST format of the data
  * object.
  */
-UINT PidlFormat::pidl_count()
+UINT PidlFormat::pidl_count() const
 {
 	if (!m_data_object)
 		return 0;

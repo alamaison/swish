@@ -306,6 +306,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\PidlCopyPlan.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SequentialPlan.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SnitchingDropTarget.cpp"
 				>
 			</File>
@@ -340,7 +348,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PidlCopyPlan.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Plan.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Progress.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SequentialPlan.hpp"
 				>
 			</File>
 			<File

@@ -63,10 +63,10 @@ public:
 	PidlFormat(const comet::com_ptr<IDataObject>& data_object);
 	~PidlFormat();
 
-	winapi::shell::pidl::apidl_t parent_folder();
-	winapi::shell::pidl::apidl_t file(UINT i);
-	winapi::shell::pidl::pidl_t relative_file(UINT i);
-	UINT pidl_count();
+	winapi::shell::pidl::apidl_t parent_folder() const;
+	winapi::shell::pidl::apidl_t file(UINT i) const;
+	winapi::shell::pidl::pidl_t relative_file(UINT i) const;
+	UINT pidl_count() const;
 
 private:
 	comet::com_ptr<IDataObject> m_data_object;
