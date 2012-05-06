@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,10 @@
 
 #include "swish/shell_folder/shell.hpp"
 
+#include <winapi/shell/shell.hpp> // bind_to_handler_object
+
 #include <comet/error.h> // com_error
+
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
@@ -37,9 +40,10 @@
 #include <string>
 #include <vector>
 
-using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::ui_object_of_items;
+
+using winapi::shell::bind_to_handler_object;
 
 using boost::filesystem::wpath;
 using boost::shared_ptr;

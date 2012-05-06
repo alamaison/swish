@@ -29,12 +29,12 @@
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // ShellDataObject
-#include "swish/shell_folder/shell.hpp"  // bind_to_handler_object
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/shell/shell.hpp> // strret_to_string, parsing_name_from_pidl
+#include <winapi/shell/shell.hpp> // strret_to_string, parsing_name_from_pidl,
+                                  // bind_to_handler_object
 #include <winapi/trace.hpp> // trace
 
 #include <boost/bind.hpp> // bind
@@ -61,8 +61,8 @@ using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::bind_to_handler_object;
 
+using winapi::shell::bind_to_handler_object;
 using winapi::shell::parsing_name_from_pidl;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;

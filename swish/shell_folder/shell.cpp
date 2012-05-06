@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,30 +26,23 @@
 
 #include "shell.hpp"
 
-#include <winapi/shell/shell.hpp> // strret_to_string, parsing_name_from_pidl
+#include <winapi/shell/shell.hpp> // parsing_name_from_pidl
 
 #include <comet/error.h> // com_error
 
-#include <string>
-
-#include <shlobj.h>  // SHGetDesktopFolder, SHILCreateFromPath, ILFree
+#include <shlobj.h>  // SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
 using winapi::shell::parsing_name_from_pidl;
-using winapi::shell::strret_to_string;
 
 using comet::com_error;
-using comet::com_error_from_interface;
 using comet::com_ptr;
-using comet::uuidof;
 
 using boost::filesystem::wpath;
 using boost::filesystem::wdirectory_iterator;
 using boost::shared_ptr;
 
 using std::invalid_argument;
-using std::wstring;
-using std::vector;
 
 namespace swish {
 namespace shell_folder {

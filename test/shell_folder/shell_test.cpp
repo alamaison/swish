@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,8 +32,7 @@
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
 
-#include <winapi/shell/shell.hpp> // desktop_folder
-#include <comet/ptr.h>  // com_ptr
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -44,7 +43,6 @@
 #include <string>
 #include <algorithm>  // transform
 
-using swish::shell_folder::bind_to_handler_object;
 using swish::shell_folder::ui_object_of_item;
 using swish::shell_folder::ui_object_of_items;
 using swish::shell_folder::path_from_pidl;
@@ -55,12 +53,9 @@ using swish::shell_folder::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
 
 using winapi::shell::pidl::apidl_t;
-using winapi::shell::desktop_folder;
 
 using test::ComFixture;
 using test::SandboxFixture;
-
-using comet::com_ptr;
 
 using boost::filesystem::wpath;
 using boost::test_tools::predicate_result;
@@ -241,70 +236,6 @@ BOOST_AUTO_TEST_CASE( multi_item_ui_object )
 		pidl_path_equivalence(format.parent_folder(), Sandbox()));
 	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
 	BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
-}
-
-/**
- * Ask for the IShellFolder handler of the sandbox folder. Check that the
- * enumeration of this folder has the expected contents.
- *
- * Tests bind_to_handler_object().
- */
-BOOST_AUTO_TEST_CASE( handler_object )
-{
-	wpath file = NewFileInSandbox();
-
-	shared_ptr<ITEMIDLIST_ABSOLUTE> sandbox = pidl_from_path(Sandbox());
-	com_ptr<IShellFolder> folder = bind_to_handler_object<IShellFolder>(
-		sandbox.get());
-
-	com_ptr<IEnumIDList> enum_items;
-	HRESULT hr = folder->EnumObjects(
-		NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, enum_items.out());
-	BOOST_REQUIRE_OK(hr);
-
-	enum_items->Reset();
-
-	PITEMID_CHILD child_pidl;
-	hr = enum_items->Next(1, &child_pidl, NULL);
-	BOOST_REQUIRE_OK(hr);
-
-	shared_ptr<ITEMIDLIST_ABSOLUTE> pidl(
-		::ILCombine(sandbox.get(), child_pidl), ::ILFree);
-	::ILFree(child_pidl);
-
-	BOOST_REQUIRE(pidl_path_equivalence(pidl.get(), file));
-	BOOST_REQUIRE_NE(enum_items->Next(1, &child_pidl, NULL), S_OK);
-}
-
-/**
- * Ask for an IShellFolder handler using a NULL PIDL.  This should return
- * the handler of the Desktop folder.
- *
- * Tests bind_to_handler_object().
- */
-BOOST_AUTO_TEST_CASE( handler_object_null_pidl )
-{
-	com_ptr<IShellFolder> desktop = desktop_folder();
-	com_ptr<IShellFolder> folder = bind_to_handler_object<IShellFolder>(NULL);
-
-	BOOST_REQUIRE(folder == desktop);
-}
-
-/**
- * Ask for an IShellFolder handler using an empty PIDL.  This should return
- * the handler of the Desktop folder.
- *
- * Tests bind_to_handler_object().
- */
-BOOST_AUTO_TEST_CASE( handler_object_empty_pidl )
-{
-	com_ptr<IShellFolder> desktop = desktop_folder();
-	SHITEMID empty = {0, {0}};
-	PCIDLIST_ABSOLUTE pidl = reinterpret_cast<PCIDLIST_ABSOLUTE>(&empty);
-
-	com_ptr<IShellFolder> folder = bind_to_handler_object<IShellFolder>(pidl);
-
-	BOOST_REQUIRE(folder == desktop);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

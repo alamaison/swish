@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,16 +36,12 @@
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/iterator/indirect_iterator.hpp>
 
-#include <winapi/shell/shell.hpp> // desktop_folder
-#include <winapi/shell/pidl.hpp> // pidl_t, PIDL wrapper types
-
 #include <shobjidl.h>  // IShellFolder
 #include <ObjIdl.h>  // IDataObject
 
 #include <vector>
-#include <string>
 #include <algorithm>  // transform
-#include <stdexcept>  // range_error, invalid_argument
+#include <stdexcept>  // invalid_argument
 
 namespace { // private
 
@@ -186,44 +182,6 @@ template<typename T>
 comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
 {
 	return ui_object_of_items<T>(&pidl, &pidl + 1);
-}
-
-/**
- * Bind to the handler object of an item.
- *
- * This handler object is usually an IShellFolder implementation but may be
- * an IStream as well as other handler types.  The type of handler is
- * determined by the template parameter.
- *
- * Analogous to BindToObject().
- *
- * @templateparam T  Type of handler to return.
- *
- * @param pidl  The item for which the handler is being requested.  Usually a
- *              PIDL for a folder when T is IShellFolder.
- *              If pidl is NULL or is the empty PIDL, the item is the Desktop
- *              folder.
- */
-template<typename T>
-comet::com_ptr<T> bind_to_handler_object(
-	const winapi::shell::pidl::pidl_t& pidl)
-{
-	comet::com_ptr<IShellFolder> desktop = winapi::shell::desktop_folder();
-	comet::com_ptr<T> handler;
-
-	if (pidl.empty()) // get handler via QI
-		return try_cast(desktop);
-
-	HRESULT hr = desktop->BindToObject(
-		(pidl.empty()) ? NULL : pidl.get(), NULL, comet::uuidof<T>(), 
-		reinterpret_cast<void**>(handler.out()));
-
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(comet::com_error_from_interface(desktop, hr));
-	if (!handler)
-		BOOST_THROW_EXCEPTION(comet::com_error(E_FAIL));
-
-	return handler;
 }
 
 }} // namespace swish::shell_folder
