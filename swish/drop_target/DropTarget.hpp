@@ -29,17 +29,16 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
+#include "swish/drop_target/CopyCallback.hpp" // CopyCallback
+#include "swish/drop_target/Progress.hpp" // Progress
+
 #include <winapi/object_with_site.hpp> // object_with_site
 #include <winapi/shell/pidl.hpp> // apidl_t
 
-#include <boost/filesystem.hpp>  // wpath
 #include <boost/shared_ptr.hpp> // shared_ptr to UI callback
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
-
-#include <memory> // auto_ptr
-#include <string>
 
 #include <OleIdl.h> // IDropTarget
 #include <OCIdl.h> // IObjectWithSite
@@ -55,26 +54,6 @@ template<> struct comet::comtype<IDropTarget>
 
 namespace swish {
 namespace drop_target {
-
-class Progress
-{
-public:
-	virtual ~Progress() {}
-	virtual bool user_cancelled() const = 0;
-	virtual void line(DWORD index, const std::wstring& text) = 0;
-	virtual void line_path(
-		DWORD index, const boost::filesystem::wpath& path) = 0;
-	virtual void update(ULONGLONG so_far, ULONGLONG out_of) = 0;
-};
-
-class CopyCallback
-{
-public:
-	virtual ~CopyCallback() {}
-	virtual void site(comet::com_ptr<IUnknown> ole_site) = 0;
-	virtual bool can_overwrite(const boost::filesystem::wpath& target) = 0;
-	virtual std::auto_ptr<Progress> progress() = 0;
-};
 
 class CDropTarget :
 	public comet::simple_object<IDropTarget, winapi::object_with_site>

@@ -254,6 +254,14 @@
 			UniqueIdentifier="{9662537D-200D-488d-BF14-C6A84DE3C786}"
 			>
 			<File
+				RelativePath=".\CopyFileOperation.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CreateDirectoryOperation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DropTarget.cpp"
 				>
 			</File>
@@ -308,11 +316,31 @@
 			UniqueIdentifier="{48657AF1-C41C-4cb1-B816-5986F8301546}"
 			>
 			<File
+				RelativePath=".\CopyCallback.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CopyFileOperation.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CreateDirectoryOperation.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DropTarget.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\DropUI.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Operation.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Progress.hpp"
 				>
 			</File>
 			<File

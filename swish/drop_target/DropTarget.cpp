@@ -26,22 +26,24 @@
 
 #include "DropTarget.hpp"
 
+#include "swish/drop_target/CopyFileOperation.hpp" // CopyFileOperation
+#include "swish/drop_target/CreateDirectoryOperation.hpp"
+                                                    // CreateDirectoryOperation
+#include "swish/drop_target/Operation.hpp" // Operation
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
-#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // ShellDataObject
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string, parsing_name_from_pidl,
-                                  // bind_to_handler_object
-#include <winapi/trace.hpp> // trace
+                                  // bind_to_handler_object, stream_from_pidl
 
 #include <boost/bind.hpp> // bind
 #include <boost/cstdint.hpp> // int64_t
 #include <boost/function.hpp> // function
 #include <boost/foreach.hpp> // BOOST_FOREACH
-#include <boost/locale/message.hpp> // translate
+#include <boost/lambda/lambda.hpp> // _1, _2
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/ptr_container/ptr_vector.hpp> // ptr_vector
 #include <boost/shared_ptr.hpp>  // shared_ptr
@@ -53,11 +55,10 @@
 
 #include <cassert> // assert
 #include <exception> // exception
-#include <iosfwd> // wstringstream
+#include <functional> // unary_function
 #include <stdexcept> // logic_error
 #include <string>
 
-using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
@@ -67,14 +68,13 @@ using winapi::shell::parsing_name_from_pidl;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
+using winapi::shell::stream_from_pidl;
 using winapi::shell::strret_to_string;
-using winapi::trace;
 
 using boost::bind;
 using boost::int64_t;
 using boost::filesystem::wpath;
 using boost::function;
-using boost::locale::translate;
 using boost::numeric_cast;
 using boost::ptr_vector;
 using boost::shared_ptr;
@@ -88,7 +88,6 @@ using std::exception;
 using std::logic_error;
 using std::size_t;
 using std::wstring;
-using std::wstringstream;
 
 namespace swish {
 namespace drop_target {
@@ -116,45 +115,6 @@ namespace { // private
 		return DROPEFFECT_NONE;
 	}
 
-	/**
-	 * Given a PIDL to a *real* file in the filesystem, return an IStream 
-	 * to it.
-	 *
-	 * @note  This fails with E_NOTIMPL on Windows 2000 and below.
-	 */
-	com_ptr<IStream> stream_from_shell_pidl(const apidl_t& pidl)
-	{
-		PCUITEMID_CHILD pidl_child;
-		HRESULT hr;
-		com_ptr<IShellFolder> folder;
-		
-		hr = swish::windows_api::SHBindToParent(
-			pidl.get(), folder.iid(), reinterpret_cast<void**>(folder.out()),
-			&pidl_child);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(
-				com_error("Couldn't get parent folder of source file", hr));
-
-		com_ptr<IStream> stream;
-		
-		hr = folder->BindToObject(
-			pidl_child, NULL, stream.iid(),
-			reinterpret_cast<void**>(stream.out()));
-		if (FAILED(hr))
-		{
-			hr = folder->BindToStorage(
-				pidl_child, NULL, stream.iid(),
-				reinterpret_cast<void**>(stream.out()));
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error(
-						L"Couldn't get stream for source file: " +
-						parsing_name_from_pidl(pidl), hr));
-		}
-
-		return stream;
-	}
-
 	std::pair<wpath, int64_t> stat_stream(const com_ptr<IStream>& stream)
 	{
 		STATSTG statstg;
@@ -172,14 +132,6 @@ namespace { // private
 	wpath filename_from_stream(const com_ptr<IStream>& stream)
 	{
 		return stat_stream(stream).first;
-	}
-
-	/**
-	 * Return size of the streamed object in bytes.
-	 */
-	int64_t size_of_stream(const com_ptr<IStream>& stream)
-	{
-		return stat_stream(stream).second;
 	}
 
 	/**
@@ -224,8 +176,6 @@ namespace { // private
 			parsing_path_from_pidl(parent + item, ::ILNext(pidl.get()));
 	}
 
-	const size_t COPY_CHUNK_SIZE = 1024 * 32;
-
 	/**
 	 * Calculate percentage.
 	 *
@@ -238,44 +188,6 @@ namespace { // private
 		else
 			return numeric_cast<int>((done * 100) / total);
 	}
-
-	/**
-	 * A destination (directory or file) on the remote server given as a
-	 * directory PIDL and a filename.
-	 */
-	class resolved_destination
-	{
-	public:
-		resolved_destination(
-			const apidl_t& remote_directory, const wstring& filename)
-			: m_remote_directory(remote_directory), m_filename(filename)
-		{
-			if (wpath(m_filename).has_parent_path())
-				BOOST_THROW_EXCEPTION(
-					logic_error(
-						"Path not properly resolved; filename expected"));
-		}
-
-		const apidl_t& directory() const
-		{
-			return m_remote_directory;
-		}
-
-		const wstring filename() const
-		{
-			return m_filename;
-		}
-
-		wpath as_absolute_path() const
-		{
-			return absolute_path_from_swish_pidl(m_remote_directory) /
-				m_filename;
-		}
-
-	private:
-		apidl_t m_remote_directory;
-		wstring m_filename;
-	};
 
 	/**
 	 * A destination (directory or file) on the remote server given as a
@@ -319,234 +231,96 @@ namespace { // private
 	};
 
 	/**
-	 * Write a stream to the provider at the given path.
+	 * Functor handles 'intra-file' progress.
+	 * 
+	 * In other words, it handles the small increments that happen during the
+	 * upload of one file amongst many.  We need this to give meaningful
+	 * progress when only a small number of files are being dropped.
 	 *
-	 * If it already exists, we want to ask the user for confirmation.
-	 * The poor-mans way of checking if the file is already there is to
-	 * try to get the file read-only first.  If this fails, assume the
-	 * file noes not already exist.
-	 *
-	 * @bug  The get may have failed for a different reason or this
-	 *       may not work reliably on all SFTP servers.  A safer
-	 *       solution would be an explicit stat on the file.
-	 *
-	 * @bug  Of course, there is a race condition here.  After we check if the
-	 *       file exists, someone else may have created it.  Unfortunately,
-	 *       there is nothing we can do about this as SFTP doesn't give us
-	 *       a way to do this atomically such as locking a file.
+	 * @bug  Vulnerable to integer overflow with a very large number of files.
 	 */
-	void copy_stream_to_remote_destination(
-		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
-		com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
-		CopyCallback& callback, function<bool()> cancelled,
-		function<void(int)> report_percent_done )
-	{
-		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
-
-		cpidl_t file = create_remote_itemid(
-			target.filename(), false, false, L"", L"", 0, 0, 0, 0,
-			datetime_t::now(), datetime_t::now());
-
-		if (sftp_directory.exists(file))
-		{
-			if (!callback.can_overwrite(target.as_absolute_path()))
-				return;
-		}
-
-		com_ptr<IStream> remote_stream;
-		
-		try
-		{
-			remote_stream = sftp_directory.GetFile(file, true);
-		}
-		catch (const com_error& provider_error)
-		{
-			// TODO: once we decomtaminate the provider, move this to the
-			// snitching drop target so it can use the info in the task dialog
-
-			wstringstream new_message;
-			new_message <<
-				translate("Unable to create file on the server:") << L"\n";
-			new_message << provider_error.description();
-			new_message << L"\n" << target.as_absolute_path();
-
-			BOOST_THROW_EXCEPTION(
-				com_error(
-					new_message.str(), provider_error.hr(),
-					provider_error.source(), provider_error.guid(),
-					provider_error.help_file(), provider_error.help_context()));
-		}
-
-		::SHChangeNotify(
-			SHCNE_CREATE, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-			(target.directory() + file).get(), NULL);
-
-		// Set both streams back to the start
-		LARGE_INTEGER move = {0};
-		HRESULT hr = local_stream->Seek(move, SEEK_SET, NULL);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(local_stream, hr));
-
-		hr = remote_stream->Seek(move, SEEK_SET, NULL);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(remote_stream, hr));
-
-		// Do the copy in chunks allowing us to cancel the operation
-		// and display progress
-		ULARGE_INTEGER cb;
-		cb.QuadPart = COPY_CHUNK_SIZE;
-		int64_t done = 0;
-		int64_t total = size_of_stream(local_stream);
-		while (!cancelled())
-		{
-			ULARGE_INTEGER cbRead = {0};
-			ULARGE_INTEGER cbWritten = {0};
-			// TODO: make our own CopyTo that propagates errors
-			hr = local_stream->CopyTo(
-				remote_stream.get(), cb, &cbRead, &cbWritten);
-			assert(FAILED(hr) || cbRead.QuadPart == cbWritten.QuadPart);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(
-					com_error_from_interface(local_stream, hr));
-
-			try
-			{
-				// We create a different version of the PIDL here whose filesize
-				// is the amount copied so far. Otherwise Explorer shows a
-				// 0-byte file when the copying is done.
-				file = create_remote_itemid(
-					target.filename(), false, false, L"", L"", 0, 0, 0,
-					done, datetime_t::now(), datetime_t::now());
-
-				::SHChangeNotify(
-					SHCNE_UPDATEITEM, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-					(target.directory() + file).get(), NULL);
-			}
-			catch(const exception& e)
-			{
-				// Ignoring error; failing to update the shell doesn't
-				// warrant aborting the transfer
-				trace("Failed to notify shell of file update %s") % e.what();
-			}
-
-			// A failure to update the progress isn't a good enough reason
-			// to abort the copy so we swallow the exception.
-			try
-			{
-				done += cbWritten.QuadPart;
-				report_percent_done(percentage(done, total));
-			}
-			catch (const std::exception& e)
-			{
-				trace("Progress threw exception: %s") % e.what();
-				assert(false);
-			}
-
-			if (cbRead.QuadPart == 0)
-				break; // finished
-		}
-	}
-
-	void create_remote_directory(
-		const com_ptr<ISftpProvider>& provider,
-		const com_ptr<ISftpConsumer>& consumer,
-		const resolved_destination& target)
-	{
-		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
-
-		sftp_directory.CreateDirectory(target.filename());
-	}
-
-	/**
-	 * Interface of entries in a PidlCopyList.
-	 */
-	class CopyListItem
+	class ProgressMicroUpdater : public std::unary_function<int, void>
 	{
 	public:
-		virtual apidl_t pidl() const = 0;
-		virtual wpath relative_path() const = 0;
-		virtual bool is_folder() const = 0;
-
-		CopyListItem* clone() const
-		{
-			CopyListItem* item = do_clone();
-			assert(typeid(*this) == typeid(*item) &&
-				"do_clone() sliced object!");
-			return item;
-		}
-
-	private:
-		virtual CopyListItem* do_clone() const = 0;
-	};
-
-	inline CopyListItem* new_clone(const CopyListItem& item)
-	{
-		return item.clone();
-	}
-
-	/**
-	 * Storage structure for an item in the copy list built by 
-	 * build_copy_list().
-	 */
-	class CopylistEntry : public CopyListItem
-	{
-	public:
-
-		CopylistEntry(
-			const apidl_t& root_pidl, const pidl_t& pidl, wpath relative_path,
-			bool is_folder) :
-		m_root_pidl(root_pidl), m_pidl(pidl), m_relative_path(relative_path),
-			m_is_folder(is_folder)
+		ProgressMicroUpdater(
+			Progress& auto_progress, size_t current_file_index,
+			size_t total_files)
+			: m_auto_progress(auto_progress),
+			  m_current_file_index(current_file_index),
+			  m_total_files(total_files)
 		{}
 
-		virtual apidl_t pidl() const
+		void operator()(int percent_done)
 		{
-			return m_root_pidl + m_pidl;
-		}
-
-		virtual wpath relative_path() const
-		{
-			return m_relative_path;
-		}
-
-		virtual bool is_folder() const
-		{
-			return m_is_folder;
+			unsigned long long pos =
+				(m_current_file_index * 100) + percent_done;
+			m_auto_progress.update(pos, m_total_files * 100);
 		}
 
 	private:
-
-		virtual CopylistEntry* do_clone() const
-		{
-			return new CopylistEntry(*this);
-		}
-
-		apidl_t m_root_pidl;
-		pidl_t m_pidl;
-		wpath m_relative_path;
-		bool m_is_folder;
+		Progress& m_auto_progress;
+		size_t m_current_file_index;
+		size_t m_total_files;
 	};
 
 	class PidlCopyList
 	{
 	public:
-		const CopyListItem& operator[](unsigned int i)
+		const Operation& operator[](unsigned int i) const
 		{
 			return m_copy_list.at(i);
 		}
 
-		size_t size()
+		size_t size() const
 		{
 			return m_copy_list.size();
 		}
 
-		void add(const CopyListItem& entry)
+		void add(const Operation& entry)
 		{
 			m_copy_list.push_back(entry.clone());
 		}
 
+		void do_copy(
+			const apidl_t& remote_destination_root, Progress& progress,
+			com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
+			CopyCallback& callback)
+			const
+		{
+			for (unsigned int i = 0; i < size(); ++i)
+			{
+				if (progress.user_cancelled())
+					BOOST_THROW_EXCEPTION(com_error(E_ABORT));
+
+				const Operation& source = (*this)[i];
+
+				destination target(remote_destination_root, source.relative_path());
+				resolved_destination resolved_target(target.resolve_destination());
+
+				assert(
+					source.relative_path().filename() == 
+					resolved_target.as_absolute_path().filename());
+
+				progress.line_path(1, source.relative_path());
+				progress.line_path(2, resolved_target.as_absolute_path());
+ 
+				ProgressMicroUpdater micro_updater(progress, i, size());
+
+				source(
+					resolved_target, bind(micro_updater, bind(percentage, _1, _2)),
+					provider, consumer, callback);
+
+				// We update here as well, fixing the progress to a file boundary,
+				// as we don't completely trust the intra-file progress.  A stream
+				// could have lied about its size messing up the count.  This
+				// will override any such errors.
+
+				progress.update(i, size());
+			}
+		}
+
 	private:
-		ptr_vector<CopyListItem> m_copy_list;
+		ptr_vector<Operation> m_copy_list;
 	};
 
 
@@ -557,7 +331,7 @@ namespace { // private
 		wpath folder_path = parsing_path_from_pidl(parent, folder_pidl);
 
 		copy_list_out.add(
-			CopylistEntry(parent, folder_pidl, folder_path, true));
+			CreateDirectoryOperation(parent, folder_pidl, folder_path));
 
 		com_ptr<IShellFolder> folder = 
 			bind_to_handler_object<IShellFolder>(parent + folder_pidl);
@@ -575,8 +349,8 @@ namespace { // private
 		{
 			pidl_t pidl = folder_pidl + item;
 			copy_list_out.add(
-				CopylistEntry(
-					parent, pidl, parsing_path_from_pidl(parent, pidl), false));
+				CopyFileOperation(
+					parent, pidl, parsing_path_from_pidl(parent, pidl)));
 		}
 
 		// Recursively add folders
@@ -607,11 +381,10 @@ namespace { // private
 			{
 				// Test if streamable
 				com_ptr<IStream> stream;
-				stream = stream_from_shell_pidl(format.file(i));
+				stream = stream_from_pidl(format.file(i));
 				
-				CopylistEntry entry(
-					format.parent_folder(), pidl, filename_from_stream(stream),
-					false);
+				CopyFileOperation entry(
+					format.parent_folder(), pidl, filename_from_stream(stream));
 				copy_list.add(entry);
 			}
 			catch (const com_error&)
@@ -627,39 +400,6 @@ namespace { // private
 
 		return copy_list;
 	}
-
-	/**
-	 * Functor handles 'intra-file' progress.
-	 * 
-	 * In other words, it handles the small increments that happen during the
-	 * upload of one file amongst many.  We need this to give meaningful
-	 * progress when only a small number of files are being dropped.
-	 *
-	 * @bug  Vulnerable to integer overflow with a very large number of files.
-	 */
-	class ProgressMicroUpdater
-	{
-	public:
-		ProgressMicroUpdater(
-			Progress& auto_progress, size_t current_file_index,
-			size_t total_files)
-			: m_auto_progress(auto_progress),
-			  m_current_file_index(current_file_index),
-			  m_total_files(total_files)
-		{}
-
-		void operator()(int percent_done)
-		{
-			unsigned long long pos =
-				(m_current_file_index * 100) + percent_done;
-			m_auto_progress.update(pos, m_total_files * 100);
-		}
-
-	private:
-		Progress& m_auto_progress;
-		size_t m_current_file_index;
-		size_t m_total_files;
-	};
 }
 
 /**
@@ -678,53 +418,10 @@ void copy_format_to_provider(
 {
 	PidlCopyList copy_list = build_copy_list(local_source_format);
 
-	std::auto_ptr<Progress> auto_progress(callback.progress());
+	std::auto_ptr<Progress> progress(callback.progress());
 
-	for (unsigned int i = 0; i < copy_list.size(); ++i)
-	{
-		if (auto_progress->user_cancelled())
-			BOOST_THROW_EXCEPTION(com_error(E_ABORT));
-
-		const CopyListItem& source = copy_list[i];
-
-		wpath from_path = source.relative_path();
-
-		destination target(remote_destination_root, from_path);
-		resolved_destination resolved_target(target.resolve_destination());
-
-		assert(
-			from_path.filename() == 
-			resolved_target.as_absolute_path().filename());
-
-		if (source.is_folder())
-		{
-			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, resolved_target.as_absolute_path());
-
-			create_remote_directory(provider, consumer, resolved_target);
-			
-			auto_progress->update(i, copy_list.size());
-		}
-		else
-		{
-			com_ptr<IStream> stream = stream_from_shell_pidl(source.pidl());
-
-			auto_progress->line_path(1, from_path);
-			auto_progress->line_path(2, resolved_target.as_absolute_path());
-
-			copy_stream_to_remote_destination(
-				stream, provider, consumer, resolved_target, callback,
-				bind(&Progress::user_cancelled, boost::ref(*auto_progress)),
-				ProgressMicroUpdater(*auto_progress, i, copy_list.size()));
-			
-			// We update here as well, fixing the progress to a file boundary,
-			// as we don't completely trust the intra-file progress.  A stream
-			// could have lied about its size messing up the count.  This
-			// will override any such errors.
-
-			auto_progress->update(i, copy_list.size());
-		}
-	}
+	copy_list.do_copy(
+		remote_destination_root, *progress, provider, consumer, callback);
 }
 
 /**
