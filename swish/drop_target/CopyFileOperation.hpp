@@ -28,7 +28,10 @@
 #define SWISH_DROP_TARGET_COPYFILEOPERATION_HPP
 #pragma once
 
-#include "swish/drop_target/Operation.hpp" // Operation
+#include "swish/drop_target/Operation.hpp"
+#include "swish/drop_target/SftpDestination.hpp"
+
+#include <winapi/shell/pidl.hpp> // apidl_t
 
 namespace swish {
 namespace drop_target {
@@ -38,16 +41,16 @@ class CopyFileOperation : public Operation
 public:
 
 	CopyFileOperation(
-		const winapi::shell::pidl::apidl_t& root_pidl,
-		const winapi::shell::pidl::pidl_t& pidl,
-		const boost::filesystem::wpath& relative_path);
+		const winapi::shell::pidl::apidl_t& source_pidl,
+		const SftpDestination& destination);
 
-	virtual winapi::shell::pidl::apidl_t pidl() const;
+public: // Operation
 
-	virtual boost::filesystem::wpath relative_path() const;
+	virtual std::wstring title() const;
 
-	virtual void operator()(
-		const resolved_destination& target, 
+	virtual std::wstring description() const;
+
+	virtual void operator()( 
 		boost::function<void(ULONGLONG, ULONGLONG)> progress,
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
@@ -57,9 +60,8 @@ private:
 
 	virtual Operation* do_clone() const;
 
-	winapi::shell::pidl::apidl_t m_root_pidl;
-	winapi::shell::pidl::pidl_t m_pidl;
-	boost::filesystem::wpath m_relative_path;
+	winapi::shell::pidl::apidl_t m_source_pidl;
+	SftpDestination m_destination;
 };
 
 }}

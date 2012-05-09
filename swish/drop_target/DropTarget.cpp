@@ -85,30 +85,29 @@ namespace { // private
 /**
  * Copy the items in the DataObject to the remote target.
  *
- * @param format  IDataObject wrapper holding the items to be copied.
- * @param provider  SFTP connection to copy data over.
- * @param remote_root  PIDL to target directory in the remote filesystem
- *                     to copy items into.
- * @param progress  Optional progress dialogue.
+ * @param source_format     Clipboard PIDL format holding the items to be copied.
+ * @param provider          SFTP connection to copy data over.
+ * @param destination_root  PIDL to target directory in the remote filesystem
+ *                          to copy items into.
+ * @param progress          Progress dialogue.
  */
 void copy_format_to_provider(
-	PidlFormat local_source_format, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_destination_root,
+	PidlFormat source_format, com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
 	CopyCallback& callback)
 {
-	PidlCopyPlan copy_list(local_source_format);
+	PidlCopyPlan copy_list(source_format, destination_root);
 
 	auto_ptr<Progress> progress(callback.progress());
 
-	copy_list.execute_plan(
-		remote_destination_root, *progress, provider, consumer, callback);
+	copy_list.execute_plan(*progress, provider, consumer, callback);
 }
 
 /**
  * Copy the items in the DataObject to the remote target.
  *
- * @param pdo  IDataObject holding the items to be copied.
- * @param pProvider  SFTP connection to copy data over.
+ * @param data_object       IDataObject holding the items to be copied.
+ * @param provider          SFTP connection to copy data over.
  * @param remote_directory  PIDL to target directory in the remote filesystem
  *                          to copy items into.
  */

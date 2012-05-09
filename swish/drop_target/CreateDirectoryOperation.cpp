@@ -36,26 +36,25 @@ using boost::function;
 
 using comet::com_ptr;
 
+using std::wstring;
+
 namespace swish {
 namespace drop_target {
 
 CreateDirectoryOperation::CreateDirectoryOperation(
-	const apidl_t& root_pidl, const pidl_t& pidl, const wpath& relative_path) :
-m_root_pidl(root_pidl), m_pidl(pidl), m_relative_path(relative_path)
-{}
+	const SftpDestination& target) : m_destination(target) {}
 
-apidl_t CreateDirectoryOperation::pidl() const
+wstring CreateDirectoryOperation::title() const
 {
-	return m_root_pidl + m_pidl;
+	return m_destination.resolve_destination().filename();
 }
 
-wpath CreateDirectoryOperation::relative_path() const
+wstring CreateDirectoryOperation::description() const
 {
-	return m_relative_path;
+	return m_destination.resolve_destination().as_absolute_path().string();
 }
 
 void CreateDirectoryOperation::operator()(
-	const resolved_destination& target, 
 	function<void(ULONGLONG, ULONGLONG)> progress,
 	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
 	CopyCallback& /*callback*/)
@@ -63,8 +62,11 @@ void CreateDirectoryOperation::operator()(
 {
 	progress(0, 1);
 
-	CSftpDirectory sftp_directory(target.directory(), provider, consumer);
-	sftp_directory.CreateDirectory(target.filename());
+	resolved_destination resolved_target(m_destination.resolve_destination());
+
+	CSftpDirectory sftp_directory(
+		resolved_target.directory(), provider, consumer);
+	sftp_directory.CreateDirectory(resolved_target.filename());
 
 	progress(1, 1);
 }

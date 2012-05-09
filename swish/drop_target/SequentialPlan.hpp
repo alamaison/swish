@@ -35,6 +35,8 @@
 namespace swish {
 namespace drop_target {
 
+class Operation;
+
 /**
  * Standard plan implementation made from list of Operation objects.
  *
@@ -45,12 +47,7 @@ class SequentialPlan : public Plan
 {
 public: // Plan
 
-	virtual const Operation& operator[](unsigned int i) const;
-
-	virtual std::size_t size() const;
-
 	virtual void execute_plan(
-		const winapi::shell::pidl::apidl_t& remote_destination_root,
 		Progress& progress, comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer, CopyCallback& callback)
 		const;

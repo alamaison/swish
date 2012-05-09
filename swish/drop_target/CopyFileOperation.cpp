@@ -31,7 +31,7 @@
 #include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
-#include <winapi/shell/shell.hpp> // stream_from_pidl
+#include <winapi/shell/shell.hpp> // stream_from_pidl, parsing_name_from_pidl
 #include <winapi/trace.hpp> // trace
 
 #include <comet/datetime.h> // datetime_t
@@ -50,6 +50,7 @@
 
 using swish::remote_folder::create_remote_itemid;
 
+using winapi::shell::parsing_name_from_pidl;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
@@ -233,30 +234,30 @@ namespace {
 }
 
 CopyFileOperation::CopyFileOperation(
-	const apidl_t& root_pidl, const pidl_t& pidl, const wpath& relative_path) :
-m_root_pidl(root_pidl), m_pidl(pidl), m_relative_path(relative_path)
-{}
+	const apidl_t& source_pidl, const SftpDestination& destination) :
+m_source_pidl(source_pidl), m_destination(destination) {}
 
-apidl_t CopyFileOperation::pidl() const
+std::wstring CopyFileOperation::title() const
 {
-	return m_root_pidl + m_pidl;
+	return parsing_name_from_pidl(m_source_pidl);
 }
 
-wpath CopyFileOperation::relative_path() const
+std::wstring CopyFileOperation::description() const
 {
-	return m_relative_path;
+	return m_destination.resolve_destination().as_absolute_path().string();
 }
 
 void CopyFileOperation::operator()(
-	const resolved_destination& target, 
 	function<void(ULONGLONG, ULONGLONG)> progress,
 	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
 	CopyCallback& callback)	const
 {
-	com_ptr<IStream> stream = stream_from_pidl(pidl());
+	com_ptr<IStream> stream = stream_from_pidl(m_source_pidl);
+
+	resolved_destination resolved_target(m_destination.resolve_destination());
 
 	copy_stream_to_remote_destination(
-		stream, provider, consumer, target, callback,
+		stream, provider, consumer, resolved_target, callback,
 		bind(
 			&Progress::user_cancelled,
 			boost::ref(*callback.progress())),

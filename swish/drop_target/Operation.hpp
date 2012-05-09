@@ -28,18 +28,11 @@
 #define SWISH_DROP_TARGET_OPERATION_HPP
 #pragma once
 
-#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
-
-#include <winapi/shell/pidl.hpp> // apidl_t
-
-#include <boost/filesystem.hpp> // wpath
 #include <boost/function.hpp> // function
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <comet/ptr.h> // com_ptr
 
 #include <cassert> // assert
-#include <stdexcept> // logic_error
 #include <string>
 
 struct ISftpProvider;
@@ -47,45 +40,6 @@ struct ISftpConsumer;
 
 namespace swish {
 namespace drop_target {
-
-/**
- * A destination (directory or file) on the remote server given as a
- * directory PIDL and a filename.
- */
-class resolved_destination
-{
-public:
-	resolved_destination(
-		const winapi::shell::pidl::apidl_t& remote_directory,
-		const std::wstring& filename)
-		: m_remote_directory(remote_directory), m_filename(filename)
-	{
-		if (boost::filesystem::wpath(m_filename).has_parent_path())
-			BOOST_THROW_EXCEPTION(
-				std::logic_error(
-					"Path not properly resolved; filename expected"));
-	}
-
-	const winapi::shell::pidl::apidl_t& directory() const
-	{
-		return m_remote_directory;
-	}
-
-	const std::wstring filename() const
-	{
-		return m_filename;
-	}
-
-	boost::filesystem::wpath as_absolute_path() const
-	{
-		return swish::remote_folder::absolute_path_from_swish_pidl(
-			m_remote_directory) / m_filename;
-	}
-
-private:
-	winapi::shell::pidl::apidl_t m_remote_directory;
-	std::wstring m_filename;
-};
 
 class CopyCallback;
 
@@ -95,12 +49,12 @@ class CopyCallback;
 class Operation
 {
 public:
-	virtual winapi::shell::pidl::apidl_t pidl() const = 0;
 
-	virtual boost::filesystem::wpath relative_path() const = 0;
+	virtual std::wstring title() const = 0;
+
+	virtual std::wstring description() const = 0;
 
 	virtual void operator()(
-		const resolved_destination& target,
 		boost::function<void(ULONGLONG, ULONGLONG)> progress,
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,

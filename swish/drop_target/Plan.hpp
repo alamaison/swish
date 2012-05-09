@@ -28,11 +28,15 @@
 #define SWISH_DROP_TARGET_PLAN_HPP
 #pragma once
 
-#include "swish/drop_target/Operation.hpp"
 #include "swish/drop_target/Progress.hpp"
+
+struct ISftpProvider;
+struct ISftpConsumer;
 
 namespace swish {
 namespace drop_target {
+
+class CopyCallback;
 
 /**
  * Interface for executable schedule of operations.
@@ -42,12 +46,7 @@ class Plan
 public:
 	virtual ~Plan() {}
 
-	virtual const Operation& operator[](unsigned int i) const = 0;
-
-	virtual std::size_t size() const = 0;
-
 	virtual void execute_plan(
-		const winapi::shell::pidl::apidl_t& remote_destination_root,
 		Progress& progress, comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer, CopyCallback& callback)
 		const = 0;

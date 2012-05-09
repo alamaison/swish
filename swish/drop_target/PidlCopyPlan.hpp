@@ -28,6 +28,7 @@
 #define SWISH_DROP_TARGET_PIDLCOPYPLAN_HPP
 #pragma once
 
+#include "swish/drop_target/Operation.hpp"
 #include "swish/drop_target/Plan.hpp"
 #include "swish/drop_target/SequentialPlan.hpp"
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // PidlFormat
@@ -42,23 +43,20 @@ class PidlCopyPlan : public Plan
 {
 public:
 
-	PidlCopyPlan(const swish::shell_folder::data_object::PidlFormat& format);
+	PidlCopyPlan(
+		const swish::shell_folder::data_object::PidlFormat& source,
+		const winapi::shell::pidl::apidl_t& destination);
 
 public: // Plan
 
-	virtual const Operation& operator[](unsigned int i) const;
-
-	virtual std::size_t size() const;
-
 	virtual void execute_plan(
-		const winapi::shell::pidl::apidl_t& remote_destination_root,
 		Progress& progress, comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer, CopyCallback& callback)
 		const;
 
 public:
 
-	void add_stage(const Operation& entry);
+	void add_stage(const Operation& stage);
 
 private:
 

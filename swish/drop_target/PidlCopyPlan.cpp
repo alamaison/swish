@@ -31,10 +31,8 @@
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <boost/bind.hpp> // bind
-#include <boost/cstdint.hpp> // int64_t
 #include <boost/filesystem/path.hpp> // wpath
-#include <boost/numeric/conversion/cast.hpp> // numeric_cast
-#include <boost/shared_ptr.hpp>
+#include <boost/function_output_iterator.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <winapi/shell/shell.hpp> // stream_from_pidl, strret_to_string,
@@ -42,9 +40,6 @@
 
 #include <comet/error.h> // com_error
 
-#include <cassert> // assert
-#include <functional> // unary_function
-#include <utility> // pair, make_pair
 #include <string>
 
 using swish::shell_folder::data_object::PidlFormat;
@@ -60,15 +55,10 @@ using comet::com_error;
 using comet::com_ptr;
 
 using boost::bind;
-using boost::int64_t;
 using boost::filesystem::wpath;
-using boost::numeric_cast;
-using boost::shared_ptr;
+using boost::make_function_output_iterator;
+using boost::ref;
 
-using std::make_pair;
-using std::pair;
-using std::size_t;
-using std::unary_function;
 using std::wstring;
 
 namespace swish {
@@ -76,31 +66,12 @@ namespace drop_target {
 
 namespace {
 
-	pair<wpath, int64_t> stat_stream(const com_ptr<IStream>& stream)
-	{
-		STATSTG statstg;
-		HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(stream, hr));
-
-		shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
-		return make_pair(name.get(), statstg.cbSize.QuadPart);
-	}
-
-	/**
-	 * Return the stream name from an IStream.
-	 */
-	wpath filename_from_stream(const com_ptr<IStream>& stream)
-	{
-		return stat_stream(stream).first;
-	}
-
 	/**
 	 * Query an item's parent folder for the item's display name relative
 	 * to that folder.
 	 */
 	wstring display_name_of_item(
-		const com_ptr<IShellFolder>& parent_folder, const cpidl_t& pidl)
+		com_ptr<IShellFolder> parent_folder, const cpidl_t& pidl)
 	{
 		STRRET strret;
 		HRESULT hr = parent_folder->GetDisplayNameOf(
@@ -122,84 +93,65 @@ namespace {
 		return display_name_of_item(parent_folder, item);
 	}
 
-	/**
-	 * Return the parsing path name for a PIDL relative the the given parent.
-	 */
-	wpath parsing_path_from_pidl(const apidl_t& parent, const pidl_t& pidl)
+	template<typename OutIt>
+	void output_operations_for_stream_pidl(
+		const apidl_t& source_pidl, const SftpDestination& destination,
+		OutIt output_iterator)
 	{
-		if (pidl.empty())
-			return wpath();
+		wpath display_name = display_name_from_pidl(
+			source_pidl.parent(), source_pidl.last_item());
 
-		cpidl_t item;
-		item.attach(::ILCloneFirst(pidl.get()));
+		CopyFileOperation operation(source_pidl, destination / display_name);
 
-		return display_name_from_pidl(parent, item) / 
-			parsing_path_from_pidl(parent + item, ::ILNext(pidl.get()));
+		*output_iterator++ = operation;
 	}
 
-	void build_copy_list_recursively(
-		const apidl_t& parent, const pidl_t& folder_pidl,
-		SequentialPlan& plan_out)
+	template<typename OutIt>
+	void output_operations_for_folder_pidl(
+		com_ptr<IShellFolder> folder, const apidl_t& source_pidl,
+		const SftpDestination& destination, OutIt output_iterator)
 	{
-		wpath folder_path = parsing_path_from_pidl(parent, folder_pidl);
+		wpath display_name = display_name_from_pidl(
+			source_pidl.parent(), source_pidl.last_item());
 
-		plan_out.add_stage(
-			CreateDirectoryOperation(parent, folder_pidl, folder_path));
+		SftpDestination new_destination = destination / display_name;
 
-		com_ptr<IShellFolder> folder = 
-			bind_to_handler_object<IShellFolder>(parent + folder_pidl);
-
-		// Add non-folder contents
+		*output_iterator++ = CreateDirectoryOperation(new_destination);
 
 		com_ptr<IEnumIDList> e;
 		HRESULT hr = folder->EnumObjects(
-			NULL, SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
+			NULL,
+			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN,
+			e.out());
 		if (FAILED(hr))
 			BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
 
 		cpidl_t item;
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{
-			pidl_t pidl = folder_pidl + item;
-			plan_out.add_stage(
-				CopyFileOperation(
-					parent, pidl, parsing_path_from_pidl(parent, pidl)));
-		}
-
-		// Recursively add folders
-
-		hr = folder->EnumObjects(
-			NULL, SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, e.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
-
-		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
-		{
-			pidl_t pidl = folder_pidl + item;
-			build_copy_list_recursively(parent, pidl, plan_out);
+			output_operations_for_pidl(
+				source_pidl + item, new_destination, output_iterator);
 		}
 	}
-}
 
-/**
- * Create plan to copy items represented by clipboard PIDL format.
- *
- * Expands the top-level PIDLs into a list of all items in the hierarchy.
- */
-PidlCopyPlan::PidlCopyPlan(const PidlFormat& source_format)
-{
-	for (unsigned int i = 0; i < source_format.pidl_count(); ++i)
+	template<typename OutIt>
+	void output_operations_for_pidl(
+		const apidl_t& source_pidl, const SftpDestination& destination,
+		OutIt output_iterator)
 	{
-		pidl_t pidl = source_format.relative_file(i);
 		try
 		{
-			// Test if streamable
-			com_ptr<IStream> stream = stream_from_pidl(source_format.file(i));
+			/*
+			Test if streamable.
+			We don't use this stream to perform the operation as that would
+			mean large transfers keeping open a large number of file handles
+			while building the copy plan - a bad idea, especially if the files
+			are on another remote server
+			*/
+			stream_from_pidl(source_pidl);
 
-			CopyFileOperation entry(
-				source_format.parent_folder(), pidl,
-				filename_from_stream(stream));
-			m_plan.add_stage(entry);
+			output_operations_for_stream_pidl(
+				source_pidl, destination, output_iterator);
 		}
 		catch (const com_error&)
 		{
@@ -207,29 +159,40 @@ PidlCopyPlan::PidlCopyPlan(const PidlFormat& source_format)
 			// Now we try to treat it as an IShellFolder and hope we
 			// have more success
 
-			build_copy_list_recursively(
-				source_format.parent_folder(), pidl, m_plan);
+			com_ptr<IShellFolder> folder =
+				bind_to_handler_object<IShellFolder>(source_pidl);
+
+			output_operations_for_folder_pidl(
+				folder, source_pidl, destination, output_iterator);
 		}
+	}
+
+}
+
+/**
+ * Create plan to copy items represented by clipboard PIDL format.
+ *
+ * Expands the top-level PIDLs into a list of all items in the hierarchy.
+ */
+PidlCopyPlan::PidlCopyPlan(
+	const PidlFormat& source_format, const apidl_t& destination_root)
+{
+	for (unsigned int i = 0; i < source_format.pidl_count(); ++i)
+	{
+		apidl_t pidl = source_format.file(i);
+
+		output_operations_for_pidl(
+			pidl, SftpDestination(destination_root, wpath()),
+			make_function_output_iterator(
+				bind(&SequentialPlan::add_stage, ref(m_plan), _1)));
 	}
 }
 
-const Operation& PidlCopyPlan::operator[](unsigned int i) const
-{
-	return m_plan[i];
-}
-
-size_t PidlCopyPlan::size() const
-{
-	return m_plan.size();
-}
-
 void PidlCopyPlan::execute_plan(
-	const apidl_t& remote_destination_root, Progress& progress,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
-	CopyCallback& callback) const
+	Progress& progress, com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer, CopyCallback& callback) const
 {
-	m_plan.execute_plan(
-		remote_destination_root, progress, provider, consumer, callback);
+	m_plan.execute_plan(progress, provider, consumer, callback);
 }
 
 void PidlCopyPlan::add_stage(const Operation& entry)

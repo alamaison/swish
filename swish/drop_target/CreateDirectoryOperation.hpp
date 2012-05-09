@@ -28,7 +28,8 @@
 #define SWISH_DROP_TARGET_CREATEDIRECTORYOPERATION_HPP
 #pragma once
 
-#include "swish/drop_target/Operation.hpp" // Operation
+#include "swish/drop_target/Operation.hpp"
+#include "swish/drop_target/SftpDestination.hpp"
 
 namespace swish {
 namespace drop_target {
@@ -37,17 +38,13 @@ class CreateDirectoryOperation : public Operation
 {
 public:
 
-	CreateDirectoryOperation(
-		const winapi::shell::pidl::apidl_t& root_pidl,
-		const winapi::shell::pidl::pidl_t& pidl,
-		const boost::filesystem::wpath& relative_path);
+	CreateDirectoryOperation(const SftpDestination& target);
 
-	virtual winapi::shell::pidl::apidl_t pidl() const;
+	virtual std::wstring title() const;
 
-	virtual boost::filesystem::wpath relative_path() const;
+	virtual std::wstring description() const;
 
 	virtual void operator()(
-		const resolved_destination& target, 
 		boost::function<void(ULONGLONG, ULONGLONG)> progress,
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
@@ -57,9 +54,7 @@ private:
 
 	virtual Operation* do_clone() const;
 
-	winapi::shell::pidl::apidl_t m_root_pidl;
-	winapi::shell::pidl::pidl_t m_pidl;
-	boost::filesystem::wpath m_relative_path;
+	SftpDestination m_destination;
 };
 
 }}

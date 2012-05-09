@@ -364,6 +364,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SftpDestination.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SnitchingDropTarget.hpp"
 				>
 			</File>
