@@ -180,8 +180,10 @@ namespace {
 		int64_t done = 0;
 		int64_t total = size_of_stream(local_stream);
 
-		while (!callback.has_user_cancelled())
+		while (true)
 		{
+			callback.check_if_user_cancelled();
+
 			ULARGE_INTEGER cbRead = {0};
 			ULARGE_INTEGER cbWritten = {0};
 			// TODO: make our own CopyTo that propagates errors

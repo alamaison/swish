@@ -56,7 +56,13 @@ class OperationCallback
 {
 public:
 
-	virtual bool has_user_cancelled() const = 0;
+	/**
+	 * Throw com_error(E_ABORT) if user cancelled.
+	 *
+	 * It throws rather than returning a boolean in order to force the operation
+	 * to abort with an exception.  This behaviour is expected by drag-and-drop.
+	 */
+	virtual void check_if_user_cancelled() const = 0;
 
 	virtual bool request_overwrite_permission(
 		const boost::filesystem::wpath& target) const = 0;

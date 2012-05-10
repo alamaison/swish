@@ -93,9 +93,9 @@ namespace {
 			m_current_file_index(current_file_index),
 			m_total_files(total_files) {}
 
-		virtual bool has_user_cancelled() const
+		virtual void check_if_user_cancelled() const
 		{
-			return m_callback.has_user_cancelled();
+			return m_callback.check_if_user_cancelled();
 		}
 
 		virtual bool request_overwrite_permission(const wpath& target) const
@@ -153,30 +153,26 @@ namespace {
 			IntraSequenceCallback micro_updater(
 				*this, operation_index, total_operations);
 
-			if (has_user_cancelled())
-			{
-				BOOST_THROW_EXCEPTION(com_error(E_ABORT));
-			}
-			else
-			{
-				operation(micro_updater, provider, consumer);
+			check_if_user_cancelled();
 
-				// We update here as well, fixing the progress to a file 
-				// boundary, as we don't completely trust the intra-file
-				// progress.  A stream could have lied about its size messing
-				// up the count.  This will override any such errors.
+			operation(micro_updater, provider, consumer);
 
-				assert(operation_index + 1 <= total_operations);
-				progress().update(operation_index + 1, total_operations);
-			}
+			// We update here as well, fixing the progress to a file 
+			// boundary, as we don't completely trust the intra-file
+			// progress.  A stream could have lied about its size messing
+			// up the count.  This will override any such errors.
+
+			assert(operation_index + 1 <= total_operations);
+			progress().update(operation_index + 1, total_operations);
 		}
 
-		virtual bool has_user_cancelled() const
+		virtual void check_if_user_cancelled() const
 		{
 			if (m_progress.get())
-				return m_progress->user_cancelled();
-			else
-				return false;
+			{
+				if (m_progress->user_cancelled())
+					BOOST_THROW_EXCEPTION(com_error(E_ABORT));
+			}
 		}
 
 		virtual bool request_overwrite_permission(const wpath& target) const
