@@ -28,6 +28,7 @@
 #define SWISH_DROP_TARGET_OPERATION_HPP
 #pragma once
 
+#include <boost/cstdint.hpp> // uintmax_t
 #include <boost/function.hpp> // function
 
 #include <comet/ptr.h> // com_ptr
@@ -44,6 +45,29 @@ namespace drop_target {
 class DropActionCallback;
 
 /**
+ * Interface through which individual drop operations interact with user.
+ *
+ * Purpose: to abstract the interaction so that an operation can pretend it
+ * is the only operation happening.  The operation doesn't need to think
+ * about the lifetime of the progress display and just updates it as it
+ * wishes till so_far == out_of.
+ */
+class OperationCallback
+{
+public:
+
+	virtual bool has_user_cancelled() const = 0;
+
+	virtual bool request_overwrite_permission(
+		const boost::filesystem::wpath& target) const = 0;
+
+	virtual void update_progress(
+		boost::uintmax_t so_far, boost::uintmax_t out_of) = 0;
+
+	virtual ~OperationCallback() {}
+};
+
+/**
  * Interface of operation functors making up a drop.
  */
 class Operation
@@ -55,10 +79,9 @@ public:
 	virtual std::wstring description() const = 0;
 
 	virtual void operator()(
-		boost::function<void(ULONGLONG, ULONGLONG)> progress,
+		OperationCallback& callback,
 		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer,
-		DropActionCallback& callback)
+		comet::com_ptr<ISftpConsumer> consumer)
 		const = 0;
 
 	Operation* clone() const

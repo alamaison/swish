@@ -47,9 +47,8 @@ public:
 	virtual ~Plan() {}
 
 	virtual void execute_plan(
-		Progress& progress, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer, DropActionCallback& callback)
-		const = 0;
+		DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+		comet::com_ptr<ISftpConsumer> consumer) const = 0;
 };
 
 }}

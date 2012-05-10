@@ -98,9 +98,7 @@ void copy_format_to_provider(
 {
 	PidlCopyPlan copy_list(source_format, destination_root);
 
-	auto_ptr<Progress> progress(callback.progress());
-
-	copy_list.execute_plan(*progress, provider, consumer, callback);
+	copy_list.execute_plan(callback, provider, consumer);
 }
 
 /**

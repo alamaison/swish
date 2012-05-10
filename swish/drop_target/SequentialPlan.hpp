@@ -43,14 +43,13 @@ class Operation;
  * Each object is executed in the order they are added and progress
  * displayed accordingly.
  */
-class SequentialPlan : public Plan
+class SequentialPlan /* final */ : public Plan
 {
 public: // Plan
 
 	virtual void execute_plan(
-		Progress& progress, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer, DropActionCallback& callback)
-		const;
+		DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+		comet::com_ptr<ISftpConsumer> consumer) const;
 
 public:
 

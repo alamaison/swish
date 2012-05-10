@@ -50,11 +50,10 @@ public: // Operation
 
 	virtual std::wstring description() const;
 
-	virtual void operator()( 
-		boost::function<void(ULONGLONG, ULONGLONG)> progress,
+	virtual void operator()(
+		OperationCallback& callback,
 		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer,
-		DropActionCallback& callback) const;
+		comet::com_ptr<ISftpConsumer> consumer) const;
 
 private:
 

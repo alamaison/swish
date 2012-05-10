@@ -39,7 +39,7 @@ namespace drop_target {
 /**
  * Plan copying items in PIDL clipboard format to remote server.
  */
-class PidlCopyPlan : public Plan
+class PidlCopyPlan /* final */ : public Plan
 {
 public:
 
@@ -50,9 +50,8 @@ public:
 public: // Plan
 
 	virtual void execute_plan(
-		Progress& progress, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer, DropActionCallback& callback)
-		const;
+		DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+		comet::com_ptr<ISftpConsumer> consumer) const;
 
 public:
 

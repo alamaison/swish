@@ -189,10 +189,10 @@ PidlCopyPlan::PidlCopyPlan(
 }
 
 void PidlCopyPlan::execute_plan(
-	Progress& progress, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, DropActionCallback& callback) const
+	DropActionCallback& callback, com_ptr<ISftpProvider> provider,
+	com_ptr<ISftpConsumer> consumer) const
 {
-	m_plan.execute_plan(progress, provider, consumer, callback);
+	m_plan.execute_plan(callback, provider, consumer);
 }
 
 void PidlCopyPlan::add_stage(const Operation& entry)

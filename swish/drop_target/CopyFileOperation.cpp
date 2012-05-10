@@ -26,8 +26,6 @@
 
 #include "CopyFileOperation.hpp"
 
-#include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
-#include "swish/drop_target/Progress.hpp" // Progress
 #include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
@@ -37,7 +35,6 @@
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
 
-#include <boost/bind.hpp> // bind
 #include <boost/cstdint.hpp> // int64_t
 #include <boost/locale/message.hpp> // translate
 #include <boost/shared_ptr.hpp>  // shared_ptr
@@ -57,7 +54,6 @@ using winapi::shell::pidl::pidl_t;
 using winapi::shell::stream_from_pidl;
 using winapi::trace;
 
-using boost::bind;
 using boost::int64_t;
 using boost::filesystem::wpath;
 using boost::function;
@@ -122,8 +118,7 @@ namespace {
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
 		com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
-		DropActionCallback& callback, function<bool()> cancelled,
-		function<void(ULONGLONG, ULONGLONG)> progress)
+		OperationCallback& callback)
 	{
 		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
 
@@ -133,7 +128,10 @@ namespace {
 
 		if (sftp_directory.exists(file))
 		{
-			if (!callback.can_overwrite(target.as_absolute_path()))
+			bool can_overwrite = callback.request_overwrite_permission(
+				target.as_absolute_path());
+
+			if (!can_overwrite)
 				return;
 		}
 
@@ -181,7 +179,8 @@ namespace {
 		cb.QuadPart = COPY_CHUNK_SIZE;
 		int64_t done = 0;
 		int64_t total = size_of_stream(local_stream);
-		while (!cancelled())
+
+		while (!callback.has_user_cancelled())
 		{
 			ULARGE_INTEGER cbRead = {0};
 			ULARGE_INTEGER cbWritten = {0};
@@ -218,11 +217,11 @@ namespace {
 			try
 			{
 				done += cbWritten.QuadPart;
-				progress(done, total);
+				callback.update_progress(done, total);
 			}
 			catch (const exception& e)
 			{
-				trace("Progress threw exception: %s") % e.what();
+				trace("Progress update threw exception: %s") % e.what();
 				assert(false);
 			}
 
@@ -248,20 +247,15 @@ std::wstring CopyFileOperation::description() const
 }
 
 void CopyFileOperation::operator()(
-	function<void(ULONGLONG, ULONGLONG)> progress,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
-	DropActionCallback& callback)	const
+	OperationCallback& callback,
+	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
 {
 	com_ptr<IStream> stream = stream_from_pidl(m_source_pidl);
 
 	resolved_destination resolved_target(m_destination.resolve_destination());
 
 	copy_stream_to_remote_destination(
-		stream, provider, consumer, resolved_target, callback,
-		bind(
-			&Progress::user_cancelled,
-			boost::ref(*callback.progress())),
-		progress);
+		stream, provider, consumer, resolved_target, callback);
 }
 
 Operation* CopyFileOperation::do_clone() const

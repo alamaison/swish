@@ -55,12 +55,10 @@ wstring CreateDirectoryOperation::description() const
 }
 
 void CreateDirectoryOperation::operator()(
-	function<void(ULONGLONG, ULONGLONG)> progress,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
-	DropActionCallback& /*callback*/)
-	const
+	OperationCallback& callback,
+	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
 {
-	progress(0, 1);
+	callback.update_progress(0, 1);
 
 	resolved_destination resolved_target(m_destination.resolve_destination());
 
@@ -68,7 +66,7 @@ void CreateDirectoryOperation::operator()(
 		resolved_target.directory(), provider, consumer);
 	sftp_directory.CreateDirectory(resolved_target.filename());
 
-	progress(1, 1);
+	callback.update_progress(1, 1);
 }
 
 Operation* CreateDirectoryOperation::do_clone() const
