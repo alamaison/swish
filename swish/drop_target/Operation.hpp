@@ -41,7 +41,7 @@ struct ISftpConsumer;
 namespace swish {
 namespace drop_target {
 
-class CopyCallback;
+class DropActionCallback;
 
 /**
  * Interface of operation functors making up a drop.
@@ -58,7 +58,7 @@ public:
 		boost::function<void(ULONGLONG, ULONGLONG)> progress,
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
-		CopyCallback& callback)
+		DropActionCallback& callback)
 		const = 0;
 
 	Operation* clone() const

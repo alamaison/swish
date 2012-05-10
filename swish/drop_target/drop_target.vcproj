@@ -324,15 +324,15 @@
 			UniqueIdentifier="{48657AF1-C41C-4cb1-B816-5986F8301546}"
 			>
 			<File
-				RelativePath=".\CopyCallback.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\CopyFileOperation.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\CreateDirectoryOperation.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DropActionCallback.hpp"
 				>
 			</File>
 			<File

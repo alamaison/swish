@@ -94,7 +94,7 @@ namespace { // private
 void copy_format_to_provider(
 	PidlFormat source_format, com_ptr<ISftpProvider> provider,
 	com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
-	CopyCallback& callback)
+	DropActionCallback& callback)
 {
 	PidlCopyPlan copy_list(source_format, destination_root);
 
@@ -114,7 +114,7 @@ void copy_format_to_provider(
 void copy_data_to_provider(
 	com_ptr<IDataObject> data_object, com_ptr<ISftpProvider> provider, 
 	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-	CopyCallback& callback)
+	DropActionCallback& callback)
 {
 	ShellDataObject data(data_object.get());
 	if (data.has_pidl_format())
@@ -136,7 +136,7 @@ void copy_data_to_provider(
 CDropTarget::CDropTarget(
 	com_ptr<ISftpProvider> provider,
 	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-	shared_ptr<CopyCallback> callback)
+	shared_ptr<DropActionCallback> callback)
 	:
 	m_provider(provider), m_consumer(consumer),
 	m_remote_directory(remote_directory), m_callback(callback) {}

@@ -1,7 +1,7 @@
 /**
     @file
 
-    Copy operation callback.
+    User interaction during a drop.
 
     @if license
 
@@ -24,8 +24,8 @@
     @endif
 */
 
-#ifndef SWISH_DROP_TARGET_COPYCALLBACK_HPP
-#define SWISH_DROP_TARGET_COPYCALLBACK_HPP
+#ifndef SWISH_DROP_TARGET_DROPACTIONCALLBACK_HPP
+#define SWISH_DROP_TARGET_DROPACTIONCALLBACK_HPP
 #pragma once
 
 #include <boost/filesystem.hpp> // wpath
@@ -39,10 +39,13 @@ namespace drop_target {
 
 class Progress;
 
-class CopyCallback
+/**
+ * Interface for drop target to communicate with the user during a drop.
+ */
+class DropActionCallback
 {
 public:
-	virtual ~CopyCallback() {}
+	virtual ~DropActionCallback() {}
 	virtual void site(comet::com_ptr<IUnknown> ole_site) = 0;
 	virtual bool can_overwrite(const boost::filesystem::wpath& target) = 0;
 	virtual std::auto_ptr<Progress> progress() = 0;

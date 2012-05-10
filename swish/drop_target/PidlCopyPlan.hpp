@@ -51,7 +51,7 @@ public: // Plan
 
 	virtual void execute_plan(
 		Progress& progress, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer, CopyCallback& callback)
+		comet::com_ptr<ISftpConsumer> consumer, DropActionCallback& callback)
 		const;
 
 public:

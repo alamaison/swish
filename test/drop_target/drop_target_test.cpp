@@ -43,7 +43,7 @@
 #include <algorithm>
 
 using swish::drop_target::CDropTarget;
-using swish::drop_target::CopyCallback;
+using swish::drop_target::DropActionCallback;
 using swish::drop_target::copy_data_to_provider;
 using swish::drop_target::Progress;
 using swish::shell_folder::data_object_for_files;
@@ -159,7 +159,7 @@ namespace { // private
 		void update(ULONGLONG, ULONGLONG) {}
 	};
 
-	class CopyCallbackStub : public CopyCallback
+	class CopyCallbackStub : public DropActionCallback
 	{
 	public:
 		void site(com_ptr<IUnknown>) {}

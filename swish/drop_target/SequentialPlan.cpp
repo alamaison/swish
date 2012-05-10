@@ -102,7 +102,7 @@ namespace {
 
 void SequentialPlan::execute_plan(
 	Progress& progress, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, CopyCallback& callback) const
+	com_ptr<ISftpConsumer> consumer, DropActionCallback& callback) const
 {
 	for (unsigned int i = 0; i < m_copy_list.size(); ++i)
 	{

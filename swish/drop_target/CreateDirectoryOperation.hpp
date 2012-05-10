@@ -48,7 +48,7 @@ public:
 		boost::function<void(ULONGLONG, ULONGLONG)> progress,
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
-		CopyCallback& callback) const;
+		DropActionCallback& callback) const;
 
 private:
 

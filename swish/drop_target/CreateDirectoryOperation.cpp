@@ -57,7 +57,7 @@ wstring CreateDirectoryOperation::description() const
 void CreateDirectoryOperation::operator()(
 	function<void(ULONGLONG, ULONGLONG)> progress,
 	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
-	CopyCallback& /*callback*/)
+	DropActionCallback& /*callback*/)
 	const
 {
 	progress(0, 1);

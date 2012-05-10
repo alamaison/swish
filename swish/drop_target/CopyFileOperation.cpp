@@ -26,7 +26,7 @@
 
 #include "CopyFileOperation.hpp"
 
-#include "swish/drop_target/CopyCallback.hpp" // CopyCallback
+#include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
 #include "swish/drop_target/Progress.hpp" // Progress
 #include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
@@ -122,7 +122,7 @@ namespace {
 	void copy_stream_to_remote_destination(
 		com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
 		com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
-		CopyCallback& callback, function<bool()> cancelled,
+		DropActionCallback& callback, function<bool()> cancelled,
 		function<void(ULONGLONG, ULONGLONG)> progress)
 	{
 		CSftpDirectory sftp_directory(target.directory(), provider, consumer);
@@ -250,7 +250,7 @@ std::wstring CopyFileOperation::description() const
 void CopyFileOperation::operator()(
 	function<void(ULONGLONG, ULONGLONG)> progress,
 	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer,
-	CopyCallback& callback)	const
+	DropActionCallback& callback)	const
 {
 	com_ptr<IStream> stream = stream_from_pidl(m_source_pidl);
 

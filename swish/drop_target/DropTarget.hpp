@@ -29,7 +29,7 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
-#include "swish/drop_target/CopyCallback.hpp" // CopyCallback
+#include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
 #include "swish/drop_target/Progress.hpp" // Progress
 
 #include <winapi/object_with_site.hpp> // object_with_site
@@ -66,7 +66,7 @@ public:
 		comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
 		const winapi::shell::pidl::apidl_t& remote_directory,
-		boost::shared_ptr<CopyCallback> callback);
+		boost::shared_ptr<DropActionCallback> callback);
 
 	/** @name IDropTarget methods */
 	// @{
@@ -101,7 +101,7 @@ private:
 
 	winapi::shell::pidl::apidl_t m_remote_directory;
 	comet::com_ptr<IDataObject> m_data_object;
-	boost::shared_ptr<CopyCallback> m_callback;
+	boost::shared_ptr<DropActionCallback> m_callback;
 };
 
 void copy_data_to_provider(
@@ -109,7 +109,7 @@ void copy_data_to_provider(
 	comet::com_ptr<ISftpProvider> provider,
 	comet::com_ptr<ISftpConsumer> consumer,
 	const winapi::shell::pidl::apidl_t& remote_directory,
-	CopyCallback& callback);
+	DropActionCallback& callback);
 
 }} // namespace swish::drop_target
 

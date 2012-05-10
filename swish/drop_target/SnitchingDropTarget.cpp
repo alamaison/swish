@@ -55,7 +55,7 @@ namespace drop_target {
 CSnitchingDropTarget::CSnitchingDropTarget(
 	HWND hwnd_owner, com_ptr<ISftpProvider> provider,
 	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-	shared_ptr<CopyCallback> callback)
+	shared_ptr<DropActionCallback> callback)
 	:
 	m_inner(new CDropTarget(provider, consumer, remote_directory, callback)),
 	m_hwnd_owner(hwnd_owner) {}

@@ -36,7 +36,7 @@ struct ISftpConsumer;
 namespace swish {
 namespace drop_target {
 
-class CopyCallback;
+class DropActionCallback;
 
 /**
  * Interface for executable schedule of operations.
@@ -48,7 +48,7 @@ public:
 
 	virtual void execute_plan(
 		Progress& progress, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer, CopyCallback& callback)
+		comet::com_ptr<ISftpConsumer> consumer, DropActionCallback& callback)
 		const = 0;
 };
 

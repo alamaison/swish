@@ -28,7 +28,8 @@
 #define SWISH_DROP_TARGET_DROPUI_HPP
 #pragma once
 
-#include "DropTarget.hpp" // CopyCallback, Progress
+#include "swish/drop_target/DropActionCallback.hpp"
+#include "swish/drop_target/Progress.hpp"
 
 #include <winapi/gui/progress.hpp> // comet::comtype<IProgressDialog>, progress
 
@@ -45,7 +46,7 @@ namespace drop_target {
 	 * DropTarget callback turning requests into GUI windows so user can
 	 * handle them.
 	 */
-	class DropUI : public CopyCallback
+	class DropUI : public DropActionCallback
 	{
 	public:
 		DropUI(HWND hwnd_owner);

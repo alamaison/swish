@@ -57,7 +57,7 @@ public:
 		HWND hwnd_owner, comet::com_ptr<ISftpProvider> provider,
 		comet::com_ptr<ISftpConsumer> consumer,
 		const winapi::shell::pidl::apidl_t& remote_directory,
-		boost::shared_ptr<CopyCallback> callback);
+		boost::shared_ptr<DropActionCallback> callback);
 
 	/** @name IDropTarget methods */
 	// @{
