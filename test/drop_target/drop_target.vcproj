@@ -331,6 +331,10 @@
 			</FileConfiguration>
 		</File>
 		<File
+			RelativePath=".\rooted_source_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\test.cpp"
 			>
 		</File>
