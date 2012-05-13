@@ -49,15 +49,20 @@ namespace detail {
 	 * Return the parsing path name for a PIDL relative the the given parent.
 	 */
 	inline std::wstring relative_name_for_pidl(
-		winapi::shell::pidl::apidl_t parent,
+		const winapi::shell::pidl::apidl_t& parent,
 		const winapi::shell::pidl::pidl_t& pidl)
 	{
 		std::wstring name;
+		winapi::shell::pidl::apidl_t abs = parent;
 
 		winapi::shell::pidl::pidl_iterator it(pidl);
 		while (it != winapi::shell::pidl::pidl_iterator())
 		{
-			name += display_name_of_item(parent + *it++) + L"\\";
+			if (!name.empty())
+				name += L"\\";
+
+			abs += *it++;
+			name += display_name_of_item(abs);
 		}
 
 		return name;
