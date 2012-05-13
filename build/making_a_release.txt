@@ -13,3 +13,5 @@ Change IIDs in swish/interfaces/SftpProvider.idl if the interface APIs have chan
 Make the matching changes to wix/swish.wxs.
 
 Add notable changes to NEWS.
+
+Make sure .po files are compiled to .mo files.
