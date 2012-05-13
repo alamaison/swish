@@ -69,7 +69,7 @@ wstring CreateDirectoryOperation::description() const
 			"directory. {1} is replaced with the directory path and must be "
 			"included in your translation.",
 			"To '{1}'"))
-		% m_destination.resolve_destination().as_absolute_path().string()).str();
+		% m_destination.root_name()).str();
 }
 
 void CreateDirectoryOperation::operator()(

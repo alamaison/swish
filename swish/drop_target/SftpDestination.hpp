@@ -32,6 +32,7 @@
 #include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 
 #include <winapi/shell/pidl.hpp> // apidl_t
+#include <winapi/shell/shell_item.hpp> // pidl_shell_item
 
 #include <boost/filesystem.hpp> // wpath
 #include <boost/foreach.hpp> // BOOST_FOREACH
@@ -123,6 +124,14 @@ public:
 	SftpDestination operator/(const boost::filesystem::wpath& path) const
 	{
 		return SftpDestination(m_remote_root, m_relative_path / path);
+	}
+
+	std::wstring root_name() const
+	{
+		using winapi::shell::pidl_shell_item;
+
+		return pidl_shell_item(m_remote_root).friendly_name(
+			pidl_shell_item::friendly_name_type::absolute);
 	}
 
 private:

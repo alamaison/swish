@@ -245,9 +245,9 @@ namespace {
 		 *
 		 * Uses the inbuilt path compression.
 		 */
-		void line_path(DWORD index, const wpath& path)
+		void line_path(DWORD index, const wstring& text)
 		{
-			m_inner->line_as_compressable_path(index, path);
+			m_inner->line_compress_paths_if_needed(index, text);
 		}
 
 		/**

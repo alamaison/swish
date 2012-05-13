@@ -155,7 +155,7 @@ namespace { // private
 	public:
 		bool user_cancelled() const { return false; }
 		void line(DWORD, const wstring&) {}
-		void line_path(DWORD, const wpath&) {}
+		void line_path(DWORD, const wstring&) {}
 		void update(ULONGLONG, ULONGLONG) {}
 	};
 

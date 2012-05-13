@@ -28,8 +28,6 @@
 #define SWISH_DROP_TARGET_PROGRESS_HPP
 #pragma once
 
-#include <boost/filesystem.hpp>  // wpath
-
 #include <string>
 
 namespace swish {
@@ -41,8 +39,7 @@ public:
 	virtual ~Progress() {}
 	virtual bool user_cancelled() const = 0;
 	virtual void line(DWORD index, const std::wstring& text) = 0;
-	virtual void line_path(
-		DWORD index, const boost::filesystem::wpath& path) = 0;
+	virtual void line_path(DWORD index, const std::wstring& text) = 0;
 	virtual void update(ULONGLONG so_far, ULONGLONG out_of) = 0;
 };
 
