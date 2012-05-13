@@ -5,9 +5,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-28 15:04-0000\n"
-"PO-Revision-Date: 2012-05-03 15:09+0000\n"
-"Last-Translator: Éliton Claus <eliton@eliton.com.br>\n"
+"POT-Creation-Date: 2012-05-13 11:59-0000\n"
+"PO-Revision-Date: 2012-05-13 11:10+0000\n"
+"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,27 +18,51 @@ msgstr ""
 "X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
-#: ../../swish/drop_target/DropTargetErrorUI.cpp:122
-#: ../../swish/drop_target/SnitchingDropTarget.cpp:122
-msgid "An error occurred while transferring files:"
-msgstr "Ocorreu um erro ao transferir os arquivos:"
+#: ../../swish/drop_target/CopyFileOperation.cpp:152
+msgid "Unable to create file on the server:"
+msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:349
+#: ../../swish/drop_target/CopyFileOperation.cpp:249
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
+msgctxt ""
+"Top line of a transfer progress window saying which file is being copied. "
+"{1} is replaced with the file path and must be included in your translation."
+msgid "Copying '{1}'"
+msgstr ""
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:260
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
+msgctxt ""
+"Second line of a transfer progress window giving the destination directory. "
+"{1} is replaced with the directory path and must be included in your "
+"translation."
+msgid "To '{1}'"
+msgstr ""
+
+#: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
 msgstr "Esta pasta já contém um arquivo com o nome '{1}'."
 
-#: ../../swish/drop_target/DropUI.cpp:352
+#: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
 msgstr "Deseja substituir?"
 
-#: ../../swish/drop_target/DropUI.cpp:360
+#: ../../swish/drop_target/DropUI.cpp:327
 msgid "Confirm File Replace"
 msgstr "Confirme a substituição"
 
-#: ../../swish/drop_target/DropUI.cpp:399
+#: ../../swish/drop_target/DropUI.cpp:366
 msgctxt "Progress"
 msgid "Copying..."
 msgstr "Copiando..."
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:125
+msgid "Unable to transfer files"
+msgstr ""
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:127
+msgid "You might not have permission to write to this directory."
+msgstr ""
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -133,6 +157,104 @@ msgstr "Senha"
 msgid "OK"
 msgstr "OK"
 
+#: ../../swish/frontend/announce_error.cpp:136
+msgid "Show &details (which may not be in your language)"
+msgstr "Mostrar &detalhes (que poderão não estar na sua língua)"
+
+#: ../../swish/frontend/announce_error.cpp:137
+msgid "Hide &details"
+msgstr "Esconder &detalhes"
+
+#: ../../swish/frontend/UserInteraction.cpp:195
+msgid "The folder already contains a file named '%1%'"
+msgstr "A pasta já contém um arquivo com o nome '%1%'"
+
+#: ../../swish/frontend/UserInteraction.cpp:200
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr "Deseja substituir o arquivo existente\n\n\t%1%\n\npor este?\n\n\t%2%"
+
+#: ../../swish/frontend/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "O arquivo já existe"
+
+#: ../../swish/frontend/UserInteraction.cpp:242
+msgid "Mismatched host-key"
+msgstr "Host-key não é idêntica"
+
+#: ../../swish/frontend/UserInteraction.cpp:243
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "ATENÇÃO: Host-key SSH mudou!"
+
+#: ../../swish/frontend/UserInteraction.cpp:249
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
+msgstr "A Host-key SSH enviada por '%1%' para se identificar não é a mesma que a chave conhecida por você. \nIsto pode representar alguém tentando se passar pelo servidor que você está se conectando ou o administrador do servidor pode ter alterado a Host-key SSH do servidor."
+
+#: ../../swish/frontend/UserInteraction.cpp:256
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "É importante verificar se esta chave de máquina está correta:"
+
+#: ../../swish/frontend/UserInteraction.cpp:265
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Eu confio nesta chave de máquina: &atualizar e conectar\nNão terá que verificar novamente esta chave a não ser que seja alterada"
+
+#: ../../swish/frontend/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr "Eu confio nesta chave de máquina: &conectar apenas\nSerá notificado sobre esta chave na próxima vez que se conectar"
+
+#: ../../swish/frontend/UserInteraction.cpp:276
+#: ../../swish/frontend/UserInteraction.cpp:320
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr "&Cancelar\nEscolha esta opção se não tiver a certeza que a chave de máquina está correta"
+
+#: ../../swish/frontend/UserInteraction.cpp:289
+msgid "Unknown host-key"
+msgstr "Host-key desconhecida"
+
+#: ../../swish/frontend/UserInteraction.cpp:295
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
+msgstr "O servidor '%1%' idenficou-se com a seguinte Host-key SSH:"
+
+#: ../../swish/frontend/UserInteraction.cpp:299
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Se não está esperando esta Host-key, isto pode significar que terceiros poderão estar se passando pelo servidor que está se conectando."
+
+#: ../../swish/frontend/UserInteraction.cpp:302
+msgid "Verify unknown SSH host-key"
+msgstr "Verifique a Host-key SSH desconhecida"
+
+#: ../../swish/frontend/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Eu confio nesta chave de máquina: &armazenar e conectar\nNão terá que verificar novamente esta chave a não ser que seja alterada"
+
+#: ../../swish/frontend/UserInteraction.cpp:314
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr "Eu confio nesta chave de máquina: &conectar apenas\nTerá que verificar novamente esta chave na próxima vez que se conectar"
+
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
 msgid "Name"
@@ -162,6 +284,46 @@ msgstr "Caminho remoto"
 msgctxt "Property"
 msgid "Type"
 msgstr "Tipo"
+
+#: ../../swish/host_folder/commands.cpp:110
+msgid "&Add SFTP Connection"
+msgstr "&Adicionar conexão SFTP"
+
+#: ../../swish/host_folder/commands.cpp:111
+msgid "Create a new SFTP connection with Swish."
+msgstr "Criar uma nova conexão SFTP com o Swish."
+
+#: ../../swish/host_folder/commands.cpp:112
+msgid "&Add SFTP Connection..."
+msgstr "&Adicionar conexão SFTP..."
+
+#: ../../swish/host_folder/commands.cpp:113
+msgid "Add Connection"
+msgstr "Adicionar conexão"
+
+#: ../../swish/host_folder/commands.cpp:143
+msgid "&Remove SFTP Connection"
+msgstr "&Remover conexão SFTP"
+
+#: ../../swish/host_folder/commands.cpp:144
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Remover uma conexão SFTP criada com o Swish."
+
+#: ../../swish/host_folder/commands.cpp:145
+msgid "&Remove SFTP Connection..."
+msgstr "&Remover conexão SFTP..."
+
+#: ../../swish/host_folder/commands.cpp:146
+msgid "Remove Connection"
+msgstr "Remover conexão"
+
+#: ../../swish/host_folder/commands.cpp:200
+msgid "SFTP Tasks"
+msgstr "Tarefas SFTP"
+
+#: ../../swish/host_folder/commands.cpp:213
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Estas tarefas facilitam a gestão das conexões SFTP do Swish."
 
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
@@ -208,218 +370,90 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr "ID de grupo"
 
-#: ../../swish/shell_folder/announce_error.cpp:129
-msgid "Show &details (which may not be in your language)"
-msgstr "Mostrar &detalhes (que poderão não estar na sua língua)"
+#: ../../swish/remote_folder/context_menu_callback.cpp:155
+msgid "Open &link"
+msgstr ""
 
-#: ../../swish/shell_folder/announce_error.cpp:130
-msgid "Hide &details"
-msgstr "Esconder &detalhes"
+#: ../../swish/remote_folder/context_menu_callback.cpp:177
+msgid "&Open"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:271
+msgid "Unable to open the link"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:272
+#: ../../swish/remote_folder/context_menu_callback.cpp:376
+#: ../../swish/remote_folder/commands/commands.cpp:262
+#: ../../swish/remote_folder/commands/delete.cpp:232
+msgid "You might not have permission."
+msgstr "Você possivelmente não tem permissões."
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:375
+msgid "Unable to open the file"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:191
+msgid "New &folder"
+msgstr "Nova &pasta"
+
+#: ../../swish/remote_folder/commands/commands.cpp:192
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Criar uma pasta nova (vazia), dentro da pasta que está aberta."
+
+#: ../../swish/remote_folder/commands/commands.cpp:194
+msgid "Make a new folder"
+msgstr "Criar uma nova pasta"
+
+#: ../../swish/remote_folder/commands/commands.cpp:233
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Nova pasta"
+
+#: ../../swish/remote_folder/commands/commands.cpp:261
+msgid "Could not create a new folder"
+msgstr "Não foi possível criar uma nova pasta"
+
+#: ../../swish/remote_folder/commands/commands.cpp:290
+msgid "File and Folder Tasks"
+msgstr "Tarefas de arquivos e pastas"
+
+#: ../../swish/remote_folder/commands/commands.cpp:302
+msgid "These tasks help you manage your remote files."
+msgstr "Estas tarefas falicitam a gestão dos seus arquivos remotos."
+
+#: ../../swish/remote_folder/commands/delete.cpp:231
+msgid "Unable to delete the item"
+msgstr "Não foi possível apagar o item"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
 msgstr "Autenticação interativa com teclado (senha digitada)"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:121
+#: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
 msgstr "Não foi possível ter acesso à pasta"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:122
-#: ../../swish/shell_folder/RemoteFolder.cpp:312
-#: ../../swish/shell_folder/RemoteFolder.cpp:572
-#: ../../swish/shell_folder/RemoteFolder.cpp:598
-#: ../../swish/shell_folder/RemoteFolder.cpp:742
-#: ../../swish/shell_folder/commands/remote/remote.cpp:285
-msgid "You might not have permission."
-msgstr "Você possivelmente não tem permissões."
-
-#: ../../swish/shell_folder/RemoteFolder.cpp:194
+#: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
 msgstr "Caminho não reconhecido"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:195
+#: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
 msgstr "Verifique se o caminho foi digitado corretamente."
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:311
+#: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
 msgstr "Não foi possível alterar o nome do item"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:570
+#: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
 msgstr "Não foi possível ter acesso ao item"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:571
+#: ../../swish/shell_folder/RemoteFolder.cpp:705
 msgid "Unable to access the items"
 msgstr "Não foi possível ter acesso aos itens"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:597
+#: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
 msgstr "Não foi possível ter acesso à pasta"
-
-#: ../../swish/shell_folder/RemoteFolder.cpp:741
-msgid "Unable to delete the item"
-msgstr "Não foi possível apagar o item"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:203
-#, boost-format
-msgid "The folder already contains a file named '%1%'"
-msgstr "A pasta já contém um arquivo com o nome '%1%'"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:208
-#, boost-format
-msgid ""
-"Would you like to replace the existing file\n"
-"\n"
-"\t%1%\n"
-"\n"
-"with this one?\n"
-"\n"
-"\t%2%"
-msgstr "Deseja substituir o arquivo existente\n\n\t%1%\n\npor este?\n\n\t%2%"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:212
-msgid "File already exists"
-msgstr "O arquivo já existe"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:247
-msgid "Mismatched host-key"
-msgstr "Host-key não é idêntica"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:248
-msgid "WARNING: the SSH host-key has changed!"
-msgstr "ATENÇÃO: Host-key SSH mudou!"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:254
-#, boost-format
-msgid ""
-"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
-"key for this server.  This could mean a third-party is pretending to be the "
-"computer you're trying to connect to or the system administrator may have "
-"just changed the key."
-msgstr "A Host-key SSH enviada por '%1%' para se identificar não é a mesma que a chave conhecida por você. \nIsto pode representar alguém tentando se passar pelo servidor que você está se conectando ou o administrador do servidor pode ter alterado a Host-key SSH do servidor."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:261
-msgid "It is important to check this is the right key fingerprint:"
-msgstr "É importante verificar se esta chave de máquina está correta:"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:270
-msgid ""
-"I trust this key: &update and connect\n"
-"You won't have to verify this key again unless it changes"
-msgstr "Eu confio nesta chave de máquina: &atualizar e conectar\nNão terá que verificar novamente esta chave a não ser que seja alterada"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:275
-msgid ""
-"I trust this key: &just connect\n"
-"You will be warned about this key again next time you connect"
-msgstr "Eu confio nesta chave de máquina: &conectar apenas\nSerá notificado sobre esta chave na próxima vez que se conectar"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:281
-#: ../../swish/shell_folder/UserInteraction.cpp:322
-msgid ""
-"&Cancel\n"
-"Choose this option unless you are sure the key is correct"
-msgstr "&Cancelar\nEscolha esta opção se não tiver a certeza que a chave de máquina está correta"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:291
-msgid "Unknown host-key"
-msgstr "Host-key desconhecida"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:297
-#, boost-format
-msgid ""
-"The server '%1%' has identified itself with an SSH host-key whose "
-"fingerprint is:"
-msgstr "O servidor '%1%' idenficou-se com a seguinte Host-key SSH:"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:301
-msgid ""
-"If you are not expecting this key, a third-party may be pretending to be the"
-" computer you're trying to connect to."
-msgstr "Se não está esperando esta Host-key, isto pode significar que terceiros poderão estar se passando pelo servidor que está se conectando."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:304
-msgid "Verify unknown SSH host-key"
-msgstr "Verifique a Host-key SSH desconhecida"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:311
-msgid ""
-"I trust this key: &store and connect\n"
-"You won't have to verify this key again unless it changes"
-msgstr "Eu confio nesta chave de máquina: &armazenar e conectar\nNão terá que verificar novamente esta chave a não ser que seja alterada"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:316
-msgid ""
-"I trust this key: &just connect\n"
-"You will be asked to verify the key again next time you connect"
-msgstr "Eu confio nesta chave de máquina: &conectar apenas\nTerá que verificar novamente esta chave na próxima vez que se conectar"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:109
-msgid "&Add SFTP Connection"
-msgstr "&Adicionar conexão SFTP"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:110
-msgid "Create a new SFTP connection with Swish."
-msgstr "Criar uma nova conexão SFTP com o Swish."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:111
-msgid "&Add SFTP Connection..."
-msgstr "&Adicionar conexão SFTP..."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:112
-msgid "Add Connection"
-msgstr "Adicionar conexão"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:142
-msgid "&Remove SFTP Connection"
-msgstr "&Remover conexão SFTP"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:143
-msgid "Remove a SFTP connection created with Swish."
-msgstr "Remover uma conexão SFTP criada com o Swish."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:144
-msgid "&Remove SFTP Connection..."
-msgstr "&Remover conexão SFTP..."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:145
-msgid "Remove Connection"
-msgstr "Remover conexão"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:199
-msgid "SFTP Tasks"
-msgstr "Tarefas SFTP"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:212
-msgid "These tasks help you manage Swish SFTP connections."
-msgstr "Estas tarefas facilitam a gestão das conexões SFTP do Swish."
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:209
-msgid "New &folder"
-msgstr "Nova &pasta"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:210
-msgid "Create a new, empty folder in the folder you have open."
-msgstr "Criar uma pasta nova (vazia), dentro da pasta que está aberta."
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:212
-msgid "Make a new folder"
-msgstr "Criar uma nova pasta"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:251
-msgctxt "Initial name"
-msgid "New folder"
-msgstr "Nova pasta"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:284
-msgid "Could not create a new folder"
-msgstr "Não foi possível criar uma nova pasta"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:312
-msgid "File and Folder Tasks"
-msgstr "Tarefas de arquivos e pastas"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:324
-msgid "These tasks help you manage your remote files."
-msgstr "Estas tarefas falicitam a gestão dos seus arquivos remotos."

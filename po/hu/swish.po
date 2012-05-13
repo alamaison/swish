@@ -1,44 +1,67 @@
-# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
-# John <shiki.biomernok@gmail.com>, 2011.
+# 
+# Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-28 15:04-0000\n"
-"PO-Revision-Date: 2011-08-03 13:42+0200\n"
-"Last-Translator: John <shiki.biomernok@gmail.com>\n"
+"POT-Creation-Date: 2012-05-13 11:59-0000\n"
+"PO-Revision-Date: 2012-05-13 11:10+0000\n"
+"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: \n"
-"Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Virtaal 0.7.0\n"
-"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"Language: hu\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
-#: ../../swish/drop_target/DropTargetErrorUI.cpp:122
-#: ../../swish/drop_target/SnitchingDropTarget.cpp:122
-msgid "An error occurred while transferring files:"
-msgstr "Hiba törént a fájlok másolása közben:"
+#: ../../swish/drop_target/CopyFileOperation.cpp:152
+msgid "Unable to create file on the server:"
+msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:349
+#: ../../swish/drop_target/CopyFileOperation.cpp:249
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
+msgctxt ""
+"Top line of a transfer progress window saying which file is being copied. "
+"{1} is replaced with the file path and must be included in your translation."
+msgid "Copying '{1}'"
+msgstr ""
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:260
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
+msgctxt ""
+"Second line of a transfer progress window giving the destination directory. "
+"{1} is replaced with the directory path and must be included in your "
+"translation."
+msgid "To '{1}'"
+msgstr ""
+
+#: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
 msgstr "Ez a mappa már tartalmaz egy '{1}' nevu fájlt."
 
-#: ../../swish/drop_target/DropUI.cpp:352
+#: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
 msgstr "Szeretné lecserélni?"
 
-#: ../../swish/drop_target/DropUI.cpp:360
+#: ../../swish/drop_target/DropUI.cpp:327
 msgid "Confirm File Replace"
 msgstr "Fájlcsere megerosítése"
 
-#: ../../swish/drop_target/DropUI.cpp:399
+#: ../../swish/drop_target/DropUI.cpp:366
 msgctxt "Progress"
 msgid "Copying..."
 msgstr "Másolás..."
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:125
+msgid "Unable to transfer files"
+msgstr ""
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:127
+msgid "You might not have permission to write to this directory."
+msgstr ""
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -58,7 +81,9 @@ msgid "For example: \"Home Computer\"."
 msgstr "Például: \"Otthoni számítógép\"."
 
 #: ../../swish/forms/add_host.cpp:151
-msgid "Specify the details of the computer and account you would like to connect to:"
+msgid ""
+"Specify the details of the computer and account you would like to connect "
+"to:"
 msgstr "Adja meg a számítógép adatait melyhez csatlakozni kíván:"
 
 #: ../../swish/forms/add_host.cpp:155
@@ -77,7 +102,9 @@ msgid "&User:"
 msgstr "Fel&használó:"
 
 #: ../../swish/forms/add_host.cpp:169
-msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgid ""
+"Specify the directory on the server that you would like Swish to start the "
+"connection in:"
 msgstr "Határozza meg a mappát a szerveren melyet a Swish csatlakozás után automatikusan megnyit:"
 
 #: ../../swish/forms/add_host.cpp:173
@@ -89,8 +116,7 @@ msgstr "&Elérési út:"
 msgid "Example: /home/yourusername"
 msgstr "Példa: /home/felhasznaloneve"
 
-#: ../../swish/forms/add_host.cpp:185
-#: ../../swish/forms/password.cpp:68
+#: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
 msgid "Cancel"
 msgstr "Mégse"
 
@@ -130,6 +156,104 @@ msgstr "Jelszó"
 msgid "OK"
 msgstr "OK"
 
+#: ../../swish/frontend/announce_error.cpp:136
+msgid "Show &details (which may not be in your language)"
+msgstr "&Részletek mutatása (nem feltétlenül saját nyelven jelenik meg)"
+
+#: ../../swish/frontend/announce_error.cpp:137
+msgid "Hide &details"
+msgstr "Ré&szletek elrejtése"
+
+#: ../../swish/frontend/UserInteraction.cpp:195
+msgid "The folder already contains a file named '%1%'"
+msgstr "A mappa már tartalmaz egy '%1%' nevu fájlt."
+
+#: ../../swish/frontend/UserInteraction.cpp:200
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr "Szeretné lecserélni a létezo fájlt\n\n\t%1%\n\nezzel?\n\n\t%2%"
+
+#: ../../swish/frontend/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "A fájl már létezik"
+
+#: ../../swish/frontend/UserInteraction.cpp:242
+msgid "Mismatched host-key"
+msgstr "Nem egyezo kiszolgáló-kulcs"
+
+#: ../../swish/frontend/UserInteraction.cpp:243
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "FIGYELEM: Az SSH kiszolgáló-kulcs megváltozott!"
+
+#: ../../swish/frontend/UserInteraction.cpp:249
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
+msgstr "Az SSH kiszolgáló-kulcs melyet a '%1%' kiszolgáló küldött, nem egyezik a kiszolgáló ismert kulcsával. Ez azt jelentheti, hogy egy harmadik-fél tetteti magát a kiszolgálónak, vagy csak az adminisztrátor megváltoztatta a kulcsot."
+
+#: ../../swish/frontend/UserInteraction.cpp:256
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "Fontos, hogy ellenorizze a következo kulcs helyességét:"
+
+#: ../../swish/frontend/UserInteraction.cpp:265
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Megbízom ebben a kulcsban: &frissítés és csatlakozás\nNem kell újra ellenoriznie ezt a kulcsot, csak ha megváltozik"
+
+#: ../../swish/frontend/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr "Megízom ebben a kulcsban: &csak csatlakozás\nFigyelmeztetve lesz mikor újra csatlakozik"
+
+#: ../../swish/frontend/UserInteraction.cpp:276
+#: ../../swish/frontend/UserInteraction.cpp:320
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr "&Mégse\nVálassza ezt a lehetoséget ha ön biztos abban, hogy a kulcs nem megfelelo"
+
+#: ../../swish/frontend/UserInteraction.cpp:289
+msgid "Unknown host-key"
+msgstr "Ismeretlen kiszolgáló-kulcs"
+
+#: ../../swish/frontend/UserInteraction.cpp:295
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
+msgstr "A kiszolgáló '%1%' a következo SSH-kiszolgáló kulccsal azonosította magát:"
+
+#: ../../swish/frontend/UserInteraction.cpp:299
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Ha ön nem ezt a kulcsot várta, egy harmadik-fél tettetheti hogy a számítógép, melyhez ön épp csatlakozni próbál."
+
+#: ../../swish/frontend/UserInteraction.cpp:302
+msgid "Verify unknown SSH host-key"
+msgstr "Ellenorizze az ismeretlen SSH kiszolgáló-kulcsot"
+
+#: ../../swish/frontend/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Megbízom ebben a kulcsban: &eltárolás és csatlakozás\nNem kell újra ellenoriznie ezt a kulcsot, csak ha megváltozik"
+
+#: ../../swish/frontend/UserInteraction.cpp:314
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr "Megízom ebben a kulcsban: &csak csatlakozás\nÚjra kell majd ellenoriznie a kulcsot mikor ismét csatlakozik"
+
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
 msgid "Name"
@@ -159,6 +283,46 @@ msgstr "Távoli elérési út"
 msgctxt "Property"
 msgid "Type"
 msgstr "Típus"
+
+#: ../../swish/host_folder/commands.cpp:110
+msgid "&Add SFTP Connection"
+msgstr "&SFTP kapcsolat hozzáadása"
+
+#: ../../swish/host_folder/commands.cpp:111
+msgid "Create a new SFTP connection with Swish."
+msgstr "Új SFTP kapcsolat létrehozása Swish-el."
+
+#: ../../swish/host_folder/commands.cpp:112
+msgid "&Add SFTP Connection..."
+msgstr "&SFTP kapcsolat hozzáadása..."
+
+#: ../../swish/host_folder/commands.cpp:113
+msgid "Add Connection"
+msgstr "Kapcsolat hozzáadása"
+
+#: ../../swish/host_folder/commands.cpp:143
+msgid "&Remove SFTP Connection"
+msgstr "SFTP kapcsolat &eltávolítása"
+
+#: ../../swish/host_folder/commands.cpp:144
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Swish által készített SFTP kapcsolat eltávolítása. "
+
+#: ../../swish/host_folder/commands.cpp:145
+msgid "&Remove SFTP Connection..."
+msgstr "SFTP kapcsolat &eltávolítása..."
+
+#: ../../swish/host_folder/commands.cpp:146
+msgid "Remove Connection"
+msgstr "Kapcsolat eltávolítása"
+
+#: ../../swish/host_folder/commands.cpp:200
+msgid "SFTP Tasks"
+msgstr "SFTP Feladatok"
+
+#: ../../swish/host_folder/commands.cpp:213
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Ezek a feladatok segítenek a Swish SFTP kapcsolatok kezelésében."
 
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
@@ -205,228 +369,90 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr "Csoport ID"
 
-#: ../../swish/shell_folder/announce_error.cpp:129
-msgid "Show &details (which may not be in your language)"
-msgstr "&Részletek mutatása (nem feltétlenül saját nyelven jelenik meg)"
+#: ../../swish/remote_folder/context_menu_callback.cpp:155
+msgid "Open &link"
+msgstr ""
 
-#: ../../swish/shell_folder/announce_error.cpp:130
-msgid "Hide &details"
-msgstr "Ré&szletek elrejtése"
+#: ../../swish/remote_folder/context_menu_callback.cpp:177
+msgid "&Open"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:271
+msgid "Unable to open the link"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:272
+#: ../../swish/remote_folder/context_menu_callback.cpp:376
+#: ../../swish/remote_folder/commands/commands.cpp:262
+#: ../../swish/remote_folder/commands/delete.cpp:232
+msgid "You might not have permission."
+msgstr "Lehetséges, hogy nincs jogosultsága."
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:375
+msgid "Unable to open the file"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:191
+msgid "New &folder"
+msgstr "Új &mappa"
+
+#: ../../swish/remote_folder/commands/commands.cpp:192
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Új, üres mappa létrehozása az éppen megnyitott mappában."
+
+#: ../../swish/remote_folder/commands/commands.cpp:194
+msgid "Make a new folder"
+msgstr "Új mappa létrehozása"
+
+#: ../../swish/remote_folder/commands/commands.cpp:233
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Új mappa"
+
+#: ../../swish/remote_folder/commands/commands.cpp:261
+msgid "Could not create a new folder"
+msgstr "Nem sikerült létrehozni az új mappát"
+
+#: ../../swish/remote_folder/commands/commands.cpp:290
+msgid "File and Folder Tasks"
+msgstr "Fájl és Mappa Feladatok"
+
+#: ../../swish/remote_folder/commands/commands.cpp:302
+msgid "These tasks help you manage your remote files."
+msgstr "Ezek a feladatok segítenek a távoli fájlok kezelésében."
+
+#: ../../swish/remote_folder/commands/delete.cpp:231
+msgid "Unable to delete the item"
+msgstr "Nem lehet törölni az adott elemet"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
 msgstr "Billentyuzet-interaktív kérés"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:121
+#: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
 msgstr "Nem lehet hozzáférni a mappához"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:122
-#: ../../swish/shell_folder/RemoteFolder.cpp:312
-#: ../../swish/shell_folder/RemoteFolder.cpp:572
-#: ../../swish/shell_folder/RemoteFolder.cpp:598
-#: ../../swish/shell_folder/RemoteFolder.cpp:742
-#: ../../swish/shell_folder/commands/remote/remote.cpp:285
-msgid "You might not have permission."
-msgstr "Lehetséges, hogy nincs jogosultsága."
-
-#: ../../swish/shell_folder/RemoteFolder.cpp:194
+#: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
 msgstr "Elérési út felismerése nem sikerült"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:195
+#: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
 msgstr "Ellenorizze, hogy az elérési út helyesen lett-e megadva."
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:311
+#: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
 msgstr "Nem sikerült átnevezni az adott elemet"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:570
+#: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
 msgstr "Nem lehet hozzáférni az elemhez"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:571
+#: ../../swish/shell_folder/RemoteFolder.cpp:705
 msgid "Unable to access the items"
 msgstr "Nem lehet hozzáférni az elemekhez"
 
-#: ../../swish/shell_folder/RemoteFolder.cpp:597
+#: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
 msgstr "Nem lehet hozzáférni a mappához"
-
-#: ../../swish/shell_folder/RemoteFolder.cpp:741
-msgid "Unable to delete the item"
-msgstr "Nem lehet törölni az adott elemet"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:203
-#, boost-format
-msgid "The folder already contains a file named '%1%'"
-msgstr "A mappa már tartalmaz egy '%1%' nevu fájlt."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:208
-#, boost-format
-msgid ""
-"Would you like to replace the existing file\n"
-"\n"
-"\t%1%\n"
-"\n"
-"with this one?\n"
-"\n"
-"\t%2%"
-msgstr ""
-"Szeretné lecserélni a létezo fájlt\n"
-"\n"
-"\t%1%\n"
-"\n"
-"ezzel?\n"
-"\n"
-"\t%2%"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:212
-msgid "File already exists"
-msgstr "A fájl már létezik"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:247
-msgid "Mismatched host-key"
-msgstr "Nem egyezo kiszolgáló-kulcs"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:248
-msgid "WARNING: the SSH host-key has changed!"
-msgstr "FIGYELEM: Az SSH kiszolgáló-kulcs megváltozott!"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:254
-#, boost-format
-msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
-msgstr "Az SSH kiszolgáló-kulcs melyet a '%1%' kiszolgáló küldött, nem egyezik a kiszolgáló ismert kulcsával. Ez azt jelentheti, hogy egy harmadik-fél tetteti magát a kiszolgálónak, vagy csak az adminisztrátor megváltoztatta a kulcsot."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:261
-msgid "It is important to check this is the right key fingerprint:"
-msgstr "Fontos, hogy ellenorizze a következo kulcs helyességét:"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:270
-msgid ""
-"I trust this key: &update and connect\n"
-"You won't have to verify this key again unless it changes"
-msgstr ""
-"Megbízom ebben a kulcsban: &frissítés és csatlakozás\n"
-"Nem kell újra ellenoriznie ezt a kulcsot, csak ha megváltozik"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:275
-msgid ""
-"I trust this key: &just connect\n"
-"You will be warned about this key again next time you connect"
-msgstr ""
-"Megízom ebben a kulcsban: &csak csatlakozás\n"
-"Figyelmeztetve lesz mikor újra csatlakozik"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:281
-#: ../../swish/shell_folder/UserInteraction.cpp:322
-msgid ""
-"&Cancel\n"
-"Choose this option unless you are sure the key is correct"
-msgstr ""
-"&Mégse\n"
-"Válassza ezt a lehetoséget ha ön biztos abban, hogy a kulcs nem megfelelo"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:291
-msgid "Unknown host-key"
-msgstr "Ismeretlen kiszolgáló-kulcs"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:297
-#, boost-format
-msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
-msgstr "A kiszolgáló '%1%' a következo SSH-kiszolgáló kulccsal azonosította magát:"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:301
-msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
-msgstr "Ha ön nem ezt a kulcsot várta, egy harmadik-fél tettetheti hogy a számítógép, melyhez ön épp csatlakozni próbál."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:304
-msgid "Verify unknown SSH host-key"
-msgstr "Ellenorizze az ismeretlen SSH kiszolgáló-kulcsot"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:311
-msgid ""
-"I trust this key: &store and connect\n"
-"You won't have to verify this key again unless it changes"
-msgstr ""
-"Megbízom ebben a kulcsban: &eltárolás és csatlakozás\n"
-"Nem kell újra ellenoriznie ezt a kulcsot, csak ha megváltozik"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:316
-msgid ""
-"I trust this key: &just connect\n"
-"You will be asked to verify the key again next time you connect"
-msgstr ""
-"Megízom ebben a kulcsban: &csak csatlakozás\n"
-"Újra kell majd ellenoriznie a kulcsot mikor ismét csatlakozik"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:109
-msgid "&Add SFTP Connection"
-msgstr "&SFTP kapcsolat hozzáadása"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:110
-msgid "Create a new SFTP connection with Swish."
-msgstr "Új SFTP kapcsolat létrehozása Swish-el."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:111
-msgid "&Add SFTP Connection..."
-msgstr "&SFTP kapcsolat hozzáadása..."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:112
-msgid "Add Connection"
-msgstr "Kapcsolat hozzáadása"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:142
-msgid "&Remove SFTP Connection"
-msgstr "SFTP kapcsolat &eltávolítása"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:143
-msgid "Remove a SFTP connection created with Swish."
-msgstr "Swish által készített SFTP kapcsolat eltávolítása. "
-
-#: ../../swish/shell_folder/commands/host/host.cpp:144
-msgid "&Remove SFTP Connection..."
-msgstr "SFTP kapcsolat &eltávolítása..."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:145
-msgid "Remove Connection"
-msgstr "Kapcsolat eltávolítása"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:199
-msgid "SFTP Tasks"
-msgstr "SFTP Feladatok"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:212
-msgid "These tasks help you manage Swish SFTP connections."
-msgstr "Ezek a feladatok segítenek a Swish SFTP kapcsolatok kezelésében."
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:209
-msgid "New &folder"
-msgstr "Új &mappa"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:210
-msgid "Create a new, empty folder in the folder you have open."
-msgstr "Új, üres mappa létrehozása az éppen megnyitott mappában."
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:212
-msgid "Make a new folder"
-msgstr "Új mappa létrehozása"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:251
-msgctxt "Initial name"
-msgid "New folder"
-msgstr "Új mappa"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:284
-msgid "Could not create a new folder"
-msgstr "Nem sikerült létrehozni az új mappát"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:312
-msgid "File and Folder Tasks"
-msgstr "Fájl és Mappa Feladatok"
-
-#: ../../swish/shell_folder/commands/remote/remote.cpp:324
-msgid "These tasks help you manage your remote files."
-msgstr "Ezek a feladatok segítenek a távoli fájlok kezelésében."
-

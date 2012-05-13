@@ -1,40 +1,67 @@
-# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
+# 
+# Translators:
 msgid ""
 msgstr ""
-"Project-Id-Version: Swish 0.3.2.0\n"
+"Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-09 15:40-0000\n"
-"PO-Revision-Date: \n"
-"Last-Translator: Petr Jílec <petrjilec@seznam.cz>\n"
+"POT-Creation-Date: 2012-05-13 11:59-0000\n"
+"PO-Revision-Date: 2012-05-13 11:10+0000\n"
+"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"Language: cs\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2\n"
 "X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
-#: ../../swish/drop_target/DropTargetErrorUI.cpp:122
-#: ../../swish/drop_target/SnitchingDropTarget.cpp:122
-msgid "An error occurred while transferring files:"
-msgstr "Objevila se chyba při přesunu těchto souborů:"
+#: ../../swish/drop_target/CopyFileOperation.cpp:152
+msgid "Unable to create file on the server:"
+msgstr ""
 
-#: ../../swish/drop_target/DropUI.cpp:344
+#: ../../swish/drop_target/CopyFileOperation.cpp:249
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
+msgctxt ""
+"Top line of a transfer progress window saying which file is being copied. "
+"{1} is replaced with the file path and must be included in your translation."
+msgid "Copying '{1}'"
+msgstr ""
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:260
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
+msgctxt ""
+"Second line of a transfer progress window giving the destination directory. "
+"{1} is replaced with the directory path and must be included in your "
+"translation."
+msgid "To '{1}'"
+msgstr ""
+
+#: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
 msgstr "Tato složka již obsahuje soubor se jménem  '{1}'."
 
-#: ../../swish/drop_target/DropUI.cpp:347
+#: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
 msgstr "Chcete provést nahrazení?"
 
-#: ../../swish/drop_target/DropUI.cpp:355
+#: ../../swish/drop_target/DropUI.cpp:327
 msgid "Confirm File Replace"
 msgstr "Potvrzení přepsání souboru"
 
-#: ../../swish/drop_target/DropUI.cpp:394
+#: ../../swish/drop_target/DropUI.cpp:366
 msgctxt "Progress"
 msgid "Copying..."
 msgstr "Kopíruji..."
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:125
+msgid "Unable to transfer files"
+msgstr ""
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:127
+msgid "You might not have permission to write to this directory."
+msgstr ""
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -54,7 +81,9 @@ msgid "For example: \"Home Computer\"."
 msgstr "Například: \"Počítač v kanceláři\"."
 
 #: ../../swish/forms/add_host.cpp:151
-msgid "Specify the details of the computer and account you would like to connect to:"
+msgid ""
+"Specify the details of the computer and account you would like to connect "
+"to:"
 msgstr "Zadejte údaje o počítači a účtu ke kterému se chcete připojit:"
 
 #: ../../swish/forms/add_host.cpp:155
@@ -73,7 +102,9 @@ msgid "&User:"
 msgstr "&Uživatel:"
 
 #: ../../swish/forms/add_host.cpp:169
-msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgid ""
+"Specify the directory on the server that you would like Swish to start the "
+"connection in:"
 msgstr "Zadejte počáteční adresář na serveru, ke kterému se má Switch připojit:"
 
 #: ../../swish/forms/add_host.cpp:173
@@ -85,8 +116,7 @@ msgstr "&Cesta:"
 msgid "Example: /home/yourusername"
 msgstr "Například: /home/vaseJmeno"
 
-#: ../../swish/forms/add_host.cpp:185
-#: ../../swish/forms/password.cpp:70
+#: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
 msgid "Cancel"
 msgstr "Zrušit"
 
@@ -118,13 +148,111 @@ msgstr "Spojení s tímto názvem už existuje. Zkuste prosím jiný název."
 msgid "Complete all fields."
 msgstr "Vyplňte všechny pole."
 
-#: ../../swish/forms/password.cpp:59
+#: ../../swish/forms/password.cpp:57
 msgid "Password"
 msgstr "Heslo"
 
-#: ../../swish/forms/password.cpp:66
+#: ../../swish/forms/password.cpp:64
 msgid "OK"
 msgstr "OK"
+
+#: ../../swish/frontend/announce_error.cpp:136
+msgid "Show &details (which may not be in your language)"
+msgstr ""
+
+#: ../../swish/frontend/announce_error.cpp:137
+msgid "Hide &details"
+msgstr ""
+
+#: ../../swish/frontend/UserInteraction.cpp:195
+msgid "The folder already contains a file named '%1%'"
+msgstr "Složky již obsahuje soubor pojmenovaný  '%1%'"
+
+#: ../../swish/frontend/UserInteraction.cpp:200
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr "Chcete přepsat existující soubor\n\n\t%1%\n\ntímto souborem?\n\n\t%2%"
+
+#: ../../swish/frontend/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "Soubor již existuje"
+
+#: ../../swish/frontend/UserInteraction.cpp:242
+msgid "Mismatched host-key"
+msgstr "Špatný host-key"
+
+#: ../../swish/frontend/UserInteraction.cpp:243
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "VAROVÁNÍ: SSH host-key se změnil!"
+
+#: ../../swish/frontend/UserInteraction.cpp:249
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
+msgstr "SSH host-key zaslaný  '%1%' k ověření své identity se neshoduje s již známým klíčem tohoto serveru. Může to znamenat, že se třetí strana snaží předstírat, že je počítač, ke kterému se snažíte připojit nebo správce systému právě změnil přístupový klíč."
+
+#: ../../swish/frontend/UserInteraction.cpp:256
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "Je důležité ověřit, že toto je správný otisk (fingerprint):"
+
+#: ../../swish/frontend/UserInteraction.cpp:265
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Důvěřuji tomuto klíči: &updatovat a připojit se\nNemusíte ověřovat tento klíč znovu, pokud se nezmění."
+
+#: ../../swish/frontend/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr "Důvěřuji tomuto klíči: &pouze se připojit\nBudete varování na tento klíč, jakmile se znovu připojíte"
+
+#: ../../swish/frontend/UserInteraction.cpp:276
+#: ../../swish/frontend/UserInteraction.cpp:320
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr "&Stornol\nVyberte tuto možnost pokud si nejste jisti, zda je klíč správný."
+
+#: ../../swish/frontend/UserInteraction.cpp:289
+msgid "Unknown host-key"
+msgstr "Neznámý host-key"
+
+#: ../../swish/frontend/UserInteraction.cpp:295
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
+msgstr "Server  '%1%' se identifikovat SSH klíčem, ke kterému náleží otisk(fingerprint):"
+
+#: ../../swish/frontend/UserInteraction.cpp:299
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Pokud je tento klíč neočekávaný, může se jednat o snahu třetí strany předstírat, že je počítačem, ke kterému se snažíte připojit."
+
+#: ../../swish/frontend/UserInteraction.cpp:302
+msgid "Verify unknown SSH host-key"
+msgstr "Ověřte neznámý SSH host-key"
+
+#: ../../swish/frontend/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Důvěřuji tomuto klíči: &uložit a připojit se\nNebudete muset ověřovat tento klíč v budoucnu, pokud se nezmění."
+
+#: ../../swish/frontend/UserInteraction.cpp:314
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr "Důvěřuji tomuto klíči: &pouze připojit\nBudete znovu vyzvání k ověření toho klíče při příštím připojení"
 
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
@@ -155,6 +283,46 @@ msgstr "Vzdálená cesta"
 msgctxt "Property"
 msgid "Type"
 msgstr "Typ"
+
+#: ../../swish/host_folder/commands.cpp:110
+msgid "&Add SFTP Connection"
+msgstr "&Přidat SFTP připojení"
+
+#: ../../swish/host_folder/commands.cpp:111
+msgid "Create a new SFTP connection with Swish."
+msgstr "Vytvořit nové SFTP připojení se Swish."
+
+#: ../../swish/host_folder/commands.cpp:112
+msgid "&Add SFTP Connection..."
+msgstr "&Přidat SFTP připojení..."
+
+#: ../../swish/host_folder/commands.cpp:113
+msgid "Add Connection"
+msgstr "Přidat připojení"
+
+#: ../../swish/host_folder/commands.cpp:143
+msgid "&Remove SFTP Connection"
+msgstr "&Odebrat SFTP připojení"
+
+#: ../../swish/host_folder/commands.cpp:144
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Odebrat SFTP připojení vytvořené se Swish."
+
+#: ../../swish/host_folder/commands.cpp:145
+msgid "&Remove SFTP Connection..."
+msgstr "&Odebrat SFTP připojení"
+
+#: ../../swish/host_folder/commands.cpp:146
+msgid "Remove Connection"
+msgstr "Odebrat připojení"
+
+#: ../../swish/host_folder/commands.cpp:200
+msgid "SFTP Tasks"
+msgstr "SFTP úkoly"
+
+#: ../../swish/host_folder/commands.cpp:213
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Tyto úkoly vám pomůžou s nastavením Swish SFTP připojení."
 
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
@@ -201,171 +369,90 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr "ID skupiny"
 
+#: ../../swish/remote_folder/context_menu_callback.cpp:155
+msgid "Open &link"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:177
+msgid "&Open"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:271
+msgid "Unable to open the link"
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:272
+#: ../../swish/remote_folder/context_menu_callback.cpp:376
+#: ../../swish/remote_folder/commands/commands.cpp:262
+#: ../../swish/remote_folder/commands/delete.cpp:232
+msgid "You might not have permission."
+msgstr ""
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:375
+msgid "Unable to open the file"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:191
+msgid "New &folder"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:192
+msgid "Create a new, empty folder in the folder you have open."
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:194
+msgid "Make a new folder"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:233
+msgctxt "Initial name"
+msgid "New folder"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:261
+msgid "Could not create a new folder"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:290
+msgid "File and Folder Tasks"
+msgstr ""
+
+#: ../../swish/remote_folder/commands/commands.cpp:302
+msgid "These tasks help you manage your remote files."
+msgstr ""
+
+#: ../../swish/remote_folder/commands/delete.cpp:231
+msgid "Unable to delete the item"
+msgstr ""
+
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
 msgstr "Požadavek na použití klávesnice"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:195
-#, boost-format
-msgid "The folder already contains a file named '%1%'"
-msgstr "Složky již obsahuje soubor pojmenovaný  '%1%'"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:200
-#, boost-format
-msgid ""
-"Would you like to replace the existing file\n"
-"\n"
-"\t%1%\n"
-"\n"
-"with this one?\n"
-"\n"
-"\t%2%"
+#: ../../swish/shell_folder/RemoteFolder.cpp:182
+msgid "Unable to access the directory"
 msgstr ""
-"Chcete přepsat existující soubor\n"
-"\n"
-"\t%1%\n"
-"\n"
-"tímto souborem?\n"
-"\n"
-"\t%2%"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:204
-msgid "File already exists"
-msgstr "Soubor již existuje"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:249
-msgid "Mismatched host-key"
-msgstr "Špatný host-key"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:250
-msgid "WARNING: the SSH host-key has changed!"
-msgstr "VAROVÁNÍ: SSH host-key se změnil!"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:256
-#, boost-format
-msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
-msgstr "SSH host-key zaslaný  '%1%' k ověření své identity se neshoduje s již známým klíčem tohoto serveru. Může to znamenat, že se třetí strana snaží předstírat, že je počítač, ke kterému se snažíte připojit nebo správce systému právě změnil přístupový klíč."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:263
-msgid "It is important to check this is the right key fingerprint:"
-msgstr "Je důležité ověřit, že toto je správný otisk (fingerprint):"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:274
-msgid ""
-"I trust this key: &update and connect\n"
-"You won't have to verify this key again unless it changes"
+#: ../../swish/shell_folder/RemoteFolder.cpp:255
+msgid "Path not recognised"
 msgstr ""
-"Důvěřuji tomuto klíči: &updatovat a připojit se\n"
-"Nemusíte ověřovat tento klíč znovu, pokud se nezmění."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:279
-msgid ""
-"I trust this key: &just connect\n"
-"You will be warned about this key again next time you connect"
+#: ../../swish/shell_folder/RemoteFolder.cpp:256
+msgid "Check that the path was entered correctly."
 msgstr ""
-"Důvěřuji tomuto klíči: &pouze se připojit\n"
-"Budete varování na tento klíč, jakmile se znovu připojíte"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:285
-#: ../../swish/shell_folder/UserInteraction.cpp:357
-msgid ""
-"&Cancel\n"
-"Choose this option unless you are sure the key is correct"
+#: ../../swish/shell_folder/RemoteFolder.cpp:377
+msgid "Unable to rename the item"
 msgstr ""
-"&Stornol\n"
-"Vyberte tuto možnost pokud si nejste jisti, zda je klíč správný."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:295
-msgid "To update the known key for this host click Yes."
-msgstr "K updatování známého klíče pro tohoto hostitele klikněte na Ano."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:297
-msgid "To connect to the server without updating the key click No."
-msgstr "K připojení na tento server bez updatování klíče klikněte na Ne."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:299
-#: ../../swish/shell_folder/UserInteraction.cpp:371
-msgid "Click Cancel unless you are sure the key is correct."
-msgstr "Klikněte na Storno, nejste-li si jisti, že je klíč správný."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:324
-msgid "Unknown host-key"
-msgstr "Neznámý host-key"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:330
-#, boost-format
-msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
-msgstr "Server  '%1%' se identifikovat SSH klíčem, ke kterému náleží otisk(fingerprint):"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:334
-msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
-msgstr "Pokud je tento klíč neočekávaný, může se jednat o snahu třetí strany předstírat, že je počítačem, ke kterému se snažíte připojit."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:339
-msgid "Verify unknown SSH host-key"
-msgstr "Ověřte neznámý SSH host-key"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:346
-msgid ""
-"I trust this key: &store and connect\n"
-"You won't have to verify this key again unless it changes"
+#: ../../swish/shell_folder/RemoteFolder.cpp:704
+msgid "Unable to access the item"
 msgstr ""
-"Důvěřuji tomuto klíči: &uložit a připojit se\n"
-"Nebudete muset ověřovat tento klíč v budoucnu, pokud se nezmění."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:351
-msgid ""
-"I trust this key: &just connect\n"
-"You will be asked to verify the key again next time you connect"
+#: ../../swish/shell_folder/RemoteFolder.cpp:705
+msgid "Unable to access the items"
 msgstr ""
-"Důvěřuji tomuto klíči: &pouze připojit\n"
-"Budete znovu vyzvání k ověření toho klíče při příštím připojení"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:367
-msgid "To store this as the known key for this server click Yes."
-msgstr "Pro uložení klíče jako známého pro tento server klikněte na Ano."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:369
-msgid "To connect to the server without storing the key click No."
-msgstr "Pro připojení k serveru bez ukládání klíče klikněte na Ne."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:109
-msgid "&Add SFTP Connection"
-msgstr "&Přidat SFTP připojení"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:110
-msgid "Create a new SFTP connection with Swish."
-msgstr "Vytvořit nové SFTP připojení se Swish."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:111
-msgid "&Add SFTP Connection..."
-msgstr "&Přidat SFTP připojení..."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:112
-msgid "Add Connection"
-msgstr "Přidat připojení"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:142
-msgid "&Remove SFTP Connection"
-msgstr "&Odebrat SFTP připojení"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:143
-msgid "Remove a SFTP connection created with Swish."
-msgstr "Odebrat SFTP připojení vytvořené se Swish."
-
-#: ../../swish/shell_folder/commands/host/host.cpp:144
-msgid "&Remove SFTP Connection..."
-msgstr "&Odebrat SFTP připojení"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:145
-msgid "Remove Connection"
-msgstr "Odebrat připojení"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:199
-msgid "SFTP Tasks"
-msgstr "SFTP úkoly"
-
-#: ../../swish/shell_folder/commands/host/host.cpp:212
-msgid "These tasks help you manage Swish SFTP connections."
-msgstr "Tyto úkoly vám pomůžou s nastavením Swish SFTP připojení."
-
+#: ../../swish/shell_folder/RemoteFolder.cpp:732
+msgid "Unable to access the folder"
+msgstr ""
