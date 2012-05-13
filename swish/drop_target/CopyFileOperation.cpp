@@ -29,7 +29,7 @@
 #include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
-#include <winapi/shell/shell.hpp> // stream_from_pidl, parsing_name_from_pidl
+#include <winapi/shell/shell.hpp> // stream_from_pidl
 #include <winapi/trace.hpp> // trace
 
 #include <comet/datetime.h> // datetime_t
@@ -37,6 +37,7 @@
 
 #include <boost/cstdint.hpp> // int64_t
 #include <boost/locale/message.hpp> // translate
+#include <boost/locale/format.hpp> // wformat
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
@@ -47,7 +48,6 @@
 
 using swish::remote_folder::create_remote_itemid;
 
-using winapi::shell::parsing_name_from_pidl;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
@@ -58,6 +58,7 @@ using boost::int64_t;
 using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
+using boost::locale::wformat;
 using boost::shared_ptr;
 
 using comet::com_error;
@@ -235,24 +236,36 @@ namespace {
 }
 
 CopyFileOperation::CopyFileOperation(
-	const apidl_t& source_pidl, const SftpDestination& destination) :
-m_source_pidl(source_pidl), m_destination(destination) {}
+	const RootedSource& source, const SftpDestination& destination) :
+m_source(source), m_destination(destination) {}
 
 std::wstring CopyFileOperation::title() const
 {
-	return parsing_name_from_pidl(m_source_pidl);
+	return (wformat(
+		translate(
+			"Top line of a transfer progress window saying which "
+			"file is being copied. {1} is replaced with the file path "
+			"and must be included in your translation.",
+			"Copying '{1}'"))
+		% m_source.relative_name()).str();
 }
 
 std::wstring CopyFileOperation::description() const
 {
-	return m_destination.resolve_destination().as_absolute_path().string();
+	return (wformat(
+		translate(
+			"Second line of a transfer progress window giving the destination "
+			"directory. {1} is replaced with the directory path and must be "
+			"included in your translation.",
+			"To '{1}'"))
+		% m_destination.resolve_destination().as_absolute_path().string()).str();
 }
 
 void CopyFileOperation::operator()(
 	OperationCallback& callback,
 	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
 {
-	com_ptr<IStream> stream = stream_from_pidl(m_source_pidl);
+	com_ptr<IStream> stream = stream_from_pidl(m_source.pidl());
 
 	resolved_destination resolved_target(m_destination.resolve_destination());
 

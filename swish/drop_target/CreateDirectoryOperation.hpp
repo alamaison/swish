@@ -29,6 +29,7 @@
 #pragma once
 
 #include "swish/drop_target/Operation.hpp"
+#include "swish/drop_target/RootedSource.hpp"
 #include "swish/drop_target/SftpDestination.hpp"
 
 namespace swish {
@@ -38,7 +39,8 @@ class CreateDirectoryOperation : public Operation
 {
 public:
 
-	CreateDirectoryOperation(const SftpDestination& target);
+	CreateDirectoryOperation(
+		const RootedSource& source, const SftpDestination& target);
 
 	virtual std::wstring title() const;
 
@@ -53,6 +55,7 @@ private:
 
 	virtual Operation* do_clone() const;
 
+	RootedSource m_source;
 	SftpDestination m_destination;
 };
 

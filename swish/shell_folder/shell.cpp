@@ -26,14 +26,14 @@
 
 #include "shell.hpp"
 
-#include <winapi/shell/shell.hpp> // parsing_name_from_pidl
+#include <winapi/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/error.h> // com_error
 
 #include <shlobj.h>  // SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
-using winapi::shell::parsing_name_from_pidl;
+using winapi::shell::pidl_shell_item;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -49,7 +49,7 @@ namespace shell_folder {
 
 wpath path_from_pidl(PIDLIST_ABSOLUTE pidl)
 {
-	return parsing_name_from_pidl(pidl);
+	return pidl_shell_item(pidl).parsing_name();
 }
 
 shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(

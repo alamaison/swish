@@ -28,6 +28,7 @@
 
 #include "swish/drop_target/CopyFileOperation.hpp"
 #include "swish/drop_target/CreateDirectoryOperation.hpp"
+#include "swish/drop_target/RootedSource.hpp"
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <boost/bind.hpp> // bind
@@ -35,8 +36,8 @@
 #include <boost/function_output_iterator.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
-#include <winapi/shell/shell.hpp> // stream_from_pidl, strret_to_string,
-                                  // bind_to_handler_object
+#include <winapi/shell/shell.hpp> // stream_from_pidl, bind_to_handler_object
+#include <winapi/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/error.h> // com_error
 
@@ -48,8 +49,8 @@ using winapi::shell::bind_to_handler_object;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
+using winapi::shell::pidl_shell_item;
 using winapi::shell::stream_from_pidl;
-using winapi::shell::strret_to_string;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -67,56 +68,38 @@ namespace drop_target {
 namespace {
 
 	/**
-	 * Query an item's parent folder for the item's display name relative
-	 * to that folder.
+	 * Return the name the copy should have at the target location.
 	 */
-	wstring display_name_of_item(
-		com_ptr<IShellFolder> parent_folder, const cpidl_t& pidl)
+	wpath target_name_from_source(const RootedSource& source)
 	{
-		STRRET strret;
-		HRESULT hr = parent_folder->GetDisplayNameOf(
-			pidl.get(), SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(parent_folder, hr));
-
-		return strret_to_string<wchar_t>(strret, pidl);
-	}
-
-	/**
-	 * Return the parsing name of an item.
-	 */
-	wpath display_name_from_pidl(const apidl_t& parent, const cpidl_t& item)
-	{
-		com_ptr<IShellFolder> parent_folder = 
-			bind_to_handler_object<IShellFolder>(parent);
-
-		return display_name_of_item(parent_folder, item);
+		return pidl_shell_item(source.pidl()).friendly_name(
+			pidl_shell_item::friendly_name_type::relative);
 	}
 
 	template<typename OutIt>
 	void output_operations_for_stream_pidl(
-		const apidl_t& source_pidl, const SftpDestination& destination,
+		const RootedSource& source, const SftpDestination& destination,
 		OutIt output_iterator)
 	{
-		wpath display_name = display_name_from_pidl(
-			source_pidl.parent(), source_pidl.last_item());
+		wpath new_name = target_name_from_source(source);
 
-		CopyFileOperation operation(source_pidl, destination / display_name);
+		SftpDestination new_destination = destination / new_name;
+
+		CopyFileOperation operation(source, new_destination);
 
 		*output_iterator++ = operation;
 	}
 
 	template<typename OutIt>
 	void output_operations_for_folder_pidl(
-		com_ptr<IShellFolder> folder, const apidl_t& source_pidl,
+		com_ptr<IShellFolder> folder, const RootedSource& source,
 		const SftpDestination& destination, OutIt output_iterator)
 	{
-		wpath display_name = display_name_from_pidl(
-			source_pidl.parent(), source_pidl.last_item());
+		wpath new_name = target_name_from_source(source);
 
-		SftpDestination new_destination = destination / display_name;
+		SftpDestination new_destination = destination / new_name;
 
-		*output_iterator++ = CreateDirectoryOperation(new_destination);
+		*output_iterator++ = CreateDirectoryOperation(source, new_destination);
 
 		com_ptr<IEnumIDList> e;
 		HRESULT hr = folder->EnumObjects(
@@ -130,13 +113,13 @@ namespace {
 		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
 		{
 			output_operations_for_pidl(
-				source_pidl + item, new_destination, output_iterator);
+				source / item, new_destination, output_iterator);
 		}
 	}
 
 	template<typename OutIt>
 	void output_operations_for_pidl(
-		const apidl_t& source_pidl, const SftpDestination& destination,
+		const RootedSource& source, const SftpDestination& destination,
 		OutIt output_iterator)
 	{
 		try
@@ -148,10 +131,10 @@ namespace {
 			while building the copy plan - a bad idea, especially if the files
 			are on another remote server
 			*/
-			stream_from_pidl(source_pidl);
+			stream_from_pidl(source.pidl());
 
 			output_operations_for_stream_pidl(
-				source_pidl, destination, output_iterator);
+				source, destination, output_iterator);
 		}
 		catch (const com_error&)
 		{
@@ -160,10 +143,10 @@ namespace {
 			// have more success
 
 			com_ptr<IShellFolder> folder =
-				bind_to_handler_object<IShellFolder>(source_pidl);
+				bind_to_handler_object<IShellFolder>(source.pidl());
 
 			output_operations_for_folder_pidl(
-				folder, source_pidl, destination, output_iterator);
+				folder, source, destination, output_iterator);
 		}
 	}
 
@@ -182,7 +165,9 @@ PidlCopyPlan::PidlCopyPlan(
 		apidl_t pidl = source_format.file(i);
 
 		output_operations_for_pidl(
-			pidl, SftpDestination(destination_root, wpath()),
+			RootedSource(
+				source_format.parent_folder(), source_format.relative_file(i)),
+			SftpDestination(destination_root, wpath()),
 			make_function_output_iterator(
 				bind(&SequentialPlan::add_stage, ref(m_plan), _1)));
 	}

@@ -360,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RootedSource.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SequentialPlan.hpp"
 				>
 			</File>

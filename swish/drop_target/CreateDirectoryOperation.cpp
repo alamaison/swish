@@ -28,11 +28,16 @@
 
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
+#include <boost/locale/message.hpp> // translate
+#include <boost/locale/format.hpp> // wformat
+
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 
 using boost::filesystem::wpath;
 using boost::function;
+using boost::locale::translate;
+using boost::locale::wformat;
 
 using comet::com_ptr;
 
@@ -42,16 +47,29 @@ namespace swish {
 namespace drop_target {
 
 CreateDirectoryOperation::CreateDirectoryOperation(
-	const SftpDestination& target) : m_destination(target) {}
+	const RootedSource& source, const SftpDestination& destination) :
+m_source(source), m_destination(destination) {}
 
 wstring CreateDirectoryOperation::title() const
 {
-	return m_destination.resolve_destination().filename();
+	return (wformat(
+		translate(
+			"Top line of a transfer progress window saying which "
+			"file is being copied. {1} is replaced with the file path "
+			"and must be included in your translation.",
+			"Copying '{1}'"))
+		% m_source.relative_name()).str();
 }
 
 wstring CreateDirectoryOperation::description() const
 {
-	return m_destination.resolve_destination().as_absolute_path().string();
+	return (wformat(
+		translate(
+			"Second line of a transfer progress window giving the destination "
+			"directory. {1} is replaced with the directory path and must be "
+			"included in your translation.",
+			"To '{1}'"))
+		% m_destination.resolve_destination().as_absolute_path().string()).str();
 }
 
 void CreateDirectoryOperation::operator()(

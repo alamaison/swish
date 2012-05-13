@@ -42,7 +42,7 @@
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
 #include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
-#include <winapi/shell/shell.hpp> // parsing_name_from_pidl
+#include <winapi/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/ptr.h>  // com_ptr
 
@@ -66,7 +66,7 @@ using namespace swish::shell_folder::data_object;
 using test::PidlFixture;
 
 using namespace winapi::shell::pidl;
-using winapi::shell::parsing_name_from_pidl;
+using winapi::shell::pidl_shell_item;
 
 using comet::com_ptr;
 
@@ -133,8 +133,8 @@ namespace { // private
 	predicate_result pidl_equivalence(
 		const apidl_t& pidl1, const apidl_t& pidl2)
 	{
-		wstring name1 = parsing_name_from_pidl(pidl1.get());
-		wstring name2 = parsing_name_from_pidl(pidl2.get());
+		wstring name1 = pidl_shell_item(pidl1).parsing_name();
+		wstring name2 = pidl_shell_item(pidl2).parsing_name();
 
 		if (name1 != name2)
 		{

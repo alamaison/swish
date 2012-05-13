@@ -29,6 +29,7 @@
 #pragma once
 
 #include "swish/drop_target/Operation.hpp"
+#include "swish/drop_target/RootedSource.hpp"
 #include "swish/drop_target/SftpDestination.hpp"
 
 #include <winapi/shell/pidl.hpp> // apidl_t
@@ -41,8 +42,7 @@ class CopyFileOperation : public Operation
 public:
 
 	CopyFileOperation(
-		const winapi::shell::pidl::apidl_t& source_pidl,
-		const SftpDestination& destination);
+		const RootedSource& source, const SftpDestination& destination);
 
 public: // Operation
 
@@ -59,7 +59,7 @@ private:
 
 	virtual Operation* do_clone() const;
 
-	winapi::shell::pidl::apidl_t m_source_pidl;
+	RootedSource m_source;
 	SftpDestination m_destination;
 };
 
