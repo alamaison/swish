@@ -1,40 +1,41 @@
-# Alexander Lamaison <awl03@doc.ic.ac.uk>, 2010.
+# 
+# Translators:
+#   <t.j.veldhuizen@tjveldhuizen.nl>, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: Swish 0.3.2.0\n"
+"Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-10-09 15:52-0000\n"
-"PO-Revision-Date: 2010-10-09 15:52-0000\n"
-"Last-Translator: Alexander Lamaison <awl03@doc.ic.ac.uk>\n"
-"Language-Team: Swish project\n"
+"POT-Creation-Date: 2011-01-28 15:04-0000\n"
+"PO-Revision-Date: 2012-05-12 09:09+0000\n"
+"Last-Translator: Thijs-jan Veldhuizen <t.j.veldhuizen@tjveldhuizen.nl>\n"
+"Language-Team: Dutch (http://www.transifex.net/projects/p/swish/language/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: nl\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Virtaal 0.5.2\n"
-"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
 #: ../../swish/drop_target/DropTargetErrorUI.cpp:122
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:122
 msgid "An error occurred while transferring files:"
-msgstr ""
+msgstr "Er is een fout opgetreden bij de bestandsoverdracht:"
 
-#: ../../swish/drop_target/DropUI.cpp:344
+#: ../../swish/drop_target/DropUI.cpp:349
 msgid "This folder already contains a file named '{1}'."
 msgstr "Deze map bevat al een bestand met de naam '{1}'"
 
-#: ../../swish/drop_target/DropUI.cpp:347
+#: ../../swish/drop_target/DropUI.cpp:352
 msgid "Would you like to replace it?"
-msgstr ""
+msgstr "Wil je het vervangen?"
 
-#: ../../swish/drop_target/DropUI.cpp:355
+#: ../../swish/drop_target/DropUI.cpp:360
 msgid "Confirm File Replace"
-msgstr ""
+msgstr "Bevestig vervanging"
 
-#: ../../swish/drop_target/DropUI.cpp:394
+#: ../../swish/drop_target/DropUI.cpp:399
 msgctxt "Progress"
 msgid "Copying..."
 msgstr "Kopiëren..."
@@ -57,7 +58,9 @@ msgid "For example: \"Home Computer\"."
 msgstr "Bijvoorbeeld: \"Computer Thuis\"."
 
 #: ../../swish/forms/add_host.cpp:151
-msgid "Specify the details of the computer and account you would like to connect to:"
+msgid ""
+"Specify the details of the computer and account you would like to connect "
+"to:"
 msgstr "Geef de details van de computer en de account waarmee u verbinding wilt maken:"
 
 #: ../../swish/forms/add_host.cpp:155
@@ -76,7 +79,9 @@ msgid "&User:"
 msgstr "&Gebruiker:"
 
 #: ../../swish/forms/add_host.cpp:169
-msgid "Specify the directory on the server that you would like Swish to start the connection in:"
+msgid ""
+"Specify the directory on the server that you would like Swish to start the "
+"connection in:"
 msgstr "Geef de map op de server waar Swish de verbinding in op moet starten:"
 
 #: ../../swish/forms/add_host.cpp:173
@@ -88,8 +93,7 @@ msgstr "P&ad:"
 msgid "Example: /home/yourusername"
 msgstr "Voorbeeld: /home/uwgebruikersnaam"
 
-#: ../../swish/forms/add_host.cpp:185
-#: ../../swish/forms/password.cpp:70
+#: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -121,11 +125,11 @@ msgstr "Een verbinding met deze titel bestaat al. Probeer een ander."
 msgid "Complete all fields."
 msgstr "Vul alle velden in."
 
-#: ../../swish/forms/password.cpp:59
+#: ../../swish/forms/password.cpp:57
 msgid "Password"
 msgstr "Wachtwoord"
 
-#: ../../swish/forms/password.cpp:66
+#: ../../swish/forms/password.cpp:64
 msgid "OK"
 msgstr "OK"
 
@@ -152,7 +156,7 @@ msgstr "Poort"
 #: ../../swish/host_folder/columns.cpp:69
 msgctxt "Property"
 msgid "Remote path"
-msgstr "Externe pad"
+msgstr "Extern pad"
 
 #: ../../swish/host_folder/columns.cpp:72
 msgctxt "Property"
@@ -162,7 +166,7 @@ msgstr "Bestandsformaat"
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
 msgid "Network Drive"
-msgstr "Bestandsserver"
+msgstr "Netwerkschijf"
 
 #: ../../swish/remote_folder/columns.cpp:82
 msgctxt "Property"
@@ -204,16 +208,65 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr "Groep ID"
 
+#: ../../swish/shell_folder/announce_error.cpp:129
+msgid "Show &details (which may not be in your language)"
+msgstr "&Details weergeven (mogelijk niet in uw eigen taal)"
+
+#: ../../swish/shell_folder/announce_error.cpp:130
+msgid "Hide &details"
+msgstr "&Details verbergen"
+
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
 msgstr "Keyboard-interactive aanvraag"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:195
+#: ../../swish/shell_folder/RemoteFolder.cpp:121
+msgid "Unable to access the directory"
+msgstr "Het is niet mogelijk deze map te benaderen"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:122
+#: ../../swish/shell_folder/RemoteFolder.cpp:312
+#: ../../swish/shell_folder/RemoteFolder.cpp:572
+#: ../../swish/shell_folder/RemoteFolder.cpp:598
+#: ../../swish/shell_folder/RemoteFolder.cpp:742
+#: ../../swish/shell_folder/commands/remote/remote.cpp:285
+msgid "You might not have permission."
+msgstr "Mogelijk heeft u geen toegangsrechten."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:194
+msgid "Path not recognised"
+msgstr "Pad niet herkend"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:195
+msgid "Check that the path was entered correctly."
+msgstr "Controleer of het pad juist is ingevoerd."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:311
+msgid "Unable to rename the item"
+msgstr "Het is niet mogelijk dit item te hernoemen"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:570
+msgid "Unable to access the item"
+msgstr "Het is niet mogelijk dit item te benaderen"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:571
+msgid "Unable to access the items"
+msgstr "Het is niet mogelijk deze items te benaderen"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:597
+msgid "Unable to access the folder"
+msgstr "Het is niet mogelijk deze map te benaderen"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:741
+msgid "Unable to delete the item"
+msgstr "Het is niet mogelijk om dit item te verwijderen"
+
+#: ../../swish/shell_folder/UserInteraction.cpp:203
 #, boost-format
 msgid "The folder already contains a file named '%1%'"
 msgstr "Deze map bevat al een bestand met de naam '%1%'"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:200
+#: ../../swish/shell_folder/UserInteraction.cpp:208
 #, boost-format
 msgid ""
 "Would you like to replace the existing file\n"
@@ -223,118 +276,88 @@ msgid ""
 "with this one?\n"
 "\n"
 "\t%2%"
-msgstr ""
-"Wilt u het bestaande bestand\n"
-"\n"
-"\t%1%\n"
-"\n"
-"met deze vervangen?\n"
-"\n"
-"\t%2%"
+msgstr "Wilt u het bestaande bestand\n\n\t%1%\n\nvervangen door dit bestand?\n\n\t%2%"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:204
+#: ../../swish/shell_folder/UserInteraction.cpp:212
 msgid "File already exists"
 msgstr "Bestand bestaat al"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:249
+#: ../../swish/shell_folder/UserInteraction.cpp:247
 msgid "Mismatched host-key"
 msgstr "Host-sleutel komt niet overeen"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:250
+#: ../../swish/shell_folder/UserInteraction.cpp:248
 msgid "WARNING: the SSH host-key has changed!"
 msgstr "WAARSCHUWING: de SSH host-sleutel is veranderd!"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:256
+#: ../../swish/shell_folder/UserInteraction.cpp:254
 #, boost-format
-msgid "The SSH host-key sent by '%1%' to identify itself doesn't match the known key for this server.  This could mean a third-party is pretending to be the computer you're trying to connect to or the system administrator may have just changed the key."
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
 msgstr "De SSH host-sleutel verzonden door '%1%' om zich te identificeren komt niet overeen met de bekende sleutel voor deze server. Mogelijk luistert iemand uw verbinding af, of de systeembeheerder heeft zojuist de sleutel van de host gewijzigd."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:263
+#: ../../swish/shell_folder/UserInteraction.cpp:261
 msgid "It is important to check this is the right key fingerprint:"
 msgstr "Het is belangrijk om te controleren dat dit de juiste sleutel vingerafdruk is:"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:274
+#: ../../swish/shell_folder/UserInteraction.cpp:270
 msgid ""
 "I trust this key: &update and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr ""
-"Ik vertrouw deze sleutel: &werk bij en verbind\n"
-"U zult deze sleutel niet opnieuw moeten verifiëren tenzij het verandert "
+msgstr "Ik vertrouw deze sleutel: &werk bij en verbind\nU hoeft deze sleutel niet opnieuw te verifiëren, tenzij deze verandert "
 
-#: ../../swish/shell_folder/UserInteraction.cpp:279
+#: ../../swish/shell_folder/UserInteraction.cpp:275
 msgid ""
 "I trust this key: &just connect\n"
 "You will be warned about this key again next time you connect"
-msgstr ""
-"Ik vertrouw deze sleutel: &verbind\n"
-"U wordt gewaarschuwd over deze toets de volgende keer dat u verbindt"
+msgstr "Ik vertrouw deze sleutel: &verbind\nU wordt opnieuw gewaarschuwd voor deze sleutel, de volgende keer dat u verbindt"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:285
-#: ../../swish/shell_folder/UserInteraction.cpp:357
+#: ../../swish/shell_folder/UserInteraction.cpp:281
+#: ../../swish/shell_folder/UserInteraction.cpp:322
 msgid ""
 "&Cancel\n"
 "Choose this option unless you are sure the key is correct"
-msgstr ""
-"&Annuleer\n"
-"Kies deze optie, tenzij u zeker bent dat de sleutel correct is"
+msgstr "&Annuleer\nKies deze optie, tenzij u zeker bent dat de sleutel correct is"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:295
-msgid "To update the known key for this host click Yes."
-msgstr "Om de bekende sleutel voor deze host bij te werken, klik op Ja."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:297
-msgid "To connect to the server without updating the key click No."
-msgstr "Om met de server te verbinden zonder de sleutel bij te werken klik op Nee."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:299
-#: ../../swish/shell_folder/UserInteraction.cpp:371
-msgid "Click Cancel unless you are sure the key is correct."
-msgstr "Klik op Annuleren tenzij u zeker bent de sleutel correct is. "
-
-#: ../../swish/shell_folder/UserInteraction.cpp:324
+#: ../../swish/shell_folder/UserInteraction.cpp:291
 msgid "Unknown host-key"
 msgstr "Onbekende host-sleutel"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:330
+#: ../../swish/shell_folder/UserInteraction.cpp:297
 #, boost-format
-msgid "The server '%1%' has identified itself with an SSH host-key whose fingerprint is:"
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
 msgstr "De server %1% heeft zich geïdentificeerd met een SSH host-sleutel waarvan de vingerafdruk is:"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:334
-msgid "If you are not expecting this key, a third-party may be pretending to be the computer you're trying to connect to."
-msgstr "Als u deze sleutel niet verwacht, kan een derde beweren de computer te zijn warmee u een verbinding probeert te maken."
+#: ../../swish/shell_folder/UserInteraction.cpp:301
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Als u deze sleutel niet verwacht, kan een derde beweren de computer te zijn waarmee u een verbinding probeert te maken."
 
-#: ../../swish/shell_folder/UserInteraction.cpp:339
+#: ../../swish/shell_folder/UserInteraction.cpp:304
 msgid "Verify unknown SSH host-key"
-msgstr "Verifiër onbekende SSH host-sleutel"
+msgstr "Verifieer onbekende SSH host-sleutel"
 
-#: ../../swish/shell_folder/UserInteraction.cpp:346
+#: ../../swish/shell_folder/UserInteraction.cpp:311
 msgid ""
 "I trust this key: &store and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr ""
-"Ik vertrouw deze sleutel: &opslaan en verbind\n"
-"U zult deze sleutel niet opnieuw moeten verifiëren tenzij het verandert "
+msgstr "Ik vertrouw deze sleutel: &opslaan en verbinden\nU hoeft deze sleutel niet opnieuw te verifiëren, tenzij deze verandert "
 
-#: ../../swish/shell_folder/UserInteraction.cpp:351
+#: ../../swish/shell_folder/UserInteraction.cpp:316
 msgid ""
 "I trust this key: &just connect\n"
 "You will be asked to verify the key again next time you connect"
-msgstr ""
-"Ik vertrouw deze sleutel: &verbind\n"
-"U wordt gevraagd om deze sleutel opniew te verifiëren de volgende keer dat u verbindt"
-
-#: ../../swish/shell_folder/UserInteraction.cpp:367
-msgid "To store this as the known key for this server click Yes."
-msgstr "Om dit als bekende sleutel voor deze server op te slaan klik op Ja."
-
-#: ../../swish/shell_folder/UserInteraction.cpp:369
-msgid "To connect to the server without storing the key click No."
-msgstr "Om met de server te verbinden zonder de sleutel op te slaan klik op Nee. "
+msgstr "Ik vertrouw deze sleutel: &verbinden\nU wordt gevraagd om deze sleutel opnieuw te verifiëren, de volgende keer dat u verbindt"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:109
 msgid "&Add SFTP Connection"
-msgstr "SFTP Verbinding &Aanmaken"
+msgstr "SFTP Verbinding &aanmaken"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:110
 msgid "Create a new SFTP connection with Swish."
@@ -342,15 +365,15 @@ msgstr "Maak een niewe SFTP verbinding aan."
 
 #: ../../swish/shell_folder/commands/host/host.cpp:111
 msgid "&Add SFTP Connection..."
-msgstr "SFTP Verbinding &Aanmaken..."
+msgstr "SFTP Verbinding &aanmaken..."
 
 #: ../../swish/shell_folder/commands/host/host.cpp:112
 msgid "Add Connection"
-msgstr "Verbinding &Aanmaken"
+msgstr "Verbinding &aanmaken"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:142
 msgid "&Remove SFTP Connection"
-msgstr "SFTP Verbinding &Verwijderen"
+msgstr "SFTP Verbinding &verwijderen"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:143
 msgid "Remove a SFTP connection created with Swish."
@@ -358,17 +381,45 @@ msgstr "Verwijder een SFTP verbinding gemaakt met Swish."
 
 #: ../../swish/shell_folder/commands/host/host.cpp:144
 msgid "&Remove SFTP Connection..."
-msgstr "SFTP Verbinding &Verwijderen..."
+msgstr "SFTP Verbinding &verwijderen..."
 
 #: ../../swish/shell_folder/commands/host/host.cpp:145
 msgid "Remove Connection"
-msgstr "Verbinding &Verwijderen"
+msgstr "Verbinding &verwijderen"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:199
 msgid "SFTP Tasks"
-msgstr ""
+msgstr "SFTP taken"
 
 #: ../../swish/shell_folder/commands/host/host.cpp:212
 msgid "These tasks help you manage Swish SFTP connections."
-msgstr ""
+msgstr "Deze taken helpen je bij het beheren van Swish SFTP-verbindingen"
 
+#: ../../swish/shell_folder/commands/remote/remote.cpp:209
+msgid "New &folder"
+msgstr "Nieuwe &map"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:210
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Maak een nieuwe, lege, map in de map die je nu open hebt."
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:212
+msgid "Make a new folder"
+msgstr "Maak een nieuwe map"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:251
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Nieuwe map"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:284
+msgid "Could not create a new folder"
+msgstr "Kon geen nieuwe map maken"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:312
+msgid "File and Folder Tasks"
+msgstr "Taken voor bestanden en mappen"
+
+#: ../../swish/shell_folder/commands/remote/remote.cpp:324
+msgid "These tasks help you manage your remote files."
+msgstr "Deze taken helpen je je bestanden op afstand te beheren."
