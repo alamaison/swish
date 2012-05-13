@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -167,7 +167,7 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
 	m_first_command_id(0),
 	m_winsparkle(
 		"http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
-		L"0.6.1", L"", "Software\\Swish\\Updates") {}
+		L"0.6.2", L"", "Software\\Swish\\Updates") {}
 
 /**
  * The folder window is being created.

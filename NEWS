@@ -1,3 +1,10 @@
+swish-0.6.2
+-Fixed performance problems with small files.
+-Fixed bug causing ZIP files to be unpacked as the were copied.
+-New Brazilian Portuguese translation.
+-Updated Dutch, German, Chinese (Simplified), Italian and Portuguese
+ translations.
+
 swish-0.6.1
 -Significant speed improvement.
 -Installer supports Windows 8.
