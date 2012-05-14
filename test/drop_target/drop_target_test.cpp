@@ -183,7 +183,7 @@ namespace { // private
 		bool can_overwrite(const wpath&) { return true; }
 	};
 
-	class DropTargetFixture : public PidlFixture, public ComFixture
+	class DropTargetFixture : public PidlFixture
 	{
 	public:
 		comet::com_ptr<IDropTarget> create_drop_target() 
