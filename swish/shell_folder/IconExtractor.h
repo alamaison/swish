@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@
 #include "swish/atl.hpp"  // Common ATL setup
 #include <atlstr.h>     // CString
 
-#define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
-                             ///< before <shtypes.h> or <shlobj.h>).
 #include <shlobj.h>     // Windows Shell API
 
 class ATL_NO_VTABLE CIconExtractor :

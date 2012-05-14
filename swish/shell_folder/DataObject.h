@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,8 +29,6 @@
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
 
-#define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
-                             ///< before <shtypes.h> or <shlobj.h>).
 #include <shlobj.h>  // Windows Shell API
 
 #include <map>  // Associative container for IStream store

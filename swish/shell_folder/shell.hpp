@@ -150,7 +150,7 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 	if (FAILED(hr))
 		BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
-	std::vector<ITEMID_CHILD *> child_pidls;
+	std::vector<ITEMID_CHILD __unaligned*> child_pidls;
 	std::transform(
 		boost::make_indirect_iterator(begin),
 		boost::make_indirect_iterator(end),

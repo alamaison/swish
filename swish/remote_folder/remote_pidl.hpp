@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,13 +39,16 @@
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
-                             ///< before <shtypes.h> or <shlobj.h>).
+#ifndef STRICT_TYPED_ITEMIDS
+#error Currently, swish requires strict PIDL types: define STRICT_TYPED_ITEMIDS
+#endif
 #include <ShTypes.h> // Raw PIDL types
+#include <StrAlign.h> // ua_wcslen, ua_wcscpy_s
 
 #include <cstring> // memset
 #include <exception>
 #include <string>
+#include <vector>
 
 namespace swish {
 namespace remote_folder {
@@ -78,6 +81,13 @@ struct remote_item_id
 #include <poppack.h>
 
 BOOST_STATIC_ASSERT((sizeof(remote_item_id) % sizeof(DWORD)) == 0);
+
+inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
+{
+	std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
+	::ua_wcscpy_s(&buffer[0], buffer.size(), source);
+	return std::wstring(&buffer[0]);
+}
 
 }
 
@@ -117,21 +127,21 @@ public:
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->wszFilename;
+		return detail::copy_unaligned_string(m_itemid->wszFilename);
 	}
 
 	std::wstring owner() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->wszOwner;
+		return detail::copy_unaligned_string(m_itemid->wszOwner);
 	}
 
 	std::wstring group() const
 	{
 		if (!valid())
 			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->wszGroup;
+		return detail::copy_unaligned_string(m_itemid->wszGroup);
 	}
 
 	ULONG owner_id() const

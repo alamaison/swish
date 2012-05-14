@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,11 +71,6 @@
 //#define _ATL_DEBUG_QI
 //#define _ATL_DEBUG_INTERFACES
 #endif
-
-#define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be before
-                             ///< <shtypes.h> or <shlobj.h>).  As <atlbase.h>
-                             ///< includes <shtypes.h> via <shlwapi.h> we 
-                             ///< need to define this here.
 
 #define _ATL_CUSTOM_THROW
 
