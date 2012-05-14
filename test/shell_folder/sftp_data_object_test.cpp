@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2012
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,14 +47,15 @@
 
 #include <comet/ptr.h>  // com_ptr
 
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/system/system_error.hpp>
 #pragma warning(push)
 #pragma warning(disable:4244) // conversion from uint64_t to uint32_t
 #include <boost/date_time/posix_time/conversion.hpp> // from_time_t
 #pragma warning(pop)
 #include <boost/date_time/posix_time/posix_time_io.hpp> // ptime stringerising
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
+#include <boost/filesystem/fstream.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <string>
@@ -73,6 +75,7 @@ using comet::com_ptr;
 using boost::filesystem::wpath;
 using boost::filesystem::ifstream;
 using boost::filesystem::ofstream;
+using boost::numeric_cast;
 using boost::system::system_error;
 using boost::system::get_system_category;
 using boost::posix_time::from_time_t;
@@ -170,7 +173,9 @@ namespace { // private
 		if (buf.size())
 		{
 			ULONG cbRead = 0;
-			BOOST_REQUIRE_OK(stream->Read(&buf[0], buf.size(), &cbRead));
+			BOOST_REQUIRE_OK(
+				stream->Read(
+					&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
 			
 			stream_contents = string(&buf[0], cbRead);
 		}
@@ -267,10 +272,11 @@ void do_filedescriptor_test(
 
 void do_filecontents_test(
 	const com_ptr<IDataObject>& data_object, const vector<wpath>& files,
-	int index)
+	size_t index)
 {
 	FORMATETC fetc = {
-		CF_FILECONTENTS, NULL, DVASPECT_CONTENT, index, TYMED_ISTREAM
+		CF_FILECONTENTS, NULL, DVASPECT_CONTENT, numeric_cast<LONG>(index),
+		TYMED_ISTREAM
 	};
 	
 	StorageMedium medium;

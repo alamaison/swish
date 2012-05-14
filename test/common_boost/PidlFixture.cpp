@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@
 #include <winapi/shell/pidl_array.hpp>  // PIDL array wrapper
 #include <winapi/shell/shell.hpp> // desktop_folder
 
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
+
 #include <string>
 
 using swish::host_folder::create_host_itemid;
@@ -48,6 +50,7 @@ using winapi::shell::desktop_folder;
 using comet::com_ptr;
 
 using boost::filesystem::wpath;
+using boost::numeric_cast;
 
 using std::vector;
 
@@ -110,8 +113,8 @@ com_ptr<IDataObject> PidlFixture::data_object_from_sandbox()
 	BOOST_REQUIRE_EQUAL(array.size(), 2U);
 
 	com_ptr<IDataObject> data_object = new CSftpDataObject(
-		array.size(), array.as_array(), sandbox_pidl().get(), Provider(),
-		Consumer());
+		numeric_cast<UINT>(array.size()), array.as_array(),
+		sandbox_pidl().get(), Provider(), Consumer());
 	BOOST_REQUIRE(data_object);
 	return data_object;
 }

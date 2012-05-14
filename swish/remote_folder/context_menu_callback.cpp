@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@
 #include <boost/locale.hpp> // translate
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <stdexcept> // runtime_error
@@ -69,6 +70,7 @@ using boost::errinfo_api_function;
 using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
+using boost::numeric_cast;
 
 using std::runtime_error;
 using std::string;
@@ -290,7 +292,8 @@ namespace {
 
 				vector<wchar_t> system_temp_dir(MAX_PATH + 1, L'\0');
 				DWORD rc = ::GetTempPathW(
-					system_temp_dir.size(), &system_temp_dir[0]);
+					numeric_cast<DWORD>(system_temp_dir.size()),
+					&system_temp_dir[0]);
 				if (rc < 1)
 					BOOST_THROW_EXCEPTION(last_error());
 				
