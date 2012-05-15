@@ -38,20 +38,6 @@ cd thirdparty
 set WGET=..\build\wget\wget.exe -N
 set SEVENZ=..\build\7za\7za.exe
 
-:: zlib
-
-echo.
-echo ===- Downloading zlib ...
-%WGET% "http://prdownloads.sourceforge.net/libpng/zlib125.zip?download" || (
-	echo ===- Error while trying to download zlib. & goto error)
-%SEVENZ% x zlib125.zip -ozlib -aoa || (
-	echo ===- Error while trying to extract zlib. & goto error)
-xcopy /E /Q /Y /I zlib\zlib-1.2.5 zlib || (
-	echo ===- Error while trying to copy zlib files & goto error)
-rd /S /Q zlib\zlib-1.2.5 || (
-	echo ===- Error while trying to clean up zlib files & goto error)
-del zlib125.zip
-
 :: OpenSSL
 
 echo.

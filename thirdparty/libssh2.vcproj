@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;"
 				PreprocessorDefinitions="WIN32;_DEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -122,7 +122,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -201,7 +201,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;"
 				PreprocessorDefinitions="WIN32;NDEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -280,7 +280,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;;&quot;$(SolutionDir)\thirdparty\zlib&quot;"
+				AdditionalIncludeDirectories="libssh2\include;libssh2\win32;&quot;$(SolutionDir)\thirdparty\openssl\$(PlatformName)\inc32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;LIBSSH2_WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -333,10 +333,6 @@
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{E0791767-B382-481A-AD28-167C0DF51D11}"
-			RelativePathToProject=".\thirdparty\zlib\zlib.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter
