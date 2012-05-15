@@ -77,7 +77,7 @@ namespace {
 			wpath directory = Sandbox() / L"testdir";
 			create_directory(directory);
 
-			wpath file = directory / L"testfile";
+			wpath file = directory / L"testfile.txt";
 			wofstream s(file);
 
 			return file;
@@ -91,7 +91,7 @@ namespace {
 			wpath directory2 = directory1 / L"testdir2";
 			create_directory(directory2);
 
-			wpath file = directory2 / L"testfile";
+			wpath file = directory2 / L"testfile.txt";
 			wofstream s(file);
 
 			return file;

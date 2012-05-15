@@ -42,7 +42,10 @@ namespace detail {
 	inline std::wstring display_name_of_item(
 		const winapi::shell::pidl::apidl_t& pidl)
 	{
-		return winapi::shell::pidl_shell_item(pidl).friendly_name();
+		using winapi::shell::pidl_shell_item;
+
+		return pidl_shell_item(pidl).friendly_name(
+			pidl_shell_item::friendly_name_type::relative);
 	}
 
 	/**
