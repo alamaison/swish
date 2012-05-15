@@ -39,7 +39,6 @@
 #pragma once
 
 #include "exception.hpp" // last_error, ssh_error
-#include "host_key.hpp" // host_key
 #include "session.hpp" // session
 
 #include <boost/cstdint.hpp> // uint64_t
