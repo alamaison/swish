@@ -5,8 +5,8 @@ msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-05-13 11:59-0000\n"
-"PO-Revision-Date: 2012-05-13 11:10+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
+"PO-Revision-Date: 2012-05-23 11:10+0000\n"
+"Last-Translator: PA Angelini <angelini@univ-rennes1.fr>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "Impossible de créer le fichier sur le serveur"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -27,7 +27,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "Copie de '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -36,7 +36,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "Vers '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -57,11 +57,11 @@ msgstr "Copie en cour..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "Transfert du fichier impossible"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "Il semble que vous n'ayez pas la permission d'écrire dans ce répertoire"
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -84,7 +84,7 @@ msgstr "Par exemple : \"Ordinateur personnel\"."
 msgid ""
 "Specify the details of the computer and account you would like to connect "
 "to:"
-msgstr "Entrez les informations de connexion :"
+msgstr "Indiquer les éléments de l'ordinateur et du compte sur lequel vous voulez vous connecter"
 
 #: ../../swish/forms/add_host.cpp:155
 msgctxt "New Host"
@@ -105,7 +105,7 @@ msgstr "&Identifiant:"
 msgid ""
 "Specify the directory on the server that you would like Swish to start the "
 "connection in:"
-msgstr "Entrez le chemin auquel accéder sur le serveur à la connexion :"
+msgstr "Indiquer le répertoire du serveur sur lequel Swish doit démarrer la connexion"
 
 #: ../../swish/forms/add_host.cpp:173
 msgctxt "New Host"
@@ -158,11 +158,11 @@ msgstr "Valider"
 
 #: ../../swish/frontend/announce_error.cpp:136
 msgid "Show &details (which may not be in your language)"
-msgstr ""
+msgstr "Montrer les détails (qui peuvent ne pas être en français)"
 
 #: ../../swish/frontend/announce_error.cpp:137
 msgid "Hide &details"
-msgstr ""
+msgstr "Cacher les détails"
 
 #: ../../swish/frontend/UserInteraction.cpp:195
 msgid "The folder already contains a file named '%1%'"
@@ -371,59 +371,59 @@ msgstr "ID du groupe"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:155
 msgid "Open &link"
-msgstr ""
+msgstr "Ouvrir le lien"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:177
 msgid "&Open"
-msgstr ""
+msgstr "Ouvrir"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:271
 msgid "Unable to open the link"
-msgstr ""
+msgstr "Impossible d'ouvrir le lien"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:272
 #: ../../swish/remote_folder/context_menu_callback.cpp:376
 #: ../../swish/remote_folder/commands/commands.cpp:262
 #: ../../swish/remote_folder/commands/delete.cpp:232
 msgid "You might not have permission."
-msgstr ""
+msgstr "Il semble que vous n'ayez pas les permissions nécessaires"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:375
 msgid "Unable to open the file"
-msgstr ""
+msgstr "Impossible d'ouvrir le répertoire"
 
 #: ../../swish/remote_folder/commands/commands.cpp:191
 msgid "New &folder"
-msgstr ""
+msgstr "Nouveau répertoire"
 
 #: ../../swish/remote_folder/commands/commands.cpp:192
 msgid "Create a new, empty folder in the folder you have open."
-msgstr ""
+msgstr "Crée un nouveau répertoire vide dans le répertoire que vous avez ouvert"
 
 #: ../../swish/remote_folder/commands/commands.cpp:194
 msgid "Make a new folder"
-msgstr ""
+msgstr "Créer un nouveau répertoire"
 
 #: ../../swish/remote_folder/commands/commands.cpp:233
 msgctxt "Initial name"
 msgid "New folder"
-msgstr ""
+msgstr "Nouveau répertoire"
 
 #: ../../swish/remote_folder/commands/commands.cpp:261
 msgid "Could not create a new folder"
-msgstr ""
+msgstr "Impossible de créer un nouveau répertoire"
 
 #: ../../swish/remote_folder/commands/commands.cpp:290
 msgid "File and Folder Tasks"
-msgstr ""
+msgstr "Tâches liées aux fichiers et répertoires"
 
 #: ../../swish/remote_folder/commands/commands.cpp:302
 msgid "These tasks help you manage your remote files."
-msgstr ""
+msgstr "Ces tâches vous aident à gérer les fichiers distants"
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
-msgstr ""
+msgstr "Impossible de détruire l'article"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
@@ -431,28 +431,28 @@ msgstr "Demande interactive du clavier"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
-msgstr ""
+msgstr "Impossible d'atteindre ce répertoire"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr ""
+msgstr "Chemin non reconnu"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
-msgstr ""
+msgstr "Vérifiez que le chemin entré est correct"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
-msgstr ""
+msgstr "Impossible de renommer cet article"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
-msgstr ""
+msgstr "Impossible d'accéder à cet article"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:705
 msgid "Unable to access the items"
-msgstr ""
+msgstr "Impossble d'accéder à ces articles"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
-msgstr ""
+msgstr "Impossible d'accéder au répertoire"

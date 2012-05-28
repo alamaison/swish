@@ -1,12 +1,13 @@
 # 
 # Translators:
+# Satoshi Kikuta <kik0220@gmail.com>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-05-13 11:59-0000\n"
-"PO-Revision-Date: 2012-05-13 11:10+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
+"PO-Revision-Date: 2012-05-23 13:23+0000\n"
+"Last-Translator: Satoshi Kikuta <kik0220@gmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,7 +20,7 @@ msgstr ""
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "サーバーにファイルを作成できませんでした"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -27,7 +28,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "'{1}'をコピー中"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -36,7 +37,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "'{1}'へ"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -57,11 +58,11 @@ msgstr "コピー中"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "転送に失敗しました"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "書き込む権限がありません"
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -371,15 +372,15 @@ msgstr "グループID"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:155
 msgid "Open &link"
-msgstr ""
+msgstr "リンクを開く &L"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:177
 msgid "&Open"
-msgstr ""
+msgstr "開く &O"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:271
 msgid "Unable to open the link"
-msgstr ""
+msgstr "リンクを開けませんでした"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:272
 #: ../../swish/remote_folder/context_menu_callback.cpp:376
@@ -390,7 +391,7 @@ msgstr "権限(パーミッション)がありません"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:375
 msgid "Unable to open the file"
-msgstr ""
+msgstr "ファイルを開けませんでした"
 
 #: ../../swish/remote_folder/commands/commands.cpp:191
 msgid "New &folder"
