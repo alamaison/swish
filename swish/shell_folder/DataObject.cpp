@@ -261,8 +261,12 @@ throw()
 {
 	CFormatEtc fetc(nFormat, tymed);
 
-	STGMEDIUM stgEmpty;
-	::ZeroMemory(&stgEmpty, sizeof stgEmpty);
+	STGMEDIUM stgEmpty = STGMEDIUM();
+
+	// The tymeds in the FORMATETC and STGMEDIUM must match.  This was tripping
+	// up Windows 8 (Consumer Preview) which is stricter about this and was
+	// returning E_OUTOFMEMORY from SetData.
+	stgEmpty.tymed = tymed;
 
 	return m_inner->SetData(&fetc, &stgEmpty, true);
 }
