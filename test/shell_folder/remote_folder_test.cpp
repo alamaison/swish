@@ -138,7 +138,7 @@ namespace { // private
 			BOOST_REQUIRE(itemid.valid());
 
 			// Check filename
-			BOOST_CHECK_GT(itemid.filename().size(), 0);
+			BOOST_CHECK_GT(itemid.filename().size(), 0U);
 			if (!(flags & SHCONTF_INCLUDEHIDDEN))
 				BOOST_CHECK_NE(itemid.filename(), L".");
 

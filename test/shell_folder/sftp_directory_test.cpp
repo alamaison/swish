@@ -147,7 +147,7 @@ namespace { // private
 			remote_itemid_view itemid(pidl);
 
 			// Check filename
-			BOOST_CHECK_GT(itemid.filename().size(), 0);
+			BOOST_CHECK_GT(itemid.filename().size(), 0U);
 			if (!(flags & SHCONTF_INCLUDEHIDDEN))
 				BOOST_CHECK_NE(itemid.filename(), L".");
 
@@ -186,7 +186,7 @@ namespace { // private
 	void standard_checks(remote_itemid_view itemid)
 	{
 		// Check filename is sensible
-		BOOST_CHECK_GT(itemid.filename().size(), 0);
+		BOOST_CHECK_GT(itemid.filename().size(), 0U);
 
 		// Check group and owner exist
 		BOOST_CHECK_GT(itemid.owner().size(), 0U);
