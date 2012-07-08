@@ -407,6 +407,14 @@
 				RelativePath=".\commands\delete.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\commands\NewFolder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\NewFolder.hpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

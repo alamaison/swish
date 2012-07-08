@@ -32,7 +32,7 @@
 #include "swish/debug.hpp"
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
-#include "swish/host_folder/commands.hpp" // host_folder_commands
+#include "swish/host_folder/commands/commands.hpp" // host_folder_commands
 #include "swish/host_folder/host_management.hpp"
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
                                            // url_from_host_itemid

@@ -256,10 +256,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\commands.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\host_management.cpp"
 				>
 			</File>
@@ -318,10 +314,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\commands.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\host_management.hpp"
 				>
 			</File>
@@ -335,6 +327,34 @@
 			</File>
 			<File
 				RelativePath=".\ViewCallback.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="commands"
+			>
+			<File
+				RelativePath=".\commands\Add.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\Add.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\commands.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\commands.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\Remove.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\Remove.hpp"
 				>
 			</File>
 		</Filter>

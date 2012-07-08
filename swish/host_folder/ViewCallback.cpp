@@ -27,7 +27,9 @@
 
 #include "ViewCallback.hpp"
 
-#include "swish/host_folder/commands.hpp" // host commands
+#include "swish/host_folder/commands/commands.hpp" // host commands
+#include "swish/host_folder/commands/Add.hpp"
+#include "swish/host_folder/commands/Remove.hpp"
 #include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
 
 #include <winapi/error.hpp> // last_error

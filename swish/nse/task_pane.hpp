@@ -38,6 +38,7 @@
 #include "swish/nse/UICommand.hpp" // IUIElement, IUICommand
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <winapi/object_with_site.hpp> // object_with_site
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr

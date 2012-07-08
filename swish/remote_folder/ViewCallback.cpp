@@ -43,7 +43,6 @@ using swish::frontend::CUserInteraction;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUIElement;
 using swish::remote_folder::connection_from_pidl;
-using swish::remote_folder::commands::NewFolder;
 using swish::remote_folder::commands::remote_folder_task_pane_tasks;
 using swish::remote_folder::commands::remote_folder_task_pane_titles;
 
