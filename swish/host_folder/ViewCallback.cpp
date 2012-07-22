@@ -33,13 +33,22 @@
 #include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
 
 #include <winapi/error.hpp> // last_error
+#include <winapi/gui/menu/basic_menu.hpp> // find_first_item_with_id
+#include <winapi/gui/menu/button/string_button_description.hpp>
+#include <winapi/gui/menu/item/command_item_description.hpp>
+#include <winapi/gui/menu/item/command_item.hpp>
+#include <winapi/gui/menu/item/item_state.hpp> // selectability
+#include <winapi/gui/menu/item/separator_item.hpp>
+#include <winapi/gui/menu/item/sub_menu_item.hpp>
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
 #include <winapi/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
+#include <boost/lambda/lambda.hpp> // _1
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <algorithm> // find_if
 #include <cassert> // assert
 #include <stdexcept> // logic_error
 #include <string>
@@ -55,6 +64,7 @@ using swish::nse::MenuCommandTitleAdapter;
 
 using comet::com_ptr;
 
+using namespace winapi::gui::menu;
 using winapi::last_error;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::shell_browser;
@@ -65,6 +75,7 @@ using boost::diagnostic_information;
 using boost::enable_error_info;
 using boost::errinfo_api_function;
 
+using std::find_if;
 using std::pair;
 using std::wstring;
 
@@ -88,19 +99,13 @@ namespace {
 		MENUIDOFFSET_LAST = MENUIDOFFSET_REMOVE
 	};
 
-	HMENU submenu_from_menu(HMENU parent_menu, UINT menu_id)
+	template<typename DescriptionType, typename HandleCreator>
+	item item_from_menu(
+		const basic_menu<DescriptionType, HandleCreator>& parent_menu,
+		UINT menu_id)
 	{
-		MENUITEMINFO info = MENUITEMINFO();
-		info.cbSize = sizeof(MENUITEMINFO);
-		info.fMask = MIIM_SUBMENU; // Item we're requesting
-
-		BOOL success = ::GetMenuItemInfo(parent_menu, menu_id, FALSE, &info);
-		if (success == FALSE)
-			BOOST_THROW_EXCEPTION(
-				enable_error_info(last_error()) << 
-				errinfo_api_function("GetMenuItemInfo"));
-
-		return info.hSubMenu;
+		return *find_first_item_with_id(
+			parent_menu.begin(), parent_menu.end(), menu_id);
 	}
 
 	/**
@@ -109,18 +114,18 @@ namespace {
 	 * The menu we want to insert into is actually the @e submenu of the
 	 * Tools menu @e item.  Confusing!
 	 */
-	HMENU tools_menu_with_fallback(HMENU parent_menu)
+	item tools_menu_with_fallback(const menu_bar& parent_menu)
 	{
 		try
 		{
-			return submenu_from_menu(parent_menu, FCIDM_MENU_TOOLS);
+			return item_from_menu(parent_menu, FCIDM_MENU_TOOLS);
 		}
 		catch (const std::exception& e)
 		{
 			trace("Failed getting tools menu: %s") % diagnostic_information(e);
 
 			// Fall back to using File menu
-			return submenu_from_menu(parent_menu, FCIDM_MENU_FILE);
+			return item_from_menu(parent_menu, FCIDM_MENU_FILE);
 		}
 	}
 
@@ -165,8 +170,7 @@ namespace {
  *                     creating this callback object.
  */
 CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
-	m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_tools_menu(NULL),
-	m_first_command_id(0),
+	m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_first_command_id(0),
 	m_winsparkle(
 		"http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
 		L"0.6.3", L"", "Software\\Swish\\Updates") {}
@@ -214,6 +218,54 @@ bool CViewCallback::on_fs_notify(
 	return true;
 }
 
+class merge_command_items
+{
+public:
+
+	typedef void result_type;
+
+	merge_command_items(HWND hwnd_view, apidl_t pidl, UINT first_command_id)
+		: m_hwnd_view(hwnd_view), m_folder_pidl(pidl),
+		  m_first_command_id(first_command_id) {}
+
+	void operator()(sub_menu_item& sub_menu)
+	{
+		menu::iterator insert_position = sub_menu.menu().begin();
+		insert_position += 2;
+		MenuCommandTitleAdapter<Add> add(m_hwnd_view, m_folder_pidl);
+
+		command_item_description add_item(
+			string_button_description(add.title(NULL).c_str()),
+			m_first_command_id + MENUIDOFFSET_ADD);
+		sub_menu.menu().insert(add_item, insert_position++);
+
+		MenuCommandTitleAdapter<Remove> remove(m_hwnd_view, m_folder_pidl);
+
+		command_item_description remove_item(
+			string_button_description(remove.title(NULL).c_str()),
+			m_first_command_id + MENUIDOFFSET_REMOVE);
+		remove_item.selectability(selectability::disabled);
+		sub_menu.menu().insert(remove_item, insert_position++);
+	}
+
+	void operator()(command_item&)
+	{
+		BOOST_THROW_EXCEPTION(
+			std::logic_error("Cannot insert into command item"));
+	}
+
+	void operator()(separator_item&)
+	{
+		BOOST_THROW_EXCEPTION(
+			std::logic_error("Cannot insert into separator"));
+	}
+
+private:
+	HWND m_hwnd_view;
+	apidl_t m_folder_pidl;
+	UINT m_first_command_id;
+};
+
 bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
 {
 	assert(menu_info.idCmdFirst >= FCIDM_SHVIEWFIRST);
@@ -223,32 +275,13 @@ bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
 
 	// Try to get a handle to the  Explorer Tools menu and insert 
 	// add and remove connection menu items into it if we find it
-	m_tools_menu = tools_menu_with_fallback(menu_info.hmenu);
-	if (m_tools_menu)
-	{
-		MenuCommandTitleAdapter<Add> add(m_hwnd_view, m_folder_pidl);
-		BOOL success = ::InsertMenu(
-			m_tools_menu, 2, MF_BYPOSITION,
-			m_first_command_id + MENUIDOFFSET_ADD,
-			add.title(NULL).c_str());
-		if (success == FALSE)
-			BOOST_THROW_EXCEPTION(
-				enable_error_info(last_error()) << 
-				errinfo_api_function("InsertMenu"));
+	m_tools_menu = tools_menu_with_fallback(
+		menu_handle::foster_handle(menu_info.hmenu));
+	m_tools_menu->accept(
+		merge_command_items(m_hwnd_view, m_folder_pidl, m_first_command_id));
 
-		MenuCommandTitleAdapter<Remove> remove(m_hwnd_view, m_folder_pidl);
-		success = ::InsertMenu(
-			m_tools_menu, 3, MF_BYPOSITION | MF_GRAYED, 
-			m_first_command_id + MENUIDOFFSET_REMOVE,
-			remove.title(NULL).c_str());
-		if (success == FALSE)
-			BOOST_THROW_EXCEPTION(
-				enable_error_info(last_error()) << 
-				errinfo_api_function("InsertMenu"));
-
-		// Return value of last menu ID plus 1
-		menu_info.idCmdFirst += MENUIDOFFSET_LAST + 1; // Added 2 items
-	}
+	// Return value of last menu ID plus 1
+	menu_info.idCmdFirst += MENUIDOFFSET_LAST + 1; // Added 2 items
 
 	return true;
 
@@ -369,6 +402,82 @@ com_ptr<IDataObject> CViewCallback::selection()
 	return selection_data_object(browser);
 }
 
+class update_command_items
+{
+public:
+
+	typedef void result_type;
+
+	update_command_items(
+		HWND hwnd_view, apidl_t pidl, com_ptr<IDataObject> selection,
+		UINT first_command_id)
+		: m_hwnd_view(hwnd_view), m_folder_pidl(pidl), m_selection(selection),
+		  m_first_command_id(first_command_id) {}
+
+	class selectability_setter
+	{
+	public:
+		typedef void result_type;
+
+		selectability_setter(BOOST_SCOPED_ENUM(selectability) selectability)
+			: m_selectability(selectability) {}
+
+		void operator()(command_item& item)
+		{
+			item.selectability(m_selectability);
+		}
+
+		template<typename T>
+		void operator()(T&)
+		{
+			BOOST_THROW_EXCEPTION(
+				std::logic_error("Unexpected menu item type"));
+		}
+
+	private:
+		BOOST_SCOPED_ENUM(selectability) m_selectability;
+	};
+
+	void operator()(sub_menu_item& sub_menu)
+	{
+		Add add(m_hwnd_view, m_folder_pidl);
+		BOOST_SCOPED_ENUM(selectability) add_state =
+			add.disabled(m_selection, false) ?
+			selectability::disabled : selectability::enabled;
+
+		item add_item = item_from_menu(
+			sub_menu.menu(), m_first_command_id + MENUIDOFFSET_ADD);
+		add_item.accept(selectability_setter(add_state));
+
+		Remove remove(m_hwnd_view, m_folder_pidl);
+		BOOST_SCOPED_ENUM(selectability) remove_state =
+			remove.disabled(m_selection, false) ?
+			selectability::disabled : selectability::enabled;
+
+		item remove_item = item_from_menu(
+			sub_menu.menu(), m_first_command_id + MENUIDOFFSET_REMOVE);
+		remove_item.accept(selectability_setter(remove_state));
+	}
+
+	void operator()(command_item&)
+	{
+		BOOST_THROW_EXCEPTION(
+			std::logic_error("Cannot insert into command item"));
+	}
+
+	void operator()(separator_item&)
+	{
+		BOOST_THROW_EXCEPTION(
+			std::logic_error("Cannot insert into separator"));
+	}
+
+private:
+	HWND m_hwnd_view;
+	apidl_t m_folder_pidl;
+	com_ptr<IDataObject> m_selection;
+	UINT m_first_command_id;
+};
+
 /**
  * Update the menus to match the current selection.
  */
@@ -377,24 +486,9 @@ void CViewCallback::update_menus()
 	if (!m_tools_menu)
 		BOOST_THROW_EXCEPTION(std::logic_error("Missing menu"));
 
-	UINT flags;
-	int rc; (void)rc;
-	// Despite being declared as a BOOL, the return value of EnableMenuItem is
-	// not treated that way.  Only a value < 0 (technically -1) is an error.
-
-	Add add(m_hwnd_view, m_folder_pidl);
-	flags = add.disabled(selection(), false) ? MF_GRAYED : MF_ENABLED;
-	rc = ::EnableMenuItem(
-		m_tools_menu, m_first_command_id + MENUIDOFFSET_ADD,
-		MF_BYCOMMAND | flags);
-	assert(rc > -1);
-
-	Remove remove(m_hwnd_view, m_folder_pidl);
-	flags = remove.disabled(selection(), false) ? MF_GRAYED : MF_ENABLED;
-	rc = ::EnableMenuItem(
-		m_tools_menu, m_first_command_id + MENUIDOFFSET_REMOVE,
-		MF_BYCOMMAND | flags);
-	assert(rc > -1);
+	m_tools_menu->accept(
+		update_command_items(
+			m_hwnd_view, m_folder_pidl, selection(), m_first_command_id));
 }
 
 }} // namespace swish::host_folder

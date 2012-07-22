@@ -33,10 +33,13 @@
 #include "swish/nse/view_callback.hpp" // CViewCallback
 
 #include <winapi/object_with_site.hpp> // object_with_site
+#include <winapi/gui/menu/item/item.hpp>
 #include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
+
+#include <boost/optional/optional.hpp> // optional
 
 namespace swish {
 namespace host_folder {
@@ -72,7 +75,8 @@ private:
 	void update_menus();
 
 	HWND m_hwnd_view;         ///< Handle to folder view window
-	HMENU m_tools_menu;       ///< Handle to the Explorer 'Tools' menu
+	boost::optional<winapi::gui::menu::item> m_tools_menu;
+							  ///< Handle to the Explorer 'Tools' menu
 	UINT m_first_command_id;  ///< Start of our tools menu ID range
 	winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
 	                                            ///< folder
