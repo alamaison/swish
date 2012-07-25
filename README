@@ -1,34 +1,35 @@
 Swish
 
 What is Swish?
-    Swish is a plugin for Microsoft Windows Explorer that integrates access to 
+    Swish is a plugin for Microsoft Windows Explorer that integrates access to
     remote files via SSH/SFTP.
-    
+
 Status:
+    Swish is 'alpha' status which means it is missing some features and some
+    bits are still a little rough around the edges.  We're getting there, though
+    and 'beta' status is not far away.
     As well as management tasks such as renaming and deleting files
     on the remote server users can drag and drop the contents of files
-    and folders from the remote server to the local filesystem.
- 
-    Currently, Swish only supports simple password and keyboard-interactive
-    authentication. 
+    and folders from the remote server to the local filesystem and double-click
+    to open files in the appropriate program.
 
 Supported Operating Systems:
-    Window 7      (most tested)
+    Windows 8     (occasionally test)
+    Windows 7     (most tested)
     Windows Vista (regularly tested)
     Windows XP    (regularly tested)
     Windows 2000  (regularly tested)
-    Windows Me    (rarely tested)
 
-    Windows 98 support is on hold for the time being - as of version 0.3.1.0
+    Windows 98/Me support is on hold for the time being - as of version 0.3.1.0
     the backend DLL seems to have problem (maybe related to MSVCRT versions).
-    
+
     Unfortunately, Windows 95 and NT 4 are not immediately supported.  This is
     because the C runtime used when compiling with Visual Studio 2005 is
     no longer compatible with their API. There are a few ways you can work round
     this if you wish:
      - Compile Swish using Visual Studio 2005.  You may have to fix the code to
        allow this; I've never tried it.
-     - Make *all* the projects statically link to the runtime library (/MT). 
+     - Make *all* the projects statically link to the runtime library (/MT).
        In addition you will have to use a version of OpenSSL similarly linked
        so you will have to compile your own. The instructions that come with
        OpenSSL make it clear how to do this. Again, I haven't tried this myself
@@ -44,17 +45,17 @@ Requirements to run:
 Requirements to build:
     The easiest way to set everything up is to run the prereqs.bat script from
     the build/ directory.  It will fetch all the dependencies except Visual
-    Studio, the Windows SDK, Boost and Wix.  These you must install yourself 
+    Studio, the Windows SDK, Boost and Wix.  These you must install yourself
     from the links below.
-    
+
     Visual C++ 2005
         Express edition is unlikely to work but feel free to try.
         If building on Windows Vista or later you will need two updates:
         - VS 2005 SP1: http://msdn.microsoft.com/en-us/vstudio/bb265237
         - VS 2005 SP1: Update for Windows Vista http://go.microsoft.com/?linkid=6366078
-    A recent version of the Windows SDK 
+    A recent version of the Windows SDK
         (http://msdn.microsoft.com/en-us/windowsvista/bb980924.aspx)
-        The latest version requires an hotfix to Visual Studio 2005: 
+        The latest version requires an hotfix to Visual Studio 2005:
         https://connect.microsoft.com/VisualStudio/Downloads/DownloadDetails.aspx?DownloadID=18623
     Comet
         A modern C++ template library for COM.
@@ -68,7 +69,7 @@ Requirements to build:
         You can get an installer from BoostPro Computing:
         http://www.boostpro.com/products/free.  However, for a 64-bit build
         of Swish you will have to build Boost yourself from source.  The
-        build/makeboost.bat script can help with this. For more information 
+        build/makeboost.bat script can help with this. For more information
         see http://www.boost.org.
         Currently Boost 1.45 is the tested version.
     Boost.Locale
@@ -78,16 +79,16 @@ Requirements to build:
     Wix 3 with Votive
         Not required to build Swish itself but needed if you want to build
         the installer. http://wix.sourceforge.net/
-    
+
     For the Provider backend:
      - libssh2
      - OpenSSL
      - zlib
     The directories to put the sourcecode for these dependencies in should
     already exist in the thirdparty/ directory.
-    
+
     libssh2 can be obtained from http://www.libssh2.org.  Swish usually requires
-    the latest snapshot.  You can get OpenSSL from http://www.openssl.org and 
+    the latest snapshot.  You can get OpenSSL from http://www.openssl.org and
     compile it yourself but a much easier option is to download the Swish
     pre-packaged binary with just the stuff needed for Swish:
     http://downloads.sourceforge.net/swish/openssl-0.9.8g-swish.zip?download.
@@ -98,25 +99,25 @@ Requirements for testing:
     on the local machine.  Many tests also require a remote host available to
     connect to over SSH.  Swish assumes this is unix-based and that the test
     user account has a home directory named /home/username.
-    
+
     Environment variables:
     CPPUNITDIR: The location of the CppUnit files.
     TEST_HOST_NAME: The name of the remote testing host.
     TEST_USER_NAME: The user name of the SSH account on the remote host.
-    TEST_HOST_PORT: The port on the remote host that SSH is listening on 
+    TEST_HOST_PORT: The port on the remote host that SSH is listening on
         (optional - defaults to 22 if not set).
-    TEST_PASSWORD:  The password to use to connect to the remote host if 
+    TEST_PASSWORD:  The password to use to connect to the remote host if
                     required.
-    
+
     If you are going to run the tests I **STRONGLY** recommend using a separate
     user account for them as they create and delete files and, being tests, have
     the potential to invoke disastrous code.  Protect yourself from them!
 
 OpenSSL:
-    This product includes software developed by the OpenSSL Project for use in 
+    This product includes software developed by the OpenSSL Project for use in
     the OpenSSL Toolkit (http://www.openssl.org/)
-    
-    This product includes cryptographic software written by Eric Young 
+
+    This product includes cryptographic software written by Eric Young
     (eay@cryptsoft.com)
 
 Building on Vista and later:
@@ -127,9 +128,9 @@ Building on Vista and later:
 Architecture:
     The architecture of Swish is divided into a back-end and a front-end.  The
     former deals with the SFTP connection to remote hosts while the latter
-    is concerned with displaying the results to the user and handling 
+    is concerned with displaying the results to the user and handling
     interaction.
-    
+
     The current Swish backend is based on libssh2 (http://www.libssh2.org).
     While the eventual aim is to offer a choice of back-end implementations
     with different capabilities, this is currently the only one.

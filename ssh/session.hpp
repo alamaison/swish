@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@
 #define SSH_SESSION_HPP
 #pragma once
 
+#include "agent.hpp"
 #include "exception.hpp" // last_error
 #include "host_key.hpp" // host_key
 
@@ -183,6 +184,15 @@ public:
 			m_session, username.data(), username.size(),
 			public_key.external_file_string().c_str(),
 			private_key.external_file_string().c_str(), passphrase.c_str());
+	}
+
+	/**
+	 * Connect to any agent running on the system and return object to
+	 * authenticate using its identities.
+	 */
+	agent::agent_identities agent_identities()
+	{
+		return agent::agent_identities(m_session);
 	}
 
 private:

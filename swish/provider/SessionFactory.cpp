@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2012
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -58,6 +59,7 @@
 
 #include "swish/atl.hpp"  // Common ATL setup
 
+#include <exception>
 #include <string>
 
 using swish::tracing::trace;
@@ -78,6 +80,7 @@ using ATL::CT2A;
 using ATL::CComBSTR;
 
 using std::auto_ptr;
+using std::exception;
 using std::string;
 
 #pragma warning (push)
@@ -107,11 +110,11 @@ using std::string;
 	auto_ptr<CSession> spSession( new CSession() );
 	spSession->Connect(pwszHost, uPort);
 
-    // Check the hostkey against our known hosts
+	// Check the hostkey against our known hosts
 	_VerifyHostKey(pwszHost, *spSession, pConsumer);
 	// Legal to fail here, e.g. user refused to accept host key
 
-    // Authenticate the user with the remote server
+	// Authenticate the user with the remote server
 	_AuthenticateUser(pwszUser, *spSession, pConsumer);
 	// Legal to fail here, e.g. wrong password/key
 
@@ -300,37 +303,75 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
 	return (rc == 0) ? S_OK : E_FAIL;
 }
 
+namespace {
+
+	HRESULT pubkey_auth_the_nasty_old_way(
+		PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+	{
+		ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
+
+		try
+		{
+			CComBSTR bstrPrivateKey;
+			HRESULT hr = pConsumer->OnPrivateKeyFileRequest(&bstrPrivateKey);
+			if (FAILED(hr))
+				return hr;
+
+			CComBSTR bstrPublicKey;
+			hr = pConsumer->OnPublicKeyFileRequest(&bstrPublicKey);
+			if (FAILED(hr))
+				return hr;
+
+			string privateKey = WideStringToUtf8String(bstrPrivateKey.m_str);
+			string publicKey = WideStringToUtf8String(bstrPublicKey.m_str);
+
+			// TODO: unlock public key using passphrase
+			int rc = libssh2_userauth_publickey_fromfile(
+				session, szUsername, publicKey.c_str(), privateKey.c_str(), "");
+			if (rc)
+				return E_ABORT;
+
+			ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+		}
+		WINAPI_COM_CATCH();
+
+		return S_OK;
+	}
+}
+
 HRESULT CSessionFactory::_PublicKeyAuthentication(
-	PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+	PCSTR szUsername, CSession& yukky_session, ISftpConsumer *pConsumer)
 {
-	ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
+	// This old way is only kept around to support the tests.  Its almost
+	// useless for anything else as we don't pass the 'consumer' enough
+	// information to identify which key to use.
+	HRESULT hr = pubkey_auth_the_nasty_old_way(
+		szUsername, yukky_session, pConsumer);
+	if (SUCCEEDED(hr))
+		return hr;
+
+	// OK, now lets do it the nice new way using agents.
+
+	ssh::session session(yukky_session.get());
 
 	try
 	{
-		CComBSTR bstrPrivateKey;
-		HRESULT hr = pConsumer->OnPrivateKeyFileRequest(&bstrPrivateKey);
-		if (FAILED(hr))
-			return hr;
-
-		CComBSTR bstrPublicKey;
-		hr = pConsumer->OnPublicKeyFileRequest(&bstrPublicKey);
-		if (FAILED(hr))
-			return hr;
-
-		string privateKey = WideStringToUtf8String(bstrPrivateKey.m_str);
-		string publicKey = WideStringToUtf8String(bstrPublicKey.m_str);
-
-		// TODO: unlock public key using passphrase
-		int rc = libssh2_userauth_publickey_fromfile(
-			session, szUsername, publicKey.c_str(), privateKey.c_str(), "");
-		if (rc)
-			return E_ABORT;
-
-		ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+		BOOST_FOREACH(ssh::agent::identity key, session.agent_identities())
+		{
+			try
+			{
+				key.authenticate(szUsername);
+				return S_OK;
+			}
+			catch (const exception&)
+			{ /* Ignore and try the next */ }
+		}
 	}
-	WINAPI_COM_CATCH();
+	catch(const exception&)
+	{ /* No agent running probably.  Either way, give up. */ }
 
-	return S_OK;
+	// None of the agent identities worked.  Sob. Back to passwords then.
+	return E_ABORT;
 }
 
 #pragma warning (pop)

@@ -106,6 +106,10 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\agent.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\exception.hpp"
 			>
 		</File>

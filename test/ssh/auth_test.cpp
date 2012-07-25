@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,13 +40,17 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <exception>
 #include <string>
 
 using ssh::exception::ssh_error;
 using ssh::session;
+using ssh::agent::agent_identities;
+using ssh::agent::identity;
 
 using test::ssh::session_fixture;
 
+using std::exception;
 using std::string;
 
 BOOST_FIXTURE_TEST_SUITE(auth_tests, session_fixture)
@@ -158,6 +162,83 @@ BOOST_AUTO_TEST_CASE( pubkey )
 	BOOST_CHECK(!s.authenticated());
 	s.authenticate_by_key(user(), public_key_path(), private_key_path(), "");
 	BOOST_CHECK(s.authenticated());
+}
+
+/**
+ * Request connection to agent.  Allowed to fail but not catastrophically.
+ */
+BOOST_AUTO_TEST_CASE( agent )
+{
+	session s = test_session();
+
+	BOOST_CHECK(!s.authenticated());
+
+	try
+	{
+		agent_identities identities = s.agent_identities();
+
+		BOOST_FOREACH(identity i, identities)
+		{
+			try
+			{
+				i.authenticate(user());
+				BOOST_CHECK(s.authenticated());
+				return;
+			}
+			catch(const exception&) {}
+
+			BOOST_CHECK(!s.authenticated());
+		}
+	}
+	catch (exception&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent copy behaviour.
+ */
+BOOST_AUTO_TEST_CASE( agent_copy )
+{
+	session s = test_session();
+
+	BOOST_CHECK(!s.authenticated());
+
+	try
+	{
+		agent_identities identities = s.agent_identities();
+		agent_identities identities2 = identities;
+
+		BOOST_FOREACH(identity i, identities)
+		{
+		}
+		BOOST_FOREACH(identity i, identities2)
+		{
+		}
+	}
+	catch (exception&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent idempotence - creating the object more than once should be ok.
+ */
+BOOST_AUTO_TEST_CASE( agent_idempotence )
+{
+	session s = test_session();
+
+	BOOST_CHECK(!s.authenticated());
+
+	try
+	{
+		agent_identities identities = s.agent_identities();
+		agent_identities identities2 = s.agent_identities();
+
+		BOOST_FOREACH(identity i, identities)
+		{
+		}
+		BOOST_FOREACH(identity i, identities2)
+		{
+		}
+	} 
+	catch (exception&) { /* agent not running - failure ok */ }
 }
 
 BOOST_AUTO_TEST_SUITE_END();
