@@ -86,6 +86,7 @@
           </TypeLib>
 
         </File>
+
         <RegistryValue Root="HKCR" Key="AppID\Swish.DLL" Name="AppID" Value="{b816a838-5022-11dc-9153-0090f5284f85}" Type="string" Action="write" />
         <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
         <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
@@ -147,6 +148,10 @@
 
       <Component Id="WinSparkle" Guid="*" Win64="$(var.Win64)">
         <File Id="WinSparkleDll" Source="$(var.TargetDir)WinSparkle.dll" KeyPath="yes" />
+      </Component>
+
+      <Component Id="Pageant" Guid="*">
+        <File Id="PageantExe" Source="$(var.TargetDir)pageant.exe" KeyPath="yes" />
       </Component>
 
       <Component Id="AUTHORS" Guid="*" Win64="$(var.Win64)">
@@ -220,6 +225,7 @@
       <ComponentRef Id="Provider" />
       <ComponentRef Id="Libssh2" />
       <ComponentRef Id="WinSparkle" />
+      <ComponentRef Id="Pageant" />
       <ComponentRef Id="AUTHORS" />
       <ComponentRef Id="NEWS" />
       <ComponentRef Id="COPYING" />

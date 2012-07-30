@@ -350,6 +350,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\commands\LaunchAgent.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\LaunchAgent.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\commands\Remove.cpp"
 				>
 			</File>

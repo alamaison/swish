@@ -27,6 +27,7 @@
 #include "commands.hpp"
 
 #include "swish/host_folder/commands/Add.hpp"
+#include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
 #include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter
@@ -76,6 +77,7 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(new CExplorerCommand<Add>(hwnd, folder_pidl));
     commands.push_back(new CExplorerCommand<Remove>(hwnd, folder_pidl));
+    commands.push_back(new CExplorerCommand<LaunchAgent>(hwnd, folder_pidl));
     return new CExplorerCommandProvider(commands);
 }
 
@@ -120,6 +122,9 @@ host_folder_task_pane_tasks(HWND hwnd, const apidl_t& folder_pidl)
         new CUICommand< WebtaskCommandTitleAdapter<Add> >(hwnd, folder_pidl));
     commands->push_back(
         new CUICommand< WebtaskCommandTitleAdapter<Remove> >(hwnd, folder_pidl));
+    commands->push_back(
+        new CUICommand< WebtaskCommandTitleAdapter<LaunchAgent> >(
+            hwnd, folder_pidl));
 
     com_ptr<IEnumUICommand> e = 
         make_smart_enumeration<IEnumUICommand>(commands);

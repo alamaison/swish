@@ -29,6 +29,7 @@
 
 #include "swish/host_folder/commands/commands.hpp" // host commands
 #include "swish/host_folder/commands/Add.hpp"
+#include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
 #include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
 
@@ -55,6 +56,7 @@
 
 using swish::frontend::winsparkle_shower;
 using swish::host_folder::commands::Add;
+using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
 using swish::host_folder::commands::host_folder_task_pane_tasks;
 using swish::host_folder::commands::host_folder_task_pane_titles;
@@ -96,7 +98,8 @@ namespace {
         MENUIDOFFSET_FIRST = 0,
         MENUIDOFFSET_ADD = MENUIDOFFSET_FIRST,
         MENUIDOFFSET_REMOVE,
-        MENUIDOFFSET_LAST = MENUIDOFFSET_REMOVE
+        MENUIDOFFSET_LAUNCH_AGENT,
+        MENUIDOFFSET_LAST
     };
 
     template<typename DescriptionType, typename HandleCreator>
@@ -246,6 +249,14 @@ public:
             m_first_command_id + MENUIDOFFSET_REMOVE);
         remove_item.selectability(selectability::disabled);
         sub_menu.menu().insert(remove_item, insert_position++);
+
+        MenuCommandTitleAdapter<LaunchAgent> launch(m_hwnd_view, m_folder_pidl);
+
+        command_item_description launch_item(
+             string_button_description(launch.title(NULL).c_str()),
+             m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
+        launch_item.selectability(selectability::disabled);
+        sub_menu.menu().insert(launch_item, insert_position++);
     }
 
     void operator()(command_item&)
@@ -281,7 +292,7 @@ bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
         merge_command_items(m_hwnd_view, m_folder_pidl, m_first_command_id));
 
     // Return value of last menu ID plus 1
-    menu_info.idCmdFirst += MENUIDOFFSET_LAST + 1; // Added 2 items
+    menu_info.idCmdFirst += MENUIDOFFSET_LAST; // Added 2 items
 
     return true;
 
@@ -317,6 +328,12 @@ bool CViewCallback::on_invoke_command(UINT command_id)
         command(selection(), NULL);
         return true;
     }
+    else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
+    {
+        LaunchAgent command(m_hwnd_view, m_folder_pidl);
+        command(selection(), NULL);
+        return true;
+    }
 
     return false;
 }
@@ -338,6 +355,11 @@ bool CViewCallback::on_get_help_text(
         Remove command(m_hwnd_view, m_folder_pidl);
         help_text = command.tool_tip(selection());
     }
+    else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
+    {
+        LaunchAgent command(m_hwnd_view, m_folder_pidl);
+        help_text = command.tool_tip(selection());
+    }
     else
     {
         return false;
@@ -346,6 +368,7 @@ bool CViewCallback::on_get_help_text(
     size_t copied = help_text.copy(buffer, buffer_size - 1);
     buffer[copied] = _T('\0');
     return true;
+
 }
 
 #pragma warning(pop)
@@ -457,6 +480,15 @@ public:
         item remove_item = item_from_menu(
             sub_menu.menu(), m_first_command_id + MENUIDOFFSET_REMOVE);
         remove_item.accept(selectability_setter(remove_state));
+
+        LaunchAgent launch(m_hwnd_view, m_folder_pidl);
+        BOOST_SCOPED_ENUM(selectability) launch_state =
+            launch.disabled(m_selection, false) ?
+            selectability::disabled : selectability::enabled;
+
+       item launch_item = item_from_menu(
+           sub_menu.menu(), m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
+       launch_item.accept(selectability_setter(launch_state));
     }
 
     void operator()(command_item&)
