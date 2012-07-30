@@ -1,12 +1,13 @@
 # 
 # Translators:
+# Tomas Figueroa <teft90@gmail.com>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-05-13 11:59-0000\n"
-"PO-Revision-Date: 2012-05-13 11:10+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
+"PO-Revision-Date: 2012-07-19 02:24+0000\n"
+"Last-Translator: Tomas Figueroa <teft90@gmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -57,11 +58,11 @@ msgstr "Copiando..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "No se pueden trasnferir los archivos"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "Puede que no tenga permiso para escribir en este directorio."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -158,11 +159,11 @@ msgstr "Aceptar"
 
 #: ../../swish/frontend/announce_error.cpp:136
 msgid "Show &details (which may not be in your language)"
-msgstr ""
+msgstr "Mostrar &detalles (podrían no estar en su idioma)"
 
 #: ../../swish/frontend/announce_error.cpp:137
 msgid "Hide &details"
-msgstr ""
+msgstr "Ocultar &detalles"
 
 #: ../../swish/frontend/UserInteraction.cpp:195
 msgid "The folder already contains a file named '%1%'"
@@ -371,26 +372,26 @@ msgstr "ID del grupo"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:155
 msgid "Open &link"
-msgstr ""
+msgstr "Abrir enlace"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:177
 msgid "&Open"
-msgstr ""
+msgstr "Abrir"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:271
 msgid "Unable to open the link"
-msgstr ""
+msgstr "No se puede abrir el enlace"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:272
 #: ../../swish/remote_folder/context_menu_callback.cpp:376
 #: ../../swish/remote_folder/commands/commands.cpp:262
 #: ../../swish/remote_folder/commands/delete.cpp:232
 msgid "You might not have permission."
-msgstr ""
+msgstr "Puede que no tenga permiso."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:375
 msgid "Unable to open the file"
-msgstr ""
+msgstr "No se puede abrir el archivo"
 
 #: ../../swish/remote_folder/commands/commands.cpp:191
 msgid "New &folder"
@@ -402,12 +403,12 @@ msgstr ""
 
 #: ../../swish/remote_folder/commands/commands.cpp:194
 msgid "Make a new folder"
-msgstr ""
+msgstr "Crear una nueva carpeta"
 
 #: ../../swish/remote_folder/commands/commands.cpp:233
 msgctxt "Initial name"
 msgid "New folder"
-msgstr ""
+msgstr "Nueva carpeta"
 
 #: ../../swish/remote_folder/commands/commands.cpp:261
 msgid "Could not create a new folder"
@@ -431,15 +432,15 @@ msgstr "Solicitud de teclado interactivo"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
-msgstr ""
+msgstr "No se puede acceder al directorio"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr ""
+msgstr "Ruta no reconocida"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
-msgstr ""
+msgstr "Verifique que la ruta fue introducida correctamente."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"

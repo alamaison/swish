@@ -1,14 +1,15 @@
 # 
 # Translators:
 #   <t.j.veldhuizen@tjveldhuizen.nl>, 2012.
+#   <tomsanders@live.nl>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-05-13 11:59-0000\n"
-"PO-Revision-Date: 2012-05-13 11:10+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
-"Language-Team: Dutch (http://www.transifex.net/projects/p/swish/language/nl/)\n"
+"PO-Revision-Date: 2012-06-30 22:41+0000\n"
+"Last-Translator: bericht <tomsanders@live.nl>\n"
+"Language-Team: Dutch (http://www.transifex.com/projects/p/swish/language/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,7 +21,7 @@ msgstr ""
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "Kon geen bestand aanmaken op de server:"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -28,7 +29,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "'{1}' wordt gekopieerd"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -37,7 +38,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "Naar '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -58,11 +59,11 @@ msgstr "Kopiëren..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "Kan bestanden niet kopieren"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "Mogelijk heeft u geen schrijfrechten voor deze map."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -372,15 +373,15 @@ msgstr "Groep ID"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:155
 msgid "Open &link"
-msgstr ""
+msgstr "Open link"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:177
 msgid "&Open"
-msgstr ""
+msgstr "Open"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:271
 msgid "Unable to open the link"
-msgstr ""
+msgstr "Kon de link niet openen"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:272
 #: ../../swish/remote_folder/context_menu_callback.cpp:376
@@ -391,7 +392,7 @@ msgstr "Mogelijk heeft u geen toegangsrechten."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:375
 msgid "Unable to open the file"
-msgstr ""
+msgstr "Kon het bestand niet openen"
 
 #: ../../swish/remote_folder/commands/commands.cpp:191
 msgid "New &folder"
