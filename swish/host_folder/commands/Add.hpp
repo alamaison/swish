@@ -43,20 +43,20 @@ namespace commands {
 class Add : public swish::nse::Command
 {
 public:
-	Add(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
-	
-	bool disabled(const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const;
-	bool hidden(const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const;
+    Add(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+    
+    bool disabled(const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const;
+    bool hidden(const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const;
 
-	void operator()(
-		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const;
+    void operator()(
+        const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
 private:
-	HWND m_hwnd;
-	winapi::shell::pidl::apidl_t m_folder_pidl;
+    HWND m_hwnd;
+    winapi::shell::pidl::apidl_t m_folder_pidl;
 };
 
 }}} // namespace swish::host_folder::commands

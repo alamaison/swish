@@ -75,8 +75,8 @@ BOOST_FIXTURE_TEST_SUITE(StreamWrite, StreamFixture)
  */
 BOOST_AUTO_TEST_CASE( get )
 {
-	com_ptr<IStream> stream = GetStream();
-	BOOST_REQUIRE(stream);
+    com_ptr<IStream> stream = GetStream();
+    BOOST_REQUIRE(stream);
 }
 
 /**
@@ -85,10 +85,10 @@ BOOST_AUTO_TEST_CASE( get )
  */
 BOOST_AUTO_TEST_CASE( get_readonly )
 {
-	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
-		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
+    if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+        BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
-	BOOST_REQUIRE_THROW(GetStream(), com_error);
+    BOOST_REQUIRE_THROW(GetStream(), com_error);
 }
 
 /**
@@ -96,21 +96,21 @@ BOOST_AUTO_TEST_CASE( get_readonly )
  */
 BOOST_AUTO_TEST_CASE( write_one_byte )
 {
-	com_ptr<IStream> stream = GetStream();
+    com_ptr<IStream> stream = GetStream();
 
-	// Write the character 'M' to the file
-	char in[1] = {'M'};
-	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(stream->Write(in, sizeof(in), &cbWritten));
-	BOOST_REQUIRE_EQUAL(cbWritten, sizeof(in));
+    // Write the character 'M' to the file
+    char in[1] = {'M'};
+    ULONG cbWritten = 0;
+    BOOST_REQUIRE_OK(stream->Write(in, sizeof(in), &cbWritten));
+    BOOST_REQUIRE_EQUAL(cbWritten, sizeof(in));
 
-	// Reset seek pointer to beginning and read back
-	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
+    // Reset seek pointer to beginning and read back
+    LARGE_INTEGER move = {0};
+    BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
-	char out[1];
-	verify_stream_read(out, sizeof(out), stream);
-	BOOST_REQUIRE_EQUAL('M', out[0]);
+    char out[1];
+    verify_stream_read(out, sizeof(out), stream);
+    BOOST_REQUIRE_EQUAL('M', out[0]);
 }
 
 /**
@@ -118,22 +118,22 @@ BOOST_AUTO_TEST_CASE( write_one_byte )
  */
 BOOST_AUTO_TEST_CASE( write_a_string )
 {
-	com_ptr<IStream> stream = GetStream();
+    com_ptr<IStream> stream = GetStream();
 
-	string in = "Lorem ipsum dolor sit amet. ";
-	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(
-		stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
-	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
+    string in = "Lorem ipsum dolor sit amet. ";
+    ULONG cbWritten = 0;
+    BOOST_REQUIRE_OK(
+        stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
+    BOOST_REQUIRE_EQUAL(cbWritten, in.size());
 
-	// Reset seek pointer to beginning and read back
-	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
+    // Reset seek pointer to beginning and read back
+    LARGE_INTEGER move = {0};
+    BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
-	vector<char> out(in.size());
-	verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(
-		out.begin(), out.end(), in.begin(), in.end());
+    vector<char> out(in.size());
+    verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(
+        out.begin(), out.end(), in.begin(), in.end());
 }
 
 /**
@@ -141,23 +141,23 @@ BOOST_AUTO_TEST_CASE( write_a_string )
  */
 BOOST_AUTO_TEST_CASE( write_large )
 {
-	com_ptr<IStream> stream = GetStream();
+    com_ptr<IStream> stream = GetStream();
 
-	vector<char> in(1000000); // Doesn't need to be initialised
+    vector<char> in(1000000); // Doesn't need to be initialised
 
-	ULONG cbWritten = 0;
-	BOOST_REQUIRE_OK(
-		stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
-	BOOST_REQUIRE_EQUAL(cbWritten, in.size());
+    ULONG cbWritten = 0;
+    BOOST_REQUIRE_OK(
+        stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
+    BOOST_REQUIRE_EQUAL(cbWritten, in.size());
 
-	// Reset seek pointer to beginning and read back
-	LARGE_INTEGER move = {0};
-	BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
+    // Reset seek pointer to beginning and read back
+    LARGE_INTEGER move = {0};
+    BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
-	vector<char> out(in.size());
-	verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(
-		out.begin(), out.end(), in.begin(), in.end());
+    vector<char> out(in.size());
+    verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(
+        out.begin(), out.end(), in.begin(), in.end());
 }
 
 /**
@@ -168,37 +168,37 @@ BOOST_AUTO_TEST_CASE( write_large )
  */
 BOOST_AUTO_TEST_CASE( write_fail )
 {
-	com_ptr<IStream> stream = GetStream();
+    com_ptr<IStream> stream = GetStream();
 
-	// Open stream's file
-	shared_ptr<void> file_handle(
-		::CreateFile(
-			m_local_path.file_string().c_str(), 
-			GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
-		::CloseHandle);
-	if (file_handle.get() == INVALID_HANDLE_VALUE)
-		throw system_error(::GetLastError(), get_system_category());
+    // Open stream's file
+    shared_ptr<void> file_handle(
+        ::CreateFile(
+            m_local_path.file_string().c_str(), 
+            GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
+        ::CloseHandle);
+    if (file_handle.get() == INVALID_HANDLE_VALUE)
+        throw system_error(::GetLastError(), get_system_category());
 
-	// Lock it
-	if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
-		throw system_error(::GetLastError(), get_system_category());
+    // Lock it
+    if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
+        throw system_error(::GetLastError(), get_system_category());
 
-	// Try to write to it via the stream
-	try
-	{
-		string in = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
-		ULONG cbWritten = 0;
-		BOOST_REQUIRE(FAILED(
-			stream->Write(&in[0], numeric_cast<ULONG>(in.size()),
-			&cbWritten)));
-		BOOST_REQUIRE_EQUAL(cbWritten, 0U);
-	}
-	catch (...)
-	{
-		::UnlockFile(file_handle.get(), 0, 0, 30, 0);
-		throw;
-	}
+    // Try to write to it via the stream
+    try
+    {
+        string in = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
+        ULONG cbWritten = 0;
+        BOOST_REQUIRE(FAILED(
+            stream->Write(&in[0], numeric_cast<ULONG>(in.size()),
+            &cbWritten)));
+        BOOST_REQUIRE_EQUAL(cbWritten, 0U);
+    }
+    catch (...)
+    {
+        ::UnlockFile(file_handle.get(), 0, 0, 30, 0);
+        throw;
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

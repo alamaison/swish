@@ -56,12 +56,12 @@ DEFINE_GUID(IID_IEnumUICommand,
  */
 struct IUIElement : public IUnknown
 {
-	virtual HRESULT STDMETHODCALLTYPE get_Name(
-		IShellItemArray* pItemArray, wchar_t** ppszName) = 0;
-	virtual HRESULT STDMETHODCALLTYPE get_Icon(
-		IShellItemArray* pItemArray, wchar_t** ppszIcon) = 0;
-	virtual HRESULT STDMETHODCALLTYPE get_Tooltip(
-		IShellItemArray* pItemArray, wchar_t** ppszInfotip) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_Name(
+        IShellItemArray* pItemArray, wchar_t** ppszName) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_Icon(
+        IShellItemArray* pItemArray, wchar_t** ppszIcon) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_Tooltip(
+        IShellItemArray* pItemArray, wchar_t** ppszInfotip) = 0;
 };
 
 /**
@@ -74,11 +74,11 @@ struct IUIElement : public IUnknown
  */
 struct IUICommand : public IUIElement
 {
-	virtual HRESULT STDMETHODCALLTYPE get_CanonicalName(GUID* pGuid) = 0;
-	virtual HRESULT STDMETHODCALLTYPE get_State(
-		IShellItemArray* pItemArray, int nRequested, EXPCMDSTATE* pState) = 0;
-	virtual HRESULT STDMETHODCALLTYPE Invoke(
-		IShellItemArray* pItemArray, IBindCtx* pCtx) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_CanonicalName(GUID* pGuid) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_State(
+        IShellItemArray* pItemArray, int nRequested, EXPCMDSTATE* pState) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Invoke(
+        IShellItemArray* pItemArray, IBindCtx* pCtx) = 0;
 };
 
 /**
@@ -91,34 +91,34 @@ struct IUICommand : public IUIElement
  */
 struct IEnumUICommand : public IUnknown
 {
-	virtual HRESULT STDMETHODCALLTYPE Next(
-		ULONG celt, IUICommand** rgelt, ULONG* pceltFetched) = 0;
-	virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt) = 0;
-	virtual HRESULT STDMETHODCALLTYPE Reset() = 0;
-	virtual HRESULT STDMETHODCALLTYPE Clone(IEnumUICommand** ppenum) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Next(
+        ULONG celt, IUICommand** rgelt, ULONG* pceltFetched) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt) = 0;
+    virtual HRESULT STDMETHODCALLTYPE Reset() = 0;
+    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumUICommand** ppenum) = 0;
 };
 
 }} // namespace swish::nse
 
 template<> struct comet::comtype<swish::nse::IUIElement>
 {
-	static const IID& uuid() throw()
-	{ return swish::nse::IID_IUIElement; }
-	typedef IUnknown base;
+    static const IID& uuid() throw()
+    { return swish::nse::IID_IUIElement; }
+    typedef IUnknown base;
 };
 
 template<> struct comet::comtype<swish::nse::IUICommand>
 {
-	static const IID& uuid() throw()
-	{ return swish::nse::IID_IUICommand; }
-	typedef swish::nse::IUIElement base;
+    static const IID& uuid() throw()
+    { return swish::nse::IID_IUICommand; }
+    typedef swish::nse::IUIElement base;
 };
 
 template<> struct comet::comtype<swish::nse::IEnumUICommand>
 {
-	static const IID& uuid() throw()
-	{ return swish::nse::IID_IEnumUICommand; }
-	typedef IUnknown base;
+    static const IID& uuid() throw()
+    { return swish::nse::IID_IEnumUICommand; }
+    typedef IUnknown base;
 };
 
 template<>
@@ -128,11 +128,11 @@ struct comet::enumerated_type_of<swish::nse::IEnumUICommand>
 template<>
 struct comet::impl::type_policy<swish::nse::IUICommand*>
 {
-	template<typename S>
-	static void init(swish::nse::IUICommand*& p, const S& s) 
-	{  p = s.get(); p->AddRef(); }
+    template<typename S>
+    static void init(swish::nse::IUICommand*& p, const S& s) 
+    {  p = s.get(); p->AddRef(); }
 
-	static void clear(swish::nse::IUICommand*& p) { p->Release(); }	
+    static void clear(swish::nse::IUICommand*& p) { p->Release(); }    
 };
 
 #endif

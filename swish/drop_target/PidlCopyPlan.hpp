@@ -43,23 +43,23 @@ class PidlCopyPlan /* final */ : public Plan
 {
 public:
 
-	PidlCopyPlan(
-		const swish::shell_folder::data_object::PidlFormat& source,
-		const winapi::shell::pidl::apidl_t& destination);
+    PidlCopyPlan(
+        const swish::shell_folder::data_object::PidlFormat& source,
+        const winapi::shell::pidl::apidl_t& destination);
 
 public: // Plan
 
-	virtual void execute_plan(
-		DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer) const;
+    virtual void execute_plan(
+        DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer) const;
 
 public:
 
-	void add_stage(const Operation& stage);
+    void add_stage(const Operation& stage);
 
 private:
 
-	SequentialPlan m_plan;
+    SequentialPlan m_plan;
 };
 
 }}

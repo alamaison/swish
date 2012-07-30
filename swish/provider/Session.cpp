@@ -63,28 +63,28 @@ using boost::system::error_code;
 using std::string;
 
 CSession::CSession() : 
-	m_io(0), m_socket(m_io), m_bConnected(false)
+    m_io(0), m_socket(m_io), m_bConnected(false)
 {
-	_CreateSession();
-	ATLASSUME(m_session);
+    _CreateSession();
+    ATLASSUME(m_session);
 }
 
 CSession::~CSession()
 {
-	_DestroySftpChannel();
-	_DestroySession();
+    _DestroySftpChannel();
+    _DestroySession();
 }
 
 CSession::operator LIBSSH2_SESSION*() const
 {
-	ATLASSUME(m_session);
-	return m_session.get();
+    ATLASSUME(m_session);
+    return m_session.get();
 }
 
 CSession::operator LIBSSH2_SFTP*() const
 {
-	ATLASSUME(m_sftp_session);
-	return m_sftp_session.get();
+    ATLASSUME(m_sftp_session);
+    return m_sftp_session.get();
 }
 
 /**
@@ -101,60 +101,60 @@ CSession::operator LIBSSH2_SFTP*() const
  */
 bool CSession::IsDead()
 {
-	fd_set socket_set;
-	FD_ZERO(&socket_set);
-	FD_SET(m_socket.native(), &socket_set);
-	TIMEVAL tv = TIMEVAL();
+    fd_set socket_set;
+    FD_ZERO(&socket_set);
+    FD_SET(m_socket.native(), &socket_set);
+    TIMEVAL tv = TIMEVAL();
 
-	int rc = ::select(1, &socket_set, NULL, NULL, &tv);
-	if (rc < 0)
-		BOOST_THROW_EXCEPTION(
-			system_error(::WSAGetLastError(), get_system_category()));
-	return rc != 0;
+    int rc = ::select(1, &socket_set, NULL, NULL, &tv);
+    if (rc < 0)
+        BOOST_THROW_EXCEPTION(
+            system_error(::WSAGetLastError(), get_system_category()));
+    return rc != 0;
 }
 
 void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
 {
-	if (m_bConnected)
-		BOOST_THROW_EXCEPTION(std::logic_error("Already connected"));
-	
-	// Connect to host over TCP/IP
-	_OpenSocketToHost(pwszHost, uPort);
+    if (m_bConnected)
+        BOOST_THROW_EXCEPTION(std::logic_error("Already connected"));
+    
+    // Connect to host over TCP/IP
+    _OpenSocketToHost(pwszHost, uPort);
 
-	// Start up libssh2 and trade welcome banners, exchange keys,
+    // Start up libssh2 and trade welcome banners, exchange keys,
     // setup crypto, compression, and MAC layers
-	ATLASSERT(m_socket.native() != INVALID_SOCKET);
-	if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
-	{
-		char *szError;
-		int cchError;
-		libssh2_session_last_error(*this, &szError, &cchError, false);
+    ATLASSERT(m_socket.native() != INVALID_SOCKET);
+    if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
+    {
+        char *szError;
+        int cchError;
+        libssh2_session_last_error(*this, &szError, &cchError, false);
 
-		_ResetSession();
-		_CloseSocketToHost();
-	
-		BOOST_THROW_EXCEPTION(std::exception(szError));
-		// Legal to fail here, e.g. server refuses banner/kex
-	}
-	
-	// Tell libssh2 we are blocking
-	libssh2_session_set_blocking(*this, 1);
+        _ResetSession();
+        _CloseSocketToHost();
+    
+        BOOST_THROW_EXCEPTION(std::exception(szError));
+        // Legal to fail here, e.g. server refuses banner/kex
+    }
+    
+    // Tell libssh2 we are blocking
+    libssh2_session_set_blocking(*this, 1);
 
-	m_bConnected = true;
+    m_bConnected = true;
 }
 
 void CSession::Disconnect()
 {
-	if (!m_bConnected)
-		return;
+    if (!m_bConnected)
+        return;
 
-	libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
-	m_bConnected = false;
+    libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
+    m_bConnected = false;
 }
 
 void CSession::StartSftp() throw(...)
 {
-	_CreateSftpChannel();
+    _CreateSftpChannel();
 }
 
 
@@ -167,10 +167,10 @@ void CSession::StartSftp() throw(...)
  */
 void CSession::_CreateSession() throw(...)
 {
-	// Create a session instance
-	m_session = shared_ptr<LIBSSH2_SESSION>(
-		libssh2_session_init(), libssh2_session_free);
-	ATLENSURE_THROW( m_session, E_FAIL );
+    // Create a session instance
+    m_session = shared_ptr<LIBSSH2_SESSION>(
+        libssh2_session_init(), libssh2_session_free);
+    ATLENSURE_THROW( m_session, E_FAIL );
 }
 
 /**
@@ -178,11 +178,11 @@ void CSession::_CreateSession() throw(...)
  */
 void CSession::_DestroySession() throw()
 {
-	ATLASSUME(m_session);
-	if (m_session)
-	{
-		Disconnect();
-	}
+    ATLASSUME(m_session);
+    if (m_session)
+    {
+        Disconnect();
+    }
 }
 
 /**
@@ -193,9 +193,9 @@ void CSession::_DestroySession() throw()
  */
 void CSession::_ResetSession() throw(...)
 {
-	_DestroySession();
-	_DestroySftpChannel();
-	_CreateSession();
+    _DestroySession();
+    _DestroySftpChannel();
+    _CreateSession();
 }
 
 /**
@@ -203,24 +203,24 @@ void CSession::_ResetSession() throw(...)
  */
 void CSession::_CreateSftpChannel() throw(...)
 {
-	ATLASSUME(m_sftp_session == NULL);
+    ATLASSUME(m_sftp_session == NULL);
 
-	if (libssh2_userauth_authenticated(*this) == 0)
-		AtlThrow(E_UNEXPECTED); // We must be authenticated first
+    if (libssh2_userauth_authenticated(*this) == 0)
+        AtlThrow(E_UNEXPECTED); // We must be authenticated first
 
-	LIBSSH2_SFTP* sftp = libssh2_sftp_init(*this); // Start up SFTP session
-	if (!sftp)
-	{
+    LIBSSH2_SFTP* sftp = libssh2_sftp_init(*this); // Start up SFTP session
+    if (!sftp)
+    {
 #ifdef _DEBUG
-		char *szError;
-		int cchError;
-		int rc = libssh2_session_last_error(*this, &szError, &cchError, false);
-		ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
+        char *szError;
+        int cchError;
+        int rc = libssh2_session_last_error(*this, &szError, &cchError, false);
+        ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
 #endif
-		AtlThrow(E_FAIL);
-	}
-	
-	m_sftp_session = shared_ptr<LIBSSH2_SFTP>(sftp, libssh2_sftp_shutdown);
+        AtlThrow(E_FAIL);
+    }
+    
+    m_sftp_session = shared_ptr<LIBSSH2_SFTP>(sftp, libssh2_sftp_shutdown);
 }
 
 /**
@@ -228,7 +228,7 @@ void CSession::_CreateSftpChannel() throw(...)
  */
 void CSession::_DestroySftpChannel() throw()
 {
-	m_sftp_session.reset();
+    m_sftp_session.reset();
 }
 
 /**
@@ -244,30 +244,30 @@ void CSession::_DestroySftpChannel() throw()
  */
 void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 {
-	ATLASSERT(pwszHost[0] != '\0');
-	ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
+    ATLASSERT(pwszHost[0] != '\0');
+    ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
 
-	// Convert host address to a UTF-8 string
-	string host_name = WideStringToUtf8String(pwszHost);
+    // Convert host address to a UTF-8 string
+    string host_name = WideStringToUtf8String(pwszHost);
 
-	tcp::resolver resolver(m_io);
-	typedef tcp::resolver::query Lookup;
-	Lookup query(host_name, port_to_string(uPort));
+    tcp::resolver resolver(m_io);
+    typedef tcp::resolver::query Lookup;
+    Lookup query(host_name, port_to_string(uPort));
 
-	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-	tcp::resolver::iterator end;
+    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    tcp::resolver::iterator end;
 
-	error_code error = host_not_found;
-	while (error && endpoint_iterator != end)
-	{
-		m_socket.close();
-		m_socket.connect(*endpoint_iterator++, error);
-	}
-	if (error)
-		BOOST_THROW_EXCEPTION(system_error(error));
+    error_code error = host_not_found;
+    while (error && endpoint_iterator != end)
+    {
+        m_socket.close();
+        m_socket.connect(*endpoint_iterator++, error);
+    }
+    if (error)
+        BOOST_THROW_EXCEPTION(system_error(error));
 
-	assert(m_socket.is_open());
-	assert(m_socket.available() == 0);
+    assert(m_socket.is_open());
+    assert(m_socket.available() == 0);
 }
 
 /**
@@ -275,5 +275,5 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
  */
 void CSession::_CloseSocketToHost() throw()
 {
-	m_socket.close();
+    m_socket.close();
 }

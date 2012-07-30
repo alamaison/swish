@@ -39,40 +39,40 @@
 
 namespace std {
 
-	inline std::ostream& operator<<(
-		std::ostream& out, const std::wstring& wide_in)
-	{
-		out << swish::utils::WideStringToUtf8String(wide_in);
-		return out;
-	}
+    inline std::ostream& operator<<(
+        std::ostream& out, const std::wstring& wide_in)
+    {
+        out << swish::utils::WideStringToUtf8String(wide_in);
+        return out;
+    }
 
-	inline std::ostream& operator<<(
-		std::ostream& out, const wchar_t* wide_in)
-	{
-		out << std::wstring(wide_in);
-		return out;
-	}
+    inline std::ostream& operator<<(
+        std::ostream& out, const wchar_t* wide_in)
+    {
+        out << std::wstring(wide_in);
+        return out;
+    }
 
-	inline std::ostream& operator<<(
-		std::ostream& out, const boost::filesystem::wpath& path)
-	{
-		out << path.string();
-		return out;
-	}
+    inline std::ostream& operator<<(
+        std::ostream& out, const boost::filesystem::wpath& path)
+    {
+        out << path.string();
+        return out;
+    }
 }
 
 namespace test {
 namespace detail {
 
-	inline void boost_require_ok(HRESULT hr)
-	{
-		if (hr != S_OK)
-		{
-			std::string message("COM return status was not S_OK: ");
-			message += comet::com_error(hr).s_str();
-			BOOST_FAIL(message);
-		}
-	}
+    inline void boost_require_ok(HRESULT hr)
+    {
+        if (hr != S_OK)
+        {
+            std::string message("COM return status was not S_OK: ");
+            message += comet::com_error(hr).s_str();
+            BOOST_FAIL(message);
+        }
+    }
 }
 }
 
@@ -83,6 +83,6 @@ namespace detail {
 #define BOOST_REQUIRE_OK(hr)                 \
 do                                           \
 {                                            \
-	test::detail::boost_require_ok( (hr) );  \
+    test::detail::boost_require_ok( (hr) );  \
 } while (0)
 /* @} */

@@ -52,12 +52,12 @@ class control : public window<T>
 {
 public:
 
-	control(boost::shared_ptr<T> impl) : window<T>(impl) {}
-	virtual ~control() {}
+    control(boost::shared_ptr<T> impl) : window<T>(impl) {}
+    virtual ~control() {}
 
 protected:
-	
-	friend class form; // form need a p-impl from controls
+    
+    friend class form; // form need a p-impl from controls
 };
 
 } // namespace ezel

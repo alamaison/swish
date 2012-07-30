@@ -58,37 +58,37 @@ template<typename T>
 class window_link_helper : private boost::noncopyable
 {
 public:
-	typedef T* pointer_type;
+    typedef T* pointer_type;
 
-	/// Link HWND to wrapper.
-	window_link_helper(HWND hwnd, pointer_type wrapper) : m_hwnd(hwnd)
-	{
-		store_user_window_data<wchar_t>(hwnd, wrapper);
-	}
+    /// Link HWND to wrapper.
+    window_link_helper(HWND hwnd, pointer_type wrapper) : m_hwnd(hwnd)
+    {
+        store_user_window_data<wchar_t>(hwnd, wrapper);
+    }
 
-	/// Create a broken link.
-	window_link_helper() : m_hwnd(NULL) {}
+    /// Create a broken link.
+    window_link_helper() : m_hwnd(NULL) {}
 
-	/// Break link.
-	~window_link_helper()
-	{
-		try
-		{
-			if (attached())
-				store_user_window_data<wchar_t>(m_hwnd, pointer_type());
-		}
-		catch (const std::exception& e)
-		{
-			winapi::trace("Unlinking window threw exception: %s")
-				% boost::diagnostic_information(e);
-		}
-	}
+    /// Break link.
+    ~window_link_helper()
+    {
+        try
+        {
+            if (attached())
+                store_user_window_data<wchar_t>(m_hwnd, pointer_type());
+        }
+        catch (const std::exception& e)
+        {
+            winapi::trace("Unlinking window threw exception: %s")
+                % boost::diagnostic_information(e);
+        }
+    }
 
-	HWND hwnd() const { return m_hwnd; }
-	bool attached() const { return m_hwnd != NULL; }
+    HWND hwnd() const { return m_hwnd; }
+    bool attached() const { return m_hwnd != NULL; }
 
 private:
-	HWND m_hwnd;
+    HWND m_hwnd;
 };
 
 /**
@@ -104,20 +104,20 @@ template<typename T>
 class window_link
 {
 public:
-	typedef T* pointer_type;
+    typedef T* pointer_type;
 
-	/// Link HWND to wrapper.
-	window_link(HWND hwnd, pointer_type wrapper)
-		: m_link(boost::make_shared<window_link_helper<T> >(hwnd, wrapper)) {}
+    /// Link HWND to wrapper.
+    window_link(HWND hwnd, pointer_type wrapper)
+        : m_link(boost::make_shared<window_link_helper<T> >(hwnd, wrapper)) {}
 
-	/// Create a broken link.
-	window_link() : m_link(boost::make_shared<window_link_helper<T> >()) {}
+    /// Create a broken link.
+    window_link() : m_link(boost::make_shared<window_link_helper<T> >()) {}
 
-	HWND hwnd() const { return m_link->hwnd(); }
-	bool attached() const { return m_link->attached(); }
+    HWND hwnd() const { return m_link->hwnd(); }
+    bool attached() const { return m_link->attached(); }
 
 private:
-	boost::shared_ptr<window_link_helper<T> > m_link;
+    boost::shared_ptr<window_link_helper<T> > m_link;
 };
 
 }} // namespace ezel::detail

@@ -45,28 +45,28 @@
 #include <boost/type_traits/is_same.hpp> // is_same
 
 #define EZEL_COMMAND_MAP_TEMPLATE \
-	int EZC0=-1, int EZC1=-1, int EZC2=-1, int EZC3=-1, int EZC4=-1, \
-	int EZC5=-1, int EZC6=-1, int EZC7=-1, int EZC8=-1, int EZC9=-1, \
-	int EZC10=-1, int EZC11=-1, int EZC12=-1, int EZC13=-1, int EZC14=-1, \
-	int EZC15=-1, int EZC16=-1, int EZC17=-1, int EZC18=-1, int EZC19=-1, \
-	int EZC20=-1, int EZC21=-1, int EZC22=-1, int EZC23=-1, int EZC24=-1, \
-	int EZC25=-1, int EZC26=-1, int EZC27=-1, int EZC28=-1, int EZC29=-1, \
-	int EZC30=-1, int EZC31=-1, int EZC32=-1, int EZC33=-1, int EZC34=-1, \
-	int EZC35=-1, int EZC36=-1, int EZC37=-1, int EZC38=-1, int EZC39=-1, \
-	int EZC40=-1, int EZC41=-1, int EZC42=-1, int EZC43=-1, int EZC44=-1, \
-	int EZC45=-1, int EZC46=-1, int EZC47=-1, int EZC48=-1, int EZC49=-1
+    int EZC0=-1, int EZC1=-1, int EZC2=-1, int EZC3=-1, int EZC4=-1, \
+    int EZC5=-1, int EZC6=-1, int EZC7=-1, int EZC8=-1, int EZC9=-1, \
+    int EZC10=-1, int EZC11=-1, int EZC12=-1, int EZC13=-1, int EZC14=-1, \
+    int EZC15=-1, int EZC16=-1, int EZC17=-1, int EZC18=-1, int EZC19=-1, \
+    int EZC20=-1, int EZC21=-1, int EZC22=-1, int EZC23=-1, int EZC24=-1, \
+    int EZC25=-1, int EZC26=-1, int EZC27=-1, int EZC28=-1, int EZC29=-1, \
+    int EZC30=-1, int EZC31=-1, int EZC32=-1, int EZC33=-1, int EZC34=-1, \
+    int EZC35=-1, int EZC36=-1, int EZC37=-1, int EZC38=-1, int EZC39=-1, \
+    int EZC40=-1, int EZC41=-1, int EZC42=-1, int EZC43=-1, int EZC44=-1, \
+    int EZC45=-1, int EZC46=-1, int EZC47=-1, int EZC48=-1, int EZC49=-1
 
 #define EZEL_COMMAND_ARG \
-	EZC0, EZC1, EZC2, EZC3, EZC4, \
-	EZC5, EZC6, EZC7, EZC8, EZC9, \
-	EZC10, EZC11, EZC12, EZC13, EZC14, \
-	EZC15, EZC16, EZC17, EZC18, EZC19, \
-	EZC20, EZC21, EZC22, EZC23, EZC24, \
-	EZC25, EZC26, EZC27, EZC28, EZC29, \
-	EZC30, EZC31, EZC32, EZC33, EZC34, \
-	EZC35, EZC36, EZC37, EZC38, EZC39, \
-	EZC40, EZC41, EZC42, EZC43, EZC44, \
-	EZC45, EZC46, EZC47, EZC48, EZC49
+    EZC0, EZC1, EZC2, EZC3, EZC4, \
+    EZC5, EZC6, EZC7, EZC8, EZC9, \
+    EZC10, EZC11, EZC12, EZC13, EZC14, \
+    EZC15, EZC16, EZC17, EZC18, EZC19, \
+    EZC20, EZC21, EZC22, EZC23, EZC24, \
+    EZC25, EZC26, EZC27, EZC28, EZC29, \
+    EZC30, EZC31, EZC32, EZC33, EZC34, \
+    EZC35, EZC36, EZC37, EZC38, EZC39, \
+    EZC40, EZC41, EZC42, EZC43, EZC44, \
+    EZC45, EZC46, EZC47, EZC48, EZC49
 
 namespace ezel {
 namespace detail {
@@ -76,16 +76,16 @@ inline void dispatch_command(T* obj, WORD id, WPARAM wparam, LPARAM lparam);
 
 template<typename It, typename End, typename T>
 inline void dispatch_command_next(
-	T* obj, WORD /*id*/, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
+    T* obj, WORD /*id*/, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
 {
-	obj->on(winapi::gui::command_base(wparam, lparam));
+    obj->on(winapi::gui::command_base(wparam, lparam));
 }
 
 template<typename It, typename End, typename T>
 inline void dispatch_command_next(
-	T* obj, WORD id, WPARAM wparam, LPARAM lparam, boost::mpl::false_)
+    T* obj, WORD id, WPARAM wparam, LPARAM lparam, boost::mpl::false_)
 {
-	dispatch_command<T::super>(obj, id, wparam, lparam);
+    dispatch_command<T::super>(obj, id, wparam, lparam);
 }
 
 /**
@@ -97,29 +97,29 @@ inline void dispatch_command_next(
  */
 template<typename It, typename End, typename T>
 inline void dispatch_command(
-	T* obj, WORD command_id, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
+    T* obj, WORD command_id, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
 {
-	return dispatch_command_next<It, End>(
-		obj, command_id, wparam, lparam, boost::is_same<T, T::super>::type());
+    return dispatch_command_next<It, End>(
+        obj, command_id, wparam, lparam, boost::is_same<T, T::super>::type());
 }
 
 template<typename It, typename End, typename T>
 inline void dispatch_command(
-	T* obj, WORD command_id, WPARAM wparam, LPARAM lparam, boost::mpl::false_)
+    T* obj, WORD command_id, WPARAM wparam, LPARAM lparam, boost::mpl::false_)
 {
-	typedef boost::mpl::deref<It>::type Front;
-	typedef boost::mpl::next<It>::type Next;
+    typedef boost::mpl::deref<It>::type Front;
+    typedef boost::mpl::next<It>::type Next;
 
-	if(command_id == Front::value)
-	{
-		return obj->on(command<Front::value>(wparam, lparam));
-	}
-	else
-	{
-		return dispatch_command<Next, End>(
-			obj, command_id, wparam, lparam,
-			typename boost::is_same<Next, End>::type());
-	}
+    if(command_id == Front::value)
+    {
+        return obj->on(command<Front::value>(wparam, lparam));
+    }
+    else
+    {
+        return dispatch_command<Next, End>(
+            obj, command_id, wparam, lparam,
+            typename boost::is_same<Next, End>::type());
+    }
 }
 
 /**
@@ -133,14 +133,14 @@ inline void dispatch_command(
  */
 template<typename T>
 inline void dispatch_command(
-	T* obj, WORD command_id, WPARAM wparam, LPARAM lparam)
+    T* obj, WORD command_id, WPARAM wparam, LPARAM lparam)
 {
-	typedef boost::mpl::begin<T::commands::commands>::type Begin;
-	typedef boost::mpl::end<T::commands::commands>::type End;
+    typedef boost::mpl::begin<T::commands::commands>::type Begin;
+    typedef boost::mpl::end<T::commands::commands>::type End;
 
-	dispatch_command<Begin, End>(
-		obj, command_id, wparam, lparam,
-		typename boost::is_same<Begin, End>::type());
+    dispatch_command<Begin, End>(
+        obj, command_id, wparam, lparam,
+        typename boost::is_same<Begin, End>::type());
 }
 
 template<EZEL_COMMAND_MAP_TEMPLATE>
@@ -148,14 +148,14 @@ class command_map
 {
 public:
 
-	// -1 is used to indicate an unused template parameter.  To
-	// prevent us having to treat -1 as a special case, we filter it out of
-	// the command map immediately here
-	typedef typename boost::mpl::copy_if<
-		boost::mpl::vector_c<int, EZEL_COMMAND_ARG>,
-		boost::mpl::not_equal_to< boost::mpl::_1, boost::mpl::int_<-1> >,
-		boost::mpl::back_inserter< boost::mpl::vector_c<WORD> >
-	>::type commands;
+    // -1 is used to indicate an unused template parameter.  To
+    // prevent us having to treat -1 as a special case, we filter it out of
+    // the command map immediately here
+    typedef typename boost::mpl::copy_if<
+        boost::mpl::vector_c<int, EZEL_COMMAND_ARG>,
+        boost::mpl::not_equal_to< boost::mpl::_1, boost::mpl::int_<-1> >,
+        boost::mpl::back_inserter< boost::mpl::vector_c<WORD> >
+    >::type commands;
 };
 
 }} // namespace winapi::gui

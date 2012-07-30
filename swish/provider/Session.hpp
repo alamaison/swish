@@ -45,35 +45,35 @@ typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
 class CSession
 {
 public:
-	CSession();
-	~CSession();
-	operator LIBSSH2_SESSION*() const;
-	operator LIBSSH2_SFTP*() const;
+    CSession();
+    ~CSession();
+    operator LIBSSH2_SESSION*() const;
+    operator LIBSSH2_SFTP*() const;
 
-	void Connect(const wchar_t* pwszHost, unsigned int uPort) throw(...);
-	void Disconnect();
-	void StartSftp() throw(...);
-	bool IsDead();
+    void Connect(const wchar_t* pwszHost, unsigned int uPort) throw(...);
+    void Disconnect();
+    void StartSftp() throw(...);
+    bool IsDead();
 
-	boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
-	boost::shared_ptr<LIBSSH2_SFTP> sftp() { return m_sftp_session; }
+    boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
+    boost::shared_ptr<LIBSSH2_SFTP> sftp() { return m_sftp_session; }
 private:
-	boost::asio::io_service m_io; ///< Boost IO system
-	boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
-	boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
-	boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
-	bool m_bConnected;             ///< Have we already connected to server?
+    boost::asio::io_service m_io; ///< Boost IO system
+    boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
+    boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
+    boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
+    bool m_bConnected;             ///< Have we already connected to server?
 
-	CSession(const CSession& session); // Intentionally not implemented
-	CSession& operator=(const CSession& pidl); // Intentionally not impl
-	
-	void _OpenSocketToHost(const wchar_t* pszHost, unsigned int uPort);
-	void _CloseSocketToHost() throw();
+    CSession(const CSession& session); // Intentionally not implemented
+    CSession& operator=(const CSession& pidl); // Intentionally not impl
+    
+    void _OpenSocketToHost(const wchar_t* pszHost, unsigned int uPort);
+    void _CloseSocketToHost() throw();
 
-	void _CreateSession() throw(...);
-	void _DestroySession() throw();
-	void _ResetSession() throw(...);
+    void _CreateSession() throw(...);
+    void _DestroySession() throw();
+    void _ResetSession() throw(...);
 
-	void _CreateSftpChannel() throw(...);
-	void _DestroySftpChannel() throw();
+    void _CreateSftpChannel() throw(...);
+    void _DestroySftpChannel() throw();
 };

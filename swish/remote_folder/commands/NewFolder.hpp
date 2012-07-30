@@ -46,28 +46,28 @@ namespace commands {
 class NewFolder : public swish::nse::Command
 {
 public:
-	NewFolder(
-		const winapi::shell::pidl::apidl_t& folder_pidl,
-		const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
-		const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
-	
-	bool disabled(const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const;
-	bool hidden(const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const;
+    NewFolder(
+        const winapi::shell::pidl::apidl_t& folder_pidl,
+        const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+        const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
+    
+    bool disabled(const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const;
+    bool hidden(const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const;
 
-	void operator()(
-		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const;
+    void operator()(
+        const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
-	void set_site(comet::com_ptr<IUnknown> ole_site);
+    void set_site(comet::com_ptr<IUnknown> ole_site);
 
 private:
-	HWND m_hwnd;
-	winapi::shell::pidl::apidl_t m_folder_pidl;
-	boost::function<comet::com_ptr<ISftpProvider>()> m_provider;
-	boost::function<comet::com_ptr<ISftpConsumer>()> m_consumer;
-	comet::com_ptr<IUnknown> m_site;
+    HWND m_hwnd;
+    winapi::shell::pidl::apidl_t m_folder_pidl;
+    boost::function<comet::com_ptr<ISftpProvider>()> m_provider;
+    boost::function<comet::com_ptr<ISftpConsumer>()> m_consumer;
+    comet::com_ptr<IUnknown> m_site;
 };
 
 }}} // namespace swish::remote_folder::commands

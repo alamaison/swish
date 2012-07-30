@@ -57,36 +57,36 @@
 
 namespace {
 
-	template<typename _FromElem, typename _ToElem>
-	struct Converter
-	{
-		typedef _FromElem FromElem;
-		typedef _ToElem ToElem;
-		typedef std::basic_string<FromElem> FromType;
-		typedef std::basic_string<ToElem> ToType;
-	};
+    template<typename _FromElem, typename _ToElem>
+    struct Converter
+    {
+        typedef _FromElem FromElem;
+        typedef _ToElem ToElem;
+        typedef std::basic_string<FromElem> FromType;
+        typedef std::basic_string<ToElem> ToType;
+    };
 
-	struct Narrow : Converter<wchar_t, char>
-	{
-		int operator()(
-			const FromElem* pszWide, int cchWide, 
-			ToElem* pszNarrow, int cbNarrow)
-		{
-			return ::WideCharToMultiByte(
-				CP_UTF8, 0, pszWide, cchWide, pszNarrow, cbNarrow, NULL, NULL);
-		}
-	};
+    struct Narrow : Converter<wchar_t, char>
+    {
+        int operator()(
+            const FromElem* pszWide, int cchWide, 
+            ToElem* pszNarrow, int cbNarrow)
+        {
+            return ::WideCharToMultiByte(
+                CP_UTF8, 0, pszWide, cchWide, pszNarrow, cbNarrow, NULL, NULL);
+        }
+    };
 
-	struct Widen : Converter<char, wchar_t>
-	{
-		int operator()(
-			const FromElem* pszNarrow, int cbNarrow, 
-			ToElem* pszWide, int cchWide)
-		{
-			return ::MultiByteToWideChar(
-				CP_UTF8, 0, pszNarrow, cbNarrow, pszWide, cchWide);
-		}
-	};
+    struct Widen : Converter<char, wchar_t>
+    {
+        int operator()(
+            const FromElem* pszNarrow, int cbNarrow, 
+            ToElem* pszWide, int cchWide)
+        {
+            return ::MultiByteToWideChar(
+                CP_UTF8, 0, pszNarrow, cbNarrow, pszWide, cchWide);
+        }
+    };
 }
 
 namespace swish {
@@ -100,29 +100,29 @@ namespace utils {
 template<typename T>
 inline typename T::ToType ConvertString(const typename T::FromType& from)
 {
-	const int size = boost::numeric_cast<int>(from.size());
-	if (size == 0)
-		return T::ToType();
+    const int size = boost::numeric_cast<int>(from.size());
+    if (size == 0)
+        return T::ToType();
 
-	// Calculate necessary buffer size
-	int len = T()(from.data(), size, NULL, 0);
+    // Calculate necessary buffer size
+    int len = T()(from.data(), size, NULL, 0);
 
-	// Perform actual conversion
-	if (len > 0)
-	{
-		std::vector<T::ToElem> buffer(len);
-		len = T()(
-			from.data(), size,
-			&buffer[0], static_cast<int>(buffer.size()));
-		if (len > 0)
-		{
-			assert(len == boost::numeric_cast<int>(buffer.size()));
-			return T::ToType(&buffer[0], len);
-		}
-	}
+    // Perform actual conversion
+    if (len > 0)
+    {
+        std::vector<T::ToElem> buffer(len);
+        len = T()(
+            from.data(), size,
+            &buffer[0], static_cast<int>(buffer.size()));
+        if (len > 0)
+        {
+            assert(len == boost::numeric_cast<int>(buffer.size()));
+            return T::ToType(&buffer[0], len);
+        }
+    }
 
-	throw boost::system::system_error(
-		::GetLastError(), boost::system::get_system_category());
+    throw boost::system::system_error(
+        ::GetLastError(), boost::system::get_system_category());
 }
 
 /**
@@ -130,7 +130,7 @@ inline typename T::ToType ConvertString(const typename T::FromType& from)
  */
 inline std::string WideStringToUtf8String(const std::wstring& wide)
 {
-	return swish::utils::ConvertString<Narrow>(wide);
+    return swish::utils::ConvertString<Narrow>(wide);
 }
 
 /**
@@ -138,7 +138,7 @@ inline std::string WideStringToUtf8String(const std::wstring& wide)
  */
 inline std::wstring Utf8StringToWideString(const std::string& narrow)
 {
-	return swish::utils::ConvertString<Widen>(narrow);
+    return swish::utils::ConvertString<Widen>(narrow);
 }
 
 }} // namespace swish::utils
@@ -149,29 +149,29 @@ inline std::wstring Utf8StringToWideString(const std::string& narrow)
 
 namespace {
 
-	struct NarrowUserTraits
-	{
-		typedef char element_type;
-		typedef std::basic_string<element_type> return_type;
+    struct NarrowUserTraits
+    {
+        typedef char element_type;
+        typedef std::basic_string<element_type> return_type;
 
-		inline static BOOL get_user_name(
-			element_type* out_buffer, DWORD* pcb_buffer)
-		{
-			return ::GetUserNameA(out_buffer, pcb_buffer);
-		}
-	};
+        inline static BOOL get_user_name(
+            element_type* out_buffer, DWORD* pcb_buffer)
+        {
+            return ::GetUserNameA(out_buffer, pcb_buffer);
+        }
+    };
 
-	struct WideUserTraits
-	{
-		typedef wchar_t element_type;
-		typedef std::basic_string<element_type> return_type;
+    struct WideUserTraits
+    {
+        typedef wchar_t element_type;
+        typedef std::basic_string<element_type> return_type;
 
-		inline static BOOL get_user_name(
-			element_type* out_buffer, DWORD* pcb_buffer)
-		{
-			return ::GetUserNameW(out_buffer, pcb_buffer);
-		}
-	};
+        inline static BOOL get_user_name(
+            element_type* out_buffer, DWORD* pcb_buffer)
+        {
+            return ::GetUserNameW(out_buffer, pcb_buffer);
+        }
+    };
 }
 
 namespace swish {
@@ -185,63 +185,63 @@ namespace detail {
 template<typename T>
 inline typename T::return_type current_user()
 {
-	// Calculate required size of output buffer
-	DWORD len = 0;
-	if (typename T::get_user_name(NULL, &len))
-		return typename T::return_type();
+    // Calculate required size of output buffer
+    DWORD len = 0;
+    if (typename T::get_user_name(NULL, &len))
+        return typename T::return_type();
 
-	DWORD err = ::GetLastError();
-	if (err != ERROR_INSUFFICIENT_BUFFER)
-	{
-		BOOST_THROW_EXCEPTION(
-			boost::system::system_error(
-				err, boost::system::get_system_category()));
-	}
+    DWORD err = ::GetLastError();
+    if (err != ERROR_INSUFFICIENT_BUFFER)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::system::system_error(
+                err, boost::system::get_system_category()));
+    }
 
-	// Repeat call with a buffer of required size
-	if (len > 0)
-	{
-		std::vector<T::element_type> buffer(len);
-		if (typename T::get_user_name(&buffer[0], &len))
-		{
-			return typename T::return_type(&buffer[0], len - 1);
-		}
-		else
-		{
-			BOOST_THROW_EXCEPTION(
-				boost::system::system_error(
-					::GetLastError(), boost::system::get_system_category()));
-		}
-	}
+    // Repeat call with a buffer of required size
+    if (len > 0)
+    {
+        std::vector<T::element_type> buffer(len);
+        if (typename T::get_user_name(&buffer[0], &len))
+        {
+            return typename T::return_type(&buffer[0], len - 1);
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::system::system_error(
+                    ::GetLastError(), boost::system::get_system_category()));
+        }
+    }
 
-	return typename T::return_type();
+    return typename T::return_type();
 }
 
 } // detail
 
 inline WideUserTraits::return_type current_user()
 {
-	return detail::current_user<WideUserTraits>();
+    return detail::current_user<WideUserTraits>();
 }
 
 inline NarrowUserTraits::return_type current_user_a()
 {
-	return detail::current_user<NarrowUserTraits>();
+    return detail::current_user<NarrowUserTraits>();
 }
 
 namespace detail {
 
-	inline DWORD get_environment_variable(
-		const char* key, char* buffer, DWORD size)
-	{
-		return ::GetEnvironmentVariableA(key, buffer, size);
-	}
+    inline DWORD get_environment_variable(
+        const char* key, char* buffer, DWORD size)
+    {
+        return ::GetEnvironmentVariableA(key, buffer, size);
+    }
 
-	inline DWORD get_environment_variable(
-		const wchar_t* key, wchar_t* buffer, DWORD size)
-	{
-		return ::GetEnvironmentVariableW(key, buffer, size);
-	}
+    inline DWORD get_environment_variable(
+        const wchar_t* key, wchar_t* buffer, DWORD size)
+    {
+        return ::GetEnvironmentVariableW(key, buffer, size);
+    }
 }
 
 /**
@@ -251,19 +251,19 @@ namespace detail {
 template<typename T>
 inline T environment_variable(const T& key)
 {
-	DWORD len = detail::get_environment_variable(key.c_str(), NULL, 0);
-	if (len == 0)
-		return T();
+    DWORD len = detail::get_environment_variable(key.c_str(), NULL, 0);
+    if (len == 0)
+        return T();
 
-	std::vector<T::value_type> buf(len);
-	len = detail::get_environment_variable(
-		key.c_str(), &buf[0], boost::numeric_cast<DWORD>(buf.size()));
-	if (len == 0)
-		BOOST_THROW_EXCEPTION(
-			boost::system::system_error(
-				::GetLastError(), boost::system::get_system_category()));
+    std::vector<T::value_type> buf(len);
+    len = detail::get_environment_variable(
+        key.c_str(), &buf[0], boost::numeric_cast<DWORD>(buf.size()));
+    if (len == 0)
+        BOOST_THROW_EXCEPTION(
+            boost::system::system_error(
+                ::GetLastError(), boost::system::get_system_category()));
 
-	return T(buf.begin(), buf.begin() + len);
+    return T(buf.begin(), buf.begin() + len);
 }
 
 /**
@@ -275,37 +275,37 @@ inline T environment_variable(const T& key)
 template<typename T>
 inline T home_directory()
 {
-	// try SHGetKnowFolderPath
-	T home = winapi::shell::special_folder_path<T::value_type>(CSIDL_PROFILE);
-	if (!home.empty())
-		return home;
+    // try SHGetKnowFolderPath
+    T home = winapi::shell::special_folder_path<T::value_type>(CSIDL_PROFILE);
+    if (!home.empty())
+        return home;
 
-	// fall back to %HOME%
-	const T::value_type home_key[] = {'H', 'O', 'M', 'E', '\0'};
-	home = environment_variable(T::string_type(home_key));
-	if (!home.empty())
-		return home;
+    // fall back to %HOME%
+    const T::value_type home_key[] = {'H', 'O', 'M', 'E', '\0'};
+    home = environment_variable(T::string_type(home_key));
+    if (!home.empty())
+        return home;
 
-	// fall back to %USERPROFILE%
-	const T::value_type userprofile[] =
-		{'U', 'S', 'E', 'R', 'P', 'R', 'O', 'F', 'I', 'L', 'E', '\0'};
-	home = environment_variable(T::string_type(userprofile));
-	if (!home.empty())
-		return home;
+    // fall back to %USERPROFILE%
+    const T::value_type userprofile[] =
+        {'U', 'S', 'E', 'R', 'P', 'R', 'O', 'F', 'I', 'L', 'E', '\0'};
+    home = environment_variable(T::string_type(userprofile));
+    if (!home.empty())
+        return home;
 
-	// fall back to %HOMEDRIVE%/%HOMEPATH%
-	const T::value_type home_drive_key[] =
-		{'H', 'O', 'M', 'E', 'D', 'R', 'I', 'V', 'E', '\0'};
-	const T::value_type home_path_key[] =
-		{'H', 'O', 'M', 'E', 'P', 'A', 'T', 'H', '\0'};
+    // fall back to %HOMEDRIVE%/%HOMEPATH%
+    const T::value_type home_drive_key[] =
+        {'H', 'O', 'M', 'E', 'D', 'R', 'I', 'V', 'E', '\0'};
+    const T::value_type home_path_key[] =
+        {'H', 'O', 'M', 'E', 'P', 'A', 'T', 'H', '\0'};
 
-	T home_drive = environment_variable(T::string_type(home_drive_key));
-	T home_path = environment_variable(T::string_type(home_path_key));
-	home = home_drive / home_path;
-	if (home.empty())
-		BOOST_THROW_EXCEPTION(
-			std::exception("Can't find home directory"));
-	return home;
+    T home_drive = environment_variable(T::string_type(home_drive_key));
+    T home_path = environment_variable(T::string_type(home_path_key));
+    home = home_drive / home_path;
+    if (home.empty())
+        BOOST_THROW_EXCEPTION(
+            std::exception("Can't find home directory"));
+    return home;
 }
 
 namespace com {
@@ -315,16 +315,16 @@ namespace com {
  */
 inline comet::com_ptr<IRunningObjectTable> running_object_table()
 {
-	comet::com_ptr<IRunningObjectTable> rot;
+    comet::com_ptr<IRunningObjectTable> rot;
 
-	HRESULT hr = ::GetRunningObjectTable(0, rot.out());
-	assert(SUCCEEDED(hr));
-	assert(rot);
+    HRESULT hr = ::GetRunningObjectTable(0, rot.out());
+    assert(SUCCEEDED(hr));
+    assert(rot);
 
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(comet::com_error(hr));
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
-	return rot;
+    return rot;
 }
 
 /**
@@ -332,12 +332,12 @@ inline comet::com_ptr<IRunningObjectTable> running_object_table()
  */
 inline CLSID clsid_from_progid(const std::wstring& progid)
 {
-	CLSID clsid;
-	HRESULT hr = ::CLSIDFromProgID(progid.c_str(), &clsid);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(comet::com_error(hr));
+    CLSID clsid;
+    HRESULT hr = ::CLSIDFromProgID(progid.c_str(), &clsid);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
-	return clsid;
+    return clsid;
 }
 
 /**
@@ -345,17 +345,17 @@ inline CLSID clsid_from_progid(const std::wstring& progid)
  */
 template<typename T>
 inline comet::com_ptr<T> class_object(
-	const CLSID& clsid, DWORD dw_class_context=CLSCTX_ALL)
+    const CLSID& clsid, DWORD dw_class_context=CLSCTX_ALL)
 {
-	comet::com_ptr<T> object;
-	HRESULT hr = ::CoGetClassObject(
-		clsid, dw_class_context, NULL, comet::uuidof(object.in()),
-		reinterpret_cast<void**>(object.out()));
-	
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(comet::com_error(hr));
+    comet::com_ptr<T> object;
+    HRESULT hr = ::CoGetClassObject(
+        clsid, dw_class_context, NULL, comet::uuidof(object.in()),
+        reinterpret_cast<void**>(object.out()));
+    
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
-	return object;
+    return object;
 }
 
 /**
@@ -363,10 +363,10 @@ inline comet::com_ptr<T> class_object(
  */
 template<typename T>
 inline comet::com_ptr<T> class_object(
-	const std::wstring& progid, DWORD dw_class_context=CLSCTX_ALL)
+    const std::wstring& progid, DWORD dw_class_context=CLSCTX_ALL)
 {
-	CLSID clsid = clsid_from_progid(progid);
-	return class_object<T>(clsid, dw_class_context);
+    CLSID clsid = clsid_from_progid(progid);
+    return class_object<T>(clsid, dw_class_context);
 }
 
 } // namespace swish::utils::com

@@ -42,83 +42,83 @@ namespace controls {
 class edit_impl : public ezel::detail::window_impl
 {
 public:
-	typedef ezel::detail::window_impl super;
+    typedef ezel::detail::window_impl super;
 
-	typedef ezel::detail::command_map<EN_CHANGE, EN_UPDATE> commands;
+    typedef ezel::detail::command_map<EN_CHANGE, EN_UPDATE> commands;
 
-	virtual void handle_command(
-		WORD command_id, WPARAM wparam, LPARAM lparam)
-	{
-		dispatch_command(this, command_id, wparam, lparam);
-	}
+    virtual void handle_command(
+        WORD command_id, WPARAM wparam, LPARAM lparam)
+    {
+        dispatch_command(this, command_id, wparam, lparam);
+    }
 
-	edit_impl(
-		const std::wstring& text, short left, short top, short width,
-		short height, DWORD custom_style)
-		:
-		ezel::detail::window_impl(text, left, top, width, height),
-		m_custom_style(custom_style) {}
+    edit_impl(
+        const std::wstring& text, short left, short top, short width,
+        short height, DWORD custom_style)
+        :
+        ezel::detail::window_impl(text, left, top, width, height),
+        m_custom_style(custom_style) {}
 
-	std::wstring window_class() const { return L"Edit"; }
+    std::wstring window_class() const { return L"Edit"; }
 
-	DWORD style() const
-	{
-		DWORD style = ezel::detail::window_impl::style() |
-			WS_CHILD | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL;
-		
-		style |= m_custom_style;
+    DWORD style() const
+    {
+        DWORD style = ezel::detail::window_impl::style() |
+            WS_CHILD | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL;
+        
+        style |= m_custom_style;
 
-		return style;
-	}
+        return style;
+    }
 
-	boost::signal<void ()>& on_change() { return m_on_change; }
-	boost::signal<void ()>& on_update() { return m_on_update; }
+    boost::signal<void ()>& on_change() { return m_on_change; }
+    boost::signal<void ()>& on_update() { return m_on_update; }
 
-	void on(command<EN_CHANGE>) { m_on_change(); }
-	void on(command<EN_UPDATE>) { m_on_update(); }
+    void on(command<EN_CHANGE>) { m_on_change(); }
+    void on(command<EN_UPDATE>) { m_on_update(); }
 
 private:
-	boost::signal<void ()> m_on_change;
-	boost::signal<void ()> m_on_update;
-	DWORD m_custom_style;
+    boost::signal<void ()> m_on_change;
+    boost::signal<void ()> m_on_update;
+    DWORD m_custom_style;
 };
 
 class edit : public ezel::control<edit_impl>
 {
 public:
 
-	struct style
-	{
-		enum value
-		{
-			default = 0,
-			password = ES_PASSWORD,
-			force_lowercase = ES_LOWERCASE,
-			only_allow_numbers = ES_NUMBER
-		};
-	};
+    struct style
+    {
+        enum value
+        {
+            default = 0,
+            password = ES_PASSWORD,
+            force_lowercase = ES_LOWERCASE,
+            only_allow_numbers = ES_NUMBER
+        };
+    };
 
-	edit(
-		const std::wstring& text, short left, short top, short width,
-		short height, style::value custom_style=style::default)
-		:
-		control<edit_impl>(
-			boost::shared_ptr<edit_impl>(
-				new edit_impl(
-					text, left, top, width, height, custom_style))) {}
+    edit(
+        const std::wstring& text, short left, short top, short width,
+        short height, style::value custom_style=style::default)
+        :
+        control<edit_impl>(
+            boost::shared_ptr<edit_impl>(
+                new edit_impl(
+                    text, left, top, width, height, custom_style))) {}
 
-	boost::signal<void ()>& on_change() { return impl()->on_change(); }
-	boost::signal<void ()>& on_update() { return impl()->on_update(); }
-	
-	boost::signal<void (const wchar_t*)>& on_text_change()
-	{ return impl()->on_text_change(); }
-	boost::signal<void ()>& on_text_changed()
-	{ return impl()->on_text_changed(); }
+    boost::signal<void ()>& on_change() { return impl()->on_change(); }
+    boost::signal<void ()>& on_update() { return impl()->on_update(); }
+    
+    boost::signal<void (const wchar_t*)>& on_text_change()
+    { return impl()->on_text_change(); }
+    boost::signal<void ()>& on_text_changed()
+    { return impl()->on_text_changed(); }
 
-	short left() const { return impl()->left(); }
-	short top() const { return impl()->top(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
+    short left() const { return impl()->left(); }
+    short top() const { return impl()->top(); }
+    short width() const { return impl()->width(); }
+    short height() const { return impl()->height(); }
 };
 
 }} // namespace ezel::controls

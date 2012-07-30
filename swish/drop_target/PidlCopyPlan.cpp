@@ -67,88 +67,88 @@ namespace drop_target {
 
 namespace {
 
-	/**
-	 * Return the name the copy should have at the target location.
-	 */
-	wpath target_name_from_source(const RootedSource& source)
-	{
-		return pidl_shell_item(source.pidl()).friendly_name(
-			pidl_shell_item::friendly_name_type::relative);
-	}
+    /**
+     * Return the name the copy should have at the target location.
+     */
+    wpath target_name_from_source(const RootedSource& source)
+    {
+        return pidl_shell_item(source.pidl()).friendly_name(
+            pidl_shell_item::friendly_name_type::relative);
+    }
 
-	template<typename OutIt>
-	void output_operations_for_stream_pidl(
-		const RootedSource& source, const SftpDestination& destination,
-		OutIt output_iterator)
-	{
-		wpath new_name = target_name_from_source(source);
+    template<typename OutIt>
+    void output_operations_for_stream_pidl(
+        const RootedSource& source, const SftpDestination& destination,
+        OutIt output_iterator)
+    {
+        wpath new_name = target_name_from_source(source);
 
-		SftpDestination new_destination = destination / new_name;
+        SftpDestination new_destination = destination / new_name;
 
-		CopyFileOperation operation(source, new_destination);
+        CopyFileOperation operation(source, new_destination);
 
-		*output_iterator++ = operation;
-	}
+        *output_iterator++ = operation;
+    }
 
-	template<typename OutIt>
-	void output_operations_for_folder_pidl(
-		com_ptr<IShellFolder> folder, const RootedSource& source,
-		const SftpDestination& destination, OutIt output_iterator)
-	{
-		wpath new_name = target_name_from_source(source);
+    template<typename OutIt>
+    void output_operations_for_folder_pidl(
+        com_ptr<IShellFolder> folder, const RootedSource& source,
+        const SftpDestination& destination, OutIt output_iterator)
+    {
+        wpath new_name = target_name_from_source(source);
 
-		SftpDestination new_destination = destination / new_name;
+        SftpDestination new_destination = destination / new_name;
 
-		*output_iterator++ = CreateDirectoryOperation(source, new_destination);
+        *output_iterator++ = CreateDirectoryOperation(source, new_destination);
 
-		com_ptr<IEnumIDList> e;
-		HRESULT hr = folder->EnumObjects(
-			NULL,
-			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN,
-			e.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
+        com_ptr<IEnumIDList> e;
+        HRESULT hr = folder->EnumObjects(
+            NULL,
+            SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN,
+            e.out());
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error_from_interface(folder, hr));
 
-		cpidl_t item;
-		while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
-		{
-			output_operations_for_pidl(
-				source / item, new_destination, output_iterator);
-		}
-	}
+        cpidl_t item;
+        while (hr == S_OK && e->Next(1, item.out(), NULL) == S_OK)
+        {
+            output_operations_for_pidl(
+                source / item, new_destination, output_iterator);
+        }
+    }
 
-	template<typename OutIt>
-	void output_operations_for_pidl(
-		const RootedSource& source, const SftpDestination& destination,
-		OutIt output_iterator)
-	{
-		try
-		{
-			/*
-			Test if streamable.
-			We don't use this stream to perform the operation as that would
-			mean large transfers keeping open a large number of file handles
-			while building the copy plan - a bad idea, especially if the files
-			are on another remote server
-			*/
-			stream_from_pidl(source.pidl());
+    template<typename OutIt>
+    void output_operations_for_pidl(
+        const RootedSource& source, const SftpDestination& destination,
+        OutIt output_iterator)
+    {
+        try
+        {
+            /*
+            Test if streamable.
+            We don't use this stream to perform the operation as that would
+            mean large transfers keeping open a large number of file handles
+            while building the copy plan - a bad idea, especially if the files
+            are on another remote server
+            */
+            stream_from_pidl(source.pidl());
 
-			output_operations_for_stream_pidl(
-				source, destination, output_iterator);
-		}
-		catch (const com_error&)
-		{
-			// Treating the item as something with an IStream has failed
-			// Now we try to treat it as an IShellFolder and hope we
-			// have more success
+            output_operations_for_stream_pidl(
+                source, destination, output_iterator);
+        }
+        catch (const com_error&)
+        {
+            // Treating the item as something with an IStream has failed
+            // Now we try to treat it as an IShellFolder and hope we
+            // have more success
 
-			com_ptr<IShellFolder> folder =
-				bind_to_handler_object<IShellFolder>(source.pidl());
+            com_ptr<IShellFolder> folder =
+                bind_to_handler_object<IShellFolder>(source.pidl());
 
-			output_operations_for_folder_pidl(
-				folder, source, destination, output_iterator);
-		}
-	}
+            output_operations_for_folder_pidl(
+                folder, source, destination, output_iterator);
+        }
+    }
 
 }
 
@@ -158,31 +158,31 @@ namespace {
  * Expands the top-level PIDLs into a list of all items in the hierarchy.
  */
 PidlCopyPlan::PidlCopyPlan(
-	const PidlFormat& source_format, const apidl_t& destination_root)
+    const PidlFormat& source_format, const apidl_t& destination_root)
 {
-	for (unsigned int i = 0; i < source_format.pidl_count(); ++i)
-	{
-		apidl_t pidl = source_format.file(i);
+    for (unsigned int i = 0; i < source_format.pidl_count(); ++i)
+    {
+        apidl_t pidl = source_format.file(i);
 
-		output_operations_for_pidl(
-			RootedSource(
-				source_format.parent_folder(), source_format.relative_file(i)),
-			SftpDestination(destination_root, wpath()),
-			make_function_output_iterator(
-				bind(&SequentialPlan::add_stage, ref(m_plan), _1)));
-	}
+        output_operations_for_pidl(
+            RootedSource(
+                source_format.parent_folder(), source_format.relative_file(i)),
+            SftpDestination(destination_root, wpath()),
+            make_function_output_iterator(
+                bind(&SequentialPlan::add_stage, ref(m_plan), _1)));
+    }
 }
 
 void PidlCopyPlan::execute_plan(
-	DropActionCallback& callback, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer) const
+    DropActionCallback& callback, com_ptr<ISftpProvider> provider,
+    com_ptr<ISftpConsumer> consumer) const
 {
-	m_plan.execute_plan(callback, provider, consumer);
+    m_plan.execute_plan(callback, provider, consumer);
 }
 
 void PidlCopyPlan::add_stage(const Operation& entry)
 {
-	m_plan.add_stage(entry);
+    m_plan.add_stage(entry);
 }
 
 }}

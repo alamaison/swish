@@ -64,8 +64,8 @@ namespace comet {
 
 template<> struct comtype<IDataObject>
 {
-	static const IID& uuid() { return IID_IDataObject; }
-	typedef ::IUnknown base;
+    static const IID& uuid() { return IID_IDataObject; }
+    typedef ::IUnknown base;
 };
 
 }
@@ -83,43 +83,43 @@ template<> struct comtype<IDataObject>
  * @param pProvider         Backend to communicate with remote server.
  */
 CSftpDataObject::CSftpDataObject(
-	UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-	PCIDLIST_ABSOLUTE pidlCommonParent, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer)
-	: CDataObject(cPidl, aPidl, pidlCommonParent),
-	// Make a copy of the PIDLs.  These are used to delay-render the 
-	// CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS format in GetData().
-	m_pidlCommonParent(pidlCommonParent),
-	m_consumer(consumer),
-	m_provider(provider),
-	m_fExpandedPidlList(false),
-	m_fRenderedDescriptor(false),
-	m_cfPreferredDropEffect(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT))),
-	m_cfFileDescriptor(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
-	m_cfFileContents(static_cast<CLIPFORMAT>(
-		::RegisterClipboardFormat(CFSTR_FILECONTENTS)))
+    UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
+    PCIDLIST_ABSOLUTE pidlCommonParent, com_ptr<ISftpProvider> provider,
+    com_ptr<ISftpConsumer> consumer)
+    : CDataObject(cPidl, aPidl, pidlCommonParent),
+    // Make a copy of the PIDLs.  These are used to delay-render the 
+    // CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS format in GetData().
+    m_pidlCommonParent(pidlCommonParent),
+    m_consumer(consumer),
+    m_provider(provider),
+    m_fExpandedPidlList(false),
+    m_fRenderedDescriptor(false),
+    m_cfPreferredDropEffect(static_cast<CLIPFORMAT>(
+        ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT))),
+    m_cfFileDescriptor(static_cast<CLIPFORMAT>(
+        ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR))),
+    m_cfFileContents(static_cast<CLIPFORMAT>(
+        ::RegisterClipboardFormat(CFSTR_FILECONTENTS)))
 {
-	std::copy(aPidl, aPidl + cPidl, std::back_inserter(m_pidls));
+    std::copy(aPidl, aPidl + cPidl, std::back_inserter(m_pidls));
 
-	// Prod the inner object with the formats whose data we will delay-
-	// render in GetData()
-	if (cPidl > 0)
-	{
-		HRESULT hr;
-		hr = ProdInnerWithFormat(m_cfFileDescriptor, TYMED_HGLOBAL);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
-		hr = ProdInnerWithFormat(m_cfFileContents, TYMED_ISTREAM);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
-	}
+    // Prod the inner object with the formats whose data we will delay-
+    // render in GetData()
+    if (cPidl > 0)
+    {
+        HRESULT hr;
+        hr = ProdInnerWithFormat(m_cfFileDescriptor, TYMED_HGLOBAL);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
+        hr = ProdInnerWithFormat(m_cfFileContents, TYMED_ISTREAM);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
+    }
 
-	// Set preferred drop effect.  This prevents any calls to GetData of FGD or
-	// FILECONTENTS until drag is complete, thereby preventing interruptions
-	// caused by delay-rendering.
-	_RenderCfPreferredDropEffect();
+    // Set preferred drop effect.  This prevents any calls to GetData of FGD or
+    // FILECONTENTS until drag is complete, thereby preventing interruptions
+    // caused by delay-rendering.
+    _RenderCfPreferredDropEffect();
 }
 
 /*----------------------------------------------------------------------------*
@@ -127,29 +127,29 @@ CSftpDataObject::CSftpDataObject(
  *----------------------------------------------------------------------------*/
 
 STDMETHODIMP CSftpDataObject::GetData(
-	FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
+    FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 {
-	::ZeroMemory(pmedium, sizeof(STGMEDIUM));
+    ::ZeroMemory(pmedium, sizeof(STGMEDIUM));
 
-	// Delay-render data if necessary
-	try
-	{
-		if (pformatetcIn->cfFormat == m_cfFileDescriptor)
-		{
-			// Delay-render CFSTR_FILEDESCRIPTOR format into this IDataObject
-			_DelayRenderCfFileGroupDescriptor();
-		}
-		else if (pformatetcIn->cfFormat == m_cfFileContents)
-		{
-			// Delay-render CFSTR_FILECONTENTS format directly.  Do not store.
-			*pmedium = _DelayRenderCfFileContents(pformatetcIn->lindex);
-			return S_OK;
-		}
+    // Delay-render data if necessary
+    try
+    {
+        if (pformatetcIn->cfFormat == m_cfFileDescriptor)
+        {
+            // Delay-render CFSTR_FILEDESCRIPTOR format into this IDataObject
+            _DelayRenderCfFileGroupDescriptor();
+        }
+        else if (pformatetcIn->cfFormat == m_cfFileContents)
+        {
+            // Delay-render CFSTR_FILECONTENTS format directly.  Do not store.
+            *pmedium = _DelayRenderCfFileContents(pformatetcIn->lindex);
+            return S_OK;
+        }
 
-		// Delegate all non-FILECONTENTS requests to the superclass
-		return __super::GetData(pformatetcIn, pmedium);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+        // Delegate all non-FILECONTENTS requests to the superclass
+        return __super::GetData(pformatetcIn, pmedium);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
 
 /*----------------------------------------------------------------------------*
@@ -159,24 +159,24 @@ STDMETHODIMP CSftpDataObject::GetData(
 void CSftpDataObject::_RenderCfPreferredDropEffect()
 throw(...)
 {
-	// Create DROPEFFECT_COPY in global memory
-	HGLOBAL hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DWORD));
-	CGlobalLock glock(hGlobal);
-	DWORD &dwDropEffect = glock.GetDword();
-	dwDropEffect = DROPEFFECT_COPY;
+    // Create DROPEFFECT_COPY in global memory
+    HGLOBAL hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DWORD));
+    CGlobalLock glock(hGlobal);
+    DWORD &dwDropEffect = glock.GetDword();
+    dwDropEffect = DROPEFFECT_COPY;
 
-	// Save in IDataObject
-	CFormatEtc fetc(m_cfPreferredDropEffect);
-	STGMEDIUM stg;
-	stg.tymed = TYMED_HGLOBAL;
-	stg.hGlobal = glock.Detach();
-	stg.pUnkForRelease = NULL;
-	HRESULT hr = SetData(&fetc, &stg, true);
-	if (FAILED(hr))
-	{
-		::ReleaseStgMedium(&stg);
-	}
-	ATLENSURE_SUCCEEDED(hr);	
+    // Save in IDataObject
+    CFormatEtc fetc(m_cfPreferredDropEffect);
+    STGMEDIUM stg;
+    stg.tymed = TYMED_HGLOBAL;
+    stg.hGlobal = glock.Detach();
+    stg.pUnkForRelease = NULL;
+    HRESULT hr = SetData(&fetc, &stg, true);
+    if (FAILED(hr))
+    {
+        ::ReleaseStgMedium(&stg);
+    }
+    ATLENSURE_SUCCEEDED(hr);    
 }
 
 /**
@@ -201,30 +201,30 @@ throw(...)
 void CSftpDataObject::_DelayRenderCfFileGroupDescriptor()
 throw(...)
 {
-	if (!m_fRenderedDescriptor && !m_pidls.empty())
-	{
-		// Create FILEGROUPDESCRIPTOR format from the cached PIDL list
-		HGLOBAL hglobal = _CreateFileGroupDescriptor();
+    if (!m_fRenderedDescriptor && !m_pidls.empty())
+    {
+        // Create FILEGROUPDESCRIPTOR format from the cached PIDL list
+        HGLOBAL hglobal = _CreateFileGroupDescriptor();
 #ifdef DEBUG
-		FileGroupDescriptor fgd(hglobal);
-		ATLASSERT(fgd.size() > 0);
+        FileGroupDescriptor fgd(hglobal);
+        ATLASSERT(fgd.size() > 0);
 #endif
 
-		// Insert the descriptor into the IDataObject
-		CFormatEtc fetc(m_cfFileDescriptor);
-		STGMEDIUM stg;
-		stg.tymed = TYMED_HGLOBAL;
-		stg.hGlobal = hglobal;
-		stg.pUnkForRelease = NULL;
-		HRESULT hr = SetData(&fetc, &stg, true);
-		if (FAILED(hr))
-		{
-			::ReleaseStgMedium(&stg);
-		}
-		ATLENSURE_SUCCEEDED(hr);
+        // Insert the descriptor into the IDataObject
+        CFormatEtc fetc(m_cfFileDescriptor);
+        STGMEDIUM stg;
+        stg.tymed = TYMED_HGLOBAL;
+        stg.hGlobal = hglobal;
+        stg.pUnkForRelease = NULL;
+        HRESULT hr = SetData(&fetc, &stg, true);
+        if (FAILED(hr))
+        {
+            ::ReleaseStgMedium(&stg);
+        }
+        ATLENSURE_SUCCEEDED(hr);
 
-		m_fRenderedDescriptor = true;
-	}
+        m_fRenderedDescriptor = true;
+    }
 }
 
 /**
@@ -249,25 +249,25 @@ throw(...)
 STGMEDIUM CSftpDataObject::_DelayRenderCfFileContents(long lindex)
 throw(...)
 {
-	STGMEDIUM stg;
-	::ZeroMemory(&stg, sizeof(STGMEDIUM));
+    STGMEDIUM stg;
+    ::ZeroMemory(&stg, sizeof(STGMEDIUM));
 
-	if (!m_pidls.empty())
-	{
-		// Create an IStream from the cached PIDL list
-		com_ptr<IStream> stream = _CreateFileContentsStream(lindex);
-		ATLENSURE(stream);
+    if (!m_pidls.empty())
+    {
+        // Create an IStream from the cached PIDL list
+        com_ptr<IStream> stream = _CreateFileContentsStream(lindex);
+        ATLENSURE(stream);
 
-		// Pack into a STGMEDIUM which will be returned to the client
-		stg.tymed = TYMED_ISTREAM;
-		stg.pstm = stream.detach();
-	}
-	else
-	{
-		AtlThrow(DV_E_LINDEX);
-	}
+        // Pack into a STGMEDIUM which will be returned to the client
+        stg.tymed = TYMED_ISTREAM;
+        stg.pstm = stream.detach();
+    }
+    else
+    {
+        AtlThrow(DV_E_LINDEX);
+    }
 
-	return stg;
+    return stg;
 }
 
 /**
@@ -275,16 +275,16 @@ throw(...)
  */
 HGLOBAL CSftpDataObject::_CreateFileGroupDescriptor()
 {
-	ExpandedList descriptors;
-	_ExpandPidlsInto(descriptors);
+    ExpandedList descriptors;
+    _ExpandPidlsInto(descriptors);
 
-	typedef ExpandedList::value_type descriptor_type;
+    typedef ExpandedList::value_type descriptor_type;
 
-	return group_descriptor_from_range(
-		make_transform_iterator(
-			descriptors.begin(), mem_fn(&descriptor_type::get)),
-		make_transform_iterator(
-			descriptors.end(), mem_fn(&descriptor_type::get)));
+    return group_descriptor_from_range(
+        make_transform_iterator(
+            descriptors.begin(), mem_fn(&descriptor_type::get)),
+        make_transform_iterator(
+            descriptors.end(), mem_fn(&descriptor_type::get)));
 }
 
 /**
@@ -299,18 +299,18 @@ HGLOBAL CSftpDataObject::_CreateFileGroupDescriptor()
 com_ptr<IStream> CSftpDataObject::_CreateFileContentsStream(long lindex)
 throw(...)
 {
-	ATLENSURE(m_fRenderedDescriptor);
+    ATLENSURE(m_fRenderedDescriptor);
 
-	// Pull the FILEGROUPDESCRIPTOR we made earlier out of the DataObject
-	CFormatEtc fetc(m_cfFileDescriptor);
-	StorageMedium medium;
-	HRESULT hr = GetData(&fetc, medium.out());
-	ATLENSURE_SUCCEEDED(hr);
-	FileGroupDescriptor fgd(medium.get().hGlobal);
+    // Pull the FILEGROUPDESCRIPTOR we made earlier out of the DataObject
+    CFormatEtc fetc(m_cfFileDescriptor);
+    StorageMedium medium;
+    HRESULT hr = GetData(&fetc, medium.out());
+    ATLENSURE_SUCCEEDED(hr);
+    FileGroupDescriptor fgd(medium.get().hGlobal);
 
-	// Get stream from relative path stored in the lindexth FILEDESCRIPTOR
-	CSftpDirectory dir(m_pidlCommonParent, m_provider, m_consumer);
-	return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
+    // Get stream from relative path stored in the lindexth FILEDESCRIPTOR
+    CSftpDirectory dir(m_pidlCommonParent, m_provider, m_consumer);
+    return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
 }
 
 /**
@@ -327,75 +327,75 @@ throw(...)
 void CSftpDataObject::_ExpandPidlsInto(ExpandedList& descriptors)
 const throw(...)
 {
-	for (UINT i = 0; i < m_pidls.size(); ++i)
-	{
-		_ExpandTopLevelPidlInto(m_pidls[i], descriptors);
-	}
+    for (UINT i = 0; i < m_pidls.size(); ++i)
+    {
+        _ExpandTopLevelPidlInto(m_pidls[i], descriptors);
+    }
 }
 
 namespace {
 
-	using namespace boost::posix_time;
+    using namespace boost::posix_time;
 
-	const int SHOW_PROGRESS_THRESHOLD = 10000;
+    const int SHOW_PROGRESS_THRESHOLD = 10000;
 
-	template<typename T, typename U>
-	remote_itemid_view view_of_last_item(const basic_pidl<T, U>& pidl)
-	{
-		raw_pidl_iterator it(pidl.get());
-		while (it != raw_pidl_iterator())
-		{
-			if (next(it) == raw_pidl_iterator())
-				return remote_itemid_view(*it);
-			else
-				++it;
-		}
+    template<typename T, typename U>
+    remote_itemid_view view_of_last_item(const basic_pidl<T, U>& pidl)
+    {
+        raw_pidl_iterator it(pidl.get());
+        while (it != raw_pidl_iterator())
+        {
+            if (next(it) == raw_pidl_iterator())
+                return remote_itemid_view(*it);
+            else
+                ++it;
+        }
 
-		BOOST_THROW_EXCEPTION(runtime_error("Empty iterator"));
-	}
+        BOOST_THROW_EXCEPTION(runtime_error("Empty iterator"));
+    }
 
-	template<typename T, typename U>
-	Descriptor make_descriptor(const basic_pidl<T, U>& pidl, bool dialogue)
-	{
-		Descriptor d;
+    template<typename T, typename U>
+    Descriptor make_descriptor(const basic_pidl<T, U>& pidl, bool dialogue)
+    {
+        Descriptor d;
 
-		// Filename
-		d.path(path_from_remote_pidl(pidl));
+        // Filename
+        d.path(path_from_remote_pidl(pidl));
 
-		// The PIDL we have been passed may be multilevel, representing a
-		// path to the file.  Get last item in PIDL to get properties of the
-		// file itself.
-		
-		remote_itemid_view itemid = view_of_last_item(pidl);
+        // The PIDL we have been passed may be multilevel, representing a
+        // path to the file.  Get last item in PIDL to get properties of the
+        // file itself.
+        
+        remote_itemid_view itemid = view_of_last_item(pidl);
 
-		// Size
-		d.file_size(itemid.size());
+        // Size
+        d.file_size(itemid.size());
 
-		// Date
-		SYSTEMTIME st;
-		ATLVERIFY(itemid.date_modified().to_systemtime(&st));
-		FILETIME ftLastWriteTime;
-		ATLVERIFY(::SystemTimeToFileTime(&st, &ftLastWriteTime));
-		d.last_write_time(from_ftime<ptime>(ftLastWriteTime));
+        // Date
+        SYSTEMTIME st;
+        ATLVERIFY(itemid.date_modified().to_systemtime(&st));
+        FILETIME ftLastWriteTime;
+        ATLVERIFY(::SystemTimeToFileTime(&st, &ftLastWriteTime));
+        d.last_write_time(from_ftime<ptime>(ftLastWriteTime));
 
-		// Show progress UI?
-		if (d.file_size() > SHOW_PROGRESS_THRESHOLD || dialogue)
-			d.want_progress(true);
+        // Show progress UI?
+        if (d.file_size() > SHOW_PROGRESS_THRESHOLD || dialogue)
+            d.want_progress(true);
 
-		// Attributes
-		DWORD dwFileAttributes = 0;
-		if (itemid.is_folder())
-			dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-		else
-			dwFileAttributes |= FILE_ATTRIBUTE_NORMAL;
+        // Attributes
+        DWORD dwFileAttributes = 0;
+        if (itemid.is_folder())
+            dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+        else
+            dwFileAttributes |= FILE_ATTRIBUTE_NORMAL;
 
-		if (itemid.filename()[0] == L'.')
-			dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+        if (itemid.filename()[0] == L'.')
+            dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 
-		d.attributes(dwFileAttributes);
+        d.attributes(dwFileAttributes);
 
-		return d;
-	}
+        return d;
+    }
 
 }
 
@@ -407,19 +407,19 @@ namespace {
  * all the items in and below the directory.
  */
 void CSftpDataObject::_ExpandTopLevelPidlInto(
-	const TopLevelPidl& pidl, ExpandedList& descriptors)
+    const TopLevelPidl& pidl, ExpandedList& descriptors)
 const throw(...)
 {
-	// Add file descriptor from PIDL - common case
-	ATLENSURE_THROW(
-		descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
-	descriptors.push_back(make_descriptor(pidl, _WantProgressDialogue()));
+    // Add file descriptor from PIDL - common case
+    ATLENSURE_THROW(
+        descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
+    descriptors.push_back(make_descriptor(pidl, _WantProgressDialogue()));
 
-	// Explode the contents of subfolders into the list
-	if (remote_itemid_view(pidl).is_folder())
-	{
-		_ExpandDirectoryTreeInto(m_pidlCommonParent, pidl.get(), descriptors);
-	}
+    // Explode the contents of subfolders into the list
+    if (remote_itemid_view(pidl).is_folder())
+    {
+        _ExpandDirectoryTreeInto(m_pidlCommonParent, pidl.get(), descriptors);
+    }
 }
 
 /**
@@ -435,10 +435,10 @@ const throw(...)
 vector<CRelativePidl> CSftpDataObject::FlattenDirectoryTree()
 throw(...)
 {
-	vector<CRelativePidl> pidls;
-	_FlattenDirectoryTreeInto(pidls, NULL);
-	ATLASSERT(pidls.size() > 0);
-	return pidls;
+    vector<CRelativePidl> pidls;
+    _FlattenDirectoryTreeInto(pidls, NULL);
+    ATLASSERT(pidls.size() > 0);
+    return pidls;
 }*/
 
 /**
@@ -458,47 +458,47 @@ throw(...)
  *                         this folder.
  */
 void CSftpDataObject::_ExpandDirectoryTreeInto(
-	const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
-	ExpandedList& descriptors)
+    const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
+    ExpandedList& descriptors)
 const throw(...)
 {
-	com_ptr<IEnumIDList> listing = _GetEnumAll(
-		CAbsolutePidl(pidlParent, pidlDirectory));
+    com_ptr<IEnumIDList> listing = _GetEnumAll(
+        CAbsolutePidl(pidlParent, pidlDirectory));
 
-	// Add all items below this directory (this directory added by caller)
-	HRESULT hr;
-	while(true)
-	{
-		cpidl_t pidl;
-		hr = listing->Next(1, pidl.out(), NULL);
-		if (hr != S_OK)
-			break;
+    // Add all items below this directory (this directory added by caller)
+    HRESULT hr;
+    while(true)
+    {
+        cpidl_t pidl;
+        hr = listing->Next(1, pidl.out(), NULL);
+        if (hr != S_OK)
+            break;
 
-		// Create version of pidl relative to the common root (pidlParent)
-		pidl_t relative_pidl = pidlDirectory.m_pidl + pidl;
+        // Create version of pidl relative to the common root (pidlParent)
+        pidl_t relative_pidl = pidlDirectory.m_pidl + pidl;
 
-		// Add simple item - common case
-		ATLENSURE_THROW(
-			descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
-		descriptors.push_back(make_descriptor(relative_pidl, true));
+        // Add simple item - common case
+        ATLENSURE_THROW(
+            descriptors.size() < descriptors.max_size() - 1, E_OUTOFMEMORY);
+        descriptors.push_back(make_descriptor(relative_pidl, true));
 
-		// Explode the contents of subfolders into the list
-		if (remote_itemid_view(pidl).is_folder())
-		{
-			pidl = NULL; // Reduce recursion footprint
-			_ExpandDirectoryTreeInto(
-				pidlParent, relative_pidl.get(), descriptors);
-		}
-	}
-	ATLENSURE(hr == S_FALSE);
+        // Explode the contents of subfolders into the list
+        if (remote_itemid_view(pidl).is_folder())
+        {
+            pidl = NULL; // Reduce recursion footprint
+            _ExpandDirectoryTreeInto(
+                pidlParent, relative_pidl.get(), descriptors);
+        }
+    }
+    ATLENSURE(hr == S_FALSE);
 }
 
 com_ptr<IEnumIDList> CSftpDataObject::_GetEnumAll(const CAbsolutePidl& pidl)
 const throw(...)
 {
-	CSftpDirectory dir(pidl, m_provider, m_consumer);
-	return dir.GetEnum(
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
+    CSftpDirectory dir(pidl, m_provider, m_consumer);
+    return dir.GetEnum(
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 }
 
 /**
@@ -510,6 +510,6 @@ const throw(...)
 inline bool CSftpDataObject::_WantProgressDialogue()
 const throw()
 {
-	return m_pidls.size() > 1
-		|| (m_pidls.size() == 1 && remote_itemid_view(m_pidls[0]).is_folder());
+    return m_pidls.size() > 1
+        || (m_pidls.size() == 1 && remote_itemid_view(m_pidls[0]).is_folder());
 }

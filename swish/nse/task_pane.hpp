@@ -71,117 +71,117 @@ namespace nse {
 template<typename Interface>
 class CUIElementErrorAdapterBase : public Interface
 {
-	BOOST_STATIC_ASSERT((boost::is_base_of<IUIElement, Interface>::value));
+    BOOST_STATIC_ASSERT((boost::is_base_of<IUIElement, Interface>::value));
 
 public:
 
-	typedef Interface interface_is;
+    typedef Interface interface_is;
 
-	/** @name IUIElement external COM methods. */
-	// @{
+    /** @name IUIElement external COM methods. */
+    // @{
 
-	/**
-	 * Return command's title string.
-	 *
-	 * @param[in]  psiItemArray  Optional array of PIDLs that command would be
-	 *                           executed upon.
-	 * @param[out] ppszName      Location in which to return character buffer
-	 *                           allocated with CoTaskMemAlloc.
-	 */
-	virtual IFACEMETHODIMP get_Name(
-		IShellItemArray* psiItemArray, wchar_t** ppszName)
-	{
-		if (ppszName)
-			*ppszName = NULL;
-		else
-			return E_POINTER;
+    /**
+     * Return command's title string.
+     *
+     * @param[in]  psiItemArray  Optional array of PIDLs that command would be
+     *                           executed upon.
+     * @param[out] ppszName      Location in which to return character buffer
+     *                           allocated with CoTaskMemAlloc.
+     */
+    virtual IFACEMETHODIMP get_Name(
+        IShellItemArray* psiItemArray, wchar_t** ppszName)
+    {
+        if (ppszName)
+            *ppszName = NULL;
+        else
+            return E_POINTER;
 
-		try
-		{
-			HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(comet::com_error(hr));
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(comet::com_error(hr));
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	/**
-	 * Return command's icon descriptor.
-	 *
-	 * This takes the form "shell32.dll,-249" where 249 is the icon's resource ID.
-	 *
-	 * @param[in]  psiItemArray  Optional array of PIDLs that command would be
-	 *                           executed upon.
-	 * @param[out] ppszIcon      Location in which to return character buffer
-	 *                           allocated with CoTaskMemAlloc.
-	 */
-	virtual IFACEMETHODIMP get_Icon(
-		IShellItemArray* psiItemArray, wchar_t** ppszIcon)
-	{
-		if (ppszIcon)
-			*ppszIcon = NULL;
-		else
-			return E_POINTER;
+    /**
+     * Return command's icon descriptor.
+     *
+     * This takes the form "shell32.dll,-249" where 249 is the icon's resource ID.
+     *
+     * @param[in]  psiItemArray  Optional array of PIDLs that command would be
+     *                           executed upon.
+     * @param[out] ppszIcon      Location in which to return character buffer
+     *                           allocated with CoTaskMemAlloc.
+     */
+    virtual IFACEMETHODIMP get_Icon(
+        IShellItemArray* psiItemArray, wchar_t** ppszIcon)
+    {
+        if (ppszIcon)
+            *ppszIcon = NULL;
+        else
+            return E_POINTER;
 
-		try
-		{
-			HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(comet::com_error(hr));
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(comet::com_error(hr));
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	/**
-	 * Return command's tool tip.
-	 *
-	 * @param[in]  psiItemArray  Optional array of PIDLs that command would be
-	 *                           executed upon.
-	 * @param[out] ppszInfotip   Location in which to return character buffer
-	 *                           allocated with CoTaskMemAlloc.
-	 */
-	virtual IFACEMETHODIMP get_Tooltip(
-		IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
-	{
-		if (ppszInfotip)
-			*ppszInfotip = NULL;
-		else
-			return E_POINTER;
+    /**
+     * Return command's tool tip.
+     *
+     * @param[in]  psiItemArray  Optional array of PIDLs that command would be
+     *                           executed upon.
+     * @param[out] ppszInfotip   Location in which to return character buffer
+     *                           allocated with CoTaskMemAlloc.
+     */
+    virtual IFACEMETHODIMP get_Tooltip(
+        IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
+    {
+        if (ppszInfotip)
+            *ppszInfotip = NULL;
+        else
+            return E_POINTER;
 
-		try
-		{
-			HRESULT hr =
-				::SHStrDup(tool_tip(psiItemArray).c_str(), ppszInfotip);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(comet::com_error(hr));
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            HRESULT hr =
+                ::SHStrDup(tool_tip(psiItemArray).c_str(), ppszInfotip);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(comet::com_error(hr));
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	// @}
+    // @}
 
-	/** @name NVI internal interface.
-	 *
-	 * Implement this to create IUIElement instances.
-	 */
-	// @{
+    /** @name NVI internal interface.
+     *
+     * Implement this to create IUIElement instances.
+     */
+    // @{
 
-	virtual std::wstring title(
-		const comet::com_ptr<IShellItemArray>& items) const = 0;
+    virtual std::wstring title(
+        const comet::com_ptr<IShellItemArray>& items) const = 0;
 
-	virtual std::wstring icon(
-		const comet::com_ptr<IShellItemArray>& items) const = 0;
+    virtual std::wstring icon(
+        const comet::com_ptr<IShellItemArray>& items) const = 0;
 
-	virtual std::wstring tool_tip(
-		const comet::com_ptr<IShellItemArray>& items) const = 0;
+    virtual std::wstring tool_tip(
+        const comet::com_ptr<IShellItemArray>& items) const = 0;
 
-	// @}
+    // @}
 };
 
 /**
@@ -191,7 +191,7 @@ public:
  * to the external COM interface.  This is an NVI style approach.
  */
 class CUIElementErrorAdapter :
-	public CUIElementErrorAdapterBase<IUIElement> {};
+    public CUIElementErrorAdapterBase<IUIElement> {};
 
 /**
  * Abstract IUICommand implementation wrapper.
@@ -203,98 +203,98 @@ class CUICommandErrorAdapter : public CUIElementErrorAdapterBase<IUICommand>
 {
 public:
 
-	/** @name IUICommand external COM methods. */
-	// @{
+    /** @name IUICommand external COM methods. */
+    // @{
 
-	/**
-	 * Return command's unique GUID.
-	 *
-	 * @param[out] pguidCommandName   Location in which to return GUID.
-	 */
-	IFACEMETHODIMP get_CanonicalName(GUID* pguidCommandName)
-	{
-		if (pguidCommandName)
-			*pguidCommandName = GUID_NULL;
-		else
-			return E_POINTER;
+    /**
+     * Return command's unique GUID.
+     *
+     * @param[out] pguidCommandName   Location in which to return GUID.
+     */
+    IFACEMETHODIMP get_CanonicalName(GUID* pguidCommandName)
+    {
+        if (pguidCommandName)
+            *pguidCommandName = GUID_NULL;
+        else
+            return E_POINTER;
 
-		try
-		{
-			*pguidCommandName = canonical_name();
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            *pguidCommandName = canonical_name();
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	/**
-	 * Return the command's state given array of PIDLs.
-	 *
-	 * @param[in]  psiItemArray  Optional array of PIDLs that command would be
-	 *                           executed upon.
-	 * @param[in]  fOkToBeSlow   Indicated whether slow operations can be used
-	 *                           when calculating the state.
-	 * @param[out] pCmdState     Location in which to return the state flags.
-	 */
-	IFACEMETHODIMP get_State(
-		IShellItemArray* psiItemArray, int nRequested, //BOOL fOkToBeSlow,
-		EXPCMDSTATE* pCmdState)
-	{
-		if (pCmdState)
-			*pCmdState = 0;
-		else
-			return E_POINTER;
+    /**
+     * Return the command's state given array of PIDLs.
+     *
+     * @param[in]  psiItemArray  Optional array of PIDLs that command would be
+     *                           executed upon.
+     * @param[in]  fOkToBeSlow   Indicated whether slow operations can be used
+     *                           when calculating the state.
+     * @param[out] pCmdState     Location in which to return the state flags.
+     */
+    IFACEMETHODIMP get_State(
+        IShellItemArray* psiItemArray, int nRequested, //BOOL fOkToBeSlow,
+        EXPCMDSTATE* pCmdState)
+    {
+        if (pCmdState)
+            *pCmdState = 0;
+        else
+            return E_POINTER;
 
-		try
-		{
-			*pCmdState = state(psiItemArray, (nRequested) ? true : false);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            *pCmdState = state(psiItemArray, (nRequested) ? true : false);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	
-	/**
-	 * Execute the code associated with this command instance.
-	 *
-	 * @param[in] psiItemArray  Optional array of PIDLs that command is
-	 *                          executed upon.
-	 * @param[in] pbc           Optional bind context.
-	 */
-	IFACEMETHODIMP Invoke(
-		IShellItemArray* psiItemArray, IBindCtx* pbc)
-	{
-		try
-		{
-			invoke(psiItemArray, pbc);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+    
+    /**
+     * Execute the code associated with this command instance.
+     *
+     * @param[in] psiItemArray  Optional array of PIDLs that command is
+     *                          executed upon.
+     * @param[in] pbc           Optional bind context.
+     */
+    IFACEMETHODIMP Invoke(
+        IShellItemArray* psiItemArray, IBindCtx* pbc)
+    {
+        try
+        {
+            invoke(psiItemArray, pbc);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	// @}
+    // @}
 
 private:
 
-	/** @name NVI internal interface.
-	 *
-	 * Implement this to create IUICommand instances.
-	 */
-	// @{
+    /** @name NVI internal interface.
+     *
+     * Implement this to create IUICommand instances.
+     */
+    // @{
 
-	virtual const comet::uuid_t& canonical_name() const = 0;
+    virtual const comet::uuid_t& canonical_name() const = 0;
 
-	virtual EXPCMDSTATE state(
-		const comet::com_ptr<IShellItemArray>& items,
-		bool ok_to_be_slow) const = 0;
+    virtual EXPCMDSTATE state(
+        const comet::com_ptr<IShellItemArray>& items,
+        bool ok_to_be_slow) const = 0;
 
-	virtual void invoke(
-		const comet::com_ptr<IShellItemArray>& items,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
+    virtual void invoke(
+        const comet::com_ptr<IShellItemArray>& items,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
 
-	// @}
+    // @}
 };
 
 #ifndef SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS
@@ -302,113 +302,113 @@ private:
 #endif
 
 #define COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, classname, initialiser) \
-	BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
-	explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
-		: initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
+    BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
+    explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
+        : initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
 
 template<COMET_LIST_TEMPLATE>
 class CUICommandImpl :
-	public comet::simple_object<CUICommandErrorAdapter, COMET_LIST_ARG_0>
+    public comet::simple_object<CUICommandErrorAdapter, COMET_LIST_ARG_0>
 {
 public:
 
 // Define pass-through contructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommandImpl, m_command)
+    COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommandImpl, m_command)
 
 #define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
 protected:
 
-	typedef X00 command_type;
+    typedef X00 command_type;
 
-	command_type& command() { return m_command; }
+    command_type& command() { return m_command; }
 
 private:
 
-	/**
-	 * Return command's unique GUID.
-	 */
-	const comet::uuid_t& canonical_name() const
-	{
-		return m_command.guid();
-	}
-		
-	/**
-	 * Return command's title string.
-	 *
-	 * @param items  Optional array of PIDLs that command would be executed
-	 *               upon.
-	 */
-	std::wstring title(const comet::com_ptr<IShellItemArray>& items) const
-	{
-		return m_command.title(data_object_from_item_array(items));
-	}
+    /**
+     * Return command's unique GUID.
+     */
+    const comet::uuid_t& canonical_name() const
+    {
+        return m_command.guid();
+    }
+        
+    /**
+     * Return command's title string.
+     *
+     * @param items  Optional array of PIDLs that command would be executed
+     *               upon.
+     */
+    std::wstring title(const comet::com_ptr<IShellItemArray>& items) const
+    {
+        return m_command.title(data_object_from_item_array(items));
+    }
 
-	/**
-	 * Return command's tool tip.
-	 *
-	 * @param items  Optional array of PIDLs that command would be executed
-	 *               upon.
-	 */
-	std::wstring tool_tip(const comet::com_ptr<IShellItemArray>& items) const
-	{
-		return m_command.tool_tip(data_object_from_item_array(items));
-	}
+    /**
+     * Return command's tool tip.
+     *
+     * @param items  Optional array of PIDLs that command would be executed
+     *               upon.
+     */
+    std::wstring tool_tip(const comet::com_ptr<IShellItemArray>& items) const
+    {
+        return m_command.tool_tip(data_object_from_item_array(items));
+    }
 
-	/**
-	 * Return command's icon descriptor.
-	 *
-	 * This takes the form "shell32.dll,-249" where 249 is the icon's
-	 * resource ID.
-	 *
-	 * @param items  Optional array of PIDLs that command would be executed 
-	 *               upon.
-	 */
-	std::wstring icon(const comet::com_ptr<IShellItemArray>& items) const
-	{
-		return m_command.icon_descriptor(data_object_from_item_array(items));
-	}
+    /**
+     * Return command's icon descriptor.
+     *
+     * This takes the form "shell32.dll,-249" where 249 is the icon's
+     * resource ID.
+     *
+     * @param items  Optional array of PIDLs that command would be executed 
+     *               upon.
+     */
+    std::wstring icon(const comet::com_ptr<IShellItemArray>& items) const
+    {
+        return m_command.icon_descriptor(data_object_from_item_array(items));
+    }
 
-	/**
-	 * Return the command's state given array of PIDLs.
-	 *
-	 * @param items          Optional array of PIDLs that command would be 
-	 *                       executed upon.
-	 * @param ok_to_be_slow  Indicates whether slow operations can be used
-	 *                       when calculating the state.  If false and slow
-	 *                       operations are required, throw E_PENDING.
-	 */
-	EXPCMDSTATE state(
-		const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow)
-	const
-	{
-		EXPCMDSTATE state = ECS_ENABLED;
-		comet::com_ptr<IDataObject> data_object = 
-			data_object_from_item_array(items);
+    /**
+     * Return the command's state given array of PIDLs.
+     *
+     * @param items          Optional array of PIDLs that command would be 
+     *                       executed upon.
+     * @param ok_to_be_slow  Indicates whether slow operations can be used
+     *                       when calculating the state.  If false and slow
+     *                       operations are required, throw E_PENDING.
+     */
+    EXPCMDSTATE state(
+        const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow)
+    const
+    {
+        EXPCMDSTATE state = ECS_ENABLED;
+        comet::com_ptr<IDataObject> data_object = 
+            data_object_from_item_array(items);
 
-		if (m_command.disabled(data_object, ok_to_be_slow))
-			state |= ECS_DISABLED;
-		if (m_command.hidden(data_object, ok_to_be_slow))
-			state |= ECS_HIDDEN;
-		return state;
-	}
+        if (m_command.disabled(data_object, ok_to_be_slow))
+            state |= ECS_DISABLED;
+        if (m_command.hidden(data_object, ok_to_be_slow))
+            state |= ECS_HIDDEN;
+        return state;
+    }
 
-	/**
-	 * Execute the code associated with this command.
-	 *
-	 * @param items     Optional array of PIDLs that command is executed upon.
-	 * @param bind_ctx  Optional bind context.
-	 */
-	void invoke(
-		const comet::com_ptr<IShellItemArray>& items,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const
-	{
-		m_command(data_object_from_item_array(items, bind_ctx), bind_ctx);
-	}
+    /**
+     * Execute the code associated with this command.
+     *
+     * @param items     Optional array of PIDLs that command is executed upon.
+     * @param bind_ctx  Optional bind context.
+     */
+    void invoke(
+        const comet::com_ptr<IShellItemArray>& items,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const
+    {
+        m_command(data_object_from_item_array(items, bind_ctx), bind_ctx);
+    }
 
-	command_type m_command;
+    command_type m_command;
 };
 
 
@@ -423,11 +423,11 @@ class CUICommand : public CUICommandImpl<T>
 {
 public:
 
-	typedef CUICommandImpl<T> super;
+    typedef CUICommandImpl<T> super;
 
 // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommand, super)
+    COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommand, super)
 
 #define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
@@ -448,24 +448,24 @@ class CUICommandWithSite : public CUICommandImpl<T, winapi::object_with_site>
 {
 public:
 
-	typedef CUICommandImpl<T, winapi::object_with_site> super;
+    typedef CUICommandImpl<T, winapi::object_with_site> super;
 
 // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommandWithSite, super)
+    COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, CUICommandWithSite, super)
 
 #define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
 private:
 
-	/**
-	 * Notify the command functor of the site we have been embedded in.
-	 */
-	virtual void on_set_site(comet::com_ptr<IUnknown> ole_site)
-	{
-		command().set_site(ole_site);
-	}
+    /**
+     * Notify the command functor of the site we have been embedded in.
+     */
+    virtual void on_set_site(comet::com_ptr<IUnknown> ole_site)
+    {
+        command().set_site(ole_site);
+    }
 };
 
 #undef COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR

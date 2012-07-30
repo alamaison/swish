@@ -1,11 +1,11 @@
 /**
     @file
 
-	Manage WinSparkle initialisation and cleanup.
+    Manage WinSparkle initialisation and cleanup.
 
-	@if license
+    @if license
 
-	Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,16 +36,16 @@ namespace frontend {
 class winsparkle_shower
 {
 public:
-	winsparkle_shower(
-		const std::string& appcast_url, const std::wstring& app_name,
-		const std::wstring& app_version, const std::wstring& company_name,
-		const std::string& relative_registry_path);
-	~winsparkle_shower();
+    winsparkle_shower(
+        const std::string& appcast_url, const std::wstring& app_name,
+        const std::wstring& app_version, const std::wstring& company_name,
+        const std::string& relative_registry_path);
+    ~winsparkle_shower();
 
-	void show();
+    void show();
 
 private:
-	bool m_needs_cleanup;
+    bool m_needs_cleanup;
 };
 
 }} // namespace swish::frontend

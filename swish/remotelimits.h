@@ -61,8 +61,8 @@
 // Complete connection description of the form:
 //     sftp://username@hostname:port/path
 #define MAX_CANONICAL_LEN \
-	(PROTOCOL_LEN + MAX_USERNAME_LEN + MAX_HOSTNAME_LEN \
-	+ MAX_PATH_LEN + MAX_PORT_STR_LEN + 2)
+    (PROTOCOL_LEN + MAX_USERNAME_LEN + MAX_HOSTNAME_LEN \
+    + MAX_PATH_LEN + MAX_PORT_STR_LEN + 2)
 
 #define MAX_LABEL_LEN             30 // Arbitrary - chosen to be easy to display
 #define MAX_LABEL_LENZ            31 

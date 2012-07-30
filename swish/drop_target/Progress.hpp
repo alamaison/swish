@@ -36,11 +36,11 @@ namespace drop_target {
 class Progress
 {
 public:
-	virtual ~Progress() {}
-	virtual bool user_cancelled() const = 0;
-	virtual void line(DWORD index, const std::wstring& text) = 0;
-	virtual void line_path(DWORD index, const std::wstring& text) = 0;
-	virtual void update(ULONGLONG so_far, ULONGLONG out_of) = 0;
+    virtual ~Progress() {}
+    virtual bool user_cancelled() const = 0;
+    virtual void line(DWORD index, const std::wstring& text) = 0;
+    virtual void line_path(DWORD index, const std::wstring& text) = 0;
+    virtual void update(ULONGLONG so_far, ULONGLONG out_of) = 0;
 };
 
 }}

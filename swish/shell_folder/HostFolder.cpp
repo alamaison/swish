@@ -102,8 +102,8 @@ namespace comet {
 
 template<> struct comtype<::IEnumIDList>
 {
-	static const ::IID& uuid() throw() { return ::IID_IEnumIDList; }
-	typedef ::IUnknown base;
+    static const ::IID& uuid() throw() { return ::IID_IEnumIDList; }
+    typedef ::IUnknown base;
 };
 
 template<> struct enumerated_type_of<IEnumIDList>
@@ -111,8 +111,8 @@ template<> struct enumerated_type_of<IEnumIDList>
 
 template<> struct comtype<IQueryAssociations>
 {
-	static const IID& uuid() { return IID_IQueryAssociations; }
-	typedef ::IUnknown base;
+    static const IID& uuid() { return IID_IQueryAssociations; }
+    typedef ::IUnknown base;
 };
 
 /**
@@ -120,12 +120,12 @@ template<> struct comtype<IQueryAssociations>
  */
 template<> struct impl::type_policy<PITEMID_CHILD>
 {
-	static void init(PITEMID_CHILD& raw_pidl, const cpidl_t& pidl) 
-	{
-		pidl.copy_to(raw_pidl);
-	}
+    static void init(PITEMID_CHILD& raw_pidl, const cpidl_t& pidl) 
+    {
+        pidl.copy_to(raw_pidl);
+    }
 
-	static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }	
+    static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }    
 };
 
 }
@@ -148,16 +148,16 @@ template<> struct impl::type_policy<PITEMID_CHILD>
  */
 IEnumIDList* CHostFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
-	UNREFERENCED_PARAMETER(hwnd); // No UI required to access registry
+    UNREFERENCED_PARAMETER(hwnd); // No UI required to access registry
 
-	// This folder only contains folders
-	if (!(flags & SHCONTF_FOLDERS) ||
-		(flags & (SHCONTF_NETPRINTERSRCH | SHCONTF_SHAREABLE)))
-		return NULL;
+    // This folder only contains folders
+    if (!(flags & SHCONTF_FOLDERS) ||
+        (flags & (SHCONTF_NETPRINTERSRCH | SHCONTF_SHAREABLE)))
+        return NULL;
 
-	// Load connections from HKCU\Software\Swish\Connections
-	return make_smart_enumeration<IEnumIDList>(
-		make_shared< vector<cpidl_t> >(LoadConnectionsFromRegistry())).detach();
+    // Load connections from HKCU\Software\Swish\Connections
+    return make_smart_enumeration<IEnumIDList>(
+        make_shared< vector<cpidl_t> >(LoadConnectionsFromRegistry())).detach();
 }
 
 /**
@@ -171,76 +171,76 @@ IEnumIDList* CHostFolder::enum_objects(HWND hwnd, SHCONTF flags)
  * of the path embedded in the host PIDL.
  */
 PIDLIST_RELATIVE CHostFolder::parse_display_name(
-	HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
-	ULONG* attributes_inout)
+    HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
+    ULONG* attributes_inout)
 {
-	trace(__FUNCTION__" called (display_name=%s)") % display_name;
+    trace(__FUNCTION__" called (display_name=%s)") % display_name;
 
-	// The string we are trying to parse should be of the form:
-	//    sftp://username@hostname:port/path
+    // The string we are trying to parse should be of the form:
+    //    sftp://username@hostname:port/path
 
-	wstring strDisplayName(display_name);
-	if (strDisplayName.empty())
-	{
-		PIDLIST_RELATIVE pidl;
-		root_pidl().copy_to(pidl);
-		return pidl;
-	}
+    wstring strDisplayName(display_name);
+    if (strDisplayName.empty())
+    {
+        PIDLIST_RELATIVE pidl;
+        root_pidl().copy_to(pidl);
+        return pidl;
+    }
 
-	// Must start with sftp://
-	if (strDisplayName.substr(0, 7) != L"sftp://")
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    // Must start with sftp://
+    if (strDisplayName.substr(0, 7) != L"sftp://")
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	// Must have @ to separate username from hostname
-	wstring::size_type nAt = strDisplayName.find_first_of(L'@', 7);
-	if (nAt == wstring::npos)
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    // Must have @ to separate username from hostname
+    wstring::size_type nAt = strDisplayName.find_first_of(L'@', 7);
+    if (nAt == wstring::npos)
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	// Must have : to separate hostname from port number
-	wstring::size_type nColon = strDisplayName.find_first_of(L':', 7);
-	if (nAt == wstring::npos)
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	if (nColon <= nAt)
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    // Must have : to separate hostname from port number
+    wstring::size_type nColon = strDisplayName.find_first_of(L':', 7);
+    if (nAt == wstring::npos)
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    if (nColon <= nAt)
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	// Must have / to separate port number from path
-	wstring::size_type nSlash = strDisplayName.find_first_of(L'/', 7);
-	if (nAt == wstring::npos)
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
-	if (nColon <= nAt)
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    // Must have / to separate port number from path
+    wstring::size_type nSlash = strDisplayName.find_first_of(L'/', 7);
+    if (nAt == wstring::npos)
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    if (nColon <= nAt)
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	wstring strUser = strDisplayName.substr(7, nAt - 7);
-	wstring strHost = strDisplayName.substr(nAt+1, nColon - (nAt+1));
-	wstring strPort = strDisplayName.substr(nColon+1, nAt - (nSlash+1));
-	wstring strPath = strDisplayName.substr(nSlash+1);
-	if (strUser.empty() || strHost.empty() || strPort.empty() ||
-		strPath.empty())
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    wstring strUser = strDisplayName.substr(7, nAt - 7);
+    wstring strHost = strDisplayName.substr(nAt+1, nColon - (nAt+1));
+    wstring strPort = strDisplayName.substr(nColon+1, nAt - (nSlash+1));
+    wstring strPath = strDisplayName.substr(nSlash+1);
+    if (strUser.empty() || strHost.empty() || strPort.empty() ||
+        strPath.empty())
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	int nPort = _wtoi(strPort.c_str());
-	if (nPort < MIN_PORT || nPort > MAX_PORT)
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    int nPort = _wtoi(strPort.c_str());
+    if (nPort < MIN_PORT || nPort > MAX_PORT)
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	// Create child PIDL for this path segment
-	cpidl_t pidl = create_host_itemid(strHost, strUser, strPath, nPort);
+    // Create child PIDL for this path segment
+    cpidl_t pidl = create_host_itemid(strHost, strUser, strPath, nPort);
 
-	com_ptr<IShellFolder> subfolder;
-	bind_to_object(
-		pidl.get(), bind_ctx, subfolder.iid(),
-		reinterpret_cast<void**>(subfolder.out()));
+    com_ptr<IShellFolder> subfolder;
+    bind_to_object(
+        pidl.get(), bind_ctx, subfolder.iid(),
+        reinterpret_cast<void**>(subfolder.out()));
 
-	wchar_t wszPath[MAX_PATH];
-	::StringCchCopyW(wszPath, ARRAYSIZE(wszPath), strPath.c_str());
+    wchar_t wszPath[MAX_PATH];
+    ::StringCchCopyW(wszPath, ARRAYSIZE(wszPath), strPath.c_str());
 
-	pidl_t pidl_path;
-	HRESULT hr = subfolder->ParseDisplayName(
-		hwnd, bind_ctx, wszPath, NULL, pidl_path.out(), attributes_inout);
-	if (FAILED(hr))
-		throw_com_error(subfolder.get(), hr);
+    pidl_t pidl_path;
+    HRESULT hr = subfolder->ParseDisplayName(
+        hwnd, bind_ctx, wszPath, NULL, pidl_path.out(), attributes_inout);
+    if (FAILED(hr))
+        throw_com_error(subfolder.get(), hr);
 
-	pidl_t pidl_out = root_pidl() + pidl_path;
-	return pidl_out.detach();
+    pidl_t pidl_out = root_pidl() + pidl_path;
+    return pidl_out.detach();
 }
 
 /**
@@ -250,52 +250,52 @@ PIDLIST_RELATIVE CHostFolder::parse_display_name(
  */
 STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
 {
-	if (::ILIsEmpty(pidl))
-		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    if (::ILIsEmpty(pidl))
+        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	wstring name;
+    wstring name;
 
-	if (flags & SHGDN_FORPARSING)
-	{
-		if (!(flags & SHGDN_INFOLDER))
-		{
-			// Bind to parent
-			com_ptr<IShellFolder> parent;
-			PCUITEMID_CHILD pidlThisFolder = NULL;
-			HRESULT hr = swish::windows_api::SHBindToParent(
-				root_pidl().get(), parent.iid(),
-				reinterpret_cast<void**>(parent.out()), &pidlThisFolder);
-			
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error(hr));
+    if (flags & SHGDN_FORPARSING)
+    {
+        if (!(flags & SHGDN_INFOLDER))
+        {
+            // Bind to parent
+            com_ptr<IShellFolder> parent;
+            PCUITEMID_CHILD pidlThisFolder = NULL;
+            HRESULT hr = swish::windows_api::SHBindToParent(
+                root_pidl().get(), parent.iid(),
+                reinterpret_cast<void**>(parent.out()), &pidlThisFolder);
+            
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(com_error(hr));
 
-			STRRET strret;
-			std::memset(&strret, 0, sizeof(strret));
-			hr = parent->GetDisplayNameOf(pidlThisFolder, flags, &strret);
-			if (FAILED(hr))
-				throw_com_error(parent.get(), hr);
+            STRRET strret;
+            std::memset(&strret, 0, sizeof(strret));
+            hr = parent->GetDisplayNameOf(pidlThisFolder, flags, &strret);
+            if (FAILED(hr))
+                throw_com_error(parent.get(), hr);
 
-			name = strret_to_string<wchar_t>(
-				strret, pidlThisFolder) + L'\\';
-		}
+            name = strret_to_string<wchar_t>(
+                strret, pidlThisFolder) + L'\\';
+        }
 
-		name += url_from_host_itemid(pidl, true);
-	}
-	else if (flags == SHGDN_NORMAL || flags & SHGDN_FORADDRESSBAR)
-	{
-		name = url_from_host_itemid(pidl, false);
-	}
-	else if (flags == SHGDN_INFOLDER || flags & SHGDN_FOREDITING)
-	{
-		name = host_itemid_view(pidl).label();
-	}
-	else
-	{
-		UNREACHABLE;
-		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	}
+        name += url_from_host_itemid(pidl, true);
+    }
+    else if (flags == SHGDN_NORMAL || flags & SHGDN_FORADDRESSBAR)
+    {
+        name = url_from_host_itemid(pidl, false);
+    }
+    else if (flags == SHGDN_INFOLDER || flags & SHGDN_FOREDITING)
+    {
+        name = host_itemid_view(pidl).label();
+    }
+    else
+    {
+        UNREACHABLE;
+        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    }
 
-	return string_to_strret(name);
+    return string_to_strret(name);
 }
 
 /**
@@ -304,11 +304,11 @@ STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
  * @todo  Support renaming host items.
  */
 PITEMID_CHILD CHostFolder::set_name_of(
-	HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/, const wchar_t* /*name*/,
-	SHGDNF /*flags*/)
+    HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/, const wchar_t* /*name*/,
+    SHGDNF /*flags*/)
 {
-	BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
-	return NULL;
+    BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
+    return NULL;
 }
 
 /**
@@ -317,13 +317,13 @@ PITEMID_CHILD CHostFolder::set_name_of(
  * @implementing folder_error_adapter
  */
 void CHostFolder::get_attributes_of(
-	UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
-	SFGAOF* attributes_inout)
+    UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+    SFGAOF* attributes_inout)
 {
-	(void)pidl_array; // All items are folders. No need to check PIDL.
-	(void)pidl_count;
+    (void)pidl_array; // All items are folders. No need to check PIDL.
+    (void)pidl_count;
 
-	DWORD dwAttribs = 0;
+    DWORD dwAttribs = 0;
     dwAttribs |= SFGAO_FOLDER;
     dwAttribs |= SFGAO_HASSUBFOLDER;
     *attributes_inout &= dwAttribs;
@@ -340,7 +340,7 @@ void CHostFolder::get_attributes_of(
  */
 SHCOLUMNID CHostFolder::map_column_to_scid(UINT column_index)
 {
-	return property_key_from_column_index(column_index).get();
+    return property_key_from_column_index(column_index).get();
 }
 
 /*--------------------------------------------------------------------------*/
@@ -356,8 +356,8 @@ SHCOLUMNID CHostFolder::map_column_to_scid(UINT column_index)
  */
 STDMETHODIMP CHostFolder::Extract( LPCTSTR, UINT, HICON *, HICON *, UINT )
 {
-	ATLTRACE("CHostFolder::Extract called\n");
-	return S_FALSE;
+    ATLTRACE("CHostFolder::Extract called\n");
+    return S_FALSE;
 }
 
 /**
@@ -368,18 +368,18 @@ STDMETHODIMP CHostFolder::Extract( LPCTSTR, UINT, HICON *, HICON *, UINT )
  * We set all SFTP hosts to have the icon from shell32.dll.
  */
 STDMETHODIMP CHostFolder::GetIconLocation(
-	__in UINT uFlags, __out_ecount(cchMax) LPTSTR szIconFile, 
-	__in UINT cchMax, __out int *piIndex, __out UINT *pwFlags )
+    __in UINT uFlags, __out_ecount(cchMax) LPTSTR szIconFile, 
+    __in UINT cchMax, __out int *piIndex, __out UINT *pwFlags )
 {
-	ATLTRACE("CHostFolder::GetIconLocation called\n");
-	(void)uFlags; // type of use is ignored for host folder
+    ATLTRACE("CHostFolder::GetIconLocation called\n");
+    (void)uFlags; // type of use is ignored for host folder
 
-	// Set host to have the ICS host icon
-	StringCchCopy(szIconFile, cchMax, L"shell32.dll");
-	*piIndex = 17;
-	*pwFlags = GIL_DONTCACHE;
+    // Set host to have the ICS host icon
+    StringCchCopy(szIconFile, cchMax, L"shell32.dll");
+    *piIndex = 17;
+    *pwFlags = GIL_DONTCACHE;
 
-	return S_OK;
+    return S_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -395,7 +395,7 @@ STDMETHODIMP CHostFolder::GetIconLocation(
  */
 CLSID CHostFolder::clsid() const
 {
-	return __uuidof(this);
+    return __uuidof(this);
 }
 
 /**
@@ -405,19 +405,19 @@ CLSID CHostFolder::clsid() const
  */
 void CHostFolder::validate_pidl(PCUIDLIST_RELATIVE pidl) const
 {
-	if (pidl == NULL)
-		BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+    if (pidl == NULL)
+        BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-	if (!host_itemid_view(pidl).valid())
-		BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    if (!host_itemid_view(pidl).valid())
+        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 }
 
 namespace {
 
-	com_ptr<ISftpConsumer> consumer_factory(HWND hwnd)
-	{
-		return new CUserInteraction(hwnd);
-	}
+    com_ptr<ISftpConsumer> consumer_factory(HWND hwnd)
+    {
+        return new CUserInteraction(hwnd);
+    }
 }
 
 /**
@@ -430,11 +430,11 @@ namespace {
  */
 CComPtr<IShellFolder> CHostFolder::subfolder(const cpidl_t& pidl)
 {
-	CComPtr<IShellFolder> folder = CRemoteFolder::Create(
-		(root_pidl() + pidl).get(), consumer_factory);
-	ATLENSURE_THROW(folder, E_NOINTERFACE);
+    CComPtr<IShellFolder> folder = CRemoteFolder::Create(
+        (root_pidl() + pidl).get(), consumer_factory);
+    ATLENSURE_THROW(folder, E_NOINTERFACE);
 
-	return folder;
+    return folder;
 }
 
 /**
@@ -442,7 +442,7 @@ CComPtr<IShellFolder> CHostFolder::subfolder(const cpidl_t& pidl)
  */
 variant_t CHostFolder::property(const property_key& key, const cpidl_t& pidl)
 {
-	return property_from_pidl(pidl, key);
+    return property_from_pidl(pidl, key);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -456,10 +456,10 @@ variant_t CHostFolder::property(const property_key& key, const cpidl_t& pidl)
  * Create a toolbar command provider for the folder.
  */
 CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
-	HWND hwnd)
+    HWND hwnd)
 {
-	TRACE("Request: IExplorerCommandProvider");
-	return host_folder_command_provider(hwnd, root_pidl()).get();
+    TRACE("Request: IExplorerCommandProvider");
+    return host_folder_command_provider(hwnd, root_pidl()).get();
 }
 
 /**
@@ -471,11 +471,11 @@ CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
  * itself. We don't need to look at the PIDLs as all host items are the same.
  */
 CComPtr<IExtractIconW> CHostFolder::extract_icon_w(
-	HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
+    HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
 {
-	TRACE("Request: IExtractIconW");
+    TRACE("Request: IExtractIconW");
 
-	return this;
+    return this;
 }
 
 /**
@@ -486,39 +486,39 @@ CComPtr<IExtractIconW> CHostFolder::extract_icon_w(
  * We don't need to look at the PIDLs as all host items are the same.
  */
 CComPtr<IQueryAssociations> CHostFolder::query_associations(
-	HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
+    HWND /*hwnd*/, UINT /*cpidl*/, PCUITEMID_CHILD_ARRAY /*apidl*/)
 {
-	TRACE("Request: IQueryAssociations");
+    TRACE("Request: IQueryAssociations");
 
-	CComPtr<IQueryAssociations> spAssoc;
-	HRESULT hr = ::AssocCreate(
-		CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
-	ATLENSURE_SUCCEEDED(hr);
+    CComPtr<IQueryAssociations> spAssoc;
+    HRESULT hr = ::AssocCreate(
+        CLSID_QueryAssociations, IID_PPV_ARGS(&spAssoc));
+    ATLENSURE_SUCCEEDED(hr);
 
-	// Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
-	LPOLESTR posz;
-	::StringFromCLSID(__uuidof(CHostFolder), &posz);
-	shared_ptr<OLECHAR> clsid(posz, ::CoTaskMemFree);
-	posz = NULL;
+    // Get CLSID in {DWORD-WORD-WORD-WORD-WORD.DWORD} form
+    LPOLESTR posz;
+    ::StringFromCLSID(__uuidof(CHostFolder), &posz);
+    shared_ptr<OLECHAR> clsid(posz, ::CoTaskMemFree);
+    posz = NULL;
 
-	// Initialise default assoc provider to use Swish CLSID key for data.
-	// This is necessary to pick up properties and TileInfo etc.
-	hr = spAssoc->Init(0, clsid.get(), NULL, NULL);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error_from_interface(spAssoc.p, hr));
+    // Initialise default assoc provider to use Swish CLSID key for data.
+    // This is necessary to pick up properties and TileInfo etc.
+    hr = spAssoc->Init(0, clsid.get(), NULL, NULL);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error_from_interface(spAssoc.p, hr));
 
-	return spAssoc;
+    return spAssoc;
 }
 
 namespace {
 
-	HRESULT CALLBACK menu_callback(
-		IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection, 
-		UINT message_id, WPARAM wparam, LPARAM lparam)
-	{
-		default_context_menu_callback callback;
-		return callback(hwnd_view, selection, message_id, wparam, lparam);
-	}
+    HRESULT CALLBACK menu_callback(
+        IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection, 
+        UINT message_id, WPARAM wparam, LPARAM lparam)
+    {
+        default_context_menu_callback callback;
+        return callback(hwnd_view, selection, message_id, wparam, lparam);
+    }
 
 }
 
@@ -528,38 +528,38 @@ namespace {
  * @implementing CSwishFolder
  */
 CComPtr<IContextMenu> CHostFolder::context_menu(
-	HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+    HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
 {
-	TRACE("Request: IContextMenu");
-	assert(cpidl > 0);
+    TRACE("Request: IContextMenu");
+    assert(cpidl > 0);
 
-	// Get keys associated with filetype from registry.
-	// We only take into account the item that was right-clicked on 
-	// (the first array element) even if this was a multi-selection.
-	//
-	// This article says that we don't need to specify the keys:
-	// http://groups.google.com/group/microsoft.public.platformsdk.shell/
-	// browse_thread/thread/6f07525eaddea29d/
-	// but we do for the context menu to appear in versions of Windows 
-	// earlier than Vista.
-	HKEY *akeys; UINT ckeys;
-	ATLENSURE_THROW(SUCCEEDED(
-		CRegistry::GetHostFolderAssocKeys(&ckeys, &akeys)),
-		E_UNEXPECTED  // Might fail if registry is corrupted
-	);
+    // Get keys associated with filetype from registry.
+    // We only take into account the item that was right-clicked on 
+    // (the first array element) even if this was a multi-selection.
+    //
+    // This article says that we don't need to specify the keys:
+    // http://groups.google.com/group/microsoft.public.platformsdk.shell/
+    // browse_thread/thread/6f07525eaddea29d/
+    // but we do for the context menu to appear in versions of Windows 
+    // earlier than Vista.
+    HKEY *akeys; UINT ckeys;
+    ATLENSURE_THROW(SUCCEEDED(
+        CRegistry::GetHostFolderAssocKeys(&ckeys, &akeys)),
+        E_UNEXPECTED  // Might fail if registry is corrupted
+    );
 
-	CComPtr<IShellFolder> spThisFolder = this;
-	ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
+    CComPtr<IShellFolder> spThisFolder = this;
+    ATLENSURE_THROW(spThisFolder, E_OUTOFMEMORY);
 
-	// Create default context menu from list of PIDLs
-	CComPtr<IContextMenu> spMenu;
-	HRESULT hr = ::CDefFolderMenu_Create2(
-		root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
-		menu_callback, ckeys, akeys, &spMenu);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error(hr));
+    // Create default context menu from list of PIDLs
+    CComPtr<IContextMenu> spMenu;
+    HRESULT hr = ::CDefFolderMenu_Create2(
+        root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
+        menu_callback, ckeys, akeys, &spMenu);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error(hr));
 
-	return spMenu;
+    return spMenu;
 }
 
 /**
@@ -568,23 +568,23 @@ CComPtr<IContextMenu> CHostFolder::context_menu(
  * @implementing CSwishFolder
  */
 CComPtr<IDataObject> CHostFolder::data_object(
-	HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
+    HWND /*hwnd*/, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl)
 {
-	TRACE("Request: IDataObject");
-	assert(cpidl > 0);
+    TRACE("Request: IDataObject");
+    assert(cpidl > 0);
 
-	// A DataObject is required in order for the call to 
-	// CDefFolderMenu_Create2 (above) to succeed on versions of Windows
-	// earlier than Vista
+    // A DataObject is required in order for the call to 
+    // CDefFolderMenu_Create2 (above) to succeed on versions of Windows
+    // earlier than Vista
 
-	CComPtr<IDataObject> spdo;
-	HRESULT hr = ::CIDLData_CreateFromIDArray(
-		root_pidl().get(), cpidl, 
-		reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error(hr));
+    CComPtr<IDataObject> spdo;
+    HRESULT hr = ::CIDLData_CreateFromIDArray(
+        root_pidl().get(), cpidl, 
+        reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error(hr));
 
-	return spdo;
+    return spdo;
 }
 
 /**
@@ -594,6 +594,6 @@ CComPtr<IDataObject> CHostFolder::data_object(
  */
 CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
 {
-	return new CViewCallback(root_pidl());
+    return new CViewCallback(root_pidl());
 }
 

@@ -34,8 +34,8 @@
 
 template<> struct comet::comtype<IDataObject>
 {
-	static const IID& uuid() throw() { return IID_IDataObject; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IDataObject; }
+    typedef IUnknown base;
 };
 
 namespace swish {
@@ -51,8 +51,8 @@ namespace nse {
  *          was empty.
  */
 comet::com_ptr<IDataObject> data_object_from_item_array(
-	comet::com_ptr<IShellItemArray> items,
-	comet::com_ptr<IBindCtx> bind_ctx=NULL);
+    comet::com_ptr<IShellItemArray> items,
+    comet::com_ptr<IBindCtx> bind_ctx=NULL);
 
 }} // namespace swish::nse
 

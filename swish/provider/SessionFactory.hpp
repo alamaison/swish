@@ -47,27 +47,27 @@ struct ISftpConsumer;
 class CSessionFactory
 {
 public:
-	static std::auto_ptr<CSession> CreateSftpSession(
-		const wchar_t* pwszHost, unsigned int uPort, const wchar_t* pwszUser,
-		__in ISftpConsumer* pConsumer);
+    static std::auto_ptr<CSession> CreateSftpSession(
+        const wchar_t* pwszHost, unsigned int uPort, const wchar_t* pwszUser,
+        __in ISftpConsumer* pConsumer);
 
 private:
-	static void _VerifyHostKey(
-		PCWSTR pwszHost, CSession& session, __in ISftpConsumer *pConsumer);
+    static void _VerifyHostKey(
+        PCWSTR pwszHost, CSession& session, __in ISftpConsumer *pConsumer);
 
-	static void _AuthenticateUser(
-		const wchar_t* pwszUser, CSession& session, 
-		__in ISftpConsumer* pConsumer);
+    static void _AuthenticateUser(
+        const wchar_t* pwszUser, CSession& session, 
+        __in ISftpConsumer* pConsumer);
 
-	static HRESULT _PasswordAuthentication(
-		const char* szUsername, CSession& session, 
-		__in ISftpConsumer* pConsumer);
+    static HRESULT _PasswordAuthentication(
+        const char* szUsername, CSession& session, 
+        __in ISftpConsumer* pConsumer);
 
-	static HRESULT _KeyboardInteractiveAuthentication(
-		const char*  szUsername, CSession& session, 
-		__in ISftpConsumer* pConsumer);
+    static HRESULT _KeyboardInteractiveAuthentication(
+        const char*  szUsername, CSession& session, 
+        __in ISftpConsumer* pConsumer);
 
-	static HRESULT _PublicKeyAuthentication(
-		const char*  szUsername, CSession& session, 
-		__in ISftpConsumer* pConsumer);
+    static HRESULT _PublicKeyAuthentication(
+        const char*  szUsername, CSession& session, 
+        __in ISftpConsumer* pConsumer);
 };

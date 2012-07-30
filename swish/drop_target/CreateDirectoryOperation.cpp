@@ -47,49 +47,49 @@ namespace swish {
 namespace drop_target {
 
 CreateDirectoryOperation::CreateDirectoryOperation(
-	const RootedSource& source, const SftpDestination& destination) :
+    const RootedSource& source, const SftpDestination& destination) :
 m_source(source), m_destination(destination) {}
 
 wstring CreateDirectoryOperation::title() const
 {
-	return (wformat(
-		translate(
-			"Top line of a transfer progress window saying which "
-			"file is being copied. {1} is replaced with the file path "
-			"and must be included in your translation.",
-			"Copying '{1}'"))
-		% m_source.relative_name()).str();
+    return (wformat(
+        translate(
+            "Top line of a transfer progress window saying which "
+            "file is being copied. {1} is replaced with the file path "
+            "and must be included in your translation.",
+            "Copying '{1}'"))
+        % m_source.relative_name()).str();
 }
 
 wstring CreateDirectoryOperation::description() const
 {
-	return (wformat(
-		translate(
-			"Second line of a transfer progress window giving the destination "
-			"directory. {1} is replaced with the directory path and must be "
-			"included in your translation.",
-			"To '{1}'"))
-		% m_destination.root_name()).str();
+    return (wformat(
+        translate(
+            "Second line of a transfer progress window giving the destination "
+            "directory. {1} is replaced with the directory path and must be "
+            "included in your translation.",
+            "To '{1}'"))
+        % m_destination.root_name()).str();
 }
 
 void CreateDirectoryOperation::operator()(
-	OperationCallback& callback,
-	com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
+    OperationCallback& callback,
+    com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
 {
-	callback.update_progress(0, 1);
+    callback.update_progress(0, 1);
 
-	resolved_destination resolved_target(m_destination.resolve_destination());
+    resolved_destination resolved_target(m_destination.resolve_destination());
 
-	CSftpDirectory sftp_directory(
-		resolved_target.directory(), provider, consumer);
-	sftp_directory.CreateDirectory(resolved_target.filename());
+    CSftpDirectory sftp_directory(
+        resolved_target.directory(), provider, consumer);
+    sftp_directory.CreateDirectory(resolved_target.filename());
 
-	callback.update_progress(1, 1);
+    callback.update_progress(1, 1);
 }
 
 Operation* CreateDirectoryOperation::do_clone() const
 {
-	return new CreateDirectoryOperation(*this);
+    return new CreateDirectoryOperation(*this);
 }
 
 }}

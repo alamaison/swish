@@ -37,57 +37,57 @@ using boost::filesystem::wpath;
 
 namespace {
 
-	class FgdFixture
-	{
-	public:
+    class FgdFixture
+    {
+    public:
 
-		static const size_t TEST_ALLOC_SIZE = 
-			sizeof(FILEGROUPDESCRIPTOR) + sizeof(FILEDESCRIPTOR);
+        static const size_t TEST_ALLOC_SIZE = 
+            sizeof(FILEGROUPDESCRIPTOR) + sizeof(FILEDESCRIPTOR);
 
-		/**
-		 * Allocate a fake FILEGROUPDESCRIPTOR with space for two
-		 * FILEDESCRIPTORS.
-		 */
-		FgdFixture() : 
-			m_hglobal(
-				::GlobalAlloc(GMEM_MOVEABLE, TEST_ALLOC_SIZE), ::GlobalFree)
-		{
-			BOOST_REQUIRE(m_hglobal.get());
+        /**
+         * Allocate a fake FILEGROUPDESCRIPTOR with space for two
+         * FILEDESCRIPTORS.
+         */
+        FgdFixture() : 
+            m_hglobal(
+                ::GlobalAlloc(GMEM_MOVEABLE, TEST_ALLOC_SIZE), ::GlobalFree)
+        {
+            BOOST_REQUIRE(m_hglobal.get());
 
-			FILEGROUPDESCRIPTOR* fgd = 
-				static_cast<FILEGROUPDESCRIPTOR*>(
-					::GlobalLock(m_hglobal.get()));
-			BOOST_REQUIRE(fgd);
+            FILEGROUPDESCRIPTOR* fgd = 
+                static_cast<FILEGROUPDESCRIPTOR*>(
+                    ::GlobalLock(m_hglobal.get()));
+            BOOST_REQUIRE(fgd);
 
-			fgd->cItems = 2;
+            fgd->cItems = 2;
 
-			FILEDESCRIPTOR fd1;
-			std::memset(&fd1, 0, sizeof(fd1));
-			wcscpy_s(fd1.cFileName, L"test/item/path");
+            FILEDESCRIPTOR fd1;
+            std::memset(&fd1, 0, sizeof(fd1));
+            wcscpy_s(fd1.cFileName, L"test/item/path");
 
-			FILEDESCRIPTOR fd2;
-			std::memset(&fd2, 0, sizeof(fd2));
-			wcscpy_s(fd2.cFileName, L"test\\item\\bob");
+            FILEDESCRIPTOR fd2;
+            std::memset(&fd2, 0, sizeof(fd2));
+            wcscpy_s(fd2.cFileName, L"test\\item\\bob");
 
-			fgd->fgd[0] = fd1;
-			fgd->fgd[1] = fd2;
+            fgd->fgd[0] = fd1;
+            fgd->fgd[1] = fd2;
 
-			BOOST_REQUIRE(::GlobalUnlock(fgd));
-		}
+            BOOST_REQUIRE(::GlobalUnlock(fgd));
+        }
 
-		/**
-		 * Return pointer to chunk of memory intialised with fake
-		 * FILEGROUPDESCRIPTOR.
-		 */
-		HGLOBAL get() const
-		{
-			return m_hglobal.get();
-		}
+        /**
+         * Return pointer to chunk of memory intialised with fake
+         * FILEGROUPDESCRIPTOR.
+         */
+        HGLOBAL get() const
+        {
+            return m_hglobal.get();
+        }
 
-	private:
-		shared_ptr<void> m_hglobal; // HGLOBAL
-	};
-	
+    private:
+        shared_ptr<void> m_hglobal; // HGLOBAL
+    };
+    
 
 }
 
@@ -99,7 +99,7 @@ BOOST_FIXTURE_TEST_SUITE(file_group_descriptor_tests, FgdFixture)
  */
 BOOST_AUTO_TEST_CASE( create )
 {
-	FileGroupDescriptor fgd(get());
+    FileGroupDescriptor fgd(get());
 }
 
 /**
@@ -107,9 +107,9 @@ BOOST_AUTO_TEST_CASE( create )
  */
 BOOST_AUTO_TEST_CASE( size )
 {
-	FileGroupDescriptor fgd(get());
-	size_t size = fgd.size();
-	BOOST_REQUIRE_EQUAL(size, 2U);
+    FileGroupDescriptor fgd(get());
+    size_t size = fgd.size();
+    BOOST_REQUIRE_EQUAL(size, 2U);
 }
 
 /**
@@ -117,10 +117,10 @@ BOOST_AUTO_TEST_CASE( size )
  */
 BOOST_AUTO_TEST_CASE( access )
 {
-	FileGroupDescriptor fgd(get());
-	BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
-	BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
-	BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
+    FileGroupDescriptor fgd(get());
+    BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
+    BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
 }
 
 /**
@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE( access )
  */
 BOOST_AUTO_TEST_CASE( bounds_error )
 {
-	FileGroupDescriptor fgd(get());
-	BOOST_REQUIRE_THROW(fgd[2], std::out_of_range);
+    FileGroupDescriptor fgd(get());
+    BOOST_REQUIRE_THROW(fgd[2], std::out_of_range);
 }
 
 /**
@@ -137,15 +137,15 @@ BOOST_AUTO_TEST_CASE( bounds_error )
  */
 BOOST_AUTO_TEST_CASE( descriptor_lifetime )
 {
-	FileGroupDescriptor fgd(get());
-	Descriptor d = fgd[0];
+    FileGroupDescriptor fgd(get());
+    Descriptor d = fgd[0];
 
-	{
-		FileGroupDescriptor scoped_fgd(get());
-		d = scoped_fgd[1];
-	}
+    {
+        FileGroupDescriptor scoped_fgd(get());
+        d = scoped_fgd[1];
+    }
 
-	BOOST_REQUIRE(d.path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE(d.path() == wpath(L"test\\item\\bob"));
 }
 
 /**
@@ -155,12 +155,12 @@ BOOST_AUTO_TEST_CASE( descriptor_lifetime )
  */
 BOOST_AUTO_TEST_CASE( descriptor_independence )
 {
-	FileGroupDescriptor fgd(get());
-	Descriptor d = fgd[1];
-	d.path(L"replaced/path");
+    FileGroupDescriptor fgd(get());
+    Descriptor d = fgd[1];
+    d.path(L"replaced/path");
 
-	BOOST_REQUIRE(d.path() == L"replaced/path");
-	BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE(d.path() == L"replaced/path");
+    BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
 }
 
 /**
@@ -170,12 +170,12 @@ BOOST_AUTO_TEST_CASE( descriptor_independence )
  */
 BOOST_AUTO_TEST_CASE( descriptor_access_byref )
 {
-	FileGroupDescriptor fgd(get());
-	fgd[1].path(L"replaced/path");
-	Descriptor d = fgd[1];
+    FileGroupDescriptor fgd(get());
+    fgd[1].path(L"replaced/path");
+    Descriptor d = fgd[1];
 
-	BOOST_REQUIRE(d.path() == L"replaced/path");
-	BOOST_REQUIRE(fgd[1].path() == L"replaced/path");
+    BOOST_REQUIRE(d.path() == L"replaced/path");
+    BOOST_REQUIRE(fgd[1].path() == L"replaced/path");
 }
 
 /**
@@ -185,11 +185,11 @@ BOOST_AUTO_TEST_CASE( descriptor_access_byref )
  */
 BOOST_AUTO_TEST_CASE( copy_construct )
 {
-	FileGroupDescriptor fgd_orig(get());
-	FileGroupDescriptor fgd = fgd_orig;
-	BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
-	BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
-	BOOST_REQUIRE_EQUAL(fgd.size(), 2U);
+    FileGroupDescriptor fgd_orig(get());
+    FileGroupDescriptor fgd = fgd_orig;
+    BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
+    BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE_EQUAL(fgd.size(), 2U);
 }
 
 /**
@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE( copy_construct )
  */
 BOOST_AUTO_TEST_CASE( copies_are_linked )
 {
-	FileGroupDescriptor fgd_orig(get());
-	FileGroupDescriptor fgd = fgd_orig;
-	
-	fgd[1].path(L"replaced/path");
+    FileGroupDescriptor fgd_orig(get());
+    FileGroupDescriptor fgd = fgd_orig;
+    
+    fgd[1].path(L"replaced/path");
 
-	BOOST_REQUIRE(fgd_orig[1].path() == L"replaced/path");
+    BOOST_REQUIRE(fgd_orig[1].path() == L"replaced/path");
 }
 
 /**
@@ -211,13 +211,13 @@ BOOST_AUTO_TEST_CASE( copies_are_linked )
  */
 BOOST_AUTO_TEST_CASE( descriptor_zero_init )
 {
-	Descriptor d;
-	const FILEDESCRIPTOR fd = d.get();
+    Descriptor d;
+    const FILEDESCRIPTOR fd = d.get();
 
-	FILEDESCRIPTOR fd_zero;
-	std::memset(&fd_zero, 0, sizeof(fd_zero));
+    FILEDESCRIPTOR fd_zero;
+    std::memset(&fd_zero, 0, sizeof(fd_zero));
 
-	BOOST_REQUIRE(!std::memcmp(&fd, &fd_zero, sizeof(fd)));
+    BOOST_REQUIRE(!std::memcmp(&fd, &fd_zero, sizeof(fd)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

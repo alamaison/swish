@@ -70,77 +70,77 @@ class CSftpDataObject : public CDataObject
 {
 public:
 
-	CSftpDataObject(
-		UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
-		__in PCIDLIST_ABSOLUTE pidlCommonParent,
-		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer);
+    CSftpDataObject(
+        UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
+        __in PCIDLIST_ABSOLUTE pidlCommonParent,
+        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer);
 
 public: // IDataObject methods
 
-	IFACEMETHODIMP GetData( 
-		__in FORMATETC *pformatetcIn,
-		__out STGMEDIUM *pmedium);
-	
+    IFACEMETHODIMP GetData( 
+        __in FORMATETC *pformatetcIn,
+        __out STGMEDIUM *pmedium);
+    
 private:
-	/**
-	 * Top-level PIDL types. These represent currently-selected items
-	 * and will always be single-level children of m_pidlCommonParent.
-	 */
-	// @{
-	typedef winapi::shell::pidl::cpidl_t TopLevelPidl;
-	typedef std::vector<TopLevelPidl> TopLevelList;
-	// @}
+    /**
+     * Top-level PIDL types. These represent currently-selected items
+     * and will always be single-level children of m_pidlCommonParent.
+     */
+    // @{
+    typedef winapi::shell::pidl::cpidl_t TopLevelPidl;
+    typedef std::vector<TopLevelPidl> TopLevelList;
+    // @}
 
-	/**
-	 * Expanded types.  The are the types that the top-level PIDLs are expanded
-	 * into when a file group descriptor is requested.  They can represent all
-	 * the items in or below the top-level and are needed in order to store 
-	 * entire directory trees in an IDataObject.
-	 */
-	// @{
-	typedef swish::shell_folder::data_object::Descriptor ExpandedItem;
-	typedef std::vector<ExpandedItem> ExpandedList;
-	// @}
+    /**
+     * Expanded types.  The are the types that the top-level PIDLs are expanded
+     * into when a file group descriptor is requested.  They can represent all
+     * the items in or below the top-level and are needed in order to store 
+     * entire directory trees in an IDataObject.
+     */
+    // @{
+    typedef swish::shell_folder::data_object::Descriptor ExpandedItem;
+    typedef std::vector<ExpandedItem> ExpandedList;
+    // @}
 
-	comet::com_ptr<ISftpProvider> m_provider; ///< Connection to backend
-	comet::com_ptr<ISftpConsumer> m_consumer; ///< UI callback
+    comet::com_ptr<ISftpProvider> m_provider; ///< Connection to backend
+    comet::com_ptr<ISftpConsumer> m_consumer; ///< UI callback
 
-	/** @name Cached PIDLs */
-	// @{
-	CAbsolutePidl m_pidlCommonParent;    ///< Parent of PIDLs in m_pidls
-	TopLevelList m_pidls;                ///< Top-level PIDLs (the selection)
-	// @}
+    /** @name Cached PIDLs */
+    // @{
+    CAbsolutePidl m_pidlCommonParent;    ///< Parent of PIDLs in m_pidls
+    TopLevelList m_pidls;                ///< Top-level PIDLs (the selection)
+    // @}
 
-	/** @name Registered CLIPFORMATS */
-	// @{
-	CLIPFORMAT m_cfPreferredDropEffect;  ///< CFSTR_PREFERREDDROPEFFECT
-	CLIPFORMAT m_cfFileDescriptor;       ///< CFSTR_FILEDESCRIPTOR
-	CLIPFORMAT m_cfFileContents;         ///< CFSTR_FILECONTENTS
-	// @}
+    /** @name Registered CLIPFORMATS */
+    // @{
+    CLIPFORMAT m_cfPreferredDropEffect;  ///< CFSTR_PREFERREDDROPEFFECT
+    CLIPFORMAT m_cfFileDescriptor;       ///< CFSTR_FILEDESCRIPTOR
+    CLIPFORMAT m_cfFileContents;         ///< CFSTR_FILECONTENTS
+    // @}
 
-	void _RenderCfPreferredDropEffect() throw(...);
+    void _RenderCfPreferredDropEffect() throw(...);
 
-	/** @name Delay-rendering */
-	//@{
-	bool m_fExpandedPidlList;         ///< Have we expanded top-level PIDLs?
-	bool m_fRenderedDescriptor;       ///< Have we rendered FileGroupDescriptor
+    /** @name Delay-rendering */
+    //@{
+    bool m_fExpandedPidlList;         ///< Have we expanded top-level PIDLs?
+    bool m_fRenderedDescriptor;       ///< Have we rendered FileGroupDescriptor
 
-	void _DelayRenderCfFileGroupDescriptor() throw(...);
-	STGMEDIUM _DelayRenderCfFileContents(long lindex) throw(...);
+    void _DelayRenderCfFileGroupDescriptor() throw(...);
+    STGMEDIUM _DelayRenderCfFileContents(long lindex) throw(...);
 
-	HGLOBAL _CreateFileGroupDescriptor();
-	comet::com_ptr<IStream> _CreateFileContentsStream(long lindex) throw(...);
+    HGLOBAL _CreateFileGroupDescriptor();
+    comet::com_ptr<IStream> _CreateFileContentsStream(long lindex) throw(...);
 
-	void _ExpandPidlsInto(__inout ExpandedList& descriptors) const throw(...);
-	void _ExpandTopLevelPidlInto(
-		const TopLevelPidl& pidl, __inout ExpandedList& descriptors)
-		const throw(...);
-	void _ExpandDirectoryTreeInto(
-		const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
-		__inout ExpandedList& descriptors) const throw(...);
-	comet::com_ptr<IEnumIDList> _GetEnumAll(const CAbsolutePidl& pidl)
-		const throw(...);
-	inline bool _WantProgressDialogue() const throw();
-	// @}
+    void _ExpandPidlsInto(__inout ExpandedList& descriptors) const throw(...);
+    void _ExpandTopLevelPidlInto(
+        const TopLevelPidl& pidl, __inout ExpandedList& descriptors)
+        const throw(...);
+    void _ExpandDirectoryTreeInto(
+        const CAbsolutePidl& pidlParent, const CRelativePidl& pidlDirectory,
+        __inout ExpandedList& descriptors) const throw(...);
+    comet::com_ptr<IEnumIDList> _GetEnumAll(const CAbsolutePidl& pidl)
+        const throw(...);
+    inline bool _WantProgressDialogue() const throw();
+    // @}
 };

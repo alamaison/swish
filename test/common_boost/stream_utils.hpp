@@ -35,7 +35,7 @@ namespace test {
 namespace stream_utils {
 
 size_t verify_stream_read(
-	void* data, size_t data_size, comet::com_ptr<IStream> stream);
+    void* data, size_t data_size, comet::com_ptr<IStream> stream);
 
 }} // namespace test::stream_utils
 

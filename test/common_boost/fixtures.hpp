@@ -44,16 +44,16 @@ namespace test {
 class ComFixture
 {
 public:
-	ComFixture()
-	{
-		HRESULT hr = ::CoInitialize(NULL);
-		BOOST_WARN_MESSAGE(SUCCEEDED(hr), "::CoInitialize failed");
-	}
+    ComFixture()
+    {
+        HRESULT hr = ::CoInitialize(NULL);
+        BOOST_WARN_MESSAGE(SUCCEEDED(hr), "::CoInitialize failed");
+    }
 
-	~ComFixture()
-	{
-		::CoUninitialize();
-	}
+    ~ComFixture()
+    {
+        ::CoUninitialize();
+    }
 };
 
 /**
@@ -62,19 +62,19 @@ public:
 class WinsockFixture
 {
 public:
-	WinsockFixture()
-	{
-		WSADATA wsadata;
-		int err = ::WSAStartup(MAKEWORD(2, 2), &wsadata);
-		if (err)
-			throw boost::system::system_error(
-				err, boost::system::get_system_category());
-	}
+    WinsockFixture()
+    {
+        WSADATA wsadata;
+        int err = ::WSAStartup(MAKEWORD(2, 2), &wsadata);
+        if (err)
+            throw boost::system::system_error(
+                err, boost::system::get_system_category());
+    }
 
-	~WinsockFixture()
-	{
-		::WSACleanup();
-	}
+    ~WinsockFixture()
+    {
+        ::WSACleanup();
+    }
 };
 
 /**
@@ -83,24 +83,24 @@ public:
 class OpenSshFixture : public WinsockFixture
 {
 public:
-	OpenSshFixture();
-	~OpenSshFixture();
+    OpenSshFixture();
+    ~OpenSshFixture();
 
-	int StopServer();
+    int StopServer();
 
-	std::string GetHost() const;
-	std::string GetUser() const;
-	int GetPort() const;
-	boost::filesystem::path PrivateKeyPath() const;
-	boost::filesystem::path PublicKeyPath() const;
-	std::string ToRemotePath(
-		boost::filesystem::path local_path) const;
-	boost::filesystem::wpath ToRemotePath(
-		boost::filesystem::wpath local_path) const;
+    std::string GetHost() const;
+    std::string GetUser() const;
+    int GetPort() const;
+    boost::filesystem::path PrivateKeyPath() const;
+    boost::filesystem::path PublicKeyPath() const;
+    std::string ToRemotePath(
+        boost::filesystem::path local_path) const;
+    boost::filesystem::wpath ToRemotePath(
+        boost::filesystem::wpath local_path) const;
 
 private:
-	int m_port;
-	boost::process::child m_sshd;
+    int m_port;
+    boost::process::child m_sshd;
 };
 
 /**
@@ -109,15 +109,15 @@ private:
 class SandboxFixture
 {
 public:
-	SandboxFixture();
-	~SandboxFixture();
+    SandboxFixture();
+    ~SandboxFixture();
 
-	boost::filesystem::wpath Sandbox();
-	boost::filesystem::wpath NewFileInSandbox();
-	boost::filesystem::wpath NewFileInSandbox(std::wstring name);
+    boost::filesystem::wpath Sandbox();
+    boost::filesystem::wpath NewFileInSandbox();
+    boost::filesystem::wpath NewFileInSandbox(std::wstring name);
 
 private:
-	boost::filesystem::wpath m_sandbox;
+    boost::filesystem::wpath m_sandbox;
 };
 
 } // namespace test

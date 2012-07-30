@@ -62,17 +62,17 @@ namespace remote_folder {
 
 namespace {
 
-	bool is_vista_or_greater()
-	{
-		OSVERSIONINFO version = OSVERSIONINFO();
-		version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		if (::GetVersionEx(&version) == FALSE)
-			BOOST_THROW_EXCEPTION(
-				enable_error_info(last_error()) << 
-				errinfo_api_function("GetVersionEx"));
+    bool is_vista_or_greater()
+    {
+        OSVERSIONINFO version = OSVERSIONINFO();
+        version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        if (::GetVersionEx(&version) == FALSE)
+            BOOST_THROW_EXCEPTION(
+                enable_error_info(last_error()) << 
+                errinfo_api_function("GetVersionEx"));
 
-		return version.dwMajorVersion > 5;
-	}
+        return version.dwMajorVersion > 5;
+    }
 }
 
 /**
@@ -82,7 +82,7 @@ namespace {
  *                     creating this callback object.
  */
 CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
-	m_folder_pidl(folder_pidl), m_hwnd_view(NULL) {}
+    m_folder_pidl(folder_pidl), m_hwnd_view(NULL) {}
 
 /**
  * The folder window is being created.
@@ -91,8 +91,8 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
  */
 bool CViewCallback::on_window_created(HWND hwnd_view)
 {
-	m_hwnd_view = hwnd_view;
-	return true;
+    m_hwnd_view = hwnd_view;
+    return true;
 }
 
 /**
@@ -105,13 +105,13 @@ bool CViewCallback::on_window_created(HWND hwnd_view)
  *        so maybe we should 'or' our extra events with it.
  */
 bool CViewCallback::on_get_notify(
-	PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
+    PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
 {
-	events = SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR |
-		SHCNE_UPDATEITEM | SHCNE_UPDATEDIR | SHCNE_RENAMEITEM |
-		SHCNE_RENAMEFOLDER;
-	pidl_monitor = m_folder_pidl.get(); // Owned by us
-	return true;
+    events = SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR |
+        SHCNE_UPDATEITEM | SHCNE_UPDATEDIR | SHCNE_RENAMEITEM |
+        SHCNE_RENAMEFOLDER;
+    pidl_monitor = m_folder_pidl.get(); // Owned by us
+    return true;
 }
 
 /**
@@ -119,61 +119,61 @@ bool CViewCallback::on_get_notify(
  * sort) has affected one of our item.  Just nod. If we don't it doesn't work.
  */
 bool CViewCallback::on_fs_notify(
-	PCIDLIST_ABSOLUTE /*pidl*/, LONG /*event*/)
+    PCIDLIST_ABSOLUTE /*pidl*/, LONG /*event*/)
 {
-	return true;
+    return true;
 }
 
 bool CViewCallback::on_get_webview_content(
-	SFV_WEBVIEW_CONTENT_DATA& content_out)
+    SFV_WEBVIEW_CONTENT_DATA& content_out)
 {
-	assert(content_out.pFolderTasksExpando == NULL);
-	assert(content_out.pExtraTasksExpando == NULL);
-	assert(content_out.pEnumRelatedPlaces == NULL);
+    assert(content_out.pFolderTasksExpando == NULL);
+    assert(content_out.pExtraTasksExpando == NULL);
+    assert(content_out.pEnumRelatedPlaces == NULL);
 
-	// HACK: webview conflicts with ExplorerCommands so we disable it if
-	//       ExplorerCommands are likely to be used.
-	if (is_vista_or_greater())
-		return false;
+    // HACK: webview conflicts with ExplorerCommands so we disable it if
+    //       ExplorerCommands are likely to be used.
+    if (is_vista_or_greater())
+        return false;
 
-	pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
-		remote_folder_task_pane_titles(m_hwnd_view, m_folder_pidl);
+    pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
+        remote_folder_task_pane_titles(m_hwnd_view, m_folder_pidl);
 
-	content_out.pExtraTasksExpando = tasks.first.detach();
-	content_out.pFolderTasksExpando = tasks.second.detach();
-	return true;
+    content_out.pExtraTasksExpando = tasks.first.detach();
+    content_out.pFolderTasksExpando = tasks.second.detach();
+    return true;
 }
 
 namespace {
-	com_ptr<ISftpConsumer> consumer(HWND hwnd)
-	{
-		return new CUserInteraction(hwnd);
-	}
+    com_ptr<ISftpConsumer> consumer(HWND hwnd)
+    {
+        return new CUserInteraction(hwnd);
+    }
 }
 
 bool CViewCallback::on_get_webview_tasks(
-	SFV_WEBVIEW_TASKSECTION_DATA& tasks_out)
+    SFV_WEBVIEW_TASKSECTION_DATA& tasks_out)
 {
-	//for some reason this fails on 64-bit
-	//assert(tasks_out.pEnumExtraTasks == NULL);
+    //for some reason this fails on 64-bit
+    //assert(tasks_out.pEnumExtraTasks == NULL);
 
-	assert(tasks_out.pEnumFolderTasks == NULL);
+    assert(tasks_out.pEnumFolderTasks == NULL);
 
 
-	// HACK: webview conflicts with ExplorerCommands so we disable it if
-	//       ExplorerCommands are likely to be used.
-	if (is_vista_or_greater())
-		return false;
+    // HACK: webview conflicts with ExplorerCommands so we disable it if
+    //       ExplorerCommands are likely to be used.
+    if (is_vista_or_greater())
+        return false;
 
-	pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
-		remote_folder_task_pane_tasks(
-			m_hwnd_view, m_folder_pidl, ole_site(),
-			bind(connection_from_pidl, m_folder_pidl, m_hwnd_view),
-			bind(&consumer, m_hwnd_view));
+    pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
+        remote_folder_task_pane_tasks(
+            m_hwnd_view, m_folder_pidl, ole_site(),
+            bind(connection_from_pidl, m_folder_pidl, m_hwnd_view),
+            bind(&consumer, m_hwnd_view));
 
-	tasks_out.pEnumExtraTasks = commands.first.detach();
-	tasks_out.pEnumFolderTasks = commands.second.detach();
-	return true;
+    tasks_out.pEnumExtraTasks = commands.first.detach();
+    tasks_out.pEnumFolderTasks = commands.second.detach();
+    return true;
 }
 
 }} // namespace swish::remote_folder

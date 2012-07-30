@@ -51,36 +51,36 @@ namespace drop_target {
 class resolved_destination
 {
 public:
-	resolved_destination(
-		const winapi::shell::pidl::apidl_t& remote_directory,
-		const std::wstring& filename)
-		: m_remote_directory(remote_directory), m_filename(filename)
-	{
-		if (boost::filesystem::wpath(m_filename).has_parent_path())
-			BOOST_THROW_EXCEPTION(
-				std::logic_error(
-					"Path not properly resolved; filename expected"));
-	}
+    resolved_destination(
+        const winapi::shell::pidl::apidl_t& remote_directory,
+        const std::wstring& filename)
+        : m_remote_directory(remote_directory), m_filename(filename)
+    {
+        if (boost::filesystem::wpath(m_filename).has_parent_path())
+            BOOST_THROW_EXCEPTION(
+                std::logic_error(
+                    "Path not properly resolved; filename expected"));
+    }
 
-	const winapi::shell::pidl::apidl_t& directory() const
-	{
-		return m_remote_directory;
-	}
+    const winapi::shell::pidl::apidl_t& directory() const
+    {
+        return m_remote_directory;
+    }
 
-	const std::wstring filename() const
-	{
-		return m_filename;
-	}
+    const std::wstring filename() const
+    {
+        return m_filename;
+    }
 
-	boost::filesystem::wpath as_absolute_path() const
-	{
-		return swish::remote_folder::absolute_path_from_swish_pidl(
-			m_remote_directory) / m_filename;
-	}
+    boost::filesystem::wpath as_absolute_path() const
+    {
+        return swish::remote_folder::absolute_path_from_swish_pidl(
+            m_remote_directory) / m_filename;
+    }
 
 private:
-	winapi::shell::pidl::apidl_t m_remote_directory;
-	std::wstring m_filename;
+    winapi::shell::pidl::apidl_t m_remote_directory;
+    std::wstring m_filename;
 };
 
 /**
@@ -95,48 +95,48 @@ private:
 class SftpDestination
 {
 public:
-	SftpDestination(
-		const winapi::shell::pidl::apidl_t& remote_root,
-		const boost::filesystem::wpath& relative_path)
-		: m_remote_root(remote_root), m_relative_path(relative_path)
-	{
-		if (relative_path.has_root_directory())
-			BOOST_THROW_EXCEPTION(
-				std::logic_error("Path must be relative to root"));
-	}
+    SftpDestination(
+        const winapi::shell::pidl::apidl_t& remote_root,
+        const boost::filesystem::wpath& relative_path)
+        : m_remote_root(remote_root), m_relative_path(relative_path)
+    {
+        if (relative_path.has_root_directory())
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Path must be relative to root"));
+    }
 
-	resolved_destination resolve_destination() const
-	{
-		winapi::shell::pidl::apidl_t directory = m_remote_root;
+    resolved_destination resolve_destination() const
+    {
+        winapi::shell::pidl::apidl_t directory = m_remote_root;
 
-		BOOST_FOREACH(
-			std::wstring intermediate_directory_name,
-			m_relative_path.parent_path())
-		{
-			directory += swish::remote_folder::create_remote_itemid(
-				intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
-				comet::datetime_t::now(), comet::datetime_t::now());
-		}
+        BOOST_FOREACH(
+            std::wstring intermediate_directory_name,
+            m_relative_path.parent_path())
+        {
+            directory += swish::remote_folder::create_remote_itemid(
+                intermediate_directory_name, true, false, L"", L"", 0, 0, 0, 0,
+                comet::datetime_t::now(), comet::datetime_t::now());
+        }
 
-		return resolved_destination(directory, m_relative_path.filename());
-	}
+        return resolved_destination(directory, m_relative_path.filename());
+    }
 
-	SftpDestination operator/(const boost::filesystem::wpath& path) const
-	{
-		return SftpDestination(m_remote_root, m_relative_path / path);
-	}
+    SftpDestination operator/(const boost::filesystem::wpath& path) const
+    {
+        return SftpDestination(m_remote_root, m_relative_path / path);
+    }
 
-	std::wstring root_name() const
-	{
-		using winapi::shell::pidl_shell_item;
+    std::wstring root_name() const
+    {
+        using winapi::shell::pidl_shell_item;
 
-		return pidl_shell_item(m_remote_root).friendly_name(
-			pidl_shell_item::friendly_name_type::absolute);
-	}
+        return pidl_shell_item(m_remote_root).friendly_name(
+            pidl_shell_item::friendly_name_type::absolute);
+    }
 
 private:
-	winapi::shell::pidl::apidl_t m_remote_root;
-	boost::filesystem::wpath m_relative_path;
+    winapi::shell::pidl::apidl_t m_remote_root;
+    boost::filesystem::wpath m_relative_path;
 };
 
 }}

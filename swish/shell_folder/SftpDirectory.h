@@ -1,7 +1,7 @@
 /**
     @file
 
-	Manage remote directory as a collection of PIDLs.
+    Manage remote directory as a collection of PIDLs.
 
     @if license
 
@@ -42,37 +42,37 @@
 class CSftpDirectory
 {
 public:
-	CSftpDirectory(
-		const winapi::shell::pidl::apidl_t& directory,
-		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer);
+    CSftpDirectory(
+        const winapi::shell::pidl::apidl_t& directory,
+        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer);
 
-	comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
-	CSftpDirectory GetSubdirectory(
-		const winapi::shell::pidl::cpidl_t& directory);
-	comet::com_ptr<IStream> GetFile(
-		const winapi::shell::pidl::cpidl_t& file, bool writeable);
-	comet::com_ptr<IStream> GetFileByPath(
-		const boost::filesystem::wpath& file, bool writeable);
+    comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
+    CSftpDirectory GetSubdirectory(
+        const winapi::shell::pidl::cpidl_t& directory);
+    comet::com_ptr<IStream> GetFile(
+        const winapi::shell::pidl::cpidl_t& file, bool writeable);
+    comet::com_ptr<IStream> GetFileByPath(
+        const boost::filesystem::wpath& file, bool writeable);
 
-	bool exists(const winapi::shell::pidl::cpidl_t& file);
+    bool exists(const winapi::shell::pidl::cpidl_t& file);
 
-	bool Rename(
-		const winapi::shell::pidl::cpidl_t& old_file,
-		const std::wstring& new_filename);
-	void Delete(
-		const winapi::shell::pidl::cpidl_t& file);
-	winapi::shell::pidl::cpidl_t CreateDirectory(const std::wstring& name);
-	winapi::shell::pidl::apidl_t ResolveLink(
-		const winapi::shell::pidl::cpidl_t& item);
+    bool Rename(
+        const winapi::shell::pidl::cpidl_t& old_file,
+        const std::wstring& new_filename);
+    void Delete(
+        const winapi::shell::pidl::cpidl_t& file);
+    winapi::shell::pidl::cpidl_t CreateDirectory(const std::wstring& name);
+    winapi::shell::pidl::apidl_t ResolveLink(
+        const winapi::shell::pidl::cpidl_t& item);
 
-	comet::enum_iterator<IEnumListing, swish::SmartListing> begin() const;
-	comet::enum_iterator<IEnumListing, swish::SmartListing> end() const;
+    comet::enum_iterator<IEnumListing, swish::SmartListing> begin() const;
+    comet::enum_iterator<IEnumListing, swish::SmartListing> end() const;
 
 private:
-	comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider
-	comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
-	boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
-	const winapi::shell::pidl::apidl_t m_directory_pidl;
-	                             ///< Absolute PIDL to this directory.
+    comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider
+    comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
+    boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
+    const winapi::shell::pidl::apidl_t m_directory_pidl;
+                                 ///< Absolute PIDL to this directory.
 };

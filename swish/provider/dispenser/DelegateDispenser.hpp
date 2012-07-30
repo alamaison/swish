@@ -49,26 +49,26 @@ public:
 
 public: // IParseDisplayName
 
-	IFACEMETHODIMP ParseDisplayName( 
-		IBindCtx* pbc, LPOLESTR pszDisplayName, ULONG* pchEaten, 
-		IMoniker** ppmkOut);
+    IFACEMETHODIMP ParseDisplayName( 
+        IBindCtx* pbc, LPOLESTR pszDisplayName, ULONG* pchEaten, 
+        IMoniker** ppmkOut);
 
 public: // IOleContainer
 
-	IFACEMETHODIMP EnumObjects(DWORD grfFlags, IEnumUnknown** ppenum);
+    IFACEMETHODIMP EnumObjects(DWORD grfFlags, IEnumUnknown** ppenum);
 
-	IFACEMETHODIMP LockContainer(BOOL fLock);
+    IFACEMETHODIMP LockContainer(BOOL fLock);
 
 public: // IOleItemContainer
 
-	IFACEMETHODIMP GetObject( 
-		LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
-		void** ppvObject);
+    IFACEMETHODIMP GetObject( 
+        LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
+        void** ppvObject);
 
-	IFACEMETHODIMP GetObjectStorage(
-		LPOLESTR pszItem, IBindCtx* pbc, REFIID riid, void** ppvStorage);
+    IFACEMETHODIMP GetObjectStorage(
+        LPOLESTR pszItem, IBindCtx* pbc, REFIID riid, void** ppvStorage);
 
-	IFACEMETHODIMP IsRunning(LPOLESTR pszItem);
+    IFACEMETHODIMP IsRunning(LPOLESTR pszItem);
 };
 
 }}} // namespace swish::provider::dispenser

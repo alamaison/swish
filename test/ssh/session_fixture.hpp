@@ -62,14 +62,14 @@ namespace detail {
  */
 inline std::string port_to_string(long port)
 {
-	std::ostringstream stream;
-	stream.imbue(std::locale::classic()); // force locale-independence
-	stream << port;
-	if (!stream)
-		BOOST_THROW_EXCEPTION(
-			std::logic_error("Unable to convert port number to string"));
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic()); // force locale-independence
+    stream << port;
+    if (!stream)
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Unable to convert port number to string"));
 
-	return stream.str();
+    return stream.str();
 }
 
 }
@@ -80,41 +80,41 @@ inline std::string port_to_string(long port)
 class session_fixture : public openssh_fixture
 {
 public:
-	session_fixture() : m_io(0), m_socket(m_io) {}
+    session_fixture() : m_io(0), m_socket(m_io) {}
 
-	boost::asio::ip::tcp::socket& open_socket(
-		const std::string host_name, int port)
-	{
-		using boost::asio::ip::tcp;
+    boost::asio::ip::tcp::socket& open_socket(
+        const std::string host_name, int port)
+    {
+        using boost::asio::ip::tcp;
 
-		tcp::resolver resolver(m_io);
-		typedef tcp::resolver::query Lookup;
-		Lookup query(host_name, detail::port_to_string(port));
+        tcp::resolver resolver(m_io);
+        typedef tcp::resolver::query Lookup;
+        Lookup query(host_name, detail::port_to_string(port));
 
-		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-		tcp::resolver::iterator end;
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+        tcp::resolver::iterator end;
 
-		boost::system::error_code error = boost::asio::error::host_not_found;
-		while (error && endpoint_iterator != end)
-		{
-			m_socket.close();
-			m_socket.connect(*endpoint_iterator++, error);
-		}
-		if (error)
-			BOOST_THROW_EXCEPTION(boost::system::system_error(error));
+        boost::system::error_code error = boost::asio::error::host_not_found;
+        while (error && endpoint_iterator != end)
+        {
+            m_socket.close();
+            m_socket.connect(*endpoint_iterator++, error);
+        }
+        if (error)
+            BOOST_THROW_EXCEPTION(boost::system::system_error(error));
 
-		return m_socket;
-	}
+        return m_socket;
+    }
 
-	::ssh::session test_session()
-	{
-		boost::asio::ip::tcp::socket& sock = open_socket(host(), port());
-		return ::ssh::session(sock.native());
-	}
+    ::ssh::session test_session()
+    {
+        boost::asio::ip::tcp::socket& sock = open_socket(host(), port());
+        return ::ssh::session(sock.native());
+    }
 
 private:
-	boost::asio::io_service m_io; ///< Boost IO system
-	boost::asio::ip::tcp::socket m_socket;
+    boost::asio::io_service m_io; ///< Boost IO system
+    boost::asio::ip::tcp::socket m_socket;
 };
 
 }} // namespace test::ssh

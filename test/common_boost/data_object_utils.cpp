@@ -59,21 +59,21 @@ using std::vector;
 
 namespace {
 
-	/**
-	 * Return the path of the currently running executable.
-	 */
-	wpath get_module_path(HMODULE hmodule=NULL)
-	{
-		vector<wchar_t> buffer(MAX_PATH);
-		unsigned long len = ::GetModuleFileNameW(
-			hmodule, &buffer[0], numeric_cast<unsigned long>(buffer.size()));
-		
-		if (len == 0)
-			BOOST_THROW_EXCEPTION(
-				system_error(::GetLastError(), get_system_category()));
+    /**
+     * Return the path of the currently running executable.
+     */
+    wpath get_module_path(HMODULE hmodule=NULL)
+    {
+        vector<wchar_t> buffer(MAX_PATH);
+        unsigned long len = ::GetModuleFileNameW(
+            hmodule, &buffer[0], numeric_cast<unsigned long>(buffer.size()));
+        
+        if (len == 0)
+            BOOST_THROW_EXCEPTION(
+                system_error(::GetLastError(), get_system_category()));
 
-		return wstring(&buffer[0], len);
-	}
+        return wstring(&buffer[0], len);
+    }
 
 }
 
@@ -93,13 +93,13 @@ namespace data_object_utils {
  */
 wpath create_test_zip_file(const wpath& in_directory)
 {
-	wpath source = get_module_path().parent_path()
-		/ L"test_zip_file.zip";
-	wpath destination = in_directory / L"test_zip_file.zip";
+    wpath source = get_module_path().parent_path()
+        / L"test_zip_file.zip";
+    wpath destination = in_directory / L"test_zip_file.zip";
 
-	copy_file(source, destination);
+    copy_file(source, destination);
 
-	return destination;
+    return destination;
 }
 
 /**
@@ -107,35 +107,35 @@ wpath create_test_zip_file(const wpath& in_directory)
  */
 com_ptr<IDataObject> data_object_for_zipfile(const wpath& zip_file)
 {
-	shared_ptr<ITEMIDLIST_ABSOLUTE> zip_pidl = pidl_from_path(zip_file);
-	com_ptr<IShellFolder> zip_folder = 
-		bind_to_handler_object<IShellFolder>(zip_pidl.get());
+    shared_ptr<ITEMIDLIST_ABSOLUTE> zip_pidl = pidl_from_path(zip_file);
+    com_ptr<IShellFolder> zip_folder = 
+        bind_to_handler_object<IShellFolder>(zip_pidl.get());
 
-	com_ptr<IEnumIDList> enum_items;
-	HRESULT hr = zip_folder->EnumObjects(
-		NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, enum_items.out());
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(com_error_from_interface(zip_folder, hr));
+    com_ptr<IEnumIDList> enum_items;
+    HRESULT hr = zip_folder->EnumObjects(
+        NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, enum_items.out());
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error_from_interface(zip_folder, hr));
 
-	enum_items->Reset();
+    enum_items->Reset();
 
-	vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
-	while (hr == S_OK)
-	{
-		PITEMID_CHILD pidl;
-		hr = enum_items->Next(1, &pidl, NULL);
-		if (hr == S_OK)
-		{
-			shared_ptr<ITEMID_CHILD> child_pidl(pidl, ::ILFree);
+    vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
+    while (hr == S_OK)
+    {
+        PITEMID_CHILD pidl;
+        hr = enum_items->Next(1, &pidl, NULL);
+        if (hr == S_OK)
+        {
+            shared_ptr<ITEMID_CHILD> child_pidl(pidl, ::ILFree);
 
-			pidls.push_back(
-				shared_ptr<ITEMIDLIST_ABSOLUTE>(
-					::ILCombine(zip_pidl.get(), child_pidl.get()),
-					::ILFree));
-		}
-	}
+            pidls.push_back(
+                shared_ptr<ITEMIDLIST_ABSOLUTE>(
+                    ::ILCombine(zip_pidl.get(), child_pidl.get()),
+                    ::ILFree));
+        }
+    }
 
-	return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
+    return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
 }
 
 }} // namespace test::data_object_utils

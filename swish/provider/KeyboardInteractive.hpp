@@ -42,59 +42,59 @@
 struct ISftpConsumer;
 
 typedef struct _LIBSSH2_USERAUTH_KBDINT_PROMPT  // Forward-decls
-	LIBSSH2_USERAUTH_KBDINT_PROMPT;
+    LIBSSH2_USERAUTH_KBDINT_PROMPT;
 typedef struct _LIBSSH2_USERAUTH_KBDINT_RESPONSE
-	LIBSSH2_USERAUTH_KBDINT_RESPONSE;
+    LIBSSH2_USERAUTH_KBDINT_RESPONSE;
 
 class CKeyboardInteractive
 {
 public:
-	typedef ATL::CComSafeArray<BSTR> PromptArray;
-	typedef ATL::CComSafeArray<VARIANT_BOOL> EchoArray;
-	typedef ATL::CComSafeArray<BSTR> ResponseArray;
+    typedef ATL::CComSafeArray<BSTR> PromptArray;
+    typedef ATL::CComSafeArray<VARIANT_BOOL> EchoArray;
+    typedef ATL::CComSafeArray<BSTR> ResponseArray;
 
-	CKeyboardInteractive(__in ISftpConsumer *pConsumer) throw();
+    CKeyboardInteractive(__in ISftpConsumer *pConsumer) throw();
 
-	void SetErrorState(HRESULT hr) throw();
-	HRESULT GetErrorState() throw();
-	
-	__callback static void OnKeyboardInteractive(
-		__in_bcount(name_len) const char *name, int name_len,
-		__in_bcount(instruction_len) const char *instruction,
-		int instruction_len, int num_prompts,
-		__in_ecount(num_prompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts, 
-		__out_ecount(num_prompts) LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses,
-		__deref_inout void **abstract) throw();
+    void SetErrorState(HRESULT hr) throw();
+    HRESULT GetErrorState() throw();
+    
+    __callback static void OnKeyboardInteractive(
+        __in_bcount(name_len) const char *name, int name_len,
+        __in_bcount(instruction_len) const char *instruction,
+        int instruction_len, int num_prompts,
+        __in_ecount(num_prompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts, 
+        __out_ecount(num_prompts) LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses,
+        __deref_inout void **abstract) throw();
 
 private:
-	inline ResponseArray _SendRequest(
-		__in const BSTR bstrName, __in const BSTR bstrInstruction,
-		__in PromptArray& saPrompts, __in EchoArray& saShowPrompts) throw(...);
+    inline ResponseArray _SendRequest(
+        __in const BSTR bstrName, __in const BSTR bstrInstruction,
+        __in PromptArray& saPrompts, __in EchoArray& saShowPrompts) throw(...);
 
-	static inline PromptArray _PackPromptSafearray(
-		int cPrompts,
-		__in_ecount(cPrompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts)
-		throw();
+    static inline PromptArray _PackPromptSafearray(
+        int cPrompts,
+        __in_ecount(cPrompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts)
+        throw();
 
-	static inline EchoArray _PackEchoSafearray(
-		int cPrompts,
-		__in_ecount(cPrompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts)
-		throw();
-	
-	static inline void _ProcessResponses(
-		__in ResponseArray& saResponses,
-		int cPrompts,
-		__out_ecount(cPrompts) LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses)
-		throw();
+    static inline EchoArray _PackEchoSafearray(
+        int cPrompts,
+        __in_ecount(cPrompts) const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts)
+        throw();
+    
+    static inline void _ProcessResponses(
+        __in ResponseArray& saResponses,
+        int cPrompts,
+        __out_ecount(cPrompts) LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses)
+        throw();
 
-	ATL::CComPtr<ISftpConsumer> m_spConsumer;
+    ATL::CComPtr<ISftpConsumer> m_spConsumer;
 
-	/** @name Delayed-error holder */
-	// As we cannot safely throw an exception throw the C code which calls
-	// OnKeyboardInteractive, we must cache any error here and the
-	// code which invokes the Libssh2 C library call must check for an error
-	// afterwards.
-	// @{
-	HRESULT m_hr;
-	// @}
+    /** @name Delayed-error holder */
+    // As we cannot safely throw an exception throw the C code which calls
+    // OnKeyboardInteractive, we must cache any error here and the
+    // code which invokes the Libssh2 C library call must check for an error
+    // afterwards.
+    // @{
+    HRESULT m_hr;
+    // @}
 };

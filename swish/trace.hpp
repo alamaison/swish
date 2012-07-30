@@ -57,83 +57,83 @@ namespace tracing {
 
 namespace {
 
-	/**
-	 * Debug tracer.
-	 */
-	class Tracer
-	{
-	public:
-		Tracer()
-		{		
-			::_CrtSetReportMode(
-				_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
-			::_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-		}
+    /**
+     * Debug tracer.
+     */
+    class Tracer
+    {
+    public:
+        Tracer()
+        {        
+            ::_CrtSetReportMode(
+                _CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+            ::_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+        }
 
-		/**
-		 * Output the trace message and break to a new line.
-		 */
-		void trace(const std::string& message) const
-		{
-			std::string line = message + "\n";
-			::_CrtDbgReport(_CRT_WARN, NULL, 0, NULL, line.c_str());
-		}
-	};
+        /**
+         * Output the trace message and break to a new line.
+         */
+        void trace(const std::string& message) const
+        {
+            std::string line = message + "\n";
+            ::_CrtDbgReport(_CRT_WARN, NULL, 0, NULL, line.c_str());
+        }
+    };
 
-	/**
-	 * Helper class to give same usage for boost-style formatting as printf.
-	 *
-	 * I.e:
-	 *     trace("%s %d") % "argument" % 42;
-	 * behaves indentically to:
-	 *     trace_f("%s %d", "argument", 42);
-	 *
-	 * This works because the temporary TraceFormatter returned by trace() is
-	 * destroyed only after the final operator% call is made.  On destruction,
-	 * the formatter outputs the fed values to the tracer.
-	 *
-	 * @see swish::tracing::trace()
-	 */
-	class TraceFormatter
-	{
-	public:
-	
-		typedef boost::archive::iterators::mb_from_wchar<
-			std::wstring::const_iterator>
-		converter;
+    /**
+     * Helper class to give same usage for boost-style formatting as printf.
+     *
+     * I.e:
+     *     trace("%s %d") % "argument" % 42;
+     * behaves indentically to:
+     *     trace_f("%s %d", "argument", 42);
+     *
+     * This works because the temporary TraceFormatter returned by trace() is
+     * destroyed only after the final operator% call is made.  On destruction,
+     * the formatter outputs the fed values to the tracer.
+     *
+     * @see swish::tracing::trace()
+     */
+    class TraceFormatter
+    {
+    public:
+    
+        typedef boost::archive::iterators::mb_from_wchar<
+            std::wstring::const_iterator>
+        converter;
 
-		TraceFormatter(const std::string& format) : m_format(format) {}
+        TraceFormatter(const std::string& format) : m_format(format) {}
 
-		~TraceFormatter() throw()
-		{
-			try
-			{
-				static Tracer tracer;
-				tracer.trace(m_format.str());
-			}
-			catch (...) {}
-		}
+        ~TraceFormatter() throw()
+        {
+            try
+            {
+                static Tracer tracer;
+                tracer.trace(m_format.str());
+            }
+            catch (...) {}
+        }
 
-		/**
-		 * Feeding operator that narrows wstring values for output.
-		 */
-		TraceFormatter& operator%(const std::wstring& value)
-		{
-			m_format % std::string(
-				converter(value.begin()), converter(value.end()));;
-			return *this;
-		}
+        /**
+         * Feeding operator that narrows wstring values for output.
+         */
+        TraceFormatter& operator%(const std::wstring& value)
+        {
+            m_format % std::string(
+                converter(value.begin()), converter(value.end()));;
+            return *this;
+        }
 
-		template<typename T>
-		TraceFormatter& operator%(const T& value)
-		{
-			m_format % value;
-			return *this;
-		}
+        template<typename T>
+        TraceFormatter& operator%(const T& value)
+        {
+            m_format % value;
+            return *this;
+        }
 
-	private:
-		boost::format m_format;
-	};
+    private:
+        boost::format m_format;
+    };
 
 }
 
@@ -147,7 +147,7 @@ namespace {
  */
 inline TraceFormatter trace(const std::string& format)
 {
-	return TraceFormatter(format);
+    return TraceFormatter(format);
 }
 
 /**
@@ -158,30 +158,30 @@ inline TraceFormatter trace(const std::string& format)
  */
 inline void trace_f(std::string format, ...)
 {
-	//
-	// WARNING: mustn't change format to a reference - this breaks varargs
-	//
+    //
+    // WARNING: mustn't change format to a reference - this breaks varargs
+    //
 
-	std::va_list arglist;
-	va_start(arglist, format);
+    std::va_list arglist;
+    va_start(arglist, format);
 
-	try
-	{
-		int cch = ::_vscprintf(format.c_str(), arglist) + 1;
-		std::vector<char> buffer(cch);
+    try
+    {
+        int cch = ::_vscprintf(format.c_str(), arglist) + 1;
+        std::vector<char> buffer(cch);
 #pragma warning(push)
 #pragma warning(disable:4996) // unsafe function
-		::_vsnprintf(&buffer[0], buffer.size(), format.c_str(), arglist);
+        ::_vsnprintf(&buffer[0], buffer.size(), format.c_str(), arglist);
 #pragma warning(pop)
-		trace(&buffer[0]);
-	}
-	catch (...)
-	{
-		va_end(arglist);
-		throw;
-	}
-	
-	va_end(arglist);
+        trace(&buffer[0]);
+    }
+    catch (...)
+    {
+        va_end(arglist);
+        throw;
+    }
+    
+    va_end(arglist);
 }
 
 }} // namespace swish::trace
@@ -193,21 +193,21 @@ namespace tracing {
 
 namespace {
 
-	class DummyFormatter
-	{
-	public:
-		template<typename T>
-		DummyFormatter& operator%(const T&)
-		{
-			return *this;
-		}
-	};
+    class DummyFormatter
+    {
+    public:
+        template<typename T>
+        DummyFormatter& operator%(const T&)
+        {
+            return *this;
+        }
+    };
 
 }
 
 inline DummyFormatter trace(const std::string&)
 {
-	return DummyFormatter();
+    return DummyFormatter();
 }
 
 inline void trace_f(std::string, ...) {}

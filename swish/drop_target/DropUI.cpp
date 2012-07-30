@@ -65,26 +65,26 @@ using std::wstring;
 
 template<> struct comet::comtype<IOleWindow>
 {
-	static const IID& uuid() throw() { return IID_IOleWindow; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IOleWindow; }
+    typedef IUnknown base;
 };
 
 template<> struct comet::comtype<IOleInPlaceFrame>
 {
-	static const IID& uuid() throw() { return IID_IOleInPlaceFrame; }
-	typedef IOleInPlaceUIWindow base;
+    static const IID& uuid() throw() { return IID_IOleInPlaceFrame; }
+    typedef IOleInPlaceUIWindow base;
 };
 
 template<> struct comet::comtype<IShellBrowser>
 {
-	static const IID& uuid() throw() { return IID_IShellBrowser; }
-	typedef IOleWindow base;
+    static const IID& uuid() throw() { return IID_IShellBrowser; }
+    typedef IOleWindow base;
 };
 
 template<> struct comet::comtype<IShellView>
 {
-	static const IID& uuid() throw() { return IID_IShellView; }
-	typedef IOleWindow base;
+    static const IID& uuid() throw() { return IID_IShellView; }
+    typedef IOleWindow base;
 };
 
 namespace swish {
@@ -92,204 +92,204 @@ namespace drop_target {
 
 namespace {
 
-	/**
-	 * Set site UI modality.
-	 *
-	 * There are many types of OLE site with subtly different EnableModeless
-	 * methods.  Try them in turn until one works.
-	 *
-	 * @todo  Add more supported site types.
-	 */
-	void modal(com_ptr<IUnknown> site, bool state)
-	{
-		BOOL enable = (state) ? TRUE : FALSE;
-
-		if (com_ptr<IShellBrowser> browser = com_cast(site))
-		{
-			HRESULT hr = browser->EnableModelessSB(enable);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(browser, hr));
-		}
-		else if (com_ptr<IOleInPlaceFrame> ole_frame = com_cast(site))
-		{
-			HRESULT hr = ole_frame->EnableModeless(enable);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(ole_frame, hr));
-		}
-		else if (com_ptr<IShellView> view = com_cast(site))
-		{
-			HRESULT hr = view->EnableModeless(state);
-			if (FAILED(hr))
-				BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
-		}
-		else
-		{
-			BOOST_THROW_EXCEPTION(com_error("No supported site found"));
-		}
-	}
-
-	/**
-	 * Prevent the OLE site from showing UI for scope of this object.
-	 *
-	 * The idea here is that we are about to display something like a modal
-	 * dialogue box and we don't want our OLE container, such as the Explorer
-	 * browser, showing its own non-modal (or even modal?) UI at the same time.
-	 *
-	 * OLE sites provides the EnableModeless method to disable UI for a
-	 * time and this class makes sure it is reenabled safely when we go out
-	 * of scope.
-	 *
-	 * If we fail to call this method because, for instance we can't find a
-	 * suitable site we swallow the error.  This failure isn't serious enough
-	 * to warrant aborting whatever wider task we're trying to achieve.
-	 */
-	class AutoModal
-	{
-	public:
-
-		AutoModal(com_ptr<IUnknown> site) : m_site(site)
-		{
-			try
-			{
-				modal(m_site, false);
-			}
-			catch (const std::exception& e)
-			{
-				trace("Unable to make OLE site non-modal: %s") % e.what();
-			}
-		}
-
-		~AutoModal()
-		{
-			try
-			{
-				modal(m_site, true);
-			}
-			catch (const std::exception& e)
-			{
-				trace("AutoModal threw in destructor: %s") % e.what();
-				assert(false);
-			}
-		}
-
-	private:
-		com_ptr<IUnknown> m_site;
-	};
-
-	/**
-	 * Ask windowed OLE container for its window handle.
-	 *
-	 * There are different types of OLE object with which could support this
-	 * operation.  Try them in turn until one works.
+    /**
+     * Set site UI modality.
      *
-	 * @todo  Add more supported OLE object types.
-	 */
-	HWND hwnd_from_ole_window(com_ptr<IUnknown> ole_window)
-	{
-		HWND hwnd = NULL;
+     * There are many types of OLE site with subtly different EnableModeless
+     * methods.  Try them in turn until one works.
+     *
+     * @todo  Add more supported site types.
+     */
+    void modal(com_ptr<IUnknown> site, bool state)
+    {
+        BOOL enable = (state) ? TRUE : FALSE;
 
-		if (com_ptr<IOleWindow> window = com_cast(ole_window))
-		{
-			window->GetWindow(&hwnd);
-		}
-		else if (com_ptr<IShellView> view = com_cast(ole_window))
-		{
-			view->GetWindow(&hwnd);
-		}
+        if (com_ptr<IShellBrowser> browser = com_cast(site))
+        {
+            HRESULT hr = browser->EnableModelessSB(enable);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(com_error_from_interface(browser, hr));
+        }
+        else if (com_ptr<IOleInPlaceFrame> ole_frame = com_cast(site))
+        {
+            HRESULT hr = ole_frame->EnableModeless(enable);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(com_error_from_interface(ole_frame, hr));
+        }
+        else if (com_ptr<IShellView> view = com_cast(site))
+        {
+            HRESULT hr = view->EnableModeless(state);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(com_error("No supported site found"));
+        }
+    }
 
-		return hwnd;
-	}
-	
+    /**
+     * Prevent the OLE site from showing UI for scope of this object.
+     *
+     * The idea here is that we are about to display something like a modal
+     * dialogue box and we don't want our OLE container, such as the Explorer
+     * browser, showing its own non-modal (or even modal?) UI at the same time.
+     *
+     * OLE sites provides the EnableModeless method to disable UI for a
+     * time and this class makes sure it is reenabled safely when we go out
+     * of scope.
+     *
+     * If we fail to call this method because, for instance we can't find a
+     * suitable site we swallow the error.  This failure isn't serious enough
+     * to warrant aborting whatever wider task we're trying to achieve.
+     */
+    class AutoModal
+    {
+    public:
 
-	/**
-	 * Exception-safe lifetime manager for an IProgressDialog object.
-	 *
-	 * Calls StartProgressDialog when created and StopProgressDialog when
-	 * destroyed.
-	 */
-	class AutoStartProgressDialog : public Progress
-	{
-	public:
-		AutoStartProgressDialog(
-			com_ptr<IProgressDialog> progress_instance, HWND hwnd,
-			const wstring& title, com_ptr<IUnknown> ole_site=NULL)
-			:
-			m_inner(
-				new	progress(
-					progress_instance, hwnd, title,
-					progress::modality::non_modal,
-					progress::time_estimation::automatic_time_estimate,
-					progress::bar_type::progress,
-					progress::minimisable::yes,
-					progress::cancellability::cancellable, ole_site))
-		{}
+        AutoModal(com_ptr<IUnknown> site) : m_site(site)
+        {
+            try
+            {
+                modal(m_site, false);
+            }
+            catch (const std::exception& e)
+            {
+                trace("Unable to make OLE site non-modal: %s") % e.what();
+            }
+        }
 
-		/**
-		 * Has the user cancelled the operation via the progress dialogue?
-		 */
-		bool user_cancelled() const
-		{
-			return m_inner->user_cancelled();
-		}
+        ~AutoModal()
+        {
+            try
+            {
+                modal(m_site, true);
+            }
+            catch (const std::exception& e)
+            {
+                trace("AutoModal threw in destructor: %s") % e.what();
+                assert(false);
+            }
+        }
 
-		/**
-		 * Set the indexth line of the display to the given text.
-		 */
-		void line(DWORD index, const wstring& text)
-		{
-			m_inner->line(index, text);
-		}
+    private:
+        com_ptr<IUnknown> m_site;
+    };
 
-		/**
-		 * Set the indexth line of the display to the given path.
-		 *
-		 * Uses the inbuilt path compression.
-		 */
-		void line_path(DWORD index, const wstring& text)
-		{
-			m_inner->line_compress_paths_if_needed(index, text);
-		}
+    /**
+     * Ask windowed OLE container for its window handle.
+     *
+     * There are different types of OLE object with which could support this
+     * operation.  Try them in turn until one works.
+     *
+     * @todo  Add more supported OLE object types.
+     */
+    HWND hwnd_from_ole_window(com_ptr<IUnknown> ole_window)
+    {
+        HWND hwnd = NULL;
 
-		/**
-		 * Update the indicator to show current progress level.
-		 */
-		void update(ULONGLONG so_far, ULONGLONG out_of)
-		{
-			m_inner->update(so_far, out_of);
-		}
+        if (com_ptr<IOleWindow> window = com_cast(ole_window))
+        {
+            window->GetWindow(&hwnd);
+        }
+        else if (com_ptr<IShellView> view = com_cast(ole_window))
+        {
+            view->GetWindow(&hwnd);
+        }
 
-	private:
-		scoped_ptr<progress> m_inner;
-	};
+        return hwnd;
+    }
+    
 
-	/**
-	 * Disables an OLE window for duration of its scope and reenables after.
-	 */
-	class ScopedDisabler
-	{
-	public:
-		ScopedDisabler(com_ptr<IUnknown> ole_window)
-			: m_ole_window(ole_window), m_hwnd(hwnd_from_ole_window(ole_window))
-		{
-			if (m_hwnd)
-			{
-				window<wchar_t> w(m_hwnd);
-				w.enable(false);
-			}
-		}
+    /**
+     * Exception-safe lifetime manager for an IProgressDialog object.
+     *
+     * Calls StartProgressDialog when created and StopProgressDialog when
+     * destroyed.
+     */
+    class AutoStartProgressDialog : public Progress
+    {
+    public:
+        AutoStartProgressDialog(
+            com_ptr<IProgressDialog> progress_instance, HWND hwnd,
+            const wstring& title, com_ptr<IUnknown> ole_site=NULL)
+            :
+            m_inner(
+                new    progress(
+                    progress_instance, hwnd, title,
+                    progress::modality::non_modal,
+                    progress::time_estimation::automatic_time_estimate,
+                    progress::bar_type::progress,
+                    progress::minimisable::yes,
+                    progress::cancellability::cancellable, ole_site))
+        {}
 
-		~ScopedDisabler()
-		{
-			if (m_hwnd)
-			{
-				window<wchar_t> w(m_hwnd);
-				w.enable(true);
-			}
-		}
-	private:
-		com_ptr<IUnknown> m_ole_window;
-		HWND m_hwnd;
-	};
+        /**
+         * Has the user cancelled the operation via the progress dialogue?
+         */
+        bool user_cancelled() const
+        {
+            return m_inner->user_cancelled();
+        }
+
+        /**
+         * Set the indexth line of the display to the given text.
+         */
+        void line(DWORD index, const wstring& text)
+        {
+            m_inner->line(index, text);
+        }
+
+        /**
+         * Set the indexth line of the display to the given path.
+         *
+         * Uses the inbuilt path compression.
+         */
+        void line_path(DWORD index, const wstring& text)
+        {
+            m_inner->line_compress_paths_if_needed(index, text);
+        }
+
+        /**
+         * Update the indicator to show current progress level.
+         */
+        void update(ULONGLONG so_far, ULONGLONG out_of)
+        {
+            m_inner->update(so_far, out_of);
+        }
+
+    private:
+        scoped_ptr<progress> m_inner;
+    };
+
+    /**
+     * Disables an OLE window for duration of its scope and reenables after.
+     */
+    class ScopedDisabler
+    {
+    public:
+        ScopedDisabler(com_ptr<IUnknown> ole_window)
+            : m_ole_window(ole_window), m_hwnd(hwnd_from_ole_window(ole_window))
+        {
+            if (m_hwnd)
+            {
+                window<wchar_t> w(m_hwnd);
+                w.enable(false);
+            }
+        }
+
+        ~ScopedDisabler()
+        {
+            if (m_hwnd)
+            {
+                window<wchar_t> w(m_hwnd);
+                w.enable(true);
+            }
+        }
+    private:
+        com_ptr<IUnknown> m_ole_window;
+        HWND m_hwnd;
+    };
 }
 
 DropUI::DropUI(HWND hwnd_owner) : m_hwnd_owner(hwnd_owner) {}
@@ -308,34 +308,34 @@ void DropUI::site(com_ptr<IUnknown> ole_site) { m_ole_site = ole_site; }
  */
 bool DropUI::can_overwrite(const wpath& target)
 {
-	if (!m_hwnd_owner)
-		return false;
+    if (!m_hwnd_owner)
+        return false;
 
-	wstringstream message;
-	message << wformat(translate(
-		"This folder already contains a file named '{1}'."))
-		% target.filename();
-	message << "\n\n";
-	message << translate("Would you like to replace it?");
+    wstringstream message;
+    message << wformat(translate(
+        "This folder already contains a file named '{1}'."))
+        % target.filename();
+    message << "\n\n";
+    message << translate("Would you like to replace it?");
 
-	AutoModal modal_scope(m_ole_site); // force container non-modal
+    AutoModal modal_scope(m_ole_site); // force container non-modal
 
-	ScopedDisabler disable_progress(m_progress); // force-hide progress as it
-	                                             // gets in the way of other UI
+    ScopedDisabler disable_progress(m_progress); // force-hide progress as it
+                                                 // gets in the way of other UI
 
-	button_type::type button = message_box(
-		m_hwnd_owner, message.str(), translate("Confirm File Replace"),
-		box_type::yes_no_cancel, icon_type::question);
-	switch (button)
-	{
-	case button_type::yes:
-		return true;
-	case button_type::no:
-		return false;
-	case button_type::cancel:
-	default:
-		BOOST_THROW_EXCEPTION(com_error(E_ABORT));
-	}
+    button_type::type button = message_box(
+        m_hwnd_owner, message.str(), translate("Confirm File Replace"),
+        box_type::yes_no_cancel, icon_type::question);
+    switch (button)
+    {
+    case button_type::yes:
+        return true;
+    case button_type::no:
+        return false;
+    case button_type::cancel:
+    default:
+        BOOST_THROW_EXCEPTION(com_error(E_ABORT));
+    }
 }
 
 /**
@@ -352,18 +352,18 @@ bool DropUI::can_overwrite(const wpath& target)
  */
 auto_ptr<Progress> DropUI::progress()
 {
-	if (!m_hwnd_owner)
-		m_hwnd_owner = hwnd_from_ole_window(m_ole_site);
+    if (!m_hwnd_owner)
+        m_hwnd_owner = hwnd_from_ole_window(m_ole_site);
 
-	if (!m_hwnd_owner)
-		trace("Creating UI without a parent Window");
+    if (!m_hwnd_owner)
+        trace("Creating UI without a parent Window");
 
-	m_progress = com_ptr<IProgressDialog>(CLSID_ProgressDialog);
+    m_progress = com_ptr<IProgressDialog>(CLSID_ProgressDialog);
 
-	return auto_ptr<Progress>(
-		new AutoStartProgressDialog(
-			m_progress, m_hwnd_owner,
-			translate("Progress", "Copying..."), m_ole_site));
+    return auto_ptr<Progress>(
+        new AutoStartProgressDialog(
+            m_progress, m_hwnd_owner,
+            translate("Progress", "Copying..."), m_ole_site));
 }
 
 }} // namespace swish::drop_target

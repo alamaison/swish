@@ -32,33 +32,33 @@ namespace mode {
 class Mode
 {
 public:
-	Mode(mode_t mode);
+    Mode(mode_t mode);
 
-	bool isRegular();          ///< regular                    '-'
-	bool isSymLink();          ///< Symbolic link              'l'
-	bool isDirectory();        ///< directory                  'd'
-	bool isCharacter();        ///< character special          'c'
-	bool isBlock();            ///< block special              'b'
-	bool isFifo();             ///< fifo                       'p'
-	bool isSocket();           ///< socket                     's'
-	bool isDoor();             ///< Solaris door               'D'
-	bool isNamed();            ///< XENIX named file           'x'
-	bool isMultiplexedBlock(); ///< multiplexed block special  'B'
-	bool isMultiplexedChar();  ///< multiplexed char special   'm'
-	bool isWhiteout();         ///< BSD whiteout               'w'
-	bool isNetwork();          ///< HP-UX network special      'n'
-	bool isContiguous();       ///< contiguous                 'C'
-	bool isOffline();          ///< Cray DMF offline no data   'M'
-	bool isOfflineData();      ///< Cray DMF offline + data    'M'
+    bool isRegular();          ///< regular                    '-'
+    bool isSymLink();          ///< Symbolic link              'l'
+    bool isDirectory();        ///< directory                  'd'
+    bool isCharacter();        ///< character special          'c'
+    bool isBlock();            ///< block special              'b'
+    bool isFifo();             ///< fifo                       'p'
+    bool isSocket();           ///< socket                     's'
+    bool isDoor();             ///< Solaris door               'D'
+    bool isNamed();            ///< XENIX named file           'x'
+    bool isMultiplexedBlock(); ///< multiplexed block special  'B'
+    bool isMultiplexedChar();  ///< multiplexed char special   'm'
+    bool isWhiteout();         ///< BSD whiteout               'w'
+    bool isNetwork();          ///< HP-UX network special      'n'
+    bool isContiguous();       ///< contiguous                 'C'
+    bool isOffline();          ///< Cray DMF offline no data   'M'
+    bool isOfflineData();      ///< Cray DMF offline + data    'M'
 
-	bool isSUID();
-	bool isSGID();
-	bool isSticky();
+    bool isSUID();
+    bool isSGID();
+    bool isSticky();
 
-	std::string toString();
+    std::string toString();
 
 private:
-	mode_t mode;
+    mode_t mode;
 };
 
 }}} // namespace swish::remote_folder::mode

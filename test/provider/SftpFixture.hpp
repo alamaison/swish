@@ -56,25 +56,25 @@ namespace provider {
  * and SFTP session object to access the server.
  */
 class SftpFixture : 
-	public test::ComFixture,
-	public test::SandboxFixture,
-	public test::OpenSshFixture
+    public test::ComFixture,
+    public test::SandboxFixture,
+    public test::OpenSshFixture
 {
 public:
 
-	/**
-	 * Return a new CSession instance connected to the fixture SSH server.
-	 */
-	boost::shared_ptr<CSession> Session()
-	{
-		comet::com_ptr<test::CConsumerStub> consumer =
-			new test::CConsumerStub(PrivateKeyPath(), PublicKeyPath());
+    /**
+     * Return a new CSession instance connected to the fixture SSH server.
+     */
+    boost::shared_ptr<CSession> Session()
+    {
+        comet::com_ptr<test::CConsumerStub> consumer =
+            new test::CConsumerStub(PrivateKeyPath(), PublicKeyPath());
 
-		return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
-			swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
-			swish::utils::Utf8StringToWideString(GetUser()).c_str(),
-			consumer.get()));
-	}
+        return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
+            swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+            swish::utils::Utf8StringToWideString(GetUser()).c_str(),
+            consumer.get()));
+    }
 };
 
 }} // namespace test::provider

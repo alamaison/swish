@@ -38,33 +38,33 @@ namespace shell_folder {
 
 namespace detail {
 
-	/**
-	 * Initialise Boost.Locale translation mechanism.
-	 */
-	inline std::locale switch_to_boost_locale()
-	{
-		using boost::filesystem::path;
-		using boost::locale::generator;
+    /**
+     * Initialise Boost.Locale translation mechanism.
+     */
+    inline std::locale switch_to_boost_locale()
+    {
+        using boost::filesystem::path;
+        using boost::locale::generator;
 
-		try
-		{
-			generator gen;
+        try
+        {
+            generator gen;
 
-			path module_directory = winapi::module_path<char>(
-				ATL::_AtlBaseModule.GetModuleInstance()).parent_path();
-			gen.add_messages_path(
-				module_directory.external_directory_string());
+            path module_directory = winapi::module_path<char>(
+                ATL::_AtlBaseModule.GetModuleInstance()).parent_path();
+            gen.add_messages_path(
+                module_directory.external_directory_string());
 
-			gen.add_messages_domain("swish");
+            gen.add_messages_domain("swish");
 
-			return std::locale::global(gen("")); // default locale
-		}
-		catch (std::exception)
-		{
-			// fall-back
-			return std::locale::global(std::locale::classic());
-		}
-	}
+            return std::locale::global(gen("")); // default locale
+        }
+        catch (std::exception)
+        {
+            // fall-back
+            return std::locale::global(std::locale::classic());
+        }
+    }
 }
 
 /**
@@ -75,22 +75,22 @@ namespace detail {
 class LocaleSetup
 {
 public:
-	LocaleSetup() : m_old_locale(detail::switch_to_boost_locale()) {}
-	~LocaleSetup()
-	{
-		try
-		{
-			std::locale::global(m_old_locale);
-		}
-		catch (std::exception)
-		{
-			// fall-back
-			std::locale::global(std::locale::classic());
-		}
-	}
+    LocaleSetup() : m_old_locale(detail::switch_to_boost_locale()) {}
+    ~LocaleSetup()
+    {
+        try
+        {
+            std::locale::global(m_old_locale);
+        }
+        catch (std::exception)
+        {
+            // fall-back
+            std::locale::global(std::locale::classic());
+        }
+    }
 
 private:
-	std::locale m_old_locale;
+    std::locale m_old_locale;
 };
 
 }} // namespace swish::shell_folder

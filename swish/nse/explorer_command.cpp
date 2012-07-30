@@ -47,11 +47,11 @@ template<> struct comet::enumerated_type_of<IEnumExplorerCommand>
 
 template<> struct comet::impl::type_policy<IExplorerCommand*>
 {
-	template<typename S>
-	static void init(IExplorerCommand*& p, const S& s) 
-	{  p = s.get(); p->AddRef(); }
+    template<typename S>
+    static void init(IExplorerCommand*& p, const S& s) 
+    {  p = s.get(); p->AddRef(); }
 
-	static void clear(IExplorerCommand*& p) { p->Release(); }	
+    static void clear(IExplorerCommand*& p) { p->Release(); }    
 };
 
 namespace swish {
@@ -66,57 +66,57 @@ namespace nse {
  * to IExplorerCommands for use when looking up via GetCommand.
  */
 CExplorerCommandProvider::CExplorerCommandProvider(
-	const ordered_commands& commands) : m_commands(commands)
+    const ordered_commands& commands) : m_commands(commands)
 {
-	BOOST_FOREACH(comet::com_ptr<IExplorerCommand>& c, m_commands)
-	{
-		uuid_t guid;
-		HRESULT hr = c->GetCanonicalName(guid.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
-		m_guid_mapping[guid] = c;
-	}
+    BOOST_FOREACH(comet::com_ptr<IExplorerCommand>& c, m_commands)
+    {
+        uuid_t guid;
+        HRESULT hr = c->GetCanonicalName(guid.out());
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
+        m_guid_mapping[guid] = c;
+    }
 }
 
 STDMETHODIMP CExplorerCommandProvider::GetCommands(
-	IUnknown* /*punkSite*/, const IID& riid, void** ppv)
+    IUnknown* /*punkSite*/, const IID& riid, void** ppv)
 {
-	if (ppv)
-		*ppv = NULL;
-	else
-		return E_POINTER;
+    if (ppv)
+        *ppv = NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		com_ptr<IEnumExplorerCommand> commands =
-			stl_enumeration<IEnumExplorerCommand>::create(
-				m_commands, get_unknown());
-		return commands->QueryInterface(riid, ppv);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        com_ptr<IEnumExplorerCommand> commands =
+            stl_enumeration<IEnumExplorerCommand>::create(
+                m_commands, get_unknown());
+        return commands->QueryInterface(riid, ppv);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CExplorerCommandProvider::GetCommand(
-	const GUID& rguidCommandId, const IID& riid, void** ppv)
+    const GUID& rguidCommandId, const IID& riid, void** ppv)
 {
-	if (ppv)
-		*ppv = NULL;
-	else
-		return E_POINTER;
+    if (ppv)
+        *ppv = NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		command_map::const_iterator item = m_guid_mapping.find(rguidCommandId);
-		if (item == m_guid_mapping.end())
-			BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    try
+    {
+        command_map::const_iterator item = m_guid_mapping.find(rguidCommandId);
+        if (item == m_guid_mapping.end())
+            BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-		return item->second->QueryInterface(riid, ppv);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+        return item->second->QueryInterface(riid, ppv);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 #pragma endregion
@@ -132,22 +132,22 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
  *                           allocated with CoTaskMemAlloc.
  */
 STDMETHODIMP CExplorerCommandErrorAdapter::GetTitle(
-	IShellItemArray* psiItemArray, wchar_t** ppszName)
+    IShellItemArray* psiItemArray, wchar_t** ppszName)
 {
-	if (ppszName)
-		*ppszName = NULL;
-	else
-		return E_POINTER;
+    if (ppszName)
+        *ppszName = NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -161,22 +161,22 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetTitle(
  *                           allocated with CoTaskMemAlloc.
  */
 STDMETHODIMP CExplorerCommandErrorAdapter::GetIcon(
-	IShellItemArray* psiItemArray, wchar_t** ppszIcon)
+    IShellItemArray* psiItemArray, wchar_t** ppszIcon)
 {
-	if (ppszIcon)
-		*ppszIcon = NULL;
-	else
-		return E_POINTER;
+    if (ppszIcon)
+        *ppszIcon = NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -188,22 +188,22 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetIcon(
  *                           allocated with CoTaskMemAlloc.
  */
 STDMETHODIMP CExplorerCommandErrorAdapter::GetToolTip(
-	IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
+    IShellItemArray* psiItemArray, wchar_t** ppszInfotip)
 {
-	if (ppszInfotip)
-		*ppszInfotip = NULL;
-	else
-		return E_POINTER;
+    if (ppszInfotip)
+        *ppszInfotip = NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		HRESULT hr = ::SHStrDup(tool_tip(psiItemArray).c_str(), ppszInfotip);
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        HRESULT hr = ::SHStrDup(tool_tip(psiItemArray).c_str(), ppszInfotip);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -212,20 +212,20 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetToolTip(
  * @param[out] pguidCommandName   Location in which to return GUID.
  */
 STDMETHODIMP CExplorerCommandErrorAdapter::GetCanonicalName(
-	GUID* pguidCommandName)
+    GUID* pguidCommandName)
 {
-	if (pguidCommandName)
-		*pguidCommandName = GUID_NULL;
-	else
-		return E_POINTER;
+    if (pguidCommandName)
+        *pguidCommandName = GUID_NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		*pguidCommandName = canonical_name();
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        *pguidCommandName = canonical_name();
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -238,20 +238,20 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetCanonicalName(
  * @param[out] pCmdState     Location in which to return the state flags.
  */
 STDMETHODIMP CExplorerCommandErrorAdapter::GetState(
-	IShellItemArray* psiItemArray, BOOL fOkToBeSlow, EXPCMDSTATE* pCmdState)
+    IShellItemArray* psiItemArray, BOOL fOkToBeSlow, EXPCMDSTATE* pCmdState)
 {
-	if (pCmdState)
-		*pCmdState = 0;
-	else
-		return E_POINTER;
+    if (pCmdState)
+        *pCmdState = 0;
+    else
+        return E_POINTER;
 
-	try
-	{
-		*pCmdState = state(psiItemArray, (fOkToBeSlow) ? true : false);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        *pCmdState = state(psiItemArray, (fOkToBeSlow) ? true : false);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -262,48 +262,48 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetState(
  * @param[in] pbc           Optional bind context.
  */
 STDMETHODIMP CExplorerCommandErrorAdapter::Invoke(
-	IShellItemArray* psiItemArray, IBindCtx* pbc)
+    IShellItemArray* psiItemArray, IBindCtx* pbc)
 {
-	try
-	{
-		invoke(psiItemArray, pbc);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        invoke(psiItemArray, pbc);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CExplorerCommandErrorAdapter::GetFlags(EXPCMDFLAGS* pFlags)
 {
-	if (pFlags)
-		*pFlags = 0;
-	else
-		return E_POINTER;
+    if (pFlags)
+        *pFlags = 0;
+    else
+        return E_POINTER;
 
-	try
-	{
-		*pFlags = flags();
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        *pFlags = flags();
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CExplorerCommandErrorAdapter::EnumSubCommands(
-	IEnumExplorerCommand** ppEnum)
+    IEnumExplorerCommand** ppEnum)
 {
-	if (ppEnum)
-		*ppEnum = NULL;
-	else
-		return E_POINTER;
+    if (ppEnum)
+        *ppEnum = NULL;
+    else
+        return E_POINTER;
 
-	try
-	{
-		*ppEnum = subcommands().detach();
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        *ppEnum = subcommands().detach();
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 #pragma endregion

@@ -44,59 +44,59 @@ BOOST_AUTO_TEST_SUITE(column_tests)
 
 namespace {
 
-	cpidl_t gimme_pidl()
-	{
-		return create_host_itemid(
-			L"myhost", L"bobuser", L"/home/bobuser", 25, L"My Label");
-	}
+    cpidl_t gimme_pidl()
+    {
+        return create_host_itemid(
+            L"myhost", L"bobuser", L"/home/bobuser", 25, L"My Label");
+    }
 
-	wstring header(size_t index)
-	{
-		Column col(index);
-		return col.header();
-	}
+    wstring header(size_t index)
+    {
+        Column col(index);
+        return col.header();
+    }
 
-	wstring detail(size_t index)
-	{
-		Column col(index);
-		return col.detail(gimme_pidl());
-	}
+    wstring detail(size_t index)
+    {
+        Column col(index);
+        return col.detail(gimme_pidl());
+    }
 }
 
 BOOST_AUTO_TEST_CASE( label )
 {
-	BOOST_CHECK_EQUAL(header(0), L"Name");
-	BOOST_CHECK_EQUAL(detail(0), L"My Label");
+    BOOST_CHECK_EQUAL(header(0), L"Name");
+    BOOST_CHECK_EQUAL(detail(0), L"My Label");
 }
 
 BOOST_AUTO_TEST_CASE( host )
 {
-	BOOST_CHECK_EQUAL(header(1), L"Host");
-	BOOST_CHECK_EQUAL(detail(1), L"myhost");
+    BOOST_CHECK_EQUAL(header(1), L"Host");
+    BOOST_CHECK_EQUAL(detail(1), L"myhost");
 }
 
 BOOST_AUTO_TEST_CASE( user )
 {
-	BOOST_CHECK_EQUAL(header(2), L"Username");
-	BOOST_CHECK_EQUAL(detail(2), L"bobuser");
+    BOOST_CHECK_EQUAL(header(2), L"Username");
+    BOOST_CHECK_EQUAL(detail(2), L"bobuser");
 }
 
 BOOST_AUTO_TEST_CASE( port )
 {
-	BOOST_CHECK_EQUAL(header(3), L"Port");
-	BOOST_CHECK_EQUAL(detail(3), L"25");
+    BOOST_CHECK_EQUAL(header(3), L"Port");
+    BOOST_CHECK_EQUAL(detail(3), L"25");
 }
 
 BOOST_AUTO_TEST_CASE( path )
 {
-	BOOST_CHECK_EQUAL(header(4), L"Remote path");
-	BOOST_CHECK_EQUAL(detail(4), L"/home/bobuser");
+    BOOST_CHECK_EQUAL(header(4), L"Remote path");
+    BOOST_CHECK_EQUAL(detail(4), L"/home/bobuser");
 }
 
 BOOST_AUTO_TEST_CASE( type )
 {
-	BOOST_CHECK_EQUAL(header(5), L"Type");
-	BOOST_CHECK_EQUAL(detail(5), L"Network Drive");
+    BOOST_CHECK_EQUAL(header(5), L"Type");
+    BOOST_CHECK_EQUAL(detail(5), L"Network Drive");
 }
 
 /**
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( type )
  */
 BOOST_AUTO_TEST_CASE( out_of_bounds )
 {
-	BOOST_CHECK_THROW(header(6), std::exception);
+    BOOST_CHECK_THROW(header(6), std::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

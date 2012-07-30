@@ -48,44 +48,44 @@ namespace provider {
 class provider;
 
 class CProvider :
-	public provider_interface, public provider_error_adapter
+    public provider_interface, public provider_error_adapter
 {
 public:
 
-	CProvider();
-	virtual ~CProvider() throw();
+    CProvider();
+    virtual ~CProvider() throw();
 
-	/** @name ISftpProvider implementation via provider_error_adapter */
-	// @{
-	virtual void initialize(BSTR user, BSTR host, UINT port);
+    /** @name ISftpProvider implementation via provider_error_adapter */
+    // @{
+    virtual void initialize(BSTR user, BSTR host, UINT port);
 
-	virtual IEnumListing* get_listing(
-		ISftpConsumer* consumer, BSTR directory);
+    virtual IEnumListing* get_listing(
+        ISftpConsumer* consumer, BSTR directory);
 
-	virtual IStream* get_file(
-		ISftpConsumer* consumer, BSTR file_path, BOOL writeable);
+    virtual IStream* get_file(
+        ISftpConsumer* consumer, BSTR file_path, BOOL writeable);
 
-	virtual VARIANT_BOOL rename(
-		ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
+    virtual VARIANT_BOOL rename(
+        ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
 
-	virtual void delete_file(ISftpConsumer* consumer, BSTR path);
+    virtual void delete_file(ISftpConsumer* consumer, BSTR path);
 
-	virtual void delete_directory(ISftpConsumer* consumer, BSTR path);
+    virtual void delete_directory(ISftpConsumer* consumer, BSTR path);
 
-	virtual void create_new_file(ISftpConsumer* consumer, BSTR path);
+    virtual void create_new_file(ISftpConsumer* consumer, BSTR path);
 
-	virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
+    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
 
-	virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
+    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
 
-	virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
-	// @}
+    virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
+    // @}
 
-	virtual provider_interface& impl();
+    virtual provider_interface& impl();
 
 private:
-	boost::shared_ptr<provider> m_provider;
-	DWORD m_dwCookie;  ///< Running Object Table registration
+    boost::shared_ptr<provider> m_provider;
+    DWORD m_dwCookie;  ///< Running Object Table registration
 };
 
 }} // namespace swish::provider

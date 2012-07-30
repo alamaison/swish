@@ -1,7 +1,7 @@
 /**
     @file
 
-	Handler for Explorer Default Context Menu messages.
+    Handler for Explorer Default Context Menu messages.
 
     @if license
 
@@ -47,171 +47,171 @@ namespace nse {
 default_context_menu_callback::~default_context_menu_callback() {}
 
 HRESULT default_context_menu_callback::operator()(
-	HWND hwnd, com_ptr<IDataObject> selection, 
-	UINT menu_message_id, WPARAM wparam, LPARAM lparam)
+    HWND hwnd, com_ptr<IDataObject> selection, 
+    UINT menu_message_id, WPARAM wparam, LPARAM lparam)
 {
-	try
-	{
-		switch (menu_message_id)
-		{
-		case DFM_MERGECONTEXTMENU:
-			{
-				QCMINFO* info = reinterpret_cast<QCMINFO*>(lparam);
-				if (info == NULL)
-					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+    try
+    {
+        switch (menu_message_id)
+        {
+        case DFM_MERGECONTEXTMENU:
+            {
+                QCMINFO* info = reinterpret_cast<QCMINFO*>(lparam);
+                if (info == NULL)
+                    BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-				bool also_add_default_verbs = merge_context_menu(
-					hwnd, selection, info->hmenu, info->indexMenu,
-					info->idCmdFirst, info->idCmdLast,
-					static_cast<UINT>(wparam));
+                bool also_add_default_verbs = merge_context_menu(
+                    hwnd, selection, info->hmenu, info->indexMenu,
+                    info->idCmdFirst, info->idCmdLast,
+                    static_cast<UINT>(wparam));
 
-				return (also_add_default_verbs) ? S_OK : S_FALSE;
-			}
-		case DFM_INVOKECOMMAND:
-			{
-				const wchar_t* arguments = reinterpret_cast<PCWSTR>(lparam);
-				bool handled = invoke_command(
-					hwnd, selection, static_cast<UINT>(wparam),
-					(arguments == NULL) ? wstring() : arguments);
+                return (also_add_default_verbs) ? S_OK : S_FALSE;
+            }
+        case DFM_INVOKECOMMAND:
+            {
+                const wchar_t* arguments = reinterpret_cast<PCWSTR>(lparam);
+                bool handled = invoke_command(
+                    hwnd, selection, static_cast<UINT>(wparam),
+                    (arguments == NULL) ? wstring() : arguments);
 
-				return (handled) ? S_OK : S_FALSE;
-			}
-		case DFM_INVOKECOMMANDEX:
-			{
-				DFMICS* dfmics = reinterpret_cast<DFMICS*>(lparam);
-				if (dfmics == NULL)
-					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+                return (handled) ? S_OK : S_FALSE;
+            }
+        case DFM_INVOKECOMMANDEX:
+            {
+                DFMICS* dfmics = reinterpret_cast<DFMICS*>(lparam);
+                if (dfmics == NULL)
+                    BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-				const wchar_t* arguments =
-					reinterpret_cast<PCWSTR>(dfmics->lParam);
+                const wchar_t* arguments =
+                    reinterpret_cast<PCWSTR>(dfmics->lParam);
 
-				if (dfmics->pici == NULL)
-					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+                if (dfmics->pici == NULL)
+                    BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-				bool handled = invoke_command(
-					hwnd, selection, static_cast<UINT>(wparam),
-					(arguments == NULL) ? wstring() : arguments, dfmics->fMask,
-					dfmics->idCmdFirst, dfmics->idDefMax, *(dfmics->pici),
+                bool handled = invoke_command(
+                    hwnd, selection, static_cast<UINT>(wparam),
+                    (arguments == NULL) ? wstring() : arguments, dfmics->fMask,
+                    dfmics->idCmdFirst, dfmics->idDefMax, *(dfmics->pici),
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-					dfmics->punkSite);
+                    dfmics->punkSite);
 #else
-					NULL);
+                    NULL);
 #endif
 
-				return (handled) ? S_OK : S_FALSE;
-			}
-		case DFM_GETVERBA:
-			{
-				string result;
-				verb(
-					hwnd, selection, static_cast<UINT>(LOWORD(wparam)),
-					result);
+                return (handled) ? S_OK : S_FALSE;
+            }
+        case DFM_GETVERBA:
+            {
+                string result;
+                verb(
+                    hwnd, selection, static_cast<UINT>(LOWORD(wparam)),
+                    result);
 
-				UINT buffer_len = static_cast<UINT>(HIWORD(wparam));
-				if ((result.size() + 1) > buffer_len)
-					BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+                UINT buffer_len = static_cast<UINT>(HIWORD(wparam));
+                if ((result.size() + 1) > buffer_len)
+                    BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-				char* buffer = reinterpret_cast<char*>(lparam);
-				if (buffer == NULL)
-					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
-
-#pragma warning(push)
-#pragma warning(disable: 4996)
-				result.copy(buffer, buffer_len);
-#pragma warning(pop)
-				buffer[buffer_len - 1] = char();
-				return S_OK;
-			}
-		case DFM_GETVERBW:
-			{
-				wstring result;
-				verb(
-					hwnd, selection, static_cast<UINT>(LOWORD(wparam)),
-					result);
-
-				UINT buffer_len = static_cast<UINT>(HIWORD(wparam));
-				if ((result.size() + 1) > buffer_len)
-					BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-
-				wchar_t* buffer = reinterpret_cast<wchar_t*>(lparam);
-				if (buffer == NULL)
-					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+                char* buffer = reinterpret_cast<char*>(lparam);
+                if (buffer == NULL)
+                    BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
-				result.copy(buffer, buffer_len);
+                result.copy(buffer, buffer_len);
 #pragma warning(pop)
-				buffer[buffer_len - 1] = wchar_t();
-				return S_OK;
-			}
-		case DFM_GETDEFSTATICID:
-			{
-				UINT* command_id_out = reinterpret_cast<UINT*>(lparam);
-				if (command_id_out == NULL)
-					BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+                buffer[buffer_len - 1] = char();
+                return S_OK;
+            }
+        case DFM_GETVERBW:
+            {
+                wstring result;
+                verb(
+                    hwnd, selection, static_cast<UINT>(LOWORD(wparam)),
+                    result);
 
-				bool use_default = !default_menu_item(
-					hwnd, selection, *command_id_out);
+                UINT buffer_len = static_cast<UINT>(HIWORD(wparam));
+                if ((result.size() + 1) > buffer_len)
+                    BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-				return (use_default) ? S_FALSE : S_OK;
-			}
-		default:
-			return on_unknown_dfm(
-				hwnd, selection, menu_message_id, wparam, lparam);
-		}
-	}
-	WINAPI_COM_CATCH();
+                wchar_t* buffer = reinterpret_cast<wchar_t*>(lparam);
+                if (buffer == NULL)
+                    BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+
+#pragma warning(push)
+#pragma warning(disable: 4996)
+                result.copy(buffer, buffer_len);
+#pragma warning(pop)
+                buffer[buffer_len - 1] = wchar_t();
+                return S_OK;
+            }
+        case DFM_GETDEFSTATICID:
+            {
+                UINT* command_id_out = reinterpret_cast<UINT*>(lparam);
+                if (command_id_out == NULL)
+                    BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+
+                bool use_default = !default_menu_item(
+                    hwnd, selection, *command_id_out);
+
+                return (use_default) ? S_FALSE : S_OK;
+            }
+        default:
+            return on_unknown_dfm(
+                hwnd, selection, menu_message_id, wparam, lparam);
+        }
+    }
+    WINAPI_COM_CATCH();
 }
 
 HRESULT default_context_menu_callback::on_unknown_dfm(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
-	UINT /*menu_message_id*/, WPARAM /*wparam*/, LPARAM /*lparam*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
+    UINT /*menu_message_id*/, WPARAM /*wparam*/, LPARAM /*lparam*/)
 {
-	return E_NOTIMPL; // Required for Windows 7 to show any menu at all
+    return E_NOTIMPL; // Required for Windows 7 to show any menu at all
 }
 
 bool default_context_menu_callback::merge_context_menu(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, HMENU /*hmenu*/,
-	UINT /*first_item_index*/, UINT& /*minimum_id*/, UINT /*maximum_id*/,
-	UINT /*allowed_changes_flags*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, HMENU /*hmenu*/,
+    UINT /*first_item_index*/, UINT& /*minimum_id*/, UINT /*maximum_id*/,
+    UINT /*allowed_changes_flags*/)
 {
-	return true;
+    return true;
 }
 
 bool default_context_menu_callback::invoke_command(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
-	UINT /*item_offset*/, const wstring& /*arguments*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
+    UINT /*item_offset*/, const wstring& /*arguments*/)
 {
-	return false;
+    return false;
 }
 
 bool default_context_menu_callback::invoke_command(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
-	UINT /*item_offset*/, const wstring& /*arguments*/,
-	DWORD /*behaviour_flags*/, UINT /*minimum_id*/, UINT /*maximum_id*/,
-	const CMINVOKECOMMANDINFO& /*invocation_details*/,
-	comet::com_ptr<IUnknown> /*context_menu_site*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
+    UINT /*item_offset*/, const wstring& /*arguments*/,
+    DWORD /*behaviour_flags*/, UINT /*minimum_id*/, UINT /*maximum_id*/,
+    const CMINVOKECOMMANDINFO& /*invocation_details*/,
+    comet::com_ptr<IUnknown> /*context_menu_site*/)
 {
-	return false;
+    return false;
 }
-	
+    
 void default_context_menu_callback::verb(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
-	UINT /*command_id_offset*/, string& /*verb_out*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
+    UINT /*command_id_offset*/, string& /*verb_out*/)
 {
 }
 
 void default_context_menu_callback::verb(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
-	UINT /*command_id_offset*/, wstring& /*verb_out*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/, 
+    UINT /*command_id_offset*/, wstring& /*verb_out*/)
 {
 }
 
 bool default_context_menu_callback::default_menu_item(
-	HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
-	UINT& /*default_command_id*/)
+    HWND /*hwnd_view*/, com_ptr<IDataObject> /*selection*/,
+    UINT& /*default_command_id*/)
 {
-	return false;
+    return false;
 }
 
 

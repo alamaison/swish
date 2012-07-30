@@ -58,65 +58,65 @@ namespace test { // private
 
 namespace {
 
-	/**
-	 * Return the PIDL to the Swish HostFolder in Explorer.
-	 */
-	apidl_t swish_pidl()
-	{
-		com_ptr<IShellFolder> desktop = desktop_folder();
+    /**
+     * Return the PIDL to the Swish HostFolder in Explorer.
+     */
+    apidl_t swish_pidl()
+    {
+        com_ptr<IShellFolder> desktop = desktop_folder();
 
-		apidl_t pidl;
-		HRESULT hr = desktop->ParseDisplayName(
-			NULL, NULL, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-			L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL, 
-			reinterpret_cast<PIDLIST_RELATIVE*>(&pidl), NULL);
-		BOOST_REQUIRE_OK(hr);
+        apidl_t pidl;
+        HRESULT hr = desktop->ParseDisplayName(
+            NULL, NULL, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
+            L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL, 
+            reinterpret_cast<PIDLIST_RELATIVE*>(&pidl), NULL);
+        BOOST_REQUIRE_OK(hr);
 
-		return pidl;
-	}
+        return pidl;
+    }
 }
 
 apidl_t PidlFixture::directory_pidl(const wpath& directory)
 {
-	return swish_pidl() + create_host_itemid(
-		Utf8StringToWideString(GetHost()),
-		Utf8StringToWideString(GetUser()),
-		directory, GetPort());
+    return swish_pidl() + create_host_itemid(
+        Utf8StringToWideString(GetHost()),
+        Utf8StringToWideString(GetUser()),
+        directory, GetPort());
 }
 
 apidl_t PidlFixture::sandbox_pidl()
 {
-	return directory_pidl(ToRemotePath(Sandbox()));
+    return directory_pidl(ToRemotePath(Sandbox()));
 }
 
 vector<cpidl_t> PidlFixture::pidls_in_sandbox()
 {
-	CSftpDirectory dir(
-		sandbox_pidl().get(), Provider().get(), Consumer().get());
-	com_ptr<IEnumIDList> pidl_enum = dir.GetEnum(
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
+    CSftpDirectory dir(
+        sandbox_pidl().get(), Provider().get(), Consumer().get());
+    com_ptr<IEnumIDList> pidl_enum = dir.GetEnum(
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 
-	vector<cpidl_t> pidls;
-	cpidl_t pidl;
-	while (pidl_enum->Next(1, pidl.out(), NULL) == S_OK)
-	{
-		pidls.push_back(pidl);
-	}
+    vector<cpidl_t> pidls;
+    cpidl_t pidl;
+    while (pidl_enum->Next(1, pidl.out(), NULL) == S_OK)
+    {
+        pidls.push_back(pidl);
+    }
 
-	return pidls;
+    return pidls;
 }
 
 com_ptr<IDataObject> PidlFixture::data_object_from_sandbox()
 {
-	vector<cpidl_t> pidls = pidls_in_sandbox();
-	pidl_array<cpidl_t> array(pidls.begin(), pidls.end());
-	BOOST_REQUIRE_EQUAL(array.size(), 2U);
+    vector<cpidl_t> pidls = pidls_in_sandbox();
+    pidl_array<cpidl_t> array(pidls.begin(), pidls.end());
+    BOOST_REQUIRE_EQUAL(array.size(), 2U);
 
-	com_ptr<IDataObject> data_object = new CSftpDataObject(
-		numeric_cast<UINT>(array.size()), array.as_array(),
-		sandbox_pidl().get(), Provider(), Consumer());
-	BOOST_REQUIRE(data_object);
-	return data_object;
+    com_ptr<IDataObject> data_object = new CSftpDataObject(
+        numeric_cast<UINT>(array.size()), array.as_array(),
+        sandbox_pidl().get(), Provider(), Consumer());
+    BOOST_REQUIRE(data_object);
+    return data_object;
 }
 
 } // test

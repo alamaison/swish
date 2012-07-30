@@ -60,39 +60,39 @@ namespace host_folder {
 namespace commands {
 
 namespace {
-	const uuid_t ADD_COMMAND_ID(L"b816a880-5022-11dc-9153-0090f5284f85");
+    const uuid_t ADD_COMMAND_ID(L"b816a880-5022-11dc-9153-0090f5284f85");
 
-	/**
+    /**
      * Cause Explorer to refresh any windows displaying the owning folder.
-	 *
-	 * Inform shell that something in our folder changed (we don't know
-	 * exactly what the new PIDL is until we reload from the registry, hence
-	 * UPDATEDIR).
-	 */
-	void notify_shell(const apidl_t folder_pidl)
-	{
-		assert(folder_pidl);
-		::SHChangeNotify(
-			SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
-			folder_pidl.get(), NULL);
-	}
+     *
+     * Inform shell that something in our folder changed (we don't know
+     * exactly what the new PIDL is until we reload from the registry, hence
+     * UPDATEDIR).
+     */
+    void notify_shell(const apidl_t folder_pidl)
+    {
+        assert(folder_pidl);
+        ::SHChangeNotify(
+            SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
+            folder_pidl.get(), NULL);
+    }
 }
 
 Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
-	Command(
-		translate("&Add SFTP Connection"), ADD_COMMAND_ID,
-		translate("Create a new SFTP connection with Swish."),
-		L"shell32.dll,-258", translate("&Add SFTP Connection..."),
-		translate("Add Connection")),
-	m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+    Command(
+        translate("&Add SFTP Connection"), ADD_COMMAND_ID,
+        translate("Create a new SFTP connection with Swish."),
+        L"shell32.dll,-258", translate("&Add SFTP Connection..."),
+        translate("Add Connection")),
+    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 bool Add::disabled(
-	const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
 { return false; }
 
 bool Add::hidden(
-	const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
 { return false; }
 
@@ -100,15 +100,15 @@ const
 void Add::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
 const
 {
-	host_info info = add_host(m_hwnd);
+    host_info info = add_host(m_hwnd);
 
-	if (ConnectionExists(info.name))
-		BOOST_THROW_EXCEPTION(com_error(E_FAIL));
+    if (ConnectionExists(info.name))
+        BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-	AddConnectionToRegistry(
-		info.name, info.host, info.port, info.user, info.path);
+    AddConnectionToRegistry(
+        info.name, info.host, info.port, info.user, info.path);
 
-	notify_shell(m_folder_pidl);
+    notify_shell(m_folder_pidl);
 }
 
 }}} // namespace swish::host_folder::commands

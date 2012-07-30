@@ -20,13 +20,13 @@ BOOST_FIXTURE_TEST_SUITE( CSession_tests, WinsockFixture )
 
 BOOST_AUTO_TEST_CASE( create_session )
 {
-	CSession session;
+    CSession session;
 }
 
 BOOST_AUTO_TEST_CASE( create_session_on_heap )
 {
-	CSession *pSession = new CSession();
-	delete pSession;
+    CSession *pSession = new CSession();
+    delete pSession;
 }
 
 /**
@@ -34,22 +34,22 @@ BOOST_AUTO_TEST_CASE( create_session_on_heap )
  */
 BOOST_AUTO_TEST_CASE( connect )
 {
-	CSession session;
-	remote_test_config config;
-	session.Connect(config.GetHost().c_str(), config.GetPort());
+    CSession session;
+    remote_test_config config;
+    session.Connect(config.GetHost().c_str(), config.GetPort());
 }
 
 BOOST_AUTO_TEST_CASE( multiple_connections )
 {
-	remote_test_config config;
+    remote_test_config config;
 
-	CSession *sessions = new CSession[5];
-	for (int i = 0; i < 5; i++)
-	{
-		sessions[i].Connect(config.GetHost().c_str(), config.GetPort());
-	}
+    CSession *sessions = new CSession[5];
+    for (int i = 0; i < 5; i++)
+    {
+        sessions[i].Connect(config.GetHost().c_str(), config.GetPort());
+    }
 
-	delete [] sessions;
+    delete [] sessions;
 }
 
 /** 
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
  */
 BOOST_AUTO_TEST_CASE( start_sftp_before_connecting )
 {
-	CSession session;
-	BOOST_CHECK_THROW(session.StartSftp(), comet::com_error);
+    CSession session;
+    BOOST_CHECK_THROW(session.StartSftp(), comet::com_error);
 }
 
 /** 
@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE( start_sftp_before_connecting )
  */
 BOOST_AUTO_TEST_CASE( start_sftp_too_early )
 {
-	CSession session;
-	remote_test_config config;
-	session.Connect(config.GetHost().c_str(), config.GetPort());
-	BOOST_CHECK_THROW(session.StartSftp(), comet::com_error);
+    CSession session;
+    remote_test_config config;
+    session.Connect(config.GetHost().c_str(), config.GetPort());
+    BOOST_CHECK_THROW(session.StartSftp(), comet::com_error);
 }
 
 /**
@@ -77,20 +77,20 @@ BOOST_AUTO_TEST_CASE( start_sftp_too_early )
  */
 BOOST_AUTO_TEST_CASE( auto_ptr_to_session )
 {
-	remote_test_config config;
-	LIBSSH2_SESSION *p = NULL;
+    remote_test_config config;
+    LIBSSH2_SESSION *p = NULL;
 
-	CSession *pSession = new CSession();
-	p = *pSession;
-	BOOST_CHECK(p);
+    CSession *pSession = new CSession();
+    p = *pSession;
+    BOOST_CHECK(p);
 
-	auto_ptr<CSession> spSession(pSession);
-	p = *spSession;
-	BOOST_CHECK(p);
+    auto_ptr<CSession> spSession(pSession);
+    p = *spSession;
+    BOOST_CHECK(p);
 
-	spSession->Connect(config.GetHost().c_str(), config.GetPort());
-	p = *spSession;
-	BOOST_CHECK(p);
+    spSession->Connect(config.GetHost().c_str(), config.GetPort());
+    p = *spSession;
+    BOOST_CHECK(p);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

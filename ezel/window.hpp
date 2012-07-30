@@ -48,39 +48,39 @@ class window
 {
 public:
 
-	window(boost::shared_ptr<T> impl) : m_impl(impl) {}
-	virtual ~window() {}
+    window(boost::shared_ptr<T> impl) : m_impl(impl) {}
+    virtual ~window() {}
 
-	std::wstring text() const { return impl()->text(); }
-	void text(const std::wstring& new_text) const
-	{
-		return impl()->text(new_text);
-	}
+    std::wstring text() const { return impl()->text(); }
+    void text(const std::wstring& new_text) const
+    {
+        return impl()->text(new_text);
+    }
 
-	void visible(bool visibility) { impl()->visible(visibility); }
-	void enable(bool enablement) { impl()->enable(enablement); }
+    void visible(bool visibility) { impl()->visible(visibility); }
+    void enable(bool enablement) { impl()->enable(enablement); }
 
-	/// @name Events
-	// @{
+    /// @name Events
+    // @{
 
-	boost::signal<void (bool)>& on_showing() { return impl()->on_showing(); }
-	boost::signal<void (bool)>& on_show() { return impl()->on_show(); }
+    boost::signal<void (bool)>& on_showing() { return impl()->on_showing(); }
+    boost::signal<void (bool)>& on_show() { return impl()->on_show(); }
 
-	boost::signal<void (const wchar_t*)>& on_text_change()
-	{ return impl()->on_text_change(); }
+    boost::signal<void (const wchar_t*)>& on_text_change()
+    { return impl()->on_text_change(); }
 
-	boost::signal<void ()>& on_text_changed()
-	{ return impl()->on_text_changed(); }
+    boost::signal<void ()>& on_text_changed()
+    { return impl()->on_text_changed(); }
 
-	// @}
+    // @}
 
 protected:
-	
-	boost::shared_ptr<T> impl() const { return m_impl; }
+    
+    boost::shared_ptr<T> impl() const { return m_impl; }
 
 private:
 
-	boost::shared_ptr<T> m_impl; // pimpl
+    boost::shared_ptr<T> m_impl; // pimpl
 };
 
 }

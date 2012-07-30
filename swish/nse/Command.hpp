@@ -47,67 +47,67 @@ namespace nse {
 class Command
 {
 public:
-	Command(
-		const std::wstring& title, const comet::uuid_t& guid,
-		const std::wstring& tool_tip=std::wstring(),
-		const std::wstring& icon_descriptor=std::wstring(),
-		const std::wstring& menu_title=std::wstring(),
-		const std::wstring& webtask_title=std::wstring());
+    Command(
+        const std::wstring& title, const comet::uuid_t& guid,
+        const std::wstring& tool_tip=std::wstring(),
+        const std::wstring& icon_descriptor=std::wstring(),
+        const std::wstring& menu_title=std::wstring(),
+        const std::wstring& webtask_title=std::wstring());
 
-	virtual ~Command() {}
+    virtual ~Command() {}
 
-	/**
-	 * Invoke to perform the command.
-	 *
-	 * Concrete commands will provide their implementation by overriding
-	 * this method.
-	 *
-	 * @param data_object  DataObject holding items on which to perform the
-	 *                     command.  This may be NULL in which case the
-	 *                     command should only execute if it makes sense to
-	 *                     do so regardless of selected items.
-	 */
-	virtual void operator()(
-		const comet::com_ptr<IDataObject>& data_object,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
+    /**
+     * Invoke to perform the command.
+     *
+     * Concrete commands will provide their implementation by overriding
+     * this method.
+     *
+     * @param data_object  DataObject holding items on which to perform the
+     *                     command.  This may be NULL in which case the
+     *                     command should only execute if it makes sense to
+     *                     do so regardless of selected items.
+     */
+    virtual void operator()(
+        const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
 
-	/** @name Attributes. */
-	// @{
-	const comet::uuid_t& guid() const;
-	virtual std::wstring title(
-		const comet::com_ptr<IDataObject>& data_object) const;
-	virtual std::wstring tool_tip(
-		const comet::com_ptr<IDataObject>& data_object) const;
-	virtual std::wstring icon_descriptor(
-		const comet::com_ptr<IDataObject>& data_object) const;
+    /** @name Attributes. */
+    // @{
+    const comet::uuid_t& guid() const;
+    virtual std::wstring title(
+        const comet::com_ptr<IDataObject>& data_object) const;
+    virtual std::wstring tool_tip(
+        const comet::com_ptr<IDataObject>& data_object) const;
+    virtual std::wstring icon_descriptor(
+        const comet::com_ptr<IDataObject>& data_object) const;
 
-	/** @name Optional title variants. */
-	// @{
-	virtual std::wstring menu_title(
-		const comet::com_ptr<IDataObject>& data_object) const;
-	virtual std::wstring webtask_title(
-		const comet::com_ptr<IDataObject>& data_object) const;
-	// @}
+    /** @name Optional title variants. */
+    // @{
+    virtual std::wstring menu_title(
+        const comet::com_ptr<IDataObject>& data_object) const;
+    virtual std::wstring webtask_title(
+        const comet::com_ptr<IDataObject>& data_object) const;
+    // @}
 
-	// @}
+    // @}
 
-	/** @name State. */
-	// @{
-	virtual bool disabled(
-		const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const = 0;
-	virtual bool hidden(
-		const comet::com_ptr<IDataObject>& data_object,
-		bool ok_to_be_slow) const = 0;
-	// @}
+    /** @name State. */
+    // @{
+    virtual bool disabled(
+        const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const = 0;
+    virtual bool hidden(
+        const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const = 0;
+    // @}
 
 private:
-	std::wstring m_title;
-	comet::uuid_t m_guid;
-	std::wstring m_tool_tip;
-	std::wstring m_icon_descriptor;
-	std::wstring m_menu_title;
-	std::wstring m_webtask_title;
+    std::wstring m_title;
+    comet::uuid_t m_guid;
+    std::wstring m_tool_tip;
+    std::wstring m_icon_descriptor;
+    std::wstring m_menu_title;
+    std::wstring m_webtask_title;
 };
 
 
@@ -116,9 +116,9 @@ private:
 #endif
 
 #define COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR(N, classname, initialiser) \
-	BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
-	explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
-		: initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
+    BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
+    explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
+        : initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
 
 template<typename CommandImpl>
 class MenuCommandTitleAdapter : public CommandImpl
@@ -127,15 +127,15 @@ public:
 
 // Define pass-through contructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
-		N, MenuCommandTitleAdapter, CommandImpl)
+    COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
+        N, MenuCommandTitleAdapter, CommandImpl)
 
 #define BOOST_PP_LOCAL_LIMITS (0, COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
-	virtual std::wstring title(
-		const comet::com_ptr<IDataObject>& data_object) const
-	{ return menu_title(data_object); }
+    virtual std::wstring title(
+        const comet::com_ptr<IDataObject>& data_object) const
+    { return menu_title(data_object); }
 };
 
 template<typename CommandImpl>
@@ -145,15 +145,15 @@ public:
 
 // Define pass-through contructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
-		N, WebtaskCommandTitleAdapter, CommandImpl)
+    COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
+        N, WebtaskCommandTitleAdapter, CommandImpl)
 
 #define BOOST_PP_LOCAL_LIMITS (0, COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
-	virtual std::wstring title(
-		const comet::com_ptr<IDataObject>& data_object) const
-	{ return webtask_title(data_object); }
+    virtual std::wstring title(
+        const comet::com_ptr<IDataObject>& data_object) const
+    { return webtask_title(data_object); }
 };
 
 #undef COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS

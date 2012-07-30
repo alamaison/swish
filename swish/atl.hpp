@@ -88,5 +88,5 @@ __declspec(noreturn) inline void AtlThrow(HRESULT hr);
  */
 __declspec(noreturn) inline void AtlThrow(HRESULT hr)
 {
-	throw comet::com_error(hr);
+    throw comet::com_error(hr);
 };

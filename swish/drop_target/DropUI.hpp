@@ -42,25 +42,25 @@
 namespace swish {
 namespace drop_target {
 
-	/**
-	 * DropTarget callback turning requests into GUI windows so user can
-	 * handle them.
-	 */
-	class DropUI : public DropActionCallback
-	{
-	public:
-		DropUI(HWND hwnd_owner);
+    /**
+     * DropTarget callback turning requests into GUI windows so user can
+     * handle them.
+     */
+    class DropUI : public DropActionCallback
+    {
+    public:
+        DropUI(HWND hwnd_owner);
 
-		virtual void site(comet::com_ptr<IUnknown> ole_site);
+        virtual void site(comet::com_ptr<IUnknown> ole_site);
 
-		virtual bool can_overwrite(const boost::filesystem::wpath& target);
-		virtual std::auto_ptr<Progress> progress();
-		
-	private:
-		HWND m_hwnd_owner;
-		comet::com_ptr<IUnknown> m_ole_site;
-		comet::com_ptr<IProgressDialog> m_progress;
-	};
+        virtual bool can_overwrite(const boost::filesystem::wpath& target);
+        virtual std::auto_ptr<Progress> progress();
+        
+    private:
+        HWND m_hwnd_owner;
+        comet::com_ptr<IUnknown> m_ole_site;
+        comet::com_ptr<IProgressDialog> m_progress;
+    };
 
 }} // namespace swish::drop_target
 

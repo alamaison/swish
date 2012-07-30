@@ -56,102 +56,102 @@ namespace swish {
 namespace remote_folder {
 
 DEFINE_PROPERTYKEY(
-	PKEY_Group, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE);
+    PKEY_Group, \
+    0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
+    0x4f, 0x85, PID_FIRST_USABLE);
 DEFINE_PROPERTYKEY(
-	PKEY_Permissions, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE + 1);
+    PKEY_Permissions, \
+    0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
+    0x4f, 0x85, PID_FIRST_USABLE + 1);
 DEFINE_PROPERTYKEY(
-	PKEY_OwnerId, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE + 2);
+    PKEY_OwnerId, \
+    0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
+    0x4f, 0x85, PID_FIRST_USABLE + 2);
 DEFINE_PROPERTYKEY(
-	PKEY_GroupId, \
-	0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
-	0x4f, 0x85, PID_FIRST_USABLE + 3);
+    PKEY_GroupId, \
+    0xb816a851, 0x5022, 0x11dc, 0x91, 0x53, 0x00, 0x90, 0xf5, 0x28, \
+    0x4f, 0x85, PID_FIRST_USABLE + 3);
 
 namespace {
 
-	/**
-	 * Find the Windows friendly type name for the file given as a PIDL.
-	 *
-	 * This type name is the one used in Explorer details.  For example,
-	 * something.txt is given the type name "Text Document" and a directory
-	 * is called a "File Folder" regardless of its name.
-	 */
-	std::wstring lookup_friendly_typename(const cpidl_t& pidl)
-	{
-		DWORD dwAttributes = 
-			(remote_itemid_view(pidl).is_folder()) ?
-				FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
+    /**
+     * Find the Windows friendly type name for the file given as a PIDL.
+     *
+     * This type name is the one used in Explorer details.  For example,
+     * something.txt is given the type name "Text Document" and a directory
+     * is called a "File Folder" regardless of its name.
+     */
+    std::wstring lookup_friendly_typename(const cpidl_t& pidl)
+    {
+        DWORD dwAttributes = 
+            (remote_itemid_view(pidl).is_folder()) ?
+                FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 
-		UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME;
+        UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME;
 
-		SHFILEINFO shfi;
-		ATLENSURE(::SHGetFileInfo(
-			remote_itemid_view(pidl).filename().c_str(), dwAttributes, 
-			&shfi, sizeof(shfi), uInfoFlags));
-		
-		return shfi.szTypeName;
-	}
+        SHFILEINFO shfi;
+        ATLENSURE(::SHGetFileInfo(
+            remote_itemid_view(pidl).filename().c_str(), dwAttributes, 
+            &shfi, sizeof(shfi), uInfoFlags));
+        
+        return shfi.szTypeName;
+    }
 
-	class unknown_property_error : public std::runtime_error
-	{
-	public:
-		unknown_property_error() : std::runtime_error("Unknown property") {}
-	};
+    class unknown_property_error : public std::runtime_error
+    {
+    public:
+        unknown_property_error() : std::runtime_error("Unknown property") {}
+    };
 
-	typedef map<
-		property_key,
-		boost::function<variant_t (const cpidl_t& pidl)> >
-		remote_property_map;
+    typedef map<
+        property_key,
+        boost::function<variant_t (const cpidl_t& pidl)> >
+        remote_property_map;
 
-	variant_t label_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).filename(); }
+    variant_t label_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).filename(); }
 
-	variant_t owner_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).owner(); }
+    variant_t owner_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).owner(); }
 
-	variant_t group_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).group(); }
+    variant_t group_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).group(); }
 
-	variant_t owner_id_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).owner_id(); }
+    variant_t owner_id_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).owner_id(); }
 
-	variant_t group_id_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).group_id(); }
+    variant_t group_id_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).group_id(); }
 
-	variant_t size_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).size(); }
+    variant_t size_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).size(); }
 
-	variant_t modified_date_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).date_modified(); }
+    variant_t modified_date_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).date_modified(); }
 
-	variant_t accessed_date_getter(const cpidl_t& pidl)
-	{ return remote_itemid_view(pidl).date_accessed(); }
+    variant_t accessed_date_getter(const cpidl_t& pidl)
+    { return remote_itemid_view(pidl).date_accessed(); }
 
-	variant_t type_getter(const cpidl_t& pidl)
-	{ return lookup_friendly_typename(pidl); }
+    variant_t type_getter(const cpidl_t& pidl)
+    { return lookup_friendly_typename(pidl); }
 
-	variant_t permissions_getter(const cpidl_t& pidl)
-	{
-		DWORD dwPerms = remote_itemid_view(pidl).permissions();
-		return mode::Mode(dwPerms).toString();
-	}
+    variant_t permissions_getter(const cpidl_t& pidl)
+    {
+        DWORD dwPerms = remote_itemid_view(pidl).permissions();
+        return mode::Mode(dwPerms).toString();
+    }
 
-	const remote_property_map remote_property_getters = map_list_of
-		(PKEY_ItemNameDisplay, label_getter) // Display name (Label)
-		(PKEY_FileOwner, owner_getter) // Owner
-		(PKEY_Group, group_getter) // Group
-		(PKEY_OwnerId, owner_id_getter) // Owner ID (UID)
-		(PKEY_GroupId, group_id_getter) // Group ID (GID)
-		(PKEY_Permissions, permissions_getter) // File permissions: drwxr-xr-x
-		(PKEY_Size, size_getter) // File size in bytes
-		(PKEY_DateModified, modified_date_getter) // Last modified date
-		(PKEY_DateAccessed, accessed_date_getter) // Last accessed date
-		(PKEY_ItemTypeText, type_getter); // Friendly type name
+    const remote_property_map remote_property_getters = map_list_of
+        (PKEY_ItemNameDisplay, label_getter) // Display name (Label)
+        (PKEY_FileOwner, owner_getter) // Owner
+        (PKEY_Group, group_getter) // Group
+        (PKEY_OwnerId, owner_id_getter) // Owner ID (UID)
+        (PKEY_GroupId, group_id_getter) // Group ID (GID)
+        (PKEY_Permissions, permissions_getter) // File permissions: drwxr-xr-x
+        (PKEY_Size, size_getter) // File size in bytes
+        (PKEY_DateModified, modified_date_getter) // Last modified date
+        (PKEY_DateAccessed, accessed_date_getter) // Last accessed date
+        (PKEY_ItemTypeText, type_getter); // Friendly type name
 }
 
 /**
@@ -162,11 +162,11 @@ namespace {
  */
 variant_t property_from_pidl(const cpidl_t& pidl, const property_key& key)
 {
-	remote_property_map::const_iterator pos = remote_property_getters.find(key);
-	if (pos == remote_property_getters.end())
-		BOOST_THROW_EXCEPTION(unknown_property_error());
+    remote_property_map::const_iterator pos = remote_property_getters.find(key);
+    if (pos == remote_property_getters.end())
+        BOOST_THROW_EXCEPTION(unknown_property_error());
 
-	return (pos->second)(pidl.get());
+    return (pos->second)(pidl.get());
 }
 
 /**
@@ -181,15 +181,15 @@ variant_t property_from_pidl(const cpidl_t& pidl, const property_key& key)
  * @retval  1 if left > right for chosen property.
  */
 int compare_pidls_by_property(
-	const cpidl_t& left, const cpidl_t& right, const property_key& key)
+    const cpidl_t& left, const cpidl_t& right, const property_key& key)
 {
-	if (property_from_pidl(left, key) == property_from_pidl(right, key))
-		return 0;
-	else if (property_from_pidl(left, key) < property_from_pidl(right, key))
-		return -1;
+    if (property_from_pidl(left, key) == property_from_pidl(right, key))
+        return 0;
+    else if (property_from_pidl(left, key) < property_from_pidl(right, key))
+        return -1;
 
-	assert(property_from_pidl(left, key) > property_from_pidl(right, key));
-	return 1;
+    assert(property_from_pidl(left, key) > property_from_pidl(right, key));
+    return 1;
 }
 
 }} // namespace swish::remote_folder

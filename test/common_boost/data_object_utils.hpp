@@ -34,9 +34,9 @@ namespace test {
 namespace data_object_utils {
 
 boost::filesystem::wpath create_test_zip_file(
-	const boost::filesystem::wpath& in_directory);
+    const boost::filesystem::wpath& in_directory);
 
 comet::com_ptr<IDataObject> data_object_for_zipfile(
-	const boost::filesystem::wpath& zip_file);
+    const boost::filesystem::wpath& zip_file);
 
 }} // namespace test::data_object_utils

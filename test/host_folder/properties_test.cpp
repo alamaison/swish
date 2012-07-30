@@ -49,100 +49,100 @@ BOOST_AUTO_TEST_SUITE(properties_tests)
 
 namespace {
 
-	cpidl_t gimme_pidl()
-	{
-		return create_host_itemid(
-			L"myhost", L"bobuser", L"/home/bobuser", 25, L"My Label");
-	}
+    cpidl_t gimme_pidl()
+    {
+        return create_host_itemid(
+            L"myhost", L"bobuser", L"/home/bobuser", 25, L"My Label");
+    }
 }
 
 BOOST_AUTO_TEST_CASE( prop_label )
 {
-	string prop = property_from_pidl(gimme_pidl(), PKEY_ItemNameDisplay);
-	BOOST_CHECK_EQUAL(prop, "My Label");
+    string prop = property_from_pidl(gimme_pidl(), PKEY_ItemNameDisplay);
+    BOOST_CHECK_EQUAL(prop, "My Label");
 }
 
 BOOST_AUTO_TEST_CASE( prop_host )
 {
-	string prop = property_from_pidl(gimme_pidl(), PKEY_ComputerName);
-	BOOST_CHECK_EQUAL(prop, "myhost");
+    string prop = property_from_pidl(gimme_pidl(), PKEY_ComputerName);
+    BOOST_CHECK_EQUAL(prop, "myhost");
 }
 
 BOOST_AUTO_TEST_CASE( prop_user )
 {
-	string prop = property_from_pidl(
-		gimme_pidl(), swish::host_folder::PKEY_SwishHostUser);
-	BOOST_CHECK_EQUAL(prop, "bobuser");
+    string prop = property_from_pidl(
+        gimme_pidl(), swish::host_folder::PKEY_SwishHostUser);
+    BOOST_CHECK_EQUAL(prop, "bobuser");
 }
 
 BOOST_AUTO_TEST_CASE( prop_port )
 {
-	string prop = property_from_pidl(
-		gimme_pidl(), swish::host_folder::PKEY_SwishHostPort);
-	BOOST_CHECK_EQUAL(prop, "25");
+    string prop = property_from_pidl(
+        gimme_pidl(), swish::host_folder::PKEY_SwishHostPort);
+    BOOST_CHECK_EQUAL(prop, "25");
 }
 
 BOOST_AUTO_TEST_CASE( prop_path )
 {
-	string prop = property_from_pidl(gimme_pidl(), PKEY_ItemPathDisplay);
-	BOOST_CHECK_EQUAL(prop, "/home/bobuser");
+    string prop = property_from_pidl(gimme_pidl(), PKEY_ItemPathDisplay);
+    BOOST_CHECK_EQUAL(prop, "/home/bobuser");
 }
 
 BOOST_AUTO_TEST_CASE( prop_type )
 {
-	string prop = property_from_pidl(gimme_pidl(), PKEY_ItemType);
-	BOOST_CHECK_EQUAL(prop, "Network Drive");
+    string prop = property_from_pidl(gimme_pidl(), PKEY_ItemType);
+    BOOST_CHECK_EQUAL(prop, "Network Drive");
 }
 
 namespace {
-	
-	cpidl_t comp_pidl()
-	{
-		return create_host_itemid(
-			L"myhost", L"boxuser", L"/home/aobuser", 24, L"Your Label");
-		    //   ==        >               <         <     >
-	}
+    
+    cpidl_t comp_pidl()
+    {
+        return create_host_itemid(
+            L"myhost", L"boxuser", L"/home/aobuser", 24, L"Your Label");
+            //   ==        >               <         <     >
+    }
 
-	int compare(const property_key& key)
-	{
-		return compare_pidls_by_property(gimme_pidl(), comp_pidl(), key);
-	}
+    int compare(const property_key& key)
+    {
+        return compare_pidls_by_property(gimme_pidl(), comp_pidl(), key);
+    }
 }
 
 BOOST_AUTO_TEST_CASE( comp_label )
 {
-	int res = compare(PKEY_ItemNameDisplay);
-	BOOST_CHECK_LT(res, 0);
+    int res = compare(PKEY_ItemNameDisplay);
+    BOOST_CHECK_LT(res, 0);
 }
 
 BOOST_AUTO_TEST_CASE( comp_host )
 {
-	int res = compare(PKEY_ComputerName);
-	BOOST_CHECK_EQUAL(res, 0);
+    int res = compare(PKEY_ComputerName);
+    BOOST_CHECK_EQUAL(res, 0);
 }
 
 BOOST_AUTO_TEST_CASE( comp_user )
 {
-	int res = compare(swish::host_folder::PKEY_SwishHostUser);
-	BOOST_CHECK_LT(res, 0);
+    int res = compare(swish::host_folder::PKEY_SwishHostUser);
+    BOOST_CHECK_LT(res, 0);
 }
 
 BOOST_AUTO_TEST_CASE( comp_port )
 {
-	int res = compare(swish::host_folder::PKEY_SwishHostPort);
-	BOOST_CHECK_GT(res, 0);
+    int res = compare(swish::host_folder::PKEY_SwishHostPort);
+    BOOST_CHECK_GT(res, 0);
 }
 
 BOOST_AUTO_TEST_CASE( comp_path )
 {
-	int res = compare(PKEY_ItemPathDisplay);
-	BOOST_CHECK_GT(res, 0);
+    int res = compare(PKEY_ItemPathDisplay);
+    BOOST_CHECK_GT(res, 0);
 }
 
 BOOST_AUTO_TEST_CASE( comp_type )
 {
-	int res = compare(PKEY_ItemType);
-	BOOST_CHECK_EQUAL(res, 0);
+    int res = compare(PKEY_ItemType);
+    BOOST_CHECK_EQUAL(res, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

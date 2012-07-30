@@ -43,9 +43,9 @@ using namespace ATL;
 class CSwishModule : public CAtlDllModuleT< CSwishModule >
 {
 public :
-	DECLARE_LIBID(LIBID_SwishLib)
-	DECLARE_REGISTRY_APPID_RESOURCEID(
-		IDR_SWISH, "{b816a838-5022-11dc-9153-0090f5284f85}")
+    DECLARE_LIBID(LIBID_SwishLib)
+    DECLARE_REGISTRY_APPID_RESOURCEID(
+        IDR_SWISH, "{b816a838-5022-11dc-9153-0090f5284f85}")
 };
 
 }}} // namespace swish::shell_folder::com_dll
@@ -55,10 +55,10 @@ swish::shell_folder::com_dll::CSwishModule _Module;
 
 /** DLL Entry Point. */
 extern "C" BOOL WINAPI DllMain(
-	HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+    HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	static swish::shell_folder::LocaleSetup m_locale; ///< Boost.Locale manager
-	(void)hInstance;
+    static swish::shell_folder::LocaleSetup m_locale; ///< Boost.Locale manager
+    (void)hInstance;
     return _Module.DllMain(dwReason, lpReserved); 
 }
 
@@ -82,12 +82,12 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 STDAPI DllRegisterServer()
 {
     HRESULT hr = _Module.DllRegisterServer();
-	return hr;
+    return hr;
 }
 
 /** Remove entries from the system registry. */
 STDAPI DllUnregisterServer()
 {
-	HRESULT hr = _Module.DllUnregisterServer();
-	return hr;
+    HRESULT hr = _Module.DllUnregisterServer();
+    return hr;
 }

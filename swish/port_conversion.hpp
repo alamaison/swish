@@ -53,14 +53,14 @@ namespace swish {
 template<typename T>
 inline T basic_port_to_string(long port)
 {
-	std::basic_ostringstream<T::value_type> stream;
-	stream.imbue(std::locale::classic()); // force locale-independence
-	stream << port;
-	if (!stream)
-		BOOST_THROW_EXCEPTION(
-			std::logic_error("Unable to convert port number to string"));
+    std::basic_ostringstream<T::value_type> stream;
+    stream.imbue(std::locale::classic()); // force locale-independence
+    stream << port;
+    if (!stream)
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Unable to convert port number to string"));
 
-	return stream.str();
+    return stream.str();
 }
 
 /**

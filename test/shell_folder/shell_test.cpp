@@ -66,30 +66,30 @@ using std::wstring;
 
 namespace { // private
 
-	/**
-	 * Check that a PIDL and a filesystem path refer to the same item.
-	 */
-	predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
-	{
-		vector<wchar_t> name(MAX_PATH);
-		::SHGetPathFromIDListW(pidl.get(), &name[0]);
+    /**
+     * Check that a PIDL and a filesystem path refer to the same item.
+     */
+    predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
+    {
+        vector<wchar_t> name(MAX_PATH);
+        ::SHGetPathFromIDListW(pidl.get(), &name[0]);
 
-		if (!equivalent(path, &name[0]))
-		{
-			predicate_result res(false);
-			res.message()
-				<< "Different items [" << wstring(&name[0])
-				<< " != " << path.file_string() << "]";
-			return res;
-		}
+        if (!equivalent(path, &name[0]))
+        {
+            predicate_result res(false);
+            res.message()
+                << "Different items [" << wstring(&name[0])
+                << " != " << path.file_string() << "]";
+            return res;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	class ShellFunctionFixture : public ComFixture, public SandboxFixture
-	{
-	public:
-	};
+    class ShellFunctionFixture : public ComFixture, public SandboxFixture
+    {
+    public:
+    };
 }
 
 //
@@ -112,13 +112,13 @@ BOOST_FIXTURE_TEST_SUITE(shell_utility_tests, ShellFunctionFixture)
  */
 BOOST_AUTO_TEST_CASE( convert_pidl_to_path )
 {
-	wpath source = NewFileInSandbox();
-	shared_ptr<ITEMIDLIST_ABSOLUTE> pidl(
-		::ILCreateFromPathW(source.file_string().c_str()), ::ILFree);
+    wpath source = NewFileInSandbox();
+    shared_ptr<ITEMIDLIST_ABSOLUTE> pidl(
+        ::ILCreateFromPathW(source.file_string().c_str()), ::ILFree);
 
-	wpath path_from_conversion = path_from_pidl(pidl.get());
+    wpath path_from_conversion = path_from_pidl(pidl.get());
 
-	BOOST_REQUIRE(equivalent(path_from_conversion, source));
+    BOOST_REQUIRE(equivalent(path_from_conversion, source));
 }
 
 /**
@@ -129,13 +129,13 @@ BOOST_AUTO_TEST_CASE( convert_pidl_to_path )
  */
 BOOST_AUTO_TEST_CASE( convert_path_to_pidl )
 {
-	wpath source = NewFileInSandbox();
+    wpath source = NewFileInSandbox();
 
-	shared_ptr<ITEMIDLIST_ABSOLUTE> pidl = pidl_from_path(source);
+    shared_ptr<ITEMIDLIST_ABSOLUTE> pidl = pidl_from_path(source);
 
-	vector<wchar_t> buffer(MAX_PATH);
-	BOOST_REQUIRE(::SHGetPathFromIDListW(pidl.get(), &buffer[0]));
-	BOOST_REQUIRE(equivalent(wstring(&buffer[0]), source));
+    vector<wchar_t> buffer(MAX_PATH);
+    BOOST_REQUIRE(::SHGetPathFromIDListW(pidl.get(), &buffer[0]));
+    BOOST_REQUIRE(equivalent(wstring(&buffer[0]), source));
 }
 
 /**
@@ -149,15 +149,15 @@ BOOST_AUTO_TEST_CASE( convert_path_to_pidl )
  */
 BOOST_AUTO_TEST_CASE( single_item_dataobject )
 {
-	wpath source = NewFileInSandbox();
-	
-	PidlFormat format(data_object_for_file(source));
+    wpath source = NewFileInSandbox();
+    
+    PidlFormat format(data_object_for_file(source));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	BOOST_REQUIRE(
-		pidl_path_equivalence(format.parent_folder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), source));
+    BOOST_REQUIRE(
+        pidl_path_equivalence(format.parent_folder(), Sandbox()));
+    BOOST_REQUIRE(pidl_path_equivalence(format.file(0), source));
 }
 
 
@@ -173,19 +173,19 @@ BOOST_AUTO_TEST_CASE( single_item_dataobject )
  */
 BOOST_AUTO_TEST_CASE( multi_item_dataobject )
 {
-	vector<wpath> sources;
-	sources.push_back(NewFileInSandbox());
-	sources.push_back(NewFileInSandbox());
-	
-	PidlFormat format(
-		data_object_for_files(sources.begin(), sources.end()));
+    vector<wpath> sources;
+    sources.push_back(NewFileInSandbox());
+    sources.push_back(NewFileInSandbox());
+    
+    PidlFormat format(
+        data_object_for_files(sources.begin(), sources.end()));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 2U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 2U);
 
-	BOOST_REQUIRE(
-		pidl_path_equivalence(format.parent_folder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
-	BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
+    BOOST_REQUIRE(
+        pidl_path_equivalence(format.parent_folder(), Sandbox()));
+    BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
+    BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
 }
 
 /**
@@ -197,16 +197,16 @@ BOOST_AUTO_TEST_CASE( multi_item_dataobject )
  */
 BOOST_AUTO_TEST_CASE( single_item_ui_object )
 {
-	wpath source = NewFileInSandbox();
-	
-	PidlFormat format(
-		ui_object_of_item<IDataObject>(pidl_from_path(source).get()));
+    wpath source = NewFileInSandbox();
+    
+    PidlFormat format(
+        ui_object_of_item<IDataObject>(pidl_from_path(source).get()));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	BOOST_REQUIRE(
-		pidl_path_equivalence(format.parent_folder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), source));
+    BOOST_REQUIRE(
+        pidl_path_equivalence(format.parent_folder(), Sandbox()));
+    BOOST_REQUIRE(pidl_path_equivalence(format.file(0), source));
 }
 
 /**
@@ -218,24 +218,24 @@ BOOST_AUTO_TEST_CASE( single_item_ui_object )
  */
 BOOST_AUTO_TEST_CASE( multi_item_ui_object )
 {
-	vector<wpath> sources;
-	sources.push_back(NewFileInSandbox());
-	sources.push_back(NewFileInSandbox());
+    vector<wpath> sources;
+    sources.push_back(NewFileInSandbox());
+    sources.push_back(NewFileInSandbox());
 
-	vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
-	transform(
-		sources.begin(), sources.end(), back_inserter(pidls), 
-		pidl_from_path);
-	
-	PidlFormat format(
-		ui_object_of_items<IDataObject>(pidls.begin(), pidls.end()));
+    vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
+    transform(
+        sources.begin(), sources.end(), back_inserter(pidls), 
+        pidl_from_path);
+    
+    PidlFormat format(
+        ui_object_of_items<IDataObject>(pidls.begin(), pidls.end()));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 2U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 2U);
 
-	BOOST_REQUIRE(
-		pidl_path_equivalence(format.parent_folder(), Sandbox()));
-	BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
-	BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
+    BOOST_REQUIRE(
+        pidl_path_equivalence(format.parent_folder(), Sandbox()));
+    BOOST_REQUIRE(pidl_path_equivalence(format.file(0), sources[0]));
+    BOOST_REQUIRE(pidl_path_equivalence(format.file(1), sources[1]));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

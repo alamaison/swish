@@ -76,55 +76,55 @@ static const ULONG COPY_CHUNK = 32500;
  */
 CString GetSftpErrorMessage(ULONG uError)
 {
-	switch (uError)
-	{
-	case LIBSSH2_FX_OK:
-		return _T("Successful");
-	case LIBSSH2_FX_EOF:
-		return _T("File ended unexpectedly");
-	case LIBSSH2_FX_NO_SUCH_FILE:
-		return _T("Required file or folder does not exist");
-	case LIBSSH2_FX_PERMISSION_DENIED:
-		return _T("Permission denied");
-	case LIBSSH2_FX_FAILURE:
-		return _T("Unknown failure");
-	case LIBSSH2_FX_BAD_MESSAGE:
-		return _T("Server returned an invalid message");
-	case LIBSSH2_FX_NO_CONNECTION:
-		return _T("No connection");
-	case LIBSSH2_FX_CONNECTION_LOST:
-		return _T("Connection lost");
-	case LIBSSH2_FX_OP_UNSUPPORTED:
-		return _T("Server does not support this operation");
-	case LIBSSH2_FX_INVALID_HANDLE:
-		return _T("Invalid handle");
-	case LIBSSH2_FX_NO_SUCH_PATH:
-		return _T("The path does not exist");
-	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-		return _T("A file or folder of that name already exists");
-	case LIBSSH2_FX_WRITE_PROTECT:
-		return _T("This file or folder has been write-protected");
-	case LIBSSH2_FX_NO_MEDIA:
-		return _T("No media was found");
-	case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
-		return _T("There is no space left on the server's filesystem");
-	case LIBSSH2_FX_QUOTA_EXCEEDED:
-		return _T("You have exceeded your disk quota on the server");
-	case LIBSSH2_FX_UNKNOWN_PRINCIPLE:
-		return _T("Unknown principle");
-	case LIBSSH2_FX_LOCK_CONFlICT:
-		return _T("Lock conflict");
-	case LIBSSH2_FX_DIR_NOT_EMPTY:
-		return _T("The folder is not empty");
-	case LIBSSH2_FX_NOT_A_DIRECTORY:
-		return _T("This file is not a folder");
-	case LIBSSH2_FX_INVALID_FILENAME:
-		return _T("The filename is not valid on the server's filesystem");
-	case LIBSSH2_FX_LINK_LOOP:
-		return _T("Operation would cause a link loop which is not permitted");
-	default:
-		return _T("Unexpected error code returned by server");
-	}
+    switch (uError)
+    {
+    case LIBSSH2_FX_OK:
+        return _T("Successful");
+    case LIBSSH2_FX_EOF:
+        return _T("File ended unexpectedly");
+    case LIBSSH2_FX_NO_SUCH_FILE:
+        return _T("Required file or folder does not exist");
+    case LIBSSH2_FX_PERMISSION_DENIED:
+        return _T("Permission denied");
+    case LIBSSH2_FX_FAILURE:
+        return _T("Unknown failure");
+    case LIBSSH2_FX_BAD_MESSAGE:
+        return _T("Server returned an invalid message");
+    case LIBSSH2_FX_NO_CONNECTION:
+        return _T("No connection");
+    case LIBSSH2_FX_CONNECTION_LOST:
+        return _T("Connection lost");
+    case LIBSSH2_FX_OP_UNSUPPORTED:
+        return _T("Server does not support this operation");
+    case LIBSSH2_FX_INVALID_HANDLE:
+        return _T("Invalid handle");
+    case LIBSSH2_FX_NO_SUCH_PATH:
+        return _T("The path does not exist");
+    case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+        return _T("A file or folder of that name already exists");
+    case LIBSSH2_FX_WRITE_PROTECT:
+        return _T("This file or folder has been write-protected");
+    case LIBSSH2_FX_NO_MEDIA:
+        return _T("No media was found");
+    case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
+        return _T("There is no space left on the server's filesystem");
+    case LIBSSH2_FX_QUOTA_EXCEEDED:
+        return _T("You have exceeded your disk quota on the server");
+    case LIBSSH2_FX_UNKNOWN_PRINCIPLE:
+        return _T("Unknown principle");
+    case LIBSSH2_FX_LOCK_CONFlICT:
+        return _T("Lock conflict");
+    case LIBSSH2_FX_DIR_NOT_EMPTY:
+        return _T("The folder is not empty");
+    case LIBSSH2_FX_NOT_A_DIRECTORY:
+        return _T("This file is not a folder");
+    case LIBSSH2_FX_INVALID_FILENAME:
+        return _T("The filename is not valid on the server's filesystem");
+    case LIBSSH2_FX_LINK_LOOP:
+        return _T("Operation would cause a link loop which is not permitted");
+    default:
+        return _T("Unexpected error code returned by server");
+    }
 }
 
 /**
@@ -135,16 +135,16 @@ CString GetSftpErrorMessage(ULONG uError)
  */
 CString GetLastErrorMessage(const CSession& session)
 {
-	int nErr; PSTR pszErr; int cchErr;
+    int nErr; PSTR pszErr; int cchErr;
 
-	nErr = libssh2_session_last_error(session, &pszErr, &cchErr, false);
-	if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
-	{
-		ULONG uErr = libssh2_sftp_last_error(session);
-		return GetSftpErrorMessage(uErr);
-	}
-	else // A non-SFTP error occurred
-		return CString(pszErr);
+    nErr = libssh2_session_last_error(session, &pszErr, &cchErr, false);
+    if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
+    {
+        ULONG uErr = libssh2_sftp_last_error(session);
+        return GetSftpErrorMessage(uErr);
+    }
+    else // A non-SFTP error occurred
+        return CString(pszErr);
 }
 
 
@@ -157,57 +157,57 @@ CString GetLastErrorMessage(const CSession& session)
  */
 HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
 {
-	switch (sftp_error)
-	{
-	case LIBSSH2_FX_OK:
-		return S_OK;
+    switch (sftp_error)
+    {
+    case LIBSSH2_FX_OK:
+        return S_OK;
 
-	case LIBSSH2_FX_EOF:
-	case LIBSSH2_FX_FAILURE:
-	case LIBSSH2_FX_BAD_MESSAGE:
-		return STG_E_CANTSAVE;
-		
-	case LIBSSH2_FX_NO_CONNECTION:
-	case LIBSSH2_FX_CONNECTION_LOST:
-		return STG_E_INCOMPLETE;
+    case LIBSSH2_FX_EOF:
+    case LIBSSH2_FX_FAILURE:
+    case LIBSSH2_FX_BAD_MESSAGE:
+        return STG_E_CANTSAVE;
+        
+    case LIBSSH2_FX_NO_CONNECTION:
+    case LIBSSH2_FX_CONNECTION_LOST:
+        return STG_E_INCOMPLETE;
 
-	case LIBSSH2_FX_NO_SUCH_FILE:
-	case LIBSSH2_FX_NO_SUCH_PATH:
-		return STG_E_FILENOTFOUND;
+    case LIBSSH2_FX_NO_SUCH_FILE:
+    case LIBSSH2_FX_NO_SUCH_PATH:
+        return STG_E_FILENOTFOUND;
 
-	case LIBSSH2_FX_PERMISSION_DENIED:
-		return STG_E_ACCESSDENIED;
+    case LIBSSH2_FX_PERMISSION_DENIED:
+        return STG_E_ACCESSDENIED;
 
-	case LIBSSH2_FX_OP_UNSUPPORTED:
-		return STG_E_UNIMPLEMENTEDFUNCTION;
+    case LIBSSH2_FX_OP_UNSUPPORTED:
+        return STG_E_UNIMPLEMENTEDFUNCTION;
 
-	case LIBSSH2_FX_INVALID_HANDLE:
-		return STG_E_INVALIDHANDLE;
+    case LIBSSH2_FX_INVALID_HANDLE:
+        return STG_E_INVALIDHANDLE;
 
-	case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-		return STG_E_FILEALREADYEXISTS;
+    case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+        return STG_E_FILEALREADYEXISTS;
 
-	case LIBSSH2_FX_WRITE_PROTECT:
-		return STG_E_DISKISWRITEPROTECTED;
+    case LIBSSH2_FX_WRITE_PROTECT:
+        return STG_E_DISKISWRITEPROTECTED;
 
-	case LIBSSH2_FX_NO_MEDIA:
-	case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
-	case LIBSSH2_FX_QUOTA_EXCEEDED:
-		return STG_E_MEDIUMFULL;
+    case LIBSSH2_FX_NO_MEDIA:
+    case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
+    case LIBSSH2_FX_QUOTA_EXCEEDED:
+        return STG_E_MEDIUMFULL;
 
-	case LIBSSH2_FX_LOCK_CONFLICT:
-		return STG_E_LOCKVIOLATION;
+    case LIBSSH2_FX_LOCK_CONFLICT:
+        return STG_E_LOCKVIOLATION;
 
-	case LIBSSH2_FX_INVALID_FILENAME:
-		return STG_E_INVALIDPARAMETER;
+    case LIBSSH2_FX_INVALID_FILENAME:
+        return STG_E_INVALIDPARAMETER;
 
-	case LIBSSH2_FX_UNKNOWN_PRINCIPAL:
-	case LIBSSH2_FX_DIR_NOT_EMPTY:
-	case LIBSSH2_FX_NOT_A_DIRECTORY:
-	case LIBSSH2_FX_LINK_LOOP:
-	default:
-		return STG_E_INVALIDFUNCTION;
-	}
+    case LIBSSH2_FX_UNKNOWN_PRINCIPAL:
+    case LIBSSH2_FX_DIR_NOT_EMPTY:
+    case LIBSSH2_FX_NOT_A_DIRECTORY:
+    case LIBSSH2_FX_LINK_LOOP:
+    default:
+        return STG_E_INVALIDFUNCTION;
+    }
 }
 
 /**
@@ -215,22 +215,22 @@ HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
  */
 HRESULT last_storage_error(CSession& session)
 {
-	switch (libssh2_session_last_error(session, NULL, NULL, false))
-	{
-	case LIBSSH2_ERROR_NONE:
-		return S_OK;
-	case LIBSSH2_ERROR_SFTP_PROTOCOL:
-		return sftp_error_to_storage_error(libssh2_sftp_last_error(session));
-	case LIBSSH2_ERROR_ALLOC:
-		return STG_E_INSUFFICIENTMEMORY;
-	default:
-		return STG_E_INVALIDFUNCTION;
-	}
+    switch (libssh2_session_last_error(session, NULL, NULL, false))
+    {
+    case LIBSSH2_ERROR_NONE:
+        return S_OK;
+    case LIBSSH2_ERROR_SFTP_PROTOCOL:
+        return sftp_error_to_storage_error(libssh2_sftp_last_error(session));
+    case LIBSSH2_ERROR_ALLOC:
+        return STG_E_INSUFFICIENTMEMORY;
+    default:
+        return STG_E_INVALIDFUNCTION;
+    }
 }
 
 int safe_libssh2_sftp_close_handle(LIBSSH2_SFTP_HANDLE* handle)
 {
-	return (handle) ? libssh2_sftp_close_handle(handle) : 0;
+    return (handle) ? libssh2_sftp_close_handle(handle) : 0;
 }
 
 } // namespace
@@ -243,34 +243,34 @@ int safe_libssh2_sftp_close_handle(LIBSSH2_SFTP_HANDLE* handle)
  * via the IStream interface.
  */
 CSftpStream::CSftpStream(
-	shared_ptr<CSession> session, const string& file, OpenFlags flags)
-	: m_session(session)
+    shared_ptr<CSession> session, const string& file, OpenFlags flags)
+    : m_session(session)
 {
-	// Map between CSftpStream flags and libssh2 flags
-	unsigned long libssh2_flags = 0;
-	if (flags & read)
-		libssh2_flags |= LIBSSH2_FXF_READ;
-	if (flags & write)
-		libssh2_flags |= LIBSSH2_FXF_WRITE | LIBSSH2_FXF_TRUNC;
-	if (flags & create)
-		libssh2_flags |= LIBSSH2_FXF_CREAT;
+    // Map between CSftpStream flags and libssh2 flags
+    unsigned long libssh2_flags = 0;
+    if (flags & read)
+        libssh2_flags |= LIBSSH2_FXF_READ;
+    if (flags & write)
+        libssh2_flags |= LIBSSH2_FXF_WRITE | LIBSSH2_FXF_TRUNC;
+    if (flags & create)
+        libssh2_flags |= LIBSSH2_FXF_CREAT;
 
-	long mode = // rw-r--r--
-		LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR | LIBSSH2_SFTP_S_IRGRP |
-		LIBSSH2_SFTP_S_IROTH;
+    long mode = // rw-r--r--
+        LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR | LIBSSH2_SFTP_S_IRGRP |
+        LIBSSH2_SFTP_S_IROTH;
 
-	m_handle = shared_ptr<LIBSSH2_SFTP_HANDLE>(
-		libssh2_sftp_open(*m_session, file.c_str(), libssh2_flags, mode),
-		safe_libssh2_sftp_close_handle);
-	if (!m_handle)
-	{
-		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(
-			com_error(GetLastErrorMessage(*m_session).GetString(), hr));
-	}
+    m_handle = shared_ptr<LIBSSH2_SFTP_HANDLE>(
+        libssh2_sftp_open(*m_session, file.c_str(), libssh2_flags, mode),
+        safe_libssh2_sftp_close_handle);
+    if (!m_handle)
+    {
+        HRESULT hr = last_storage_error(*m_session);
+        BOOST_THROW_EXCEPTION(
+            com_error(GetLastErrorMessage(*m_session).GetString(), hr));
+    }
 
-	m_strFilename = file.substr(file.find_last_of('/')+1);
-	m_strDirectory = file.substr(0, file.find_last_of('/'));
+    m_strFilename = file.substr(file.find_last_of('/')+1);
+    m_strDirectory = file.substr(0, file.find_last_of('/'));
 }
 
 /**
@@ -314,20 +314,20 @@ CSftpStream::~CSftpStream()
  */
 STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
 {
-	if (pcbRead)
-		*pcbRead = 0;
-	ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
+    if (pcbRead)
+        *pcbRead = 0;
+    ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
 
-	try
-	{
-		ULONG cbTemp = 0; // Either return count directly or discard in cbTemp
-		if (!pcbRead)
-			pcbRead = &cbTemp;
-		_Read(static_cast<char*>(pv), cb, *pcbRead);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        ULONG cbTemp = 0; // Either return count directly or discard in cbTemp
+        if (!pcbRead)
+            pcbRead = &cbTemp;
+        _Read(static_cast<char*>(pv), cb, *pcbRead);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return (*pcbRead < cb) ? S_FALSE : S_OK;
+    return (*pcbRead < cb) ? S_FALSE : S_OK;
 }
 
 /**
@@ -351,22 +351,22 @@ STDMETHODIMP CSftpStream::Read(void* pv, ULONG cb, ULONG* pcbRead)
  * [1] http://msdn.microsoft.com/en-us/library/aa380014%28v=VS.85%29.aspx
  */
 STDMETHODIMP CSftpStream::Write(
-	const void* pv, ULONG cb, ULONG* pcbWritten)
+    const void* pv, ULONG cb, ULONG* pcbWritten)
 {
-	if (pcbWritten)
-		*pcbWritten = 0;
-	ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
+    if (pcbWritten)
+        *pcbWritten = 0;
+    ATLENSURE_RETURN_HR(pv, STG_E_INVALIDPOINTER);
 
-	try
-	{
-		ULONG cbTemp = 0; // Either return count directly or discard in cbTemp
-		if (!pcbWritten)
-			pcbWritten = &cbTemp;
-		_Write(static_cast<const char*>(pv), cb, *pcbWritten);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        ULONG cbTemp = 0; // Either return count directly or discard in cbTemp
+        if (!pcbWritten)
+            pcbWritten = &cbTemp;
+        _Write(static_cast<const char*>(pv), cb, *pcbWritten);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -392,25 +392,25 @@ STDMETHODIMP CSftpStream::Write(
  * @retval STG_E_INVALIDPOINTER if pstm is NULL.
  */
 STDMETHODIMP CSftpStream::CopyTo(
-	IStream *pstm, ULARGE_INTEGER cb, 
-	ULARGE_INTEGER *pcbRead, ULARGE_INTEGER *pcbWritten)
+    IStream *pstm, ULARGE_INTEGER cb, 
+    ULARGE_INTEGER *pcbRead, ULARGE_INTEGER *pcbWritten)
 {
-	ATLENSURE_RETURN_HR(pstm, STG_E_INVALIDPOINTER);
+    ATLENSURE_RETURN_HR(pstm, STG_E_INVALIDPOINTER);
 
-	// If the count-output variables are not provided, redirect them to local
-	// temporaries so that the remainder of the algorithm doesn't have to
-	// repeatedly check their existence
-	ULONGLONG cbRead, cbWritten;
+    // If the count-output variables are not provided, redirect them to local
+    // temporaries so that the remainder of the algorithm doesn't have to
+    // repeatedly check their existence
+    ULONGLONG cbRead, cbWritten;
 
-	try
-	{
-		_CopyTo(pstm, cb.QuadPart,
-			(pcbRead) ? pcbRead->QuadPart : cbRead,
-			(pcbWritten) ? pcbWritten->QuadPart : cbWritten);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        _CopyTo(pstm, cb.QuadPart,
+            (pcbRead) ? pcbRead->QuadPart : cbRead,
+            (pcbWritten) ? pcbWritten->QuadPart : cbWritten);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -435,17 +435,17 @@ STDMETHODIMP CSftpStream::CopyTo(
  *         before the beginning of the file.
  */
 STDMETHODIMP CSftpStream::Seek(
-	LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
+    LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-	try
-	{
-		ULONGLONG uNewPosition = _Seek(dlibMove.QuadPart, dwOrigin);
-		if (plibNewPosition)
-			plibNewPosition->QuadPart = uNewPosition;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        ULONGLONG uNewPosition = _Seek(dlibMove.QuadPart, dwOrigin);
+        if (plibNewPosition)
+            plibNewPosition->QuadPart = uNewPosition;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -475,15 +475,15 @@ STDMETHODIMP CSftpStream::Seek(
  */
 STDMETHODIMP CSftpStream::Stat(STATSTG *pstatstg, DWORD grfStatFlag)
 {
-	ATLENSURE_RETURN_HR(pstatstg, STG_E_INVALIDPOINTER);
+    ATLENSURE_RETURN_HR(pstatstg, STG_E_INVALIDPOINTER);
 
-	try
-	{
-		*pstatstg = _Stat(!(grfStatFlag & STATFLAG_NONAME));
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        *pstatstg = _Stat(!(grfStatFlag & STATFLAG_NONAME));
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -498,7 +498,7 @@ STDMETHODIMP CSftpStream::Stat(STATSTG *pstatstg, DWORD grfStatFlag)
  */
 STDMETHODIMP CSftpStream::SetSize(ULARGE_INTEGER /*libNewSize*/)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /**
@@ -510,7 +510,7 @@ STDMETHODIMP CSftpStream::SetSize(ULARGE_INTEGER /*libNewSize*/)
  */
 STDMETHODIMP CSftpStream::Clone(IStream ** /*ppstm*/)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /**
@@ -520,7 +520,7 @@ STDMETHODIMP CSftpStream::Clone(IStream ** /*ppstm*/)
  */
 STDMETHODIMP CSftpStream::Commit(DWORD /*grfCommitFlags*/)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /**
@@ -530,7 +530,7 @@ STDMETHODIMP CSftpStream::Commit(DWORD /*grfCommitFlags*/)
  */
 STDMETHODIMP CSftpStream::Revert()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /**
@@ -539,9 +539,9 @@ STDMETHODIMP CSftpStream::Revert()
  * @returns STG_E_INVALIDFUNCTION.
  */
 STDMETHODIMP CSftpStream::LockRegion(
-	ULARGE_INTEGER /*libOffset*/, ULARGE_INTEGER /*cb*/, DWORD /*dwLockType*/)
+    ULARGE_INTEGER /*libOffset*/, ULARGE_INTEGER /*cb*/, DWORD /*dwLockType*/)
 {
-	return STG_E_INVALIDFUNCTION;
+    return STG_E_INVALIDFUNCTION;
 }
 
 /**
@@ -551,9 +551,9 @@ STDMETHODIMP CSftpStream::LockRegion(
  * @returns STG_E_INVALIDFUNCTION.
  */
 STDMETHODIMP CSftpStream::UnlockRegion(
-	ULARGE_INTEGER /*libOffset*/, ULARGE_INTEGER /*cb*/, DWORD /*dwLockType*/)
+    ULARGE_INTEGER /*libOffset*/, ULARGE_INTEGER /*cb*/, DWORD /*dwLockType*/)
 {
-	return STG_E_INVALIDFUNCTION;
+    return STG_E_INVALIDFUNCTION;
 }
 
 /*----------------------------------------------------------------------------*
@@ -570,28 +570,28 @@ STDMETHODIMP CSftpStream::UnlockRegion(
  */
 void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 {
-	ULONG rc;
+    ULONG rc;
 
-	cbRead = 0;
-	do {
-		rc = _ReadOne(pbuf + cbRead, cb - cbRead);
-		cbRead += rc;
-	} while (rc != 0 && cbRead < cb);
+    cbRead = 0;
+    do {
+        rc = _ReadOne(pbuf + cbRead, cb - cbRead);
+        cbRead += rc;
+    } while (rc != 0 && cbRead < cb);
 }
 
 ULONG CSftpStream::_ReadOne(char* pbuf, ULONG cb)
 {
-	ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
-	if (rc < 0)
-	{
-		TRACE("libssh2_sftp_read() failed: %ws", 
-			GetLastErrorMessage(*m_session));
-		BOOST_THROW_EXCEPTION(com_error(last_storage_error(*m_session)));
-	}
-	else
-	{
-		return rc;
-	}
+    ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
+    if (rc < 0)
+    {
+        TRACE("libssh2_sftp_read() failed: %ws", 
+            GetLastErrorMessage(*m_session));
+        BOOST_THROW_EXCEPTION(com_error(last_storage_error(*m_session)));
+    }
+    else
+    {
+        return rc;
+    }
 }
 
 /**
@@ -604,30 +604,30 @@ ULONG CSftpStream::_ReadOne(char* pbuf, ULONG cb)
  */
 void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 {
-	ULONG rc;
-	
-	cbWritten = 0;
-	do {
-		rc = _WriteOne(pbuf + cbWritten, cb - cbWritten);
-		cbWritten += rc;
-	}
-	while (cbWritten < cb);
+    ULONG rc;
+    
+    cbWritten = 0;
+    do {
+        rc = _WriteOne(pbuf + cbWritten, cb - cbWritten);
+        cbWritten += rc;
+    }
+    while (cbWritten < cb);
 }
 
 
 ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
 {
-	ssize_t rc = libssh2_sftp_write(m_handle.get(), pbuf, cb);
-	if (rc < 0)
-	{
-		TRACE("libssh2_sftp_write() failed: %ws", 
-			GetLastErrorMessage(*m_session));
+    ssize_t rc = libssh2_sftp_write(m_handle.get(), pbuf, cb);
+    if (rc < 0)
+    {
+        TRACE("libssh2_sftp_write() failed: %ws", 
+            GetLastErrorMessage(*m_session));
 
-		// XXX: maybe we have to return STG_E_CANTSAVE here (see MSDN)
-		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(com_error(hr));
-	}
-	return rc;
+        // XXX: maybe we have to return STG_E_CANTSAVE here (see MSDN)
+        HRESULT hr = last_storage_error(*m_session);
+        BOOST_THROW_EXCEPTION(com_error(hr));
+    }
+    return rc;
 }
 
 /**
@@ -639,30 +639,30 @@ ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
  * @throws   com_error with STG_E_* code if an error occurs.
  */
 void CSftpStream::_CopyTo(
-	IStream *pstm, ULONGLONG cb, 
-	ULONGLONG& cbRead, ULONGLONG& cbWritten) throw(...)
+    IStream *pstm, ULONGLONG cb, 
+    ULONGLONG& cbRead, ULONGLONG& cbWritten) throw(...)
 {
-	cbRead = cbWritten = 0;
+    cbRead = cbWritten = 0;
 
-	// Perform copy operation in chunks COPY_CHUNK bytes big
-	do {
-		ULONG cbReadOne;
-		ULONG cbWrittenOne;
-		ULONG cbChunk = static_cast<ULONG>(min(cb - cbRead, COPY_CHUNK));
-		try
-		{
-			_CopyOne(pstm, cbChunk, cbReadOne, cbWrittenOne);
-			cbRead += cbReadOne;
-			cbWritten += cbWrittenOne;
-		}
-		catch(...)
-		{
-			// The counts must be updated even in the failure case
-			cbRead += cbReadOne;
-			cbWritten += cbWrittenOne;
-			throw;
-		}
-	} while (cbRead < cb);
+    // Perform copy operation in chunks COPY_CHUNK bytes big
+    do {
+        ULONG cbReadOne;
+        ULONG cbWrittenOne;
+        ULONG cbChunk = static_cast<ULONG>(min(cb - cbRead, COPY_CHUNK));
+        try
+        {
+            _CopyOne(pstm, cbChunk, cbReadOne, cbWrittenOne);
+            cbRead += cbReadOne;
+            cbWritten += cbWrittenOne;
+        }
+        catch(...)
+        {
+            // The counts must be updated even in the failure case
+            cbRead += cbReadOne;
+            cbWritten += cbWrittenOne;
+            throw;
+        }
+    } while (cbRead < cb);
 }
 
 /**
@@ -684,27 +684,27 @@ void CSftpStream::_CopyTo(
  *        in the background while writing the buffer to the target stream.
  */
 void CSftpStream::_CopyOne(
-	IStream *pstm, ULONG cb, ULONG& cbRead, ULONG& cbWritten) throw(...)
+    IStream *pstm, ULONG cb, ULONG& cbRead, ULONG& cbWritten) throw(...)
 {
-	void *pv = new byte[cb]; // Intermediate buffer
+    void *pv = new byte[cb]; // Intermediate buffer
 
-	// Read data
-	try
-	{
-		_Read(static_cast<char *>(pv), cb, cbRead);
-	}
-	catch(...)
-	{
-		UNREACHABLE;
-		delete [] pv;
-		throw;
-	}
+    // Read data
+    try
+    {
+        _Read(static_cast<char *>(pv), cb, cbRead);
+    }
+    catch(...)
+    {
+        UNREACHABLE;
+        delete [] pv;
+        throw;
+    }
 
-	// Write data
-	cbWritten = 0; // Could remove this if we trust the stream to set it properly
-	HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
-	delete [] pv;
-	ATLENSURE_SUCCEEDED(hr);
+    // Write data
+    cbWritten = 0; // Could remove this if we trust the stream to set it properly
+    HRESULT hr = pstm->Write(pv, cbRead, &cbWritten);
+    delete [] pv;
+    ATLENSURE_SUCCEEDED(hr);
 }
 
 /**
@@ -715,11 +715,11 @@ void CSftpStream::_CopyOne(
  */
 ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
-	ULONGLONG uNewPosition = _CalculateNewFilePosition(nMove, dwOrigin);
+    ULONGLONG uNewPosition = _CalculateNewFilePosition(nMove, dwOrigin);
 
-	libssh2_sftp_seek64(m_handle.get(), uNewPosition);
+    libssh2_sftp_seek64(m_handle.get(), uNewPosition);
 
-	return uNewPosition;
+    return uNewPosition;
 }
 
 /**
@@ -728,63 +728,63 @@ ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
  * @throws  com_error with STG_E_* code if an error occurs.
  */
 STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
-{	
-	// Prepare STATSTG
-	STATSTG statstg;
-	::ZeroMemory(&statstg, sizeof STATSTG);
-	statstg.type = STGTY_STREAM;
-		
-	// Get file size
-	LIBSSH2_SFTP_ATTRIBUTES attrs;
-	::ZeroMemory(&attrs, sizeof attrs);
-	attrs.flags = LIBSSH2_SFTP_ATTR_SIZE | LIBSSH2_SFTP_ATTR_ACMODTIME;
+{    
+    // Prepare STATSTG
+    STATSTG statstg;
+    ::ZeroMemory(&statstg, sizeof STATSTG);
+    statstg.type = STGTY_STREAM;
+        
+    // Get file size
+    LIBSSH2_SFTP_ATTRIBUTES attrs;
+    ::ZeroMemory(&attrs, sizeof attrs);
+    attrs.flags = LIBSSH2_SFTP_ATTR_SIZE | LIBSSH2_SFTP_ATTR_ACMODTIME;
 
-	if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
-	{
-		UNREACHABLE;
-		TRACE("libssh2_sftp_fstat() failed: %ws", 
-			GetLastErrorMessage(*m_session));
+    if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
+    {
+        UNREACHABLE;
+        TRACE("libssh2_sftp_fstat() failed: %ws", 
+            GetLastErrorMessage(*m_session));
 
-		HRESULT hr = last_storage_error(*m_session);
-		BOOST_THROW_EXCEPTION(com_error(hr));
-	}
+        HRESULT hr = last_storage_error(*m_session);
+        BOOST_THROW_EXCEPTION(com_error(hr));
+    }
 
-	statstg.cbSize.QuadPart = attrs.filesize;
+    statstg.cbSize.QuadPart = attrs.filesize;
 
-	// Get file dates
-	LONGLONG ll;
+    // Get file dates
+    LONGLONG ll;
 
-	ll = Int32x32To64(attrs.mtime, 10000000) + 116444736000000000;
-	statstg.mtime.dwLowDateTime = static_cast<DWORD>(ll);
-	statstg.mtime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
+    ll = Int32x32To64(attrs.mtime, 10000000) + 116444736000000000;
+    statstg.mtime.dwLowDateTime = static_cast<DWORD>(ll);
+    statstg.mtime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
 
-	ll = Int32x32To64(attrs.atime, 10000000) + 116444736000000000;
-	statstg.atime.dwLowDateTime = static_cast<DWORD>(ll);
-	statstg.atime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
+    ll = Int32x32To64(attrs.atime, 10000000) + 116444736000000000;
+    statstg.atime.dwLowDateTime = static_cast<DWORD>(ll);
+    statstg.atime.dwHighDateTime = static_cast<DWORD>(ll >> 32);
 
-	// Provide filename if requested
-	if (bWantName)
-	{
-		// Convert filename to OLECHARs
-		CA2W szFilename(m_strFilename.c_str(), CP_UTF8);
+    // Provide filename if requested
+    if (bWantName)
+    {
+        // Convert filename to OLECHARs
+        CA2W szFilename(m_strFilename.c_str(), CP_UTF8);
 
-		// Allocate sufficient memory for OLECHAR version of filename
-		size_t cchData = ::wcslen(szFilename)+1;
-		size_t cbData = cchData * sizeof OLECHAR;
-		statstg.pwcsName = static_cast<LPOLESTR>(::CoTaskMemAlloc(cbData));
-		ATLENSURE_THROW(statstg.pwcsName, STG_E_INSUFFICIENTMEMORY);
+        // Allocate sufficient memory for OLECHAR version of filename
+        size_t cchData = ::wcslen(szFilename)+1;
+        size_t cbData = cchData * sizeof OLECHAR;
+        statstg.pwcsName = static_cast<LPOLESTR>(::CoTaskMemAlloc(cbData));
+        ATLENSURE_THROW(statstg.pwcsName, STG_E_INSUFFICIENTMEMORY);
 
-		// Copy converted filename to STATSTG
-		errno_t rc = ::wcscpy_s(statstg.pwcsName, cchData, szFilename);
-		if (rc != 0)
-		{
-			UNREACHABLE;
-			::CoTaskMemFree(statstg.pwcsName);
-			AtlThrow(STG_E_INSUFFICIENTMEMORY);
-		}
-	}
+        // Copy converted filename to STATSTG
+        errno_t rc = ::wcscpy_s(statstg.pwcsName, cchData, szFilename);
+        if (rc != 0)
+        {
+            UNREACHABLE;
+            ::CoTaskMemFree(statstg.pwcsName);
+            AtlThrow(STG_E_INSUFFICIENTMEMORY);
+        }
+    }
 
-	return statstg;
+    return statstg;
 }
 
 /**
@@ -793,44 +793,44 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
  * @throws  com_error with STG_E_* code if an error occurs.
  */
 ULONGLONG CSftpStream::_CalculateNewFilePosition(
-	LONGLONG nMove, DWORD dwOrigin) throw(...)
+    LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
-	LONGLONG nNewPosition = 0;
+    LONGLONG nNewPosition = 0;
 
-	switch(dwOrigin)
-	{
-	case STREAM_SEEK_SET: // Relative to beginning of file
-		nNewPosition = nMove;
-		break;
-	case STREAM_SEEK_CUR: // Relative to current position
-	{
-		nNewPosition = libssh2_sftp_tell64(m_handle.get());
-		nNewPosition += nMove;
-		break;
-	}
-	case STREAM_SEEK_END: // Relative to end (MUST ACCESS SERVER)
-	{
-		LONGLONG nOffset = nMove;
+    switch(dwOrigin)
+    {
+    case STREAM_SEEK_SET: // Relative to beginning of file
+        nNewPosition = nMove;
+        break;
+    case STREAM_SEEK_CUR: // Relative to current position
+    {
+        nNewPosition = libssh2_sftp_tell64(m_handle.get());
+        nNewPosition += nMove;
+        break;
+    }
+    case STREAM_SEEK_END: // Relative to end (MUST ACCESS SERVER)
+    {
+        LONGLONG nOffset = nMove;
 
-		// Get size of file from server
-		LIBSSH2_SFTP_ATTRIBUTES attrs;
-		::ZeroMemory(&attrs, sizeof attrs);
-		attrs.flags = LIBSSH2_SFTP_ATTR_SIZE;
-		if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
-		{		
-			HRESULT hr = last_storage_error(*m_session);
-			BOOST_THROW_EXCEPTION(com_error(hr));
-		}
+        // Get size of file from server
+        LIBSSH2_SFTP_ATTRIBUTES attrs;
+        ::ZeroMemory(&attrs, sizeof attrs);
+        attrs.flags = LIBSSH2_SFTP_ATTR_SIZE;
+        if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
+        {        
+            HRESULT hr = last_storage_error(*m_session);
+            BOOST_THROW_EXCEPTION(com_error(hr));
+        }
 
-		nNewPosition = attrs.filesize - nOffset;
-		break;
-	}
-	default:
-		ATLENSURE_THROW(false, STG_E_INVALIDFUNCTION);
-	}
+        nNewPosition = attrs.filesize - nOffset;
+        break;
+    }
+    default:
+        ATLENSURE_THROW(false, STG_E_INVALIDFUNCTION);
+    }
 
-	if (nNewPosition < 0)
-		AtlThrow(STG_E_INVALIDFUNCTION);
+    if (nNewPosition < 0)
+        AtlThrow(STG_E_INVALIDFUNCTION);
 
-	return static_cast<ULONGLONG>(nNewPosition);
+    return static_cast<ULONGLONG>(nNewPosition);
 }

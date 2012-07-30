@@ -1,7 +1,7 @@
 /**
     @file
 
-	Pool of reusuable SFTP connections.
+    Pool of reusuable SFTP connections.
 
     @if license
 
@@ -60,8 +60,8 @@ using std::wstring;
 
 template<> struct comet::comtype<IBindStatusCallback>
 {
-	static const IID& uuid() throw() { return IID_IBindStatusCallback; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IBindStatusCallback; }
+    typedef IUnknown base;
 };
 
 namespace swish {
@@ -69,19 +69,19 @@ namespace remote_folder {
 
 namespace {
 
-	/**
-	 * Create an moniker string for the session with the given parameters.
-	 *
-	 * e.g. clsid:b816a864-5022-11dc-9153-0090f5284f85:!user@host:port
-	 */
-	wstring provider_moniker_name(
-		const wstring& user, const wstring& host, int port)
-	{
-		wstring item_name = 
-			L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L'@' + 
-			host + L':' + port_to_wstring(port);
-		return item_name;
-	}
+    /**
+     * Create an moniker string for the session with the given parameters.
+     *
+     * e.g. clsid:b816a864-5022-11dc-9153-0090f5284f85:!user@host:port
+     */
+    wstring provider_moniker_name(
+        const wstring& user, const wstring& host, int port)
+    {
+        wstring item_name = 
+            L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L'@' + 
+            host + L':' + port_to_wstring(port);
+        return item_name;
+    }
 
 }
 
@@ -95,36 +95,36 @@ namespace {
 class CBindCallbackStub : public comet::simple_object<IBindStatusCallback>
 {
 public:
-	IFACEMETHODIMP OnStartBinding(DWORD /*dwReserved*/, IBinding* /*pib*/)
-	{ return S_OK; }
-	
-	IFACEMETHODIMP GetPriority(LONG* /*pnPriority*/)
-	{ return E_NOTIMPL; }
-	
-	IFACEMETHODIMP OnLowResource(DWORD /*reserved*/)
-	{ return E_NOTIMPL; }
-	
-	IFACEMETHODIMP OnProgress(
-		ULONG /*ulProgress*/, ULONG /*ulProgressMax*/, ULONG /*ulStatusCode*/,
-		LPCWSTR /*szStatusText*/)
-	{ return S_OK; }
-	
-	IFACEMETHODIMP OnStopBinding(HRESULT /*hresult*/, LPCWSTR /*szError*/)
-	{ return S_OK; }
-	
-	IFACEMETHODIMP GetBindInfo(DWORD* grfBINDF, BINDINFO* /*pbindinfo*/)
-	{
-		*grfBINDF = BINDF_NO_UI | BINDF_SILENTOPERATION;
-		return S_OK;
-	}
-	
-	IFACEMETHODIMP OnDataAvailable(
-		DWORD /*grfBSCF*/, DWORD /*dwSize*/, FORMATETC* /*pformatetc*/,
-		STGMEDIUM* /*pstgmed*/)
-	{ return S_OK; };
-	
-	IFACEMETHODIMP OnObjectAvailable(REFIID /*riid*/, IUnknown* /*punk*/)
-	{ return S_OK; };	
+    IFACEMETHODIMP OnStartBinding(DWORD /*dwReserved*/, IBinding* /*pib*/)
+    { return S_OK; }
+    
+    IFACEMETHODIMP GetPriority(LONG* /*pnPriority*/)
+    { return E_NOTIMPL; }
+    
+    IFACEMETHODIMP OnLowResource(DWORD /*reserved*/)
+    { return E_NOTIMPL; }
+    
+    IFACEMETHODIMP OnProgress(
+        ULONG /*ulProgress*/, ULONG /*ulProgressMax*/, ULONG /*ulStatusCode*/,
+        LPCWSTR /*szStatusText*/)
+    { return S_OK; }
+    
+    IFACEMETHODIMP OnStopBinding(HRESULT /*hresult*/, LPCWSTR /*szError*/)
+    { return S_OK; }
+    
+    IFACEMETHODIMP GetBindInfo(DWORD* grfBINDF, BINDINFO* /*pbindinfo*/)
+    {
+        *grfBINDF = BINDF_NO_UI | BINDF_SILENTOPERATION;
+        return S_OK;
+    }
+    
+    IFACEMETHODIMP OnDataAvailable(
+        DWORD /*grfBSCF*/, DWORD /*dwSize*/, FORMATETC* /*pformatetc*/,
+        STGMEDIUM* /*pstgmed*/)
+    { return S_OK; };
+    
+    IFACEMETHODIMP OnObjectAvailable(REFIID /*riid*/, IUnknown* /*punk*/)
+    { return S_OK; };    
 };
 
 }
@@ -148,71 +148,71 @@ public:
  * @returns pointer to the session (ISftpProvider).
  */
 com_ptr<ISftpProvider> CPool::GetSession(
-	const wstring& host, const wstring& user, int port, HWND /*hwnd*/)
+    const wstring& host, const wstring& user, int port, HWND /*hwnd*/)
 {
-	if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-	if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-	auto_cs lock(m_cs);
+    auto_cs lock(m_cs);
 
-	// Try to get the session from the global pool
-	wstring display_name = provider_moniker_name(user, host, port);
+    // Try to get the session from the global pool
+    wstring display_name = provider_moniker_name(user, host, port);
 
-	// The default class moniker's BindStatusCallback creates a progress
-	// dialogue which steals window focus even though it's never
-	// displayed!!  The only way I've found to prevent this is to use a
-	// custom callback object which does nothing except specify that
-	// UI is forbidden.
-	com_ptr<IBindCtx> bind_context = create_bind_context();
-	com_ptr<IBindStatusCallback> callback = new CBindCallbackStub();
-	HRESULT hr = ::RegisterBindStatusCallback(
-		bind_context.get(), callback.get(), NULL, 0);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(
-			boost::enable_error_info(comet::com_error(hr)) <<
-			boost::errinfo_api_function("RegisterBindStatusCallback"));
+    // The default class moniker's BindStatusCallback creates a progress
+    // dialogue which steals window focus even though it's never
+    // displayed!!  The only way I've found to prevent this is to use a
+    // custom callback object which does nothing except specify that
+    // UI is forbidden.
+    com_ptr<IBindCtx> bind_context = create_bind_context();
+    com_ptr<IBindStatusCallback> callback = new CBindCallbackStub();
+    HRESULT hr = ::RegisterBindStatusCallback(
+        bind_context.get(), callback.get(), NULL, 0);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(comet::com_error(hr)) <<
+            boost::errinfo_api_function("RegisterBindStatusCallback"));
 
-	return object_from_moniker_name<ISftpProvider>(
-		display_name, bind_context);
+    return object_from_moniker_name<ISftpProvider>(
+        display_name, bind_context);
 }
 
 namespace {
 
-	void params_from_pidl(
-		const apidl_t& pidl, wstring& user, wstring& host, int& port)
-	{
-		// Find HOSTPIDL part of this folder's absolute pidl to extract server
-		// info
-		host_itemid_view host_itemid(*find_host_itemid(pidl));
-		assert(host_itemid.valid());
+    void params_from_pidl(
+        const apidl_t& pidl, wstring& user, wstring& host, int& port)
+    {
+        // Find HOSTPIDL part of this folder's absolute pidl to extract server
+        // info
+        host_itemid_view host_itemid(*find_host_itemid(pidl));
+        assert(host_itemid.valid());
 
-		user = host_itemid.user();
-		host = host_itemid.host();
-		port = host_itemid.port();
-		assert(!user.empty());
-		assert(!host.empty());
-	}
+        user = host_itemid.user();
+        host = host_itemid.host();
+        port = host_itemid.port();
+        assert(!user.empty());
+        assert(!host.empty());
+    }
 
-	/**
-	 * Gets connection for given SFTP session parameters.
-	 */
-	com_ptr<ISftpProvider> connection(
-		const wstring& host, const wstring& user, int port, HWND hwnd)
-	{
-		CPool pool;
-		return pool.GetSession(host, user, port, hwnd);
-	}
+    /**
+     * Gets connection for given SFTP session parameters.
+     */
+    com_ptr<ISftpProvider> connection(
+        const wstring& host, const wstring& user, int port, HWND hwnd)
+    {
+        CPool pool;
+        return pool.GetSession(host, user, port, hwnd);
+    }
 }
 
 com_ptr<ISftpProvider> connection_from_pidl(const apidl_t& pidl, HWND hwnd)
 {
-	// Extract connection info from PIDL
-	wstring user, host, path;
-	int port;
-	params_from_pidl(pidl, user, host, port);
+    // Extract connection info from PIDL
+    wstring user, host, path;
+    int port;
+    params_from_pidl(pidl, user, host, port);
 
-	return connection(host, user, port, hwnd);
+    return connection(host, user, port, hwnd);
 }
 
 }} // namespace swish::remote_folder

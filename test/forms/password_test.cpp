@@ -40,29 +40,29 @@ BOOST_AUTO_TEST_SUITE(password_tests)
  */
 DWORD WINAPI click_cancel_thread(LPVOID /*thread_param*/)
 {
-	::Sleep(1700);
-	HWND hwnd = GetForegroundWindow();
+    ::Sleep(1700);
+    HWND hwnd = GetForegroundWindow();
 
-	// Post left mouse button up/down directly to Cancel button
-	::SendMessage(
-		::GetDlgItem(hwnd, 103), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
-	::SendMessage(::GetDlgItem(hwnd, 103), WM_LBUTTONUP, NULL, NULL);
-	return 0;
+    // Post left mouse button up/down directly to Cancel button
+    ::SendMessage(
+        ::GetDlgItem(hwnd, 103), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
+    ::SendMessage(::GetDlgItem(hwnd, 103), WM_LBUTTONUP, NULL, NULL);
+    return 0;
 }
 
 BOOST_AUTO_TEST_CASE( show )
 {
-	DWORD thread_id;
-	HANDLE thread = ::CreateThread(
-		NULL, 0, click_cancel_thread, NULL, 0, &thread_id);
+    DWORD thread_id;
+    HANDLE thread = ::CreateThread(
+        NULL, 0, click_cancel_thread, NULL, 0, &thread_id);
 
-	std::wstring password;
-	BOOST_CHECK(
-		!swish::forms::password_prompt(
-			NULL, L"Oi! Gimme a password", password));
-	BOOST_CHECK(password.empty());
+    std::wstring password;
+    BOOST_CHECK(
+        !swish::forms::password_prompt(
+            NULL, L"Oi! Gimme a password", password));
+    BOOST_CHECK(password.empty());
 
-	::CloseHandle(thread);
+    ::CloseHandle(thread);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

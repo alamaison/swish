@@ -53,24 +53,24 @@ using std::wstring;
 
 namespace { // private
 
-	const wstring NEW_FOLDER = L"New folder";
+    const wstring NEW_FOLDER = L"New folder";
 
-	class NewFolderCommandFixture : public PidlFixture
-	{
-	public:
-		NewFolder new_folder_command()
-		{
-			return NewFolder(
-				sandbox_pidl(), bind(&NewFolderCommandFixture::Provider, this),
-				bind(&NewFolderCommandFixture::Consumer, this));
-		}
-	};
+    class NewFolderCommandFixture : public PidlFixture
+    {
+    public:
+        NewFolder new_folder_command()
+        {
+            return NewFolder(
+                sandbox_pidl(), bind(&NewFolderCommandFixture::Provider, this),
+                bind(&NewFolderCommandFixture::Consumer, this));
+        }
+    };
 }
 
 template<> struct comet::comtype<IObjectWithSite>
 {
-	static const IID& uuid() throw() { return IID_IObjectWithSite; }
-	typedef ::IUnknown base;
+    static const IID& uuid() throw() { return IID_IObjectWithSite; }
+    typedef ::IUnknown base;
 };
 
 #pragma region NewFolder tests
@@ -82,13 +82,13 @@ BOOST_FIXTURE_TEST_SUITE(new_folder_tests, NewFolderCommandFixture)
  */
 BOOST_AUTO_TEST_CASE( non_execution_properties )
 {
-	NewFolder command = new_folder_command();
-	BOOST_CHECK(!command.guid().is_null());
-	BOOST_CHECK(!command.title(NULL).empty());
-	BOOST_CHECK(!command.tool_tip(NULL).empty());
-	BOOST_CHECK(!command.icon_descriptor(NULL).empty());
-	BOOST_CHECK(!command.disabled(NULL, true));
-	BOOST_CHECK(!command.hidden(NULL, true));
+    NewFolder command = new_folder_command();
+    BOOST_CHECK(!command.guid().is_null());
+    BOOST_CHECK(!command.title(NULL).empty());
+    BOOST_CHECK(!command.tool_tip(NULL).empty());
+    BOOST_CHECK(!command.icon_descriptor(NULL).empty());
+    BOOST_CHECK(!command.disabled(NULL, true));
+    BOOST_CHECK(!command.hidden(NULL, true));
 }
 
 /**
@@ -96,15 +96,15 @@ BOOST_AUTO_TEST_CASE( non_execution_properties )
  */
 BOOST_AUTO_TEST_CASE( no_collision_empty )
 {
-	wpath expected = Sandbox() / NEW_FOLDER;
+    wpath expected = Sandbox() / NEW_FOLDER;
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(expected));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 1);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 1);
 }
 
 /**
@@ -112,16 +112,16 @@ BOOST_AUTO_TEST_CASE( no_collision_empty )
  */
 BOOST_AUTO_TEST_CASE( no_collision )
 {
-	NewFileInSandbox();
-	wpath expected = Sandbox() / NEW_FOLDER;
+    NewFileInSandbox();
+    wpath expected = Sandbox() / NEW_FOLDER;
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(expected));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
 }
 
 /**
@@ -130,19 +130,19 @@ BOOST_AUTO_TEST_CASE( no_collision )
  */
 BOOST_AUTO_TEST_CASE( basic_collision )
 {
-	wpath collision = Sandbox() / NEW_FOLDER;
-	wpath expected = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath collision = Sandbox() / NEW_FOLDER;
+    wpath expected = Sandbox() / (NEW_FOLDER + L" (2)");
 
-	BOOST_REQUIRE(create_directory(collision));
+    BOOST_REQUIRE(create_directory(collision));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
 }
 
 /**
@@ -151,19 +151,19 @@ BOOST_AUTO_TEST_CASE( basic_collision )
  */
 BOOST_AUTO_TEST_CASE( non_interfering_collision )
 {
-	wpath collision = Sandbox() / (NEW_FOLDER + L" (2)");
-	wpath expected = Sandbox() / NEW_FOLDER;
+    wpath collision = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath expected = Sandbox() / NEW_FOLDER;
 
-	BOOST_REQUIRE(create_directory(collision));
+    BOOST_REQUIRE(create_directory(collision));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
 }
 
 /**
@@ -172,22 +172,22 @@ BOOST_AUTO_TEST_CASE( non_interfering_collision )
  */
 BOOST_AUTO_TEST_CASE( multiple_collision )
 {
-	wpath collision1 = Sandbox() / NEW_FOLDER;
-	wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-	wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    wpath collision1 = Sandbox() / NEW_FOLDER;
+    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
-	BOOST_REQUIRE(create_directory(collision1));
-	BOOST_REQUIRE(create_directory(collision2));
+    BOOST_REQUIRE(create_directory(collision1));
+    BOOST_REQUIRE(create_directory(collision2));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision1));
-	BOOST_REQUIRE(is_directory(collision2));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision1));
+    BOOST_REQUIRE(is_directory(collision2));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 3);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 3);
 }
 
 /**
@@ -196,22 +196,22 @@ BOOST_AUTO_TEST_CASE( multiple_collision )
  */
 BOOST_AUTO_TEST_CASE( non_contiguous_collision1 )
 {
-	wpath collision1 = Sandbox() / NEW_FOLDER;
-	wpath collision2 = Sandbox() / (NEW_FOLDER + L" (3)");
-	wpath expected = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath collision1 = Sandbox() / NEW_FOLDER;
+    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (3)");
+    wpath expected = Sandbox() / (NEW_FOLDER + L" (2)");
 
-	BOOST_REQUIRE(create_directory(collision1));
-	BOOST_REQUIRE(create_directory(collision2));
+    BOOST_REQUIRE(create_directory(collision1));
+    BOOST_REQUIRE(create_directory(collision2));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision1));
-	BOOST_REQUIRE(is_directory(collision2));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision1));
+    BOOST_REQUIRE(is_directory(collision2));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 3);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 3);
 }
 
 /**
@@ -221,25 +221,25 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision1 )
  */
 BOOST_AUTO_TEST_CASE( non_contiguous_collision2 )
 {
-	wpath collision1 = Sandbox() / NEW_FOLDER;
-	wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-	wpath collision3 = Sandbox() / (NEW_FOLDER + L" (4)");
-	wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    wpath collision1 = Sandbox() / NEW_FOLDER;
+    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath collision3 = Sandbox() / (NEW_FOLDER + L" (4)");
+    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
-	BOOST_REQUIRE(create_directory(collision1));
-	BOOST_REQUIRE(create_directory(collision2));
-	BOOST_REQUIRE(create_directory(collision3));
+    BOOST_REQUIRE(create_directory(collision1));
+    BOOST_REQUIRE(create_directory(collision2));
+    BOOST_REQUIRE(create_directory(collision3));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision1));
-	BOOST_REQUIRE(is_directory(collision2));
-	BOOST_REQUIRE(is_directory(collision3));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision1));
+    BOOST_REQUIRE(is_directory(collision2));
+    BOOST_REQUIRE(is_directory(collision3));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
 }
 
 /**
@@ -249,25 +249,25 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision2 )
  */
 BOOST_AUTO_TEST_CASE( collision_suffix_mismatch )
 {
-	wpath collision1 = Sandbox() / NEW_FOLDER;
-	wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-	wpath collision3 = Sandbox() / (NEW_FOLDER + L" (3) ");
-	wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    wpath collision1 = Sandbox() / NEW_FOLDER;
+    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath collision3 = Sandbox() / (NEW_FOLDER + L" (3) ");
+    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
-	BOOST_REQUIRE(create_directory(collision1));
-	BOOST_REQUIRE(create_directory(collision2));
-	BOOST_REQUIRE(create_directory(collision3));
+    BOOST_REQUIRE(create_directory(collision1));
+    BOOST_REQUIRE(create_directory(collision2));
+    BOOST_REQUIRE(create_directory(collision3));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision1));
-	BOOST_REQUIRE(is_directory(collision2));
-	BOOST_REQUIRE(is_directory(collision3));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision1));
+    BOOST_REQUIRE(is_directory(collision2));
+    BOOST_REQUIRE(is_directory(collision3));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
 }
 
 /**
@@ -277,25 +277,25 @@ BOOST_AUTO_TEST_CASE( collision_suffix_mismatch )
  */
 BOOST_AUTO_TEST_CASE( collision_prefix_mismatch )
 {
-	wpath collision1 = Sandbox() / NEW_FOLDER;
-	wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-	wpath collision3 = Sandbox() / (L" " + NEW_FOLDER + L" (3) ");
-	wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    wpath collision1 = Sandbox() / NEW_FOLDER;
+    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    wpath collision3 = Sandbox() / (L" " + NEW_FOLDER + L" (3) ");
+    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
-	BOOST_REQUIRE(create_directory(collision1));
-	BOOST_REQUIRE(create_directory(collision2));
-	BOOST_REQUIRE(create_directory(collision3));
+    BOOST_REQUIRE(create_directory(collision1));
+    BOOST_REQUIRE(create_directory(collision2));
+    BOOST_REQUIRE(create_directory(collision3));
 
-	NewFolder command = new_folder_command();
-	command(NULL, NULL);
+    NewFolder command = new_folder_command();
+    command(NULL, NULL);
 
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_directory(collision1));
-	BOOST_REQUIRE(is_directory(collision2));
-	BOOST_REQUIRE(is_directory(collision3));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_directory(collision1));
+    BOOST_REQUIRE(is_directory(collision2));
+    BOOST_REQUIRE(is_directory(collision3));
 
-	BOOST_CHECK_EQUAL(
-		distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
+    BOOST_CHECK_EQUAL(
+        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -309,22 +309,22 @@ BOOST_FIXTURE_TEST_SUITE( new_folder_task_pane_tests, PidlFixture )
  */
 BOOST_AUTO_TEST_CASE( task_pane_old_site )
 {
-	std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > panes =
-		remote_folder_task_pane_tasks(
-			NULL, sandbox_pidl(), NULL,
-			bind(&NewFolderCommandFixture::Provider, this),
-			bind(&NewFolderCommandFixture::Consumer, this));
+    std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > panes =
+        remote_folder_task_pane_tasks(
+            NULL, sandbox_pidl(), NULL,
+            bind(&NewFolderCommandFixture::Provider, this),
+            bind(&NewFolderCommandFixture::Consumer, this));
 
-	BOOST_REQUIRE(panes.first);
+    BOOST_REQUIRE(panes.first);
 
-	com_ptr<IUICommand> new_folder;
-	ULONG fetched = 0;
-	HRESULT hr = panes.first->Next(1, new_folder.out(), &fetched);
-	BOOST_REQUIRE_OK(hr);
+    com_ptr<IUICommand> new_folder;
+    ULONG fetched = 0;
+    HRESULT hr = panes.first->Next(1, new_folder.out(), &fetched);
+    BOOST_REQUIRE_OK(hr);
 
-	com_ptr<IObjectWithSite> object = try_cast(new_folder);
-	hr = object->SetSite(NULL);
-	BOOST_REQUIRE_OK(hr);
+    com_ptr<IObjectWithSite> object = try_cast(new_folder);
+    hr = object->SetSite(NULL);
+    BOOST_REQUIRE_OK(hr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

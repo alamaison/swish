@@ -63,15 +63,15 @@ using std::wstring;
  * @param[out] paKeys  Location in which to return th allocated array.
  */
 /* static */ HRESULT CRegistry::GetHostFolderAssocKeys(
-	UINT *pcKeys, HKEY **paKeys)
+    UINT *pcKeys, HKEY **paKeys)
 throw()
 {
-	try
-	{
-		return _GetHKEYArrayFromKeynames(
-			_GetHostFolderAssocKeynames(), pcKeys, paKeys);
-	}
-	WINAPI_COM_CATCH();
+    try
+    {
+        return _GetHKEYArrayFromKeynames(
+            _GetHostFolderAssocKeynames(), pcKeys, paKeys);
+    }
+    WINAPI_COM_CATCH();
 }
 
 /**
@@ -102,38 +102,38 @@ throw()
  * @param[out] paKeys  Location in which to return th allocated array.
  */
 HRESULT CRegistry::GetRemoteFolderAssocKeys(
-	remote_itemid_view itemid, UINT *pcKeys, HKEY **paKeys)
+    remote_itemid_view itemid, UINT *pcKeys, HKEY **paKeys)
 {
-	try
-	{
-		return _GetHKEYArrayFromKeynames(
-			_GetRemoteFolderAssocKeynames(itemid), pcKeys, paKeys);
-	}
-	WINAPI_COM_CATCH();
+    try
+    {
+        return _GetHKEYArrayFromKeynames(
+            _GetRemoteFolderAssocKeynames(itemid), pcKeys, paKeys);
+    }
+    WINAPI_COM_CATCH();
 }
 
 namespace {
 
 CRegistry::KeyNames remote_folder_background_key_names() 
 {
-	CRegistry::KeyNames names;
+    CRegistry::KeyNames names;
 
-	names.push_back(L"Directory\\Background");
+    names.push_back(L"Directory\\Background");
 
-	return names;
+    return names;
 }
 
 }
 
 HRESULT CRegistry::GetRemoteFolderBackgroundAssocKeys(
-	UINT *pcKeys, HKEY **paKeys)
+    UINT *pcKeys, HKEY **paKeys)
 {
-	try
-	{
-		return _GetHKEYArrayFromKeynames(
-			remote_folder_background_key_names(), pcKeys, paKeys);
-	}
-	WINAPI_COM_CATCH();
+    try
+    {
+        return _GetHKEYArrayFromKeynames(
+            remote_folder_background_key_names(), pcKeys, paKeys);
+    }
+    WINAPI_COM_CATCH();
 }
 
 
@@ -153,12 +153,12 @@ HRESULT CRegistry::GetRemoteFolderBackgroundAssocKeys(
 /* static */ CRegistry::KeyNames CRegistry::_GetHostFolderAssocKeynames()
 throw()
 {
-	KeyNames vecNames;
+    KeyNames vecNames;
 
-	// Add virtual folder specific items
-	vecNames.push_back(L"Folder");
+    // Add virtual folder specific items
+    vecNames.push_back(L"Folder");
 
-	return vecNames;
+    return vecNames;
 }
 
 /**
@@ -183,39 +183,39 @@ throw()
  *                information is being requested.
  */
 /* static */ CRegistry::KeyNames CRegistry::_GetRemoteFolderAssocKeynames(
-	remote_itemid_view itemid)
+    remote_itemid_view itemid)
 throw(...)
 {
-	KeyNames vecNames;
+    KeyNames vecNames;
 
-	// If this is a directory, add directory-specific items
-	if (itemid.is_folder())
-	{
-		vecNames = _GetKeynamesForFolder();
-	}
-	else
-	{
-		wstring extension = wpath(itemid.filename()).extension();
-		wstring::size_type dot_index = extension.find(L".");
-		if (dot_index != wstring::npos)
-			extension.erase(dot_index);
+    // If this is a directory, add directory-specific items
+    if (itemid.is_folder())
+    {
+        vecNames = _GetKeynamesForFolder();
+    }
+    else
+    {
+        wstring extension = wpath(itemid.filename()).extension();
+        wstring::size_type dot_index = extension.find(L".");
+        if (dot_index != wstring::npos)
+            extension.erase(dot_index);
 
-		// Get extension-specific keys
-		// We don't want to add the {.ext} key itself to the list
-		// of keys but rather, we should use it's default value to 
-		// look up its file class.
-		// e.g:
-		//   HKCR\.txt => (Default) txtfile
-		// so we look up the following key
-		//   HKCR\txtfile
-		vecNames = _GetKeynamesForExtension(extension.c_str());
-	}
+        // Get extension-specific keys
+        // We don't want to add the {.ext} key itself to the list
+        // of keys but rather, we should use it's default value to 
+        // look up its file class.
+        // e.g:
+        //   HKCR\.txt => (Default) txtfile
+        // so we look up the following key
+        //   HKCR\txtfile
+        vecNames = _GetKeynamesForExtension(extension.c_str());
+    }
 
-	// Add names of keys that apply to items of all types
-	KeyNames vecCommon = _GetKeynamesCommonToAll();
-	vecNames.insert(vecNames.end(), vecCommon.begin(), vecCommon.end());
+    // Add names of keys that apply to items of all types
+    KeyNames vecCommon = _GetKeynamesCommonToAll();
+    vecNames.insert(vecNames.end(), vecCommon.begin(), vecCommon.end());
 
-	return vecNames;
+    return vecNames;
 }
 
 /**
@@ -224,13 +224,13 @@ throw(...)
 /* static */ CRegistry::KeyNames CRegistry::_GetKeynamesForFolder()
 throw()
 {
-	KeyNames vecKeynames;
+    KeyNames vecKeynames;
 
-	vecKeynames.push_back(L"Folder");
-	vecKeynames.push_back(L"Directory");
-	vecKeynames.push_back(L"Directory\\Background");
+    vecKeynames.push_back(L"Folder");
+    vecKeynames.push_back(L"Directory");
+    vecKeynames.push_back(L"Directory\\Background");
 
-	return vecKeynames;
+    return vecKeynames;
 }
 
 /**
@@ -239,11 +239,11 @@ throw()
 /* static */ CRegistry::KeyNames CRegistry::_GetKeynamesCommonToAll()
 throw()
 {
-	KeyNames vecKeynames;
+    KeyNames vecKeynames;
 
-	vecKeynames.push_back(L"AllFilesystemObjects");
+    vecKeynames.push_back(L"AllFilesystemObjects");
 
-	return vecKeynames;
+    return vecKeynames;
 }
 
 /**
@@ -255,130 +255,130 @@ throw()
  *        HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ext
  */
 /* static */ CRegistry::KeyNames CRegistry::_GetKeynamesForExtension(
-	__in PCWSTR pwszExtension)
+    __in PCWSTR pwszExtension)
 throw()
 {
-	KeyNames vecKeynames;
-	CString strExtension = CString(L".") + pwszExtension;
+    KeyNames vecKeynames;
+    CString strExtension = CString(L".") + pwszExtension;
 
-	// Start digging at HKCR\.{szExtension}
-	CRegKey reg;
-	if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)	== ERROR_SUCCESS)
-	{
-		vecKeynames.push_back(strExtension);
+    // Start digging at HKCR\.{szExtension}
+    CRegKey reg;
+    if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)    == ERROR_SUCCESS)
+    {
+        vecKeynames.push_back(strExtension);
 
-		// Try to get registered file class key (extensions's default val)
-		wchar_t wszClass[2048]; ULONG cchClass = 2048;
-		if (reg.QueryStringValue(L"", wszClass, &cchClass) == ERROR_SUCCESS
-		 && cchClass > 1
-		 && reg.Open(HKEY_CLASSES_ROOT, wszClass, KEY_READ) == ERROR_SUCCESS)
-		{
-			vecKeynames.push_back(wszClass);
+        // Try to get registered file class key (extensions's default val)
+        wchar_t wszClass[2048]; ULONG cchClass = 2048;
+        if (reg.QueryStringValue(L"", wszClass, &cchClass) == ERROR_SUCCESS
+         && cchClass > 1
+         && reg.Open(HKEY_CLASSES_ROOT, wszClass, KEY_READ) == ERROR_SUCCESS)
+        {
+            vecKeynames.push_back(wszClass);
 
-			// Does this class contain a CurVer subkey pointing to another
-			// version of this file.
-			//   e.g.: PowerPoint.Show\CurVer => PowerPoint.Show.12
-			CString strCurVer = wszClass;
-			strCurVer += L"\\CurVer";
-			if (reg.Open(HKEY_CLASSES_ROOT, strCurVer, KEY_READ)
-				== ERROR_SUCCESS)
-			{
-				// Does this CurVer exist?
-				wchar_t wszCurVer[2048]; ULONG cchCurVer = 2048;
-				if (reg.QueryStringValue(L"", wszCurVer, &cchCurVer) ==
-					ERROR_SUCCESS && cchCurVer > 1
-				 && reg.Open(HKEY_CLASSES_ROOT, wszCurVer, KEY_READ) == 
-					ERROR_SUCCESS)
-				{
-					vecKeynames.push_back(wszCurVer);
-				}
-			}
-		}
-	}
+            // Does this class contain a CurVer subkey pointing to another
+            // version of this file.
+            //   e.g.: PowerPoint.Show\CurVer => PowerPoint.Show.12
+            CString strCurVer = wszClass;
+            strCurVer += L"\\CurVer";
+            if (reg.Open(HKEY_CLASSES_ROOT, strCurVer, KEY_READ)
+                == ERROR_SUCCESS)
+            {
+                // Does this CurVer exist?
+                wchar_t wszCurVer[2048]; ULONG cchCurVer = 2048;
+                if (reg.QueryStringValue(L"", wszCurVer, &cchCurVer) ==
+                    ERROR_SUCCESS && cchCurVer > 1
+                 && reg.Open(HKEY_CLASSES_ROOT, wszCurVer, KEY_READ) == 
+                    ERROR_SUCCESS)
+                {
+                    vecKeynames.push_back(wszCurVer);
+                }
+            }
+        }
+    }
 
-	// Dig again at HKCR\SystemFileAssociations\.{sxExtension}
-	CString strSysFileAssocExt = L"SystemFileAssociations\\" + strExtension;
-	if (reg.Open(HKEY_CLASSES_ROOT, strSysFileAssocExt, KEY_READ)
-		== ERROR_SUCCESS)
-	{
-		vecKeynames.push_back(strSysFileAssocExt);
-	}
+    // Dig again at HKCR\SystemFileAssociations\.{sxExtension}
+    CString strSysFileAssocExt = L"SystemFileAssociations\\" + strExtension;
+    if (reg.Open(HKEY_CLASSES_ROOT, strSysFileAssocExt, KEY_READ)
+        == ERROR_SUCCESS)
+    {
+        vecKeynames.push_back(strSysFileAssocExt);
+    }
 
-	// Dig again at HKCR\.{szExtension}\PerceivedType
-	if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)
-		== ERROR_SUCCESS)
-	{
-		wchar_t wszPerceivedType[2048]; ULONG cchPerceivedType = 2048;
-		if (reg.QueryStringValue(
-				L"PerceivedType", wszPerceivedType, &cchPerceivedType)
-			== ERROR_SUCCESS && cchPerceivedType > 1)
-		{
-			CString strPerceivedType = 
-				CString(L"SystemFileAssociations\\") + wszPerceivedType;
+    // Dig again at HKCR\.{szExtension}\PerceivedType
+    if (reg.Open(HKEY_CLASSES_ROOT, strExtension, KEY_READ)
+        == ERROR_SUCCESS)
+    {
+        wchar_t wszPerceivedType[2048]; ULONG cchPerceivedType = 2048;
+        if (reg.QueryStringValue(
+                L"PerceivedType", wszPerceivedType, &cchPerceivedType)
+            == ERROR_SUCCESS && cchPerceivedType > 1)
+        {
+            CString strPerceivedType = 
+                CString(L"SystemFileAssociations\\") + wszPerceivedType;
 
-			if (reg.Open(HKEY_CLASSES_ROOT, strPerceivedType, KEY_READ)
-				== ERROR_SUCCESS)
-				vecKeynames.push_back(strPerceivedType);
-		}
-	}
+            if (reg.Open(HKEY_CLASSES_ROOT, strPerceivedType, KEY_READ)
+                == ERROR_SUCCESS)
+                vecKeynames.push_back(strPerceivedType);
+        }
+    }
 
-	if (!vecKeynames.size())
-		vecKeynames.push_back(L"Unknown");
+    if (!vecKeynames.size())
+        vecKeynames.push_back(L"Unknown");
 
-	vecKeynames.push_back(L"*");
+    vecKeynames.push_back(L"*");
 
-	ATLASSERT( vecKeynames.size() <= 6 ); 
-	return vecKeynames;
+    ATLASSERT( vecKeynames.size() <= 6 ); 
+    return vecKeynames;
 }
 
 /**
  * Create SHAlloced array of HKEYs from a list of registry key names.
  */
 /* static */ HRESULT CRegistry::_GetHKEYArrayFromKeynames(
-	const KeyNames vecNames, UINT *pcKeys, HKEY **paKeys)
+    const KeyNames vecNames, UINT *pcKeys, HKEY **paKeys)
 throw()
 {
-	vector<HKEY> vecKeys = _GetKeysFromKeynames(vecNames);
-	return _GetHKEYArrayFromVector(vecKeys, pcKeys, paKeys);
+    vector<HKEY> vecKeys = _GetKeysFromKeynames(vecNames);
+    return _GetHKEYArrayFromVector(vecKeys, pcKeys, paKeys);
 }
 
 /**
  * Create SHAlloced array of HKEYs from a list of HKEYs.
  */
 /* static */ HRESULT CRegistry::_GetHKEYArrayFromVector(
-	const vector<HKEY> vecKeys, UINT *pcKeys, HKEY **paKeys)
+    const vector<HKEY> vecKeys, UINT *pcKeys, HKEY **paKeys)
 throw()
 {
-	ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
+    ATLASSERT( vecKeys.size() <= 16 ); // CDefFolderMenu_Create2's maximum
 
-	HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
-	for (UINT i = 0; i < vecKeys.size(); i++)
-		aKeys[i] = vecKeys[i];
+    HKEY *aKeys = (HKEY *)::SHAlloc(vecKeys.size() * sizeof HKEY); 
+    for (UINT i = 0; i < vecKeys.size(); i++)
+        aKeys[i] = vecKeys[i];
 
-	*pcKeys = static_cast<UINT>(vecKeys.size());
-	*paKeys = aKeys;
+    *pcKeys = static_cast<UINT>(vecKeys.size());
+    *paKeys = aKeys;
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
  * Create list of registry handles from list of keys names.
  */
 /* static */ vector<HKEY> CRegistry::_GetKeysFromKeynames(
-	const KeyNames vecKeynames)
+    const KeyNames vecKeynames)
 throw()
 {
-	LSTATUS rc = ERROR_SUCCESS;
-	vector<HKEY> vecKeys;
-	
-	for each (CString strKeyname in vecKeynames)
-	{
-		CRegKey reg;
-		rc = reg.Open(HKEY_CLASSES_ROOT, strKeyname, KEY_READ);
-		ATLASSERT(rc == ERROR_SUCCESS);
-		if (rc == ERROR_SUCCESS)
-			vecKeys.push_back(reg.Detach());
-	}
+    LSTATUS rc = ERROR_SUCCESS;
+    vector<HKEY> vecKeys;
+    
+    for each (CString strKeyname in vecKeynames)
+    {
+        CRegKey reg;
+        rc = reg.Open(HKEY_CLASSES_ROOT, strKeyname, KEY_READ);
+        ATLASSERT(rc == ERROR_SUCCESS);
+        if (rc == ERROR_SUCCESS)
+            vecKeys.push_back(reg.Detach());
+    }
 
-	return vecKeys;
+    return vecKeys;
 }

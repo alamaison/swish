@@ -49,47 +49,47 @@ namespace test {
 
 namespace detail {
 
-	inline comet::com_ptr<ISftpProvider> provider_instance(
-		const comet::bstr_t& host, const comet::bstr_t& user, int port)
-	{
-		std::wstring item_name = 
-			L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L"@" + 
-			host + L":" + swish::port_to_wstring(port);
+    inline comet::com_ptr<ISftpProvider> provider_instance(
+        const comet::bstr_t& host, const comet::bstr_t& user, int port)
+    {
+        std::wstring item_name = 
+            L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L"@" + 
+            host + L":" + swish::port_to_wstring(port);
 
-		return winapi::com::object_from_moniker_name<ISftpProvider>(item_name);
-	}
+        return winapi::com::object_from_moniker_name<ISftpProvider>(item_name);
+    }
 
-	/**
-	 * Helper to ensure CoInitialize/CoUnitialize is called correctly for
-	 * static object instance.
-	 */
-	class static_provider
-	{
-	public:
-		static_provider(
-			const std::string& host, const std::string& user, int port)
-			: m_provider(provider_instance(host, user, port)) {}
+    /**
+     * Helper to ensure CoInitialize/CoUnitialize is called correctly for
+     * static object instance.
+     */
+    class static_provider
+    {
+    public:
+        static_provider(
+            const std::string& host, const std::string& user, int port)
+            : m_provider(provider_instance(host, user, port)) {}
 
-		comet::com_ptr<ISftpProvider> get() const { return m_provider; }
+        comet::com_ptr<ISftpProvider> get() const { return m_provider; }
 
-	private:
-		comet::auto_coinit coinit;
-		comet::com_ptr<ISftpProvider> m_provider;
-	};
+    private:
+        comet::auto_coinit coinit;
+        comet::com_ptr<ISftpProvider> m_provider;
+    };
 
-	static boost::shared_ptr<static_provider> s_provider; ///< static provider
+    static boost::shared_ptr<static_provider> s_provider; ///< static provider
 
-	template<typename ServerType>
-	boost::shared_ptr<ServerType> singleton_server()
-	{
-		static boost::shared_ptr<ServerType> s_server;
-		if (!s_server)
-		{
-			s_server = boost::make_shared<ServerType>();
-		}
+    template<typename ServerType>
+    boost::shared_ptr<ServerType> singleton_server()
+    {
+        static boost::shared_ptr<ServerType> s_server;
+        if (!s_server)
+        {
+            s_server = boost::make_shared<ServerType>();
+        }
 
-		return s_server;
-	}
+        return s_server;
+    }
 }
 
 /**
@@ -102,32 +102,32 @@ class mortality_policy_base
 {
 public:
 
-	std::string host() const { return server().GetHost(); }
+    std::string host() const { return server().GetHost(); }
 
-	std::string user() const { return server().GetUser(); }
+    std::string user() const { return server().GetUser(); }
 
-	int port() const { return server().GetPort(); }
+    int port() const { return server().GetPort(); }
 
-	boost::filesystem::path private_key() const
-	{ return server().PrivateKeyPath(); }
+    boost::filesystem::path private_key() const
+    { return server().PrivateKeyPath(); }
 
-	boost::filesystem::path public_key() const
-	{ return server().PublicKeyPath(); }
+    boost::filesystem::path public_key() const
+    { return server().PublicKeyPath(); }
 
-	std::string local_to_remote(const boost::filesystem::path& local_path)
-	const
-	{
-		return server().ToRemotePath(local_path);
-	}
+    std::string local_to_remote(const boost::filesystem::path& local_path)
+    const
+    {
+        return server().ToRemotePath(local_path);
+    }
 
-	boost::filesystem::wpath local_to_remote(
-		const boost::filesystem::wpath& local_path) const
-	{
-		return server().ToRemotePath(local_path);
-	}
+    boost::filesystem::wpath local_to_remote(
+        const boost::filesystem::wpath& local_path) const
+    {
+        return server().ToRemotePath(local_path);
+    }
 
 private:
-	virtual const ServerType& server() const = 0;
+    virtual const ServerType& server() const = 0;
 };
 
 /**
@@ -146,25 +146,25 @@ class immortal_provider : public mortality_policy_base<ServerType>
 {
 public:
 
-	/**
-	 * Return a pointer to the static provider instance.
-	 *
-	 * Created on demand on the first request.
-	 */
-	comet::com_ptr<ISftpProvider> provider() const
-	{
-		if (!detail::s_provider)
-		{
-			detail::s_provider = boost::make_shared<detail::static_provider>(
-				host(), user(), port());
-		}
+    /**
+     * Return a pointer to the static provider instance.
+     *
+     * Created on demand on the first request.
+     */
+    comet::com_ptr<ISftpProvider> provider() const
+    {
+        if (!detail::s_provider)
+        {
+            detail::s_provider = boost::make_shared<detail::static_provider>(
+                host(), user(), port());
+        }
 
-		return detail::s_provider->get();
-	}
-	
+        return detail::s_provider->get();
+    }
+    
 private:
-	const ServerType& server() const
-	{ return *detail::singleton_server<ServerType>(); }
+    const ServerType& server() const
+    { return *detail::singleton_server<ServerType>(); }
 };
 
 /**
@@ -183,82 +183,82 @@ class mortal_provider : public mortality_policy_base<ServerType>
 {
 public:
 
-	/**
-	 * Return a pointer to a new provider instance.
-	 */
-	comet::com_ptr<ISftpProvider> provider()
-	{
-		if (!m_provider)
-		{
-			m_provider = detail::provider_instance(
-				m_server.GetHost(), m_server.GetUser(), m_server.GetPort());
-		}
+    /**
+     * Return a pointer to a new provider instance.
+     */
+    comet::com_ptr<ISftpProvider> provider()
+    {
+        if (!m_provider)
+        {
+            m_provider = detail::provider_instance(
+                m_server.GetHost(), m_server.GetUser(), m_server.GetPort());
+        }
 
-		return m_provider;
-	}
+        return m_provider;
+    }
 
 private:
-	comet::auto_coinit m_coinit;
-	ServerType m_server;
-	comet::com_ptr<ISftpProvider> m_provider;
+    comet::auto_coinit m_coinit;
+    ServerType m_server;
+    comet::com_ptr<ISftpProvider> m_provider;
 
-	const ServerType& server() const { return m_server; }
+    const ServerType& server() const { return m_server; }
 };
 
 template<typename MortalityPolicy>
 class ProviderFixtureT :
-	public test::ComFixture, public test::SandboxFixture
+    public test::ComFixture, public test::SandboxFixture
 {
 public:
 
-	/**
-	 * Get a CProvider instance connected to the fixture SSH server.
-	 */
-	comet::com_ptr<ISftpProvider> ProviderFixtureT::Provider()
-	{
-		return m_policy.provider();
-	}
+    /**
+     * Get a CProvider instance connected to the fixture SSH server.
+     */
+    comet::com_ptr<ISftpProvider> ProviderFixtureT::Provider()
+    {
+        return m_policy.provider();
+    }
 
-	/**
-	 * Get a dummy consumer to use in calls to provider.
-	 */
-	comet::com_ptr<ISftpConsumer> ProviderFixtureT::Consumer()
-	{
-		comet::com_ptr<test::CConsumerStub> consumer = 
-			new test::CConsumerStub(
-				m_policy.private_key(), m_policy.public_key());
-		return consumer;
-	}
+    /**
+     * Get a dummy consumer to use in calls to provider.
+     */
+    comet::com_ptr<ISftpConsumer> ProviderFixtureT::Consumer()
+    {
+        comet::com_ptr<test::CConsumerStub> consumer = 
+            new test::CConsumerStub(
+                m_policy.private_key(), m_policy.public_key());
+        return consumer;
+    }
 
-	std::string GetUser() { return m_policy.user(); }
-	std::string GetHost() { return m_policy.host(); }
-	int GetPort() { return m_policy.port(); }
+    std::string GetUser() { return m_policy.user(); }
+    std::string GetHost() { return m_policy.host(); }
+    int GetPort() { return m_policy.port(); }
 
-	std::string ToRemotePath(const boost::filesystem::path& local_path)
-	{
-		return m_policy.local_to_remote(local_path);
-	}
+    std::string ToRemotePath(const boost::filesystem::path& local_path)
+    {
+        return m_policy.local_to_remote(local_path);
+    }
 
-	boost::filesystem::wpath ToRemotePath(
-		const boost::filesystem::wpath& local_path)
-	{
-		return m_policy.local_to_remote(local_path);
-	}
+    boost::filesystem::wpath ToRemotePath(
+        const boost::filesystem::wpath& local_path)
+    {
+        return m_policy.local_to_remote(local_path);
+    }
 
 private:
-	MortalityPolicy m_policy;
+    MortalityPolicy m_policy;
 };
 
 #ifdef _DEBUG
 typedef ProviderFixtureT<
-	immortal_provider<test::OpenSshFixture> > ProviderFixture;
+    immortal_provider<test::OpenSshFixture> > ProviderFixture;
 #else
 typedef ProviderFixtureT<
-	mortal_provider<test::OpenSshFixture> > ProviderFixture;
+    mortal_provider<test::OpenSshFixture> > ProviderFixture;
 #endif
 
 typedef ProviderFixtureT<
-	mortal_provider<test::OpenSshFixture> >
+    mortal_provider<test::OpenSshFixture> >
 MortalProviderFixture;
 
 } // namespace test

@@ -67,7 +67,7 @@ struct provider_typelib;
 // @{
 struct Provider
 {
-	typedef make_list<ISftpProvider>::result interfaces;
+    typedef make_list<ISftpProvider>::result interfaces;
     typedef make_list<>::result              source_interfaces;
     typedef make_list<CProvider>::result     interface_impls;
     typedef provider_typelib                 type_library;
@@ -77,7 +77,7 @@ struct Provider
 
 struct RealDispenser
 {
-	typedef make_list<IOleItemContainer>::result interfaces;
+    typedef make_list<IOleItemContainer>::result interfaces;
     typedef make_list<>::result                  source_interfaces;
     typedef make_list<CDispenser>::result        interface_impls;
     typedef provider_typelib                     type_library;
@@ -126,20 +126,20 @@ template<> struct comtype<Dispenser> {
 
 template<> struct comtype<IParseDisplayName>
 {
-	static const IID& uuid() throw() { return IID_IParseDisplayName; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IParseDisplayName; }
+    typedef IUnknown base;
 };
 
 template<> struct comtype<IOleContainer>
 {
-	static const IID& uuid() throw() { return IID_IOleContainer; }
-	typedef IParseDisplayName base;
+    static const IID& uuid() throw() { return IID_IOleContainer; }
+    typedef IParseDisplayName base;
 };
 
 template<> struct comtype<IOleItemContainer>
 {
-	static const IID& uuid() throw() { return IID_IOleItemContainer; }
-	typedef IOleContainer base;
+    static const IID& uuid() throw() { return IID_IOleItemContainer; }
+    typedef IOleContainer base;
 };
 
 }
@@ -155,71 +155,71 @@ template<typename ITF_LIST, bool LOCK_MODULE>
 class class_object_base : public comet::implement_qi<ITF_LIST>
 {
 public:
-	STDMETHOD_(ULONG, AddRef)()
-	{
-		if (LOCK_MODULE) module().lock();
-		return 2;
-	}
+    STDMETHOD_(ULONG, AddRef)()
+    {
+        if (LOCK_MODULE) module().lock();
+        return 2;
+    }
 
-	STDMETHOD_(ULONG, Release)()
-	{
-		if (LOCK_MODULE) module().unlock();
-		return 1;
-	}
+    STDMETHOD_(ULONG, Release)()
+    {
+        if (LOCK_MODULE) module().unlock();
+        return 1;
+    }
 
-	STDMETHOD(LockServer)(BOOL bLock)
-	{
-		if (bLock)
-			module().lock();
-		else
-			module().unlock();
-		return S_OK;
-	}
+    STDMETHOD(LockServer)(BOOL bLock)
+    {
+        if (bLock)
+            module().lock();
+        else
+            module().unlock();
+        return S_OK;
+    }
 };
 
 }
 
 template<bool LOCK_MODULE>
 struct comet::impl::factory_builder_aux<
-	comet::impl::ft_standard, coclass_implementation<Dispenser>, LOCK_MODULE>
+    comet::impl::ft_standard, coclass_implementation<Dispenser>, LOCK_MODULE>
 {
-	typedef class_object_base<Dispenser::interface_impls, LOCK_MODULE>
-		is_factory;
+    typedef class_object_base<Dispenser::interface_impls, LOCK_MODULE>
+        is_factory;
 };
 
 template<bool LOCK_MODULE>
 struct comet::impl::factory_builder_aux<
-	comet::impl::ft_standard, coclass_implementation<RealDispenser>,
-	LOCK_MODULE>
+    comet::impl::ft_standard, coclass_implementation<RealDispenser>,
+    LOCK_MODULE>
 {
-	typedef class_object_base<RealDispenser::interface_impls, LOCK_MODULE>
-		is_factory;
+    typedef class_object_base<RealDispenser::interface_impls, LOCK_MODULE>
+        is_factory;
 };
 
 template<>
 class coclass_implementation<Dispenser> : public CDelegateDispenser
 {
 public:
-	enum { factory_type = comet::impl::ft_standard };
-	enum { thread_model = comet::thread_model::Free };
-	static const wchar_t* get_progid() { return L"Provider.Dispenser"; }
+    enum { factory_type = comet::impl::ft_standard };
+    enum { thread_model = comet::thread_model::Free };
+    static const wchar_t* get_progid() { return L"Provider.Dispenser"; }
 };
 
 template<>
 class coclass_implementation<RealDispenser> : public CDispenser
 {
 public:
-	enum { factory_type = comet::impl::ft_standard };
-	enum { thread_model = comet::thread_model::Both };
-	static const wchar_t* get_progid() { return L"Provider.RealDispenser"; }
+    enum { factory_type = comet::impl::ft_standard };
+    enum { thread_model = comet::thread_model::Both };
+    static const wchar_t* get_progid() { return L"Provider.RealDispenser"; }
 };
 
 template<>
 class coclass_implementation<Provider> :
-	public comet::coclass<Provider, comet::thread_model::Apartment>
+    public comet::coclass<Provider, comet::thread_model::Apartment>
 {
 public:
-	static const wchar_t* get_progid() { return L"Provider.Provider"; }
+    static const wchar_t* get_progid() { return L"Provider.Provider"; }
 };
 
 /**
@@ -227,7 +227,7 @@ public:
  */
 struct provider_typelib
 {
-	typedef make_list<Provider, RealDispenser, Dispenser>::result coclasses;
+    typedef make_list<Provider, RealDispenser, Dispenser>::result coclasses;
     enum { major_version = 1, minor_version = 0 };
 };
 
@@ -241,9 +241,9 @@ typedef comet::com_server<provider_typelib> server; ///< Comet module type
 
 /** DLL Entry Point. */
 extern "C" BOOL WINAPI DllMain(
-	HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+    HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	return server::DllMain(hInstance, dwReason, lpReserved);
+    return server::DllMain(hInstance, dwReason, lpReserved);
 }
 
 /** Used to determine whether the DLL can be unloaded by OLE. */
@@ -271,7 +271,7 @@ STDAPI DllRegisterServer()
 /** Remove entries from the system registry. */
 STDAPI DllUnregisterServer()
 {
-	return server::DllUnregisterServer();
+    return server::DllUnregisterServer();
 }
 
 #pragma endregion

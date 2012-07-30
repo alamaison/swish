@@ -44,56 +44,56 @@ typedef boost::function<void (void)> on_click_callback;
 class checkbox_impl : public ezel::detail::window_impl
 {
 public:
-	typedef ezel::detail::window_impl super;
+    typedef ezel::detail::window_impl super;
 
-	typedef ezel::detail::command_map<BN_CLICKED> commands;
+    typedef ezel::detail::command_map<BN_CLICKED> commands;
 
-	virtual void handle_command(
-		WORD command_id, WPARAM wparam, LPARAM lparam)
-	{
-		dispatch_command(this, command_id, wparam, lparam);
-	}
+    virtual void handle_command(
+        WORD command_id, WPARAM wparam, LPARAM lparam)
+    {
+        dispatch_command(this, command_id, wparam, lparam);
+    }
 
-	checkbox_impl(
-		const std::wstring& text, short left, short top, short width,
-		short height)
-		:
-		ezel::detail::window_impl(text, left, top, width, height)
-		{}
+    checkbox_impl(
+        const std::wstring& text, short left, short top, short width,
+        short height)
+        :
+        ezel::detail::window_impl(text, left, top, width, height)
+        {}
 
-	std::wstring window_class() const { return L"button"; }
+    std::wstring window_class() const { return L"button"; }
 
-	DWORD style() const
-	{
-		return WS_CHILD | WS_VISIBLE | BS_CHECKBOX | WS_TABSTOP;
-	}
+    DWORD style() const
+    {
+        return WS_CHILD | WS_VISIBLE | BS_CHECKBOX | WS_TABSTOP;
+    }
 
-	boost::signal<void ()>& on_click() { return m_on_click; }
+    boost::signal<void ()>& on_click() { return m_on_click; }
 
-	void on(command<BN_CLICKED>) { m_on_click(); }
+    void on(command<BN_CLICKED>) { m_on_click(); }
 
 private:
 
-	boost::signal<void ()> m_on_click;
-	bool m_default;
+    boost::signal<void ()> m_on_click;
+    bool m_default;
 };
 
 class checkbox : public ezel::control<checkbox_impl>
 {
 public:
-	checkbox(
-		const std::wstring& text, short left, short top, short width,
-		short height)
-		:
-		control<checkbox_impl>(
-			boost::shared_ptr<checkbox_impl>(
-				new checkbox_impl(text, left, top, width, height))) {}
+    checkbox(
+        const std::wstring& text, short left, short top, short width,
+        short height)
+        :
+        control<checkbox_impl>(
+            boost::shared_ptr<checkbox_impl>(
+                new checkbox_impl(text, left, top, width, height))) {}
 
-	std::wstring text() const { return impl()->text(); }
-	short left() const { return impl()->left(); }
-	short top() const { return impl()->top(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
+    std::wstring text() const { return impl()->text(); }
+    short left() const { return impl()->left(); }
+    short top() const { return impl()->top(); }
+    short width() const { return impl()->width(); }
+    short height() const { return impl()->height(); }
 };
 
 }} // namespace ezel::controls

@@ -55,8 +55,8 @@ using comet::module;
 
 template<> struct comet::comtype<IOleItemContainer>
 {
-	static const IID& uuid() throw() { return IID_IOleItemContainer; }
-	typedef IUnknown IOleContainer;
+    static const IID& uuid() throw() { return IID_IOleItemContainer; }
+    typedef IUnknown IOleContainer;
 };
 
 namespace swish {
@@ -65,107 +65,107 @@ namespace dispenser {
 
 namespace {
 
-	critical_section real_dispenser_lock;
-	IOleItemContainer* real_dispenser = NULL;
+    critical_section real_dispenser_lock;
+    IOleItemContainer* real_dispenser = NULL;
 
-	/**
-	 * Return a pointer to the real dispenser.
-	 */
-	IOleItemContainer* dispenser()
-	{
-		if (!real_dispenser) // First run - no dispenser yet
-		{
-			auto_cs cs(real_dispenser_lock);
+    /**
+     * Return a pointer to the real dispenser.
+     */
+    IOleItemContainer* dispenser()
+    {
+        if (!real_dispenser) // First run - no dispenser yet
+        {
+            auto_cs cs(real_dispenser_lock);
 
-			// Check twice: keep common case fast by not locking first
-			if (!real_dispenser)
-			{
-				real_dispenser = class_object<IOleItemContainer>(
-					L"Provider.RealDispenser").detach();
-			}
-		}
+            // Check twice: keep common case fast by not locking first
+            if (!real_dispenser)
+            {
+                real_dispenser = class_object<IOleItemContainer>(
+                    L"Provider.RealDispenser").detach();
+            }
+        }
 
-		return real_dispenser;
-	}
+        return real_dispenser;
+    }
 }
 
 // IParseDisplayName
 
 STDMETHODIMP CDelegateDispenser::ParseDisplayName( 
-	IBindCtx* pbc, LPOLESTR pszDisplayName, ULONG* pchEaten, 
-	IMoniker** ppmkOut)
+    IBindCtx* pbc, LPOLESTR pszDisplayName, ULONG* pchEaten, 
+    IMoniker** ppmkOut)
 {
-	try
-	{
-		return dispenser()->ParseDisplayName(
-			pbc, pszDisplayName, pchEaten, ppmkOut) | raise_exception;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    try
+    {
+        return dispenser()->ParseDisplayName(
+            pbc, pszDisplayName, pchEaten, ppmkOut) | raise_exception;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 // IOleContainer
 
 STDMETHODIMP CDelegateDispenser::EnumObjects(
-	DWORD grfFlags, IEnumUnknown** ppenum)
+    DWORD grfFlags, IEnumUnknown** ppenum)
 {
-	try
-	{
-		return dispenser()->EnumObjects(grfFlags, ppenum) | raise_exception;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    try
+    {
+        return dispenser()->EnumObjects(grfFlags, ppenum) | raise_exception;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 STDMETHODIMP CDelegateDispenser::LockContainer(BOOL fLock)
 {
-	try
-	{
-		if (fLock)
-			module().lock();
-		else
-			module().unlock();
-		return dispenser()->LockContainer(fLock) | raise_exception;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    try
+    {
+        if (fLock)
+            module().lock();
+        else
+            module().unlock();
+        return dispenser()->LockContainer(fLock) | raise_exception;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 // IOleItemContainer
 
 STDMETHODIMP CDelegateDispenser::GetObject( 
-	LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
-	void** ppvObject)
+    LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
+    void** ppvObject)
 {
-	try
-	{
-		return dispenser()->GetObject(
-			pszItem, dwSpeedNeeded, pbc, riid, ppvObject) | raise_exception;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    try
+    {
+        return dispenser()->GetObject(
+            pszItem, dwSpeedNeeded, pbc, riid, ppvObject) | raise_exception;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 STDMETHODIMP CDelegateDispenser::GetObjectStorage(
-	LPOLESTR pszItem, IBindCtx* pbc, REFIID riid, void** ppvStorage)
+    LPOLESTR pszItem, IBindCtx* pbc, REFIID riid, void** ppvStorage)
 {
-	try
-	{
-		return dispenser()->GetObjectStorage(
-			pszItem, pbc, riid, ppvStorage) | raise_exception;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    try
+    {
+        return dispenser()->GetObjectStorage(
+            pszItem, pbc, riid, ppvStorage) | raise_exception;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 STDMETHODIMP CDelegateDispenser::IsRunning(LPOLESTR pszItem)
 {
-	try
-	{
-		return dispenser()->IsRunning(pszItem) | raise_exception;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    try
+    {
+        return dispenser()->IsRunning(pszItem) | raise_exception;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 }}} // namespace swish::provider::dispenser

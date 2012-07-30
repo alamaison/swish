@@ -1,7 +1,7 @@
 /**
     @file
 
-	Component to handle user-interaction between the user and an SftpProvider.
+    Component to handle user-interaction between the user and an SftpProvider.
 
     @if license
 
@@ -40,48 +40,48 @@ class CUserInteraction : public comet::simple_object<ISftpConsumer>
 {
 public:
 
-	typedef ISftpConsumer interface_is;
+    typedef ISftpConsumer interface_is;
 
-	CUserInteraction(HWND hwnd);
+    CUserInteraction(HWND hwnd);
 
-	/**
-	 * User interaction callbacks.
-	 * @{
-	 */
-	// ISftpConsumer Methods
-	IFACEMETHODIMP OnPasswordRequest(
-		__in BSTR bstrRequest, __out BSTR *pbstrPassword
-	);
-	IFACEMETHODIMP OnKeyboardInteractiveRequest(
-		__in BSTR bstrName, __in BSTR bstrInstruction,
-		__in SAFEARRAY *psaPrompts,
-		__in SAFEARRAY *psaShowResponses,
-		__deref_out SAFEARRAY **ppsaResponses
-	);
-	IFACEMETHODIMP OnPrivateKeyFileRequest(
-		__out BSTR *pbstrPrivateKeyFile
-	);
-	IFACEMETHODIMP OnPublicKeyFileRequest(
-		__out BSTR *pbstrPublicKeyFile
-	);
-	IFACEMETHODIMP OnConfirmOverwrite(
-		__in BSTR bstrOldFile,
-		__in BSTR bstrNewFile
-	);
-	IFACEMETHODIMP OnHostkeyMismatch(
-		__in BSTR bstrHostName,
-		__in BSTR bstrHostKey,
-		__in BSTR bstrHostKeyType
-	);
-	IFACEMETHODIMP OnHostkeyUnknown(
-		__in BSTR bstrHostName,
-		__in BSTR bstrHostKey,
-		__in BSTR bstrHostKeyType
-	);
-	/* @} */
+    /**
+     * User interaction callbacks.
+     * @{
+     */
+    // ISftpConsumer Methods
+    IFACEMETHODIMP OnPasswordRequest(
+        __in BSTR bstrRequest, __out BSTR *pbstrPassword
+    );
+    IFACEMETHODIMP OnKeyboardInteractiveRequest(
+        __in BSTR bstrName, __in BSTR bstrInstruction,
+        __in SAFEARRAY *psaPrompts,
+        __in SAFEARRAY *psaShowResponses,
+        __deref_out SAFEARRAY **ppsaResponses
+    );
+    IFACEMETHODIMP OnPrivateKeyFileRequest(
+        __out BSTR *pbstrPrivateKeyFile
+    );
+    IFACEMETHODIMP OnPublicKeyFileRequest(
+        __out BSTR *pbstrPublicKeyFile
+    );
+    IFACEMETHODIMP OnConfirmOverwrite(
+        __in BSTR bstrOldFile,
+        __in BSTR bstrNewFile
+    );
+    IFACEMETHODIMP OnHostkeyMismatch(
+        __in BSTR bstrHostName,
+        __in BSTR bstrHostKey,
+        __in BSTR bstrHostKeyType
+    );
+    IFACEMETHODIMP OnHostkeyUnknown(
+        __in BSTR bstrHostName,
+        __in BSTR bstrHostKey,
+        __in BSTR bstrHostKeyType
+    );
+    /* @} */
 
 private:
-	HWND m_hwnd;      ///< Window to use as parent for user interaction.
+    HWND m_hwnd;      ///< Window to use as parent for user interaction.
 };
 
 }} // namespace swish::frontend

@@ -62,9 +62,9 @@ BOOST_FIXTURE_TEST_SUITE(auth_tests, session_fixture)
  */
 BOOST_AUTO_TEST_CASE( intial_state )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -76,11 +76,11 @@ BOOST_AUTO_TEST_CASE( intial_state )
  */
 BOOST_AUTO_TEST_CASE( password_fail )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK_THROW(
-		s.authenticate_by_password(user(), "dummy password"), ssh_error);
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK_THROW(
+        s.authenticate_by_password(user(), "dummy password"), ssh_error);
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -88,13 +88,13 @@ BOOST_AUTO_TEST_CASE( password_fail )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK_THROW(
-		s.authenticate_by_key(
-			user(), wrong_public_key_path(), private_key_path(), ""),
-		ssh_error);
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK_THROW(
+        s.authenticate_by_key(
+            user(), wrong_public_key_path(), private_key_path(), ""),
+        ssh_error);
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -102,13 +102,13 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK_THROW(
-		s.authenticate_by_key(
-			user(), public_key_path(), wrong_private_key_path(), ""),
-		ssh_error);
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK_THROW(
+        s.authenticate_by_key(
+            user(), public_key_path(), wrong_private_key_path(), ""),
+        ssh_error);
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -117,13 +117,13 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK_THROW(
-		s.authenticate_by_key(
-			user(), wrong_public_key_path(), wrong_private_key_path(), ""),
-		ssh_error);
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK_THROW(
+        s.authenticate_by_key(
+            user(), wrong_public_key_path(), wrong_private_key_path(), ""),
+        ssh_error);
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -131,12 +131,12 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
  */
 BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK_THROW(
-		s.authenticate_by_key(
-			user(), private_key_path(), private_key_path(), ""), ssh_error);
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK_THROW(
+        s.authenticate_by_key(
+            user(), private_key_path(), private_key_path(), ""), ssh_error);
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -144,12 +144,12 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
  */
 BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK_THROW(
-		s.authenticate_by_key(
-			user(), public_key_path(), public_key_path(), ""), ssh_error);
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK_THROW(
+        s.authenticate_by_key(
+            user(), public_key_path(), public_key_path(), ""), ssh_error);
+    BOOST_CHECK(!s.authenticated());
 }
 
 /**
@@ -157,11 +157,11 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
  */
 BOOST_AUTO_TEST_CASE( pubkey )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK(!s.authenticated());
-	s.authenticate_by_key(user(), public_key_path(), private_key_path(), "");
-	BOOST_CHECK(s.authenticated());
+    BOOST_CHECK(!s.authenticated());
+    s.authenticate_by_key(user(), public_key_path(), private_key_path(), "");
+    BOOST_CHECK(s.authenticated());
 }
 
 /**
@@ -169,28 +169,28 @@ BOOST_AUTO_TEST_CASE( pubkey )
  */
 BOOST_AUTO_TEST_CASE( agent )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK(!s.authenticated());
 
-	try
-	{
-		agent_identities identities = s.agent_identities();
+    try
+    {
+        agent_identities identities = s.agent_identities();
 
-		BOOST_FOREACH(identity i, identities)
-		{
-			try
-			{
-				i.authenticate(user());
-				BOOST_CHECK(s.authenticated());
-				return;
-			}
-			catch(const exception&) {}
+        BOOST_FOREACH(identity i, identities)
+        {
+            try
+            {
+                i.authenticate(user());
+                BOOST_CHECK(s.authenticated());
+                return;
+            }
+            catch(const exception&) {}
 
-			BOOST_CHECK(!s.authenticated());
-		}
-	}
-	catch (exception&) { /* agent not running - failure ok */ }
+            BOOST_CHECK(!s.authenticated());
+        }
+    }
+    catch (exception&) { /* agent not running - failure ok */ }
 }
 
 /**
@@ -198,23 +198,23 @@ BOOST_AUTO_TEST_CASE( agent )
  */
 BOOST_AUTO_TEST_CASE( agent_copy )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK(!s.authenticated());
 
-	try
-	{
-		agent_identities identities = s.agent_identities();
-		agent_identities identities2 = identities;
+    try
+    {
+        agent_identities identities = s.agent_identities();
+        agent_identities identities2 = identities;
 
-		BOOST_FOREACH(identity i, identities)
-		{
-		}
-		BOOST_FOREACH(identity i, identities2)
-		{
-		}
-	}
-	catch (exception&) { /* agent not running - failure ok */ }
+        BOOST_FOREACH(identity i, identities)
+        {
+        }
+        BOOST_FOREACH(identity i, identities2)
+        {
+        }
+    }
+    catch (exception&) { /* agent not running - failure ok */ }
 }
 
 /**
@@ -222,23 +222,23 @@ BOOST_AUTO_TEST_CASE( agent_copy )
  */
 BOOST_AUTO_TEST_CASE( agent_idempotence )
 {
-	session s = test_session();
+    session s = test_session();
 
-	BOOST_CHECK(!s.authenticated());
+    BOOST_CHECK(!s.authenticated());
 
-	try
-	{
-		agent_identities identities = s.agent_identities();
-		agent_identities identities2 = s.agent_identities();
+    try
+    {
+        agent_identities identities = s.agent_identities();
+        agent_identities identities2 = s.agent_identities();
 
-		BOOST_FOREACH(identity i, identities)
-		{
-		}
-		BOOST_FOREACH(identity i, identities2)
-		{
-		}
-	} 
-	catch (exception&) { /* agent not running - failure ok */ }
+        BOOST_FOREACH(identity i, identities)
+        {
+        }
+        BOOST_FOREACH(identity i, identities2)
+        {
+        }
+    } 
+    catch (exception&) { /* agent not running - failure ok */ }
 }
 
 BOOST_AUTO_TEST_SUITE_END();

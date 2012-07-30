@@ -48,55 +48,55 @@ BOOST_AUTO_TEST_SUITE(default_context_menu_callback_tests)
 
 BOOST_AUTO_TEST_CASE( create )
 {
-	default_context_menu_callback();
+    default_context_menu_callback();
 }
 
 BOOST_AUTO_TEST_CASE( unhandled_message )
 {
-	default_context_menu_callback callback;
-	HRESULT hr = callback(NULL, NULL, (UINT)-1, 6, 7);
-	BOOST_CHECK_EQUAL(hr, E_NOTIMPL);
+    default_context_menu_callback callback;
+    HRESULT hr = callback(NULL, NULL, (UINT)-1, 6, 7);
+    BOOST_CHECK_EQUAL(hr, E_NOTIMPL);
 }
 
 namespace {
 
-	class verb_callback : public default_context_menu_callback
-	{
-		virtual void verb(HWND, com_ptr<IDataObject>, UINT, wstring& verb_out)
-		{
-			verb_out = L"test";
-		}
+    class verb_callback : public default_context_menu_callback
+    {
+        virtual void verb(HWND, com_ptr<IDataObject>, UINT, wstring& verb_out)
+        {
+            verb_out = L"test";
+        }
 
-		virtual void verb(HWND, com_ptr<IDataObject>, UINT, string& verb_out)
-		{
-			verb_out = "another test";
-		}
-	};
+        virtual void verb(HWND, com_ptr<IDataObject>, UINT, string& verb_out)
+        {
+            verb_out = "another test";
+        }
+    };
 
 }
 
 BOOST_AUTO_TEST_CASE( verbw )
 {
-	verb_callback callback;
-	vector<wchar_t> buffer(5, L'Z');
-	HRESULT hr = callback(
-		NULL, NULL, DFM_GETVERBW, MAKELONG(6, buffer.size()),
-		(LPARAM)(&buffer[0]));
-	BOOST_REQUIRE_OK(hr);
+    verb_callback callback;
+    vector<wchar_t> buffer(5, L'Z');
+    HRESULT hr = callback(
+        NULL, NULL, DFM_GETVERBW, MAKELONG(6, buffer.size()),
+        (LPARAM)(&buffer[0]));
+    BOOST_REQUIRE_OK(hr);
 
-	wchar_t* expected = L"test";
-	BOOST_CHECK_EQUAL_COLLECTIONS(
-		buffer.begin(), buffer.end(), expected, expected + 5);
+    wchar_t* expected = L"test";
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), expected, expected + 5);
 }
 
 BOOST_AUTO_TEST_CASE( verbw_buffer_too_small )
 {
-	verb_callback callback;
-	vector<wchar_t> buffer(4, L'Z');
-	HRESULT hr = callback(
-		NULL, NULL, DFM_GETVERBW, MAKELONG(6, buffer.size()),
-		(LPARAM)(&buffer[0]));
-	BOOST_CHECK(FAILED(hr));
+    verb_callback callback;
+    vector<wchar_t> buffer(4, L'Z');
+    HRESULT hr = callback(
+        NULL, NULL, DFM_GETVERBW, MAKELONG(6, buffer.size()),
+        (LPARAM)(&buffer[0]));
+    BOOST_CHECK(FAILED(hr));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

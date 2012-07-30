@@ -39,28 +39,28 @@ namespace swish {
 namespace remote_folder {
 
 class CViewCallback :
-	public comet::simple_object<nse::CViewCallback, winapi::object_with_site>
+    public comet::simple_object<nse::CViewCallback, winapi::object_with_site>
 {
 public:
 
-	CViewCallback(const winapi::shell::pidl::apidl_t& folder_pidl);
+    CViewCallback(const winapi::shell::pidl::apidl_t& folder_pidl);
 
 private:
 
-	/// @name  SFVM_* message handlers
-	// @{
+    /// @name  SFVM_* message handlers
+    // @{
 
-	virtual bool on_window_created(HWND hwnd_view);
-	virtual bool on_get_notify(PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events);
-	virtual bool on_fs_notify(PCIDLIST_ABSOLUTE pidl, LONG event);
-	virtual bool on_get_webview_content(SFV_WEBVIEW_CONTENT_DATA& content_out);
-	virtual bool on_get_webview_tasks(SFV_WEBVIEW_TASKSECTION_DATA& tasks_out);
+    virtual bool on_window_created(HWND hwnd_view);
+    virtual bool on_get_notify(PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events);
+    virtual bool on_fs_notify(PCIDLIST_ABSOLUTE pidl, LONG event);
+    virtual bool on_get_webview_content(SFV_WEBVIEW_CONTENT_DATA& content_out);
+    virtual bool on_get_webview_tasks(SFV_WEBVIEW_TASKSECTION_DATA& tasks_out);
 
-	// @}
+    // @}
 
-	HWND m_hwnd_view;         ///< Handle to folder view window
-	winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
-	                                            ///< folder
+    HWND m_hwnd_view;         ///< Handle to folder view window
+    winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
+                                                ///< folder
 };
 
 }} // namespace remote::host_folder

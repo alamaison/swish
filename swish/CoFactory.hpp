@@ -44,25 +44,25 @@ template <typename T>
 class CCoFactory
 {
 public:
-	/**
-	 * Static factory method.
-	 *
-	 * This creator method provides a CComObject-based class with a way to 
-	 * create instances with exception-safe lifetimes.  The created 
-	 * instance is AddReffed, unlike those create by CreateInstance which 
-	 * have a reference count of 0.
-	 *
-	 * @returns  Smart pointer to the CComObject<T>-based COM object.
-	 * @throws   com_error if creation fails.
-	 */
-	static ATL::CComPtr<T> CreateCoObject() throw(...)
-	{
-		ATL::CComObject<T> *pObject = NULL;
-		HRESULT hr = ATL::CComObject<T>::CreateInstance(&pObject);
-		ATLENSURE_SUCCEEDED(hr);
+    /**
+     * Static factory method.
+     *
+     * This creator method provides a CComObject-based class with a way to 
+     * create instances with exception-safe lifetimes.  The created 
+     * instance is AddReffed, unlike those create by CreateInstance which 
+     * have a reference count of 0.
+     *
+     * @returns  Smart pointer to the CComObject<T>-based COM object.
+     * @throws   com_error if creation fails.
+     */
+    static ATL::CComPtr<T> CreateCoObject() throw(...)
+    {
+        ATL::CComObject<T> *pObject = NULL;
+        HRESULT hr = ATL::CComObject<T>::CreateInstance(&pObject);
+        ATLENSURE_SUCCEEDED(hr);
 
-		return pObject;
-	}
+        return pObject;
+    }
 };
 
 }; // namespace swish

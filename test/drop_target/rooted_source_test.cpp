@@ -52,63 +52,63 @@ using boost::filesystem::wpath;
 
 namespace {
 
-	class RootedSourceFixture : public SandboxFixture
-	{
-	public:
-		wpath test_root()
-		{
-			return Sandbox();
-		}
+    class RootedSourceFixture : public SandboxFixture
+    {
+    public:
+        wpath test_root()
+        {
+            return Sandbox();
+        }
 
-		wpath child_file()
-		{
-			return NewFileInSandbox();
-		}
+        wpath child_file()
+        {
+            return NewFileInSandbox();
+        }
 
-		wpath child_directory()
-		{
-			wpath directory = Sandbox() / L"testdir";
-			create_directory(directory);
-			return directory;
-		}
+        wpath child_directory()
+        {
+            wpath directory = Sandbox() / L"testdir";
+            create_directory(directory);
+            return directory;
+        }
 
-		wpath grandchild_file()
-		{
-			wpath directory = Sandbox() / L"testdir";
-			create_directory(directory);
+        wpath grandchild_file()
+        {
+            wpath directory = Sandbox() / L"testdir";
+            create_directory(directory);
 
-			wpath file = directory / L"testfile.txt";
-			wofstream s(file);
+            wpath file = directory / L"testfile.txt";
+            wofstream s(file);
 
-			return file;
-		}
+            return file;
+        }
 
-		wpath greatgrandchild_file()
-		{
-			wpath directory1 = Sandbox() / L"testdir1";
-			create_directory(directory1);
+        wpath greatgrandchild_file()
+        {
+            wpath directory1 = Sandbox() / L"testdir1";
+            create_directory(directory1);
 
-			wpath directory2 = directory1 / L"testdir2";
-			create_directory(directory2);
+            wpath directory2 = directory1 / L"testdir2";
+            create_directory(directory2);
 
-			wpath file = directory2 / L"testfile.txt";
-			wofstream s(file);
+            wpath file = directory2 / L"testfile.txt";
+            wofstream s(file);
 
-			return file;
-		}
+            return file;
+        }
 
-	};
+    };
 
-	inline bool operator==(const apidl_t& lhs, const apidl_t& rhs)
-	{
-		return pidl_shell_item(lhs).parsing_name()
-			== pidl_shell_item(rhs).parsing_name();
-	}
+    inline bool operator==(const apidl_t& lhs, const apidl_t& rhs)
+    {
+        return pidl_shell_item(lhs).parsing_name()
+            == pidl_shell_item(rhs).parsing_name();
+    }
 
-	apidl_t to_pidl(const wpath& path)
-	{
-		return pidl_from_parsing_name(path.file_string());
-	}
+    apidl_t to_pidl(const wpath& path)
+    {
+        return pidl_from_parsing_name(path.file_string());
+    }
 
 }
 
@@ -119,12 +119,12 @@ BOOST_FIXTURE_TEST_SUITE(rooted_source_tests, RootedSourceFixture)
  */
 BOOST_AUTO_TEST_CASE( root )
 {
-	apidl_t root_pidl = to_pidl(test_root());
-	RootedSource source(root_pidl, cpidl_t());
+    apidl_t root_pidl = to_pidl(test_root());
+    RootedSource source(root_pidl, cpidl_t());
 
-	BOOST_CHECK(source.pidl() == root_pidl);
-	BOOST_CHECK(source.common_root() == root_pidl);
-	BOOST_CHECK_EQUAL(source.relative_name(), L"");
+    BOOST_CHECK(source.pidl() == root_pidl);
+    BOOST_CHECK(source.common_root() == root_pidl);
+    BOOST_CHECK_EQUAL(source.relative_name(), L"");
 }
 
 /**
@@ -132,14 +132,14 @@ BOOST_AUTO_TEST_CASE( root )
  */
 BOOST_AUTO_TEST_CASE( child )
 {
-	wpath file = child_file();
-	apidl_t pidl = to_pidl(file);
+    wpath file = child_file();
+    apidl_t pidl = to_pidl(file);
 
-	RootedSource source(pidl.parent(), pidl.last_item());
+    RootedSource source(pidl.parent(), pidl.last_item());
 
-	BOOST_CHECK(source.pidl() == pidl);
-	BOOST_CHECK(source.common_root() == pidl.parent());
-	BOOST_CHECK_EQUAL(source.relative_name(), file.filename());
+    BOOST_CHECK(source.pidl() == pidl);
+    BOOST_CHECK(source.common_root() == pidl.parent());
+    BOOST_CHECK_EQUAL(source.relative_name(), file.filename());
 }
 
 /**
@@ -147,14 +147,14 @@ BOOST_AUTO_TEST_CASE( child )
  */
 BOOST_AUTO_TEST_CASE( child_dir )
 {
-	wpath directory = child_directory();
-	apidl_t pidl = to_pidl(directory);
+    wpath directory = child_directory();
+    apidl_t pidl = to_pidl(directory);
 
-	RootedSource source(pidl.parent(), pidl.last_item());
+    RootedSource source(pidl.parent(), pidl.last_item());
 
-	BOOST_CHECK(source.pidl() == pidl);
-	BOOST_CHECK(source.common_root() == pidl.parent());
-	BOOST_CHECK_EQUAL(source.relative_name(), directory.filename());
+    BOOST_CHECK(source.pidl() == pidl);
+    BOOST_CHECK(source.common_root() == pidl.parent());
+    BOOST_CHECK_EQUAL(source.relative_name(), directory.filename());
 }
 
 /**
@@ -162,20 +162,20 @@ BOOST_AUTO_TEST_CASE( child_dir )
  */
 BOOST_AUTO_TEST_CASE( grandchild )
 {
-	wpath file = grandchild_file();
-	apidl_t pidl = to_pidl(file);
-	apidl_t root_pidl = pidl.parent().parent();
-	pidl_t branch = pidl.parent().last_item() + pidl.last_item();
+    wpath file = grandchild_file();
+    apidl_t pidl = to_pidl(file);
+    apidl_t root_pidl = pidl.parent().parent();
+    pidl_t branch = pidl.parent().last_item() + pidl.last_item();
 
-	RootedSource source(root_pidl, branch);
+    RootedSource source(root_pidl, branch);
 
-	BOOST_CHECK(source.pidl() == pidl);
-	BOOST_CHECK(source.common_root() == root_pidl);
+    BOOST_CHECK(source.pidl() == pidl);
+    BOOST_CHECK(source.common_root() == root_pidl);
 
-	wpath expected_relative_name = file.parent_path().filename();
-	expected_relative_name /= file.filename();
-	BOOST_CHECK_EQUAL(
-		source.relative_name(), expected_relative_name.file_string());
+    wpath expected_relative_name = file.parent_path().filename();
+    expected_relative_name /= file.filename();
+    BOOST_CHECK_EQUAL(
+        source.relative_name(), expected_relative_name.file_string());
 }
 
 /**
@@ -183,23 +183,23 @@ BOOST_AUTO_TEST_CASE( grandchild )
  */
 BOOST_AUTO_TEST_CASE( greatgrandchild )
 {
-	wpath file = greatgrandchild_file();
-	apidl_t pidl = to_pidl(file);
-	apidl_t root_pidl = pidl.parent().parent().parent();
-	pidl_t branch = 
-		pidl.parent().parent().last_item() + pidl.parent().last_item() +
-		pidl.last_item();
+    wpath file = greatgrandchild_file();
+    apidl_t pidl = to_pidl(file);
+    apidl_t root_pidl = pidl.parent().parent().parent();
+    pidl_t branch = 
+        pidl.parent().parent().last_item() + pidl.parent().last_item() +
+        pidl.last_item();
 
-	RootedSource source(root_pidl, branch);
+    RootedSource source(root_pidl, branch);
 
-	BOOST_CHECK(source.pidl() == pidl);
-	BOOST_CHECK(source.common_root() == root_pidl);
+    BOOST_CHECK(source.pidl() == pidl);
+    BOOST_CHECK(source.common_root() == root_pidl);
 
-	wpath expected_relative_name = file.parent_path().parent_path().filename();
-	expected_relative_name /= file.parent_path().filename();
-	expected_relative_name /= file.filename();
-	BOOST_CHECK_EQUAL(
-		source.relative_name(), expected_relative_name.file_string());
+    wpath expected_relative_name = file.parent_path().parent_path().filename();
+    expected_relative_name /= file.parent_path().filename();
+    expected_relative_name /= file.filename();
+    BOOST_CHECK_EQUAL(
+        source.relative_name(), expected_relative_name.file_string());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

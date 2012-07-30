@@ -57,38 +57,38 @@ namespace ssh {
 
 namespace { // private
 
-	const string SANDBOX_NAME = "ssh-sandbox";
+    const string SANDBOX_NAME = "ssh-sandbox";
 
-	/**
-	 * Return the path to the sandbox directory.
-	 */
-	path sandbox_directory()
-	{
-		shared_ptr<char> name(
-			_tempnam(NULL, SANDBOX_NAME.c_str()), free);
-		BOOST_REQUIRE(name);
-		
-		return path(name.get());
-	}
+    /**
+     * Return the path to the sandbox directory.
+     */
+    path sandbox_directory()
+    {
+        shared_ptr<char> name(
+            _tempnam(NULL, SANDBOX_NAME.c_str()), free);
+        BOOST_REQUIRE(name);
+        
+        return path(name.get());
+    }
 }
 
 sandbox_fixture::sandbox_fixture() : m_sandbox(sandbox_directory())
 {
-	create_directory(m_sandbox);
+    create_directory(m_sandbox);
 }
 
 sandbox_fixture::~sandbox_fixture()
 {
-	try
-	{
-		remove_all(m_sandbox);
-	}
-	catch (...) {}
+    try
+    {
+        remove_all(m_sandbox);
+    }
+    catch (...) {}
 }
 
 path sandbox_fixture::sandbox()
 {
-	return m_sandbox;
+    return m_sandbox;
 }
 
 /**
@@ -97,17 +97,17 @@ path sandbox_fixture::sandbox()
  */
 path sandbox_fixture::new_file_in_sandbox()
 {
-	vector<char> buffer(MAX_PATH);
+    vector<char> buffer(MAX_PATH);
 
-	if (!GetTempFileNameA(
-		sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
-		throw system_error(::GetLastError(), get_system_category());
-	
-	path p = path(string(&buffer[0], buffer.size()));
-	BOOST_CHECK(exists(p));
-	BOOST_CHECK(is_regular_file(p));
-	BOOST_CHECK(p.is_complete());
-	return p;
+    if (!GetTempFileNameA(
+        sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
+        throw system_error(::GetLastError(), get_system_category());
+    
+    path p = path(string(&buffer[0], buffer.size()));
+    BOOST_CHECK(exists(p));
+    BOOST_CHECK(is_regular_file(p));
+    BOOST_CHECK(p.is_complete());
+    return p;
 }
 
 }} // namespace test::ssh

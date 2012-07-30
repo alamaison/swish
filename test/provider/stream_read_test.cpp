@@ -73,42 +73,42 @@ using std::vector;
 
 namespace { // private
 
-	const string TEST_DATA = "Humpty dumpty\nsat on the wall.\n\rHumpty ...";
+    const string TEST_DATA = "Humpty dumpty\nsat on the wall.\n\rHumpty ...";
 
-	/**
-	 * Fixture for tests that need to read data from an existing file.
-	 */
-	class StreamReadFixture : public StreamFixture
-	{
-	public:
+    /**
+     * Fixture for tests that need to read data from an existing file.
+     */
+    class StreamReadFixture : public StreamFixture
+    {
+    public:
 
-		/**
-		 * Put test data into a file in our sandbox.
-		 */
-		StreamReadFixture() : StreamFixture()
-		{
-			ofstream file(m_local_path, std::ios::binary);
-			file << ExpectedData() << std::flush;
-		}
+        /**
+         * Put test data into a file in our sandbox.
+         */
+        StreamReadFixture() : StreamFixture()
+        {
+            ofstream file(m_local_path, std::ios::binary);
+            file << ExpectedData() << std::flush;
+        }
 
-		/**
-		 * Create an IStream instance open for reading on a temporary file 
-		 * in our sandbox.  The file contained the same data that 
-		 * ExpectedData() returns.
-		 */
-		com_ptr<IStream> GetReadStream()
-		{
-			return GetStream(CSftpStream::read);
-		}
+        /**
+         * Create an IStream instance open for reading on a temporary file 
+         * in our sandbox.  The file contained the same data that 
+         * ExpectedData() returns.
+         */
+        com_ptr<IStream> GetReadStream()
+        {
+            return GetStream(CSftpStream::read);
+        }
 
-		/**
-		 * Return the data we expect to be able to read using the IStream.
-		 */
-		string ExpectedData()
-		{
-			return TEST_DATA;
-		}
-	};
+        /**
+         * Return the data we expect to be able to read using the IStream.
+         */
+        string ExpectedData()
+        {
+            return TEST_DATA;
+        }
+    };
 
 }
 
@@ -119,8 +119,8 @@ BOOST_FIXTURE_TEST_SUITE(StreamRead, StreamReadFixture)
  */
 BOOST_AUTO_TEST_CASE( get )
 {
-	com_ptr<IStream> stream = GetReadStream();
-	BOOST_REQUIRE(stream);
+    com_ptr<IStream> stream = GetReadStream();
+    BOOST_REQUIRE(stream);
 }
 
 /**
@@ -130,11 +130,11 @@ BOOST_AUTO_TEST_CASE( get )
  */
 BOOST_AUTO_TEST_CASE( get_readonly )
 {
-	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
-		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
+    if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+        BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
-	com_ptr<IStream> stream = GetReadStream();
-	BOOST_REQUIRE(stream);
+    com_ptr<IStream> stream = GetReadStream();
+    BOOST_REQUIRE(stream);
 }
 
 /**
@@ -142,19 +142,19 @@ BOOST_AUTO_TEST_CASE( get_readonly )
  */
 BOOST_AUTO_TEST_CASE( read_a_string )
 {
-	com_ptr<IStream> stream = GetReadStream();
+    com_ptr<IStream> stream = GetReadStream();
 
-	string expected = ExpectedData();
-	vector<char> buf(expected.size());
+    string expected = ExpectedData();
+    vector<char> buf(expected.size());
 
-	size_t bytes_read =	verify_stream_read(
-		&buf[0], numeric_cast<ULONG>(buf.size()), stream);
+    size_t bytes_read =    verify_stream_read(
+        &buf[0], numeric_cast<ULONG>(buf.size()), stream);
 
-	BOOST_CHECK_EQUAL(bytes_read, expected.size());
+    BOOST_CHECK_EQUAL(bytes_read, expected.size());
 
-	// Test that the bytes we read match
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(
-		buf.begin(), buf.end(), expected.begin(), expected.end());
+    // Test that the bytes we read match
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(
+        buf.begin(), buf.end(), expected.begin(), expected.end());
 }
 
 /**
@@ -162,22 +162,22 @@ BOOST_AUTO_TEST_CASE( read_a_string )
  */
 BOOST_AUTO_TEST_CASE( read_a_string_readonly )
 {
-	if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
-		BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
+    if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+        BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
-	com_ptr<IStream> stream = GetReadStream();
+    com_ptr<IStream> stream = GetReadStream();
 
-	string expected = ExpectedData();
-	vector<char> buf(expected.size());
+    string expected = ExpectedData();
+    vector<char> buf(expected.size());
 
-	size_t bytes_read =	verify_stream_read(
-		&buf[0], numeric_cast<ULONG>(buf.size()), stream);
+    size_t bytes_read =    verify_stream_read(
+        &buf[0], numeric_cast<ULONG>(buf.size()), stream);
 
-	BOOST_CHECK_EQUAL(bytes_read, expected.size());
+    BOOST_CHECK_EQUAL(bytes_read, expected.size());
 
-	// Test that the bytes we read match
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(
-		buf.begin(), buf.end(), expected.begin(), expected.end());
+    // Test that the bytes we read match
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(
+        buf.begin(), buf.end(), expected.begin(), expected.end());
 }
 
 /**
@@ -189,38 +189,38 @@ BOOST_AUTO_TEST_CASE( read_a_string_readonly )
 
 BOOST_AUTO_TEST_CASE( read_fail )
 {
-	com_ptr<IStream> stream = GetReadStream();
+    com_ptr<IStream> stream = GetReadStream();
 
-	// Open stream's file
-	shared_ptr<void> file_handle(
-		::CreateFile(
-			m_local_path.file_string().c_str(), 
-			GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
-		::CloseHandle);
-	if (file_handle.get() == INVALID_HANDLE_VALUE)
-		throw system_error(::GetLastError(), get_system_category());
+    // Open stream's file
+    shared_ptr<void> file_handle(
+        ::CreateFile(
+            m_local_path.file_string().c_str(), 
+            GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
+        ::CloseHandle);
+    if (file_handle.get() == INVALID_HANDLE_VALUE)
+        throw system_error(::GetLastError(), get_system_category());
 
-	// Lock it
-	if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
-		throw system_error(::GetLastError(), get_system_category());
+    // Lock it
+    if (!::LockFile(file_handle.get(), 0, 0, 30, 0))
+        throw system_error(::GetLastError(), get_system_category());
 
-	// Try to read from the stream
-	try
-	{
-		string expected = ExpectedData();
-		ULONG cbRead = 0;
-		vector<char> buf(expected.size());
-		BOOST_REQUIRE(FAILED(
-			stream->Read(&buf[0], numeric_cast<ULONG>(buf.size()),
-			&cbRead)));
-		BOOST_REQUIRE_EQUAL(cbRead, 0U);
-	}
-	catch (...)
-	{
-		::UnlockFile(file_handle.get(), 0, 0, 30, 0);
-		throw;
-	}
+    // Try to read from the stream
+    try
+    {
+        string expected = ExpectedData();
+        ULONG cbRead = 0;
+        vector<char> buf(expected.size());
+        BOOST_REQUIRE(FAILED(
+            stream->Read(&buf[0], numeric_cast<ULONG>(buf.size()),
+            &cbRead)));
+        BOOST_REQUIRE_EQUAL(cbRead, 0U);
+    }
+    catch (...)
+    {
+        ::UnlockFile(file_handle.get(), 0, 0, 30, 0);
+        throw;
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

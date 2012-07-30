@@ -54,77 +54,77 @@ using std::vector;
 
 namespace { // private
 
-	static const wstring CONNECTIONS_REGISTRY_KEY_NAME = 
-		L"Software\\Swish\\Connections";
-	static const wchar_t* HOST_VALUE_NAME = L"Host";
-	static const wchar_t* PORT_VALUE_NAME = L"Port";
-	static const wchar_t* USER_VALUE_NAME = L"User";
-	static const wchar_t* PATH_VALUE_NAME = L"Path";
+    static const wstring CONNECTIONS_REGISTRY_KEY_NAME = 
+        L"Software\\Swish\\Connections";
+    static const wchar_t* HOST_VALUE_NAME = L"Host";
+    static const wchar_t* PORT_VALUE_NAME = L"Port";
+    static const wchar_t* USER_VALUE_NAME = L"User";
+    static const wchar_t* PATH_VALUE_NAME = L"Path";
 
-	static const int MAX_REGISTRY_LEN = 2048;
+    static const int MAX_REGISTRY_LEN = 2048;
 
-	/**
-	 * Get a single connection from the registry as a PIDL.
-	 *
-	 * @pre The @c Software\\Swish\\Connections registry key exists.
-	 * @pre The connection is present as a subkey of the 
-	 *      @c Software\\Swish\\Connections registry key whose name is given
-	 *      by @p label.
-	 *
-	 * @param label  Friendly name of the connection to load.
-	 *
-	 * @returns  A host PIDL holding the connection details.
-	 * @throws  com_error: E_FAIL if the registry key does not exist
-	 *          and E_UNEXPECTED if the registry is corrupted.
-	 */
-	cpidl_t GetConnectionDetailsFromRegistry(wstring label)
-	{
-		CRegKey registry;
-		LSTATUS rc;
+    /**
+     * Get a single connection from the registry as a PIDL.
+     *
+     * @pre The @c Software\\Swish\\Connections registry key exists.
+     * @pre The connection is present as a subkey of the 
+     *      @c Software\\Swish\\Connections registry key whose name is given
+     *      by @p label.
+     *
+     * @param label  Friendly name of the connection to load.
+     *
+     * @returns  A host PIDL holding the connection details.
+     * @throws  com_error: E_FAIL if the registry key does not exist
+     *          and E_UNEXPECTED if the registry is corrupted.
+     */
+    cpidl_t GetConnectionDetailsFromRegistry(wstring label)
+    {
+        CRegKey registry;
+        LSTATUS rc;
 
-		// Open HKCU\Software\Swish\Connections\<label> registry key
-		wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;
-		rc = registry.Open(HKEY_CURRENT_USER, key.c_str());
-		ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+        // Open HKCU\Software\Swish\Connections\<label> registry key
+        wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;
+        rc = registry.Open(HKEY_CURRENT_USER, key.c_str());
+        ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 
-		// Host
-		vector<wchar_t> host(MAX_HOSTNAME_LENZ);
-		if (host.size() > 0)
-		{
-			ULONG cch = numeric_cast<ULONG>(host.size());
-			rc = registry.QueryStringValue(HOST_VALUE_NAME, &host[0], &cch);
-			ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-		}
+        // Host
+        vector<wchar_t> host(MAX_HOSTNAME_LENZ);
+        if (host.size() > 0)
+        {
+            ULONG cch = numeric_cast<ULONG>(host.size());
+            rc = registry.QueryStringValue(HOST_VALUE_NAME, &host[0], &cch);
+            ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
+        }
 
-		// Port
-		DWORD port;
-		rc = registry.QueryDWORDValue(PORT_VALUE_NAME, port);
-		ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-		ATLASSERT(port >= MIN_PORT && port <= MAX_PORT);
+        // Port
+        DWORD port;
+        rc = registry.QueryDWORDValue(PORT_VALUE_NAME, port);
+        ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
+        ATLASSERT(port >= MIN_PORT && port <= MAX_PORT);
 
-		// User
-		vector<wchar_t> user(MAX_USERNAME_LENZ);
-		if (user.size() > 0)
-		{
-			ULONG cch = numeric_cast<ULONG>(user.size());
-			rc = registry.QueryStringValue(USER_VALUE_NAME, &user[0], &cch);
-			ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-		}
+        // User
+        vector<wchar_t> user(MAX_USERNAME_LENZ);
+        if (user.size() > 0)
+        {
+            ULONG cch = numeric_cast<ULONG>(user.size());
+            rc = registry.QueryStringValue(USER_VALUE_NAME, &user[0], &cch);
+            ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
+        }
 
-		// Path
-		vector<wchar_t> path(MAX_PATH_LENZ);
-		if (path.size() > 0)
-		{
-			ULONG cch = numeric_cast<ULONG>(path.size());
-			rc = registry.QueryStringValue(PATH_VALUE_NAME, &path[0], &cch);
-			ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-		}
+        // Path
+        vector<wchar_t> path(MAX_PATH_LENZ);
+        if (path.size() > 0)
+        {
+            ULONG cch = numeric_cast<ULONG>(path.size());
+            rc = registry.QueryStringValue(PATH_VALUE_NAME, &path[0], &cch);
+            ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
+        }
 
-		ATLENSURE(host.size() > 0 && user.size() > 0 && path.size() > 0);
+        ATLENSURE(host.size() > 0 && user.size() > 0 && path.size() > 0);
 
-		return create_host_itemid(
-			&host[0], &user[0], &path[0], port, &label[0]);
-	}
+        return create_host_itemid(
+            &host[0], &user[0], &path[0], port, &label[0]);
+    }
 }
 
 namespace swish {
@@ -145,34 +145,34 @@ namespace host_management {
  */
 vector<cpidl_t> LoadConnectionsFromRegistry()
 {
-	CRegKey registry;
-	LSTATUS rc;
-	vector<cpidl_t> connections;
+    CRegKey registry;
+    LSTATUS rc;
+    vector<cpidl_t> connections;
 
-	rc = registry.Open(
-		HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
+    rc = registry.Open(
+        HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
 
-	if (rc == ERROR_SUCCESS) // Legal to fail here - may be first ever connection
-	{
-		int iSubKey = 0;
-		do {
-			wchar_t label[MAX_LABEL_LENZ]; 
-			DWORD cchLabel = MAX_LABEL_LENZ;
-			rc = registry.EnumKey(iSubKey, label, &cchLabel);
-			if (rc == ERROR_SUCCESS)
-			{
-				connections.push_back(
-					GetConnectionDetailsFromRegistry(label));
-			}
-			iSubKey++;
-			// rc may be an error for corrupted registry entries such 
-			// as a label being too big.  We continue looping regardless.
-		} while (rc != ERROR_NO_MORE_ITEMS);
+    if (rc == ERROR_SUCCESS) // Legal to fail here - may be first ever connection
+    {
+        int iSubKey = 0;
+        do {
+            wchar_t label[MAX_LABEL_LENZ]; 
+            DWORD cchLabel = MAX_LABEL_LENZ;
+            rc = registry.EnumKey(iSubKey, label, &cchLabel);
+            if (rc == ERROR_SUCCESS)
+            {
+                connections.push_back(
+                    GetConnectionDetailsFromRegistry(label));
+            }
+            iSubKey++;
+            // rc may be an error for corrupted registry entries such 
+            // as a label being too big.  We continue looping regardless.
+        } while (rc != ERROR_NO_MORE_ITEMS);
 
-		ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
-	}
+        ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
+    }
 
-	return connections; // May be empty
+    return connections; // May be empty
 }
 
 /**
@@ -182,27 +182,27 @@ vector<cpidl_t> LoadConnectionsFromRegistry()
  * been added yet) the key is created and the host added to it.
  */
 void AddConnectionToRegistry(
-	wstring label, wstring host, int port, wstring username, wstring path)
+    wstring label, wstring host, int port, wstring username, wstring path)
 {
-	CRegKey registry;
-	LSTATUS rc;
+    CRegKey registry;
+    LSTATUS rc;
 
-	// Create HKCU\Software\Swish\Connections\<label> registry key
-	wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;
-	rc = registry.Create(HKEY_CURRENT_USER, key.c_str());
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    // Create HKCU\Software\Swish\Connections\<label> registry key
+    wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;
+    rc = registry.Create(HKEY_CURRENT_USER, key.c_str());
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 
-	rc = registry.SetStringValue(HOST_VALUE_NAME, host.c_str());
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    rc = registry.SetStringValue(HOST_VALUE_NAME, host.c_str());
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 
-	rc = registry.SetDWORDValue(PORT_VALUE_NAME, port);
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    rc = registry.SetDWORDValue(PORT_VALUE_NAME, port);
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 
-	rc = registry.SetStringValue(USER_VALUE_NAME, username.c_str());
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    rc = registry.SetStringValue(USER_VALUE_NAME, username.c_str());
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 
-	rc = registry.SetStringValue(PATH_VALUE_NAME, path.c_str());
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    rc = registry.SetStringValue(PATH_VALUE_NAME, path.c_str());
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 }
 
 /**
@@ -210,33 +210,33 @@ void AddConnectionToRegistry(
  */
 void RemoveConnectionFromRegistry(wstring label)
 {
-	CRegKey registry;
-	LSTATUS rc;
+    CRegKey registry;
+    LSTATUS rc;
 
-	rc = registry.Open(
-		HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
-	
-	rc = registry.RecurseDeleteKey(label.c_str());
-	ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    rc = registry.Open(
+        HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    
+    rc = registry.RecurseDeleteKey(label.c_str());
+    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
 }
 
 namespace {
 
-	class label_matches
-	{
-	public:
+    class label_matches
+    {
+    public:
 
-		label_matches(const wstring& label) : m_label(label) {}
+        label_matches(const wstring& label) : m_label(label) {}
 
-		bool operator()(const cpidl_t& connection)
-		{
-			return host_itemid_view(connection).label() == m_label;
-		}
+        bool operator()(const cpidl_t& connection)
+        {
+            return host_itemid_view(connection).label() == m_label;
+        }
 
-	private:
-		wstring m_label;
-	};
+    private:
+        wstring m_label;
+    };
 }
 
 /**
@@ -244,14 +244,14 @@ namespace {
  */
 bool ConnectionExists(wstring label)
 {
-	if (label.size() < 1)
-		return false;
+    if (label.size() < 1)
+        return false;
 
-	vector<cpidl_t> connections = LoadConnectionsFromRegistry();
+    vector<cpidl_t> connections = LoadConnectionsFromRegistry();
 
-	return find_if(
-		connections.begin(), connections.end(), label_matches(label))
-		!= connections.end();
+    return find_if(
+        connections.begin(), connections.end(), label_matches(label))
+        != connections.end();
 }
 
 }}} // namespace swish::host_folder::host_management

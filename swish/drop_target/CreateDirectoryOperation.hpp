@@ -39,24 +39,24 @@ class CreateDirectoryOperation : public Operation
 {
 public:
 
-	CreateDirectoryOperation(
-		const RootedSource& source, const SftpDestination& target);
+    CreateDirectoryOperation(
+        const RootedSource& source, const SftpDestination& target);
 
-	virtual std::wstring title() const;
+    virtual std::wstring title() const;
 
-	virtual std::wstring description() const;
+    virtual std::wstring description() const;
 
-	virtual void operator()(
-		OperationCallback& callback,
-		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer) const;
+    virtual void operator()(
+        OperationCallback& callback,
+        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer) const;
 
 private:
 
-	virtual Operation* do_clone() const;
+    virtual Operation* do_clone() const;
 
-	RootedSource m_source;
-	SftpDestination m_destination;
+    RootedSource m_source;
+    SftpDestination m_destination;
 };
 
 }}

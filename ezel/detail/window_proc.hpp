@@ -41,10 +41,10 @@ namespace detail {
 class window_proc_base
 {
 public:
-	virtual ~window_proc_base() {}
+    virtual ~window_proc_base() {}
 
-	virtual LRESULT do_default_handling(
-		UINT message_id, WPARAM wparam, LPARAM lparam) = 0;
+    virtual LRESULT do_default_handling(
+        UINT message_id, WPARAM wparam, LPARAM lparam) = 0;
 };
 
 /**
@@ -54,50 +54,50 @@ class window_proc : public window_proc_base
 {
 public:
 
-	/**
-	 * Subclass window.
-	 */
-	window_proc(HWND hwnd, WNDPROC new_proc) :
-		m_window(hwnd), m_proc(new_proc),
-		m_sub_proc(m_window.change_window_procedure(m_proc)) {}
+    /**
+     * Subclass window.
+     */
+    window_proc(HWND hwnd, WNDPROC new_proc) :
+        m_window(hwnd), m_proc(new_proc),
+        m_sub_proc(m_window.change_window_procedure(m_proc)) {}
 
-	/**
-	 * Unsubclass window.
-	 */
-	~window_proc()
-	{
-		try
-		{
-			WNDPROC current_wndproc = m_window.window_procedure();
-			if (current_wndproc == m_proc)
-			{
-				WNDPROC proc = m_window.change_window_procedure(m_sub_proc);
-				(void)proc;
-				assert(proc == m_proc); // mustn't remove someone else's
-				                        // window procedure
-			}
-		}
-		catch (const std::exception& e)
-		{
-			winapi::trace("window_proc destructor threw exception: %s")
-				% boost::diagnostic_information(e);
-		}
-	}
+    /**
+     * Unsubclass window.
+     */
+    ~window_proc()
+    {
+        try
+        {
+            WNDPROC current_wndproc = m_window.window_procedure();
+            if (current_wndproc == m_proc)
+            {
+                WNDPROC proc = m_window.change_window_procedure(m_sub_proc);
+                (void)proc;
+                assert(proc == m_proc); // mustn't remove someone else's
+                                        // window procedure
+            }
+        }
+        catch (const std::exception& e)
+        {
+            winapi::trace("window_proc destructor threw exception: %s")
+                % boost::diagnostic_information(e);
+        }
+    }
 
-	virtual LRESULT do_default_handling(
-		UINT message_id, WPARAM wparam, LPARAM lparam)
-	{
-		return ::CallWindowProcW(
-			m_sub_proc, m_window.hwnd(), message_id, wparam, lparam);
-	}
+    virtual LRESULT do_default_handling(
+        UINT message_id, WPARAM wparam, LPARAM lparam)
+    {
+        return ::CallWindowProcW(
+            m_sub_proc, m_window.hwnd(), message_id, wparam, lparam);
+    }
 
 protected:
-	winapi::gui::window<wchar_t>& window() { return m_window; }
+    winapi::gui::window<wchar_t>& window() { return m_window; }
 
 private:
-	winapi::gui::window<wchar_t> m_window;
-	WNDPROC m_proc;
-	WNDPROC m_sub_proc; ///< Subclassed window's default message handler
+    winapi::gui::window<wchar_t> m_window;
+    WNDPROC m_proc;
+    WNDPROC m_sub_proc; ///< Subclassed window's default message handler
 };
 
 
@@ -117,13 +117,13 @@ class dialog_proc : public window_proc
 {
 public:
 
-	dialog_proc(HWND hwnd, WNDPROC new_proc) : window_proc(hwnd, new_proc) {}
+    dialog_proc(HWND hwnd, WNDPROC new_proc) : window_proc(hwnd, new_proc) {}
 
-	virtual LRESULT do_default_handling(
-		UINT message_id, WPARAM wparam, LPARAM lparam)
-	{
-		return ::DefDlgProc(window().hwnd(), message_id, wparam, lparam);
-	}
+    virtual LRESULT do_default_handling(
+        UINT message_id, WPARAM wparam, LPARAM lparam)
+    {
+        return ::DefDlgProc(window().hwnd(), message_id, wparam, lparam);
+    }
 };
 
 }} // namespace ezel::detail

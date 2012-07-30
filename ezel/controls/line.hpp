@@ -42,31 +42,31 @@ class line_impl : public ezel::detail::window_impl
 {
 public:
 
-	line_impl(short left, short top, short width)
-		:
-		ezel::detail::window_impl(L"", left, top, width, 1) {}
+    line_impl(short left, short top, short width)
+        :
+        ezel::detail::window_impl(L"", left, top, width, 1) {}
 
-	std::wstring window_class() const { return L"static"; }
-	DWORD style() const
-	{
-		return WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ | WS_GROUP | SS_NOTIFY;
-	}
+    std::wstring window_class() const { return L"static"; }
+    DWORD style() const
+    {
+        return WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ | WS_GROUP | SS_NOTIFY;
+    }
 };
 
 class line : public ezel::control<line_impl>
 {
 public:
-	line(
-		short left, short top, short width)
-		:
-		control<line_impl>(
-			boost::shared_ptr<line_impl>(new line_impl(left, top, width)))
-		{}
+    line(
+        short left, short top, short width)
+        :
+        control<line_impl>(
+            boost::shared_ptr<line_impl>(new line_impl(left, top, width)))
+        {}
 
-	short left() const { return impl()->left(); }
-	short top() const { return impl()->top(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
+    short left() const { return impl()->left(); }
+    short top() const { return impl()->top(); }
+    short width() const { return impl()->width(); }
+    short height() const { return impl()->height(); }
 };
 
 }} // namespace ezel::controls

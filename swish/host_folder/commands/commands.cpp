@@ -71,60 +71,60 @@ namespace host_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> host_folder_command_provider(
-	HWND hwnd, const apidl_t& folder_pidl)
+    HWND hwnd, const apidl_t& folder_pidl)
 {
-	CExplorerCommandProvider::ordered_commands commands;
-	commands.push_back(new CExplorerCommand<Add>(hwnd, folder_pidl));
-	commands.push_back(new CExplorerCommand<Remove>(hwnd, folder_pidl));
-	return new CExplorerCommandProvider(commands);
+    CExplorerCommandProvider::ordered_commands commands;
+    commands.push_back(new CExplorerCommand<Add>(hwnd, folder_pidl));
+    commands.push_back(new CExplorerCommand<Remove>(hwnd, folder_pidl));
+    return new CExplorerCommandProvider(commands);
 }
 
 class CSftpTasksTitle : public simple_object<CUIElementErrorAdapter>
 {
 public:
 
-	virtual std::wstring title(
-		const comet::com_ptr<IShellItemArray>& /*items*/) const
-	{
-		return translate("SFTP Tasks");
-	}
+    virtual std::wstring title(
+        const comet::com_ptr<IShellItemArray>& /*items*/) const
+    {
+        return translate("SFTP Tasks");
+    }
 
-	virtual std::wstring icon(
-		const comet::com_ptr<IShellItemArray>& /*items*/) const
-	{
-		return L"shell32.dll,-9";
-	}
+    virtual std::wstring icon(
+        const comet::com_ptr<IShellItemArray>& /*items*/) const
+    {
+        return L"shell32.dll,-9";
+    }
 
-	virtual std::wstring tool_tip(
-		const comet::com_ptr<IShellItemArray>& /*items*/) const
-	{
-		return translate(
-			"These tasks help you manage Swish SFTP connections.");
-	}
+    virtual std::wstring tool_tip(
+        const comet::com_ptr<IShellItemArray>& /*items*/) const
+    {
+        return translate(
+            "These tasks help you manage Swish SFTP connections.");
+    }
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
 host_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
 {
-	return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
+    return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 host_folder_task_pane_tasks(HWND hwnd, const apidl_t& folder_pidl)
 {
-	typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
-	shared_command_vector commands =
-		make_shared< vector< com_ptr<IUICommand> > >();
+    typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
+    shared_command_vector commands =
+        make_shared< vector< com_ptr<IUICommand> > >();
 
-	commands->push_back(
-		new CUICommand< WebtaskCommandTitleAdapter<Add> >(hwnd, folder_pidl));
-	commands->push_back(
-		new CUICommand< WebtaskCommandTitleAdapter<Remove> >(hwnd, folder_pidl));
+    commands->push_back(
+        new CUICommand< WebtaskCommandTitleAdapter<Add> >(hwnd, folder_pidl));
+    commands->push_back(
+        new CUICommand< WebtaskCommandTitleAdapter<Remove> >(hwnd, folder_pidl));
 
-	com_ptr<IEnumUICommand> e = 
-		make_smart_enumeration<IEnumUICommand>(commands);
+    com_ptr<IEnumUICommand> e = 
+        make_smart_enumeration<IEnumUICommand>(commands);
 
-	return make_pair(e, com_ptr<IEnumUICommand>());
+    return make_pair(e, com_ptr<IEnumUICommand>());
 }
 
 }}} // namespace swish::host_folder::commands

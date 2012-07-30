@@ -47,17 +47,17 @@ using ATL::CComSafeArray;
 using comet::com_error;
 
 CKeyboardInteractive::CKeyboardInteractive(ISftpConsumer *pConsumer) throw() :
-	m_spConsumer(pConsumer), m_hr(S_OK)
+    m_spConsumer(pConsumer), m_hr(S_OK)
 {}
 
 void CKeyboardInteractive::SetErrorState(HRESULT hr) throw()
 {
-	m_hr = hr;
+    m_hr = hr;
 }
 
 HRESULT CKeyboardInteractive::GetErrorState() throw()
 {
-	return m_hr;
+    return m_hr;
 }
 
 /**
@@ -68,46 +68,46 @@ HRESULT CKeyboardInteractive::GetErrorState() throw()
  * prior to calling.
  */
 /* static */ void CKeyboardInteractive::OnKeyboardInteractive(
-	const char *name, int name_len,
-	const char *instruction, int instruction_len, 
-	int num_prompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts, 
-	LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses,
-	void **abstract) throw()
+    const char *name, int name_len,
+    const char *instruction, int instruction_len, 
+    int num_prompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts, 
+    LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses,
+    void **abstract) throw()
 {
-	if (!num_prompts && !name_len && !instruction_len)
-		return;
+    if (!num_prompts && !name_len && !instruction_len)
+        return;
 
-	// Retrieve pointer to our object instance from callback payload
-	ATLASSERT(*abstract);
-	CKeyboardInteractive *pThis =
-		static_cast<CKeyboardInteractive *>(*abstract);
+    // Retrieve pointer to our object instance from callback payload
+    ATLASSERT(*abstract);
+    CKeyboardInteractive *pThis =
+        static_cast<CKeyboardInteractive *>(*abstract);
 
-	try
-	{
-		// Pack prompt information into SAFEARRAYs
-		CComSafeArray<BSTR> saPrompts =
-			_PackPromptSafearray(num_prompts, prompts);
-		CComSafeArray<VARIANT_BOOL> saShowPrompts =
-			_PackEchoSafearray(num_prompts, prompts);
+    try
+    {
+        // Pack prompt information into SAFEARRAYs
+        CComSafeArray<BSTR> saPrompts =
+            _PackPromptSafearray(num_prompts, prompts);
+        CComSafeArray<VARIANT_BOOL> saShowPrompts =
+            _PackEchoSafearray(num_prompts, prompts);
 
-		// Send arrays to the front-end in a keyboard-interactive request
-		CComSafeArray<BSTR> saResponses = pThis->_SendRequest(
-			CComBSTR(name_len, name), CComBSTR(instruction_len, instruction),
-			saPrompts, saShowPrompts);
+        // Send arrays to the front-end in a keyboard-interactive request
+        CComSafeArray<BSTR> saResponses = pThis->_SendRequest(
+            CComBSTR(name_len, name), CComBSTR(instruction_len, instruction),
+            saPrompts, saShowPrompts);
 
-		// Pack responses into libssh2 data-structure
-		_ProcessResponses(saResponses, num_prompts, responses);
-	}
-	catch (com_error& e)
-	{
-		pThis->SetErrorState(e.hr());
-		return;
-	}
-	catch (...)
-	{
-		pThis->SetErrorState(E_UNEXPECTED);
-		return;
-	}
+        // Pack responses into libssh2 data-structure
+        _ProcessResponses(saResponses, num_prompts, responses);
+    }
+    catch (com_error& e)
+    {
+        pThis->SetErrorState(e.hr());
+        return;
+    }
+    catch (...)
+    {
+        pThis->SetErrorState(E_UNEXPECTED);
+        return;
+    }
 }
 
 /**
@@ -116,73 +116,73 @@ HRESULT CKeyboardInteractive::GetErrorState() throw()
  * @returns the responses given to each prompt by the front-end (i.e the user).
  */
 CKeyboardInteractive::ResponseArray CKeyboardInteractive::_SendRequest(
-	const BSTR bstrName, const BSTR bstrInstruction,
-	PromptArray& saPrompts, EchoArray& saShowPrompts) throw (...)
+    const BSTR bstrName, const BSTR bstrInstruction,
+    PromptArray& saPrompts, EchoArray& saShowPrompts) throw (...)
 {
-	HRESULT hr = E_FAIL;
+    HRESULT hr = E_FAIL;
 
-	SAFEARRAY *psaResponses = NULL;
-	hr = m_spConsumer->OnKeyboardInteractiveRequest(
-		bstrName, bstrInstruction, saPrompts, saShowPrompts, &psaResponses);
-	if (FAILED(hr))
-		AtlThrow(hr);
-	ATLENSURE(psaResponses);
+    SAFEARRAY *psaResponses = NULL;
+    hr = m_spConsumer->OnKeyboardInteractiveRequest(
+        bstrName, bstrInstruction, saPrompts, saShowPrompts, &psaResponses);
+    if (FAILED(hr))
+        AtlThrow(hr);
+    ATLENSURE(psaResponses);
 
-	return psaResponses;
+    return psaResponses;
 }
 
 /**
  * Packs prompt text into a SAFEARRAY.
  */
 /* static */ CKeyboardInteractive::PromptArray CKeyboardInteractive::_PackPromptSafearray(
-	int cPrompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts) throw()
+    int cPrompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts) throw()
 {
-	CComSafeArray<BSTR> saPrompts(cPrompts);
-	for (int i = 0; i < cPrompts; i++)
-	{
-		ATLVERIFY(SUCCEEDED( saPrompts.SetAt(
-			i, CComBSTR(prompts[i].length, prompts[i].text).Detach(), false) ));
-	}
+    CComSafeArray<BSTR> saPrompts(cPrompts);
+    for (int i = 0; i < cPrompts; i++)
+    {
+        ATLVERIFY(SUCCEEDED( saPrompts.SetAt(
+            i, CComBSTR(prompts[i].length, prompts[i].text).Detach(), false) ));
+    }
 
-	return saPrompts;
+    return saPrompts;
 }
 
 /**
  * Packs prompt echo information into a SAFEARRAY.
  */
 /* static */ CKeyboardInteractive::EchoArray CKeyboardInteractive::_PackEchoSafearray(
-	int cPrompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts) throw()
+    int cPrompts, const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts) throw()
 {
-	CComSafeArray<VARIANT_BOOL> saShowPrompts(cPrompts);
-	for (int i = 0; i < cPrompts; i++)
-	{
-		saShowPrompts[i] = (prompts[i].echo) ? VARIANT_TRUE : VARIANT_FALSE;
-	}
+    CComSafeArray<VARIANT_BOOL> saShowPrompts(cPrompts);
+    for (int i = 0; i < cPrompts; i++)
+    {
+        saShowPrompts[i] = (prompts[i].echo) ? VARIANT_TRUE : VARIANT_FALSE;
+    }
 
-	return saShowPrompts;
+    return saShowPrompts;
 }
 
 /**
  * Packs the SAFEARRAY of responses into the data-structure provided by libssh2.
  */
 /* static */ void CKeyboardInteractive::_ProcessResponses(
-	ResponseArray& saResponses,
-	int cPrompts, LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses) throw()
+    ResponseArray& saResponses,
+    int cPrompts, LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses) throw()
 {
-	ATLASSERT( saResponses.GetCount() == (ULONG)cPrompts );
-	for (int i = 0; i < cPrompts; i++)
-	{
-		// Calculate necessary length of UTF-8 response buffer
-		int cbLength = ::WideCharToMultiByte(
-			CP_UTF8, 0, saResponses[i], ::SysStringLen(saResponses[i]),
-			NULL, 0, NULL, NULL);
+    ATLASSERT( saResponses.GetCount() == (ULONG)cPrompts );
+    for (int i = 0; i < cPrompts; i++)
+    {
+        // Calculate necessary length of UTF-8 response buffer
+        int cbLength = ::WideCharToMultiByte(
+            CP_UTF8, 0, saResponses[i], ::SysStringLen(saResponses[i]),
+            NULL, 0, NULL, NULL);
 
-		// Allocate a sufficiently large buffer using the libssh2 allocator
-		// (malloc) and convert string into the buffer
-		responses[i].text = static_cast<char *>(malloc(cbLength));
-		responses[i].length = cbLength;
-		::WideCharToMultiByte(
-			CP_UTF8, 0, saResponses[i], ::SysStringLen(saResponses[i]),
-			responses[i].text, cbLength, NULL, NULL);
-	}
+        // Allocate a sufficiently large buffer using the libssh2 allocator
+        // (malloc) and convert string into the buffer
+        responses[i].text = static_cast<char *>(malloc(cbLength));
+        responses[i].length = cbLength;
+        ::WideCharToMultiByte(
+            CP_UTF8, 0, saResponses[i], ::SysStringLen(saResponses[i]),
+            responses[i].text, cbLength, NULL, NULL);
+    }
 }

@@ -56,45 +56,45 @@ namespace windows_api {
  * Copyright 1998 Juergen Schmied.
  */
 inline HRESULT WINAPI SHBindToParent(
-	PCIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID* ppv, 
-	PCUITEMID_CHILD* ppidlLast)
+    PCIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID* ppv, 
+    PCUITEMID_CHILD* ppidlLast)
 {
-	IShellFolder* psfDesktop;
-	HRESULT hr = E_FAIL;
+    IShellFolder* psfDesktop;
+    HRESULT hr = E_FAIL;
 
-	if (!ppv)
-		return E_POINTER;
-	*ppv = NULL;
-	
-	if (ppidlLast)
-		*ppidlLast = NULL;
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+    
+    if (ppidlLast)
+        *ppidlLast = NULL;
 
-	if (!pidl)
-		return E_INVALIDARG;
+    if (!pidl)
+        return E_INVALIDARG;
 
-	hr = ::SHGetDesktopFolder(&psfDesktop);
-	if (FAILED(hr))
-		return hr;
+    hr = ::SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
 
-	if (::ILIsChild(pidl))
-	{
-		/* we are on desktop level */
-		hr = psfDesktop->QueryInterface(riid, ppv);
-	}
-	else
-	{
-		PIDLIST_ABSOLUTE pidlParent = ::ILCloneFull(pidl);
-		::ILRemoveLastID(pidlParent);
-		hr = psfDesktop->BindToObject(pidlParent, NULL, riid, ppv);
-		::ILFree(pidlParent);
-	}
+    if (::ILIsChild(pidl))
+    {
+        /* we are on desktop level */
+        hr = psfDesktop->QueryInterface(riid, ppv);
+    }
+    else
+    {
+        PIDLIST_ABSOLUTE pidlParent = ::ILCloneFull(pidl);
+        ::ILRemoveLastID(pidlParent);
+        hr = psfDesktop->BindToObject(pidlParent, NULL, riid, ppv);
+        ::ILFree(pidlParent);
+    }
 
-	psfDesktop->Release();
+    psfDesktop->Release();
 
-	if (SUCCEEDED(hr) && ppidlLast)
-		*ppidlLast = ::ILFindLastID(pidl);
+    if (SUCCEEDED(hr) && ppidlLast)
+        *ppidlLast = ::ILFindLastID(pidl);
 
-	return hr;
+    return hr;
 }
 
 }} // namespace swish::windows_api

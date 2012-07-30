@@ -1,11 +1,11 @@
 /**
     @file
 
-	Manage WinSparkle initialisation and cleanup.
+    Manage WinSparkle initialisation and cleanup.
 
-	@if license
+    @if license
 
-	Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,30 +35,30 @@ namespace swish {
 namespace frontend {
 
 winsparkle_shower::winsparkle_shower(
-	const string& appcast_url, const wstring& app_name, 
-	const wstring& app_version, const wstring& company_name,
-	const string& relative_registry_path) : m_needs_cleanup(false)
+    const string& appcast_url, const wstring& app_name, 
+    const wstring& app_version, const wstring& company_name,
+    const string& relative_registry_path) : m_needs_cleanup(false)
 {
-	win_sparkle_set_appcast_url(appcast_url.c_str());
-	win_sparkle_set_registry_path(relative_registry_path.c_str());
-	win_sparkle_set_app_details(
-		company_name.c_str(), app_name.c_str(), app_version.c_str());
+    win_sparkle_set_appcast_url(appcast_url.c_str());
+    win_sparkle_set_registry_path(relative_registry_path.c_str());
+    win_sparkle_set_app_details(
+        company_name.c_str(), app_name.c_str(), app_version.c_str());
 }
 
 void winsparkle_shower::show()
 {
-	// the dialog may be requested more than once so we need to clean up
-	// before showing it again
-	if (m_needs_cleanup)
-		win_sparkle_cleanup();
+    // the dialog may be requested more than once so we need to clean up
+    // before showing it again
+    if (m_needs_cleanup)
+        win_sparkle_cleanup();
 
-	m_needs_cleanup = true;
-	win_sparkle_init();
+    m_needs_cleanup = true;
+    win_sparkle_init();
 }
 
 winsparkle_shower::~winsparkle_shower()
 {
-	win_sparkle_cleanup();
+    win_sparkle_cleanup();
 }
 
 }} // namespace swish::frontend

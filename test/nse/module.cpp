@@ -38,11 +38,11 @@ using ATL::CAtlModule;
 class CModule : public CAtlModule
 {
 public :
-	
-	virtual HRESULT AddCommonRGSReplacements(IRegistrarBase*) throw()
-	{
-		return S_OK;
-	}
+    
+    virtual HRESULT AddCommonRGSReplacements(IRegistrarBase*) throw()
+    {
+        return S_OK;
+    }
 };
 
 }}} // namespace test::swish::com_dll

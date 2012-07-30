@@ -33,47 +33,47 @@ struct assertion_traits<ATL::CString>
 
     static std::string toString(ATL::CString x)
     {
-		ATL::CStringA y(x);
-		std::string s(y);
-		return s;
+        ATL::CStringA y(x);
+        std::string s(y);
+        return s;
     }
 };
 
 #define STRMESSAGE_CASE(hr) case hr: strMessage = #hr; break;
 inline std::string GetErrorFromHResult(HRESULT hResult)
 {
-	std::string strMessage;
-	switch (hResult)
-	{
-		STRMESSAGE_CASE(S_OK);
-		STRMESSAGE_CASE(S_FALSE);
-		STRMESSAGE_CASE(E_ABORT);
-		STRMESSAGE_CASE(E_ACCESSDENIED);
-		STRMESSAGE_CASE(E_UNEXPECTED);
-		STRMESSAGE_CASE(E_NOTIMPL);
-		STRMESSAGE_CASE(E_OUTOFMEMORY);
-		STRMESSAGE_CASE(E_INVALIDARG);
-		STRMESSAGE_CASE(E_NOINTERFACE);
-		STRMESSAGE_CASE(E_POINTER);
-		STRMESSAGE_CASE(E_HANDLE);
-		STRMESSAGE_CASE(E_FAIL);
-		STRMESSAGE_CASE(E_PENDING);
-	default:
-		strMessage = "<unknown>";
-	}
+    std::string strMessage;
+    switch (hResult)
+    {
+        STRMESSAGE_CASE(S_OK);
+        STRMESSAGE_CASE(S_FALSE);
+        STRMESSAGE_CASE(E_ABORT);
+        STRMESSAGE_CASE(E_ACCESSDENIED);
+        STRMESSAGE_CASE(E_UNEXPECTED);
+        STRMESSAGE_CASE(E_NOTIMPL);
+        STRMESSAGE_CASE(E_OUTOFMEMORY);
+        STRMESSAGE_CASE(E_INVALIDARG);
+        STRMESSAGE_CASE(E_NOINTERFACE);
+        STRMESSAGE_CASE(E_POINTER);
+        STRMESSAGE_CASE(E_HANDLE);
+        STRMESSAGE_CASE(E_FAIL);
+        STRMESSAGE_CASE(E_PENDING);
+    default:
+        strMessage = "<unknown>";
+    }
 
-	char *pszMessage = NULL;
-	if (::FormatMessageA(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-		hResult, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
-		reinterpret_cast<char*>(&pszMessage), 0, NULL) && (pszMessage != NULL))
-	{
-		strMessage += ": ";
-		strMessage += pszMessage;
-		::LocalFree(reinterpret_cast<HLOCAL>(pszMessage));
-	}
+    char *pszMessage = NULL;
+    if (::FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+        hResult, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+        reinterpret_cast<char*>(&pszMessage), 0, NULL) && (pszMessage != NULL))
+    {
+        strMessage += ": ";
+        strMessage += pszMessage;
+        ::LocalFree(reinterpret_cast<HLOCAL>(pszMessage));
+    }
 
-	return strMessage;
+    return strMessage;
 }
 
 /**
@@ -81,13 +81,13 @@ inline std::string GetErrorFromHResult(HRESULT hResult)
  * @{
  */
 #define CPPUNIT_ASSERT_OK(hresult) \
-	do { \
-		HRESULT hrCopy; \
-		hrCopy = hresult; \
-		std::string str("COM return code was "); \
-		str += CPPUNIT_NS::GetErrorFromHResult(hrCopy); \
-		CPPUNIT_ASSERT_MESSAGE(str, hrCopy == S_OK); \
-	} while(0);
+    do { \
+        HRESULT hrCopy; \
+        hrCopy = hresult; \
+        std::string str("COM return code was "); \
+        str += CPPUNIT_NS::GetErrorFromHResult(hrCopy); \
+        CPPUNIT_ASSERT_MESSAGE(str, hrCopy == S_OK); \
+    } while(0);
 #define CPPUNIT_ASSERT_SUCCEEDED(hresult) CPPUNIT_ASSERT(SUCCEEDED(hresult))
 #define CPPUNIT_ASSERT_FAILED(hresult) CPPUNIT_ASSERT(FAILED(hresult))
 /* @} */
@@ -101,13 +101,13 @@ void assertZero( const T& actual,
                  SourceLine sourceLine,
                  const std::string &message )
 {
-	CPPUNIT_NS::assertEquals(static_cast<T>(0), actual, sourceLine, message);
+    CPPUNIT_NS::assertEquals(static_cast<T>(0), actual, sourceLine, message);
 }
 #define CPPUNIT_ASSERT_ZERO(actual) \
-	do { \
-		CPPUNIT_NS::assertZero((actual), CPPUNIT_SOURCELINE(), \
-			""#actual " != 0"); \
-	} while(0);
+    do { \
+        CPPUNIT_NS::assertZero((actual), CPPUNIT_SOURCELINE(), \
+            ""#actual " != 0"); \
+    } while(0);
 /* @} */
 
 CPPUNIT_NS_END

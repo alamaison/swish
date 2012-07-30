@@ -70,138 +70,138 @@ using winapi::shell::pidl::apidl_t;
 
 namespace { // private
 
-	const string TEST_DATA = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
-	const string LARGER_TEST_DATA = 
-		";sdkfna;sldjnksj fjnweneofiun weof woenf woeunr2938y4192n34kj1458c"
-		"d;ofn3498tv 3405jnv 3498thv-948rc 34f 9485hv94htc rwr98thv3948h534h4";
+    const string TEST_DATA = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
+    const string LARGER_TEST_DATA = 
+        ";sdkfna;sldjnksj fjnweneofiun weof woenf woeunr2938y4192n34kj1458c"
+        "d;ofn3498tv 3405jnv 3498thv-948rc 34f 9485hv94htc rwr98thv3948h534h4";
 
-	/**
-	 * The test data which will be written and read from files to
-	 * check correct transmission.
-	 */
-	string test_data()
-	{
-		return TEST_DATA;
-	}
-	
-	/**
-	 * Write some data to a collection of local files and return them in
-	 * a DataObject created by the shell.
-	 * 
-	 * The files must all be in the same filesystem folder.
-	 */
-	template<typename It>
-	com_ptr<IDataObject> create_multifile_data_object(It begin, It end)
-	{
-		for_each(begin, end, fill_file);
-		return data_object_for_files(begin, end);
-	}
+    /**
+     * The test data which will be written and read from files to
+     * check correct transmission.
+     */
+    string test_data()
+    {
+        return TEST_DATA;
+    }
+    
+    /**
+     * Write some data to a collection of local files and return them in
+     * a DataObject created by the shell.
+     * 
+     * The files must all be in the same filesystem folder.
+     */
+    template<typename It>
+    com_ptr<IDataObject> create_multifile_data_object(It begin, It end)
+    {
+        for_each(begin, end, fill_file);
+        return data_object_for_files(begin, end);
+    }
 
-	/**
-	 * Write some data to a local file and return it as a DataObject.
-	 */
-	com_ptr<IDataObject> create_data_object(const wpath& local)
-	{
-		return create_multifile_data_object(&local, &local + 1);
-	}
+    /**
+     * Write some data to a local file and return it as a DataObject.
+     */
+    com_ptr<IDataObject> create_data_object(const wpath& local)
+    {
+        return create_multifile_data_object(&local, &local + 1);
+    }
 
-	/**
-	 * Fill a file with the test data.
-	 */
-	void fill_file(const wpath& file)
-	{
-		ofstream stream(file);
-		stream << test_data();
-	}
-	
-	/**
-	 * Check if a file's contents is our test data.
-	 */
-	predicate_result file_contents_correct(const wpath& file)
-	{
-		ifstream stream(file);
-		string contents = string(
-			istreambuf_iterator<char>(stream),
-			istreambuf_iterator<char>());
+    /**
+     * Fill a file with the test data.
+     */
+    void fill_file(const wpath& file)
+    {
+        ofstream stream(file);
+        stream << test_data();
+    }
+    
+    /**
+     * Check if a file's contents is our test data.
+     */
+    predicate_result file_contents_correct(const wpath& file)
+    {
+        ifstream stream(file);
+        string contents = string(
+            istreambuf_iterator<char>(stream),
+            istreambuf_iterator<char>());
 
-		if (contents != test_data())
-		{
-			predicate_result res(false);
-			res.message()
-				<< "File contents is not as expected [" << contents
-				<< " != " << test_data() << "]";
-			return res;
-		}
+        if (contents != test_data())
+        {
+            predicate_result res(false);
+            res.message()
+                << "File contents is not as expected [" << contents
+                << " != " << test_data() << "]";
+            return res;
+        }
 
-		return true;
-	}
-	
-	/**
-	 * Create a new empty file at the given absolute path.
-	 */
-	void create_empty_file(wpath name)
-	{
-		BOOST_CHECK(name.is_complete());
+        return true;
+    }
+    
+    /**
+     * Create a new empty file at the given absolute path.
+     */
+    void create_empty_file(wpath name)
+    {
+        BOOST_CHECK(name.is_complete());
 
-		ofstream file(name, std::ios_base::out|std::ios_base::trunc);
-		file.close();
-		
-		BOOST_CHECK(exists(name));
-		BOOST_CHECK(is_regular_file(name));
-	}
+        ofstream file(name, std::ios_base::out|std::ios_base::trunc);
+        file.close();
+        
+        BOOST_CHECK(exists(name));
+        BOOST_CHECK(is_regular_file(name));
+    }
 
-	class ProgressStub : public Progress
-	{
-	public:
-		bool user_cancelled() const { return false; }
-		void line(DWORD, const wstring&) {}
-		void line_path(DWORD, const wstring&) {}
-		void update(ULONGLONG, ULONGLONG) {}
-	};
+    class ProgressStub : public Progress
+    {
+    public:
+        bool user_cancelled() const { return false; }
+        void line(DWORD, const wstring&) {}
+        void line_path(DWORD, const wstring&) {}
+        void update(ULONGLONG, ULONGLONG) {}
+    };
 
-	class CopyCallbackStub : public DropActionCallback
-	{
-	public:
-		void site(com_ptr<IUnknown>) {}
+    class CopyCallbackStub : public DropActionCallback
+    {
+    public:
+        void site(com_ptr<IUnknown>) {}
 
-		std::auto_ptr<Progress> progress()
-		{ return std::auto_ptr<Progress>(new ProgressStub()); }
+        std::auto_ptr<Progress> progress()
+        { return std::auto_ptr<Progress>(new ProgressStub()); }
 
-		bool can_overwrite(const wpath&)
-		{ throw std::exception("unexpected request to confirm overwrite"); }
-	};
+        bool can_overwrite(const wpath&)
+        { throw std::exception("unexpected request to confirm overwrite"); }
+    };
 
-	class ForbidOverwrite : public CopyCallbackStub
-	{
-	public:
-		bool can_overwrite(const wpath&) { return false; }
-	};
+    class ForbidOverwrite : public CopyCallbackStub
+    {
+    public:
+        bool can_overwrite(const wpath&) { return false; }
+    };
 
-	class AllowOverwrite : public CopyCallbackStub
-	{
-	public:
-		bool can_overwrite(const wpath&) { return true; }
-	};
+    class AllowOverwrite : public CopyCallbackStub
+    {
+    public:
+        bool can_overwrite(const wpath&) { return true; }
+    };
 
-	class DropTargetFixture : public PidlFixture
-	{
-	public:
-		comet::com_ptr<IDropTarget> create_drop_target() 
-		{
-			wpath target_directory = Sandbox() / L"drop-target";
-			create_directory(target_directory);
+    class DropTargetFixture : public PidlFixture
+    {
+    public:
+        comet::com_ptr<IDropTarget> create_drop_target() 
+        {
+            wpath target_directory = Sandbox() / L"drop-target";
+            create_directory(target_directory);
 
-			return new CDropTarget(
-				Provider(), Consumer(),
-				absolute_directory_pidl(target_directory),
-				make_shared<CopyCallbackStub>());
-		}
+            return new CDropTarget(
+                Provider(), Consumer(),
+                absolute_directory_pidl(target_directory),
+                make_shared<CopyCallbackStub>());
+        }
 
-		apidl_t absolute_directory_pidl(wpath local_path)
-		{
-			return directory_pidl(ToRemotePath(local_path));
-		}
-	};
+        apidl_t absolute_directory_pidl(wpath local_path)
+        {
+            return directory_pidl(ToRemotePath(local_path));
+        }
+    };
 
 }
 
@@ -213,8 +213,8 @@ BOOST_FIXTURE_TEST_SUITE(drop_target_tests, DropTargetFixture)
  */
 BOOST_AUTO_TEST_CASE( create )
 {
-	com_ptr<IDropTarget> sp = create_drop_target();
-	BOOST_REQUIRE(sp);
+    com_ptr<IDropTarget> sp = create_drop_target();
+    BOOST_REQUIRE(sp);
 }
 
 #pragma region DataObject copy tests
@@ -228,19 +228,19 @@ BOOST_FIXTURE_TEST_SUITE(drop_target_copy_tests, DropTargetFixture)
  */
 BOOST_AUTO_TEST_CASE( copy_single )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
 
-	wpath destination = Sandbox() / L"copy-destination";
-	create_directory(destination);
+    wpath destination = Sandbox() / L"copy-destination";
+    create_directory(destination);
 
-	CopyCallbackStub cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    CopyCallbackStub cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	wpath expected = destination / local.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+    wpath expected = destination / local.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(file_contents_correct(expected));
 }
 
 /**
@@ -251,28 +251,28 @@ BOOST_AUTO_TEST_CASE( copy_single )
  */
 BOOST_AUTO_TEST_CASE( copy_many )
 {
-	vector<wpath> locals;
-	locals.push_back(NewFileInSandbox());
-	locals.push_back(NewFileInSandbox());
-	locals.push_back(NewFileInSandbox());
+    vector<wpath> locals;
+    locals.push_back(NewFileInSandbox());
+    locals.push_back(NewFileInSandbox());
+    locals.push_back(NewFileInSandbox());
 
-	com_ptr<IDataObject> spdo = create_multifile_data_object(
-		locals.begin(), locals.end());
+    com_ptr<IDataObject> spdo = create_multifile_data_object(
+        locals.begin(), locals.end());
 
-	wpath destination = Sandbox() / L"copy-destination";
-	create_directory(destination);
+    wpath destination = Sandbox() / L"copy-destination";
+    create_directory(destination);
 
-	CopyCallbackStub cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    CopyCallbackStub cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	vector<wpath>::const_iterator it;
-	for (it = locals.begin(); it != locals.end(); ++it)
-	{
-		wpath expected = destination / (*it).filename();
-		BOOST_REQUIRE(exists(expected));
-		BOOST_REQUIRE(file_contents_correct(expected));
-	}
+    vector<wpath>::const_iterator it;
+    for (it = locals.begin(); it != locals.end(); ++it)
+    {
+        wpath expected = destination / (*it).filename();
+        BOOST_REQUIRE(exists(expected));
+        BOOST_REQUIRE(file_contents_correct(expected));
+    }
 }
 
 /**
@@ -291,87 +291,87 @@ BOOST_AUTO_TEST_CASE( copy_many )
  */
 BOOST_AUTO_TEST_CASE( copy_recursively )
 {
-	vector<wpath> top_level;
+    vector<wpath> top_level;
 
-	// Build top-level - these are the only items stored in the vector
+    // Build top-level - these are the only items stored in the vector
 
-	top_level.push_back(NewFileInSandbox());
-	top_level.push_back(NewFileInSandbox());
+    top_level.push_back(NewFileInSandbox());
+    top_level.push_back(NewFileInSandbox());
 
-	wpath empty_folder = Sandbox() / L"empty";
-	wpath non_empty_folder = Sandbox() / L"non-empty";
-	create_directory(empty_folder);
-	create_directory(non_empty_folder);
-	top_level.push_back(empty_folder);
-	top_level.push_back(non_empty_folder);
+    wpath empty_folder = Sandbox() / L"empty";
+    wpath non_empty_folder = Sandbox() / L"non-empty";
+    create_directory(empty_folder);
+    create_directory(non_empty_folder);
+    top_level.push_back(empty_folder);
+    top_level.push_back(non_empty_folder);
 
-	// Build lower levels
+    // Build lower levels
 
-	wpath second_level_folder = non_empty_folder / L"second-level-folder";
-	create_directory(second_level_folder);
+    wpath second_level_folder = non_empty_folder / L"second-level-folder";
+    create_directory(second_level_folder);
 
-	wpath second_level_file = non_empty_folder / L"second-level-file";
-	create_empty_file(second_level_file);
-	fill_file(second_level_file);
+    wpath second_level_file = non_empty_folder / L"second-level-file";
+    create_empty_file(second_level_file);
+    fill_file(second_level_file);
 
-	wpath second_level_zip_file = create_test_zip_file(non_empty_folder);
+    wpath second_level_zip_file = create_test_zip_file(non_empty_folder);
 
-	wpath third_level_file = second_level_folder / L"third-level-file";
-	create_empty_file(third_level_file);
-	fill_file(third_level_file);
+    wpath third_level_file = second_level_folder / L"third-level-file";
+    create_empty_file(third_level_file);
+    fill_file(third_level_file);
 
-	com_ptr<IDataObject> spdo = create_multifile_data_object(
-		top_level.begin(), top_level.end());
+    com_ptr<IDataObject> spdo = create_multifile_data_object(
+        top_level.begin(), top_level.end());
 
 
-	wpath destination = Sandbox() / L"copy-destination";
-	create_directory(destination);
+    wpath destination = Sandbox() / L"copy-destination";
+    create_directory(destination);
 
-	CopyCallbackStub cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    CopyCallbackStub cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	wpath expected;
+    wpath expected;
 
-	expected = destination / top_level[0].filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+    expected = destination / top_level[0].filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(file_contents_correct(expected));
 
-	expected = destination / top_level[0].filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+    expected = destination / top_level[0].filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(file_contents_correct(expected));
 
-	expected = destination / empty_folder.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_empty(expected));
+    expected = destination / empty_folder.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_empty(expected));
 
-	expected = destination / non_empty_folder.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_directory(expected));
-	
-	expected = destination / non_empty_folder.filename() /
-		second_level_file.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+    expected = destination / non_empty_folder.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_directory(expected));
+    
+    expected = destination / non_empty_folder.filename() /
+        second_level_file.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(file_contents_correct(expected));
 
-	expected = destination / non_empty_folder.filename() / 
-		second_level_folder.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(!is_empty(expected));
+    expected = destination / non_empty_folder.filename() / 
+        second_level_folder.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(!is_empty(expected));
 
-	// The zip file must be copied as-is, not expanded
-	expected = destination / non_empty_folder.filename() /
-		second_level_zip_file.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_regular_file(expected));
-	BOOST_REQUIRE_GT(file_size(expected), 800);
+    // The zip file must be copied as-is, not expanded
+    expected = destination / non_empty_folder.filename() /
+        second_level_zip_file.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_regular_file(expected));
+    BOOST_REQUIRE_GT(file_size(expected), 800);
 
-	expected = destination / non_empty_folder.filename() /
-		second_level_folder.filename() / third_level_file.filename();
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(file_contents_correct(expected));
+    expected = destination / non_empty_folder.filename() /
+        second_level_folder.filename() / third_level_file.filename();
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(file_contents_correct(expected));
 }
 
 /**
@@ -390,46 +390,46 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
  */
 BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 {
-	wpath local = create_test_zip_file(Sandbox());
-	com_ptr<IDataObject> spdo = data_object_for_zipfile(local);
+    wpath local = create_test_zip_file(Sandbox());
+    com_ptr<IDataObject> spdo = data_object_for_zipfile(local);
 
-	wpath destination = Sandbox() / L"copy-destination";
-	create_directory(destination);
+    wpath destination = Sandbox() / L"copy-destination";
+    create_directory(destination);
 
-	CopyCallbackStub cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    CopyCallbackStub cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	wpath expected;
+    wpath expected;
 
-	expected = destination / L"file1.txt";
-	BOOST_REQUIRE(exists(expected));
+    expected = destination / L"file1.txt";
+    BOOST_REQUIRE(exists(expected));
 
-	expected = destination / L"file2.txt";
-	BOOST_REQUIRE(exists(expected));
+    expected = destination / L"file2.txt";
+    BOOST_REQUIRE(exists(expected));
 
-	expected = destination / L"empty";
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(is_empty(expected));
+    expected = destination / L"empty";
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(is_empty(expected));
 
-	expected = destination / L"non-empty";
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_directory(expected));
+    expected = destination / L"non-empty";
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_directory(expected));
 
-	expected = destination / L"non-empty" / 
-		L"second-level-file";
-	BOOST_REQUIRE(exists(expected));
+    expected = destination / L"non-empty" / 
+        L"second-level-file";
+    BOOST_REQUIRE(exists(expected));
 
-	expected = destination / L"non-empty" / 
-		L"second-level-folder";
-	BOOST_REQUIRE(exists(expected));
-	BOOST_REQUIRE(is_directory(expected));
-	BOOST_REQUIRE(!is_empty(expected));
+    expected = destination / L"non-empty" / 
+        L"second-level-folder";
+    BOOST_REQUIRE(exists(expected));
+    BOOST_REQUIRE(is_directory(expected));
+    BOOST_REQUIRE(!is_empty(expected));
 
-	expected = destination / L"non-empty" / 
-		L"second-level-folder" / L"third-level-file";
-	BOOST_REQUIRE(exists(expected));
+    expected = destination / L"non-empty" / 
+        L"second-level-folder" / L"third-level-file";
+    BOOST_REQUIRE(exists(expected));
 }
 
 /**
@@ -441,24 +441,24 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
  */
 BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
 
-	wpath destination = Sandbox() / L"copy-destination";
-	wpath obstruction = destination / local.filename();
+    wpath destination = Sandbox() / L"copy-destination";
+    wpath obstruction = destination / local.filename();
 
-	create_directory(destination);
-	ofstream(obstruction).close();
+    create_directory(destination);
+    ofstream(obstruction).close();
 
-	BOOST_CHECK(exists(obstruction));
-	BOOST_CHECK(!file_contents_correct(obstruction));
+    BOOST_CHECK(exists(obstruction));
+    BOOST_CHECK(!file_contents_correct(obstruction));
 
-	AllowOverwrite cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    AllowOverwrite cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	BOOST_CHECK(exists(obstruction));
-	BOOST_CHECK(file_contents_correct(obstruction));
+    BOOST_CHECK(exists(obstruction));
+    BOOST_CHECK(file_contents_correct(obstruction));
 }
 
 /**
@@ -466,24 +466,24 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
  */
 BOOST_AUTO_TEST_CASE( copy_overwrite_no )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
 
-	wpath destination = Sandbox() / L"copy-destination";
-	wpath obstruction = destination / local.filename();
+    wpath destination = Sandbox() / L"copy-destination";
+    wpath obstruction = destination / local.filename();
 
-	create_directory(destination);
-	ofstream(obstruction).close(); // empty
+    create_directory(destination);
+    ofstream(obstruction).close(); // empty
 
-	BOOST_CHECK(exists(obstruction));
-	BOOST_CHECK(!file_contents_correct(obstruction));
+    BOOST_CHECK(exists(obstruction));
+    BOOST_CHECK(!file_contents_correct(obstruction));
 
-	ForbidOverwrite cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    ForbidOverwrite cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	BOOST_CHECK(exists(obstruction));
-	BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
+    BOOST_CHECK(exists(obstruction));
+    BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
 }
 
 /**
@@ -494,28 +494,28 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_no )
  */
 BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
 
-	wpath destination = Sandbox() / L"copy-destination";
-	wpath obstruction = destination / local.filename();
+    wpath destination = Sandbox() / L"copy-destination";
+    wpath obstruction = destination / local.filename();
 
-	// make sure that the destination file already exists and is larger
-	// that what we're about to copy to it
-	create_directory(destination);
-	ofstream stream(obstruction);
-	stream << LARGER_TEST_DATA;
-	stream.close();
+    // make sure that the destination file already exists and is larger
+    // that what we're about to copy to it
+    create_directory(destination);
+    ofstream stream(obstruction);
+    stream << LARGER_TEST_DATA;
+    stream.close();
 
-	BOOST_REQUIRE(exists(obstruction));
-	BOOST_REQUIRE(!file_contents_correct(obstruction));
+    BOOST_REQUIRE(exists(obstruction));
+    BOOST_REQUIRE(!file_contents_correct(obstruction));
 
-	AllowOverwrite cb;
-	copy_data_to_provider(
-		spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+    AllowOverwrite cb;
+    copy_data_to_provider(
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
 
-	BOOST_REQUIRE(exists(obstruction));
-	BOOST_REQUIRE(file_contents_correct(obstruction));
+    BOOST_REQUIRE(exists(obstruction));
+    BOOST_REQUIRE(file_contents_correct(obstruction));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -533,14 +533,14 @@ BOOST_FIXTURE_TEST_SUITE(drop_target_dnd_tests, DropTargetFixture)
  */
 BOOST_AUTO_TEST_CASE( drag_enter )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
-	com_ptr<IDropTarget> spdt = create_drop_target();
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
+    com_ptr<IDropTarget> spdt = create_drop_target();
 
-	POINTL pt = {0, 0};
-	DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_LINK;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    POINTL pt = {0, 0};
+    DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_LINK;
+    BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 }
 
 /**
@@ -552,14 +552,14 @@ BOOST_AUTO_TEST_CASE( drag_enter )
  */
 BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
-	com_ptr<IDropTarget> spdt = create_drop_target();
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
+    com_ptr<IDropTarget> spdt = create_drop_target();
 
-	POINTL pt = {0, 0};
-	DWORD dwEffect = DROPEFFECT_LINK;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
+    POINTL pt = {0, 0};
+    DWORD dwEffect = DROPEFFECT_LINK;
+    BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 }
 
 /**
@@ -574,21 +574,21 @@ BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
  */
 BOOST_AUTO_TEST_CASE( drag_over )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
-	com_ptr<IDropTarget> spdt = create_drop_target();
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
+    com_ptr<IDropTarget> spdt = create_drop_target();
 
-	POINTL pt = {0, 0};
+    POINTL pt = {0, 0};
 
-	// Do enter with link which should be declined (DROPEFFECT_NONE)
-	DWORD dwEffect = DROPEFFECT_LINK;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
+    // Do enter with link which should be declined (DROPEFFECT_NONE)
+    DWORD dwEffect = DROPEFFECT_LINK;
+    BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 
-	// Change request to copy which should be accepted
-	dwEffect = DROPEFFECT_COPY;
-	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    // Change request to copy which should be accepted
+    dwEffect = DROPEFFECT_COPY;
+    BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 }
 
 /**
@@ -601,27 +601,27 @@ BOOST_AUTO_TEST_CASE( drag_over )
  */
 BOOST_AUTO_TEST_CASE( drag_leave )
 {
-	wpath local = NewFileInSandbox();
-	com_ptr<IDataObject> spdo = create_data_object(local);
-	com_ptr<IDropTarget> spdt = create_drop_target();
+    wpath local = NewFileInSandbox();
+    com_ptr<IDataObject> spdo = create_data_object(local);
+    com_ptr<IDropTarget> spdt = create_drop_target();
 
-	POINTL pt = {0, 0};
+    POINTL pt = {0, 0};
 
-	// Do enter with copy which sould be accepted
-	DWORD dwEffect = DROPEFFECT_COPY;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    // Do enter with copy which sould be accepted
+    DWORD dwEffect = DROPEFFECT_COPY;
+    BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
-	// Continue drag
-	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    // Continue drag
+    BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
-	// Finish drag without dropping
-	BOOST_REQUIRE_OK(spdt->DragLeave());
+    // Finish drag without dropping
+    BOOST_REQUIRE_OK(spdt->DragLeave());
 
-	// Decline any further queries until next DragEnter()
-	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
+    // Decline any further queries until next DragEnter()
+    BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 }
 
 /**
@@ -635,33 +635,33 @@ BOOST_AUTO_TEST_CASE( drag_leave )
  */
 BOOST_AUTO_TEST_CASE( drop )
 {
-	wpath local = NewFileInSandbox();
+    wpath local = NewFileInSandbox();
 
-	com_ptr<IDataObject> spdo = create_data_object(local);
-	com_ptr<IDropTarget> spdt = create_drop_target();
+    com_ptr<IDataObject> spdo = create_data_object(local);
+    com_ptr<IDropTarget> spdt = create_drop_target();
 
-	POINTL pt = {0, 0};
+    POINTL pt = {0, 0};
 
-	// Do enter with copy which should be accepted
-	DWORD dwEffect = DROPEFFECT_COPY;
-	BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    // Do enter with copy which should be accepted
+    DWORD dwEffect = DROPEFFECT_COPY;
+    BOOST_REQUIRE_OK(spdt->DragEnter(spdo.in(), MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
-	// Continue drag
-	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    // Continue drag
+    BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
-	// Drop onto DropTarget
-	BOOST_REQUIRE_OK(spdt->Drop(spdo.in(), MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
+    // Drop onto DropTarget
+    BOOST_REQUIRE_OK(spdt->Drop(spdo.in(), MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_COPY));
 
-	// Decline any further queries until next DragEnter()
-	BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
-	BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
+    // Decline any further queries until next DragEnter()
+    BOOST_REQUIRE_OK(spdt->DragOver(MK_LBUTTON, pt, &dwEffect));
+    BOOST_REQUIRE_EQUAL(dwEffect, static_cast<DWORD>(DROPEFFECT_NONE));
 
-	wpath expected = Sandbox() / L"drop-target" / local.filename();
-	BOOST_CHECK(exists(expected));
-	BOOST_CHECK(file_contents_correct(expected));
+    wpath expected = Sandbox() / L"drop-target" / local.filename();
+    BOOST_CHECK(exists(expected));
+    BOOST_CHECK(file_contents_correct(expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

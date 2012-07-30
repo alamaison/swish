@@ -45,90 +45,90 @@ class CConsumerStub : public comet::simple_object<ISftpConsumer>
 {
 public:
 
-	typedef ISftpConsumer interface_is;
+    typedef ISftpConsumer interface_is;
 
-	CConsumerStub(
-		boost::filesystem::path privatekey, boost::filesystem::path publickey)
-		: m_privateKey(privatekey), m_publicKey(publickey) {}
+    CConsumerStub(
+        boost::filesystem::path privatekey, boost::filesystem::path publickey)
+        : m_privateKey(privatekey), m_publicKey(publickey) {}
 
-	// ISftpConsumer methods
-	IFACEMETHODIMP OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
-	{
-		*pbstrPassword = NULL;
-		return E_NOTIMPL;
-	}
+    // ISftpConsumer methods
+    IFACEMETHODIMP OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
+    {
+        *pbstrPassword = NULL;
+        return E_NOTIMPL;
+    }
 
-	IFACEMETHODIMP OnKeyboardInteractiveRequest(
-		BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
-		SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
-		SAFEARRAY ** /*ppsaResponses*/)
-	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
-		return E_NOTIMPL;
-	}
+    IFACEMETHODIMP OnKeyboardInteractiveRequest(
+        BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
+        SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
+        SAFEARRAY ** /*ppsaResponses*/)
+    {
+        BOOST_ERROR("Unexpected call to "__FUNCTION__);
+        return E_NOTIMPL;
+    }
 
-	/**
-	 * Return the path of the file containing the private key.
-	 *
-	 * The path is set via SetKeyPaths().
-	 */
-	IFACEMETHODIMP OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
-	{
-		ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
-		*pbstrPrivateKeyFile = NULL;
+    /**
+     * Return the path of the file containing the private key.
+     *
+     * The path is set via SetKeyPaths().
+     */
+    IFACEMETHODIMP OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
+    {
+        ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
+        *pbstrPrivateKeyFile = NULL;
 
-		try
-		{
-			*pbstrPrivateKeyFile = comet::bstr_t::detach(
-				m_privateKey.file_string());
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            *pbstrPrivateKeyFile = comet::bstr_t::detach(
+                m_privateKey.file_string());
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	/**
-	 * Return the path of the file containing the public key.
-	 *
-	 * The path is set via SetKeyPaths().
-	 */
-	IFACEMETHODIMP OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
-	{
-		ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
-		*pbstrPublicKeyFile = NULL;
+    /**
+     * Return the path of the file containing the public key.
+     *
+     * The path is set via SetKeyPaths().
+     */
+    IFACEMETHODIMP OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
+    {
+        ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
+        *pbstrPublicKeyFile = NULL;
 
-		try
-		{
-			*pbstrPublicKeyFile = comet::bstr_t::detach(
-				m_publicKey.file_string());
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+        try
+        {
+            *pbstrPublicKeyFile = comet::bstr_t::detach(
+                m_publicKey.file_string());
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	IFACEMETHODIMP OnConfirmOverwrite(
-		BSTR /*bstrOldFile*/, BSTR /*bstrNewFile*/)
-	{
-		BOOST_ERROR("Unexpected call to "__FUNCTION__);
-		return E_NOTIMPL;
-	}
+    IFACEMETHODIMP OnConfirmOverwrite(
+        BSTR /*bstrOldFile*/, BSTR /*bstrNewFile*/)
+    {
+        BOOST_ERROR("Unexpected call to "__FUNCTION__);
+        return E_NOTIMPL;
+    }
 
-	IFACEMETHODIMP OnHostkeyMismatch(
-		BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
-	{
-		return S_FALSE;
-	}
+    IFACEMETHODIMP OnHostkeyMismatch(
+        BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
+    {
+        return S_FALSE;
+    }
 
-	IFACEMETHODIMP OnHostkeyUnknown(
-		BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
-	{
-		return S_FALSE;
-	}
+    IFACEMETHODIMP OnHostkeyUnknown(
+        BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
+    {
+        return S_FALSE;
+    }
 
 private:
-	boost::filesystem::path m_privateKey;
-	boost::filesystem::path m_publicKey;
+    boost::filesystem::path m_privateKey;
+    boost::filesystem::path m_publicKey;
 };
 
 } // namespace test

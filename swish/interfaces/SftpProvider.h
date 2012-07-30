@@ -42,20 +42,20 @@ namespace comet {
 
 template<> struct comtype<ISftpProvider>
 {
-	static const IID& uuid() throw() { return IID_ISftpProvider; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_ISftpProvider; }
+    typedef IUnknown base;
 };
 
 template<> struct comtype<ISftpConsumer>
 {
-	static const IID& uuid() throw() { return IID_ISftpConsumer; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_ISftpConsumer; }
+    typedef IUnknown base;
 };
 
 template<> struct comtype<IEnumListing>
 {
-	static const IID& uuid() throw() { return IID_IEnumListing; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IEnumListing; }
+    typedef IUnknown base;
 };
 
 template<> struct enumerated_type_of<IEnumListing>
@@ -69,25 +69,25 @@ namespace detail {
 
 inline Listing copy_listing(const Listing& other)
 {
-	Listing lt;
+    Listing lt;
 
-	lt.bstrFilename = ::SysAllocStringLen(
-		other.bstrFilename, ::SysStringLen(other.bstrFilename));
-	lt.uPermissions = other.uPermissions;
-	lt.bstrOwner = ::SysAllocStringLen(
-		other.bstrOwner, ::SysStringLen(other.bstrOwner));
-	lt.bstrGroup = ::SysAllocStringLen(
-		other.bstrGroup, ::SysStringLen(other.bstrGroup));
-	lt.uUid = other.uUid;
-	lt.uGid = other.uGid;
-	lt.uSize = other.uSize;
-	lt.cHardLinks = other.cHardLinks;
-	lt.dateModified = other.dateModified;
-	lt.dateAccessed = other.dateAccessed;
-	lt.fIsDirectory = other.fIsDirectory;
-	lt.fIsLink = other.fIsLink;
+    lt.bstrFilename = ::SysAllocStringLen(
+        other.bstrFilename, ::SysStringLen(other.bstrFilename));
+    lt.uPermissions = other.uPermissions;
+    lt.bstrOwner = ::SysAllocStringLen(
+        other.bstrOwner, ::SysStringLen(other.bstrOwner));
+    lt.bstrGroup = ::SysAllocStringLen(
+        other.bstrGroup, ::SysStringLen(other.bstrGroup));
+    lt.uUid = other.uUid;
+    lt.uGid = other.uGid;
+    lt.uSize = other.uSize;
+    lt.cHardLinks = other.cHardLinks;
+    lt.dateModified = other.dateModified;
+    lt.dateAccessed = other.dateAccessed;
+    lt.fIsDirectory = other.fIsDirectory;
+    lt.fIsLink = other.fIsLink;
 
-	return lt;
+    return lt;
 }
 
 }
@@ -100,68 +100,68 @@ class SmartListing
 {
 public:
 
-	SmartListing() : lt(Listing()) {}
+    SmartListing() : lt(Listing()) {}
 
-	SmartListing(const SmartListing& other) : lt(detail::copy_listing(other.lt))
-	{}
+    SmartListing(const SmartListing& other) : lt(detail::copy_listing(other.lt))
+    {}
 
-	SmartListing(const Listing& other) : lt(detail::copy_listing(other)) {}
+    SmartListing(const Listing& other) : lt(detail::copy_listing(other)) {}
 
-	SmartListing& operator=(const SmartListing& other)
-	{
-		SmartListing copy(other);
-		std::swap(this->lt, copy.lt);
-		return *this;
-	}
+    SmartListing& operator=(const SmartListing& other)
+    {
+        SmartListing copy(other);
+        std::swap(this->lt, copy.lt);
+        return *this;
+    }
 
-	~SmartListing()
-	{
-		::SysFreeString(lt.bstrFilename);
-		::SysFreeString(lt.bstrGroup);
-		::SysFreeString(lt.bstrOwner);
-		std::memset(&lt, 0, sizeof(Listing));
-	}
+    ~SmartListing()
+    {
+        ::SysFreeString(lt.bstrFilename);
+        ::SysFreeString(lt.bstrGroup);
+        ::SysFreeString(lt.bstrOwner);
+        std::memset(&lt, 0, sizeof(Listing));
+    }
 
-	bool operator<(const SmartListing& other) const
-	{
-		if (lt.bstrFilename == 0)
-			return other.lt.bstrFilename != 0;
+    bool operator<(const SmartListing& other) const
+    {
+        if (lt.bstrFilename == 0)
+            return other.lt.bstrFilename != 0;
 
-		if (other.lt.bstrFilename == 0)
-			return false;
+        if (other.lt.bstrFilename == 0)
+            return false;
 
-		return ::VarBstrCmp(
-			lt.bstrFilename, other.lt.bstrFilename,
-			::GetThreadLocale(), 0) == VARCMP_LT;
-	}
+        return ::VarBstrCmp(
+            lt.bstrFilename, other.lt.bstrFilename,
+            ::GetThreadLocale(), 0) == VARCMP_LT;
+    }
 
-	bool operator==(const SmartListing& other) const
-	{
-		if (lt.bstrFilename == 0 && other.lt.bstrFilename == 0)
-			return true;
+    bool operator==(const SmartListing& other) const
+    {
+        if (lt.bstrFilename == 0 && other.lt.bstrFilename == 0)
+            return true;
 
-		return ::VarBstrCmp(
-			lt.bstrFilename, other.lt.bstrFilename,
-			::GetThreadLocale(), 0) == VARCMP_EQ;
-	}
+        return ::VarBstrCmp(
+            lt.bstrFilename, other.lt.bstrFilename,
+            ::GetThreadLocale(), 0) == VARCMP_EQ;
+    }
 
-	bool operator==(const comet::bstr_t& name) const
-	{
-		return lt.bstrFilename == name;
-	}
+    bool operator==(const comet::bstr_t& name) const
+    {
+        return lt.bstrFilename == name;
+    }
 
-	Listing detach()
-	{
-		Listing out = lt;
-		std::memset(&lt, 0, sizeof(Listing));
-		return out;
-	}
+    Listing detach()
+    {
+        Listing out = lt;
+        std::memset(&lt, 0, sizeof(Listing));
+        return out;
+    }
 
-	Listing* out() { return &lt; }
-	const Listing& get() const { return lt; }
+    Listing* out() { return &lt; }
+    const Listing& get() const { return lt; }
 
 private:
-	Listing lt;
+    Listing lt;
 };
 
 } // namespace swish
@@ -174,31 +174,31 @@ namespace comet {
  */
 template<> struct impl::type_policy<Listing>
 {
-	static void init(Listing& t, const swish::SmartListing& s) 
-	{
-		swish::SmartListing copy = s;
-		t = copy.detach();
-	}
+    static void init(Listing& t, const swish::SmartListing& s) 
+    {
+        swish::SmartListing copy = s;
+        t = copy.detach();
+    }
 
-	static void init(Listing& t, const Listing& s) 
-	{
-		t = swish::detail::copy_listing(s);
-	}
+    static void init(Listing& t, const Listing& s) 
+    {
+        t = swish::detail::copy_listing(s);
+    }
 
-	static void init(swish::SmartListing& t, const Listing& s) 
-	{
-		t = swish::SmartListing(s);
-	}
+    static void init(swish::SmartListing& t, const Listing& s) 
+    {
+        t = swish::SmartListing(s);
+    }
 
-	static void clear(Listing& t)
-	{
-		::SysFreeString(t.bstrFilename);
-		::SysFreeString(t.bstrOwner);
-		::SysFreeString(t.bstrGroup);
-		t = Listing();
-	}
+    static void clear(Listing& t)
+    {
+        ::SysFreeString(t.bstrFilename);
+        ::SysFreeString(t.bstrOwner);
+        ::SysFreeString(t.bstrGroup);
+        t = Listing();
+    }
 
-	static void clear(swish::SmartListing&) {}
+    static void clear(swish::SmartListing&) {}
 };
 
 } // namespace comet

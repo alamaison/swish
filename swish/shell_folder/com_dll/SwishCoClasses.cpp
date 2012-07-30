@@ -40,17 +40,17 @@ using namespace ATL;
  * COM factory for externally created instances of CHostFolder.
  */
 class ATL_NO_VTABLE CHostFolderCoClass :
-	public CHostFolder,
-	public CComCoClass<CHostFolderCoClass, &CLSID_CHostFolder>
+    public CHostFolder,
+    public CComCoClass<CHostFolderCoClass, &CLSID_CHostFolder>
 {
 public:
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_HOSTFOLDER)
+    DECLARE_REGISTRY_RESOURCEID(IDR_HOSTFOLDER)
 
-	BEGIN_COM_MAP(CHostFolderCoClass)
-		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(CHostFolder)
-	END_COM_MAP()
+    BEGIN_COM_MAP(CHostFolderCoClass)
+        COM_INTERFACE_ENTRY(IShellFolder)
+        COM_INTERFACE_ENTRY_CHAIN(CHostFolder)
+    END_COM_MAP()
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(CHostFolder), CHostFolderCoClass)
@@ -59,17 +59,17 @@ OBJECT_ENTRY_AUTO(__uuidof(CHostFolder), CHostFolderCoClass)
  * COM factory for externally created instances of CRemoteFolder.
  */
 class ATL_NO_VTABLE CRemoteFolderCoClass :
-	public CRemoteFolder,
-	public CComCoClass<CRemoteFolderCoClass, &CLSID_CRemoteFolder>
+    public CRemoteFolder,
+    public CComCoClass<CRemoteFolderCoClass, &CLSID_CRemoteFolder>
 {
 public:
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_REMOTEFOLDER)
+    DECLARE_REGISTRY_RESOURCEID(IDR_REMOTEFOLDER)
 
-	BEGIN_COM_MAP(CRemoteFolderCoClass)
-		COM_INTERFACE_ENTRY(IShellFolder)
-		COM_INTERFACE_ENTRY_CHAIN(CRemoteFolder)
-	END_COM_MAP()
+    BEGIN_COM_MAP(CRemoteFolderCoClass)
+        COM_INTERFACE_ENTRY(IShellFolder)
+        COM_INTERFACE_ENTRY_CHAIN(CRemoteFolder)
+    END_COM_MAP()
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(CRemoteFolder), CRemoteFolderCoClass)

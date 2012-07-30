@@ -70,8 +70,8 @@ namespace comet {
 
 template<> struct comtype<IEnumIDList>
 {
-	static const IID& uuid() throw() { return IID_IEnumIDList; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IEnumIDList; }
+    typedef IUnknown base;
 };
 
 template<> struct enumerated_type_of<IEnumIDList>
@@ -82,139 +82,139 @@ template<> struct enumerated_type_of<IEnumIDList>
  */
 template<> struct impl::type_policy<PITEMID_CHILD>
 {
-	static void init(PITEMID_CHILD& t, const cpidl_t& s) 
-	{
-		s.copy_to(t);
-	}
+    static void init(PITEMID_CHILD& t, const cpidl_t& s) 
+    {
+        s.copy_to(t);
+    }
 
-	static void clear(PITEMID_CHILD& t)
-	{
-		::ILFree(t);
-	}	
+    static void clear(PITEMID_CHILD& t)
+    {
+        ::ILFree(t);
+    }    
 };
 
 }
 
 namespace { // private
 
-	apidl_t test_pidl()
-	{
-		return apidl_t() + create_host_itemid(
-			L"testhost", L"testuser", L"/tmp", 22);
-	}
+    apidl_t test_pidl()
+    {
+        return apidl_t() + create_host_itemid(
+            L"testhost", L"testuser", L"/tmp", 22);
+    }
 
-	class SftpDirectoryFixture
-	{
-	private:
-		com_ptr<MockProvider> m_provider;
-		com_ptr<MockConsumer> m_consumer;
+    class SftpDirectoryFixture
+    {
+    private:
+        com_ptr<MockProvider> m_provider;
+        com_ptr<MockConsumer> m_consumer;
 
-	public:
+    public:
 
-		SftpDirectoryFixture()
-			: m_provider(new MockProvider()), m_consumer(new MockConsumer()) {}
+        SftpDirectoryFixture()
+            : m_provider(new MockProvider()), m_consumer(new MockConsumer()) {}
 
-		CSftpDirectory directory()
-		{
-			return directory(test_pidl());
-		}
+        CSftpDirectory directory()
+        {
+            return directory(test_pidl());
+        }
 
-		CSftpDirectory directory(const apidl_t& pidl)
-		{
-			return CSftpDirectory(pidl.get(), provider(), consumer());
-		}
+        CSftpDirectory directory(const apidl_t& pidl)
+        {
+            return CSftpDirectory(pidl.get(), provider(), consumer());
+        }
 
-		com_ptr<MockProvider> provider()
-		{
-			return m_provider;
-		}
+        com_ptr<MockProvider> provider()
+        {
+            return m_provider;
+        }
 
-		com_ptr<MockConsumer> consumer()
-		{
-			return m_consumer;
-		}
-	};
+        com_ptr<MockConsumer> consumer()
+        {
+            return m_consumer;
+        }
+    };
 
-	void test_enum(com_ptr<IEnumIDList> pidls, SHCONTF flags)
-	{
-		PITEMID_CHILD pidl;
-		ULONG fetched;
-		HRESULT hr = pidls->Next(1, &pidl, &fetched);
-		BOOST_REQUIRE_OK(hr);
-		BOOST_CHECK_EQUAL(fetched, 1U);
+    void test_enum(com_ptr<IEnumIDList> pidls, SHCONTF flags)
+    {
+        PITEMID_CHILD pidl;
+        ULONG fetched;
+        HRESULT hr = pidls->Next(1, &pidl, &fetched);
+        BOOST_REQUIRE_OK(hr);
+        BOOST_CHECK_EQUAL(fetched, 1U);
 
-		do {
-			remote_itemid_view itemid(pidl);
+        do {
+            remote_itemid_view itemid(pidl);
 
-			// Check filename
-			BOOST_CHECK_GT(itemid.filename().size(), 0U);
-			if (!(flags & SHCONTF_INCLUDEHIDDEN))
-				BOOST_CHECK_NE(itemid.filename(), L".");
+            // Check filename
+            BOOST_CHECK_GT(itemid.filename().size(), 0U);
+            if (!(flags & SHCONTF_INCLUDEHIDDEN))
+                BOOST_CHECK_NE(itemid.filename(), L".");
 
-			// Check folderness
-			if (!(flags & SHCONTF_FOLDERS))
-				BOOST_CHECK(!itemid.is_folder());
-			if (!(flags & SHCONTF_NONFOLDERS))
-				BOOST_CHECK(itemid.is_folder());
+            // Check folderness
+            if (!(flags & SHCONTF_FOLDERS))
+                BOOST_CHECK(!itemid.is_folder());
+            if (!(flags & SHCONTF_NONFOLDERS))
+                BOOST_CHECK(itemid.is_folder());
 
-			// Check group and owner exist
-			BOOST_CHECK_GT(itemid.owner().size(), 0U);
-			BOOST_CHECK_GT(itemid.group().size(), 0U);
+            // Check group and owner exist
+            BOOST_CHECK_GT(itemid.owner().size(), 0U);
+            BOOST_CHECK_GT(itemid.group().size(), 0U);
 
-			// Check date validity
-			BOOST_CHECK(itemid.date_modified().good());
+            // Check date validity
+            BOOST_CHECK(itemid.date_modified().good());
 
-			hr = pidls->Next(1, &pidl, &fetched);
-		} while (hr == S_OK);
+            hr = pidls->Next(1, &pidl, &fetched);
+        } while (hr == S_OK);
 
-		BOOST_CHECK_EQUAL(hr, S_FALSE);
-		BOOST_CHECK_EQUAL(fetched, 0U);
-	}
+        BOOST_CHECK_EQUAL(hr, S_FALSE);
+        BOOST_CHECK_EQUAL(fetched, 0U);
+    }
 
-	void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
-	{
-		test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
-	}
+    void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
+    {
+        test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
+    }
 
-	cpidl_t create_test_pidl(const wstring& filename)
-	{
-		return create_remote_itemid(
-			filename, false, false, L"", L"", 0, 0, 040666, 42, datetime_t(),
-			datetime_t());
-	}
+    cpidl_t create_test_pidl(const wstring& filename)
+    {
+        return create_remote_itemid(
+            filename, false, false, L"", L"", 0, 0, 040666, 42, datetime_t(),
+            datetime_t());
+    }
 
-	void standard_checks(remote_itemid_view itemid)
-	{
-		// Check filename is sensible
-		BOOST_CHECK_GT(itemid.filename().size(), 0U);
+    void standard_checks(remote_itemid_view itemid)
+    {
+        // Check filename is sensible
+        BOOST_CHECK_GT(itemid.filename().size(), 0U);
 
-		// Check group and owner exist
-		BOOST_CHECK_GT(itemid.owner().size(), 0U);
-		BOOST_CHECK_GT(itemid.group().size(), 0U);
+        // Check group and owner exist
+        BOOST_CHECK_GT(itemid.owner().size(), 0U);
+        BOOST_CHECK_GT(itemid.group().size(), 0U);
 
-		// Check date validity
-		BOOST_CHECK(itemid.date_modified().good());
-	}
+        // Check date validity
+        BOOST_CHECK(itemid.date_modified().good());
+    }
 
-	template<size_t size>
-	void expected_filenames(
-		com_ptr<IEnumIDList> listing, const wchar_t* (&expected)[size])
-	{
-		vector<wstring> sorted_expected(expected, expected + size);
-		std::sort(sorted_expected.begin(), sorted_expected.end());
+    template<size_t size>
+    void expected_filenames(
+        com_ptr<IEnumIDList> listing, const wchar_t* (&expected)[size])
+    {
+        vector<wstring> sorted_expected(expected, expected + size);
+        std::sort(sorted_expected.begin(), sorted_expected.end());
 
-		vector<wstring> actual;
-		enum_iterator<IEnumIDList> e(listing);
-		for (; e != enum_iterator<IEnumIDList>(); ++e)
-		{
-			actual.push_back(remote_itemid_view(*e).filename());
-		}
-		std::sort(actual.begin(), actual.end());
+        vector<wstring> actual;
+        enum_iterator<IEnumIDList> e(listing);
+        for (; e != enum_iterator<IEnumIDList>(); ++e)
+        {
+            actual.push_back(remote_itemid_view(*e).filename());
+        }
+        std::sort(actual.begin(), actual.end());
 
-		BOOST_CHECK_EQUAL_COLLECTIONS(
-			actual.begin(), actual.end(), sorted_expected.begin(),
-			sorted_expected.end());
-	}
+        BOOST_CHECK_EQUAL_COLLECTIONS(
+            actual.begin(), actual.end(), sorted_expected.begin(),
+            sorted_expected.end());
+    }
 }
 
 #pragma region SftpDirectory tests
@@ -225,16 +225,16 @@ BOOST_FIXTURE_TEST_SUITE(sftp_directory_tests, SftpDirectoryFixture)
  */
 BOOST_AUTO_TEST_CASE( empty )
 {
-	SHCONTF flags = 
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
-	provider()->set_listing_behaviour(MockProvider::EmptyListing);
+    SHCONTF flags = 
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    provider()->set_listing_behaviour(MockProvider::EmptyListing);
 
-	com_ptr<IEnumIDList> listing = directory().GetEnum(flags);
+    com_ptr<IEnumIDList> listing = directory().GetEnum(flags);
 
-	ULONG fetched = 1;
-	PITEMID_CHILD pidl;
-	BOOST_CHECK_EQUAL(listing->Next(1, &pidl, &fetched), S_FALSE);
-	BOOST_CHECK_EQUAL(fetched, 0U);
+    ULONG fetched = 1;
+    PITEMID_CHILD pidl;
+    BOOST_CHECK_EQUAL(listing->Next(1, &pidl, &fetched), S_FALSE);
+    BOOST_CHECK_EQUAL(fetched, 0U);
 }
 
 /**
@@ -242,14 +242,14 @@ BOOST_AUTO_TEST_CASE( empty )
  */
 BOOST_AUTO_TEST_CASE( everything )
 {
-	SHCONTF flags = 
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    SHCONTF flags = 
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
-	for (; e != enum_iterator<IEnumIDList>(); ++e)
-	{
-		standard_checks(remote_itemid_view(*e));
-	}
+    enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+    for (; e != enum_iterator<IEnumIDList>(); ++e)
+    {
+        standard_checks(remote_itemid_view(*e));
+    }
 }
 
 /**
@@ -257,37 +257,37 @@ BOOST_AUTO_TEST_CASE( everything )
  */
 BOOST_AUTO_TEST_CASE( links )
 {
-	SHCONTF flags = 
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    SHCONTF flags = 
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	// Keep list of what is a link to test against
-	vector<wstring> link_names;
-	link_names.push_back(L"linktmpfolder");
-	link_names.push_back(L"another linktmpfolder");
-	link_names.push_back(L"ptmp");
-	link_names.push_back(L".qtmp");
-	link_names.push_back(L"this_link_is_broken_tmp");
+    // Keep list of what is a link to test against
+    vector<wstring> link_names;
+    link_names.push_back(L"linktmpfolder");
+    link_names.push_back(L"another linktmpfolder");
+    link_names.push_back(L"ptmp");
+    link_names.push_back(L".qtmp");
+    link_names.push_back(L"this_link_is_broken_tmp");
 
-	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
-	for (; e != enum_iterator<IEnumIDList>(); ++e)
-	{
-		remote_itemid_view itemid(*e);
+    enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+    for (; e != enum_iterator<IEnumIDList>(); ++e)
+    {
+        remote_itemid_view itemid(*e);
 
-		if (std::find(
-			link_names.begin(), link_names.end(), itemid.filename()) !=
-			link_names.end())
-		{
-			BOOST_CHECK_MESSAGE(
-				itemid.is_link(),
-				itemid.filename() + L" is not recognised as a link");
-		}
-		else
-		{
-			BOOST_CHECK_MESSAGE(
-				!itemid.is_link(),
-				itemid.filename() + L" is incorrectly recognised as a link");
-		}
-	}
+        if (std::find(
+            link_names.begin(), link_names.end(), itemid.filename()) !=
+            link_names.end())
+        {
+            BOOST_CHECK_MESSAGE(
+                itemid.is_link(),
+                itemid.filename() + L" is not recognised as a link");
+        }
+        else
+        {
+            BOOST_CHECK_MESSAGE(
+                !itemid.is_link(),
+                itemid.filename() + L" is incorrectly recognised as a link");
+        }
+    }
 }
 
 /**
@@ -296,22 +296,22 @@ BOOST_AUTO_TEST_CASE( links )
  */
 BOOST_AUTO_TEST_CASE( only_folder )
 {
-	SHCONTF flags = SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN;
+    SHCONTF flags = SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
-	for (; e != enum_iterator<IEnumIDList>(); ++e)
-	{
-		remote_itemid_view itemid(*e);
-		BOOST_CHECK(itemid.is_folder());
-		standard_checks(itemid);
-	}
+    enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+    for (; e != enum_iterator<IEnumIDList>(); ++e)
+    {
+        remote_itemid_view itemid(*e);
+        BOOST_CHECK(itemid.is_folder());
+        standard_checks(itemid);
+    }
 
-	const wchar_t* expected[] = {
-		L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
-		L"testtmpfolder with spaces", L".testtmphiddenfolder", L"linktmpfolder",
-		L"another linktmpfolder", L"swish"};
+    const wchar_t* expected[] = {
+        L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
+        L"testtmpfolder with spaces", L".testtmphiddenfolder", L"linktmpfolder",
+        L"another linktmpfolder", L"swish"};
 
-	expected_filenames(directory().GetEnum(flags), expected);
+    expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -319,24 +319,24 @@ BOOST_AUTO_TEST_CASE( only_folder )
  */
 BOOST_AUTO_TEST_CASE( only_files )
 {
-	SHCONTF flags = SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    SHCONTF flags = SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
-	for (; e != enum_iterator<IEnumIDList>(); ++e)
-	{
-		remote_itemid_view itemid(*e);
-		BOOST_CHECK(!itemid.is_folder());
-		standard_checks(itemid);
-	}
+    enum_iterator<IEnumIDList> e(directory().GetEnum(flags));
+    for (; e != enum_iterator<IEnumIDList>(); ++e)
+    {
+        remote_itemid_view itemid(*e);
+        BOOST_CHECK(!itemid.is_folder());
+        standard_checks(itemid);
+    }
 
-	const wchar_t* expected[] = {
-		L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
-		L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
-		L"testtmpfile.ext.txt", L"testtmpfile..", L".testtmphiddenfile",
-		L"ptmp", L".qtmp", L"this_link_is_broken_tmp"};
-		// broken link is considered a file
+    const wchar_t* expected[] = {
+        L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
+        L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
+        L"testtmpfile.ext.txt", L"testtmpfile..", L".testtmphiddenfile",
+        L"ptmp", L".qtmp", L"this_link_is_broken_tmp"};
+        // broken link is considered a file
 
-	expected_filenames(directory().GetEnum(flags), expected);
+    expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -344,18 +344,18 @@ BOOST_AUTO_TEST_CASE( only_files )
  */
 BOOST_AUTO_TEST_CASE( no_hidden )
 {
-	SHCONTF flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+    SHCONTF flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
 
-	const wchar_t* expected[] = {
-		L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
-		L"testtmpfolder with spaces", L"linktmpfolder",
-		L"another linktmpfolder", L"swish",
-		L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
-		L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
-		L"testtmpfile.ext.txt", L"testtmpfile..", 
-		L"ptmp", L"this_link_is_broken_tmp"};
+    const wchar_t* expected[] = {
+        L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
+        L"testtmpfolder with spaces", L"linktmpfolder",
+        L"another linktmpfolder", L"swish",
+        L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
+        L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
+        L"testtmpfile.ext.txt", L"testtmpfile..", 
+        L"ptmp", L"this_link_is_broken_tmp"};
 
-	expected_filenames(directory().GetEnum(flags), expected);
+    expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -364,14 +364,14 @@ BOOST_AUTO_TEST_CASE( no_hidden )
  */
 BOOST_AUTO_TEST_CASE( no_hidden_only_folders )
 {
-	SHCONTF flags = SHCONTF_FOLDERS;
+    SHCONTF flags = SHCONTF_FOLDERS;
 
-	const wchar_t* expected[] = {
-		L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
-		L"testtmpfolder with spaces", L"linktmpfolder",
-		L"another linktmpfolder", L"swish"};
+    const wchar_t* expected[] = {
+        L"Testtmpfolder", L"testtmpfolder.ext", L"testtmpfolder.bmp",
+        L"testtmpfolder with spaces", L"linktmpfolder",
+        L"another linktmpfolder", L"swish"};
 
-	expected_filenames(directory().GetEnum(flags), expected);
+    expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -380,15 +380,15 @@ BOOST_AUTO_TEST_CASE( no_hidden_only_folders )
  */
 BOOST_AUTO_TEST_CASE( no_hidden_only_files )
 {
-	SHCONTF flags = SHCONTF_NONFOLDERS;
+    SHCONTF flags = SHCONTF_NONFOLDERS;
 
-	const wchar_t* expected[] = {
-		L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
-		L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
-		L"testtmpfile.ext.txt", L"testtmpfile..", 
-		L"ptmp", L"this_link_is_broken_tmp"};
+    const wchar_t* expected[] = {
+        L"testtmpfile", L"testtmpFile", L"testtmpfile.ext", L"testtmpfile.txt",
+        L"testtmpfile with spaces", L"testtmpfile with \"quotes\" and spaces",
+        L"testtmpfile.ext.txt", L"testtmpfile..", 
+        L"ptmp", L"this_link_is_broken_tmp"};
 
-	expected_filenames(directory().GetEnum(flags), expected);
+    expected_filenames(directory().GetEnum(flags), expected);
 }
 
 /**
@@ -398,12 +398,12 @@ BOOST_AUTO_TEST_CASE( no_hidden_only_files )
  */
 BOOST_AUTO_TEST_CASE( rename )
 {
-	provider()->set_rename_behaviour(MockProvider::RenameOK);
+    provider()->set_rename_behaviour(MockProvider::RenameOK);
 
-	// PIDL of old file.  Would normally come from GetEnum()
-	cpidl_t pidl = create_test_pidl(L"testtmpfile");
+    // PIDL of old file.  Would normally come from GetEnum()
+    cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-	BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), false);
+    BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), false);
 }
 
 /**
@@ -411,17 +411,17 @@ BOOST_AUTO_TEST_CASE( rename )
  */
 BOOST_AUTO_TEST_CASE( rename_in_subfolder )
 {
-	provider()->set_rename_behaviour(MockProvider::RenameOK);
+    provider()->set_rename_behaviour(MockProvider::RenameOK);
 
-	// PIDL of old file.  Would normally come from GetEnum()
-	cpidl_t pidl = create_test_pidl(L"testswishfile");
+    // PIDL of old file.  Would normally come from GetEnum()
+    cpidl_t pidl = create_test_pidl(L"testswishfile");
 
-	BOOST_CHECK_EQUAL(
-		directory(
-			apidl_t() + create_host_itemid(
-				L"testhost", L"testuser", L"/tmp/swish", 22)).Rename(
-					pidl, L"renamed to"),
-		false);
+    BOOST_CHECK_EQUAL(
+        directory(
+            apidl_t() + create_host_itemid(
+                L"testhost", L"testuser", L"/tmp/swish", 22)).Rename(
+                    pidl, L"renamed to"),
+        false);
 }
 
 /**
@@ -430,26 +430,26 @@ BOOST_AUTO_TEST_CASE( rename_in_subfolder )
  */
 BOOST_AUTO_TEST_CASE( rename_with_confirmation_granted )
 {
-	provider()->set_rename_behaviour(MockProvider::ConfirmOverwrite);
-	consumer()->set_confirm_overwrite_behaviour(MockConsumer::AllowOverwrite);
+    provider()->set_rename_behaviour(MockProvider::ConfirmOverwrite);
+    consumer()->set_confirm_overwrite_behaviour(MockConsumer::AllowOverwrite);
 
-	cpidl_t pidl = create_test_pidl(L"testtmpfile");
+    cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-	BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), true);
-	BOOST_CHECK(consumer()->confirmed_overwrite());
+    BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), true);
+    BOOST_CHECK(consumer()->confirmed_overwrite());
 }
 
 namespace {
 
-	bool is_com_abort(const com_error& error)
-	{	
-		return error.hr() == E_ABORT;
-	}
+    bool is_com_abort(const com_error& error)
+    {    
+        return error.hr() == E_ABORT;
+    }
 
-	bool is_com_fail(const com_error& error)
-	{	
-		return error.hr() == E_FAIL;
-	}
+    bool is_com_fail(const com_error& error)
+    {    
+        return error.hr() == E_FAIL;
+    }
 }
 
 /**
@@ -458,14 +458,14 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( rename_with_confirmation_denied )
 {
-	provider()->set_rename_behaviour(MockProvider::ConfirmOverwrite);
-	consumer()->set_confirm_overwrite_behaviour(MockConsumer::PreventOverwrite);
+    provider()->set_rename_behaviour(MockProvider::ConfirmOverwrite);
+    consumer()->set_confirm_overwrite_behaviour(MockConsumer::PreventOverwrite);
 
-	cpidl_t pidl = create_test_pidl(L"testtmpfile");
+    cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-	BOOST_CHECK_EXCEPTION(
-		directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
-	BOOST_CHECK(consumer()->confirmed_overwrite());
+    BOOST_CHECK_EXCEPTION(
+        directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
+    BOOST_CHECK(consumer()->confirmed_overwrite());
 }
 
 /**
@@ -473,13 +473,13 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_denied )
  */
 BOOST_AUTO_TEST_CASE( rename_provider_aborts )
 {
-	provider()->set_rename_behaviour(MockProvider::AbortRename);
+    provider()->set_rename_behaviour(MockProvider::AbortRename);
 
-	cpidl_t pidl = create_test_pidl(L"testtmpfile");
+    cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-	BOOST_CHECK_EXCEPTION(
-		directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
-	BOOST_CHECK(!consumer()->confirmed_overwrite());
+    BOOST_CHECK_EXCEPTION(
+        directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
+    BOOST_CHECK(!consumer()->confirmed_overwrite());
 }
 
 /**
@@ -487,13 +487,13 @@ BOOST_AUTO_TEST_CASE( rename_provider_aborts )
  */
 BOOST_AUTO_TEST_CASE( rename_provider_fail )
 {
-	provider()->set_rename_behaviour(MockProvider::FailRename);
+    provider()->set_rename_behaviour(MockProvider::FailRename);
 
-	cpidl_t pidl = create_test_pidl(L"testtmpfile");
+    cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-	BOOST_CHECK_EXCEPTION(
-		directory().Rename(pidl, L"renamed to"), com_error, is_com_fail);
-	BOOST_CHECK(!consumer()->confirmed_overwrite());
+    BOOST_CHECK_EXCEPTION(
+        directory().Rename(pidl, L"renamed to"), com_error, is_com_fail);
+    BOOST_CHECK(!consumer()->confirmed_overwrite());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

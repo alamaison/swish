@@ -32,21 +32,21 @@ namespace swish {
 namespace nse {
 
 com_ptr<IDataObject> data_object_from_item_array(
-	com_ptr<IShellItemArray> items, com_ptr<IBindCtx> bind_ctx)
+    com_ptr<IShellItemArray> items, com_ptr<IBindCtx> bind_ctx)
 {
-	com_ptr<IDataObject> data_object;
-	if (items)
-	{
-		items->BindToHandler(
-			bind_ctx.get(), BHID_DataObject, data_object.iid(),
-			reinterpret_cast<void**>(data_object.out()));
-	}
+    com_ptr<IDataObject> data_object;
+    if (items)
+    {
+        items->BindToHandler(
+            bind_ctx.get(), BHID_DataObject, data_object.iid(),
+            reinterpret_cast<void**>(data_object.out()));
+    }
 
-	// We don't care if binding succeeded - if it did, great; we pass
-	// the DataObject.  If not, the data_object pointer will be NULL
-	// and we can assume that no items were selected
+    // We don't care if binding succeeded - if it did, great; we pass
+    // the DataObject.  If not, the data_object pointer will be NULL
+    // and we can assume that no items were selected
 
-	return data_object;
+    return data_object;
 }
 
 }} // namespace swish::nse

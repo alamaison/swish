@@ -45,61 +45,61 @@ namespace controls {
 class button_impl : public ezel::detail::window_impl
 {
 public:
-	typedef ezel::detail::window_impl super;
+    typedef ezel::detail::window_impl super;
 
-	typedef ezel::detail::command_map<BN_CLICKED> commands;
+    typedef ezel::detail::command_map<BN_CLICKED> commands;
 
-	virtual void handle_command(
-		WORD command_id, WPARAM wparam, LPARAM lparam)
-	{
-		dispatch_command(this, command_id, wparam, lparam);
-	}
+    virtual void handle_command(
+        WORD command_id, WPARAM wparam, LPARAM lparam)
+    {
+        dispatch_command(this, command_id, wparam, lparam);
+    }
 
-	button_impl(
-		const std::wstring& title, short left, short top, short width,
-		short height, bool default)
-		:
-		ezel::detail::window_impl(title, left, top, width, height),
-		m_default(default) {}
+    button_impl(
+        const std::wstring& title, short left, short top, short width,
+        short height, bool default)
+        :
+        ezel::detail::window_impl(title, left, top, width, height),
+        m_default(default) {}
 
-	std::wstring window_class() const { return L"button"; }
+    std::wstring window_class() const { return L"button"; }
 
-	DWORD style() const
-	{
-		DWORD style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
-		
-		style |= (m_default) ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON;
+    DWORD style() const
+    {
+        DWORD style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        
+        style |= (m_default) ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON;
 
-		return style;
-	}
+        return style;
+    }
 
-	boost::signal<void ()>& on_click() { return m_on_click; }
+    boost::signal<void ()>& on_click() { return m_on_click; }
 
-	void on(command<BN_CLICKED>) { m_on_click(); }
+    void on(command<BN_CLICKED>) { m_on_click(); }
 
 private:
 
-	boost::signal<void ()> m_on_click;
-	bool m_default;
+    boost::signal<void ()> m_on_click;
+    bool m_default;
 };
 
 class button : public ezel::control<button_impl>
 {
 public:
-	button(
-		const std::wstring& title, short left, short top, short width,
-		short height, bool default=false)
-		:
-		control<button_impl>(
-			boost::shared_ptr<button_impl>(
-				new button_impl(title, left, top, width, height, default))) {}
+    button(
+        const std::wstring& title, short left, short top, short width,
+        short height, bool default=false)
+        :
+        control<button_impl>(
+            boost::shared_ptr<button_impl>(
+                new button_impl(title, left, top, width, height, default))) {}
 
-	boost::signal<void ()>& on_click() { return impl()->on_click(); }
+    boost::signal<void ()>& on_click() { return impl()->on_click(); }
 
-	short left() const { return impl()->left(); }
-	short top() const { return impl()->top(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
+    short left() const { return impl()->left(); }
+    short top() const { return impl()->top(); }
+    short width() const { return impl()->width(); }
+    short height() const { return impl()->height(); }
 };
 
 }} // namespace ezel::controls

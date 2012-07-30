@@ -47,17 +47,17 @@ class SequentialPlan /* final */ : public Plan
 {
 public: // Plan
 
-	virtual void execute_plan(
-		DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer) const;
+    virtual void execute_plan(
+        DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer) const;
 
 public:
 
-	void add_stage(const Operation& entry);
+    void add_stage(const Operation& entry);
 
 private:
 
-	boost::ptr_vector<Operation> m_copy_list;
+    boost::ptr_vector<Operation> m_copy_list;
 };
 
 }}

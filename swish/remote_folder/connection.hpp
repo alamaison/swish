@@ -1,7 +1,7 @@
 /**
     @file
 
-	Pool of reusuable SFTP connections.
+    Pool of reusuable SFTP connections.
 
     @if license
 
@@ -45,12 +45,12 @@ class CPool
 {
 public:
 
-	comet::com_ptr<ISftpProvider> GetSession(
-		const std::wstring& host, const std::wstring& user, int port,
-		HWND hwnd);
+    comet::com_ptr<ISftpProvider> GetSession(
+        const std::wstring& host, const std::wstring& user, int port,
+        HWND hwnd);
 
 private:
-	static comet::critical_section m_cs;
+    static comet::critical_section m_cs;
 };
 
 
@@ -69,7 +69,7 @@ private:
  * @throws ATL exceptions on failure.
  */
 comet::com_ptr<ISftpProvider> connection_from_pidl(
-	const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
+    const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
 
 /**
  * Interface for connection making logic.
@@ -86,9 +86,9 @@ comet::com_ptr<ISftpProvider> connection_from_pidl(
 /*class connection_maker
 {
 public:
-	virtual ~connection_maker() = 0;
-	virtual comet::com_ptr<ISftpProvider> provider() = 0;
-	virtual comet::com_ptr<ISftpConsumer> consumer() = 0;
+    virtual ~connection_maker() = 0;
+    virtual comet::com_ptr<ISftpProvider> provider() = 0;
+    virtual comet::com_ptr<ISftpConsumer> consumer() = 0;
 };*/
 
 }} // namespace swish::remote_folder

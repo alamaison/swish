@@ -53,23 +53,23 @@ using std::wstring;
 
 namespace {
 
-	/**
-	 * Return the PIDL to the Swish HostFolder in Explorer.
-	 */
-	apidl_t swish_pidl()
-	{
-		return pidl_from_parsing_name(
-			L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-			L"::{B816A83A-5022-11DC-9153-0090F5284F85}");
-	}
+    /**
+     * Return the PIDL to the Swish HostFolder in Explorer.
+     */
+    apidl_t swish_pidl()
+    {
+        return pidl_from_parsing_name(
+            L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
+            L"::{B816A83A-5022-11DC-9153-0090F5284F85}");
+    }
 
-	cpidl_t test_remote_itemid(const wstring& filename, bool is_folder)
-	{
-		return create_remote_itemid(
-			filename, is_folder, false, L"bobuser", L"bob's group", 1001, 65535,
-			040666, 18446744073709551615, datetime_t(1970, 11, 1, 9, 15, 42, 6),
-			datetime_t((DATE)0));
-	}
+    cpidl_t test_remote_itemid(const wstring& filename, bool is_folder)
+    {
+        return create_remote_itemid(
+            filename, is_folder, false, L"bobuser", L"bob's group", 1001, 65535,
+            040666, 18446744073709551615, datetime_t(1970, 11, 1, 9, 15, 42, 6),
+            datetime_t((DATE)0));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE( swish_pidl_tests )
@@ -82,11 +82,11 @@ BOOST_AUTO_TEST_SUITE( swish_pidl_tests )
  */
 BOOST_AUTO_TEST_CASE( pidl_to_absolute_path_host_item_only )
 {
-	apidl_t pidl = swish_pidl() + create_host_itemid(
-		L"host.example.com", L"bobuser", L"/p/q", 22);
+    apidl_t pidl = swish_pidl() + create_host_itemid(
+        L"host.example.com", L"bobuser", L"/p/q", 22);
 
-	BOOST_CHECK_EQUAL(
-		absolute_path_from_swish_pidl(pidl), L"/p/q");
+    BOOST_CHECK_EQUAL(
+        absolute_path_from_swish_pidl(pidl), L"/p/q");
 }
 
 /**
@@ -94,12 +94,12 @@ BOOST_AUTO_TEST_CASE( pidl_to_absolute_path_host_item_only )
  */
 BOOST_AUTO_TEST_CASE( pidl_to_absolute_path )
 {
-	apidl_t pidl = swish_pidl() + create_host_itemid(
-		L"host.example.com", L"bobuser", L"/p/q", 22);
-	pidl += test_remote_itemid(L"foo", false);
+    apidl_t pidl = swish_pidl() + create_host_itemid(
+        L"host.example.com", L"bobuser", L"/p/q", 22);
+    pidl += test_remote_itemid(L"foo", false);
 
-	BOOST_CHECK_EQUAL(
-		absolute_path_from_swish_pidl(pidl), L"/p/q/foo");
+    BOOST_CHECK_EQUAL(
+        absolute_path_from_swish_pidl(pidl), L"/p/q/foo");
 }
 
 /**
@@ -107,13 +107,13 @@ BOOST_AUTO_TEST_CASE( pidl_to_absolute_path )
  */
 BOOST_AUTO_TEST_CASE( pidl_to_absolute_path_multiple_remote_items )
 {
-	apidl_t pidl = swish_pidl() + create_host_itemid(
-		L"host.example.com", L"bobuser", L"/p/q", 22);
-	pidl += test_remote_itemid(L"foo", true);
-	pidl += test_remote_itemid(L".bob", false);
+    apidl_t pidl = swish_pidl() + create_host_itemid(
+        L"host.example.com", L"bobuser", L"/p/q", 22);
+    pidl += test_remote_itemid(L"foo", true);
+    pidl += test_remote_itemid(L".bob", false);
 
-	BOOST_CHECK_EQUAL(
-		absolute_path_from_swish_pidl(pidl), L"/p/q/foo/.bob");
+    BOOST_CHECK_EQUAL(
+        absolute_path_from_swish_pidl(pidl), L"/p/q/foo/.bob");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

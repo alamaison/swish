@@ -61,22 +61,22 @@ namespace detail {
  */
 struct remote_item_id
 {
-	USHORT cb;
-	DWORD dwFingerprint;
-	bool fIsFolder;
-	bool fIsLink;
-	WCHAR wszFilename[MAX_FILENAME_LENZ];
-	WCHAR wszOwner[MAX_USERNAME_LENZ];
-	WCHAR wszGroup[MAX_USERNAME_LENZ];
-	ULONG uUid;
-	ULONG uGid;
-	DWORD dwPermissions;
-	//WORD wPadding;
-	ULONGLONG uSize;
-	DATE dateModified;
-	DATE dateAccessed;
+    USHORT cb;
+    DWORD dwFingerprint;
+    bool fIsFolder;
+    bool fIsLink;
+    WCHAR wszFilename[MAX_FILENAME_LENZ];
+    WCHAR wszOwner[MAX_USERNAME_LENZ];
+    WCHAR wszGroup[MAX_USERNAME_LENZ];
+    ULONG uUid;
+    ULONG uGid;
+    DWORD dwPermissions;
+    //WORD wPadding;
+    ULONGLONG uSize;
+    DATE dateModified;
+    DATE dateAccessed;
 
-	static const DWORD FINGERPRINT = 0x533aaf69;
+    static const DWORD FINGERPRINT = 0x533aaf69;
 };
 #include <poppack.h>
 
@@ -84,9 +84,9 @@ BOOST_STATIC_ASSERT((sizeof(remote_item_id) % sizeof(DWORD)) == 0);
 
 inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 {
-	std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
-	::ua_wcscpy_s(&buffer[0], buffer.size(), source);
-	return std::wstring(&buffer[0]);
+    std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
+    ::ua_wcscpy_s(&buffer[0], buffer.size(), source);
+    return std::wstring(&buffer[0]);
 }
 
 }
@@ -100,118 +100,118 @@ inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 class remote_itemid_view
 {
 public:
-	// We have to take the PIDL as a template, rather than that as a pidl_t
-	// as the PIDL passed might be a cpidl_t or an apidl_t.  In this case
-	// the pidl would be converted to a pidl_t using a temporary which is
-	// destroyed immediately after the constructor returns, thereby
-	// invalidating the PIDL we've stored a reference to.
-	template<typename T, typename Alloc>
-	explicit remote_itemid_view(
-		const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
-		: m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl.get()))
-	{}
+    // We have to take the PIDL as a template, rather than that as a pidl_t
+    // as the PIDL passed might be a cpidl_t or an apidl_t.  In this case
+    // the pidl would be converted to a pidl_t using a temporary which is
+    // destroyed immediately after the constructor returns, thereby
+    // invalidating the PIDL we've stored a reference to.
+    template<typename T, typename Alloc>
+    explicit remote_itemid_view(
+        const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
+        : m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl.get()))
+    {}
 
-	explicit remote_itemid_view(PCUIDLIST_RELATIVE pidl)
-		: m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl)) {}
+    explicit remote_itemid_view(PCUIDLIST_RELATIVE pidl)
+        : m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl)) {}
 
-	bool valid() const
-	{
-		if (m_itemid == NULL)
-			return false;
+    bool valid() const
+    {
+        if (m_itemid == NULL)
+            return false;
 
-		return ((m_itemid->cb == sizeof(detail::remote_item_id)) &&
-			(m_itemid->dwFingerprint == detail::remote_item_id::FINGERPRINT));
-	}
+        return ((m_itemid->cb == sizeof(detail::remote_item_id)) &&
+            (m_itemid->dwFingerprint == detail::remote_item_id::FINGERPRINT));
+    }
 
-	std::wstring filename() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::copy_unaligned_string(m_itemid->wszFilename);
-	}
+    std::wstring filename() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return detail::copy_unaligned_string(m_itemid->wszFilename);
+    }
 
-	std::wstring owner() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::copy_unaligned_string(m_itemid->wszOwner);
-	}
+    std::wstring owner() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return detail::copy_unaligned_string(m_itemid->wszOwner);
+    }
 
-	std::wstring group() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return detail::copy_unaligned_string(m_itemid->wszGroup);
-	}
+    std::wstring group() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return detail::copy_unaligned_string(m_itemid->wszGroup);
+    }
 
-	ULONG owner_id() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->uUid;
-	}
+    ULONG owner_id() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return m_itemid->uUid;
+    }
 
-	ULONG group_id() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->uGid;
-	}
+    ULONG group_id() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return m_itemid->uGid;
+    }
 
-	bool is_folder() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->fIsFolder;
-	}
+    bool is_folder() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return m_itemid->fIsFolder;
+    }
 
-	bool is_link() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->fIsLink;
-	}
+    bool is_link() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return m_itemid->fIsLink;
+    }
 
-	DWORD permissions() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->dwPermissions;
-	}
+    DWORD permissions() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return m_itemid->dwPermissions;
+    }
 
-	ULONGLONG size() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return m_itemid->uSize;
-	}
+    ULONGLONG size() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return m_itemid->uSize;
+    }
 
-	comet::datetime_t date_modified() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return comet::datetime_t(m_itemid->dateModified);
-	}
+    comet::datetime_t date_modified() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return comet::datetime_t(m_itemid->dateModified);
+    }
 
-	comet::datetime_t date_accessed() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
-		return comet::datetime_t(m_itemid->dateAccessed);
-	}
+    comet::datetime_t date_accessed() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a remote item"));
+        return comet::datetime_t(m_itemid->dateAccessed);
+    }
 
 private:
-	const detail::remote_item_id __unaligned* m_itemid;
+    const detail::remote_item_id __unaligned* m_itemid;
 };
 
 namespace detail {
 
 #include <pshpack1.h>
-	struct remote_item_template
-	{
-		remote_item_id id;
-		SHITEMID terminator;
-	};
+    struct remote_item_template
+    {
+        remote_item_id id;
+        SHITEMID terminator;
+    };
 #include <poppack.h>
 
 }
@@ -232,47 +232,47 @@ namespace detail {
  * @param date_accessed  Date that file was last accessed.
  */
 inline winapi::shell::pidl::cpidl_t create_remote_itemid(
-	const std::wstring& filename, bool is_folder, bool is_link,
-	const std::wstring& owner, const std::wstring& group, ULONG owner_id,
-	ULONG group_id, DWORD permissions, ULONGLONG size,
-	const comet::datetime_t date_modified,
-	const comet::datetime_t date_accessed)
+    const std::wstring& filename, bool is_folder, bool is_link,
+    const std::wstring& owner, const std::wstring& group, ULONG owner_id,
+    ULONG group_id, DWORD permissions, ULONGLONG size,
+    const comet::datetime_t date_modified,
+    const comet::datetime_t date_accessed)
 {
-	// We create the item on the stack and then clone it into 
-	// a CoTaskMemAllocated pidl when we return it as a cpidl_t
-	detail::remote_item_template item;
-	std::memset(&item, 0, sizeof(item));
+    // We create the item on the stack and then clone it into 
+    // a CoTaskMemAllocated pidl when we return it as a cpidl_t
+    detail::remote_item_template item;
+    std::memset(&item, 0, sizeof(item));
 
-	item.id.cb = sizeof(item.id);
-	item.id.dwFingerprint = detail::remote_item_id::FINGERPRINT;
+    item.id.cb = sizeof(item.id);
+    item.id.dwFingerprint = detail::remote_item_id::FINGERPRINT;
 
 #pragma warning(push)
 #pragma warning(disable:4996)
-	filename.copy(item.id.wszFilename, MAX_FILENAME_LENZ);
-	item.id.wszFilename[MAX_HOSTNAME_LENZ - 1] = wchar_t();
+    filename.copy(item.id.wszFilename, MAX_FILENAME_LENZ);
+    item.id.wszFilename[MAX_HOSTNAME_LENZ - 1] = wchar_t();
 
-	owner.copy(item.id.wszOwner, MAX_USERNAME_LENZ);
-	item.id.wszOwner[MAX_USERNAME_LENZ - 1] = wchar_t();
+    owner.copy(item.id.wszOwner, MAX_USERNAME_LENZ);
+    item.id.wszOwner[MAX_USERNAME_LENZ - 1] = wchar_t();
 
-	group.copy(item.id.wszGroup, MAX_USERNAME_LENZ);
-	item.id.wszGroup[MAX_USERNAME_LENZ - 1] = wchar_t();
+    group.copy(item.id.wszGroup, MAX_USERNAME_LENZ);
+    item.id.wszGroup[MAX_USERNAME_LENZ - 1] = wchar_t();
 #pragma warning(pop)
 
-	item.id.fIsFolder = is_folder;
-	item.id.fIsLink = is_link;
+    item.id.fIsFolder = is_folder;
+    item.id.fIsLink = is_link;
 
-	item.id.uUid = owner_id;
-	item.id.uGid = group_id;
-	item.id.dwPermissions = permissions;
-	item.id.uSize = size;
+    item.id.uUid = owner_id;
+    item.id.uGid = group_id;
+    item.id.dwPermissions = permissions;
+    item.id.uSize = size;
 
-	item.id.dateModified = date_modified.get();
-	item.id.dateAccessed = date_accessed.get();
+    item.id.dateModified = date_modified.get();
+    item.id.dateAccessed = date_accessed.get();
 
-	assert(item.terminator.cb == 0);
+    assert(item.terminator.cb == 0);
 
-	return winapi::shell::pidl::cpidl_t(
-		reinterpret_cast<PCITEMID_CHILD>(&item));
+    return winapi::shell::pidl::cpidl_t(
+        reinterpret_cast<PCITEMID_CHILD>(&item));
 }
 
 /**
@@ -283,24 +283,24 @@ inline winapi::shell::pidl::cpidl_t create_remote_itemid(
  * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
  */
 inline boost::filesystem::wpath path_from_remote_pidl(
-	const winapi::shell::pidl::pidl_t& remote_pidl)
+    const winapi::shell::pidl::pidl_t& remote_pidl)
 {
-	// Walk over RemoteItemIds and append each filename to form the path
-	winapi::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
+    // Walk over RemoteItemIds and append each filename to form the path
+    winapi::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
 
-	boost::filesystem::wpath path;
-	while (it != winapi::shell::pidl::raw_pidl_iterator())
-	{
-		remote_itemid_view itemid(*it);
-		if (!itemid.valid())
-			break; // should never happen
+    boost::filesystem::wpath path;
+    while (it != winapi::shell::pidl::raw_pidl_iterator())
+    {
+        remote_itemid_view itemid(*it);
+        if (!itemid.valid())
+            break; // should never happen
 
-		path /= itemid.filename();
+        path /= itemid.filename();
 
-		++it;
-	}
+        ++it;
+    }
 
-	return path;
+    return path;
 }
 
 }} // namespace swish::remote_folder

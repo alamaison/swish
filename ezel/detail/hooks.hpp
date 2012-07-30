@@ -41,54 +41,54 @@ namespace detail {
 
 namespace native {
 
-	/// @name CREATESTRUCT
-	// @{
-	template<typename T> struct create_struct;
+    /// @name CREATESTRUCT
+    // @{
+    template<typename T> struct create_struct;
 
-	template<> struct create_struct<char>
-	{ typedef CREATESTRUCTA type; };
+    template<> struct create_struct<char>
+    { typedef CREATESTRUCTA type; };
 
-	template<> struct create_struct<wchar_t>
-	{ typedef CREATESTRUCTW type; };
-	// @}
+    template<> struct create_struct<wchar_t>
+    { typedef CREATESTRUCTW type; };
+    // @}
 
-	/// @name CBT_CREATEWND
-	// @{
-	template<typename T> struct cbt_createwnd;
+    /// @name CBT_CREATEWND
+    // @{
+    template<typename T> struct cbt_createwnd;
 
-	template<> struct cbt_createwnd<char>
-	{ typedef CBT_CREATEWNDA type; };
+    template<> struct cbt_createwnd<char>
+    { typedef CBT_CREATEWNDA type; };
 
-	template<> struct cbt_createwnd<wchar_t>
-	{ typedef CBT_CREATEWNDW type; };
-	// @}
+    template<> struct cbt_createwnd<wchar_t>
+    { typedef CBT_CREATEWNDW type; };
+    // @}
 
 }
 
 template<typename T>
 inline void handle_create(
-	HWND hwnd, HWND /*insert_after*/,
-	typename native::create_struct<T>::type& create_info)
+    HWND hwnd, HWND /*insert_after*/,
+    typename native::create_struct<T>::type& create_info)
 {
-	UNALIGNED wchar_t* data =
-		static_cast<UNALIGNED wchar_t*>(create_info.lpCreateParams);
+    UNALIGNED wchar_t* data =
+        static_cast<UNALIGNED wchar_t*>(create_info.lpCreateParams);
 
-	if (data)
-	{
-		assert(*data == sizeof(wchar_t) + sizeof(window_impl*));
-		data++; // skip size
+    if (data)
+    {
+        assert(*data == sizeof(wchar_t) + sizeof(window_impl*));
+        data++; // skip size
 
-		window_impl* w = *reinterpret_cast<window_impl**>(data);
-		w->attach(hwnd);
-	}
+        window_impl* w = *reinterpret_cast<window_impl**>(data);
+        w->attach(hwnd);
+    }
 }
 
 template<typename T>
 inline void handle_destroy(HWND hwnd)
 {
-	window_impl* this_window =
-		fetch_user_window_data<T, window_impl*>(hwnd);
-	this_window->detach();
+    window_impl* this_window =
+        fetch_user_window_data<T, window_impl*>(hwnd);
+    this_window->detach();
 }
 
 /**
@@ -101,34 +101,34 @@ inline void handle_destroy(HWND hwnd)
  */
 template<typename T>
 inline LRESULT CALLBACK cbt_hook_function(
-	int code, WPARAM wparam, LPARAM lparam)
+    int code, WPARAM wparam, LPARAM lparam)
 {
-	try
-	{
-		if (code == HCBT_CREATEWND)
-		{
-			HWND hwnd = reinterpret_cast<HWND>(wparam);
+    try
+    {
+        if (code == HCBT_CREATEWND)
+        {
+            HWND hwnd = reinterpret_cast<HWND>(wparam);
 
-			typedef typename native::cbt_createwnd<T>::type* cbt_param;
+            typedef typename native::cbt_createwnd<T>::type* cbt_param;
 
-			cbt_param cbt_info = reinterpret_cast<cbt_param>(lparam);
+            cbt_param cbt_info = reinterpret_cast<cbt_param>(lparam);
 
-			handle_create<T>(
-				hwnd, cbt_info->hwndInsertAfter, *(cbt_info->lpcs));
-		}
-		else if (code == HCBT_DESTROYWND)
-		{
-			//handle_destroy<T>(reinterpret_cast<HWND>(wparam));
-		}
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << e.what();
-	}
+            handle_create<T>(
+                hwnd, cbt_info->hwndInsertAfter, *(cbt_info->lpcs));
+        }
+        else if (code == HCBT_DESTROYWND)
+        {
+            //handle_destroy<T>(reinterpret_cast<HWND>(wparam));
+        }
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what();
+    }
 
-	// TODO: pass *this* hook as first param for Windows 9x
-	LRESULT rc = ::CallNextHookEx(NULL, code, wparam, lparam);
-	return rc;
+    // TODO: pass *this* hook as first param for Windows 9x
+    LRESULT rc = ::CallNextHookEx(NULL, code, wparam, lparam);
+    return rc;
 }
 
 /**
@@ -141,12 +141,12 @@ template<typename T>
 class creation_hooks
 {
 public:
-	creation_hooks()
-		:
-		m_cbt_hook(winapi::windows_hook(WH_CBT, &cbt_hook_function<T>)) {}
+    creation_hooks()
+        :
+        m_cbt_hook(winapi::windows_hook(WH_CBT, &cbt_hook_function<T>)) {}
 
 private:
-	winapi::hhook m_cbt_hook;
+    winapi::hhook m_cbt_hook;
 };
 
 }} // namespace ezel::detail

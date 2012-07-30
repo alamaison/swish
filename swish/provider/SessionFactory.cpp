@@ -104,81 +104,81 @@ using std::string;
  * - E_FAIL otherwise
  */
 /* static */ auto_ptr<CSession> CSessionFactory::CreateSftpSession(
-	PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
-	ISftpConsumer *pConsumer) throw(...)
+    PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
+    ISftpConsumer *pConsumer) throw(...)
 {
-	auto_ptr<CSession> spSession( new CSession() );
-	spSession->Connect(pwszHost, uPort);
+    auto_ptr<CSession> spSession( new CSession() );
+    spSession->Connect(pwszHost, uPort);
 
-	// Check the hostkey against our known hosts
-	_VerifyHostKey(pwszHost, *spSession, pConsumer);
-	// Legal to fail here, e.g. user refused to accept host key
+    // Check the hostkey against our known hosts
+    _VerifyHostKey(pwszHost, *spSession, pConsumer);
+    // Legal to fail here, e.g. user refused to accept host key
 
-	// Authenticate the user with the remote server
-	_AuthenticateUser(pwszUser, *spSession, pConsumer);
-	// Legal to fail here, e.g. wrong password/key
+    // Authenticate the user with the remote server
+    _AuthenticateUser(pwszUser, *spSession, pConsumer);
+    // Legal to fail here, e.g. wrong password/key
 
-	spSession->StartSftp();
+    spSession->StartSftp();
 
-	return spSession;
+    return spSession;
 }
 
 const wpath known_hosts_path =
-	home_directory<wpath>() / L".ssh" / L"known_hosts";
+    home_directory<wpath>() / L".ssh" / L"known_hosts";
 
 void CSessionFactory::_VerifyHostKey(
-	PCWSTR pwszHost, CSession& session, ISftpConsumer *pConsumer)
+    PCWSTR pwszHost, CSession& session, ISftpConsumer *pConsumer)
 {
-	ATLASSUME(pConsumer);
+    ATLASSUME(pConsumer);
 
-	ssh::session sess(session.get());
+    ssh::session sess(session.get());
 
-	bstr_t host = pwszHost;
-	host_key key = sess.hostkey();
-	bstr_t hostkey_algorithm = key.algorithm_name();
-	bstr_t hostkey_hash = hexify(key.md5_hash());
+    bstr_t host = pwszHost;
+    host_key key = sess.hostkey();
+    bstr_t hostkey_algorithm = key.algorithm_name();
+    bstr_t hostkey_hash = hexify(key.md5_hash());
 
-	assert(!hostkey_hash.empty());
-	assert(!hostkey_algorithm.empty());
-	
-	trace("host-key fingerprint: %1%\t(%2%)")
-		% hostkey_algorithm % hostkey_hash;
+    assert(!hostkey_hash.empty());
+    assert(!hostkey_algorithm.empty());
+    
+    trace("host-key fingerprint: %1%\t(%2%)")
+        % hostkey_algorithm % hostkey_hash;
 
-	// make sure known_hosts file exists
-	create_directories(known_hosts_path.parent_path());
-	ofstream(known_hosts_path, std::ios::app);
+    // make sure known_hosts file exists
+    create_directories(known_hosts_path.parent_path());
+    ofstream(known_hosts_path, std::ios::app);
 
-	openssh_knownhost_collection hosts(session.get(), known_hosts_path);
+    openssh_knownhost_collection hosts(session.get(), known_hosts_path);
 
-	find_result result = hosts.find(host.s_str(), key);
-	if (result.mismatch())
-	{
-		HRESULT hr = pConsumer->OnHostkeyMismatch(
-			host.in(), hostkey_hash.in(), hostkey_algorithm.in());
-		if (hr == S_OK)
-		{
-			update(hosts, host, key, result); // update known_hosts
-			hosts.save(known_hosts_path);
-		}
-		else if (hr == S_FALSE)
-			return; // continue but don't add
-		else
-			AtlThrow(E_ABORT); // screech to a halt
-	}
-	else if (result.not_found())
-	{
-		HRESULT hr = pConsumer->OnHostkeyUnknown(
-			host.in(), hostkey_hash.in(), hostkey_algorithm.in());
-		if (hr == S_OK)
-		{
-			add(hosts, host, key); // add to known_hosts
-			hosts.save(known_hosts_path);
-		}
-		else if (hr == S_FALSE)
-			return; // continue but don't add
-		else
-			AtlThrow(E_ABORT); // screech to a halt
-	}
+    find_result result = hosts.find(host.s_str(), key);
+    if (result.mismatch())
+    {
+        HRESULT hr = pConsumer->OnHostkeyMismatch(
+            host.in(), hostkey_hash.in(), hostkey_algorithm.in());
+        if (hr == S_OK)
+        {
+            update(hosts, host, key, result); // update known_hosts
+            hosts.save(known_hosts_path);
+        }
+        else if (hr == S_FALSE)
+            return; // continue but don't add
+        else
+            AtlThrow(E_ABORT); // screech to a halt
+    }
+    else if (result.not_found())
+    {
+        HRESULT hr = pConsumer->OnHostkeyUnknown(
+            host.in(), hostkey_hash.in(), hostkey_algorithm.in());
+        if (hr == S_OK)
+        {
+            add(hosts, host, key); // add to known_hosts
+            hosts.save(known_hosts_path);
+        }
+        else if (hr == S_FALSE)
+            return; // continue but don't add
+        else
+            AtlThrow(E_ABORT); // screech to a halt
+    }
 }
 
 /**
@@ -193,45 +193,45 @@ void CSessionFactory::_VerifyHostKey(
  * - E_FAIL otherwise
  */
 void CSessionFactory::_AuthenticateUser(
-	PCWSTR pwszUser, CSession& session, ISftpConsumer *pConsumer) throw(...)
+    PCWSTR pwszUser, CSession& session, ISftpConsumer *pConsumer) throw(...)
 {
-	ATLASSUME(pwszUser[0] != '\0');
-	CT2A szUsername(pwszUser);
+    ATLASSUME(pwszUser[0] != '\0');
+    CT2A szUsername(pwszUser);
 
-	// Check which authentication methods are available
-	char *szAuthList = libssh2_userauth_list(
-		session, szUsername, ::strlen(szUsername));
-	if (!szAuthList || *szAuthList == '\0')
-	{
-		// If empty, server refused to let user connect
-		BOOST_THROW_EXCEPTION(
-			std::exception("No supported authentication methods found"));
-	}
+    // Check which authentication methods are available
+    char *szAuthList = libssh2_userauth_list(
+        session, szUsername, ::strlen(szUsername));
+    if (!szAuthList || *szAuthList == '\0')
+    {
+        // If empty, server refused to let user connect
+        BOOST_THROW_EXCEPTION(
+            std::exception("No supported authentication methods found"));
+    }
 
-	TRACE("Authentication methods: %s", szAuthList);
+    TRACE("Authentication methods: %s", szAuthList);
 
-	// Try each supported authentication method in turn until one succeeds
-	HRESULT hr = E_FAIL;
-	if (::strstr(szAuthList, "publickey"))
-	{
-		TRACE("Trying public-key authentication");
-		hr = _PublicKeyAuthentication(szUsername, session, pConsumer);
-	}
-	if (FAILED(hr) && ::strstr(szAuthList, "keyboard-interactive"))
-	{
-		TRACE("Trying keyboard-interactive authentication");
-		hr = _KeyboardInteractiveAuthentication(szUsername, session, pConsumer);
-		if (hr == E_ABORT)
-			AtlThrow(hr); // User cancelled
-	}
-	if (FAILED(hr) && ::strstr(szAuthList, "password"))
-	{
-		TRACE("Trying simple password authentication");
-		hr = _PasswordAuthentication(szUsername, session, pConsumer);
-	}
+    // Try each supported authentication method in turn until one succeeds
+    HRESULT hr = E_FAIL;
+    if (::strstr(szAuthList, "publickey"))
+    {
+        TRACE("Trying public-key authentication");
+        hr = _PublicKeyAuthentication(szUsername, session, pConsumer);
+    }
+    if (FAILED(hr) && ::strstr(szAuthList, "keyboard-interactive"))
+    {
+        TRACE("Trying keyboard-interactive authentication");
+        hr = _KeyboardInteractiveAuthentication(szUsername, session, pConsumer);
+        if (hr == E_ABORT)
+            AtlThrow(hr); // User cancelled
+    }
+    if (FAILED(hr) && ::strstr(szAuthList, "password"))
+    {
+        TRACE("Trying simple password authentication");
+        hr = _PasswordAuthentication(szUsername, session, pConsumer);
+    }
 
-	if (FAILED(hr))
-		AtlThrow(hr);
+    if (FAILED(hr))
+        AtlThrow(hr);
 }
 
 /**
@@ -247,27 +247,27 @@ void CSessionFactory::_AuthenticateUser(
  * - E_FAIL otherwise
  */
 HRESULT CSessionFactory::_PasswordAuthentication(
-	PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+    PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
 {
-	HRESULT hr;
-	CComBSTR bstrPrompt = _T("Please enter your password:");
-	CComBSTR bstrPassword;
+    HRESULT hr;
+    CComBSTR bstrPrompt = _T("Please enter your password:");
+    CComBSTR bstrPassword;
 
-	// Loop until successfully authenticated or request returns cancel
-	int ret = -1; // default to failure
-	do {
-		hr = pConsumer->OnPasswordRequest( bstrPrompt, &bstrPassword );
-		if FAILED(hr)
-			return hr;
-		CT2A szPassword(bstrPassword);
-		ret = libssh2_userauth_password(session, szUsername, szPassword);
-		// TODO: handle password change callback here
-		bstrPassword.Empty(); // Prevent memory leak on repeat
-	} while (ret != 0);
+    // Loop until successfully authenticated or request returns cancel
+    int ret = -1; // default to failure
+    do {
+        hr = pConsumer->OnPasswordRequest( bstrPrompt, &bstrPassword );
+        if FAILED(hr)
+            return hr;
+        CT2A szPassword(bstrPassword);
+        ret = libssh2_userauth_password(session, szUsername, szPassword);
+        // TODO: handle password change callback here
+        bstrPassword.Empty(); // Prevent memory leak on repeat
+    } while (ret != 0);
 
-	ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
-	ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
-	return hr;
+    ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
+    ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+    return hr;
 }
 
 /**
@@ -281,97 +281,97 @@ HRESULT CSessionFactory::_PasswordAuthentication(
  * - E_FAIL otherwise
  */
 HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
-	PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+    PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
 {
-	// Create instance of keyboard-interactive authentication handler
-	CKeyboardInteractive handler(pConsumer);
-	
-	// Pass pointer to handler in session abstract and begin authentication.
-	// The static callback method (last parameter) will extract the 'this'
-	// pointer from the session and use it to invoke the handler instance.
-	// If the user cancels the operation, our callback should throw an
-	// E_ABORT exception which we catch here.
-	*libssh2_session_abstract(session) = &handler;
-	int rc = libssh2_userauth_keyboard_interactive(session,
-		szUsername, &(CKeyboardInteractive::OnKeyboardInteractive));
-	
-	// Check for two possible types of failure
-	if (FAILED(handler.GetErrorState()))
-		return handler.GetErrorState();
+    // Create instance of keyboard-interactive authentication handler
+    CKeyboardInteractive handler(pConsumer);
+    
+    // Pass pointer to handler in session abstract and begin authentication.
+    // The static callback method (last parameter) will extract the 'this'
+    // pointer from the session and use it to invoke the handler instance.
+    // If the user cancels the operation, our callback should throw an
+    // E_ABORT exception which we catch here.
+    *libssh2_session_abstract(session) = &handler;
+    int rc = libssh2_userauth_keyboard_interactive(session,
+        szUsername, &(CKeyboardInteractive::OnKeyboardInteractive));
+    
+    // Check for two possible types of failure
+    if (FAILED(handler.GetErrorState()))
+        return handler.GetErrorState();
 
-	ATLASSERT(rc || libssh2_userauth_authenticated(session)); // Double-check
-	return (rc == 0) ? S_OK : E_FAIL;
+    ATLASSERT(rc || libssh2_userauth_authenticated(session)); // Double-check
+    return (rc == 0) ? S_OK : E_FAIL;
 }
 
 namespace {
 
-	HRESULT pubkey_auth_the_nasty_old_way(
-		PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
-	{
-		ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
+    HRESULT pubkey_auth_the_nasty_old_way(
+        PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+    {
+        ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
 
-		try
-		{
-			CComBSTR bstrPrivateKey;
-			HRESULT hr = pConsumer->OnPrivateKeyFileRequest(&bstrPrivateKey);
-			if (FAILED(hr))
-				return hr;
+        try
+        {
+            CComBSTR bstrPrivateKey;
+            HRESULT hr = pConsumer->OnPrivateKeyFileRequest(&bstrPrivateKey);
+            if (FAILED(hr))
+                return hr;
 
-			CComBSTR bstrPublicKey;
-			hr = pConsumer->OnPublicKeyFileRequest(&bstrPublicKey);
-			if (FAILED(hr))
-				return hr;
+            CComBSTR bstrPublicKey;
+            hr = pConsumer->OnPublicKeyFileRequest(&bstrPublicKey);
+            if (FAILED(hr))
+                return hr;
 
-			string privateKey = WideStringToUtf8String(bstrPrivateKey.m_str);
-			string publicKey = WideStringToUtf8String(bstrPublicKey.m_str);
+            string privateKey = WideStringToUtf8String(bstrPrivateKey.m_str);
+            string publicKey = WideStringToUtf8String(bstrPublicKey.m_str);
 
-			// TODO: unlock public key using passphrase
-			int rc = libssh2_userauth_publickey_fromfile(
-				session, szUsername, publicKey.c_str(), privateKey.c_str(), "");
-			if (rc)
-				return E_ABORT;
+            // TODO: unlock public key using passphrase
+            int rc = libssh2_userauth_publickey_fromfile(
+                session, szUsername, publicKey.c_str(), privateKey.c_str(), "");
+            if (rc)
+                return E_ABORT;
 
-			ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
-		}
-		WINAPI_COM_CATCH();
+            ATLASSERT(libssh2_userauth_authenticated(session)); // Double-check
+        }
+        WINAPI_COM_CATCH();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 }
 
 HRESULT CSessionFactory::_PublicKeyAuthentication(
-	PCSTR szUsername, CSession& yukky_session, ISftpConsumer *pConsumer)
+    PCSTR szUsername, CSession& yukky_session, ISftpConsumer *pConsumer)
 {
-	// This old way is only kept around to support the tests.  Its almost
-	// useless for anything else as we don't pass the 'consumer' enough
-	// information to identify which key to use.
-	HRESULT hr = pubkey_auth_the_nasty_old_way(
-		szUsername, yukky_session, pConsumer);
-	if (SUCCEEDED(hr))
-		return hr;
+    // This old way is only kept around to support the tests.  Its almost
+    // useless for anything else as we don't pass the 'consumer' enough
+    // information to identify which key to use.
+    HRESULT hr = pubkey_auth_the_nasty_old_way(
+        szUsername, yukky_session, pConsumer);
+    if (SUCCEEDED(hr))
+        return hr;
 
-	// OK, now lets do it the nice new way using agents.
+    // OK, now lets do it the nice new way using agents.
 
-	ssh::session session(yukky_session.get());
+    ssh::session session(yukky_session.get());
 
-	try
-	{
-		BOOST_FOREACH(ssh::agent::identity key, session.agent_identities())
-		{
-			try
-			{
-				key.authenticate(szUsername);
-				return S_OK;
-			}
-			catch (const exception&)
-			{ /* Ignore and try the next */ }
-		}
-	}
-	catch(const exception&)
-	{ /* No agent running probably.  Either way, give up. */ }
+    try
+    {
+        BOOST_FOREACH(ssh::agent::identity key, session.agent_identities())
+        {
+            try
+            {
+                key.authenticate(szUsername);
+                return S_OK;
+            }
+            catch (const exception&)
+            { /* Ignore and try the next */ }
+        }
+    }
+    catch(const exception&)
+    { /* No agent running probably.  Either way, give up. */ }
 
-	// None of the agent identities worked.  Sob. Back to passwords then.
-	return E_ABORT;
+    // None of the agent identities worked.  Sob. Back to passwords then.
+    return E_ABORT;
 }
 
 #pragma warning (pop)

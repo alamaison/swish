@@ -35,8 +35,8 @@ namespace forms {
 
 
 bool password_prompt(
-	HWND hwnd_owner, const std::wstring& prompt, std::wstring& password_out);
-	
+    HWND hwnd_owner, const std::wstring& prompt, std::wstring& password_out);
+    
 }} // namespace swish::forms
 
 #endif

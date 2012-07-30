@@ -51,14 +51,14 @@ namespace ssh {
 class sandbox_fixture
 {
 public:
-	sandbox_fixture();
-	~sandbox_fixture();
+    sandbox_fixture();
+    ~sandbox_fixture();
 
-	boost::filesystem::path sandbox();
-	boost::filesystem::path new_file_in_sandbox();
+    boost::filesystem::path sandbox();
+    boost::filesystem::path new_file_in_sandbox();
 
 private:
-	boost::filesystem::path m_sandbox;
+    boost::filesystem::path m_sandbox;
 };
 
 }} // namespace test::ssh

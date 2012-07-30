@@ -53,48 +53,48 @@ namespace exception {
  * Exception type thrown when libssh2 returns an error.
  */
 class ssh_error :
-	public virtual boost::exception, public virtual std::exception
+    public virtual boost::exception, public virtual std::exception
 {
 public:
 
-	ssh_error(const char* message, int error_code)
-		: boost::exception(), std::exception(),
-		  m_message(message), m_error_code(error_code)
-	{
-	}
+    ssh_error(const char* message, int error_code)
+        : boost::exception(), std::exception(),
+          m_message(message), m_error_code(error_code)
+    {
+    }
 
-	ssh_error(const char* message, int len, int error_code)
-		: boost::exception(), std::exception(message, len),
-		  m_message(message, len), m_error_code(error_code)
-	{
-	}
+    ssh_error(const char* message, int len, int error_code)
+        : boost::exception(), std::exception(message, len),
+          m_message(message, len), m_error_code(error_code)
+    {
+    }
 
-	virtual const char* what() const
-	{
-		try
-		{
-			return m_message.c_str();
-		}
-		catch (std::exception&)
-		{
-			return "Unknown SSH error";
-		}
-	}
+    virtual const char* what() const
+    {
+        try
+        {
+            return m_message.c_str();
+        }
+        catch (std::exception&)
+        {
+            return "Unknown SSH error";
+        }
+    }
 
-	int error_code() const
-	{
-		return m_error_code;
-	}
+    int error_code() const
+    {
+        return m_error_code;
+    }
 
 protected:
-	std::string& message()
-	{
-		return m_message;
-	}
+    std::string& message()
+    {
+        return m_message;
+    }
 
 private:
-	std::string m_message;
-	int m_error_code;
+    std::string m_message;
+    int m_error_code;
 };
 
 /**
@@ -102,14 +102,14 @@ private:
  */
 inline ssh_error last_error(boost::shared_ptr<LIBSSH2_SESSION> session)
 {
-	char* message_buf = NULL; // read-only reference
-	int message_len = 0; // len not including NULL-term
-	int err = libssh2_session_last_error(
-		session.get(), &message_buf, &message_len, false);
+    char* message_buf = NULL; // read-only reference
+    int message_len = 0; // len not including NULL-term
+    int err = libssh2_session_last_error(
+        session.get(), &message_buf, &message_len, false);
 
-	assert(err && "throwing success!");
+    assert(err && "throwing success!");
 
-	return ssh_error(message_buf, message_len, err);
+    return ssh_error(message_buf, message_len, err);
 }
 
 }} // namespace ssh::exception

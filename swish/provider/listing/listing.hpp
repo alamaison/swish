@@ -51,13 +51,13 @@ namespace swish {
 namespace provider {
 namespace listing {
 
-	comet::bstr_t parse_user_from_long_entry(const std::string& long_entry);
+    comet::bstr_t parse_user_from_long_entry(const std::string& long_entry);
 
-	comet::bstr_t parse_group_from_long_entry(const std::string& long_entry);
+    comet::bstr_t parse_group_from_long_entry(const std::string& long_entry);
 
-	Listing fill_listing_entry(
-		const std::string& utf8_file_name,
-		const std::string& utf8_long_entry,
-		const LIBSSH2_SFTP_ATTRIBUTES& attributes);
+    Listing fill_listing_entry(
+        const std::string& utf8_file_name,
+        const std::string& utf8_long_entry,
+        const LIBSSH2_SFTP_ATTRIBUTES& attributes);
 
 }}} // namespace swish::provider::listing

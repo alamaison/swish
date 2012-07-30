@@ -69,41 +69,41 @@ using std::vector;
 
 namespace { // private
 
-	/**
-	 * Fixture that returns backend connections from the connection pool.
-	 */
-	class PoolFixture : public ComFixture, OpenSshFixture
-	{
-	public:
-		com_ptr<ISftpProvider> GetSession()
-		{
-			CPool pool;
-			return pool.GetSession(
-				Utf8StringToWideString(GetHost()).c_str(), 
-				Utf8StringToWideString(GetUser()).c_str(), GetPort(),
-				NULL).get();
-		}
+    /**
+     * Fixture that returns backend connections from the connection pool.
+     */
+    class PoolFixture : public ComFixture, OpenSshFixture
+    {
+    public:
+        com_ptr<ISftpProvider> GetSession()
+        {
+            CPool pool;
+            return pool.GetSession(
+                Utf8StringToWideString(GetHost()).c_str(), 
+                Utf8StringToWideString(GetUser()).c_str(), GetPort(),
+                NULL).get();
+        }
 
-		com_ptr<ISftpConsumer> Consumer()
-		{
-			com_ptr<CConsumerStub> consumer = new CConsumerStub(
-				PrivateKeyPath(), PublicKeyPath());
-			return consumer;
-		}
+        com_ptr<ISftpConsumer> Consumer()
+        {
+            com_ptr<CConsumerStub> consumer = new CConsumerStub(
+                PrivateKeyPath(), PublicKeyPath());
+            return consumer;
+        }
 
-		/**
-		 * Check that the given provider responds sensibly to a request.
-		 */
-		void CheckAlive(const com_ptr<ISftpProvider>& provider)
-		{
-			BOOST_REQUIRE(provider);
+        /**
+         * Check that the given provider responds sensibly to a request.
+         */
+        void CheckAlive(const com_ptr<ISftpProvider>& provider)
+        {
+            BOOST_REQUIRE(provider);
 
-			com_ptr<IEnumListing> listing;
-			HRESULT hr = provider->GetListing(
-				Consumer().in(), bstr_t(L"/home").in(), listing.out());
-			BOOST_CHECK(SUCCEEDED(hr));
-		}
-	};
+            com_ptr<IEnumListing> listing;
+            HRESULT hr = provider->GetListing(
+                Consumer().in(), bstr_t(L"/home").in(), listing.out());
+            BOOST_CHECK(SUCCEEDED(hr));
+        }
+    };
 }
 
 BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
@@ -113,8 +113,8 @@ BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
  */
 BOOST_AUTO_TEST_CASE( session )
 {
-	com_ptr<ISftpProvider> provider = GetSession();
-	CheckAlive(provider);
+    com_ptr<ISftpProvider> provider = GetSession();
+    CheckAlive(provider);
 }
 
 /**
@@ -122,13 +122,13 @@ BOOST_AUTO_TEST_CASE( session )
  */
 BOOST_AUTO_TEST_CASE( twice )
 {
-	com_ptr<ISftpProvider> first_provider = GetSession();
-	CheckAlive(first_provider);
+    com_ptr<ISftpProvider> first_provider = GetSession();
+    CheckAlive(first_provider);
 
-	com_ptr<ISftpProvider> second_provider = GetSession();
-	CheckAlive(second_provider);
+    com_ptr<ISftpProvider> second_provider = GetSession();
+    CheckAlive(second_provider);
 
-	BOOST_REQUIRE(second_provider == first_provider);
+    BOOST_REQUIRE(second_provider == first_provider);
 }
 
 /**
@@ -137,22 +137,22 @@ BOOST_AUTO_TEST_CASE( twice )
  */
 BOOST_AUTO_TEST_CASE( get_session_twice_separately )
 {
-	ISftpProvider* first_provider = GetSession().detach();
-	BOOST_REQUIRE(first_provider);
+    ISftpProvider* first_provider = GetSession().detach();
+    BOOST_REQUIRE(first_provider);
 
-	IUnknown* first_unk;
-	first_provider->QueryInterface(&first_unk);
-	if (first_provider)
-		first_provider->Release();
-	if (first_unk)
-		first_unk->Release();
+    IUnknown* first_unk;
+    first_provider->QueryInterface(&first_unk);
+    if (first_provider)
+        first_provider->Release();
+    if (first_unk)
+        first_unk->Release();
 
-	com_ptr<ISftpProvider> second_provider = GetSession();
-	BOOST_REQUIRE(second_provider);
-	CheckAlive(second_provider);
+    com_ptr<ISftpProvider> second_provider = GetSession();
+    BOOST_REQUIRE(second_provider);
+    CheckAlive(second_provider);
 
-	com_ptr<IUnknown> second_unk(second_provider);
-	BOOST_REQUIRE(first_unk != second_unk.get());
+    com_ptr<IUnknown> second_unk(second_provider);
+    BOOST_REQUIRE(first_unk != second_unk.get());
 }
 
 
@@ -165,38 +165,38 @@ template <typename T>
 class use_session_thread : public thread
 {
 public:
-	use_session_thread(T* fixture, COINIT ci=COINIT_MULTITHREADED)
-		: thread(), m_fixture(fixture), m_coinit(ci) {}
+    use_session_thread(T* fixture, COINIT ci=COINIT_MULTITHREADED)
+        : thread(), m_fixture(fixture), m_coinit(ci) {}
 
 private:
-	DWORD thread_main()
-	{
-		try
-		{
-			auto_coinit coinit(m_coinit);
+    DWORD thread_main()
+    {
+        try
+        {
+            auto_coinit coinit(m_coinit);
 
-			{
-				com_ptr<ISftpProvider> first_provider = 
-					m_fixture->GetSession();
-				m_fixture->CheckAlive(first_provider);
+            {
+                com_ptr<ISftpProvider> first_provider = 
+                    m_fixture->GetSession();
+                m_fixture->CheckAlive(first_provider);
 
-				com_ptr<ISftpProvider> second_provider = 
-					m_fixture->GetSession();
-				m_fixture->CheckAlive(second_provider);
+                com_ptr<ISftpProvider> second_provider = 
+                    m_fixture->GetSession();
+                m_fixture->CheckAlive(second_provider);
 
-				BOOST_REQUIRE(second_provider == first_provider);
-			}
-		}
-		catch (const std::exception& e)
-		{
-			BOOST_MESSAGE(boost::diagnostic_information(e));
-		}
+                BOOST_REQUIRE(second_provider == first_provider);
+            }
+        }
+        catch (const std::exception& e)
+        {
+            BOOST_MESSAGE(boost::diagnostic_information(e));
+        }
 
-		return 1;
-	}
+        return 1;
+    }
 
-	T* m_fixture;
-	const COINIT m_coinit;
+    T* m_fixture;
+    const COINIT m_coinit;
 };
 
 typedef use_session_thread<PoolFixture> test_thread;
@@ -208,43 +208,43 @@ typedef use_session_thread<PoolFixture> test_thread;
  */
 BOOST_AUTO_TEST_CASE( threaded )
 {
-	vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
+    vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
 
-	BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
-	{
-		thread = shared_ptr<test_thread>(new test_thread(this));
-		thread->start();
-	}
+    BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
+    {
+        thread = shared_ptr<test_thread>(new test_thread(this));
+        thread->start();
+    }
 
-	BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
-	{
-		thread->wait();
-	}
+    BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
+    {
+        thread->wait();
+    }
 }
 
 template <typename T>
 inline void do_thread_test(
-	T* fixture, COINIT starting_thread_type, COINIT retrieving_thread_type)
+    T* fixture, COINIT starting_thread_type, COINIT retrieving_thread_type)
 {
-	// cycle first type of thread to create session and store for
-	// later clients
-	test_thread creation_thread(fixture, starting_thread_type);
-	creation_thread.start();
-	creation_thread.wait();
+    // cycle first type of thread to create session and store for
+    // later clients
+    test_thread creation_thread(fixture, starting_thread_type);
+    creation_thread.start();
+    creation_thread.wait();
 
-	// start other type of threads which should try to retrieve same session
-	vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
-	BOOST_FOREACH(shared_ptr<test_thread>& t, threads)
-	{
-		t = shared_ptr<test_thread>(
-			new test_thread(fixture, retrieving_thread_type));
-		t->start();
-	}
+    // start other type of threads which should try to retrieve same session
+    vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
+    BOOST_FOREACH(shared_ptr<test_thread>& t, threads)
+    {
+        t = shared_ptr<test_thread>(
+            new test_thread(fixture, retrieving_thread_type));
+        t->start();
+    }
 
-	BOOST_FOREACH(shared_ptr<test_thread>& t, threads)
-	{
-		t->wait();
-	}
+    BOOST_FOREACH(shared_ptr<test_thread>& t, threads)
+    {
+        t->wait();
+    }
 }
 
 /**
@@ -255,7 +255,7 @@ inline void do_thread_test(
  */
 BOOST_AUTO_TEST_CASE( threaded_create_sta_use_mta )
 {
-	do_thread_test(this, COINIT_APARTMENTTHREADED, COINIT_MULTITHREADED);
+    do_thread_test(this, COINIT_APARTMENTTHREADED, COINIT_MULTITHREADED);
 }
 
 /**
@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE( threaded_create_sta_use_mta )
  */
 BOOST_AUTO_TEST_CASE( threaded_create_mta_use_sta )
 {
-	BOOST_MESSAGE("skipping threaded_create_mta_use_sta test");
-	//do_thread_test(this, COINIT_MULTITHREADED, COINIT_APARTMENTTHREADED);
+    BOOST_MESSAGE("skipping threaded_create_mta_use_sta test");
+    //do_thread_test(this, COINIT_MULTITHREADED, COINIT_APARTMENTTHREADED);
 }
 
 /**
@@ -282,8 +282,8 @@ BOOST_AUTO_TEST_CASE( threaded_create_mta_use_sta )
  */
 BOOST_AUTO_TEST_CASE( threaded_create_sta_use_sta )
 {
-	BOOST_MESSAGE("skipping threaded_create_sta_use_sta test");
-	//do_thread_test(this, COINIT_APARTMENTTHREADED, COINIT_APARTMENTTHREADED);
+    BOOST_MESSAGE("skipping threaded_create_sta_use_sta test");
+    //do_thread_test(this, COINIT_APARTMENTTHREADED, COINIT_APARTMENTTHREADED);
 }
 
 /**
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE( threaded_create_sta_use_sta )
  */
 BOOST_AUTO_TEST_CASE( threaded_create_mta_use_mta )
 {
-	do_thread_test(this, COINIT_MULTITHREADED, COINIT_MULTITHREADED);
+    do_thread_test(this, COINIT_MULTITHREADED, COINIT_MULTITHREADED);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -70,8 +70,8 @@ namespace comet {
 
 template<> struct comtype<IEnumIDList>
 {
-	static const IID& uuid() throw() { return IID_IEnumIDList; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IEnumIDList; }
+    typedef IUnknown base;
 };
 
 template<> struct enumerated_type_of<IEnumIDList>
@@ -82,90 +82,90 @@ template<> struct enumerated_type_of<IEnumIDList>
  */
 template<> struct impl::type_policy<PITEMID_CHILD>
 {
-	static void init(PITEMID_CHILD& t, const cpidl_t& s) 
-	{
-		s.copy_to(t);
-	}
+    static void init(PITEMID_CHILD& t, const cpidl_t& s) 
+    {
+        s.copy_to(t);
+    }
 
-	static void clear(PITEMID_CHILD& t)
-	{
-		::ILFree(t);
-	}	
+    static void clear(PITEMID_CHILD& t)
+    {
+        ::ILFree(t);
+    }    
 };
 
 }
 
 namespace { // private
 
-	class RemoteFolderFixture : public PidlFixture
-	{
-	private:
-		com_ptr<IShellFolder> m_folder;
+    class RemoteFolderFixture : public PidlFixture
+    {
+    private:
+        com_ptr<IShellFolder> m_folder;
 
-	public:
+    public:
 
-		RemoteFolderFixture()
-			: m_folder(
-			    CRemoteFolder::Create(
-					sandbox_pidl().get(),
-					boost::bind(
-						&RemoteFolderFixture::consumer_factory, this, _1)))
-		{}
+        RemoteFolderFixture()
+            : m_folder(
+                CRemoteFolder::Create(
+                    sandbox_pidl().get(),
+                    boost::bind(
+                        &RemoteFolderFixture::consumer_factory, this, _1)))
+        {}
 
-		com_ptr<IShellFolder> folder() const
-		{
-			return m_folder;
-		}
+        com_ptr<IShellFolder> folder() const
+        {
+            return m_folder;
+        }
 
-		comet::com_ptr<ISftpConsumer> consumer_factory(HWND)
-		{
-			return Consumer();
-		}
-	};
+        comet::com_ptr<ISftpConsumer> consumer_factory(HWND)
+        {
+            return Consumer();
+        }
+    };
 
-	void test_enum(com_ptr<IEnumIDList> pidls, SHCONTF flags)
-	{
-		PITEMID_CHILD pidl;
-		ULONG fetched;
-		HRESULT hr = pidls->Next(1, &pidl, &fetched);
-		BOOST_REQUIRE_OK(hr);
-		BOOST_CHECK_EQUAL(fetched, 1U);
+    void test_enum(com_ptr<IEnumIDList> pidls, SHCONTF flags)
+    {
+        PITEMID_CHILD pidl;
+        ULONG fetched;
+        HRESULT hr = pidls->Next(1, &pidl, &fetched);
+        BOOST_REQUIRE_OK(hr);
+        BOOST_CHECK_EQUAL(fetched, 1U);
 
-		do {
-			remote_itemid_view itemid(pidl);
+        do {
+            remote_itemid_view itemid(pidl);
 
-			// Check REMOTEPIDLness
-			BOOST_REQUIRE(itemid.valid());
+            // Check REMOTEPIDLness
+            BOOST_REQUIRE(itemid.valid());
 
-			// Check filename
-			BOOST_CHECK_GT(itemid.filename().size(), 0U);
-			if (!(flags & SHCONTF_INCLUDEHIDDEN))
-				BOOST_CHECK_NE(itemid.filename(), L".");
+            // Check filename
+            BOOST_CHECK_GT(itemid.filename().size(), 0U);
+            if (!(flags & SHCONTF_INCLUDEHIDDEN))
+                BOOST_CHECK_NE(itemid.filename(), L".");
 
-			// Check folderness
-			if (!(flags & SHCONTF_FOLDERS))
-				BOOST_CHECK(!itemid.is_folder());
-			if (!(flags & SHCONTF_NONFOLDERS))
-				BOOST_CHECK(itemid.is_folder());
+            // Check folderness
+            if (!(flags & SHCONTF_FOLDERS))
+                BOOST_CHECK(!itemid.is_folder());
+            if (!(flags & SHCONTF_NONFOLDERS))
+                BOOST_CHECK(itemid.is_folder());
 
-			// Check group and owner exist
-			BOOST_CHECK_GT(itemid.owner().size(), 0U);
-			BOOST_CHECK_GT(itemid.group().size(), 0U);
+            // Check group and owner exist
+            BOOST_CHECK_GT(itemid.owner().size(), 0U);
+            BOOST_CHECK_GT(itemid.group().size(), 0U);
 
-			// Check date validity
-			BOOST_CHECK(itemid.date_modified().good());
-			
-			hr = pidls->Next(1, &pidl, &fetched);
-		} while (hr == S_OK);
+            // Check date validity
+            BOOST_CHECK(itemid.date_modified().good());
+            
+            hr = pidls->Next(1, &pidl, &fetched);
+        } while (hr == S_OK);
 
-		BOOST_CHECK_EQUAL(hr, S_FALSE);
-		BOOST_CHECK_EQUAL(fetched, 0U);
-	}
+        BOOST_CHECK_EQUAL(hr, S_FALSE);
+        BOOST_CHECK_EQUAL(fetched, 0U);
+    }
 
-	void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
-	{
-		test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
-	}
+    void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
+    {
+        test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
+    }
 }
 
 BOOST_FIXTURE_TEST_SUITE(remote_folder_tests, RemoteFolderFixture)
@@ -176,17 +176,17 @@ BOOST_FIXTURE_TEST_SUITE(remote_folder_tests, RemoteFolderFixture)
  */
 BOOST_AUTO_TEST_CASE( enum_empty )
 {
-	SHCONTF flags = 
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    SHCONTF flags = 
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	com_ptr<IEnumIDList> listing;
-	HRESULT hr = folder()->EnumObjects(NULL, flags, listing.out());
-	BOOST_REQUIRE_OK(hr);
+    com_ptr<IEnumIDList> listing;
+    HRESULT hr = folder()->EnumObjects(NULL, flags, listing.out());
+    BOOST_REQUIRE_OK(hr);
 
-	ULONG fetched = 1;
-	PITEMID_CHILD pidl;
-	BOOST_CHECK_EQUAL(listing->Next(1, &pidl, &fetched), S_FALSE);
-	BOOST_CHECK_EQUAL(fetched, 0U);
+    ULONG fetched = 1;
+    PITEMID_CHILD pidl;
+    BOOST_CHECK_EQUAL(listing->Next(1, &pidl, &fetched), S_FALSE);
+    BOOST_CHECK_EQUAL(fetched, 0U);
 }
 
 /**
@@ -194,71 +194,71 @@ BOOST_AUTO_TEST_CASE( enum_empty )
  */
 BOOST_AUTO_TEST_CASE( enum_everything )
 {
-	wpath file1 = NewFileInSandbox();
-	wpath file2 = NewFileInSandbox();
-	wpath folder1 = Sandbox() / L"folder1";
-	create_directory(folder1);
-	wpath folder2 = Sandbox() / L"folder2";
-	create_directory(folder2);
+    wpath file1 = NewFileInSandbox();
+    wpath file2 = NewFileInSandbox();
+    wpath folder1 = Sandbox() / L"folder1";
+    create_directory(folder1);
+    wpath folder2 = Sandbox() / L"folder2";
+    create_directory(folder2);
 
-	SHCONTF flags = 
-		SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    SHCONTF flags = 
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-	com_ptr<IEnumIDList> listing;
-	HRESULT hr = folder()->EnumObjects(NULL, flags, listing.out());
-	BOOST_REQUIRE_OK(hr);
+    com_ptr<IEnumIDList> listing;
+    HRESULT hr = folder()->EnumObjects(NULL, flags, listing.out());
+    BOOST_REQUIRE_OK(hr);
 
-	test_enum(listing, flags);
+    test_enum(listing, flags);
 }
 
 
 namespace {
 
-	bool pidl_matches_filename(PCUITEMID_CHILD remote_pidl, wstring name)
-	{
-		remote_itemid_view item(remote_pidl);
-		return item.filename() == name;
-	}
+    bool pidl_matches_filename(PCUITEMID_CHILD remote_pidl, wstring name)
+    {
+        remote_itemid_view item(remote_pidl);
+        return item.filename() == name;
+    }
 
-	cpidl_t pidl_for_file(com_ptr<IShellFolder> folder, wstring name)
-	{
-		SHCONTF flags = 
-			SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+    cpidl_t pidl_for_file(com_ptr<IShellFolder> folder, wstring name)
+    {
+        SHCONTF flags = 
+            SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
-		com_ptr<IEnumIDList> listing;
-		HRESULT hr = folder->EnumObjects(NULL, flags, listing.out());
-		BOOST_REQUIRE_OK(hr);
+        com_ptr<IEnumIDList> listing;
+        HRESULT hr = folder->EnumObjects(NULL, flags, listing.out());
+        BOOST_REQUIRE_OK(hr);
 
-		enum_iterator<IEnumIDList> pos = std::find_if(
-			enum_iterator<IEnumIDList>(listing), enum_iterator<IEnumIDList>(),
-			bind(pidl_matches_filename, _1, name));
-		BOOST_REQUIRE_MESSAGE(pos != enum_iterator<IEnumIDList>(), "PIDL not found");
+        enum_iterator<IEnumIDList> pos = std::find_if(
+            enum_iterator<IEnumIDList>(listing), enum_iterator<IEnumIDList>(),
+            bind(pidl_matches_filename, _1, name));
+        BOOST_REQUIRE_MESSAGE(pos != enum_iterator<IEnumIDList>(), "PIDL not found");
 
-		return *pos;
-	}
+        return *pos;
+    }
 
-	predicate_result display_name_matches(
-		com_ptr<IShellFolder> folder, SHGDNF flags, const wstring& filename,
-		const wstring& expected_display_name)
-	{
-		cpidl_t pidl = pidl_for_file(folder, filename);
+    predicate_result display_name_matches(
+        com_ptr<IShellFolder> folder, SHGDNF flags, const wstring& filename,
+        const wstring& expected_display_name)
+    {
+        cpidl_t pidl = pidl_for_file(folder, filename);
 
-		STRRET strret;
-		HRESULT hr = folder->GetDisplayNameOf(pidl.get(), flags, &strret);
-		BOOST_REQUIRE_OK(hr);
+        STRRET strret;
+        HRESULT hr = folder->GetDisplayNameOf(pidl.get(), flags, &strret);
+        BOOST_REQUIRE_OK(hr);
 
-		wstring display_name = strret_to_string<wchar_t>(strret);
-		if (display_name != expected_display_name)
-		{
-			predicate_result res(false);
-			res.message()
-				<< L"Display name for '" << filename << L"' unexpected: ["
-				<< display_name << L" != " << expected_display_name << L"]";
-			return res;
-		}
+        wstring display_name = strret_to_string<wchar_t>(strret);
+        if (display_name != expected_display_name)
+        {
+            predicate_result res(false);
+            res.message()
+                << L"Display name for '" << filename << L"' unexpected: ["
+                << display_name << L" != " << expected_display_name << L"]";
+            return res;
+        }
 
-		return true;
-	}
+        return true;
+    }
 }
 
 /**
@@ -274,13 +274,13 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( display_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_NORMAL;
-	wstring expected = L"testfile";
+    SHGDNF flags = SHGDN_NORMAL;
+    wstring expected = L"testfile";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 /**
@@ -292,17 +292,17 @@ BOOST_AUTO_TEST_CASE( display_name_file )
  */
 BOOST_AUTO_TEST_CASE( display_name_hidden_file )
 {
-	wpath file1 = NewFileInSandbox(L".hidden");
-	wpath file2 = NewFileInSandbox(L".testfile.txt");
+    wpath file1 = NewFileInSandbox(L".hidden");
+    wpath file2 = NewFileInSandbox(L".testfile.txt");
 
-	SHGDNF flags = SHGDN_NORMAL;
-	wstring expected1 = L".hidden";
-	wstring expected2 = L".testfile";
+    SHGDNF flags = SHGDN_NORMAL;
+    wstring expected1 = L".hidden";
+    wstring expected2 = L".testfile";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file1.filename(), expected1));
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file2.filename(), expected2));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file1.filename(), expected1));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file2.filename(), expected2));
 }
 
 /**
@@ -313,13 +313,13 @@ BOOST_AUTO_TEST_CASE( display_name_hidden_file )
  */
 BOOST_AUTO_TEST_CASE( editing_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_NORMAL | SHGDN_FOREDITING;
-	wstring expected = L"testfile.txt";
+    SHGDNF flags = SHGDN_NORMAL | SHGDN_FOREDITING;
+    wstring expected = L"testfile.txt";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 /**
@@ -328,16 +328,16 @@ BOOST_AUTO_TEST_CASE( editing_name_file )
  */
 BOOST_AUTO_TEST_CASE( address_bar_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR;
-	wstring expected = L"sftp://" + 
-		Utf8StringToWideString(GetUser()) + L"@" +
-		Utf8StringToWideString(GetHost()) + L":" +
-		lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
+    SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR;
+    wstring expected = L"sftp://" + 
+        Utf8StringToWideString(GetUser()) + L"@" +
+        Utf8StringToWideString(GetHost()) + L":" +
+        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 /**
@@ -350,13 +350,13 @@ BOOST_AUTO_TEST_CASE( address_bar_name_file )
  */
 BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_INFOLDER;
-	wstring expected = L"testfile";
+    SHGDNF flags = SHGDN_INFOLDER;
+    wstring expected = L"testfile";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 
@@ -372,13 +372,13 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
  */
 BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_INFOLDER | SHGDN_FORPARSING;
-	wstring expected = L"testfile.txt";
+    SHGDNF flags = SHGDN_INFOLDER | SHGDN_FORPARSING;
+    wstring expected = L"testfile.txt";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 /**
@@ -390,13 +390,13 @@ BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
  */
 BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_INFOLDER | SHGDN_FOREDITING;
-	wstring expected = L"testfile.txt";
+    SHGDNF flags = SHGDN_INFOLDER | SHGDN_FOREDITING;
+    wstring expected = L"testfile.txt";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 // NORMAL + FORPARSING = ABSOLUTE
@@ -411,16 +411,16 @@ BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
  */
 BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
-	wstring expected = L"Computer\\Swish\\sftp://" + 
-		Utf8StringToWideString(GetUser()) + L"@" +
-		Utf8StringToWideString(GetHost()) + L":" +
-		lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
+    SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
+    wstring expected = L"Computer\\Swish\\sftp://" + 
+        Utf8StringToWideString(GetUser()) + L"@" +
+        Utf8StringToWideString(GetHost()) + L":" +
+        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 /**
@@ -431,19 +431,19 @@ BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
  */
 BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
 {
-	wpath file = NewFileInSandbox(L"testfile.txt");
+    wpath file = NewFileInSandbox(L"testfile.txt");
 
-	SHGDNF flags = SHGDN_NORMAL | SHGDN_FORPARSING;
-	wstring expected = 
-		L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-		L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\sftp://" + 
-		Utf8StringToWideString(GetUser()) + L"@" +
-		Utf8StringToWideString(GetHost()) + L":" +
-		lexical_cast<wstring>(GetPort()) + L"/" +
-		ToRemotePath(file).string();
+    SHGDNF flags = SHGDN_NORMAL | SHGDN_FORPARSING;
+    wstring expected = 
+        L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
+        L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\sftp://" + 
+        Utf8StringToWideString(GetUser()) + L"@" +
+        Utf8StringToWideString(GetHost()) + L":" +
+        lexical_cast<wstring>(GetPort()) + L"/" +
+        ToRemotePath(file).string();
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, file.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
 }
 
 /**
@@ -459,14 +459,14 @@ BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
  */
 BOOST_AUTO_TEST_CASE( display_name_folder )
 {
-	wpath directory = Sandbox() / L"testfolder";
-	create_directory(directory);
+    wpath directory = Sandbox() / L"testfolder";
+    create_directory(directory);
 
-	SHGDNF flags = SHGDN_NORMAL;
-	wstring expected = L"testfolder";
+    SHGDNF flags = SHGDN_NORMAL;
+    wstring expected = L"testfolder";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, directory.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, directory.filename(), expected));
 }
 
 /**
@@ -476,14 +476,14 @@ BOOST_AUTO_TEST_CASE( display_name_folder )
  */
 BOOST_AUTO_TEST_CASE( in_folder_name_folder )
 {
-	wpath directory = Sandbox() / L"testfolder";
-	create_directory(directory);
+    wpath directory = Sandbox() / L"testfolder";
+    create_directory(directory);
 
-	SHGDNF flags = SHGDN_INFOLDER;
-	wstring expected = L"testfolder";
+    SHGDNF flags = SHGDN_INFOLDER;
+    wstring expected = L"testfolder";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, directory.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, directory.filename(), expected));
 }
 
 /**
@@ -494,14 +494,14 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder )
  */
 BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
 {
-	wpath directory = Sandbox() / L"testfolder.txt";
-	create_directory(directory);
+    wpath directory = Sandbox() / L"testfolder.txt";
+    create_directory(directory);
 
-	SHGDNF flags = SHGDN_NORMAL;
-	wstring expected = L"testfolder.txt";
+    SHGDNF flags = SHGDN_NORMAL;
+    wstring expected = L"testfolder.txt";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, directory.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, directory.filename(), expected));
 }
 
 /**
@@ -513,14 +513,14 @@ BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
  */
 BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
 {
-	wpath directory = Sandbox() / L"testfolder.txt";
-	create_directory(directory);
+    wpath directory = Sandbox() / L"testfolder.txt";
+    create_directory(directory);
 
-	SHGDNF flags = SHGDN_INFOLDER;
-	wstring expected = L"testfolder.txt";
+    SHGDNF flags = SHGDN_INFOLDER;
+    wstring expected = L"testfolder.txt";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, directory.filename(), expected));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, directory.filename(), expected));
 }
 
 /**
@@ -532,19 +532,19 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
  */
 BOOST_AUTO_TEST_CASE( display_name_hidden_folder )
 {
-	wpath dir1 = Sandbox() / L".hidden";
-	create_directory(dir1);
-	wpath dir2 = Sandbox() / L".testfolder.txt";
-	create_directory(dir2);
+    wpath dir1 = Sandbox() / L".hidden";
+    create_directory(dir1);
+    wpath dir2 = Sandbox() / L".testfolder.txt";
+    create_directory(dir2);
 
-	SHGDNF flags = SHGDN_NORMAL;
-	wstring expected1 = L".hidden";
-	wstring expected2 = L".testfolder.txt";
+    SHGDNF flags = SHGDN_NORMAL;
+    wstring expected1 = L".hidden";
+    wstring expected2 = L".testfolder.txt";
 
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, dir1.filename(), expected1));
-	BOOST_CHECK(
-		display_name_matches(folder(), flags, dir2.filename(), expected2));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, dir1.filename(), expected1));
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, dir2.filename(), expected2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

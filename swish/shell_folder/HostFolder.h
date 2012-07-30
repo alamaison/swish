@@ -40,69 +40,69 @@
 #include <vector>
 
 class ATL_NO_VTABLE CHostFolder :
-	public IExtractIconW,
-	public swish::shell_folder::folder::CSwishFolder<
-		swish::host_folder::Column>
+    public IExtractIconW,
+    public swish::shell_folder::folder::CSwishFolder<
+        swish::host_folder::Column>
 {
 public:
 
-	BEGIN_COM_MAP(CHostFolder)
-		COM_INTERFACE_ENTRY(IExtractIconW)
-		COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
-	END_COM_MAP()
+    BEGIN_COM_MAP(CHostFolder)
+        COM_INTERFACE_ENTRY(IExtractIconW)
+        COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
+    END_COM_MAP()
 
 protected:
 
-	CLSID clsid() const;
+    CLSID clsid() const;
 
-	void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
+    void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
 
-	ATL::CComPtr<IShellFolder> subfolder(
-		const winapi::shell::pidl::cpidl_t& pidl);
-	
-	comet::variant_t property(
-		const winapi::shell::property_key& key,
-		const winapi::shell::pidl::cpidl_t& pidl);
+    ATL::CComPtr<IShellFolder> subfolder(
+        const winapi::shell::pidl::cpidl_t& pidl);
+    
+    comet::variant_t property(
+        const winapi::shell::property_key& key,
+        const winapi::shell::pidl::cpidl_t& pidl);
 
-	ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
+    ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
 
-	ATL::CComPtr<IExtractIconW> extract_icon_w(
-		HWND hwnd, PCUITEMID_CHILD pidl);
-	ATL::CComPtr<IQueryAssociations> query_associations(
-		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
-	ATL::CComPtr<IContextMenu> context_menu(
-		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
-	ATL::CComPtr<IDataObject> data_object(
-		HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+    ATL::CComPtr<IExtractIconW> extract_icon_w(
+        HWND hwnd, PCUITEMID_CHILD pidl);
+    ATL::CComPtr<IQueryAssociations> query_associations(
+        HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+    ATL::CComPtr<IContextMenu> context_menu(
+        HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
+    ATL::CComPtr<IDataObject> data_object(
+        HWND hwnd, UINT cpidl, PCUITEMID_CHILD_ARRAY apidl);
 
-	ATL::CComPtr<IShellFolderViewCB> folder_view_callback(HWND hwnd);
+    ATL::CComPtr<IShellFolderViewCB> folder_view_callback(HWND hwnd);
 
 public:
 
-	// IShellFolder (via folder_error_adapter)
-	virtual IEnumIDList* enum_objects(HWND hwnd, SHCONTF flags);
-	
-	virtual void get_attributes_of(
-		UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
-		SFGAOF* flags_inout);
+    // IShellFolder (via folder_error_adapter)
+    virtual IEnumIDList* enum_objects(HWND hwnd, SHCONTF flags);
+    
+    virtual void get_attributes_of(
+        UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
+        SFGAOF* flags_inout);
 
-	virtual STRRET get_display_name_of(
-		PCUITEMID_CHILD pidl, SHGDNF uFlags);
+    virtual STRRET get_display_name_of(
+        PCUITEMID_CHILD pidl, SHGDNF uFlags);
 
-	virtual PIDLIST_RELATIVE parse_display_name(
-		HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
-		ULONG* attributes_inout);
+    virtual PIDLIST_RELATIVE parse_display_name(
+        HWND hwnd, IBindCtx* bind_ctx, const wchar_t* display_name,
+        ULONG* attributes_inout);
 
-	virtual PITEMID_CHILD set_name_of(
-		HWND hwnd, PCUITEMID_CHILD pidl, const wchar_t* name,
-		SHGDNF flags);
+    virtual PITEMID_CHILD set_name_of(
+        HWND hwnd, PCUITEMID_CHILD pidl, const wchar_t* name,
+        SHGDNF flags);
 
-	// IShellFolder2 (via folder_error_adapter2)
-	virtual SHCOLUMNID map_column_to_scid(UINT column_index);
+    // IShellFolder2 (via folder_error_adapter2)
+    virtual SHCOLUMNID map_column_to_scid(UINT column_index);
 
-	// IExtractIconW
-	STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
-						HICON *phiconSmall, UINT nIconSize );
-	STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
-								int *piIndex, UINT *pwFlags );
+    // IExtractIconW
+    STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
+                        HICON *phiconSmall, UINT nIconSize );
+    STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
+                                int *piIndex, UINT *pwFlags );
 };

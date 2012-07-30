@@ -61,32 +61,32 @@ class StreamFixture : public test::provider::SftpFixture
 {
 public:
 
-	boost::filesystem::wpath m_local_path;
-	std::string m_remote_path;
+    boost::filesystem::wpath m_local_path;
+    std::string m_remote_path;
 
-	/**
-	 * Initialise the test fixture with the path of a new, empty file
-	 * in the sandbox.
-	 */
-	StreamFixture() 
-		: m_local_path(NewFileInSandbox()), 
-		  m_remote_path(ToRemotePath(
-			swish::utils::WideStringToUtf8String(m_local_path.file_string())))
-	{
-	}
+    /**
+     * Initialise the test fixture with the path of a new, empty file
+     * in the sandbox.
+     */
+    StreamFixture() 
+        : m_local_path(NewFileInSandbox()), 
+          m_remote_path(ToRemotePath(
+            swish::utils::WideStringToUtf8String(m_local_path.file_string())))
+    {
+    }
 
-	/**
-	 * Create an IStream instance open on a temporary file in our sandbox.
-	 * By default the stream is open for reading and writing but different
-	 * flags can be passed to change this.
-	 */
-	comet::com_ptr<IStream> GetStream(
-		CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
-	{
-		boost::shared_ptr<CSession> session(Session());
+    /**
+     * Create an IStream instance open on a temporary file in our sandbox.
+     * By default the stream is open for reading and writing but different
+     * flags can be passed to change this.
+     */
+    comet::com_ptr<IStream> GetStream(
+        CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
+    {
+        boost::shared_ptr<CSession> session(Session());
 
-		return new CSftpStream(session, m_remote_path, flags);
-	}
+        return new CSftpStream(session, m_remote_path, flags);
+    }
 };
 
 }} // namespace test::provider

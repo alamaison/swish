@@ -56,12 +56,12 @@ BOOST_AUTO_TEST_SUITE(SwishUtils)
  */
 BOOST_AUTO_TEST_CASE( narrowing_string )
 {
-	wstring wide = L"This was a wide-char string";
-	string narrow = "This was a wide-char string";
+    wstring wide = L"This was a wide-char string";
+    string narrow = "This was a wide-char string";
 
-	string out = swish::utils::WideStringToUtf8String(wide);
+    string out = swish::utils::WideStringToUtf8String(wide);
 
-	BOOST_REQUIRE_EQUAL(out, narrow);
+    BOOST_REQUIRE_EQUAL(out, narrow);
 }
 
 /**
@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE( narrowing_string )
  */
 BOOST_AUTO_TEST_CASE( narrowing_empty_string )
 {
-	wstring wide = L"";
-	string narrow = "";
+    wstring wide = L"";
+    string narrow = "";
 
-	string out = swish::utils::WideStringToUtf8String(wide);
+    string out = swish::utils::WideStringToUtf8String(wide);
 
-	BOOST_REQUIRE_EQUAL(out, narrow);
+    BOOST_REQUIRE_EQUAL(out, narrow);
 }
 
 /**
@@ -82,12 +82,12 @@ BOOST_AUTO_TEST_CASE( narrowing_empty_string )
  */
 BOOST_AUTO_TEST_CASE( widening_string )
 {
-	wstring wide = L"This was a wide-char string";
-	string narrow = "This was a wide-char string";
+    wstring wide = L"This was a wide-char string";
+    string narrow = "This was a wide-char string";
 
-	wstring out = swish::utils::Utf8StringToWideString(narrow);
+    wstring out = swish::utils::Utf8StringToWideString(narrow);
 
-	BOOST_REQUIRE_EQUAL(out, wide);
+    BOOST_REQUIRE_EQUAL(out, wide);
 }
 
 /**
@@ -95,12 +95,12 @@ BOOST_AUTO_TEST_CASE( widening_string )
  */
 BOOST_AUTO_TEST_CASE( widening_empty_string )
 {
-	wstring wide = L"";
-	string narrow = "";
+    wstring wide = L"";
+    string narrow = "";
 
-	wstring out = swish::utils::Utf8StringToWideString(narrow);
+    wstring out = swish::utils::Utf8StringToWideString(narrow);
 
-	BOOST_REQUIRE_EQUAL(out, wide);
+    BOOST_REQUIRE_EQUAL(out, wide);
 }
 
 /**
@@ -108,9 +108,9 @@ BOOST_AUTO_TEST_CASE( widening_empty_string )
  */
 BOOST_AUTO_TEST_CASE( get_current_user )
 {
-	wstring name = swish::utils::current_user();
+    wstring name = swish::utils::current_user();
 
-	BOOST_REQUIRE_GE(name.size(), wstring(L"a").size());
+    BOOST_REQUIRE_GE(name.size(), wstring(L"a").size());
 }
 
 /**
@@ -118,9 +118,9 @@ BOOST_AUTO_TEST_CASE( get_current_user )
  */
 BOOST_AUTO_TEST_CASE( get_current_user_a )
 {
-	string name = swish::utils::current_user_a();
+    string name = swish::utils::current_user_a();
 
-	BOOST_REQUIRE_GE(name.size(), string("a").size());
+    BOOST_REQUIRE_GE(name.size(), string("a").size());
 }
 
 /**
@@ -128,10 +128,10 @@ BOOST_AUTO_TEST_CASE( get_current_user_a )
  */
 BOOST_AUTO_TEST_CASE( get_homedir )
 {
-	path home = swish::utils::home_directory<path>();
+    path home = swish::utils::home_directory<path>();
 
-	BOOST_CHECK(!home.empty());
-	BOOST_CHECK(is_directory(home));
+    BOOST_CHECK(!home.empty());
+    BOOST_CHECK(is_directory(home));
 }
 
 /**
@@ -139,10 +139,10 @@ BOOST_AUTO_TEST_CASE( get_homedir )
  */
 BOOST_AUTO_TEST_CASE( get_homedir_w )
 {
-	wpath home = swish::utils::home_directory<wpath>();
+    wpath home = swish::utils::home_directory<wpath>();
 
-	BOOST_CHECK(!home.empty());
-	BOOST_CHECK(is_directory(home));
+    BOOST_CHECK(!home.empty());
+    BOOST_CHECK(is_directory(home));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

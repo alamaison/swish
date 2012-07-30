@@ -60,15 +60,15 @@ namespace detail {
 #include <pshpack1.h>
 struct host_item_id
 {
-	USHORT cb;
-	DWORD dwFingerprint;
-	WCHAR wszLabel[MAX_LABEL_LENZ];
-	WCHAR wszUser[MAX_USERNAME_LENZ];
-	WCHAR wszHost[MAX_HOSTNAME_LENZ];
-	WCHAR wszPath[MAX_PATH_LENZ];
-	USHORT uPort;
-	
-	static const DWORD FINGERPRINT = 0x496c1066;
+    USHORT cb;
+    DWORD dwFingerprint;
+    WCHAR wszLabel[MAX_LABEL_LENZ];
+    WCHAR wszUser[MAX_USERNAME_LENZ];
+    WCHAR wszHost[MAX_HOSTNAME_LENZ];
+    WCHAR wszPath[MAX_PATH_LENZ];
+    USHORT uPort;
+    
+    static const DWORD FINGERPRINT = 0x496c1066;
 };
 #include <poppack.h>
 
@@ -76,9 +76,9 @@ BOOST_STATIC_ASSERT((sizeof(host_item_id) % sizeof(DWORD)) == 0);
 
 inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 {
-	std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
-	::ua_wcscpy_s(&buffer[0], buffer.size(), source);
-	return std::wstring(&buffer[0]);
+    std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
+    ::ua_wcscpy_s(&buffer[0], buffer.size(), source);
+    return std::wstring(&buffer[0]);
 }
 
 }
@@ -92,75 +92,75 @@ inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 class host_itemid_view
 {
 public:
-	// We have to take the PIDL as a template, rather than that as a pidl_t
-	// as the PIDL passed might be a cpidl_t or an apidl_t.  In this case
-	// the pidl would be converted to a pidl_t using a temporary which is
-	// destroyed immediately after the constructor returns, thereby
-	// invalidating the PIDL we've stored a reference to.
-	template<typename T, typename Alloc>
-	explicit host_itemid_view(
-		const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
-		: m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl.get())) {}
+    // We have to take the PIDL as a template, rather than that as a pidl_t
+    // as the PIDL passed might be a cpidl_t or an apidl_t.  In this case
+    // the pidl would be converted to a pidl_t using a temporary which is
+    // destroyed immediately after the constructor returns, thereby
+    // invalidating the PIDL we've stored a reference to.
+    template<typename T, typename Alloc>
+    explicit host_itemid_view(
+        const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
+        : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl.get())) {}
 
-	explicit host_itemid_view(PCUIDLIST_RELATIVE pidl)
-		: m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl)) {}
+    explicit host_itemid_view(PCUIDLIST_RELATIVE pidl)
+        : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl)) {}
 
-	bool valid() const
-	{
-		if (m_itemid == NULL)
-			return false;
+    bool valid() const
+    {
+        if (m_itemid == NULL)
+            return false;
 
-		return ((m_itemid->cb == sizeof(detail::host_item_id)) &&
-			(m_itemid->dwFingerprint == detail::host_item_id::FINGERPRINT));
-	}
+        return ((m_itemid->cb == sizeof(detail::host_item_id)) &&
+            (m_itemid->dwFingerprint == detail::host_item_id::FINGERPRINT));
+    }
 
-	std::wstring host() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::copy_unaligned_string(m_itemid->wszHost);
-	}
+    std::wstring host() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
+        return detail::copy_unaligned_string(m_itemid->wszHost);
+    }
 
-	std::wstring user() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::copy_unaligned_string(m_itemid->wszUser);
-	}
+    std::wstring user() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
+        return detail::copy_unaligned_string(m_itemid->wszUser);
+    }
 
-	std::wstring label() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::copy_unaligned_string(m_itemid->wszLabel);
-	}
+    std::wstring label() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
+        return detail::copy_unaligned_string(m_itemid->wszLabel);
+    }
 
-	boost::filesystem::wpath path() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return detail::copy_unaligned_string(m_itemid->wszPath);
-	}
+    boost::filesystem::wpath path() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
+        return detail::copy_unaligned_string(m_itemid->wszPath);
+    }
 
-	int port() const
-	{
-		if (!valid())
-			BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-		return m_itemid->uPort;
-	}
+    int port() const
+    {
+        if (!valid())
+            BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
+        return m_itemid->uPort;
+    }
 
 private:
-	const detail::host_item_id __unaligned* m_itemid;
+    const detail::host_item_id __unaligned* m_itemid;
 };
 
 namespace detail {
-	struct is_valid_host_item
-	{
-		bool operator()(const winapi::shell::pidl::pidl_t& pidl)
-		{
-			return host_itemid_view(pidl).valid();
-		}
-	};
+    struct is_valid_host_item
+    {
+        bool operator()(const winapi::shell::pidl::pidl_t& pidl)
+        {
+            return host_itemid_view(pidl).valid();
+        }
+    };
 }
 
 /**
@@ -174,36 +174,36 @@ namespace detail {
  * @throws if no host ITEMID is found in the PIDL.
  */
 inline winapi::shell::pidl::raw_pidl_iterator find_host_itemid(
-	PCIDLIST_ABSOLUTE pidl)
+    PCIDLIST_ABSOLUTE pidl)
 {
-	winapi::shell::pidl::raw_pidl_iterator begin(pidl);
-	winapi::shell::pidl::raw_pidl_iterator end;
-	
-	// Search along pidl until we find one that matches our fingerprint or
-	// we run off the end
-	winapi::shell::pidl::raw_pidl_iterator pos = std::find_if(
-		begin, end, detail::is_valid_host_item());
-	if (pos != end)
-		return pos;
-	else
-		BOOST_THROW_EXCEPTION(
-			std::runtime_error("PIDL doesn't contain host ITEMID"));
+    winapi::shell::pidl::raw_pidl_iterator begin(pidl);
+    winapi::shell::pidl::raw_pidl_iterator end;
+    
+    // Search along pidl until we find one that matches our fingerprint or
+    // we run off the end
+    winapi::shell::pidl::raw_pidl_iterator pos = std::find_if(
+        begin, end, detail::is_valid_host_item());
+    if (pos != end)
+        return pos;
+    else
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("PIDL doesn't contain host ITEMID"));
 }
 
 inline winapi::shell::pidl::raw_pidl_iterator find_host_itemid(
-	const winapi::shell::pidl::apidl_t& pidl)
+    const winapi::shell::pidl::apidl_t& pidl)
 {
-	return swish::host_folder::find_host_itemid(pidl.get());
+    return swish::host_folder::find_host_itemid(pidl.get());
 }
 
 namespace detail {
 
 #include <pshpack1.h>
-	struct host_item_template
-	{
-		host_item_id id;
-		SHITEMID terminator;
-	};
+    struct host_item_template
+    {
+        host_item_id id;
+        SHITEMID terminator;
+    };
 #include <poppack.h>
 
 }
@@ -212,41 +212,41 @@ namespace detail {
  * Construct a new host folder PIDL with the fields initialised.
  */
 inline winapi::shell::pidl::cpidl_t create_host_itemid(
-	const std::wstring& host, const std::wstring& user, 
-	const boost::filesystem::wpath& path, int port,
-	const std::wstring& label=std::wstring())
+    const std::wstring& host, const std::wstring& user, 
+    const boost::filesystem::wpath& path, int port,
+    const std::wstring& label=std::wstring())
 {
-	// We create the item on the stack and then clone it into 
-	// a CoTaskMemAllocated pidl when we return it as a cpidl_t
-	detail::host_item_template item;
-	std::memset(&item, 0, sizeof(item));
+    // We create the item on the stack and then clone it into 
+    // a CoTaskMemAllocated pidl when we return it as a cpidl_t
+    detail::host_item_template item;
+    std::memset(&item, 0, sizeof(item));
 
-	item.id.cb = sizeof(item.id);
-	item.id.dwFingerprint = detail::host_item_id::FINGERPRINT;
+    item.id.cb = sizeof(item.id);
+    item.id.dwFingerprint = detail::host_item_id::FINGERPRINT;
 
 #pragma warning(push)
 #pragma warning(disable:4996)
-	host.copy(item.id.wszHost, MAX_HOSTNAME_LENZ);
-	item.id.wszHost[MAX_HOSTNAME_LENZ - 1] = wchar_t();
+    host.copy(item.id.wszHost, MAX_HOSTNAME_LENZ);
+    item.id.wszHost[MAX_HOSTNAME_LENZ - 1] = wchar_t();
 
-	user.copy(item.id.wszUser, MAX_USERNAME_LENZ);
-	item.id.wszUser[MAX_USERNAME_LENZ - 1] = wchar_t();
+    user.copy(item.id.wszUser, MAX_USERNAME_LENZ);
+    item.id.wszUser[MAX_USERNAME_LENZ - 1] = wchar_t();
 
-	path.string().copy(item.id.wszPath, MAX_PATH_LENZ);
-	item.id.wszPath[MAX_PATH_LENZ - 1] = wchar_t();
+    path.string().copy(item.id.wszPath, MAX_PATH_LENZ);
+    item.id.wszPath[MAX_PATH_LENZ - 1] = wchar_t();
 
-	label.copy(item.id.wszLabel, MAX_LABEL_LENZ);
-	item.id.wszLabel[MAX_LABEL_LENZ - 1] = wchar_t();
+    label.copy(item.id.wszLabel, MAX_LABEL_LENZ);
+    item.id.wszLabel[MAX_LABEL_LENZ - 1] = wchar_t();
 #pragma warning(pop)
 
-	item.id.uPort = boost::numeric_cast<USHORT>(port);
+    item.id.uPort = boost::numeric_cast<USHORT>(port);
 
-	assert(item.terminator.cb == 0);
+    assert(item.terminator.cb == 0);
 
-	return winapi::shell::pidl::cpidl_t(
-		reinterpret_cast<PCITEMID_CHILD>(&item));
+    return winapi::shell::pidl::cpidl_t(
+        reinterpret_cast<PCITEMID_CHILD>(&item));
 }
-	
+    
 /**
  * Retrieve the long name of the host connection from the PIDL.
  *
@@ -256,23 +256,23 @@ inline winapi::shell::pidl::cpidl_t create_host_itemid(
  *     sftp://username\@hostname/path
  */
 inline std::wstring url_from_host_itemid(
-	const winapi::shell::pidl::cpidl_t itemid, bool canonical)
+    const winapi::shell::pidl::cpidl_t itemid, bool canonical)
 {
-	host_itemid_view host_pidl(itemid);
+    host_itemid_view host_pidl(itemid);
 
-	if (canonical || host_pidl.port() != SFTP_DEFAULT_PORT)
-	{
-		return str(
-			boost::wformat(L"sftp://%s@%s:%u/%s")
-			% host_pidl.user() % host_pidl.host() % host_pidl.port()
-			% host_pidl.path());
-	}
-	else
-	{
-		return str(
-			boost::wformat(L"sftp://%s@%s/%s")
-			% host_pidl.user() % host_pidl.host() % host_pidl.path());
-	}
+    if (canonical || host_pidl.port() != SFTP_DEFAULT_PORT)
+    {
+        return str(
+            boost::wformat(L"sftp://%s@%s:%u/%s")
+            % host_pidl.user() % host_pidl.host() % host_pidl.port()
+            % host_pidl.path());
+    }
+    else
+    {
+        return str(
+            boost::wformat(L"sftp://%s@%s/%s")
+            % host_pidl.user() % host_pidl.host() % host_pidl.path());
+    }
 }
 
 }} // namespace swish::host_folder

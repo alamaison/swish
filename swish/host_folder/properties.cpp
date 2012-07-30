@@ -63,40 +63,40 @@ DEFINE_PROPERTYKEY(PKEY_SwishHostPort, 0xb816a850, 0x5022, 0x11dc, \
 
 namespace {
 
-	class unknown_property_error : public std::runtime_error
-	{
-	public:
-		unknown_property_error() : std::runtime_error("Unknown property") {}
-	};
+    class unknown_property_error : public std::runtime_error
+    {
+    public:
+        unknown_property_error() : std::runtime_error("Unknown property") {}
+    };
 
-	typedef map<
-		property_key,
-		boost::function<variant_t (const cpidl_t& pidl)> >
-		host_property_map;
+    typedef map<
+        property_key,
+        boost::function<variant_t (const cpidl_t& pidl)> >
+        host_property_map;
 
-	variant_t net_drive_returner(const cpidl_t& /*pidl*/)
-	{
-		return translate("FileType", "Network Drive").str<wchar_t>();
-	}
+    variant_t net_drive_returner(const cpidl_t& /*pidl*/)
+    {
+        return translate("FileType", "Network Drive").str<wchar_t>();
+    }
 
-	variant_t label_getter(const cpidl_t& pidl)
-	{ return host_itemid_view(pidl).label(); }
-	variant_t host_getter(const cpidl_t& pidl)
-	{ return host_itemid_view(pidl).host(); }
-	variant_t user_getter(const cpidl_t& pidl)
-	{ return host_itemid_view(pidl).user(); }
-	variant_t port_getter(const cpidl_t& pidl)
-	{ return host_itemid_view(pidl).port(); }
-	variant_t path_getter(const cpidl_t& pidl)
-	{ return host_itemid_view(pidl).path().string(); }
+    variant_t label_getter(const cpidl_t& pidl)
+    { return host_itemid_view(pidl).label(); }
+    variant_t host_getter(const cpidl_t& pidl)
+    { return host_itemid_view(pidl).host(); }
+    variant_t user_getter(const cpidl_t& pidl)
+    { return host_itemid_view(pidl).user(); }
+    variant_t port_getter(const cpidl_t& pidl)
+    { return host_itemid_view(pidl).port(); }
+    variant_t path_getter(const cpidl_t& pidl)
+    { return host_itemid_view(pidl).path().string(); }
 
-	const host_property_map host_property_getters = map_list_of
-		(PKEY_ItemNameDisplay, label_getter) // Display name (Label)
-		(PKEY_ComputerName, host_getter) // Hostname
-		(PKEY_SwishHostUser, user_getter) // Username
-		(PKEY_SwishHostPort, port_getter) // SFTP port
-		(PKEY_ItemPathDisplay, path_getter) // Remote filesystem path
-		(PKEY_ItemType, net_drive_returner); // Type: always 'Network Drive'
+    const host_property_map host_property_getters = map_list_of
+        (PKEY_ItemNameDisplay, label_getter) // Display name (Label)
+        (PKEY_ComputerName, host_getter) // Hostname
+        (PKEY_SwishHostUser, user_getter) // Username
+        (PKEY_SwishHostPort, port_getter) // SFTP port
+        (PKEY_ItemPathDisplay, path_getter) // Remote filesystem path
+        (PKEY_ItemType, net_drive_returner); // Type: always 'Network Drive'
 }
 
 /**
@@ -107,11 +107,11 @@ namespace {
  */
 variant_t property_from_pidl(const cpidl_t& pidl, const property_key& key)
 {
-	host_property_map::const_iterator pos = host_property_getters.find(key);
-	if (pos == host_property_getters.end())
-		BOOST_THROW_EXCEPTION(unknown_property_error());
+    host_property_map::const_iterator pos = host_property_getters.find(key);
+    if (pos == host_property_getters.end())
+        BOOST_THROW_EXCEPTION(unknown_property_error());
 
-	return (pos->second)(pidl.get());
+    return (pos->second)(pidl.get());
 }
 
 /**
@@ -126,15 +126,15 @@ variant_t property_from_pidl(const cpidl_t& pidl, const property_key& key)
  * @retval  1 if left > right for chosen property.
  */
 int compare_pidls_by_property(
-	const cpidl_t& left, const cpidl_t& right, const property_key& key)
+    const cpidl_t& left, const cpidl_t& right, const property_key& key)
 {
-	if (property_from_pidl(left, key) == property_from_pidl(right, key))
-		return 0;
-	else if (property_from_pidl(left, key) < property_from_pidl(right, key))
-		return -1;
+    if (property_from_pidl(left, key) == property_from_pidl(right, key))
+        return 0;
+    else if (property_from_pidl(left, key) < property_from_pidl(right, key))
+        return -1;
 
-	assert(property_from_pidl(left, key) > property_from_pidl(right, key));
-	return 1;
+    assert(property_from_pidl(left, key) > property_from_pidl(right, key));
+    return 1;
 }
 
 }} // namespace swish::host_folder

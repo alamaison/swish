@@ -54,29 +54,29 @@ namespace provider {
 class provider_interface
 {
 public:
-	virtual void initialize(BSTR user, BSTR host, UINT port) = 0;
+    virtual void initialize(BSTR user, BSTR host, UINT port) = 0;
 
-	virtual IEnumListing* get_listing(
-		ISftpConsumer* consumer, BSTR directory) = 0;
+    virtual IEnumListing* get_listing(
+        ISftpConsumer* consumer, BSTR directory) = 0;
 
-	virtual IStream* get_file(
-		ISftpConsumer* consumer, BSTR file_path, BOOL writeable) = 0;
+    virtual IStream* get_file(
+        ISftpConsumer* consumer, BSTR file_path, BOOL writeable) = 0;
 
-	virtual VARIANT_BOOL rename(
-		ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
+    virtual VARIANT_BOOL rename(
+        ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
 
-	virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
+    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
 
-	virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
+    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
 
-	virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
+    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
 
-	virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
+    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
 
-	virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
+    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
 
-	virtual Listing stat(
-		ISftpConsumer* consumer, BSTR path, BOOL follow_links) = 0;
+    virtual Listing stat(
+        ISftpConsumer* consumer, BSTR path, BOOL follow_links) = 0;
 };
 
 /**
@@ -123,187 +123,187 @@ public:
 class provider_error_adapter : public ISftpProvider
 {
 public:
-	typedef ISftpProvider interface_is;
+    typedef ISftpProvider interface_is;
 
-	virtual IFACEMETHODIMP Initialize(
-		BSTR bstrUser, BSTR bstrHost, UINT uPort)
-	{
-		try
-		{
-			impl().initialize(bstrUser, bstrHost, uPort);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+    virtual IFACEMETHODIMP Initialize(
+        BSTR bstrUser, BSTR bstrHost, UINT uPort)
+    {
+        try
+        {
+            impl().initialize(bstrUser, bstrHost, uPort);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP GetListing(
-		ISftpConsumer* pConsumer, BSTR bstrDirectory, IEnumListing** ppEnum)
-	{
-		try
-		{
-			if (!ppEnum)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-			*ppEnum = NULL;
+    virtual IFACEMETHODIMP GetListing(
+        ISftpConsumer* pConsumer, BSTR bstrDirectory, IEnumListing** ppEnum)
+    {
+        try
+        {
+            if (!ppEnum)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            *ppEnum = NULL;
 
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			*ppEnum = impl().get_listing(pConsumer, bstrDirectory);
+            *ppEnum = impl().get_listing(pConsumer, bstrDirectory);
 
-			assert(*ppEnum || !"No error but no retval");
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            assert(*ppEnum || !"No error but no retval");
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP GetFile(
-		ISftpConsumer* pConsumer, BSTR bstrFilePath, BOOL fWriteable,
-		IStream** ppStream)
-	{
-		try
-		{
-			if (!ppStream)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-			*ppStream = NULL;
+    virtual IFACEMETHODIMP GetFile(
+        ISftpConsumer* pConsumer, BSTR bstrFilePath, BOOL fWriteable,
+        IStream** ppStream)
+    {
+        try
+        {
+            if (!ppStream)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            *ppStream = NULL;
 
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			*ppStream = impl().get_file(pConsumer, bstrFilePath, fWriteable);
+            *ppStream = impl().get_file(pConsumer, bstrFilePath, fWriteable);
 
-			assert(*ppStream || !"No error but no retval");
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            assert(*ppStream || !"No error but no retval");
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP Rename(
-		ISftpConsumer* pConsumer, BSTR bstrFromPath, BSTR bstrToPath,
-		VARIANT_BOOL* pfWasTargetOverwritten)
-	{
-		try
-		{
-			if (!pfWasTargetOverwritten)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-			*pfWasTargetOverwritten = VARIANT_FALSE;
+    virtual IFACEMETHODIMP Rename(
+        ISftpConsumer* pConsumer, BSTR bstrFromPath, BSTR bstrToPath,
+        VARIANT_BOOL* pfWasTargetOverwritten)
+    {
+        try
+        {
+            if (!pfWasTargetOverwritten)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            *pfWasTargetOverwritten = VARIANT_FALSE;
 
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			*pfWasTargetOverwritten = impl().rename(
-				pConsumer, bstrFromPath, bstrToPath);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            *pfWasTargetOverwritten = impl().rename(
+                pConsumer, bstrFromPath, bstrToPath);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP Delete(ISftpConsumer* pConsumer, BSTR bstrPath)
-	{
-		try
-		{
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+    virtual IFACEMETHODIMP Delete(ISftpConsumer* pConsumer, BSTR bstrPath)
+    {
+        try
+        {
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			impl().delete_file(pConsumer, bstrPath);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            impl().delete_file(pConsumer, bstrPath);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP DeleteDirectory(
-		ISftpConsumer* pConsumer, BSTR bstrPath)
-	{
-		try
-		{
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+    virtual IFACEMETHODIMP DeleteDirectory(
+        ISftpConsumer* pConsumer, BSTR bstrPath)
+    {
+        try
+        {
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			impl().delete_directory(pConsumer, bstrPath);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            impl().delete_directory(pConsumer, bstrPath);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP CreateNewFile(
-		ISftpConsumer* pConsumer, BSTR bstrPath)
-	{
-		try
-		{
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+    virtual IFACEMETHODIMP CreateNewFile(
+        ISftpConsumer* pConsumer, BSTR bstrPath)
+    {
+        try
+        {
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			impl().create_new_file(pConsumer, bstrPath);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            impl().create_new_file(pConsumer, bstrPath);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP CreateNewDirectory(
-		ISftpConsumer* pConsumer, BSTR bstrPath)
-	{
-		try
-		{
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+    virtual IFACEMETHODIMP CreateNewDirectory(
+        ISftpConsumer* pConsumer, BSTR bstrPath)
+    {
+        try
+        {
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			impl().create_new_directory(pConsumer, bstrPath);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            impl().create_new_directory(pConsumer, bstrPath);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
-	virtual IFACEMETHODIMP ResolveLink(
-		ISftpConsumer* pConsumer, BSTR bstrLinkPath, BSTR* pbstrTargetPathOut)
-	{
-		try
-		{
-			if (!pbstrTargetPathOut)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-			*pbstrTargetPathOut = NULL;
+    virtual IFACEMETHODIMP ResolveLink(
+        ISftpConsumer* pConsumer, BSTR bstrLinkPath, BSTR* pbstrTargetPathOut)
+    {
+        try
+        {
+            if (!pbstrTargetPathOut)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            *pbstrTargetPathOut = NULL;
 
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			*pbstrTargetPathOut = impl().resolve_link(pConsumer, bstrLinkPath);
+            *pbstrTargetPathOut = impl().resolve_link(pConsumer, bstrLinkPath);
 
-			assert(*pbstrTargetPathOut || !"No error but no retval");
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            assert(*pbstrTargetPathOut || !"No error but no retval");
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
-	
-	virtual IFACEMETHODIMP Stat(
-		ISftpConsumer *pConsumer, BSTR bstrPath, BOOL fFollowLinks,
-		struct Listing *pplt)
-	{
-		try
-		{
-			if (!pplt)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-			*pplt = Listing();
+        return S_OK;
+    }
+    
+    virtual IFACEMETHODIMP Stat(
+        ISftpConsumer *pConsumer, BSTR bstrPath, BOOL fFollowLinks,
+        struct Listing *pplt)
+    {
+        try
+        {
+            if (!pplt)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            *pplt = Listing();
 
-			if (!pConsumer)
-				BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
+            if (!pConsumer)
+                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
 
-			*pplt = impl().stat(pConsumer, bstrPath, fFollowLinks);
-		}
-		WINAPI_COM_CATCH_AUTO_INTERFACE();
+            *pplt = impl().stat(pConsumer, bstrPath, fFollowLinks);
+        }
+        WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-		return S_OK;
-	}
+        return S_OK;
+    }
 
 private:
 
-	virtual provider_interface& impl() = 0;
+    virtual provider_interface& impl() = 0;
 };
 
 }} // namespace swish::provider

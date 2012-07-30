@@ -55,14 +55,14 @@ BOOST_FIXTURE_TEST_SUITE(StreamCreate, StreamFixture)
  */
 BOOST_AUTO_TEST_CASE( new_file )
 {
-	// Delete sandbox file before creating stream
-	remove(m_local_path);
+    // Delete sandbox file before creating stream
+    remove(m_local_path);
 
-	BOOST_REQUIRE(!exists(m_local_path));
+    BOOST_REQUIRE(!exists(m_local_path));
 
-	GetStream(CSftpStream::create);
+    GetStream(CSftpStream::create);
 
-	BOOST_REQUIRE(exists(m_local_path));
+    BOOST_REQUIRE(exists(m_local_path));
 }
 
 /**
@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE( new_file )
  */
 BOOST_AUTO_TEST_CASE( new_file_fail )
 {
-	// Delete sandbox file before creating stream
-	remove(m_local_path);
+    // Delete sandbox file before creating stream
+    remove(m_local_path);
 
-	BOOST_REQUIRE(!exists(m_local_path));
+    BOOST_REQUIRE(!exists(m_local_path));
 
-	BOOST_REQUIRE_THROW(GetStream(), com_error);
+    BOOST_REQUIRE_THROW(GetStream(), com_error);
 
-	BOOST_REQUIRE(!exists(m_local_path));
+    BOOST_REQUIRE(!exists(m_local_path));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -14,235 +14,235 @@
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-	<Product Id="*" Name="Swish"
-			 Language="0" Version="$(var.Swish_ProductVersion)" Manufacturer="Alexander Lamaison"
-			 UpgradeCode="97CF376F-FFDE-472A-946B-E3F5D45229DA">
+  <Product Id="*" Name="Swish"
+       Language="0" Version="$(var.Swish_ProductVersion)" Manufacturer="Alexander Lamaison"
+       UpgradeCode="97CF376F-FFDE-472A-946B-E3F5D45229DA">
 
-		<?if $(var.Platform) = x64?>
-		<Package InstallerVersion="200" Compressed="yes"
-				 Description="Secure remote access from Windows Explorer via SFTP" Platform="x64"/>
-		<?else?>
-		<Package InstallerVersion="200" Compressed="yes"
-				 Description="Secure remote access from Windows Explorer via SFTP"/>
-		<?endif?>
+    <?if $(var.Platform) = x64?>
+    <Package InstallerVersion="200" Compressed="yes"
+         Description="Secure remote access from Windows Explorer via SFTP" Platform="x64"/>
+    <?else?>
+    <Package InstallerVersion="200" Compressed="yes"
+         Description="Secure remote access from Windows Explorer via SFTP"/>
+    <?endif?>
 
-		<MajorUpgrade
-			DowngradeErrorMessage="A newer version on Swish is already installed.  Please uninstall it first and try again"
-			Schedule="afterInstallInitialize" />
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version on Swish is already installed.  Please uninstall it first and try again"
+      Schedule="afterInstallInitialize" />
 
-		<!-- Prevent installing 32-bit version on 64-bit Windows -->
-		<?if $(var.Platform) != x64?>
-		<Condition Message="You can't install 32-bit Swish on 64-bit Windows.  Please download the correct installer from http://www.swish-sftp.org.">
-			<![CDATA[Not VersionNT64]]>
-		</Condition>
-		<?endif?>
+    <!-- Prevent installing 32-bit version on 64-bit Windows -->
+    <?if $(var.Platform) != x64?>
+    <Condition Message="You can't install 32-bit Swish on 64-bit Windows.  Please download the correct installer from http://www.swish-sftp.org.">
+      <![CDATA[Not VersionNT64]]>
+    </Condition>
+    <?endif?>
 
-		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
-		<Directory Id="TARGETDIR" Name="SourceDir">
-			<?if $(var.Platform) = x64?>
-			<Directory Id="ProgramFiles64Folder">
-				<Directory Id="INSTALLDIR" Name="Swish"/>
-			</Directory>
-			<?else?>
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLDIR" Name="Swish"/>
-			</Directory>
-			<?endif?>
-		</Directory>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <?if $(var.Platform) = x64?>
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="Swish"/>
+      </Directory>
+      <?else?>
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="Swish"/>
+      </Directory>
+      <?endif?>
+    </Directory>
 
-		<DirectoryRef Id="INSTALLDIR">
-			<Component Id="Interfaces" Guid="*" Win64="$(var.Win64)">
-				<File Id="InterfacesDll" Source="$(var.TargetDir)interfaces_dll.dll" KeyPath="yes">
-					<Class Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
-				</File>
-				<!-- CHANGE THESE IF THE INTERFACE DEFINITIONS CHANGE! -->
-				<!-- *EXTRA CAREFUL*: If the IID of the first interface
-					 changes, ProxyStubClassId32 of all the interfaces must
-					 change too as well as the CLSDID of the PSFactoryBuffer
-					 above.  It seems to be picked from this first
-					 interface. -->
-				<Interface Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Name="IEnumListing" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="7" />
-				<Interface Id="8BEDB4C6-16D4-4EA6-9685-64DAC2A8A189" Name="ISftpConsumer" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="10" />
-				<Interface Id="E2D6A1D6-48EB-4F38-9D00-3C4536416C49" Name="ISftpProvider" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="13" />
-			</Component>
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="Interfaces" Guid="*" Win64="$(var.Win64)">
+        <File Id="InterfacesDll" Source="$(var.TargetDir)interfaces_dll.dll" KeyPath="yes">
+          <Class Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
+        </File>
+        <!-- CHANGE THESE IF THE INTERFACE DEFINITIONS CHANGE! -->
+        <!-- *EXTRA CAREFUL*: If the IID of the first interface
+           changes, ProxyStubClassId32 of all the interfaces must
+           change too as well as the CLSDID of the PSFactoryBuffer
+           above.  It seems to be picked from this first
+           interface. -->
+        <Interface Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Name="IEnumListing" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="7" />
+        <Interface Id="8BEDB4C6-16D4-4EA6-9685-64DAC2A8A189" Name="ISftpConsumer" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="10" />
+        <Interface Id="E2D6A1D6-48EB-4F38-9D00-3C4536416C49" Name="ISftpProvider" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="13" />
+      </Component>
 
-			<Component Id="ShellFolder" Guid="*" Win64="$(var.Win64)">
-				<File Id="ShellFolderDll" Source="$(var.TargetDir)shell_folder-com_dll.dll" KeyPath="yes">
+      <Component Id="ShellFolder" Guid="*" Win64="$(var.Win64)">
+        <File Id="ShellFolderDll" Source="$(var.TargetDir)shell_folder-com_dll.dll" KeyPath="yes">
 
-					<TypeLib Id="B816A838-5022-11DC-9153-0090F5284F85" Description="Swish 0.4 Type Library" Language="0" MajorVersion="0" MinorVersion="3">
-						<AppId Description="Swish" Id="B816A838-5022-11DC-9153-0090F5284F85">
-							<Class Id="B816A83A-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="Swish" ThreadingModel="apartment">
-								<ProgId Id="Swish.HostFolder.1" Description="CHostFolder Class">
-									<ProgId Id="Swish.HostFolder" Description="CHostFolder Class" />
-								</ProgId>
-							</Class>
-							<Class Id="B816A83C-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="CRemoteFolder Class" ThreadingModel="apartment">
-								<ProgId Id="Swish.RemoteFolder.1" Description="CRemoteFolder Class">
-									<ProgId Id="Swish.RemoteFolder" Description="CRemoteFolder Class" />
-								</ProgId>
-							</Class>
-						</AppId>
-					</TypeLib>
+          <TypeLib Id="B816A838-5022-11DC-9153-0090F5284F85" Description="Swish 0.4 Type Library" Language="0" MajorVersion="0" MinorVersion="3">
+            <AppId Description="Swish" Id="B816A838-5022-11DC-9153-0090F5284F85">
+              <Class Id="B816A83A-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="Swish" ThreadingModel="apartment">
+                <ProgId Id="Swish.HostFolder.1" Description="CHostFolder Class">
+                  <ProgId Id="Swish.HostFolder" Description="CHostFolder Class" />
+                </ProgId>
+              </Class>
+              <Class Id="B816A83C-5022-11DC-9153-0090F5284F85" Context="InprocServer32" Description="CRemoteFolder Class" ThreadingModel="apartment">
+                <ProgId Id="Swish.RemoteFolder.1" Description="CRemoteFolder Class">
+                  <ProgId Id="Swish.RemoteFolder" Description="CRemoteFolder Class" />
+                </ProgId>
+              </Class>
+            </AppId>
+          </TypeLib>
 
-				</File>
-				<RegistryValue Root="HKCR" Key="AppID\Swish.DLL" Name="AppID" Value="{b816a838-5022-11dc-9153-0090f5284f85}" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="InfoTip" Value="Remote file-system access via SFTP" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="TileInfo" Value="prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{b816a850-5022-11dc-9153-0090f5284f85} 2;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}" Name="InfoTip" Value="Remote file-system access via SFTP" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}" Name="TileInfo" Value="prop:{B725F130-47EF-101A-A5F1-02608C9EEBAC}, 12;{B725F130-47EF-101A-A5F1-02608C9EEBAC, 14}" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="Interface" Value="" Type="string" Action="write" />
-				<RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish" Type="string" Action="write" />
-				<RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="Removal Message" Value="Please don't remove Swish this way - uninstall it." Type="string" Action="write" />
-				<RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish HostFolder" Type="string" Action="write" />
-				<RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83c-5022-11dc-9153-0090f5284f85}" Value="Swish SFTP Folder" Type="string" Action="write" />
-			</Component>
+        </File>
+        <RegistryValue Root="HKCR" Key="AppID\Swish.DLL" Name="AppID" Value="{b816a838-5022-11dc-9153-0090f5284f85}" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="InfoTip" Value="Remote file-system access via SFTP" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="TileInfo" Value="prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{b816a850-5022-11dc-9153-0090f5284f85} 2;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}" Name="InfoTip" Value="Remote file-system access via SFTP" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}" Name="TileInfo" Value="prop:{B725F130-47EF-101A-A5F1-02608C9EEBAC}, 12;{B725F130-47EF-101A-A5F1-02608C9EEBAC, 14}" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="Interface" Value="" Type="string" Action="write" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish" Type="string" Action="write" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="Removal Message" Value="Please don't remove Swish this way - uninstall it." Type="string" Action="write" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish HostFolder" Type="string" Action="write" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83c-5022-11dc-9153-0090f5284f85}" Value="Swish SFTP Folder" Type="string" Action="write" />
+      </Component>
 
-			<Component Id="Provider" Guid="*" Win64="$(var.Win64)">
-				<File Id="ProviderDll" Source="$(var.TargetDir)provider-com_dll.dll"
-					  KeyPath="yes">
-					<TypeLib Id="b816a861-5022-11dc-9153-0090f5284f85" Description="Swish SFTP Provider 0.1 Type Library" Language="0" MajorVersion="0" MinorVersion="1">
-						<AppId Description="Swish SFTP Provider" Id="{b816a860-5022-11dc-9153-0090f5284f85}">
+      <Component Id="Provider" Guid="*" Win64="$(var.Win64)">
+        <File Id="ProviderDll" Source="$(var.TargetDir)provider-com_dll.dll"
+            KeyPath="yes">
+          <TypeLib Id="b816a861-5022-11dc-9153-0090f5284f85" Description="Swish SFTP Provider 0.1 Type Library" Language="0" MajorVersion="0" MinorVersion="1">
+            <AppId Description="Swish SFTP Provider" Id="{b816a860-5022-11dc-9153-0090f5284f85}">
 
-							<Class Id="b816a862-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="Provider Component" ThreadingModel="apartment">
-								<ProgId Id="Provider.Provider.1" Description="Provider Component">
-									<ProgId Id="Provider.Provider" Description="Provider Component" />
-								</ProgId>
-							</Class>
+              <Class Id="b816a862-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="Provider Component" ThreadingModel="apartment">
+                <ProgId Id="Provider.Provider.1" Description="Provider Component">
+                  <ProgId Id="Provider.Provider" Description="Provider Component" />
+                </ProgId>
+              </Class>
 
-							<Class Id="b816a863-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="RealDispenser Component" ThreadingModel="both">
-								<ProgId Id="Provider.RealDispenser.1" Description="RealDispenser Component">
-									<ProgId Id="Provider.RealDispenser" Description="RealDispenser Component" />
-								</ProgId>
-							</Class>
+              <Class Id="b816a863-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="RealDispenser Component" ThreadingModel="both">
+                <ProgId Id="Provider.RealDispenser.1" Description="RealDispenser Component">
+                  <ProgId Id="Provider.RealDispenser" Description="RealDispenser Component" />
+                </ProgId>
+              </Class>
 
-							<Class Id="b816a864-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="Dispenser Component" ThreadingModel="free">
-								<ProgId Id="Provider.Dispenser.1" Description="Dispenser Component">
-									<ProgId Id="Provider.Dispenser" Description="Dispenser Component" />
-								</ProgId>
-							</Class>
-						</AppId>
-					</TypeLib>
-				</File>
-			</Component>
+              <Class Id="b816a864-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="Dispenser Component" ThreadingModel="free">
+                <ProgId Id="Provider.Dispenser.1" Description="Dispenser Component">
+                  <ProgId Id="Provider.Dispenser" Description="Dispenser Component" />
+                </ProgId>
+              </Class>
+            </AppId>
+          </TypeLib>
+        </File>
+      </Component>
 
-			<!-- Ideally, this should use the same Guid="*" as the other components but it's too late as we already hardcoded it -->
-			<?if $(var.Platform) = x64?>
-			<Component Id="Libssh2" Guid="E9814846-0092-11E0-8254-DD3CDFD72085" Win64="yes">
-				<File Id="Libssh2Dll" Source="$(var.TargetDir)libssh2.dll" KeyPath="yes" />
-				<File Id="Libeay32Dll" Source="$(var.TargetDir)libeay32.dll" />
-				<File Id="Ssleay32Dll" Source="$(var.TargetDir)ssleay32.dll" />
-			</Component>
-			<?else?>
-			<Component Id="Libssh2" Guid="9F77EBBF-CF61-45ce-91CA-6D76793CFED7">
-				<File Id="Libssh2Dll" Source="$(var.TargetDir)libssh2.dll" KeyPath="yes" />
-				<File Id="Libeay32Dll" Source="$(var.TargetDir)libeay32.dll" />
-				<File Id="Ssleay32Dll" Source="$(var.TargetDir)ssleay32.dll" />
-			</Component>
-			<?endif?>
+      <!-- Ideally, this should use the same Guid="*" as the other components but it's too late as we already hardcoded it -->
+      <?if $(var.Platform) = x64?>
+      <Component Id="Libssh2" Guid="E9814846-0092-11E0-8254-DD3CDFD72085" Win64="yes">
+        <File Id="Libssh2Dll" Source="$(var.TargetDir)libssh2.dll" KeyPath="yes" />
+        <File Id="Libeay32Dll" Source="$(var.TargetDir)libeay32.dll" />
+        <File Id="Ssleay32Dll" Source="$(var.TargetDir)ssleay32.dll" />
+      </Component>
+      <?else?>
+      <Component Id="Libssh2" Guid="9F77EBBF-CF61-45ce-91CA-6D76793CFED7">
+        <File Id="Libssh2Dll" Source="$(var.TargetDir)libssh2.dll" KeyPath="yes" />
+        <File Id="Libeay32Dll" Source="$(var.TargetDir)libeay32.dll" />
+        <File Id="Ssleay32Dll" Source="$(var.TargetDir)ssleay32.dll" />
+      </Component>
+      <?endif?>
 
-			<Component Id="WinSparkle" Guid="*" Win64="$(var.Win64)">
-				<File Id="WinSparkleDll" Source="$(var.TargetDir)WinSparkle.dll" KeyPath="yes" />
-			</Component>
+      <Component Id="WinSparkle" Guid="*" Win64="$(var.Win64)">
+        <File Id="WinSparkleDll" Source="$(var.TargetDir)WinSparkle.dll" KeyPath="yes" />
+      </Component>
 
-			<Component Id="AUTHORS" Guid="*" Win64="$(var.Win64)">
-				<File Id="AUTHORSDoc"
-					  Source="$(var.SolutionDir)AUTHORS" KeyPath="yes" Vital="no" />
-			</Component>
+      <Component Id="AUTHORS" Guid="*" Win64="$(var.Win64)">
+        <File Id="AUTHORSDoc"
+            Source="$(var.SolutionDir)AUTHORS" KeyPath="yes" Vital="no" />
+      </Component>
 
-			<Component Id="NEWS" Guid="*" Win64="$(var.Win64)">
-				<File Id="NEWSDoc"
-					  Source="$(var.SolutionDir)NEWS" KeyPath="yes" Vital="no" />
-			</Component>
+      <Component Id="NEWS" Guid="*" Win64="$(var.Win64)">
+        <File Id="NEWSDoc"
+            Source="$(var.SolutionDir)NEWS" KeyPath="yes" Vital="no" />
+      </Component>
 
-			<Component Id="COPYING" Guid="*" Win64="$(var.Win64)">
-				<File Id="COPYINGDoc"
-					  Source="$(var.SolutionDir)COPYING" KeyPath="yes" Vital="no" />
-			</Component>
+      <Component Id="COPYING" Guid="*" Win64="$(var.Win64)">
+        <File Id="COPYINGDoc"
+            Source="$(var.SolutionDir)COPYING" KeyPath="yes" Vital="no" />
+      </Component>
 
-			<Component Id="README" Guid="*" Win64="$(var.Win64)">
-				<File Id="READMEDoc"
-					  Source="$(var.SolutionDir)README" KeyPath="yes" Vital="no" />
-			</Component>
+      <Component Id="README" Guid="*" Win64="$(var.Win64)">
+        <File Id="READMEDoc"
+            Source="$(var.SolutionDir)README" KeyPath="yes" Vital="no" />
+      </Component>
 
-			<?if $(var.Platform) = x64?>
+      <?if $(var.Platform) = x64?>
 
-			<Merge Id="CRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_CRT_x86_x64.msm" DiskId="1" />
-			<Merge Id="CRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_CRT_x86_x64.msm" DiskId="1" />
-			<?if $(var.Configuration) = Debug?>
-			<Merge Id="DebugCRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_DebugCRT_x86_x64.msm" DiskId="1"/>
-			<Merge Id="DebugCRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_DebugCRT_x86_x64.msm" DiskId="1" />
-			<?endif?>
+      <Merge Id="CRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_CRT_x86_x64.msm" DiskId="1" />
+      <Merge Id="CRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_CRT_x86_x64.msm" DiskId="1" />
+      <?if $(var.Configuration) = Debug?>
+      <Merge Id="DebugCRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_DebugCRT_x86_x64.msm" DiskId="1"/>
+      <Merge Id="DebugCRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_DebugCRT_x86_x64.msm" DiskId="1" />
+      <?endif?>
 
-			<?else?>
+      <?else?>
 
-			<Merge Id="CRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_CRT_x86.msm" DiskId="1" />
-			<Merge Id="CRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_CRT_x86.msm" DiskId="1" />
-			<?if $(var.Configuration) = Debug?>
-			<Merge Id="DebugCRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_DebugCRT_x86.msm" DiskId="1"/>
-			<Merge Id="DebugCRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_DebugCRT_x86.msm" DiskId="1" />
-			<?endif?>
+      <Merge Id="CRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_CRT_x86.msm" DiskId="1" />
+      <Merge Id="CRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_CRT_x86.msm" DiskId="1" />
+      <?if $(var.Configuration) = Debug?>
+      <Merge Id="DebugCRT" Language="0" SourceFile="$(var.MergeModuleDir)Microsoft_VC80_DebugCRT_x86.msm" DiskId="1"/>
+      <Merge Id="DebugCRT_policy" Language="0" SourceFile="$(var.MergeModuleDir)policy_8_0_Microsoft_VC80_DebugCRT_x86.msm" DiskId="1" />
+      <?endif?>
 
-			<?endif?>
+      <?endif?>
 
-		</DirectoryRef>
+    </DirectoryRef>
 
-		<ComponentGroup Id="Translations">
-			<ComponentGroupRef Id="NLTrans" />
-			<ComponentGroupRef Id="RUTrans" />
-			<ComponentGroupRef Id="DETrans" />
-			<ComponentGroupRef Id="TRTrans" />
-			<ComponentGroupRef Id="FRTrans" />
-			<ComponentGroupRef Id="ESTrans" />
-			<ComponentGroupRef Id="HETrans" />
-			<ComponentGroupRef Id="CSTrans" />
-			<ComponentGroupRef Id="ITTrans" />
-			<ComponentGroupRef Id="JATrans" />
-			<ComponentGroupRef Id="PLTrans" />
-			<ComponentGroupRef Id="HUTrans" />
-			<ComponentGroupRef Id="SKTrans" />
-			<ComponentGroupRef Id="ZHTWTrans" />
-			<ComponentGroupRef Id="HITrans" />
-			<ComponentGroupRef Id="BGTrans" />
-			<ComponentGroupRef Id="PTTrans" />
-			<ComponentGroupRef Id="SVTrans" />
-			<ComponentGroupRef Id="ZHCNTrans" />
-			<ComponentGroupRef Id="PTBRTrans" />
-		</ComponentGroup>
+    <ComponentGroup Id="Translations">
+      <ComponentGroupRef Id="NLTrans" />
+      <ComponentGroupRef Id="RUTrans" />
+      <ComponentGroupRef Id="DETrans" />
+      <ComponentGroupRef Id="TRTrans" />
+      <ComponentGroupRef Id="FRTrans" />
+      <ComponentGroupRef Id="ESTrans" />
+      <ComponentGroupRef Id="HETrans" />
+      <ComponentGroupRef Id="CSTrans" />
+      <ComponentGroupRef Id="ITTrans" />
+      <ComponentGroupRef Id="JATrans" />
+      <ComponentGroupRef Id="PLTrans" />
+      <ComponentGroupRef Id="HUTrans" />
+      <ComponentGroupRef Id="SKTrans" />
+      <ComponentGroupRef Id="ZHTWTrans" />
+      <ComponentGroupRef Id="HITrans" />
+      <ComponentGroupRef Id="BGTrans" />
+      <ComponentGroupRef Id="PTTrans" />
+      <ComponentGroupRef Id="SVTrans" />
+      <ComponentGroupRef Id="ZHCNTrans" />
+      <ComponentGroupRef Id="PTBRTrans" />
+    </ComponentGroup>
 
-		<Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>
-			<ComponentRef Id="Interfaces" />
-			<ComponentRef Id="ShellFolder" />
-			<ComponentRef Id="Provider" />
-			<ComponentRef Id="Libssh2" />
-			<ComponentRef Id="WinSparkle" />
-			<ComponentRef Id="AUTHORS" />
-			<ComponentRef Id="NEWS" />
-			<ComponentRef Id="COPYING" />
-			<ComponentRef Id="README" />
-			<ComponentGroupRef Id="Translations" />
-			<MergeRef Id="CRT" />
-			<MergeRef Id="CRT_policy" />
-			<?if $(var.Configuration) = Debug?>
-			<MergeRef Id="DebugCRT" />
-			<MergeRef Id="DebugCRT_policy" />
-			<?endif?>
-		</Feature>
+    <Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>
+      <ComponentRef Id="Interfaces" />
+      <ComponentRef Id="ShellFolder" />
+      <ComponentRef Id="Provider" />
+      <ComponentRef Id="Libssh2" />
+      <ComponentRef Id="WinSparkle" />
+      <ComponentRef Id="AUTHORS" />
+      <ComponentRef Id="NEWS" />
+      <ComponentRef Id="COPYING" />
+      <ComponentRef Id="README" />
+      <ComponentGroupRef Id="Translations" />
+      <MergeRef Id="CRT" />
+      <MergeRef Id="CRT_policy" />
+      <?if $(var.Configuration) = Debug?>
+      <MergeRef Id="DebugCRT" />
+      <MergeRef Id="DebugCRT_policy" />
+      <?endif?>
+    </Feature>
 
-		<Property Id='ARPCONTACT'>swish@lammy.co.uk</Property>
-		<Property Id='ARPHELPLINK'>http://www.swish-sftp.org</Property>
-		<Property Id='ARPURLINFOABOUT'>http://www.swish-sftp.org</Property>
-		<Property Id='ARPURLUPDATEINFO'>http://sourceforge.net/projects/swish/</Property>
+    <Property Id='ARPCONTACT'>swish@lammy.co.uk</Property>
+    <Property Id='ARPHELPLINK'>http://www.swish-sftp.org</Property>
+    <Property Id='ARPURLINFOABOUT'>http://www.swish-sftp.org</Property>
+    <Property Id='ARPURLUPDATEINFO'>http://sourceforge.net/projects/swish/</Property>
 
-		<Property Id="WIXUI_DONTVALIDATEPATH" Value="1"/>
-		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-		<UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_DONTVALIDATEPATH" Value="1"/>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <UIRef Id="WixUI_InstallDir" />
 
-		<WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)\COPYING.rtf" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)\COPYING.rtf" />
 
-	</Product>
+  </Product>
 </Wix>

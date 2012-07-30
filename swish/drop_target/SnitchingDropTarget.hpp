@@ -49,43 +49,43 @@ namespace drop_target {
  * cycle would be distracting.
  */
 class CSnitchingDropTarget :
-	public comet::simple_object<IDropTarget, IObjectWithSite>
+    public comet::simple_object<IDropTarget, IObjectWithSite>
 {
 public:
 
-	CSnitchingDropTarget(
-		HWND hwnd_owner, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer,
-		const winapi::shell::pidl::apidl_t& remote_directory,
-		boost::shared_ptr<DropActionCallback> callback);
+    CSnitchingDropTarget(
+        HWND hwnd_owner, comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer,
+        const winapi::shell::pidl::apidl_t& remote_directory,
+        boost::shared_ptr<DropActionCallback> callback);
 
-	/** @name IDropTarget methods */
-	// @{
+    /** @name IDropTarget methods */
+    // @{
 
-	IFACEMETHODIMP DragEnter( 
-		IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    IFACEMETHODIMP DragEnter( 
+        IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
 
-	IFACEMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    IFACEMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
 
-	IFACEMETHODIMP DragLeave();
+    IFACEMETHODIMP DragLeave();
 
-	IFACEMETHODIMP Drop(
-		IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    IFACEMETHODIMP Drop(
+        IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
 
-	// @}
+    // @}
 
-	/** @name IObjectWithSite methods */
-	// @{
+    /** @name IObjectWithSite methods */
+    // @{
 
-	IFACEMETHODIMP SetSite(IUnknown* pUnkSite);
-	IFACEMETHODIMP GetSite(REFIID riid, void** ppvSite);
+    IFACEMETHODIMP SetSite(IUnknown* pUnkSite);
+    IFACEMETHODIMP GetSite(REFIID riid, void** ppvSite);
 
-	// @}
+    // @}
 
 private:
 
-	comet::com_ptr<IDropTarget> m_inner;
-	HWND m_hwnd_owner;
+    comet::com_ptr<IDropTarget> m_inner;
+    HWND m_hwnd_owner;
 };
 
 }} // namespace swish::drop_target

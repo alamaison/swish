@@ -55,37 +55,37 @@ namespace data_object {
 
 namespace {
 
-	inline boost::uint32_t lo_dword(boost::uint64_t qword)
-	{
-		return static_cast<boost::uint32_t>(qword & 0xFFFFFFFF);
-	}
+    inline boost::uint32_t lo_dword(boost::uint64_t qword)
+    {
+        return static_cast<boost::uint32_t>(qword & 0xFFFFFFFF);
+    }
 
-	inline boost::uint32_t hi_dword(boost::uint64_t qword)
-	{
-		return static_cast<boost::uint32_t>((qword >> 32) & 0xFFFFFFFF);
-	}
+    inline boost::uint32_t hi_dword(boost::uint64_t qword)
+    {
+        return static_cast<boost::uint32_t>((qword >> 32) & 0xFFFFFFFF);
+    }
 
-	/**
-	 * Convert a ptime to a Windows FILETIME.
-	 */
-	void ptime_to_filetime(const boost::posix_time::ptime& time, FILETIME& ft)
-	{
-		boost::posix_time::ptime filetime_epoch(
-			boost::gregorian::date(1601,1,1));
-		boost::posix_time::time_duration duration = time - filetime_epoch;
-		boost::uint64_t hundred_nanosecs = duration.total_nanoseconds();
-		hundred_nanosecs /= 100UL;
-		ft.dwLowDateTime = lo_dword(hundred_nanosecs);
-		ft.dwHighDateTime = hi_dword(hundred_nanosecs);
-	}
+    /**
+     * Convert a ptime to a Windows FILETIME.
+     */
+    void ptime_to_filetime(const boost::posix_time::ptime& time, FILETIME& ft)
+    {
+        boost::posix_time::ptime filetime_epoch(
+            boost::gregorian::date(1601,1,1));
+        boost::posix_time::time_duration duration = time - filetime_epoch;
+        boost::uint64_t hundred_nanosecs = duration.total_nanoseconds();
+        hundred_nanosecs /= 100UL;
+        ft.dwLowDateTime = lo_dword(hundred_nanosecs);
+        ft.dwHighDateTime = hi_dword(hundred_nanosecs);
+    }
 
-	/**
-	 * Convert a Windows FILETIME to a ptime.
-	 */
-	boost::posix_time::ptime filetime_to_ptime(const FILETIME& ft)
-	{
-		return boost::posix_time::from_ftime<boost::posix_time::ptime>(ft);
-	}
+    /**
+     * Convert a Windows FILETIME to a ptime.
+     */
+    boost::posix_time::ptime filetime_to_ptime(const FILETIME& ft)
+    {
+        return boost::posix_time::from_ftime<boost::posix_time::ptime>(ft);
+    }
 
 }
 
@@ -96,8 +96,8 @@ namespace {
 class field_error : public std::logic_error
 {
 public:
-	explicit field_error(const std::string message) : std::logic_error(message)
-	{}
+    explicit field_error(const std::string message) : std::logic_error(message)
+    {}
 };
 
 /**
@@ -106,195 +106,195 @@ public:
 class Descriptor : private FILEDESCRIPTOR
 {
 public:
-	
-	Descriptor() : FILEDESCRIPTOR() {}
-	Descriptor(const FILEDESCRIPTOR& d) : FILEDESCRIPTOR(d) {}
-	// default copy, assign and destruct OK
+    
+    Descriptor() : FILEDESCRIPTOR() {}
+    Descriptor(const FILEDESCRIPTOR& d) : FILEDESCRIPTOR(d) {}
+    // default copy, assign and destruct OK
 
-	const FILEDESCRIPTOR& get() const
-	{
-		return *this;
-	}
+    const FILEDESCRIPTOR& get() const
+    {
+        return *this;
+    }
 
-	/**
-	 * Return the stored filename or relative path.
-	 */
-	boost::filesystem::wpath path() const
-	{
-		return cFileName;
-	}
+    /**
+     * Return the stored filename or relative path.
+     */
+    boost::filesystem::wpath path() const
+    {
+        return cFileName;
+    }
 
-	/**
-	 * Save given path as the descriptor filename/path.
-	 */
-	void path(const boost::filesystem::wpath& path)
-	{
-		static const size_t BUFFER_SIZE =
-			sizeof(cFileName) / sizeof(cFileName[0]);
+    /**
+     * Save given path as the descriptor filename/path.
+     */
+    void path(const boost::filesystem::wpath& path)
+    {
+        static const size_t BUFFER_SIZE =
+            sizeof(cFileName) / sizeof(cFileName[0]);
 
-		if (path.file_string().size() >= BUFFER_SIZE)
-			BOOST_THROW_EXCEPTION(
-				std::length_error("Path greater than MAX_PATH"));
+        if (path.file_string().size() >= BUFFER_SIZE)
+            BOOST_THROW_EXCEPTION(
+                std::length_error("Path greater than MAX_PATH"));
 
-		size_t count = path.file_string().copy(cFileName, BUFFER_SIZE - 1);
-		cFileName[count] = L'\0';
-	}
+        size_t count = path.file_string().copy(cFileName, BUFFER_SIZE - 1);
+        cFileName[count] = L'\0';
+    }
 
-	/**
-	 * Get the size of the item described by the descriptor.
-	 *
-	 * If the corresponding FILECONTENTS format is stored in an HGLOBAL this
-	 * is also the size of the allocated memory.
-	 */
-	boost::uint64_t file_size() const
-	{
-		if (!_valid_field(FD_FILESIZE))
-			BOOST_THROW_EXCEPTION(field_error("File size not available."));
+    /**
+     * Get the size of the item described by the descriptor.
+     *
+     * If the corresponding FILECONTENTS format is stored in an HGLOBAL this
+     * is also the size of the allocated memory.
+     */
+    boost::uint64_t file_size() const
+    {
+        if (!_valid_field(FD_FILESIZE))
+            BOOST_THROW_EXCEPTION(field_error("File size not available."));
 
-		boost::uint64_t s = nFileSizeHigh;
-		s = s << 32;
-		s += nFileSizeLow;
-		return s;
-	}
+        boost::uint64_t s = nFileSizeHigh;
+        s = s << 32;
+        s += nFileSizeLow;
+        return s;
+    }
 
-	/**
-	 * Set the size of the item described by the descriptor.
-	 *
-	 * If the corresponding FILECONTENTS format is stored in an HGLOBAL this
-	 * is also the size of the allocated memory.
-	 */
-	void file_size(boost::uint64_t size)
-	{
-		nFileSizeLow = lo_dword(size);
-		nFileSizeHigh = hi_dword(size);
-		_set_field_valid(FD_FILESIZE);
-	}
+    /**
+     * Set the size of the item described by the descriptor.
+     *
+     * If the corresponding FILECONTENTS format is stored in an HGLOBAL this
+     * is also the size of the allocated memory.
+     */
+    void file_size(boost::uint64_t size)
+    {
+        nFileSizeLow = lo_dword(size);
+        nFileSizeHigh = hi_dword(size);
+        _set_field_valid(FD_FILESIZE);
+    }
 
-	/**
-	 * The date and time that the item was created.
-	 */
-	boost::posix_time::ptime creation_time() const
-	{
-		if (!_valid_field(FD_CREATETIME))
-			BOOST_THROW_EXCEPTION(field_error("Creation time not available."));
+    /**
+     * The date and time that the item was created.
+     */
+    boost::posix_time::ptime creation_time() const
+    {
+        if (!_valid_field(FD_CREATETIME))
+            BOOST_THROW_EXCEPTION(field_error("Creation time not available."));
 
-		return filetime_to_ptime(ftCreationTime);
-	}
+        return filetime_to_ptime(ftCreationTime);
+    }
 
-	/**
-	 * Set the date and time that the item was created.
-	 */
-	void creation_time(const boost::posix_time::ptime& time)
-	{
-		ptime_to_filetime(time, ftLastWriteTime);
-		_set_field_valid(FD_CREATETIME);
-	}
+    /**
+     * Set the date and time that the item was created.
+     */
+    void creation_time(const boost::posix_time::ptime& time)
+    {
+        ptime_to_filetime(time, ftLastWriteTime);
+        _set_field_valid(FD_CREATETIME);
+    }
 
-	/**
-	 * The date and time that the item was last accessed.
-	 */
-	boost::posix_time::ptime last_access_time() const
-	{
-		if (!_valid_field(FD_ACCESSTIME))
-			BOOST_THROW_EXCEPTION(
-				field_error("Last access time not available."));
+    /**
+     * The date and time that the item was last accessed.
+     */
+    boost::posix_time::ptime last_access_time() const
+    {
+        if (!_valid_field(FD_ACCESSTIME))
+            BOOST_THROW_EXCEPTION(
+                field_error("Last access time not available."));
 
-		return filetime_to_ptime(ftLastAccessTime);
-	}
+        return filetime_to_ptime(ftLastAccessTime);
+    }
 
-	/**
-	 * Set the date and time that the item was last accessed.
-	 */
-	void last_access_time(const boost::posix_time::ptime& time)
-	{
-		ptime_to_filetime(time, ftLastAccessTime);
-		_set_field_valid(FD_ACCESSTIME);
-	}
+    /**
+     * Set the date and time that the item was last accessed.
+     */
+    void last_access_time(const boost::posix_time::ptime& time)
+    {
+        ptime_to_filetime(time, ftLastAccessTime);
+        _set_field_valid(FD_ACCESSTIME);
+    }
 
-	/**
-	 * The date and time that the item was last modified.
-	 */
-	boost::posix_time::ptime last_write_time() const
-	{
-		if (!_valid_field(FD_WRITESTIME))
-			BOOST_THROW_EXCEPTION(
-				field_error("Last write time not available."));
+    /**
+     * The date and time that the item was last modified.
+     */
+    boost::posix_time::ptime last_write_time() const
+    {
+        if (!_valid_field(FD_WRITESTIME))
+            BOOST_THROW_EXCEPTION(
+                field_error("Last write time not available."));
 
-		return filetime_to_ptime(ftLastWriteTime);
-	}
+        return filetime_to_ptime(ftLastWriteTime);
+    }
 
-	/**
-	 * Set the date and time that the item was last modified.
-	 */
-	void last_write_time(const boost::posix_time::ptime& time)
-	{
-		ptime_to_filetime(time, ftLastWriteTime);
-		_set_field_valid(FD_WRITESTIME);
-	}
+    /**
+     * Set the date and time that the item was last modified.
+     */
+    void last_write_time(const boost::posix_time::ptime& time)
+    {
+        ptime_to_filetime(time, ftLastWriteTime);
+        _set_field_valid(FD_WRITESTIME);
+    }
 
-	/**
-	 * Should shell show progress UI when copying items?
-	 */
-	bool want_progress() const
-	{
-		return _valid_field(FD_PROGRESSUI);
-	}
+    /**
+     * Should shell show progress UI when copying items?
+     */
+    bool want_progress() const
+    {
+        return _valid_field(FD_PROGRESSUI);
+    }
 
-	/**
-	 * Set whether the shell should show progress UI when copying items.
-	 */
-	void want_progress(bool show)
-	{
-		if (show)
-			_set_field_valid(FD_PROGRESSUI);
-		else
-			_unset_field_valid(FD_PROGRESSUI);
-	}
+    /**
+     * Set whether the shell should show progress UI when copying items.
+     */
+    void want_progress(bool show)
+    {
+        if (show)
+            _set_field_valid(FD_PROGRESSUI);
+        else
+            _unset_field_valid(FD_PROGRESSUI);
+    }
 
-	/**
-	 * FILE_ATTRIBUTE* bit values of item.
-	 */
-	DWORD attributes() const
-	{
-		if (!_valid_field(FD_ATTRIBUTES))
-			BOOST_THROW_EXCEPTION(field_error("Attributes not available."));
-		return dwFileAttributes;
-	}
+    /**
+     * FILE_ATTRIBUTE* bit values of item.
+     */
+    DWORD attributes() const
+    {
+        if (!_valid_field(FD_ATTRIBUTES))
+            BOOST_THROW_EXCEPTION(field_error("Attributes not available."));
+        return dwFileAttributes;
+    }
 
-	/**
-	 * Set FILE_ATTRIBUTE* bit values for item.
-	 */
-	void attributes(DWORD attrs)
-	{
-		dwFileAttributes = attrs;
-		_set_field_valid(FD_ATTRIBUTES);
-	}
+    /**
+     * Set FILE_ATTRIBUTE* bit values for item.
+     */
+    void attributes(DWORD attrs)
+    {
+        dwFileAttributes = attrs;
+        _set_field_valid(FD_ATTRIBUTES);
+    }
 
 private:
 
-	/**
-	 * Is the field with the given field flag valid?
-	 */
-	bool _valid_field(DWORD field) const
-	{
-		return !!(dwFlags & field);
-	}	
-	
-	/**
-	 * Set the validity of the given field.
-	 */
-	void _set_field_valid(DWORD field)
-	{
-		dwFlags = dwFlags | field;
-	}
-	
-	/**
-	 * Unset the validity of the given field.
-	 */
-	void _unset_field_valid(DWORD field)
-	{
-		dwFlags = (dwFlags & (~field));
-	}
+    /**
+     * Is the field with the given field flag valid?
+     */
+    bool _valid_field(DWORD field) const
+    {
+        return !!(dwFlags & field);
+    }    
+    
+    /**
+     * Set the validity of the given field.
+     */
+    void _set_field_valid(DWORD field)
+    {
+        dwFlags = dwFlags | field;
+    }
+    
+    /**
+     * Unset the validity of the given field.
+     */
+    void _unset_field_valid(DWORD field)
+    {
+        dwFlags = (dwFlags & (~field));
+    }
 };
 
 BOOST_STATIC_ASSERT(sizeof(Descriptor) == sizeof(FILEDESCRIPTOR));
@@ -309,36 +309,36 @@ class FileGroupDescriptor
 {
 public:
 
-	/**
-	 * Create wrapper around an existing FILEGROUPDESCRIPTOR in global memory.
-	 */
-	FileGroupDescriptor(HGLOBAL hglobal) : m_lock(hglobal) {}
+    /**
+     * Create wrapper around an existing FILEGROUPDESCRIPTOR in global memory.
+     */
+    FileGroupDescriptor(HGLOBAL hglobal) : m_lock(hglobal) {}
 
-	// default copy, assign and destruct OK
+    // default copy, assign and destruct OK
 
-	/**
-	 * Number of FILEDESCRIPTORS in the FILEGROUPDESCRIPTOR.
-	 */
-	size_t size() const
-	{
-		return m_lock.get()->cItems;
-	}
+    /**
+     * Number of FILEDESCRIPTORS in the FILEGROUPDESCRIPTOR.
+     */
+    size_t size() const
+    {
+        return m_lock.get()->cItems;
+    }
 
-	/**
-	 * Return a reference to the ith FILEDESCRIPTOR as a Descriptor.
-	 */
-	Descriptor& operator[](size_t i) const
-	{
-		if (i >= size())
-			BOOST_THROW_EXCEPTION(
-				std::out_of_range(
-					"Attempt to access FILEDESCRIPTOR out of range"));
+    /**
+     * Return a reference to the ith FILEDESCRIPTOR as a Descriptor.
+     */
+    Descriptor& operator[](size_t i) const
+    {
+        if (i >= size())
+            BOOST_THROW_EXCEPTION(
+                std::out_of_range(
+                    "Attempt to access FILEDESCRIPTOR out of range"));
 
-		return *static_cast<Descriptor*>(&m_lock.get()->fgd[i]);
-	}
+        return *static_cast<Descriptor*>(&m_lock.get()->fgd[i]);
+    }
 
 private:
-	GlobalLocker<FILEGROUPDESCRIPTOR> m_lock;
+    GlobalLocker<FILEGROUPDESCRIPTOR> m_lock;
 };
 
 /**
@@ -353,34 +353,34 @@ private:
 template<typename It>
 HGLOBAL group_descriptor_from_range(It first, It last)
 {
-	size_t count = std::distance(first, last);
-	if (count < 1)
-		BOOST_THROW_EXCEPTION(
-			std::length_error("Range must have at least one descriptor."));
+    size_t count = std::distance(first, last);
+    if (count < 1)
+        BOOST_THROW_EXCEPTION(
+            std::length_error("Range must have at least one descriptor."));
 
-	size_t bytes = 
-		sizeof(FILEGROUPDESCRIPTOR) + (count * sizeof(FILEDESCRIPTOR));
+    size_t bytes = 
+        sizeof(FILEGROUPDESCRIPTOR) + (count * sizeof(FILEDESCRIPTOR));
 
-	HGLOBAL hglobal = ::GlobalAlloc(GMEM_MOVEABLE, bytes);
-	if (!hglobal)
-		BOOST_THROW_EXCEPTION(
-			boost::system::system_error(
-				::GetLastError(), boost::system::get_system_category()));
+    HGLOBAL hglobal = ::GlobalAlloc(GMEM_MOVEABLE, bytes);
+    if (!hglobal)
+        BOOST_THROW_EXCEPTION(
+            boost::system::system_error(
+                ::GetLastError(), boost::system::get_system_category()));
 
-	try
-	{
-		GlobalLocker<FILEGROUPDESCRIPTOR> lock(hglobal);
-		lock.get()->cItems = boost::numeric_cast<UINT>(count);
-		std::copy(first, last, &lock.get()->fgd[0]);
-		// last arg above: decay array to stop false +ive by checked iterator
-	}
-	catch (...)
-	{
-		::GlobalFree(hglobal);
-		throw;
-	}
+    try
+    {
+        GlobalLocker<FILEGROUPDESCRIPTOR> lock(hglobal);
+        lock.get()->cItems = boost::numeric_cast<UINT>(count);
+        std::copy(first, last, &lock.get()->fgd[0]);
+        // last arg above: decay array to stop false +ive by checked iterator
+    }
+    catch (...)
+    {
+        ::GlobalFree(hglobal);
+        throw;
+    }
 
-	return hglobal;
+    return hglobal;
 }
 
 }}} // namespace swish::shell_folder::data_object

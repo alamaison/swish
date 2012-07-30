@@ -42,14 +42,14 @@ namespace com_dll {
  */
 namespace pidl {
 
-	PITEMID_CHILD MakeHostPidl(
-		PCWSTR user, PCWSTR host, PCWSTR path, 
-		USHORT port=SFTP_DEFAULT_PORT, PCWSTR label=L"");
+    PITEMID_CHILD MakeHostPidl(
+        PCWSTR user, PCWSTR host, PCWSTR path, 
+        USHORT port=SFTP_DEFAULT_PORT, PCWSTR label=L"");
 
-	PITEMID_CHILD MakeRemotePidl(
-		PCWSTR filename, bool fIsFolder=false, PCWSTR owner=L"", 
-		PCWSTR group=L"", ULONG uUid=0, ULONG uGid=0, bool fIsLink=false,
-		DWORD dwPermissions=0, ULONGLONG uSize=0,
-		DATE dateModified=0, DATE dateAccessed=0);
+    PITEMID_CHILD MakeRemotePidl(
+        PCWSTR filename, bool fIsFolder=false, PCWSTR owner=L"", 
+        PCWSTR group=L"", ULONG uUid=0, ULONG uGid=0, bool fIsLink=false,
+        DWORD dwPermissions=0, ULONGLONG uSize=0,
+        DATE dateModified=0, DATE dateAccessed=0);
 
 }}}} // namespace test::swish::com_dll::pidl

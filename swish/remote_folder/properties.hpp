@@ -39,13 +39,13 @@ namespace swish {
 namespace remote_folder {
 
 comet::variant_t property_from_pidl(
-	const winapi::shell::pidl::cpidl_t& pidl,
-	const winapi::shell::property_key& key);
+    const winapi::shell::pidl::cpidl_t& pidl,
+    const winapi::shell::property_key& key);
 
 int compare_pidls_by_property(
-	const winapi::shell::pidl::cpidl_t& pidl_left,
-	const winapi::shell::pidl::cpidl_t& pidl_right,
-	const winapi::shell::property_key& key);
+    const winapi::shell::pidl::cpidl_t& pidl_left,
+    const winapi::shell::pidl::cpidl_t& pidl_right,
+    const winapi::shell::property_key& key);
 
 /**
  * Custom properties (PKEYs) for Swish remote folder.

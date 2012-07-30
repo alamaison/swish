@@ -48,38 +48,38 @@ namespace {
  */
 DWORD WINAPI click_cancel_thread(LPVOID /*thread_param*/)
 {
-	::Sleep(2000);
-	HWND hwnd = GetForegroundWindow();
+    ::Sleep(2000);
+    HWND hwnd = GetForegroundWindow();
 
-	// Send Cancel button click message to dialog box
-	//WPARAM wParam = MAKEWPARAM(IDCANCEL, BN_CLICKED);
-	//pThis->m_dlg.SendMessage(WM_COMMAND, wParam);
+    // Send Cancel button click message to dialog box
+    //WPARAM wParam = MAKEWPARAM(IDCANCEL, BN_CLICKED);
+    //pThis->m_dlg.SendMessage(WM_COMMAND, wParam);
 
-	// Alternatively post left mouse button up/down directly to Cancel button
-	::SendMessage(
-		::GetDlgItem(hwnd, 117), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
-	::SendMessage(::GetDlgItem(hwnd, 117), WM_LBUTTONUP, NULL, NULL);
-	return 0;
+    // Alternatively post left mouse button up/down directly to Cancel button
+    ::SendMessage(
+        ::GetDlgItem(hwnd, 117), WM_LBUTTONDOWN, MK_LBUTTON, NULL);
+    ::SendMessage(::GetDlgItem(hwnd, 117), WM_LBUTTONUP, NULL, NULL);
+    return 0;
 }
 
 }
 
 BOOST_AUTO_TEST_CASE( show )
 {
-	DWORD thread_id;
-	HANDLE thread = ::CreateThread(
-		NULL, 0, click_cancel_thread, NULL, 0, &thread_id);
+    DWORD thread_id;
+    HANDLE thread = ::CreateThread(
+        NULL, 0, click_cancel_thread, NULL, 0, &thread_id);
 
-	try
-	{
-		swish::forms::add_host(NULL);
-	}
-	catch (const std::exception& e)
-	{
-		BOOST_REQUIRE_EQUAL(e.what(), "user cancelled form");
-	}
+    try
+    {
+        swish::forms::add_host(NULL);
+    }
+    catch (const std::exception& e)
+    {
+        BOOST_REQUIRE_EQUAL(e.what(), "user cancelled form");
+    }
 
-	::CloseHandle(thread);
+    ::CloseHandle(thread);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

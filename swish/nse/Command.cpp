@@ -39,9 +39,9 @@ namespace swish {
 namespace nse {
 
 Command::Command(
-	const wstring& title, const uuid_t& guid,
-	const wstring& tool_tip, const wstring& icon_descriptor,
-	const wstring& menu_title, const wstring& webtask_title)
+    const wstring& title, const uuid_t& guid,
+    const wstring& tool_tip, const wstring& icon_descriptor,
+    const wstring& menu_title, const wstring& webtask_title)
 : m_title(title), m_guid(guid), m_tool_tip(tool_tip),
   m_icon_descriptor(icon_descriptor), m_menu_title(menu_title),
   m_webtask_title(webtask_title) {}
@@ -59,11 +59,11 @@ wstring Command::icon_descriptor(const comet::com_ptr<IDataObject>&) const
 { return m_icon_descriptor; }
 
 wstring Command::menu_title(
-	const comet::com_ptr<IDataObject>& data_object) const
+    const comet::com_ptr<IDataObject>& data_object) const
 { return (m_menu_title.empty()) ? title(data_object) : m_menu_title; }
 
 wstring Command::webtask_title(
-	const comet::com_ptr<IDataObject>& data_object) const
+    const comet::com_ptr<IDataObject>& data_object) const
 { return (m_webtask_title.empty()) ? title(data_object) : m_webtask_title; }
 
 

@@ -44,68 +44,68 @@ using std::wstring;
 
 namespace {
 
-	const wstring TEST_CONNECTION_NAME = L"T";
+    const wstring TEST_CONNECTION_NAME = L"T";
 
-	struct cleanup_fixture
-	{
-		~cleanup_fixture()
-		{
-			regkey connections =
-				regkey(HKEY_CURRENT_USER).open(L"Software\\Swish\\Connections");
-			connections.delete_subkey_nothrow(TEST_CONNECTION_NAME);
-		}
-	};
+    struct cleanup_fixture
+    {
+        ~cleanup_fixture()
+        {
+            regkey connections =
+                regkey(HKEY_CURRENT_USER).open(L"Software\\Swish\\Connections");
+            connections.delete_subkey_nothrow(TEST_CONNECTION_NAME);
+        }
+    };
 
-	regkey test_connection_key()
-	{
-		return regkey(HKEY_CURRENT_USER).open(
-			L"Software\\Swish\\Connections\\" + TEST_CONNECTION_NAME);
-	}
+    regkey test_connection_key()
+    {
+        return regkey(HKEY_CURRENT_USER).open(
+            L"Software\\Swish\\Connections\\" + TEST_CONNECTION_NAME);
+    }
 }
 
 BOOST_FIXTURE_TEST_SUITE(host_management_tests, cleanup_fixture)
 
 BOOST_AUTO_TEST_CASE( add_minimal )
 {
-	AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
+    AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
 
-	regkey new_connection = test_connection_key();
+    regkey new_connection = test_connection_key();
 
-	BOOST_CHECK_EQUAL(new_connection[L"Host"].str(), L"h");
-	BOOST_CHECK_EQUAL(new_connection[L"User"].str(), L"u");
-	BOOST_CHECK_EQUAL(new_connection[L"Port"].dword(), 1U);
-	BOOST_CHECK_EQUAL(new_connection[L"Path"].str(), L"/");
+    BOOST_CHECK_EQUAL(new_connection[L"Host"].str(), L"h");
+    BOOST_CHECK_EQUAL(new_connection[L"User"].str(), L"u");
+    BOOST_CHECK_EQUAL(new_connection[L"Port"].dword(), 1U);
+    BOOST_CHECK_EQUAL(new_connection[L"Path"].str(), L"/");
 }
 
 BOOST_AUTO_TEST_CASE( add )
 {
-	wstring hostname = 
-		L"a.nice.really.beautiful.long.loooooooooooooooooooooooooooooo"
-		L"ooooooong.host.name.example";
-	wstring username = 
-		L"dsflkm dfsdoifmo opim[i\"moimoimoimoim[ipom]0k3\"9k42p3m4l23 4k 23;"
-		L"krjn1;oi[9j[c09j38j4kj2 3k4 ;2o3iun4[029j3[9mre4;cj ;l3i45r c£";
-	wstring path = 
-		L"/krjn1;oi[9j[c09j38j4kj2 3k4 ;2o3iun4[029j3[9mre4;cj ;l3i45r c£"
-		L"dsflkm dfsdoifmo opim[i\"moimoimoimoim[ipom]0k3\"9k42p3m4l23 4k 23;";
+    wstring hostname = 
+        L"a.nice.really.beautiful.long.loooooooooooooooooooooooooooooo"
+        L"ooooooong.host.name.example";
+    wstring username = 
+        L"dsflkm dfsdoifmo opim[i\"moimoimoimoim[ipom]0k3\"9k42p3m4l23 4k 23;"
+        L"krjn1;oi[9j[c09j38j4kj2 3k4 ;2o3iun4[029j3[9mre4;cj ;l3i45r c£";
+    wstring path = 
+        L"/krjn1;oi[9j[c09j38j4kj2 3k4 ;2o3iun4[029j3[9mre4;cj ;l3i45r c£"
+        L"dsflkm dfsdoifmo opim[i\"moimoimoimoim[ipom]0k3\"9k42p3m4l23 4k 23;";
 
-	AddConnectionToRegistry(
-		TEST_CONNECTION_NAME, hostname, 65535U, username, path);
+    AddConnectionToRegistry(
+        TEST_CONNECTION_NAME, hostname, 65535U, username, path);
 
-	regkey new_connection = test_connection_key();
+    regkey new_connection = test_connection_key();
 
-	BOOST_CHECK_EQUAL(new_connection[L"Host"].str(), hostname);
-	BOOST_CHECK_EQUAL(new_connection[L"User"].str(), username);
-	BOOST_CHECK_EQUAL(new_connection[L"Port"].dword(), 65535U);
-	BOOST_CHECK_EQUAL(new_connection[L"Path"].str(), path);
+    BOOST_CHECK_EQUAL(new_connection[L"Host"].str(), hostname);
+    BOOST_CHECK_EQUAL(new_connection[L"User"].str(), username);
+    BOOST_CHECK_EQUAL(new_connection[L"Port"].dword(), 65535U);
+    BOOST_CHECK_EQUAL(new_connection[L"Path"].str(), path);
 }
 
 BOOST_AUTO_TEST_CASE( remove )
 {
-	AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
-	RemoveConnectionFromRegistry(L"T");
+    AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
+    RemoveConnectionFromRegistry(L"T");
 
-	BOOST_CHECK_THROW(test_connection_key(), exception);
+    BOOST_CHECK_THROW(test_connection_key(), exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

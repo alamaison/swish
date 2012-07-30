@@ -40,8 +40,8 @@ namespace host_management {
 std::vector<winapi::shell::pidl::cpidl_t> LoadConnectionsFromRegistry();
 
 void AddConnectionToRegistry(
-	std::wstring label, std::wstring host, int port, 
-	std::wstring username, std::wstring path);
+    std::wstring label, std::wstring host, int port, 
+    std::wstring username, std::wstring path);
 
 void RemoveConnectionFromRegistry(std::wstring label);
 

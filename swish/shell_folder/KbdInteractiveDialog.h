@@ -1,7 +1,7 @@
 /**
     @file
 
-	WTL dialog box for keyboard-interactive requests.
+    WTL dialog box for keyboard-interactive requests.
 
     @if license
 
@@ -40,57 +40,57 @@ typedef std::vector<bool>         EchoList;
 typedef std::vector<ATL::CString> ResponseList;
 
 class CKbdInteractiveDialog : 
-	public ATL::CDialogImpl<CKbdInteractiveDialog>
+    public ATL::CDialogImpl<CKbdInteractiveDialog>
 {
 public:
 
-	/** Dialog box resource identifier */
-	enum { IDD = IDD_KBDINTERACTIVEDIALOG };
+    /** Dialog box resource identifier */
+    enum { IDD = IDD_KBDINTERACTIVEDIALOG };
 
-	CKbdInteractiveDialog(
-		PCWSTR pszName, PCWSTR pszInstruction,
-		__in PromptList vecPrompts, __in EchoList vecEcho);
-	~CKbdInteractiveDialog();
+    CKbdInteractiveDialog(
+        PCWSTR pszName, PCWSTR pszInstruction,
+        __in PromptList vecPrompts, __in EchoList vecEcho);
+    ~CKbdInteractiveDialog();
 
-	ResponseList GetResponses();
+    ResponseList GetResponses();
 
     BEGIN_MSG_MAP(CKbdInteractiveDialog)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_HANDLER(IDOK, BN_CLICKED, OnOK)
         COMMAND_HANDLER(IDCANCEL, BN_CLICKED, OnCancel)
     END_MSG_MAP()
 
 private:
-	/** @name Message handlers */
-	// @{
-	LRESULT __callback OnInitDialog(UINT, WPARAM, LPARAM, BOOL&);
-	// @}
+    /** @name Message handlers */
+    // @{
+    LRESULT __callback OnInitDialog(UINT, WPARAM, LPARAM, BOOL&);
+    // @}
 
-	/** @name Command handlers */
-	// @{
-	LRESULT __callback OnOK(WORD, WORD, HWND, BOOL&);
-	LRESULT __callback OnCancel(WORD, WORD, HWND, BOOL&);
-	// @}
+    /** @name Command handlers */
+    // @{
+    LRESULT __callback OnOK(WORD, WORD, HWND, BOOL&);
+    LRESULT __callback OnCancel(WORD, WORD, HWND, BOOL&);
+    // @}
 
-	/** @name GUI drawing */
-	// @{
-	CRect _DrawInstruction(PCWSTR pszInstruction, __in CRect rectDialog);
-	CRect _DrawPrompt(
-		PCWSTR pszPrompt, __in CPoint point, __in CRect rectDialog);
-	CRect _DrawResponseBox(
-		bool fHideResponse, __in CPoint point, __in CRect rectDialog);
-	CRect _DrawOKCancel(__in CPoint point, __in CRect rectDialog);
-	// @}
+    /** @name GUI drawing */
+    // @{
+    CRect _DrawInstruction(PCWSTR pszInstruction, __in CRect rectDialog);
+    CRect _DrawPrompt(
+        PCWSTR pszPrompt, __in CPoint point, __in CRect rectDialog);
+    CRect _DrawResponseBox(
+        bool fHideResponse, __in CPoint point, __in CRect rectDialog);
+    CRect _DrawOKCancel(__in CPoint point, __in CRect rectDialog);
+    // @}
 
-	void _ExchangeData();
+    void _ExchangeData();
 
-	// Input
-	ATL::CString      m_strName;
-	ATL::CString      m_strInstruction;
-	PromptList        m_vecPrompts;
-	EchoList          m_vecEcho;
+    // Input
+    ATL::CString      m_strName;
+    ATL::CString      m_strInstruction;
+    PromptList        m_vecPrompts;
+    EchoList          m_vecEcho;
 
-	// Output
-	std::vector<HWND> m_vecResponseWindows;
-	ResponseList      m_vecResponses;
+    // Output
+    std::vector<HWND> m_vecResponseWindows;
+    ResponseList      m_vecResponses;
 };

@@ -51,8 +51,8 @@ using std::wstring;
 using namespace swish::provider;
 
 namespace {
-	const string longentry = 
-		"-rw-r--r--    1 swish    wheel         767 Dec  8  2005 .cshrc";
+    const string longentry = 
+        "-rw-r--r--    1 swish    wheel         767 Dec  8  2005 .cshrc";
 }
 
 BOOST_AUTO_TEST_SUITE(listing_tests)
@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_SUITE(listing_tests)
  */
 BOOST_AUTO_TEST_CASE( parse_user_test )
 {
-	bstr_t bstr = listing::parse_user_from_long_entry(longentry);
-	wstring user(L"swish");
-	BOOST_REQUIRE_EQUAL(bstr, user);
+    bstr_t bstr = listing::parse_user_from_long_entry(longentry);
+    wstring user(L"swish");
+    BOOST_REQUIRE_EQUAL(bstr, user);
 }
 
 /**
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE( parse_user_test )
  */
 BOOST_AUTO_TEST_CASE( parse_group_test )
 {
-	bstr_t bstr = listing::parse_group_from_long_entry(longentry);
-	BOOST_REQUIRE_EQUAL(bstr, L"wheel");
+    bstr_t bstr = listing::parse_group_from_long_entry(longentry);
+    BOOST_REQUIRE_EQUAL(bstr, L"wheel");
 }
 
 /**
@@ -85,38 +85,38 @@ BOOST_AUTO_TEST_CASE( parse_group_test )
  */
 BOOST_AUTO_TEST_CASE( create_listing_test )
 {
-	// Set up properties for test.  These are intentionally different from
-	// those in the long entry to check that *only* the user and group
-	// names are parsed from it.
-	string filename(".cshrc test");
-	LIBSSH2_SFTP_ATTRIBUTES attrs;
-	::ZeroMemory(&attrs, sizeof(attrs));
-	attrs.flags = LIBSSH2_SFTP_ATTR_UIDGID | LIBSSH2_SFTP_ATTR_SIZE | 
-		LIBSSH2_SFTP_ATTR_PERMISSIONS;
-	attrs.uid = 1000;
-	attrs.gid = 1001;
-	attrs.filesize = 348;
-	attrs.permissions = 0677;
+    // Set up properties for test.  These are intentionally different from
+    // those in the long entry to check that *only* the user and group
+    // names are parsed from it.
+    string filename(".cshrc test");
+    LIBSSH2_SFTP_ATTRIBUTES attrs;
+    ::ZeroMemory(&attrs, sizeof(attrs));
+    attrs.flags = LIBSSH2_SFTP_ATTR_UIDGID | LIBSSH2_SFTP_ATTR_SIZE | 
+        LIBSSH2_SFTP_ATTR_PERMISSIONS;
+    attrs.uid = 1000;
+    attrs.gid = 1001;
+    attrs.filesize = 348;
+    attrs.permissions = 0677;
 
-	Listing lt = listing::fill_listing_entry(filename, longentry, attrs);
+    Listing lt = listing::fill_listing_entry(filename, longentry, attrs);
 
-	// Check fields that should be set
-	BOOST_CHECK_EQUAL(lt.bstrFilename, L".cshrc test");
-	BOOST_CHECK_EQUAL(lt.uUid, static_cast<ULONG>(1000));
-	BOOST_CHECK_EQUAL(lt.uGid, static_cast<ULONG>(1001));
-	BOOST_CHECK_EQUAL(lt.bstrOwner, L"swish");
-	BOOST_CHECK_EQUAL(lt.bstrGroup, L"wheel");
-	BOOST_CHECK_EQUAL(lt.uSize, static_cast<ULONG>(348));
-	BOOST_CHECK_EQUAL(lt.uPermissions, static_cast<ULONG>(0677));
+    // Check fields that should be set
+    BOOST_CHECK_EQUAL(lt.bstrFilename, L".cshrc test");
+    BOOST_CHECK_EQUAL(lt.uUid, static_cast<ULONG>(1000));
+    BOOST_CHECK_EQUAL(lt.uGid, static_cast<ULONG>(1001));
+    BOOST_CHECK_EQUAL(lt.bstrOwner, L"swish");
+    BOOST_CHECK_EQUAL(lt.bstrGroup, L"wheel");
+    BOOST_CHECK_EQUAL(lt.uSize, static_cast<ULONG>(348));
+    BOOST_CHECK_EQUAL(lt.uPermissions, static_cast<ULONG>(0677));
 
-	// Check fields that should not be set
-	BOOST_CHECK_EQUAL(lt.cHardLinks, static_cast<ULONG>(0));
-	BOOST_CHECK_EQUAL(lt.dateModified, static_cast<ULONG>(0));
+    // Check fields that should not be set
+    BOOST_CHECK_EQUAL(lt.cHardLinks, static_cast<ULONG>(0));
+    BOOST_CHECK_EQUAL(lt.dateModified, static_cast<ULONG>(0));
 
-	// Clean up memory
-	::SysFreeString(lt.bstrFilename);
-	::SysFreeString(lt.bstrGroup);
-	::SysFreeString(lt.bstrOwner);
+    // Clean up memory
+    ::SysFreeString(lt.bstrFilename);
+    ::SysFreeString(lt.bstrGroup);
+    ::SysFreeString(lt.bstrOwner);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

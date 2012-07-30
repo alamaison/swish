@@ -37,9 +37,9 @@
 do { \
     LPVOID lpMsgBuf; \
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
-		NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
+        NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
         (LPTSTR) &lpMsgBuf, 0, NULL ); \
-	_ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); \
+    _ASSERT_EXPR((expr), (LPTSTR)lpMsgBuf); LocalFree(lpMsgBuf); \
 } while(0)
 #else
 #define REPORT(expr) (expr)
@@ -56,23 +56,23 @@ do { \
 
 #define ATLENSURE_REPORT_HR(expr, error, hr)                         \
 do {                                                                 \
-	int __atl_condVal=!!(expr);                                      \
-	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
-	if(!(__atl_condVal)) return (hr);                                \
+    int __atl_condVal=!!(expr);                                      \
+    _ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+    if(!(__atl_condVal)) return (hr);                                \
 } while (0)
 
 #define ATLENSURE_REPORT_THROW(expr, error, hr)                      \
 do {                                                                 \
-	int __atl_condVal=!!(expr);                                      \
-	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
-	if(!(__atl_condVal)) AtlThrow(hr);                               \
+    int __atl_condVal=!!(expr);                                      \
+    _ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+    if(!(__atl_condVal)) AtlThrow(hr);                               \
 } while (0)
 
 #ifdef _DEBUG
 #define ATLASSERT_REPORT(expr, error)                                \
 do {                                                                 \
-	int __atl_condVal=!!(expr);                                      \
-	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+    int __atl_condVal=!!(expr);                                      \
+    _ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
 } while (0)
 #else
 #define ATLASSERT_REPORT(expr, error) ((void)0)
@@ -81,8 +81,8 @@ do {                                                                 \
 #ifdef _DEBUG
 #define ATLVERIFY_REPORT(expr, error)                                \
 do {                                                                 \
-	int __atl_condVal=!!(expr);                                      \
-	_ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
+    int __atl_condVal=!!(expr);                                      \
+    _ASSERT_EXPR(__atl_condVal, _com_error((error)).ErrorMessage()); \
 } while (0)
 #else
 #define ATLVERIFY_REPORT(expr, error) (expr)

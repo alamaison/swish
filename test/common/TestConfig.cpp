@@ -7,37 +7,37 @@ using namespace ATL;
 
 CTestConfig::CTestConfig()
 {
-	// Host name
-	if(!m_strHost.GetEnvironmentVariable(_T("TEST_HOST_NAME")))
-		CPPUNIT_FAIL("Please set TEST_HOST_NAME environment variable");
-	CPPUNIT_ASSERT(!m_strHost.IsEmpty());
-	CPPUNIT_ASSERT(m_strHost.GetLength() > 2);
-	CPPUNIT_ASSERT(m_strHost.GetLength() < 255);
+    // Host name
+    if(!m_strHost.GetEnvironmentVariable(_T("TEST_HOST_NAME")))
+        CPPUNIT_FAIL("Please set TEST_HOST_NAME environment variable");
+    CPPUNIT_ASSERT(!m_strHost.IsEmpty());
+    CPPUNIT_ASSERT(m_strHost.GetLength() > 2);
+    CPPUNIT_ASSERT(m_strHost.GetLength() < 255);
 
-	// User name
-	if(!m_strUser.GetEnvironmentVariable(_T("TEST_USER_NAME")))
-		CPPUNIT_FAIL("Please set TEST_USER_NAME environment variable");
-	CPPUNIT_ASSERT(!m_strUser.IsEmpty());
-	CPPUNIT_ASSERT(m_strUser.GetLength() > 2);
-	CPPUNIT_ASSERT(m_strUser.GetLength() < 64);
+    // User name
+    if(!m_strUser.GetEnvironmentVariable(_T("TEST_USER_NAME")))
+        CPPUNIT_FAIL("Please set TEST_USER_NAME environment variable");
+    CPPUNIT_ASSERT(!m_strUser.IsEmpty());
+    CPPUNIT_ASSERT(m_strUser.GetLength() > 2);
+    CPPUNIT_ASSERT(m_strUser.GetLength() < 64);
 
-	// Port number
-	CString strPort;
-	if(!strPort.GetEnvironmentVariable(_T("TEST_HOST_PORT")))
-	{
-		m_uPort = 22; // Default SSH port
-	}
-	else
-	{
-		int m_uPort = ::StrToInt(strPort);
-		CPPUNIT_ASSERT(m_uPort >= 0);
-		CPPUNIT_ASSERT(m_uPort <= 65535);
-	}
+    // Port number
+    CString strPort;
+    if(!strPort.GetEnvironmentVariable(_T("TEST_HOST_PORT")))
+    {
+        m_uPort = 22; // Default SSH port
+    }
+    else
+    {
+        int m_uPort = ::StrToInt(strPort);
+        CPPUNIT_ASSERT(m_uPort >= 0);
+        CPPUNIT_ASSERT(m_uPort <= 65535);
+    }
 
-	// Password
-	if(!m_strPassword.GetEnvironmentVariable(_T("TEST_PASSWORD")))
-		CPPUNIT_FAIL("Please set TEST_PASSWORD environment variable");
-	CPPUNIT_ASSERT(!m_strPassword.IsEmpty());
+    // Password
+    if(!m_strPassword.GetEnvironmentVariable(_T("TEST_PASSWORD")))
+        CPPUNIT_FAIL("Please set TEST_PASSWORD environment variable");
+    CPPUNIT_ASSERT(!m_strPassword.IsEmpty());
 }
 
 CTestConfig::~CTestConfig()
@@ -60,7 +60,7 @@ CTestConfig::~CTestConfig()
  */
 CString CTestConfig::GetHost() const
 {
-	return m_strHost;
+    return m_strHost;
 }
 
 /**
@@ -80,7 +80,7 @@ CString CTestConfig::GetHost() const
 CString CTestConfig::GetUser() const
 {
 
-	return m_strUser;
+    return m_strUser;
 }
 
 /**
@@ -98,7 +98,7 @@ CString CTestConfig::GetUser() const
  */
 USHORT CTestConfig::GetPort() const
 {
-	return static_cast<USHORT>(m_uPort);
+    return static_cast<USHORT>(m_uPort);
 }
 
 /**
@@ -114,5 +114,5 @@ USHORT CTestConfig::GetPort() const
  */
 CString CTestConfig::GetPassword() const
 {
-	return m_strPassword;
+    return m_strPassword;
 }

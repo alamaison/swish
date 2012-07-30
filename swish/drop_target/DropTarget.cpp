@@ -59,26 +59,26 @@ namespace drop_target {
 
 namespace { // private
 
-	/**
-	 * Given a DataObject and bitfield of allowed DROPEFFECTs, determine
-	 * which drop effect, if any, should be chosen.  If none are
-	 * appropriate, return DROPEFFECT_NONE.
-	 */
-	DWORD determine_drop_effect(
-		const com_ptr<IDataObject>& pdo, DWORD allowed_effects)
-	{
-		if (pdo)
-		{
-			PidlFormat format(pdo);
-			if (format.pidl_count() > 0)
-			{
-				if (allowed_effects & DROPEFFECT_COPY)
-					return DROPEFFECT_COPY;
-			}
-		}
+    /**
+     * Given a DataObject and bitfield of allowed DROPEFFECTs, determine
+     * which drop effect, if any, should be chosen.  If none are
+     * appropriate, return DROPEFFECT_NONE.
+     */
+    DWORD determine_drop_effect(
+        const com_ptr<IDataObject>& pdo, DWORD allowed_effects)
+    {
+        if (pdo)
+        {
+            PidlFormat format(pdo);
+            if (format.pidl_count() > 0)
+            {
+                if (allowed_effects & DROPEFFECT_COPY)
+                    return DROPEFFECT_COPY;
+            }
+        }
 
-		return DROPEFFECT_NONE;
-	}
+        return DROPEFFECT_NONE;
+    }
 
 }
 
@@ -92,13 +92,13 @@ namespace { // private
  * @param progress          Progress dialogue.
  */
 void copy_format_to_provider(
-	PidlFormat source_format, com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
-	DropActionCallback& callback)
+    PidlFormat source_format, com_ptr<ISftpProvider> provider,
+    com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
+    DropActionCallback& callback)
 {
-	PidlCopyPlan copy_list(source_format, destination_root);
+    PidlCopyPlan copy_list(source_format, destination_root);
 
-	copy_list.execute_plan(callback, provider, consumer);
+    copy_list.execute_plan(callback, provider, consumer);
 }
 
 /**
@@ -110,38 +110,38 @@ void copy_format_to_provider(
  *                          to copy items into.
  */
 void copy_data_to_provider(
-	com_ptr<IDataObject> data_object, com_ptr<ISftpProvider> provider, 
-	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-	DropActionCallback& callback)
+    com_ptr<IDataObject> data_object, com_ptr<ISftpProvider> provider, 
+    com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
+    DropActionCallback& callback)
 {
-	ShellDataObject data(data_object.get());
-	if (data.has_pidl_format())
-	{
-		copy_format_to_provider(
-			PidlFormat(data_object), provider, consumer, remote_directory,
-			callback);
-	}
-	else
-	{
-		BOOST_THROW_EXCEPTION(
-			com_error("DataObject doesn't contain a supported format"));
-	}
+    ShellDataObject data(data_object.get());
+    if (data.has_pidl_format())
+    {
+        copy_format_to_provider(
+            PidlFormat(data_object), provider, consumer, remote_directory,
+            callback);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(
+            com_error("DataObject doesn't contain a supported format"));
+    }
 }
 
 /**
  * Create an instance of the DropTarget initialised with a data provider.
  */
 CDropTarget::CDropTarget(
-	com_ptr<ISftpProvider> provider,
-	com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-	shared_ptr<DropActionCallback> callback)
-	:
-	m_provider(provider), m_consumer(consumer),
-	m_remote_directory(remote_directory), m_callback(callback) {}
+    com_ptr<ISftpProvider> provider,
+    com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
+    shared_ptr<DropActionCallback> callback)
+    :
+    m_provider(provider), m_consumer(consumer),
+    m_remote_directory(remote_directory), m_callback(callback) {}
 
 void CDropTarget::on_set_site(com_ptr<IUnknown> ole_site)
 {
-	m_callback->site(ole_site);
+    m_callback->site(ole_site);
 }
 
 /**
@@ -151,20 +151,20 @@ void CDropTarget::on_set_site(com_ptr<IUnknown> ole_site)
  * @todo  Take account of the key state.
  */
 STDMETHODIMP CDropTarget::DragEnter( 
-	IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
+    IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
 {
-	try
-	{
-		if (!pdwEffect)
-			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+    try
+    {
+        if (!pdwEffect)
+            BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-		m_data_object = pdo;
+        m_data_object = pdo;
 
-		*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+        *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -175,18 +175,18 @@ STDMETHODIMP CDropTarget::DragEnter(
  * @todo  Take account of the key state.
  */
 STDMETHODIMP CDropTarget::DragOver( 
-	DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
+    DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
 {
-	try
-	{
-		if (!pdwEffect)
-			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+    try
+    {
+        if (!pdwEffect)
+            BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-		*pdwEffect = determine_drop_effect(m_data_object, *pdwEffect);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+        *pdwEffect = determine_drop_effect(m_data_object, *pdwEffect);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -194,13 +194,13 @@ STDMETHODIMP CDropTarget::DragOver(
  */
 STDMETHODIMP CDropTarget::DragLeave()
 {
-	try
-	{
-		m_data_object = NULL;
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+    try
+    {
+        m_data_object = NULL;
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -210,27 +210,27 @@ STDMETHODIMP CDropTarget::DragLeave()
  * @todo  Take account of the key state.
  */
 STDMETHODIMP CDropTarget::Drop( 
-	IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
+    IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
 {
-	try
-	{
-		if (!pdwEffect)
-			BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+    try
+    {
+        if (!pdwEffect)
+            BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-		// Drop doesn't need to maintain any state and is handed a fresh copy
-		// of the IDataObject so we can can immediately cancel the one we were
-		// using for the other parts of the drag-drop loop
-		m_data_object = NULL;
+        // Drop doesn't need to maintain any state and is handed a fresh copy
+        // of the IDataObject so we can can immediately cancel the one we were
+        // using for the other parts of the drag-drop loop
+        m_data_object = NULL;
 
-		*pdwEffect = determine_drop_effect(pdo, *pdwEffect);
+        *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
 
-		if (pdo && *pdwEffect == DROPEFFECT_COPY)
-			copy_data_to_provider(
-				pdo, m_provider, m_consumer, m_remote_directory, *m_callback);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
+        if (pdo && *pdwEffect == DROPEFFECT_COPY)
+            copy_data_to_provider(
+                pdo, m_provider, m_consumer, m_remote_directory, *m_callback);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
 
-	return S_OK;
+    return S_OK;
 }
 
 }} // namespace swish::drop_target

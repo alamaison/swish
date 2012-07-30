@@ -48,68 +48,68 @@ struct ISftpConsumer;
 
 template<> struct comet::comtype<IDropTarget>
 {
-	static const IID& uuid() throw() { return IID_IDropTarget; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IDropTarget; }
+    typedef IUnknown base;
 };
 
 namespace swish {
 namespace drop_target {
 
 class CDropTarget :
-	public comet::simple_object<IDropTarget, winapi::object_with_site>
+    public comet::simple_object<IDropTarget, winapi::object_with_site>
 {
 public:
 
-	typedef IDropTarget interface_is;
+    typedef IDropTarget interface_is;
 
-	CDropTarget(
-		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer,
-		const winapi::shell::pidl::apidl_t& remote_directory,
-		boost::shared_ptr<DropActionCallback> callback);
+    CDropTarget(
+        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer,
+        const winapi::shell::pidl::apidl_t& remote_directory,
+        boost::shared_ptr<DropActionCallback> callback);
 
-	/** @name IDropTarget methods */
-	// @{
+    /** @name IDropTarget methods */
+    // @{
 
-	IFACEMETHODIMP DragEnter( 
-		__in_opt IDataObject* pDataObj,
-		__in DWORD grfKeyState,
-		__in POINTL pt,
-		__inout DWORD* pdwEffect);
+    IFACEMETHODIMP DragEnter( 
+        __in_opt IDataObject* pDataObj,
+        __in DWORD grfKeyState,
+        __in POINTL pt,
+        __inout DWORD* pdwEffect);
 
-	IFACEMETHODIMP DragOver( 
-		__in DWORD grfKeyState,
-		__in POINTL pt,
-		__inout DWORD* pdwEffect);
+    IFACEMETHODIMP DragOver( 
+        __in DWORD grfKeyState,
+        __in POINTL pt,
+        __inout DWORD* pdwEffect);
 
-	IFACEMETHODIMP DragLeave();
+    IFACEMETHODIMP DragLeave();
 
-	IFACEMETHODIMP Drop( 
-		__in_opt IDataObject* pDataObj,
-		__in DWORD grfKeyState,
-		__in POINTL pt,
-		__inout DWORD* pdwEffect);
+    IFACEMETHODIMP Drop( 
+        __in_opt IDataObject* pDataObj,
+        __in DWORD grfKeyState,
+        __in POINTL pt,
+        __inout DWORD* pdwEffect);
 
-	// @}
+    // @}
 
 private:
 
-	virtual void on_set_site(comet::com_ptr<IUnknown> ole_site);
+    virtual void on_set_site(comet::com_ptr<IUnknown> ole_site);
 
-	comet::com_ptr<ISftpProvider> m_provider;
-	comet::com_ptr<ISftpConsumer> m_consumer;
+    comet::com_ptr<ISftpProvider> m_provider;
+    comet::com_ptr<ISftpConsumer> m_consumer;
 
-	winapi::shell::pidl::apidl_t m_remote_directory;
-	comet::com_ptr<IDataObject> m_data_object;
-	boost::shared_ptr<DropActionCallback> m_callback;
+    winapi::shell::pidl::apidl_t m_remote_directory;
+    comet::com_ptr<IDataObject> m_data_object;
+    boost::shared_ptr<DropActionCallback> m_callback;
 };
 
 void copy_data_to_provider(
-	comet::com_ptr<IDataObject> data_object,
-	comet::com_ptr<ISftpProvider> provider,
-	comet::com_ptr<ISftpConsumer> consumer,
-	const winapi::shell::pidl::apidl_t& remote_directory,
-	DropActionCallback& callback);
+    comet::com_ptr<IDataObject> data_object,
+    comet::com_ptr<ISftpProvider> provider,
+    comet::com_ptr<ISftpConsumer> consumer,
+    const winapi::shell::pidl::apidl_t& remote_directory,
+    DropActionCallback& callback);
 
 }} // namespace swish::drop_target
 

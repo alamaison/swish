@@ -53,33 +53,33 @@ using test::ssh::session_fixture;
 using std::string;
 
 const string EXPECTED_HOSTKEY =
-	"AAAAB3NzaC1yc2EAAAABIwAAAQEArrr/JuJmaZligyfS8vcNur+mWR2ddDQtVdhHzdKU"
-	"UoR6/Om6cvxpe61H1YZO1xCpLUBXmkki4HoNtYOpPB2W4V+8U4BDeVBD5crypEOE1+7B"
-	"Am99fnEDxYIOZq2/jTP0yQmzCpWYS3COyFmkOL7sfX1wQMeW5zQT2WKcxC6FSWbhDqrB"
-	"eNEGi687hJJoJ7YXgY/IdiYW5NcOuqRSWljjGS3dAJsHHWk4nJbhjEDXbPaeduMAwQU9"
-	"i6ELfP3r+q6wdu0P4jWaoo3De1aYxnToV/ldXykpipON4NPamsb6Ph2qlJQKypq7J4iQ"
-	"gkIIbCU1A31+4ExvcIVoxLQw/aTSbw==";
+    "AAAAB3NzaC1yc2EAAAABIwAAAQEArrr/JuJmaZligyfS8vcNur+mWR2ddDQtVdhHzdKU"
+    "UoR6/Om6cvxpe61H1YZO1xCpLUBXmkki4HoNtYOpPB2W4V+8U4BDeVBD5crypEOE1+7B"
+    "Am99fnEDxYIOZq2/jTP0yQmzCpWYS3COyFmkOL7sfX1wQMeW5zQT2WKcxC6FSWbhDqrB"
+    "eNEGi687hJJoJ7YXgY/IdiYW5NcOuqRSWljjGS3dAJsHHWk4nJbhjEDXbPaeduMAwQU9"
+    "i6ELfP3r+q6wdu0P4jWaoo3De1aYxnToV/ldXykpipON4NPamsb6Ph2qlJQKypq7J4iQ"
+    "gkIIbCU1A31+4ExvcIVoxLQw/aTSbw==";
 
 BOOST_FIXTURE_TEST_SUITE(host_key_tests, session_fixture)
 
 namespace {
 
-	string base64_decode(
-		boost::shared_ptr<LIBSSH2_SESSION> session, const string& input)
-	{
-		char* data;
-		unsigned int data_len;
-		int rc = libssh2_base64_decode(
-			session.get(), &data, &data_len, input.data(), input.size());
-		if (rc)
-			BOOST_THROW_EXCEPTION(
-				ssh::exception::last_error(session) <<
-				boost::errinfo_api_function("libssh2_base64_decode"));
+    string base64_decode(
+        boost::shared_ptr<LIBSSH2_SESSION> session, const string& input)
+    {
+        char* data;
+        unsigned int data_len;
+        int rc = libssh2_base64_decode(
+            session.get(), &data, &data_len, input.data(), input.size());
+        if (rc)
+            BOOST_THROW_EXCEPTION(
+                ssh::exception::last_error(session) <<
+                boost::errinfo_api_function("libssh2_base64_decode"));
 
-		string out(data, data_len);
-		free(data);
-		return out;
-	}
+        string out(data, data_len);
+        free(data);
+        return out;
+    }
 }
 
 /**
@@ -87,14 +87,14 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( hostkey )
 {
-	session s = test_session();
-	host_key key = s.hostkey();
+    session s = test_session();
+    host_key key = s.hostkey();
 
-	string expected = base64_decode(s.get(), EXPECTED_HOSTKEY);
-	BOOST_CHECK_EQUAL(key.key(), expected);
-	BOOST_CHECK_EQUAL(key.algorithm(), ssh::host_key::ssh_rsa);
-	BOOST_CHECK_EQUAL(key.algorithm_name(), "ssh-rsa");
-	BOOST_CHECK(!key.is_base64());
+    string expected = base64_decode(s.get(), EXPECTED_HOSTKEY);
+    BOOST_CHECK_EQUAL(key.key(), expected);
+    BOOST_CHECK_EQUAL(key.algorithm(), ssh::host_key::ssh_rsa);
+    BOOST_CHECK_EQUAL(key.algorithm_name(), "ssh-rsa");
+    BOOST_CHECK(!key.is_base64());
 }
 
 /**
@@ -104,12 +104,12 @@ BOOST_AUTO_TEST_CASE( hostkey )
  */
 BOOST_AUTO_TEST_CASE( hostkey_md5 )
 {
-	host_key key = test_session().hostkey();
+    host_key key = test_session().hostkey();
 
-	string hex_hash(ssh::host_key::hexify(key.md5_hash(), " ", true));
+    string hex_hash(ssh::host_key::hexify(key.md5_hash(), " ", true));
 
-	BOOST_CHECK_EQUAL(
-		hex_hash, "0C 0E D1 A5 BB 10 27 5F 76 92 4C E1 87 CE 5C 5E");
+    BOOST_CHECK_EQUAL(
+        hex_hash, "0C 0E D1 A5 BB 10 27 5F 76 92 4C E1 87 CE 5C 5E");
 }
 
 BOOST_AUTO_TEST_SUITE_END();

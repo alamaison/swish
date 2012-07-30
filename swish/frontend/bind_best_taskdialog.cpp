@@ -42,16 +42,16 @@ namespace frontend {
 
 tdi_function bind_best_taskdialog()
 {
-	try
-	{
-		return proc_address<
-			HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
-				"comctl32.dll", "TaskDialogIndirect");
-	}
-	catch (const exception&)
-	{
-		return ::Task98DialogIndirect;
-	}
+    try
+    {
+        return proc_address<
+            HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
+                "comctl32.dll", "TaskDialogIndirect");
+    }
+    catch (const exception&)
+    {
+        return ::Task98DialogIndirect;
+    }
 }
 
 }} // namespace swish::frontend

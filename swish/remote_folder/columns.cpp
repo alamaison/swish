@@ -54,60 +54,60 @@ namespace remote_folder {
 
 namespace {
 
-	/**
-	 * Convert the variant to a date string in the format normal for the shell.
-	 */
-	wstring date_formatter(const variant_t& val)
-	{
-		return format_date_time<wchar_t>(val);
-	}
+    /**
+     * Convert the variant to a date string in the format normal for the shell.
+     */
+    wstring date_formatter(const variant_t& val)
+    {
+        return format_date_time<wchar_t>(val);
+    }
 
-	/**
-	 * Format the number in the variant as a file size in KB.
-	 */
-	wstring size_formatter(const variant_t& val)
-	{
-		return format_filesize_kilobytes<wchar_t>(val);
-	}
+    /**
+     * Format the number in the variant as a file size in KB.
+     */
+    wstring size_formatter(const variant_t& val)
+    {
+        return format_filesize_kilobytes<wchar_t>(val);
+    }
 
-	/**
-	 * Static column information.
-	 * Order of entries must correspond to the indices in columnIndices.
-	 */
-	const boost::array<column_entry, 10> column_key_index = { {
+    /**
+     * Static column information.
+     * Order of entries must correspond to the indices in columnIndices.
+     */
+    const boost::array<column_entry, 10> column_key_index = { {
 
-		{ PKEY_ItemNameDisplay, translate("Property (filename/label)", "Name"),
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
+        { PKEY_ItemNameDisplay, translate("Property (filename/label)", "Name"),
+          SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30 },
 
-		{ PKEY_Size, translate("Property", "Size"),
-		  SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15,
-		  size_formatter },
+        { PKEY_Size, translate("Property", "Size"),
+          SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15,
+          size_formatter },
 
-		{ PKEY_ItemTypeText, translate("Property", "Type"),
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
+        { PKEY_ItemTypeText, translate("Property", "Type"),
+          SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20 },
 
-		{ PKEY_DateModified, translate("Property", "Date Modified"),
-		  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20,
-		  date_formatter },
+        { PKEY_DateModified, translate("Property", "Date Modified"),
+          SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 20,
+          date_formatter },
 
-		{ PKEY_DateAccessed, translate("Property", "Date Accessed"),
-		  SHCOLSTATE_TYPE_DATE, LVCFMT_LEFT, 20, date_formatter },
+        { PKEY_DateAccessed, translate("Property", "Date Accessed"),
+          SHCOLSTATE_TYPE_DATE, LVCFMT_LEFT, 20, date_formatter },
 
-		{ PKEY_Permissions, translate("Property", "Permissions"),
-		  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 },
+        { PKEY_Permissions, translate("Property", "Permissions"),
+          SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12 },
 
-		{ PKEY_FileOwner, translate("Property", "Owner"),
-		  SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
+        { PKEY_FileOwner, translate("Property", "Owner"),
+          SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
 
-		{ PKEY_Group, translate("Property", "Group"),
-		  SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
+        { PKEY_Group, translate("Property", "Group"),
+          SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 12 },
 
-		{ PKEY_OwnerId, translate("Property", "Owner ID"),
-		  SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 },
+        { PKEY_OwnerId, translate("Property", "Owner ID"),
+          SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 },
 
-		{ PKEY_GroupId, translate("Property", "Group ID"),
-		  SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 }
-	} };
+        { PKEY_GroupId, translate("Property", "Group ID"),
+          SHCOLSTATE_TYPE_INT, LVCFMT_LEFT, 10 }
+    } };
 
 }
 
@@ -116,7 +116,7 @@ namespace {
  */
 const column_entry& RemoteColumnEntries::entry(size_t index) const
 {
-	return column_key_index.at(index);
+    return column_key_index.at(index);
 }
 
 /**
@@ -124,7 +124,7 @@ const column_entry& RemoteColumnEntries::entry(size_t index) const
  */
 const property_key& property_key_from_column_index(size_t index)
 {
-	return column_key_index.at(index).m_key;
+    return column_key_index.at(index).m_key;
 }
 
 }} // namespace swish::remote_folder

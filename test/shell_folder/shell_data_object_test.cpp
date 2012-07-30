@@ -59,29 +59,29 @@ using std::wstring;
 
 namespace { // private
 
-	/**
-	 * Check that a PIDL and a filesystem path refer to the same item.
-	 */
-	predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
-	{
-		vector<wchar_t> name(MAX_PATH);
-		::SHGetPathFromIDListW(pidl.get(), &name[0]);
+    /**
+     * Check that a PIDL and a filesystem path refer to the same item.
+     */
+    predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
+    {
+        vector<wchar_t> name(MAX_PATH);
+        ::SHGetPathFromIDListW(pidl.get(), &name[0]);
 
-		if (!equivalent(path, &name[0]))
-		{
-			predicate_result res(false);
-			res.message()
-				<< "Different items [" << wstring(&name[0])
-				<< " != " << path.file_string() << "]";
-			return res;
-		}
+        if (!equivalent(path, &name[0]))
+        {
+            predicate_result res(false);
+            res.message()
+                << "Different items [" << wstring(&name[0])
+                << " != " << path.file_string() << "]";
+            return res;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	class DataObjectFixture : public ComFixture, public SandboxFixture
-	{
-	};
+    class DataObjectFixture : public ComFixture, public SandboxFixture
+    {
+    };
 }
 
 #pragma region StorageMedium tests
@@ -93,15 +93,15 @@ BOOST_AUTO_TEST_SUITE(storage_medium_tests)
  */
 BOOST_AUTO_TEST_CASE( storage_medium_lifecycle )
 {
-	{
-		StorageMedium medium;
+    {
+        StorageMedium medium;
 
-		BOOST_REQUIRE(medium.empty());
-		BOOST_REQUIRE_EQUAL(medium.get().hGlobal, static_cast<HGLOBAL>(NULL));
-		BOOST_REQUIRE_EQUAL(medium.get().pstm, static_cast<IStream*>(NULL));
-		BOOST_REQUIRE_EQUAL(
-			medium.get().pUnkForRelease, static_cast<IUnknown*>(NULL));
-	}
+        BOOST_REQUIRE(medium.empty());
+        BOOST_REQUIRE_EQUAL(medium.get().hGlobal, static_cast<HGLOBAL>(NULL));
+        BOOST_REQUIRE_EQUAL(medium.get().pstm, static_cast<IStream*>(NULL));
+        BOOST_REQUIRE_EQUAL(
+            medium.get().pUnkForRelease, static_cast<IUnknown*>(NULL));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -120,10 +120,10 @@ BOOST_FIXTURE_TEST_SUITE(shell_data_object_tests, DataObjectFixture)
  */
 BOOST_AUTO_TEST_CASE( cf_hdrop_format )
 {
-	wpath file = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_file(file).get());
+    wpath file = NewFileInSandbox();
+    ShellDataObject data_object(data_object_for_file(file).get());
 
-	BOOST_REQUIRE(data_object.has_hdrop_format());
+    BOOST_REQUIRE(data_object.has_hdrop_format());
 }
 
 /**
@@ -134,10 +134,10 @@ BOOST_AUTO_TEST_CASE( cf_hdrop_format )
  */
 BOOST_AUTO_TEST_CASE( cf_hdrop_format_virtual )
 {
-	wpath zip_file = create_test_zip_file(Sandbox());
-	ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
+    wpath zip_file = create_test_zip_file(Sandbox());
+    ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
-	BOOST_REQUIRE(!data_object.has_hdrop_format());
+    BOOST_REQUIRE(!data_object.has_hdrop_format());
 }
 
 /**
@@ -150,10 +150,10 @@ BOOST_AUTO_TEST_CASE( cf_hdrop_format_virtual )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format )
 {
-	wpath file = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_file(file).get());
+    wpath file = NewFileInSandbox();
+    ShellDataObject data_object(data_object_for_file(file).get());
 
-	BOOST_REQUIRE(data_object.has_pidl_format());
+    BOOST_REQUIRE(data_object.has_pidl_format());
 }
 
 /**
@@ -166,10 +166,10 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format_virtual )
 {
-	wpath zip_file = create_test_zip_file(Sandbox());
-	ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
+    wpath zip_file = create_test_zip_file(Sandbox());
+    ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
-	BOOST_REQUIRE(data_object.has_pidl_format());
+    BOOST_REQUIRE(data_object.has_pidl_format());
 }
 
 /**
@@ -180,10 +180,10 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format_virtual )
  */
 BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format )
 {
-	wpath file = NewFileInSandbox();
-	ShellDataObject data_object(data_object_for_file(file).get());
+    wpath file = NewFileInSandbox();
+    ShellDataObject data_object(data_object_for_file(file).get());
 
-	BOOST_REQUIRE(!data_object.has_file_group_descriptor_format());
+    BOOST_REQUIRE(!data_object.has_file_group_descriptor_format());
 }
 
 /**
@@ -194,10 +194,10 @@ BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format )
  */
 BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format_virtual )
 {
-	wpath zip_file = create_test_zip_file(Sandbox());
-	ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
+    wpath zip_file = create_test_zip_file(Sandbox());
+    ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
-	BOOST_REQUIRE(data_object.has_file_group_descriptor_format());
+    BOOST_REQUIRE(data_object.has_file_group_descriptor_format());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -215,14 +215,14 @@ BOOST_FIXTURE_TEST_SUITE(pidl_format_tests, DataObjectFixture)
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
 {
-	wpath file = NewFileInSandbox();
-	PidlFormat format(data_object_for_file(file));
+    wpath file = NewFileInSandbox();
+    PidlFormat format(data_object_for_file(file));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	apidl_t pidl = format.file(0);
+    apidl_t pidl = format.file(0);
 
-	BOOST_REQUIRE(pidl_path_equivalence(pidl, file));
+    BOOST_REQUIRE(pidl_path_equivalence(pidl, file));
 }
 
 /**
@@ -234,14 +234,14 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
 {
-	wpath file = NewFileInSandbox();
-	PidlFormat format(data_object_for_file(file));
+    wpath file = NewFileInSandbox();
+    PidlFormat format(data_object_for_file(file));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
 
-	apidl_t folder_pidl = format.parent_folder();
+    apidl_t folder_pidl = format.parent_folder();
 
-	BOOST_REQUIRE(pidl_path_equivalence(folder_pidl, file.parent_path()));
+    BOOST_REQUIRE(pidl_path_equivalence(folder_pidl, file.parent_path()));
 }
 
 /**
@@ -253,11 +253,11 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item_fail )
 {
-	wpath file = NewFileInSandbox();
-	PidlFormat format(data_object_for_file(file));
+    wpath file = NewFileInSandbox();
+    PidlFormat format(data_object_for_file(file));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
-	BOOST_REQUIRE_THROW(format.file(1), std::range_error)
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
+    BOOST_REQUIRE_THROW(format.file(1), std::range_error)
 }
 
 /**
@@ -269,22 +269,22 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item_fail )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_multiple_items )
 {
-	wpath file1 = NewFileInSandbox();
-	wpath file2 = NewFileInSandbox();
-	wpath file3 = NewFileInSandbox();
-	PidlFormat format(data_object_for_directory(Sandbox()));
+    wpath file1 = NewFileInSandbox();
+    wpath file2 = NewFileInSandbox();
+    wpath file3 = NewFileInSandbox();
+    PidlFormat format(data_object_for_directory(Sandbox()));
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 3U);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 3U);
 
-	apidl_t pidl1 = format.file(0);
-	apidl_t pidl2 = format.file(1);
-	apidl_t pidl3 = format.file(2);
+    apidl_t pidl1 = format.file(0);
+    apidl_t pidl2 = format.file(1);
+    apidl_t pidl3 = format.file(2);
 
-	BOOST_REQUIRE(pidl_path_equivalence(pidl1, file1));
-	BOOST_REQUIRE(pidl_path_equivalence(pidl2, file2));
-	BOOST_REQUIRE(pidl_path_equivalence(pidl3, file3));
+    BOOST_REQUIRE(pidl_path_equivalence(pidl1, file1));
+    BOOST_REQUIRE(pidl_path_equivalence(pidl2, file2));
+    BOOST_REQUIRE(pidl_path_equivalence(pidl3, file3));
 
-	BOOST_REQUIRE_THROW(format.file(4), std::range_error)
+    BOOST_REQUIRE_THROW(format.file(4), std::range_error)
 }
 
 /**
@@ -297,12 +297,12 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_multiple_items )
  */
 BOOST_AUTO_TEST_CASE( null_dataobject )
 {
-	PidlFormat format(NULL);
+    PidlFormat format(NULL);
 
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), 0U);
-	BOOST_REQUIRE_THROW(format.file(0), std::range_error);
-	BOOST_REQUIRE_THROW(format.relative_file(0), std::range_error);
-	BOOST_REQUIRE_THROW(format.parent_folder(), std::logic_error);
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), 0U);
+    BOOST_REQUIRE_THROW(format.file(0), std::range_error);
+    BOOST_REQUIRE_THROW(format.relative_file(0), std::range_error);
+    BOOST_REQUIRE_THROW(format.parent_folder(), std::logic_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

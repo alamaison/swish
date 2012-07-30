@@ -56,21 +56,21 @@ class OperationCallback
 {
 public:
 
-	/**
-	 * Throw com_error(E_ABORT) if user cancelled.
-	 *
-	 * It throws rather than returning a boolean in order to force the operation
-	 * to abort with an exception.  This behaviour is expected by drag-and-drop.
-	 */
-	virtual void check_if_user_cancelled() const = 0;
+    /**
+     * Throw com_error(E_ABORT) if user cancelled.
+     *
+     * It throws rather than returning a boolean in order to force the operation
+     * to abort with an exception.  This behaviour is expected by drag-and-drop.
+     */
+    virtual void check_if_user_cancelled() const = 0;
 
-	virtual bool request_overwrite_permission(
-		const boost::filesystem::wpath& target) const = 0;
+    virtual bool request_overwrite_permission(
+        const boost::filesystem::wpath& target) const = 0;
 
-	virtual void update_progress(
-		boost::uintmax_t so_far, boost::uintmax_t out_of) = 0;
+    virtual void update_progress(
+        boost::uintmax_t so_far, boost::uintmax_t out_of) = 0;
 
-	virtual ~OperationCallback() {}
+    virtual ~OperationCallback() {}
 };
 
 /**
@@ -80,31 +80,31 @@ class Operation
 {
 public:
 
-	virtual std::wstring title() const = 0;
+    virtual std::wstring title() const = 0;
 
-	virtual std::wstring description() const = 0;
+    virtual std::wstring description() const = 0;
 
-	virtual void operator()(
-		OperationCallback& callback,
-		comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer)
-		const = 0;
+    virtual void operator()(
+        OperationCallback& callback,
+        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer)
+        const = 0;
 
-	Operation* clone() const
-	{
-		Operation* item = do_clone();
-		assert(typeid(*this) == typeid(*item) &&
-			"do_clone() sliced object!");
-		return item;
-	}
+    Operation* clone() const
+    {
+        Operation* item = do_clone();
+        assert(typeid(*this) == typeid(*item) &&
+            "do_clone() sliced object!");
+        return item;
+    }
 
 private:
-	virtual Operation* do_clone() const = 0;
+    virtual Operation* do_clone() const = 0;
 };
 
 inline Operation* new_clone(const Operation& item)
 {
-	return item.clone();
+    return item.clone();
 }
 
 }} // namespace swish::drop_target

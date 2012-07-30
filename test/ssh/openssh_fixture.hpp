@@ -52,24 +52,24 @@ namespace ssh {
 class openssh_fixture
 {
 public:
-	openssh_fixture();
-	virtual ~openssh_fixture();
+    openssh_fixture();
+    virtual ~openssh_fixture();
 
-	int stop_server();
+    int stop_server();
 
-	std::string host() const;
-	std::string user() const;
-	int port() const;
-	boost::filesystem::path private_key_path() const;
-	boost::filesystem::path public_key_path() const;
-	boost::filesystem::path wrong_private_key_path() const;
-	boost::filesystem::path wrong_public_key_path() const;
-	boost::filesystem::path to_remote_path(
-		boost::filesystem::path local_path) const;
+    std::string host() const;
+    std::string user() const;
+    int port() const;
+    boost::filesystem::path private_key_path() const;
+    boost::filesystem::path public_key_path() const;
+    boost::filesystem::path wrong_private_key_path() const;
+    boost::filesystem::path wrong_public_key_path() const;
+    boost::filesystem::path to_remote_path(
+        boost::filesystem::path local_path) const;
 
 private:
-	int m_port;
-	boost::process::child m_sshd;
+    int m_port;
+    boost::process::child m_sshd;
 };
 
 }} // namespace test::ssh

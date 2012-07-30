@@ -48,40 +48,40 @@ namespace remote_folder {
 class context_menu_callback : public swish::nse::default_context_menu_callback
 {
 public:
-	context_menu_callback(
-		boost::function<comet::com_ptr<ISftpProvider>(HWND)> provider_factory,
-		boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
+    context_menu_callback(
+        boost::function<comet::com_ptr<ISftpProvider>(HWND)> provider_factory,
+        boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
 
 private:
-	bool merge_context_menu(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection, HMENU hmenu,
-		UINT first_item_index, UINT& minimum_id, UINT maximum_id,
-		UINT allowed_changes_flags);
+    bool merge_context_menu(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection, HMENU hmenu,
+        UINT first_item_index, UINT& minimum_id, UINT maximum_id,
+        UINT allowed_changes_flags);
 
-	void verb(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
-		UINT command_id_offset, std::wstring& verb_out);
+    void verb(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection,
+        UINT command_id_offset, std::wstring& verb_out);
 
-	void verb(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
-		UINT command_id_offset, std::string& verb_out);
+    void verb(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection,
+        UINT command_id_offset, std::string& verb_out);
 
-	bool invoke_command(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection, UINT item_offset,
-		const std::wstring& arguments);
+    bool invoke_command(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection, UINT item_offset,
+        const std::wstring& arguments);
 
-	bool invoke_command(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection, UINT item_offset,
-		const std::wstring& arguments, DWORD behaviour_flags, UINT minimum_id,
-		UINT maximum_id, const CMINVOKECOMMANDINFO& invocation_details,
-		comet::com_ptr<IUnknown> context_menu_site);
+    bool invoke_command(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection, UINT item_offset,
+        const std::wstring& arguments, DWORD behaviour_flags, UINT minimum_id,
+        UINT maximum_id, const CMINVOKECOMMANDINFO& invocation_details,
+        comet::com_ptr<IUnknown> context_menu_site);
 
-	bool default_menu_item(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection,
-		UINT& default_command_id);
+    bool default_menu_item(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection,
+        UINT& default_command_id);
 
-	boost::function<comet::com_ptr<ISftpProvider>(HWND)> m_provider_factory;
-	boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
+    boost::function<comet::com_ptr<ISftpProvider>(HWND)> m_provider_factory;
+    boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 };
 
 }} // namespace swish::remote_folder

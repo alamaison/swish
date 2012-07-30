@@ -76,8 +76,8 @@ namespace comet {
 
 template<> struct comtype<IOleItemContainer>
 {
-	static const IID& uuid() throw() { return IID_IOleItemContainer; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IOleItemContainer; }
+    typedef IUnknown base;
 };
 
 } // namespace comet
@@ -89,187 +89,187 @@ namespace dispenser {
 
 namespace {
 
-	critical_section lock; ///< Critical section around global sessions
+    critical_section lock; ///< Critical section around global sessions
 
-	/**
-	 * Create an item moniker with the given name and a '!' delimeter.
-	 *
-	 * e.g. !user@host:port
-	 */
-	com_ptr<IMoniker> create_item_moniker(const bstr_t& name)
-	{
-		com_ptr<IMoniker> moniker;
-		HRESULT hr = ::CreateItemMoniker(
-			OLESTR("!"), name.c_str(), moniker.out());
-		if (FAILED(hr))
-			throw com_error("Couldn't create item moniker", hr);
+    /**
+     * Create an item moniker with the given name and a '!' delimeter.
+     *
+     * e.g. !user@host:port
+     */
+    com_ptr<IMoniker> create_item_moniker(const bstr_t& name)
+    {
+        com_ptr<IMoniker> moniker;
+        HRESULT hr = ::CreateItemMoniker(
+            OLESTR("!"), name.c_str(), moniker.out());
+        if (FAILED(hr))
+            throw com_error("Couldn't create item moniker", hr);
 
-		return moniker;
-	}
+        return moniker;
+    }
 
-	/**
-	 * Fetch an item from the Running Object Table.
-	 */
-	com_ptr<IUnknown> item_from_rot(const bstr_t& name)
-	{
-		com_ptr<IMoniker> moniker = create_item_moniker(name);
-		com_ptr<IRunningObjectTable> rot = running_object_table();
+    /**
+     * Fetch an item from the Running Object Table.
+     */
+    com_ptr<IUnknown> item_from_rot(const bstr_t& name)
+    {
+        com_ptr<IMoniker> moniker = create_item_moniker(name);
+        com_ptr<IRunningObjectTable> rot = running_object_table();
 
-		com_ptr<IUnknown> unknown;
-		HRESULT hr = rot->GetObject(moniker.in(), unknown.out());
-		if (FAILED(hr))
-			throw com_error(L"Couldn't find item " + name + L" in ROT", hr);
+        com_ptr<IUnknown> unknown;
+        HRESULT hr = rot->GetObject(moniker.in(), unknown.out());
+        if (FAILED(hr))
+            throw com_error(L"Couldn't find item " + name + L" in ROT", hr);
 
-		return unknown;
-	}
+        return unknown;
+    }
 
-	const wregex item_moniker_regex(L"(.+)@(.+):(\\d+)");
-	const unsigned int USER_MATCH = 1;
-	const unsigned int HOST_MATCH = 2;
-	const unsigned int PORT_MATCH = 3;
+    const wregex item_moniker_regex(L"(.+)@(.+):(\\d+)");
+    const unsigned int USER_MATCH = 1;
+    const unsigned int HOST_MATCH = 2;
+    const unsigned int PORT_MATCH = 3;
 
-	/**
-	 * Create a new provider session from the given item moniker name.
-	 */
-	com_ptr<ISftpProvider> create_new_session(const wstring& name)
-	{
-		wsmatch match;
-		if (regex_match(name, match, item_moniker_regex) &&
-			match.size() == 4)
-		{
-			bstr_t user = match[USER_MATCH];
-			bstr_t host = match[HOST_MATCH];
-			unsigned int port = lexical_cast<unsigned int>(
-				match[PORT_MATCH].str());
+    /**
+     * Create a new provider session from the given item moniker name.
+     */
+    com_ptr<ISftpProvider> create_new_session(const wstring& name)
+    {
+        wsmatch match;
+        if (regex_match(name, match, item_moniker_regex) &&
+            match.size() == 4)
+        {
+            bstr_t user = match[USER_MATCH];
+            bstr_t host = match[HOST_MATCH];
+            unsigned int port = lexical_cast<unsigned int>(
+                match[PORT_MATCH].str());
 
-			// Create SFTP Provider from ProgID and initialise
-			com_ptr<ISftpProvider> provider(L"Provider.Provider");
-			HRESULT hr;
-			hr = provider->Initialize(user.in(), host.in(), port);
-			if (FAILED(hr))
-				throw com_error("Couldn't initialise Provider", hr);
+            // Create SFTP Provider from ProgID and initialise
+            com_ptr<ISftpProvider> provider(L"Provider.Provider");
+            HRESULT hr;
+            hr = provider->Initialize(user.in(), host.in(), port);
+            if (FAILED(hr))
+                throw com_error("Couldn't initialise Provider", hr);
 
-			trace("Created new session: %ls") % name;
-			return provider;
-		}
-		else
-			throw com_error("Moniker failed to parse");
-	}
+            trace("Created new session: %ls") % name;
+            return provider;
+        }
+        else
+            throw com_error("Moniker failed to parse");
+    }
 
-	void get_object( 
-		const bstr_t& name, DWORD dw_speed_needed, 
-		const com_ptr<IBindCtx>& /*bc*/, const IID& iid, void** object_out)
-	{
-		// Try to get the session from the global pool
-		try
-		{
-			item_from_rot(name).raw()->QueryInterface(iid, object_out);
-		}
-		catch (const com_error& e)
-		{
-			trace("No existing session: %s") % e.what();
+    void get_object( 
+        const bstr_t& name, DWORD dw_speed_needed, 
+        const com_ptr<IBindCtx>& /*bc*/, const IID& iid, void** object_out)
+    {
+        // Try to get the session from the global pool
+        try
+        {
+            item_from_rot(name).raw()->QueryInterface(iid, object_out);
+        }
+        catch (const com_error& e)
+        {
+            trace("No existing session: %s") % e.what();
 
-			if (dw_speed_needed != BINDSPEED_INDEFINITE)
-				throw com_error("Object not running", MK_E_EXCEEDEDDEADLINE);
+            if (dw_speed_needed != BINDSPEED_INDEFINITE)
+                throw com_error("Object not running", MK_E_EXCEEDEDDEADLINE);
 
-			if (iid != uuidof<ISftpProvider>())
-				throw com_error(E_NOINTERFACE);
+            if (iid != uuidof<ISftpProvider>())
+                throw com_error(E_NOINTERFACE);
 
-			// No existing session; create new one and add to the pool
-			*object_out = reinterpret_cast<void**>(
-				create_new_session(name).detach());
-		}
-	}
+            // No existing session; create new one and add to the pool
+            *object_out = reinterpret_cast<void**>(
+                create_new_session(name).detach());
+        }
+    }
 }
 
 // IParseDisplayName
 
 STDMETHODIMP CDispenser::ParseDisplayName( 
-	IBindCtx* /*pbc*/, LPOLESTR pszDisplayName, ULONG* pchEaten, 
-	IMoniker** ppmkOut)
+    IBindCtx* /*pbc*/, LPOLESTR pszDisplayName, ULONG* pchEaten, 
+    IMoniker** ppmkOut)
 {
-	if (!pszDisplayName) return E_INVALIDARG;
-	if (!pchEaten) return E_POINTER;
-	if (!ppmkOut) return E_POINTER;
+    if (!pszDisplayName) return E_INVALIDARG;
+    if (!pchEaten) return E_POINTER;
+    if (!ppmkOut) return E_POINTER;
 
-	HRESULT hr;
+    HRESULT hr;
 
-	hr = ::CreateItemMoniker(OLESTR("!"), pszDisplayName + 1, ppmkOut);
-	if (SUCCEEDED(hr))
-		*pchEaten = numeric_cast<ULONG>(::wcslen(pszDisplayName));
-	else
-		*pchEaten = 0;
+    hr = ::CreateItemMoniker(OLESTR("!"), pszDisplayName + 1, ppmkOut);
+    if (SUCCEEDED(hr))
+        *pchEaten = numeric_cast<ULONG>(::wcslen(pszDisplayName));
+    else
+        *pchEaten = 0;
 
-	return hr;
+    return hr;
 }
 
 // IOleContainer
 
 STDMETHODIMP CDispenser::EnumObjects(
-	DWORD /*grfFlags*/, IEnumUnknown** ppenum)
+    DWORD /*grfFlags*/, IEnumUnknown** ppenum)
 {
-	if (!ppenum) return E_POINTER;
-	*ppenum = 0;
-	return E_NOTIMPL;
+    if (!ppenum) return E_POINTER;
+    *ppenum = 0;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDispenser::LockContainer(BOOL /*fLock*/)
 {
-	return S_OK;
+    return S_OK;
 }
 
 // IOleItemContainer
 
 STDMETHODIMP CDispenser::GetObject( 
-	LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
-	void** ppvObject)
+    LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
+    void** ppvObject)
 {
-	if (!pszItem) return E_INVALIDARG;
-	if (!ppvObject) return E_POINTER;
+    if (!pszItem) return E_INVALIDARG;
+    if (!ppvObject) return E_POINTER;
 
-	try
-	{
-		*ppvObject = 0;
+    try
+    {
+        *ppvObject = 0;
 
-		auto_cs cs(lock);
-		get_object(pszItem, dwSpeedNeeded, pbc, riid, ppvObject);
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+        auto_cs cs(lock);
+        get_object(pszItem, dwSpeedNeeded, pbc, riid, ppvObject);
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 STDMETHODIMP CDispenser::GetObjectStorage(
-	LPOLESTR /*pszItem*/, IBindCtx* /*pbc*/, REFIID /*riid*/,
-	void** ppvStorage)
+    LPOLESTR /*pszItem*/, IBindCtx* /*pbc*/, REFIID /*riid*/,
+    void** ppvStorage)
 {
-	if (!ppvStorage) return E_POINTER;
-	*ppvStorage = 0;
-	return MK_E_NOSTORAGE;
+    if (!ppvStorage) return E_POINTER;
+    *ppvStorage = 0;
+    return MK_E_NOSTORAGE;
 }
 
 STDMETHODIMP CDispenser::IsRunning(LPOLESTR pszItem)
 {
-	if (!pszItem) return E_INVALIDARG;
+    if (!pszItem) return E_INVALIDARG;
 
-	bstr_t item = pszItem;
-	try
-	{
-		try
-		{
-			auto_cs cs(lock);
-			item_from_rot(item);
-		}
-		catch (...)
-		{
-			wsmatch match;
-			if (regex_match(item.w_str(), match, item_moniker_regex))
-				return S_FALSE; // Name parses correctly as a session
-			else
-				throw com_error(MK_E_NOOBJECT); // Not one of our monikers
-		}
-	}
-	WINAPI_COM_CATCH_AUTO_INTERFACE();
-	return S_OK;
+    bstr_t item = pszItem;
+    try
+    {
+        try
+        {
+            auto_cs cs(lock);
+            item_from_rot(item);
+        }
+        catch (...)
+        {
+            wsmatch match;
+            if (regex_match(item.w_str(), match, item_moniker_regex))
+                return S_FALSE; // Name parses correctly as a session
+            else
+                throw com_error(MK_E_NOOBJECT); // Not one of our monikers
+        }
+    }
+    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    return S_OK;
 }
 
 }}} // namespace swish::provider::dispenser

@@ -65,78 +65,78 @@ template<typename Interface, typename FakeType, typename RealType>
 class window_proxy
 {
 public:
-	window_proxy(boost::shared_ptr<FakeType> fake)
-		: m_fake_window(fake), m_active_window(m_fake_window) {}
+    window_proxy(boost::shared_ptr<FakeType> fake)
+        : m_fake_window(fake), m_active_window(m_fake_window) {}
 
-	Interface* operator->() { return m_active_window; }
-	Interface& operator*() { return *m_active_window; }
-	const Interface* operator->() const { return m_active_window; }
-	const Interface& operator*() const { return *m_active_window; }
+    Interface* operator->() { return m_active_window; }
+    Interface& operator*() { return *m_active_window; }
+    const Interface* operator->() const { return m_active_window; }
+    const Interface& operator*() const { return *m_active_window; }
 
-	/**
-	 * Switch from fake to real window.
-	 */
-	void attach(HWND hwnd)
-	{
-		assert(!m_real_window); // why are we attaching twice?
-		assert(m_active_window == m_fake_window); // fake window not active one
+    /**
+     * Switch from fake to real window.
+     */
+    void attach(HWND hwnd)
+    {
+        assert(!m_real_window); // why are we attaching twice?
+        assert(m_active_window == m_fake_window); // fake window not active one
 
-		m_real_window = boost::make_shared<RealType>(hwnd);
-		m_active_window = m_real_window;
-	}
+        m_real_window = boost::make_shared<RealType>(hwnd);
+        m_active_window = m_real_window;
+    }
 
-	/**
-	 * Switch back to the fake window.
-	 */
-	void detach()
-	{
-		assert(m_real_window); // why are not attached?
-		assert(m_active_window == m_real_window); // real window not active one
+    /**
+     * Switch back to the fake window.
+     */
+    void detach()
+    {
+        assert(m_real_window); // why are not attached?
+        assert(m_active_window == m_real_window); // real window not active one
 
-		m_real_window.reset();
-		m_active_window = m_fake_window;
-	}
+        m_real_window.reset();
+        m_active_window = m_fake_window;
+    }
 
-	/**
-	 * Suck data from real Win32 window object into the fake window.
-	 *
-	 * This method exists so that properties of the window are still available
-	 * after the real window has been destroyed.
-	 *
-	 * Call this method after receiving the WM_CREATE message so that
-	 * @c copy_fields() can rely on the integrity of the window fields.
-	 */
-	void pull()
-	{
-		assert(m_real_window); // must not call this method unless attached
+    /**
+     * Suck data from real Win32 window object into the fake window.
+     *
+     * This method exists so that properties of the window are still available
+     * after the real window has been destroyed.
+     *
+     * Call this method after receiving the WM_CREATE message so that
+     * @c copy_fields() can rely on the integrity of the window fields.
+     */
+    void pull()
+    {
+        assert(m_real_window); // must not call this method unless attached
 
-		copy_fields(real(), fake());
-	}
+        copy_fields(real(), fake());
+    }
 
-	/**
-	 * Update Win32 window object from fields in the fake window.
-	 *
-	 * Fields can be set in the wrapper before the Win32 window is created.
-	 * This window pushes those values out to the real window once it is
-	 * created.
-	 *
-	 * Call this method before receiving the WM_DESTROY message so that
-	 * @c copy_fields() can rely on the integrity of the window fields.
-	 */
-	void push()
-	{
-		assert(m_real_window); // must not call this method unless attached
+    /**
+     * Update Win32 window object from fields in the fake window.
+     *
+     * Fields can be set in the wrapper before the Win32 window is created.
+     * This window pushes those values out to the real window once it is
+     * created.
+     *
+     * Call this method before receiving the WM_DESTROY message so that
+     * @c copy_fields() can rely on the integrity of the window fields.
+     */
+    void push()
+    {
+        assert(m_real_window); // must not call this method unless attached
 
-		copy_fields(fake(), real());
-	}
+        copy_fields(fake(), real());
+    }
 
 private:
-	Interface& real() { return *m_real_window; }
-	Interface& fake() { return *m_fake_window; }
+    Interface& real() { return *m_real_window; }
+    Interface& fake() { return *m_fake_window; }
 
-	boost::shared_ptr<FakeType> m_fake_window;
-	boost::shared_ptr<RealType> m_real_window;
-	boost::shared_ptr<Interface> m_active_window;
+    boost::shared_ptr<FakeType> m_fake_window;
+    boost::shared_ptr<RealType> m_real_window;
+    boost::shared_ptr<Interface> m_active_window;
 };
 
 }} // namespace ezel::detail

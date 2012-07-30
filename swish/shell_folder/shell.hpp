@@ -45,22 +45,22 @@
 
 namespace { // private
 
-	/**
-	 * Function adapter for ILFindLastID to work with transform algorithm
-	 * in ui_object_of_items.
-	 */
-	PUITEMID_CHILD find_last_ID(const ITEMIDLIST_RELATIVE& idl)
-	{
-		return ::ILFindLastID(&idl);
-	}
+    /**
+     * Function adapter for ILFindLastID to work with transform algorithm
+     * in ui_object_of_items.
+     */
+    PUITEMID_CHILD find_last_ID(const ITEMIDLIST_RELATIVE& idl)
+    {
+        return ::ILFindLastID(&idl);
+    }
 }
 
 namespace comet {
 
 template<> struct comtype<IDataObject>
 {
-	static const IID& uuid() throw() { return IID_IDataObject; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IDataObject; }
+    typedef IUnknown base;
 };
 
 }
@@ -85,7 +85,7 @@ boost::filesystem::wpath path_from_pidl(PIDLIST_ABSOLUTE pidl);
  * path.
  */
 boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
-	const boost::filesystem::wpath& filesystem_path);
+    const boost::filesystem::wpath& filesystem_path);
 
 /**
  * Return an IDataObject representing several files in the same folder.
@@ -100,23 +100,23 @@ boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
 template<typename It>
 comet::com_ptr<IDataObject> data_object_for_files(It begin, It end)
 {
-	std::vector<boost::shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
-	transform(begin, end, back_inserter(pidls), pidl_from_path);
+    std::vector<boost::shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
+    transform(begin, end, back_inserter(pidls), pidl_from_path);
 
-	return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
+    return ui_object_of_items<IDataObject>(pidls.begin(), pidls.end());
 }
 
 /**
  * Return an IDataObject representing a file on the local filesystem.
  */
 comet::com_ptr<IDataObject> data_object_for_file(
-	const boost::filesystem::wpath& file);
+    const boost::filesystem::wpath& file);
 
 /**
  * Return an IDataObject representing all the files in a directory.
  */
 comet::com_ptr<IDataObject> data_object_for_directory(
-	const boost::filesystem::wpath& directory);
+    const boost::filesystem::wpath& directory);
 
 /**
  * Return the associated object of several items.
@@ -134,37 +134,37 @@ comet::com_ptr<IDataObject> data_object_for_directory(
 template<typename T, typename It>
 comet::com_ptr<T> ui_object_of_items(It begin, It end)
 {
-	//
-	// All the items we're passed have to have the same parent folder so
-	// we just bind to the parent of the *first* item in the collection.
-	//
+    //
+    // All the items we're passed have to have the same parent folder so
+    // we just bind to the parent of the *first* item in the collection.
+    //
 
-	if (begin == end)
-		BOOST_THROW_EXCEPTION(std::invalid_argument("Empty range given"));
+    if (begin == end)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Empty range given"));
 
-	comet::com_ptr<IShellFolder> parent;
-	HRESULT hr = swish::windows_api::SHBindToParent(
-		// &* strips smart pointer, if any
-		&**begin, comet::uuidof(parent.in()),
-		reinterpret_cast<void**>(parent.out()), NULL);
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(comet::com_error(hr));
+    comet::com_ptr<IShellFolder> parent;
+    HRESULT hr = swish::windows_api::SHBindToParent(
+        // &* strips smart pointer, if any
+        &**begin, comet::uuidof(parent.in()),
+        reinterpret_cast<void**>(parent.out()), NULL);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(comet::com_error(hr));
 
-	std::vector<ITEMID_CHILD __unaligned*> child_pidls;
-	std::transform(
-		boost::make_indirect_iterator(begin),
-		boost::make_indirect_iterator(end),
-		back_inserter(child_pidls), find_last_ID);
+    std::vector<ITEMID_CHILD __unaligned*> child_pidls;
+    std::transform(
+        boost::make_indirect_iterator(begin),
+        boost::make_indirect_iterator(end),
+        back_inserter(child_pidls), find_last_ID);
 
-	comet::com_ptr<T> ui_object;
-	hr = parent->GetUIObjectOf(
-		NULL, boost::numeric_cast<UINT>(child_pidls.size()),
-		(child_pidls.empty()) ? NULL : &child_pidls[0],
-		comet::uuidof<T>(), NULL, reinterpret_cast<void**>(ui_object.out()));
-	if (FAILED(hr))
-		BOOST_THROW_EXCEPTION(comet::com_error_from_interface(parent, hr));
+    comet::com_ptr<T> ui_object;
+    hr = parent->GetUIObjectOf(
+        NULL, boost::numeric_cast<UINT>(child_pidls.size()),
+        (child_pidls.empty()) ? NULL : &child_pidls[0],
+        comet::uuidof<T>(), NULL, reinterpret_cast<void**>(ui_object.out()));
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(comet::com_error_from_interface(parent, hr));
 
-	return ui_object;
+    return ui_object;
 }
 
 /**
@@ -181,7 +181,7 @@ comet::com_ptr<T> ui_object_of_items(It begin, It end)
 template<typename T>
 comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
 {
-	return ui_object_of_items<T>(&pidl, &pidl + 1);
+    return ui_object_of_items<T>(&pidl, &pidl + 1);
 }
 
 }} // namespace swish::shell_folder

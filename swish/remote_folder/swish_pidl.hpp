@@ -46,23 +46,23 @@ namespace remote_folder {
  * remote item ids, but doesn't have to.
  */
 inline boost::filesystem::wpath absolute_path_from_swish_pidl(
-	const winapi::shell::pidl::apidl_t& pidl)
+    const winapi::shell::pidl::apidl_t& pidl)
 {
-	winapi::shell::pidl::raw_pidl_iterator item_pos =
-		swish::host_folder::find_host_itemid(pidl);
+    winapi::shell::pidl::raw_pidl_iterator item_pos =
+        swish::host_folder::find_host_itemid(pidl);
 
-	boost::filesystem::wpath path =
-		swish::host_folder::host_itemid_view(*item_pos).path();
+    boost::filesystem::wpath path =
+        swish::host_folder::host_itemid_view(*item_pos).path();
 
-	if (++item_pos != winapi::shell::pidl::raw_pidl_iterator())
-	{
-		if (remote_itemid_view(*item_pos).valid())
-		{
-			path /= path_from_remote_pidl(*item_pos);
-		}
-	}
+    if (++item_pos != winapi::shell::pidl::raw_pidl_iterator())
+    {
+        if (remote_itemid_view(*item_pos).valid())
+        {
+            path /= path_from_remote_pidl(*item_pos);
+        }
+    }
 
-	return path;
+    return path;
 }
 
 }} // namespace swish::remote_folder

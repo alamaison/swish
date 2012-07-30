@@ -52,46 +52,46 @@ namespace remote_folder {
 
 struct column_entry
 {
-	/**
-	 * @name Fields.
-	 *
-	 * These can be set using an aggregate initialiser: { val1, val2, ... }
-	 */
-	// @{
-	winapi::shell::property_key m_key;
-	boost::locale::message m_title;
-	SHCOLSTATEF m_flags;
-	int m_format;
-	int m_avg_char_width;
-	boost::function<std::wstring (const comet::variant_t&)> m_stringifier;
-	// @}
+    /**
+     * @name Fields.
+     *
+     * These can be set using an aggregate initialiser: { val1, val2, ... }
+     */
+    // @{
+    winapi::shell::property_key m_key;
+    boost::locale::message m_title;
+    SHCOLSTATEF m_flags;
+    int m_format;
+    int m_avg_char_width;
+    boost::function<std::wstring (const comet::variant_t&)> m_stringifier;
+    // @}
 
-	std::wstring title() const { return m_title; }
-	SHCOLSTATEF flags() const { return m_flags; }
-	int format() const { return m_format; }
-	int avg_char_width() const { return m_avg_char_width; }
+    std::wstring title() const { return m_title; }
+    SHCOLSTATEF flags() const { return m_flags; }
+    int format() const { return m_format; }
+    int avg_char_width() const { return m_avg_char_width; }
 
-	/**
-	 * Convert the column's property variant to a string.
-	 *
-	 * Transforms the output using m_stringifier, if any, otherwise performs
-	 * simple wstring conversion.
-	 */
-	std::wstring detail(const winapi::shell::pidl::cpidl_t& pidl) const
-	{
-		comet::variant_t var = property_from_pidl(pidl, m_key);
-		if (m_stringifier)
-			return m_stringifier(var);
-		else
-			return var;
-	}
+    /**
+     * Convert the column's property variant to a string.
+     *
+     * Transforms the output using m_stringifier, if any, otherwise performs
+     * simple wstring conversion.
+     */
+    std::wstring detail(const winapi::shell::pidl::cpidl_t& pidl) const
+    {
+        comet::variant_t var = property_from_pidl(pidl, m_key);
+        if (m_stringifier)
+            return m_stringifier(var);
+        else
+            return var;
+    }
 
-	int compare(
-		const winapi::shell::pidl::cpidl_t& lhs,
-		const winapi::shell::pidl::cpidl_t& rhs) const
-	{
-		return compare_pidls_by_property(lhs, rhs, m_key);
-	}
+    int compare(
+        const winapi::shell::pidl::cpidl_t& lhs,
+        const winapi::shell::pidl::cpidl_t& rhs) const
+    {
+        return compare_pidls_by_property(lhs, rhs, m_key);
+    }
 };
 
 #pragma warning(pop)
@@ -102,13 +102,13 @@ struct column_entry
 class RemoteColumnEntries
 {
 protected:
-	const column_entry& entry(size_t index) const;
+    const column_entry& entry(size_t index) const;
 };
 
 typedef swish::nse::StaticColumn<RemoteColumnEntries> Column;
 
 const winapi::shell::property_key& property_key_from_column_index(
-	size_t index);
+    size_t index);
 
 }} // namespace swish::remote_folder
 

@@ -27,184 +27,184 @@ Mode::Mode(mode_t mode) : mode(mode) {}
 
 bool Mode::isSymLink()
 {
-	assert(S_ISLNK(mode) ^ ( S_ISREG(mode) || S_ISDIR(mode) || S_ISCHR(mode)
-		|| S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISLNK(mode);
+    assert(S_ISLNK(mode) ^ ( S_ISREG(mode) || S_ISDIR(mode) || S_ISCHR(mode)
+        || S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISLNK(mode);
 }
 
 bool Mode::isRegular()
 {
-	assert(S_ISREG(mode) ^ ( S_ISLNK(mode) || S_ISDIR(mode) || S_ISCHR(mode)
-		|| S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISREG(mode);
+    assert(S_ISREG(mode) ^ ( S_ISLNK(mode) || S_ISDIR(mode) || S_ISCHR(mode)
+        || S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISREG(mode);
 }
 
 bool Mode::isDirectory()
 {
-	assert(S_ISDIR(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISCHR(mode)
-		|| S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISDIR(mode);
+    assert(S_ISDIR(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISCHR(mode)
+        || S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISDIR(mode);
 }
 
 bool Mode::isCharacter()
 {
-	assert(S_ISLNK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISLNK(mode);
+    assert(S_ISLNK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISBLK(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISLNK(mode);
 }
 
 bool Mode::isBlock()
 {
-	assert(S_ISBLK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISBLK(mode);
+    assert(S_ISBLK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISBLK(mode);
 }
 
 bool Mode::isFifo()
 {
-	assert(S_ISFIFO(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISSOCK(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISFIFO(mode);
+    assert(S_ISFIFO(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISSOCK(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISFIFO(mode);
 }
 
 bool Mode::isSocket()
 {
-	assert(S_ISSOCK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISSOCK(mode);
+    assert(S_ISSOCK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISDOOR(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISSOCK(mode);
 }
 
 bool Mode::isDoor()                                     /* Solaris door 'D' */
 {
-	assert(S_ISDOOR(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISNAM(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISDOOR(mode);
+    assert(S_ISDOOR(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISNAM(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISDOOR(mode);
 }
 
 bool Mode::isNamed()                                /* XENIX named file 'x' */
 {
-	assert(S_ISNAM(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISMPB(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISNAM(mode);
+    assert(S_ISNAM(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISMPB(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISNAM(mode);
 }
 
 bool Mode::isMultiplexedBlock()            /* multiplexed block special 'B' */
 {
-	assert(S_ISMPB(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISMPB(mode);
+    assert(S_ISMPB(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPC(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISMPB(mode);
 }
 
 bool Mode::isMultiplexedChar()             /* multiplexed char special 'm' */
 {
-	assert(S_ISMPC(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPB(mode) || S_ISWHT(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISMPC(mode);
+    assert(S_ISMPC(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPB(mode) || S_ISWHT(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISMPC(mode);
 }
 
 bool Mode::isWhiteout()                                 /* BSD whiteout 'w' */
 {
-	assert(S_ISWHT(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPB(mode) || S_ISMPC(mode) || S_ISNWK(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISWHT(mode);
+    assert(S_ISWHT(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPB(mode) || S_ISMPC(mode) || S_ISNWK(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISWHT(mode);
 }
 
 bool Mode::isNetwork()                         /* HP-UX network special 'n' */
 {
-	assert(S_ISNWK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
-		|| S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISNWK(mode);
+    assert(S_ISNWK(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
+        || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISNWK(mode);
 }
 
 bool Mode::isContiguous()                 /* contiguous - returns false 'C' */
 {
-	assert(S_ISCTG(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
-		|| S_ISNWK(mode) || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
-	return S_ISCTG(mode);
+    assert(S_ISCTG(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
+        || S_ISNWK(mode) || S_ISCTG(mode) || S_ISOFD(mode) || S_ISOFL(mode) ));
+    return S_ISCTG(mode);
 }
 
 bool Mode::isOffline()      /* Cray DMF offline no data - returns false 'M' */
 {
-	assert(S_ISOFL(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
-		|| S_ISNWK(mode) || S_ISCTG(mode) || S_ISOFD(mode) ));
-	return S_ISOFL(mode);
+    assert(S_ISOFL(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
+        || S_ISNWK(mode) || S_ISCTG(mode) || S_ISOFD(mode) ));
+    return S_ISOFL(mode);
 }
 
 bool Mode::isOfflineData()   /* Cray DMF offline + data - returns false 'M' */
 {
-	assert(S_ISOFD(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
-		|| S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
-		|| S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
-		|| S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
-		|| S_ISNWK(mode) || S_ISCTG(mode) || S_ISOFL(mode) ));
-	return S_ISOFD(mode);
+    assert(S_ISOFD(mode) ^ ( S_ISLNK(mode) || S_ISREG(mode) || S_ISDIR(mode)
+        || S_ISCHR(mode) || S_ISBLK(mode) || S_ISFIFO(mode)
+        || S_ISSOCK(mode) || S_ISDOOR(mode) || S_ISNAM(mode)
+        || S_ISMPB(mode) || S_ISMPC(mode) || S_ISWHT(mode)
+        || S_ISNWK(mode) || S_ISCTG(mode) || S_ISOFL(mode) ));
+    return S_ISOFD(mode);
 }
 
 
 bool Mode::isSUID()
 {
-	return ((mode & S_ISUID) == S_ISUID);
+    return ((mode & S_ISUID) == S_ISUID);
 }
 
 bool Mode::isSGID()
 {
-	return ((mode & S_ISGID) == S_ISGID);
+    return ((mode & S_ISGID) == S_ISGID);
 }
 
 bool Mode::isSticky()
 {
-	return ((mode & S_ISVTX) == S_ISVTX);
+    return ((mode & S_ISVTX) == S_ISVTX);
 }
 
 std::string Mode::toString()
 {
-	const int MODE_STR_BUFFER_SIZE = 10;
-	char buf[MODE_STR_BUFFER_SIZE];
-	::mode_string(mode, buf);
-	return std::string(buf, MODE_STR_BUFFER_SIZE);
+    const int MODE_STR_BUFFER_SIZE = 10;
+    char buf[MODE_STR_BUFFER_SIZE];
+    ::mode_string(mode, buf);
+    return std::string(buf, MODE_STR_BUFFER_SIZE);
 }

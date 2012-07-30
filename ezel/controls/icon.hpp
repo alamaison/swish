@@ -43,81 +43,81 @@ namespace controls {
 class icon_impl : public ezel::detail::window_impl
 {
 protected:
-	typedef ezel::detail::window_impl super;
+    typedef ezel::detail::window_impl super;
 
 public:
 
-	icon_impl(short left, short top, short width, short height)
-		:
-		ezel::detail::window_impl(L"", left, top, width, height),
-		m_icon(NULL) {}
+    icon_impl(short left, short top, short width, short height)
+        :
+        ezel::detail::window_impl(L"", left, top, width, height),
+        m_icon(NULL) {}
 
-	std::wstring window_class() const { return L"static"; }
-	DWORD style() const
-	{
-		DWORD style = ezel::detail::window_impl::style() |
-			WS_CHILD | SS_ICON | WS_GROUP | SS_NOTIFY | SS_CENTERIMAGE;
+    std::wstring window_class() const { return L"static"; }
+    DWORD style() const
+    {
+        DWORD style = ezel::detail::window_impl::style() |
+            WS_CHILD | SS_ICON | WS_GROUP | SS_NOTIFY | SS_CENTERIMAGE;
 
-		return style;
-	}
+        return style;
+    }
 
-	HICON change_icon(HICON new_icon)
-	{
-		if (!is_active())
-		{
-			HICON previous = m_icon;
-			m_icon = new_icon;
-			return previous;
-		}
-		else
-		{
-			winapi::gui::icon_window<wchar_t> icon(hwnd());
-			return icon.change_icon(new_icon);
-		}
-	}
+    HICON change_icon(HICON new_icon)
+    {
+        if (!is_active())
+        {
+            HICON previous = m_icon;
+            m_icon = new_icon;
+            return previous;
+        }
+        else
+        {
+            winapi::gui::icon_window<wchar_t> icon(hwnd());
+            return icon.change_icon(new_icon);
+        }
+    }
 
 protected:
 
-	/**
-	 * Set the source of the icon to whatever the user set via change_icon.
-	 */
-	virtual void push()
-	{
-		super::push();
+    /**
+     * Set the source of the icon to whatever the user set via change_icon.
+     */
+    virtual void push()
+    {
+        super::push();
 
-		winapi::send_message<wchar_t>(
-			hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
-	}
+        winapi::send_message<wchar_t>(
+            hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
+    }
 
 private:
-	HICON m_icon;
+    HICON m_icon;
 };
 
 class icon : public ezel::control<icon_impl>
 {
 public:
 
-	struct style
-	{
-		enum value
-		{
-			default = 0,
-			ampersand_not_special = SS_NOPREFIX
-		};
-	};
+    struct style
+    {
+        enum value
+        {
+            default = 0,
+            ampersand_not_special = SS_NOPREFIX
+        };
+    };
 
-	icon(short left, short top, short width, short height)
-		:
-		control<icon_impl>(
-			boost::shared_ptr<icon_impl>(
-				new icon_impl(left, top, width, height))) {}
+    icon(short left, short top, short width, short height)
+        :
+        control<icon_impl>(
+            boost::shared_ptr<icon_impl>(
+                new icon_impl(left, top, width, height))) {}
 
-	HICON change_icon(HICON new_icon) { return impl()->change_icon(new_icon); }
+    HICON change_icon(HICON new_icon) { return impl()->change_icon(new_icon); }
 
-	short left() const { return impl()->left(); }
-	short top() const { return impl()->top(); }
-	short width() const { return impl()->width(); }
-	short height() const { return impl()->height(); }
+    short left() const { return impl()->left(); }
+    short top() const { return impl()->top(); }
+    short width() const { return impl()->width(); }
+    short height() const { return impl()->height(); }
 };
 
 }} // namespace ezel::controls

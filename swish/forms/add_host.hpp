@@ -35,15 +35,15 @@ namespace forms {
 
 struct host_info
 {
-	std::wstring name;
-	std::wstring host;
-	std::wstring user;
-	int port;
-	std::wstring path;
+    std::wstring name;
+    std::wstring host;
+    std::wstring user;
+    int port;
+    std::wstring path;
 };
 
 host_info add_host(HWND owner);
-	
+    
 }} // namespace swish::forms
 
 #endif

@@ -42,24 +42,24 @@ using std::string;
 
 namespace { // private
 
-	typedef swish::shell_folder::data_object::GlobalLocker<char> 
-		GlobalStringLock;
+    typedef swish::shell_folder::data_object::GlobalLocker<char> 
+        GlobalStringLock;
 
-	/**
-	 * Put the test string into global memory and return a smart pointer to it.
-	 */
-	shared_ptr<void> global_test_data(const string& data)
-	{
-		shared_ptr<void> global(
-			::GlobalAlloc(GMEM_MOVEABLE, data.size()+1), ::GlobalFree);
-		char* buf = static_cast<char*>(::GlobalLock(global.get()));
+    /**
+     * Put the test string into global memory and return a smart pointer to it.
+     */
+    shared_ptr<void> global_test_data(const string& data)
+    {
+        shared_ptr<void> global(
+            ::GlobalAlloc(GMEM_MOVEABLE, data.size()+1), ::GlobalFree);
+        char* buf = static_cast<char*>(::GlobalLock(global.get()));
 
-		::CopyMemory(buf, data.c_str(), data.size());
-		buf[data.size()] = '\0';
+        ::CopyMemory(buf, data.c_str(), data.size());
+        buf[data.size()] = '\0';
 
-		::GlobalUnlock(buf);
-		return global;
-	}
+        ::GlobalUnlock(buf);
+        return global;
+    }
 }
 
 BOOST_AUTO_TEST_SUITE( global_lock_test )
@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_SUITE( global_lock_test )
  */
 BOOST_AUTO_TEST_CASE( lock )
 {
-	shared_ptr<void> global = global_test_data("lorem ipsum");
+    shared_ptr<void> global = global_test_data("lorem ipsum");
 
-	GlobalStringLock lock(global.get());
-	char* data = lock.get();
+    GlobalStringLock lock(global.get());
+    char* data = lock.get();
 
-	BOOST_REQUIRE_EQUAL(data, "lorem ipsum");
+    BOOST_REQUIRE_EQUAL(data, "lorem ipsum");
 }
 
 /**
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE( lock )
  */
 BOOST_AUTO_TEST_CASE( lock_fail )
 {
-	BOOST_REQUIRE_THROW(GlobalStringLock lock(NULL), system_error);
+    BOOST_REQUIRE_THROW(GlobalStringLock lock(NULL), system_error);
 }
 
 /**
@@ -92,15 +92,15 @@ BOOST_AUTO_TEST_CASE( lock_fail )
  */
 BOOST_AUTO_TEST_CASE( lock_copy )
 {
-	shared_ptr<void> global = global_test_data("lorem ipsum");
+    shared_ptr<void> global = global_test_data("lorem ipsum");
 
-	GlobalStringLock lock(global.get());
-	void* data1 = lock.get();
+    GlobalStringLock lock(global.get());
+    void* data1 = lock.get();
 
-	GlobalStringLock lock_copy(lock);
-	void* data2 = lock_copy.get();
+    GlobalStringLock lock_copy(lock);
+    void* data2 = lock_copy.get();
 
-	BOOST_REQUIRE_EQUAL(data1, data2); // Compare address, not strings
+    BOOST_REQUIRE_EQUAL(data1, data2); // Compare address, not strings
 }
 
 /**
@@ -109,23 +109,23 @@ BOOST_AUTO_TEST_CASE( lock_copy )
  */
 BOOST_AUTO_TEST_CASE( lock_copy_assign )
 {
-	// Create first lock on global data
-	shared_ptr<void> global1 = global_test_data("lorem ipsum");
-	GlobalStringLock lock1(global1.get());
+    // Create first lock on global data
+    shared_ptr<void> global1 = global_test_data("lorem ipsum");
+    GlobalStringLock lock1(global1.get());
 
-	// Create a lock on *other* global data
-	shared_ptr<void> global2 = global_test_data("dolor sit amet");
-	GlobalStringLock lock2(global2.get());
+    // Create a lock on *other* global data
+    shared_ptr<void> global2 = global_test_data("dolor sit amet");
+    GlobalStringLock lock2(global2.get());
 
-	// Assign second lock to first which should point both locks to second data
-	lock1 = lock2;
+    // Assign second lock to first which should point both locks to second data
+    lock1 = lock2;
 
-	char* data1 = lock1.get();
-	char* data2 = lock2.get();
+    char* data1 = lock1.get();
+    char* data2 = lock2.get();
 
-	// Compare addresses and make sure it points to the *second* string
-	BOOST_REQUIRE_EQUAL(static_cast<void*>(data1), static_cast<void*>(data2));
-	BOOST_REQUIRE_EQUAL(data1, "dolor sit amet");
+    // Compare addresses and make sure it points to the *second* string
+    BOOST_REQUIRE_EQUAL(static_cast<void*>(data1), static_cast<void*>(data2));
+    BOOST_REQUIRE_EQUAL(data1, "dolor sit amet");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

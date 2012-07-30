@@ -90,112 +90,112 @@ namespace comet {
 
 template<> struct comtype<::IDataObject>
 {
-	static const ::IID& uuid() throw() { return ::IID_IDataObject; }
-	typedef ::IUnknown base;
+    static const ::IID& uuid() throw() { return ::IID_IDataObject; }
+    typedef ::IUnknown base;
 };
 
 }
 
 namespace { // private
 
-	class DataObjectFixture : public PidlFixture
-	{
-	public:
+    class DataObjectFixture : public PidlFixture
+    {
+    public:
 
-		vector<wpath> make_test_files(bool readonly=false)
-		{
-			vector<wpath> files;
-			files.push_back(NewFileInSandbox());
-			files.push_back(NewFileInSandbox());
+        vector<wpath> make_test_files(bool readonly=false)
+        {
+            vector<wpath> files;
+            files.push_back(NewFileInSandbox());
+            files.push_back(NewFileInSandbox());
 
-			ofstream s;
-			s.open(files.at(0));
-			s << "blah";
-			s.close();
-			s.open(files.at(1));
-			s << "more stuff";
-			s.close();
+            ofstream s;
+            s.open(files.at(0));
+            s << "blah";
+            s.close();
+            s.open(files.at(1));
+            s << "more stuff";
+            s.close();
 
-			if (readonly)
-			{
-				if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
-					BOOST_THROW_EXCEPTION(
-						system_error(errno, get_system_category()));
-				if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
-					BOOST_THROW_EXCEPTION(
-						system_error(errno, get_system_category()));
-			}
+            if (readonly)
+            {
+                if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
+                    BOOST_THROW_EXCEPTION(
+                        system_error(errno, get_system_category()));
+                if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
+                    BOOST_THROW_EXCEPTION(
+                        system_error(errno, get_system_category()));
+            }
 
-			return files;
-		}
-	};
+            return files;
+        }
+    };
 
-	/**
-	 * Check that a PIDL and a filesystem path refer to the same item.
-	 */
-	predicate_result pidl_equivalence(
-		const apidl_t& pidl1, const apidl_t& pidl2)
-	{
-		wstring name1 = pidl_shell_item(pidl1).parsing_name();
-		wstring name2 = pidl_shell_item(pidl2).parsing_name();
+    /**
+     * Check that a PIDL and a filesystem path refer to the same item.
+     */
+    predicate_result pidl_equivalence(
+        const apidl_t& pidl1, const apidl_t& pidl2)
+    {
+        wstring name1 = pidl_shell_item(pidl1).parsing_name();
+        wstring name2 = pidl_shell_item(pidl2).parsing_name();
 
-		if (name1 != name2)
-		{
-			predicate_result res(false);
-			res.message()
-				<< "PIDLs resolve to different items [" << name1
-				<< " != " << name2 << "]";
-			return res;
-		}
+        if (name1 != name2)
+        {
+            predicate_result res(false);
+            res.message()
+                << "PIDLs resolve to different items [" << name1
+                << " != " << name2 << "]";
+            return res;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	/**
-	 * Check that the contents of a file and a stream are the same
-	 */
-	predicate_result file_stream_equivalence(
-		const wpath& file, const com_ptr<IStream>& stream)
-	{
-		// Read in from file
-		ifstream in_stream(file);
-		string file_contents = string(
-			istreambuf_iterator<char>(in_stream),
-			istreambuf_iterator<char>());
+    /**
+     * Check that the contents of a file and a stream are the same
+     */
+    predicate_result file_stream_equivalence(
+        const wpath& file, const com_ptr<IStream>& stream)
+    {
+        // Read in from file
+        ifstream in_stream(file);
+        string file_contents = string(
+            istreambuf_iterator<char>(in_stream),
+            istreambuf_iterator<char>());
 
-		// Read in from stream
-		ULARGE_INTEGER stream_size;
-		LARGE_INTEGER zero = {0};
-		BOOST_REQUIRE_OK(stream->Seek(zero, STREAM_SEEK_END, &stream_size));
-		BOOST_REQUIRE_OK(stream->Seek(zero, STREAM_SEEK_SET, NULL));
-		vector<char> buf(stream_size.LowPart);
-		string stream_contents;
-		if (buf.size())
-		{
-			ULONG cbRead = 0;
-			BOOST_REQUIRE_OK(
-				stream->Read(
-					&buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
-			
-			stream_contents = string(&buf[0], cbRead);
-		}
+        // Read in from stream
+        ULARGE_INTEGER stream_size;
+        LARGE_INTEGER zero = {0};
+        BOOST_REQUIRE_OK(stream->Seek(zero, STREAM_SEEK_END, &stream_size));
+        BOOST_REQUIRE_OK(stream->Seek(zero, STREAM_SEEK_SET, NULL));
+        vector<char> buf(stream_size.LowPart);
+        string stream_contents;
+        if (buf.size())
+        {
+            ULONG cbRead = 0;
+            BOOST_REQUIRE_OK(
+                stream->Read(
+                    &buf[0], numeric_cast<ULONG>(buf.size()), &cbRead));
+            
+            stream_contents = string(&buf[0], cbRead);
+        }
 
-		if (file_contents != stream_contents)
-		{
-			predicate_result res(false);
-			res.message()
-				<< "File and IStream contents do not match [" << file_contents
-				<< " != " << stream_contents << "]";
-			return res;
-		}
+        if (file_contents != stream_contents)
+        {
+            predicate_result res(false);
+            res.message()
+                << "File and IStream contents do not match [" << file_contents
+                << " != " << stream_contents << "]";
+            return res;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	const CLIPFORMAT CF_FILEDESCRIPTORW = 
-		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW));
-	const CLIPFORMAT CF_FILECONTENTS = 
-		static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILECONTENTS));
+    const CLIPFORMAT CF_FILEDESCRIPTORW = 
+        static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW));
+    const CLIPFORMAT CF_FILECONTENTS = 
+        static_cast<CLIPFORMAT>(::RegisterClipboardFormat(CFSTR_FILECONTENTS));
 }
 
 #pragma region SftpDataObject tests
@@ -203,9 +203,9 @@ BOOST_FIXTURE_TEST_SUITE(sftp_data_object_tests, DataObjectFixture)
 
 BOOST_AUTO_TEST_CASE( create )
 {
-	com_ptr<IDataObject> data_object = new CSftpDataObject(
-		0, NULL, sandbox_pidl().get(), Provider(), Consumer());
-	BOOST_REQUIRE(data_object);
+    com_ptr<IDataObject> data_object = new CSftpDataObject(
+        0, NULL, sandbox_pidl().get(), Provider(), Consumer());
+    BOOST_REQUIRE(data_object);
 }
 
 /**
@@ -215,17 +215,17 @@ BOOST_AUTO_TEST_CASE( create )
  */
 BOOST_AUTO_TEST_CASE( pidls )
 {
-	make_test_files();
+    make_test_files();
 
-	vector<cpidl_t> pidls = pidls_in_sandbox();
+    vector<cpidl_t> pidls = pidls_in_sandbox();
 
-	com_ptr<IDataObject> data_object = data_object_from_sandbox();
-	PidlFormat format(data_object);
+    com_ptr<IDataObject> data_object = data_object_from_sandbox();
+    PidlFormat format(data_object);
 
-	BOOST_REQUIRE(pidl_equivalence(format.parent_folder(), sandbox_pidl()));
-	BOOST_REQUIRE(pidl_equivalence(format.file(0), sandbox_pidl() + pidls[0]));
-	BOOST_REQUIRE(pidl_equivalence(format.file(1), sandbox_pidl() + pidls[1]));
-	BOOST_REQUIRE_EQUAL(format.pidl_count(), pidls.size());
+    BOOST_REQUIRE(pidl_equivalence(format.parent_folder(), sandbox_pidl()));
+    BOOST_REQUIRE(pidl_equivalence(format.file(0), sandbox_pidl() + pidls[0]));
+    BOOST_REQUIRE(pidl_equivalence(format.file(1), sandbox_pidl() + pidls[1]));
+    BOOST_REQUIRE_EQUAL(format.pidl_count(), pidls.size());
 }
 
 /**
@@ -234,57 +234,57 @@ BOOST_AUTO_TEST_CASE( pidls )
  */
 BOOST_AUTO_TEST_CASE( hdrop )
 {
-	make_test_files();
+    make_test_files();
 
-	com_ptr<IDataObject> data_object = data_object_from_sandbox();
+    com_ptr<IDataObject> data_object = data_object_from_sandbox();
 
-	FORMATETC fetc = {
-		CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
-	};
-	
-	StorageMedium medium;
-	HRESULT hr = data_object->GetData(&fetc, medium.out());
+    FORMATETC fetc = {
+        CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+    };
+    
+    StorageMedium medium;
+    HRESULT hr = data_object->GetData(&fetc, medium.out());
 
-	BOOST_REQUIRE(FAILED(hr));
+    BOOST_REQUIRE(FAILED(hr));
 }
 
 void do_filedescriptor_test(
-	const com_ptr<IDataObject>& data_object, const vector<wpath>& files)
+    const com_ptr<IDataObject>& data_object, const vector<wpath>& files)
 {
-	FORMATETC fetc = {
-		CF_FILEDESCRIPTORW, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
-	};
-	
-	StorageMedium medium;
-	HRESULT hr = data_object->GetData(&fetc, medium.out());
-	BOOST_REQUIRE_OK(hr);
+    FORMATETC fetc = {
+        CF_FILEDESCRIPTORW, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+    };
+    
+    StorageMedium medium;
+    HRESULT hr = data_object->GetData(&fetc, medium.out());
+    BOOST_REQUIRE_OK(hr);
 
-	FileGroupDescriptor fgd(medium.get().hGlobal);
-	BOOST_REQUIRE_EQUAL(fgd.size(), files.size());
-	for (size_t i = 0; i < files.size(); ++i)
-	{
-		BOOST_REQUIRE_EQUAL(fgd[i].path(), files[i].filename());
-		BOOST_REQUIRE_EQUAL(fgd[i].file_size(), file_size(files[i]));
-		BOOST_REQUIRE_EQUAL(
-			fgd[i].last_write_time(), from_time_t(last_write_time(files[i])));
-	}
+    FileGroupDescriptor fgd(medium.get().hGlobal);
+    BOOST_REQUIRE_EQUAL(fgd.size(), files.size());
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        BOOST_REQUIRE_EQUAL(fgd[i].path(), files[i].filename());
+        BOOST_REQUIRE_EQUAL(fgd[i].file_size(), file_size(files[i]));
+        BOOST_REQUIRE_EQUAL(
+            fgd[i].last_write_time(), from_time_t(last_write_time(files[i])));
+    }
 }
 
 void do_filecontents_test(
-	const com_ptr<IDataObject>& data_object, const vector<wpath>& files,
-	size_t index)
+    const com_ptr<IDataObject>& data_object, const vector<wpath>& files,
+    size_t index)
 {
-	FORMATETC fetc = {
-		CF_FILECONTENTS, NULL, DVASPECT_CONTENT, numeric_cast<LONG>(index),
-		TYMED_ISTREAM
-	};
-	
-	StorageMedium medium;
-	HRESULT hr = data_object->GetData(&fetc, medium.out());
-	BOOST_REQUIRE_OK(hr);
+    FORMATETC fetc = {
+        CF_FILECONTENTS, NULL, DVASPECT_CONTENT, numeric_cast<LONG>(index),
+        TYMED_ISTREAM
+    };
+    
+    StorageMedium medium;
+    HRESULT hr = data_object->GetData(&fetc, medium.out());
+    BOOST_REQUIRE_OK(hr);
 
-	com_ptr<IStream> stream = medium.get().pstm;
-	BOOST_REQUIRE(file_stream_equivalence(files.at(index), stream));
+    com_ptr<IStream> stream = medium.get().pstm;
+    BOOST_REQUIRE(file_stream_equivalence(files.at(index), stream));
 }
 
 /**
@@ -293,14 +293,14 @@ void do_filecontents_test(
  */
 BOOST_AUTO_TEST_CASE( file_descriptor )
 {
-	vector<wpath> files = make_test_files();
+    vector<wpath> files = make_test_files();
 
-	com_ptr<IDataObject> data_object = data_object_from_sandbox();
+    com_ptr<IDataObject> data_object = data_object_from_sandbox();
 
-	do_filedescriptor_test(data_object, files);
+    do_filedescriptor_test(data_object, files);
 
-	for (size_t i = 0; i < files.size(); ++i)
-		do_filecontents_test(data_object, files, i);
+    for (size_t i = 0; i < files.size(); ++i)
+        do_filecontents_test(data_object, files, i);
 }
 
 /**
@@ -309,14 +309,14 @@ BOOST_AUTO_TEST_CASE( file_descriptor )
  */
 BOOST_AUTO_TEST_CASE( file_descriptor_readonly )
 {
-	vector<wpath> files = make_test_files(true);
+    vector<wpath> files = make_test_files(true);
 
-	com_ptr<IDataObject> data_object = data_object_from_sandbox();
+    com_ptr<IDataObject> data_object = data_object_from_sandbox();
 
-	do_filedescriptor_test(data_object, files);
+    do_filedescriptor_test(data_object, files);
 
-	for (size_t i = 0; i < files.size(); ++i)
-		do_filecontents_test(data_object, files, i);
+    for (size_t i = 0; i < files.size(); ++i)
+        do_filecontents_test(data_object, files, i);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

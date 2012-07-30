@@ -72,77 +72,77 @@ namespace remote_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-	HWND /*hwnd*/, const apidl_t& folder_pidl,
-	const function<com_ptr<ISftpProvider>()>& provider,
-	const function<com_ptr<ISftpConsumer>()>& consumer)
+    HWND /*hwnd*/, const apidl_t& folder_pidl,
+    const function<com_ptr<ISftpProvider>()>& provider,
+    const function<com_ptr<ISftpConsumer>()>& consumer)
 {
-	CExplorerCommandProvider::ordered_commands commands;
-	commands.push_back(
-		new CExplorerCommandWithSite<NewFolder>(
-			folder_pidl, provider, consumer));
-	return new CExplorerCommandProvider(commands);
+    CExplorerCommandProvider::ordered_commands commands;
+    commands.push_back(
+        new CExplorerCommandWithSite<NewFolder>(
+            folder_pidl, provider, consumer));
+    return new CExplorerCommandProvider(commands);
 }
 
 class CSftpTasksTitle : public simple_object<CUIElementErrorAdapter>
 {
 public:
 
-	virtual std::wstring title(
-		const comet::com_ptr<IShellItemArray>& /*items*/) const
-	{
-		return translate("File and Folder Tasks");
-	}
+    virtual std::wstring title(
+        const comet::com_ptr<IShellItemArray>& /*items*/) const
+    {
+        return translate("File and Folder Tasks");
+    }
 
-	virtual std::wstring icon(
-		const comet::com_ptr<IShellItemArray>& /*items*/) const
-	{
-		return L"shell32.dll,-319";
-	}
+    virtual std::wstring icon(
+        const comet::com_ptr<IShellItemArray>& /*items*/) const
+    {
+        return L"shell32.dll,-319";
+    }
 
-	virtual std::wstring tool_tip(
-		const comet::com_ptr<IShellItemArray>& /*items*/) const
-	{
-		return translate("These tasks help you manage your remote files.");
-	}
+    virtual std::wstring tool_tip(
+        const comet::com_ptr<IShellItemArray>& /*items*/) const
+    {
+        return translate("These tasks help you manage your remote files.");
+    }
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
 remote_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
 {
-	return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
+    return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
-	HWND /*hwnd*/, const apidl_t& folder_pidl,
-	com_ptr<IUnknown> ole_site,
-	const function<com_ptr<ISftpProvider>()>& provider,
-	const function<com_ptr<ISftpConsumer>()>& consumer)
+    HWND /*hwnd*/, const apidl_t& folder_pidl,
+    com_ptr<IUnknown> ole_site,
+    const function<com_ptr<ISftpProvider>()>& provider,
+    const function<com_ptr<ISftpConsumer>()>& consumer)
 {
-	typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
-	shared_command_vector commands =
-		make_shared< vector< com_ptr<IUICommand> > >();
+    typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
+    shared_command_vector commands =
+        make_shared< vector< com_ptr<IUICommand> > >();
 
-	com_ptr<IUICommand> new_folder =
-		new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
-				folder_pidl, provider, consumer);
+    com_ptr<IUICommand> new_folder =
+        new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
+                folder_pidl, provider, consumer);
 
-	com_ptr<IObjectWithSite> object_with_site = com_cast(new_folder);
+    com_ptr<IObjectWithSite> object_with_site = com_cast(new_folder);
 
-	// Explorer doesn't seem to call SetSite on the command object which is odd
-	// because any command that needs to change the view would need it.  We do
-	// it instead.
-	// XXX: We never unset the site.  Explorer normally does if it sets it.
-	//      I don't know if this is a problem.
-	if (object_with_site)
-		object_with_site->SetSite(ole_site.get());
+    // Explorer doesn't seem to call SetSite on the command object which is odd
+    // because any command that needs to change the view would need it.  We do
+    // it instead.
+    // XXX: We never unset the site.  Explorer normally does if it sets it.
+    //      I don't know if this is a problem.
+    if (object_with_site)
+        object_with_site->SetSite(ole_site.get());
 
-	commands->push_back(new_folder);
+    commands->push_back(new_folder);
 
-	com_ptr<IEnumUICommand> e = 
-		make_smart_enumeration<IEnumUICommand>(commands);
+    com_ptr<IEnumUICommand> e = 
+        make_smart_enumeration<IEnumUICommand>(commands);
 
-	return make_pair(e, com_ptr<IEnumUICommand>());
+    return make_pair(e, com_ptr<IEnumUICommand>());
 }
 
 }}} // namespace swish::remote_folder::commands

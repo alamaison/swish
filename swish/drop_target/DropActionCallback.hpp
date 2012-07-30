@@ -45,10 +45,10 @@ class Progress;
 class DropActionCallback
 {
 public:
-	virtual ~DropActionCallback() {}
-	virtual void site(comet::com_ptr<IUnknown> ole_site) = 0;
-	virtual bool can_overwrite(const boost::filesystem::wpath& target) = 0;
-	virtual std::auto_ptr<Progress> progress() = 0;
+    virtual ~DropActionCallback() {}
+    virtual void site(comet::com_ptr<IUnknown> ole_site) = 0;
+    virtual bool can_overwrite(const boost::filesystem::wpath& target) = 0;
+    virtual std::auto_ptr<Progress> progress() = 0;
 };
 
 }}

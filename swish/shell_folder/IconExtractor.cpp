@@ -25,11 +25,11 @@
 using ATL::CComPtr;
 
 /*static*/ CComPtr<IExtractIconW> CIconExtractor::Create(
-	PCTSTR szFilename, bool fIsFolder)
+    PCTSTR szFilename, bool fIsFolder)
 {
-	CComPtr<CIconExtractor> sp = CIconExtractor::CreateCoObject();
-	sp->Initialize(szFilename, fIsFolder);
-	return sp.p;
+    CComPtr<CIconExtractor> sp = CIconExtractor::CreateCoObject();
+    sp->Initialize(szFilename, fIsFolder);
+    return sp.p;
 }
 
 /**
@@ -40,8 +40,8 @@ using ATL::CComPtr;
  */
 void CIconExtractor::Initialize(PCTSTR szFilename, bool fIsFolder)
 {
-	m_fForFolder = fIsFolder;
-	m_strFilename = szFilename;
+    m_fForFolder = fIsFolder;
+    m_strFilename = szFilename;
 }
 
 /**
@@ -62,22 +62,22 @@ void CIconExtractor::Initialize(PCTSTR szFilename, bool fIsFolder)
  *             
  */
 STDMETHODIMP CIconExtractor::GetIconLocation(
-	UINT uFlags, PWSTR pwszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags )
+    UINT uFlags, PWSTR pwszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags )
 {
-	ATLTRACE("CIconExtractor::GetIconLocation called\n");
+    ATLTRACE("CIconExtractor::GetIconLocation called\n");
 
-	// Look for icon's index into system list
-	int index = _GetIconIndex(uFlags);
-	if (index < 0)
-		return S_FALSE; // None found - make shell use Unknown
+    // Look for icon's index into system list
+    int index = _GetIconIndex(uFlags);
+    if (index < 0)
+        return S_FALSE; // None found - make shell use Unknown
 
-	// Output * as filename to indicate icon is in system list
-	ATLVERIFY(SUCCEEDED(
-		::StringCchCopyW(pwszIconFile, cchMax, L"*")));
-	*pwFlags = GIL_NOTFILENAME;
-	*piIndex = index;
+    // Output * as filename to indicate icon is in system list
+    ATLVERIFY(SUCCEEDED(
+        ::StringCchCopyW(pwszIconFile, cchMax, L"*")));
+    *pwFlags = GIL_NOTFILENAME;
+    *piIndex = index;
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -85,22 +85,22 @@ STDMETHODIMP CIconExtractor::GetIconLocation(
  * @implementing IExtractIconA
  */
 STDMETHODIMP CIconExtractor::GetIconLocation(
-	UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+    UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
-	ATLTRACE("CIconExtractor::GetIconLocation called\n");
+    ATLTRACE("CIconExtractor::GetIconLocation called\n");
 
-	// Look for icon's index into system list
-	int index = _GetIconIndex(uFlags);
-	if (index < 0)
-		return S_FALSE; // None found - make shell use Unknown
+    // Look for icon's index into system list
+    int index = _GetIconIndex(uFlags);
+    if (index < 0)
+        return S_FALSE; // None found - make shell use Unknown
 
-	// Output * as filename to indicate icon is in system list
-	ATLVERIFY(SUCCEEDED(
-		::StringCchCopyA(szIconFile, cchMax, "*")));
-	*pwFlags = GIL_NOTFILENAME;
-	*piIndex = index;
+    // Output * as filename to indicate icon is in system list
+    ATLVERIFY(SUCCEEDED(
+        ::StringCchCopyA(szIconFile, cchMax, "*")));
+    *pwFlags = GIL_NOTFILENAME;
+    *piIndex = index;
 
-	return S_OK;
+    return S_OK;
 }
 
 /**
@@ -112,8 +112,8 @@ STDMETHODIMP CIconExtractor::GetIconLocation(
  */
 STDMETHODIMP CIconExtractor::Extract(PCWSTR, UINT, HICON *, HICON *, UINT)
 {
-	ATLTRACE("CIconExtractor::Extract called\n");
-	return S_FALSE;
+    ATLTRACE("CIconExtractor::Extract called\n");
+    return S_FALSE;
 }
 
 /**
@@ -122,34 +122,34 @@ STDMETHODIMP CIconExtractor::Extract(PCWSTR, UINT, HICON *, HICON *, UINT)
  */
 STDMETHODIMP CIconExtractor::Extract(PCSTR, UINT, HICON *, HICON *, UINT)
 {
-	ATLTRACE("CIconExtractor::Extract (A) called\n");
-	return S_FALSE;
+    ATLTRACE("CIconExtractor::Extract (A) called\n");
+    return S_FALSE;
 }
 
 int CIconExtractor::_GetIconIndex(UINT uFlags)
 {
-	if (uFlags & GIL_DEFAULTICON)
-		return 0;
+    if (uFlags & GIL_DEFAULTICON)
+        return 0;
 
-	DWORD dwAttributes = 
-		(m_fForFolder) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
+    DWORD dwAttributes = 
+        (m_fForFolder) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 
-	UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX;
-	if (uFlags & GIL_OPENICON)
-		uInfoFlags |= SHGFI_OPENICON;
+    UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX;
+    if (uFlags & GIL_OPENICON)
+        uInfoFlags |= SHGFI_OPENICON;
 
-	// Look up index to default icon in current system list
-	{
-		// Get index to default icon in system list
-		SHFILEINFO shfi;
-		if(::SHGetFileInfo(m_strFilename, dwAttributes, &shfi, 
-			sizeof(shfi), uInfoFlags))
-		{
-			return shfi.iIcon;
-		}
-		else
-			return -1; // None found
-	}
+    // Look up index to default icon in current system list
+    {
+        // Get index to default icon in system list
+        SHFILEINFO shfi;
+        if(::SHGetFileInfo(m_strFilename, dwAttributes, &shfi, 
+            sizeof(shfi), uInfoFlags))
+        {
+            return shfi.iIcon;
+        }
+        else
+            return -1; // None found
+    }
 }
 
 // CIconExtractor

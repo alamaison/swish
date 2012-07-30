@@ -43,16 +43,16 @@ namespace commands {
 class Delete
 {
 public:
-	Delete(
-		boost::function<comet::com_ptr<ISftpProvider>(HWND)> provider_factory,
-		boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
+    Delete(
+        boost::function<comet::com_ptr<ISftpProvider>(HWND)> provider_factory,
+        boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
 
-	void operator()(
-		HWND hwnd_view, comet::com_ptr<IDataObject> selection) const;
+    void operator()(
+        HWND hwnd_view, comet::com_ptr<IDataObject> selection) const;
 
 private:
-	boost::function<comet::com_ptr<ISftpProvider>(HWND)> m_provider_factory;
-	boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
+    boost::function<comet::com_ptr<ISftpProvider>(HWND)> m_provider_factory;
+    boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 };
 
 }}} // namespace swish::remote_folder::commands

@@ -1,7 +1,7 @@
 /**
     @file
 
-	PIDL wrapper classes.
+    PIDL wrapper classes.
 
     @if license
 
@@ -37,41 +37,41 @@ template <typename IdListType>
 class CPidlData
 {
 protected:
-	/** @name PIDL Types */
-	// @{
-	typedef IdListType *PidlType;            ///< @b Non-const PIDL type
-	typedef const IdListType *ConstPidlType; ///< @b Const PIDL type
-	typedef PidlType Type; ///< Which of const or non-const @b this PIDL is
-	// @}
+    /** @name PIDL Types */
+    // @{
+    typedef IdListType *PidlType;            ///< @b Non-const PIDL type
+    typedef const IdListType *ConstPidlType; ///< @b Const PIDL type
+    typedef PidlType Type; ///< Which of const or non-const @b this PIDL is
+    // @}
 
-	CPidlData() : m_pidl(NULL) {}
-	explicit CPidlData( __in_opt Type pidl ) throw() : m_pidl(pidl) {}
-	explicit CPidlData( __in const CPidlData& pidl ) throw() : m_pidl(pidl) {}
+    CPidlData() : m_pidl(NULL) {}
+    explicit CPidlData( __in_opt Type pidl ) throw() : m_pidl(pidl) {}
+    explicit CPidlData( __in const CPidlData& pidl ) throw() : m_pidl(pidl) {}
 
 public:
-	inline bool operator!() const throw()
-	{
-		return m_pidl == NULL;
-	}
+    inline bool operator!() const throw()
+    {
+        return m_pidl == NULL;
+    }
 
-	/**
-	 * Implicitly convert wrapped PIDL to another type.
-	 *
-	 * This template delegates to Type (the type of the raw PIDL) decisions 
-	 * about which types this PIDL can be converted to.  The code will not 
-	 * compile if @p IdListSupertype is not compatible with Type.  Used in:
-	 *    @code const IdListSupertype p = Type m_pidl @endcode
-	 *
-	 * @tparam IdListSupertype  Target type of conversion. Does not have to be
-	 *                          supertype of raw PIDL type.  May be same type.
-	 */
-	template<typename IdListSupertype>
-	operator const IdListSupertype() const throw()
-	{
-		return m_pidl;
-	}
+    /**
+     * Implicitly convert wrapped PIDL to another type.
+     *
+     * This template delegates to Type (the type of the raw PIDL) decisions 
+     * about which types this PIDL can be converted to.  The code will not 
+     * compile if @p IdListSupertype is not compatible with Type.  Used in:
+     *    @code const IdListSupertype p = Type m_pidl @endcode
+     *
+     * @tparam IdListSupertype  Target type of conversion. Does not have to be
+     *                          supertype of raw PIDL type.  May be same type.
+     */
+    template<typename IdListSupertype>
+    operator const IdListSupertype() const throw()
+    {
+        return m_pidl;
+    }
 
-	Type m_pidl;
+    Type m_pidl;
 };
 
 /**
@@ -81,41 +81,41 @@ template <typename IdListType>
 class CPidlConstData
 {
 protected:
-	/** @name PIDL Types */
-	// @{
-	typedef IdListType *PidlType;            ///< @b Non-const PIDL type
-	typedef const IdListType *ConstPidlType; ///< @b Const PIDL type
-	typedef ConstPidlType Type; ///< Which of const or non-const @b this PIDL is
-	// @}
+    /** @name PIDL Types */
+    // @{
+    typedef IdListType *PidlType;            ///< @b Non-const PIDL type
+    typedef const IdListType *ConstPidlType; ///< @b Const PIDL type
+    typedef ConstPidlType Type; ///< Which of const or non-const @b this PIDL is
+    // @}
 
-	CPidlConstData() : m_pidl(NULL) {}
-	CPidlConstData( __in_opt Type pidl ) throw() : m_pidl(pidl) {}
-	CPidlConstData( __in const CPidlConstData& pidl ) throw() : m_pidl(pidl) {}
+    CPidlConstData() : m_pidl(NULL) {}
+    CPidlConstData( __in_opt Type pidl ) throw() : m_pidl(pidl) {}
+    CPidlConstData( __in const CPidlConstData& pidl ) throw() : m_pidl(pidl) {}
 
 public:
-	inline bool operator!() const throw()
-	{
-		return m_pidl == NULL;
-	}
+    inline bool operator!() const throw()
+    {
+        return m_pidl == NULL;
+    }
 
-	/**
-	 * Implicitly convert wrapped PIDL to another type.
-	 *
-	 * This template delegates to Type (the type of the raw PIDL) decisions 
-	 * about which types this PIDL can be converted to.  The code will not 
-	 * compile if @p IdListSupertype is not compatible with Type.  Used in:
-	 *    @code const IdListSupertype p = Type m_pidl @endcode
-	 *
-	 * @tparam IdListSupertype  Target type of conversion. Does not have to be
-	 *                          supertype of raw PIDL type.  May be same type.
-	 */
-	template<typename IdListSupertype>
-	operator const IdListSupertype() const throw()
-	{
-		return m_pidl;
-	}
+    /**
+     * Implicitly convert wrapped PIDL to another type.
+     *
+     * This template delegates to Type (the type of the raw PIDL) decisions 
+     * about which types this PIDL can be converted to.  The code will not 
+     * compile if @p IdListSupertype is not compatible with Type.  Used in:
+     *    @code const IdListSupertype p = Type m_pidl @endcode
+     *
+     * @tparam IdListSupertype  Target type of conversion. Does not have to be
+     *                          supertype of raw PIDL type.  May be same type.
+     */
+    template<typename IdListSupertype>
+    operator const IdListSupertype() const throw()
+    {
+        return m_pidl;
+    }
 
-	Type m_pidl;
+    Type m_pidl;
 };
 
 /**
@@ -140,56 +140,56 @@ template <typename DataT>
 class CPidlBase : public DataT
 {
 protected:
-	typedef typename DataT::PidlType PidlType;
-	typedef typename DataT::ConstPidlType ConstPidlType;
+    typedef typename DataT::PidlType PidlType;
+    typedef typename DataT::ConstPidlType ConstPidlType;
 
 public:
-	CPidlBase() {}
-	CPidlBase( __in_opt typename DataT::Type pidl ) throw() : DataT(pidl) {}
-	CPidlBase( __in const CPidlBase& pidl ) throw() : DataT(pidl) {}
+    CPidlBase() {}
+    CPidlBase( __in_opt typename DataT::Type pidl ) throw() : DataT(pidl) {}
+    CPidlBase( __in const CPidlBase& pidl ) throw() : DataT(pidl) {}
 
-	PidlType CopyTo() const throw(...)
-	{
-		return Clone(m_pidl);
-	}
+    PidlType CopyTo() const throw(...)
+    {
+        return Clone(m_pidl);
+    }
 
-	PidlType CopyParent() const throw(...)
-	{
-		PidlType pidl = CopyTo();
-		ATLVERIFY(::ILRemoveLastID(pidl));
-		return pidl;
-	}
+    PidlType CopyParent() const throw(...)
+    {
+        PidlType pidl = CopyTo();
+        ATLVERIFY(::ILRemoveLastID(pidl));
+        return pidl;
+    }
 
-	PCUIDLIST_RELATIVE GetNext() const throw()
-	{
-		if (m_pidl == NULL)
-			return NULL;
+    PCUIDLIST_RELATIVE GetNext() const throw()
+    {
+        if (m_pidl == NULL)
+            return NULL;
 
-		PCUIDLIST_RELATIVE pidl = ::ILNext(m_pidl);
-		return (::ILIsEmpty(pidl)) ? NULL : pidl;
-	}
+        PCUIDLIST_RELATIVE pidl = ::ILNext(m_pidl);
+        return (::ILIsEmpty(pidl)) ? NULL : pidl;
+    }
 
-	PCUITEMID_CHILD GetLast() const throw(...)
-	{
-		return ::ILFindLastID(m_pidl);
-	}
+    PCUITEMID_CHILD GetLast() const throw(...)
+    {
+        return ::ILFindLastID(m_pidl);
+    }
 
-	inline bool IsEmpty() const throw()
-	{
-		return ((m_pidl == NULL) || (m_pidl->mkid.cb == 0));
-	}
+    inline bool IsEmpty() const throw()
+    {
+        return ((m_pidl == NULL) || (m_pidl->mkid.cb == 0));
+    }
 
-	static PidlType Clone( __in_opt ConstPidlType pidl ) throw(...)
-	{
-		if (pidl == NULL)
-			return NULL;
-		
-		PidlType pidlOut = static_cast<PidlType>(::ILClone(pidl));
-		if (pidlOut == NULL)
-			AtlThrow(E_OUTOFMEMORY);
+    static PidlType Clone( __in_opt ConstPidlType pidl ) throw(...)
+    {
+        if (pidl == NULL)
+            return NULL;
+        
+        PidlType pidlOut = static_cast<PidlType>(::ILClone(pidl));
+        if (pidlOut == NULL)
+            AtlThrow(E_OUTOFMEMORY);
 
-		return pidlOut;
-	}
+        return pidlOut;
+    }
 };
 
 /** @name PIDL Handle type declarations.
@@ -238,82 +238,82 @@ template <typename IdListType>
 class CPidl : public CPidlBase< CPidlData<IdListType> >
 {
 public:
-	CPidl() {}
-	CPidl( __in_opt ConstPidlType pidl ) throw(...) : CPidlBase(Clone(pidl)) {}
-	CPidl( __in const CPidl& pidl ) throw(...) : CPidlBase(Clone(pidl)) {}
+    CPidl() {}
+    CPidl( __in_opt ConstPidlType pidl ) throw(...) : CPidlBase(Clone(pidl)) {}
+    CPidl( __in const CPidl& pidl ) throw(...) : CPidlBase(Clone(pidl)) {}
 
-	CPidl& operator=( __in const CPidl& pidl ) throw(...)
-	{
-		if (m_pidl != pidl.m_pidl)
-		{
-			CopyFrom(pidl);
-		}
-		return *this;
-	}
+    CPidl& operator=( __in const CPidl& pidl ) throw(...)
+    {
+        if (m_pidl != pidl.m_pidl)
+        {
+            CopyFrom(pidl);
+        }
+        return *this;
+    }
 
-	/**
-	 * Concatenation constructor.
-	 */
-	explicit CPidl(
-		__in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
-	throw(...)
-	{
-		if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2))
-			return;
+    /**
+     * Concatenation constructor.
+     */
+    explicit CPidl(
+        __in_opt ConstPidlType pidl1, __in_opt PCUIDLIST_RELATIVE pidl2 )
+    throw(...)
+    {
+        if (::ILIsEmpty(pidl1) && ::ILIsEmpty(pidl2))
+            return;
 
-		m_pidl = reinterpret_cast<PidlType>(::ILCombine(
-			reinterpret_cast<PCIDLIST_ABSOLUTE>(pidl1), pidl2));
-		ATLENSURE_THROW(m_pidl, E_OUTOFMEMORY);
-	}
-	
-	/**
-	 * Return raw address of PIDL to allow use as an out-parameter.
-	 *
-	 * Any existing PIDL will first be destroyed.
-	 */
-	PidlType* operator&() throw()
-	{
-		Delete();
-		return &m_pidl;
-	}
+        m_pidl = reinterpret_cast<PidlType>(::ILCombine(
+            reinterpret_cast<PCIDLIST_ABSOLUTE>(pidl1), pidl2));
+        ATLENSURE_THROW(m_pidl, E_OUTOFMEMORY);
+    }
+    
+    /**
+     * Return raw address of PIDL to allow use as an out-parameter.
+     *
+     * Any existing PIDL will first be destroyed.
+     */
+    PidlType* operator&() throw()
+    {
+        Delete();
+        return &m_pidl;
+    }
 
-	~CPidl() throw()
-	{
-		Delete();
-	}
+    ~CPidl() throw()
+    {
+        Delete();
+    }
 
-	CPidl& Attach( __in_opt PidlType pidl ) throw()
-	{
-		Delete();
-		m_pidl = pidl;
-		return *this;
-	}
+    CPidl& Attach( __in_opt PidlType pidl ) throw()
+    {
+        Delete();
+        m_pidl = pidl;
+        return *this;
+    }
 
-	CPidl& CopyFrom( __in_opt ConstPidlType pidl ) throw(...)
-	{
-		return Attach(Clone(pidl));
-	}
+    CPidl& CopyFrom( __in_opt ConstPidlType pidl ) throw(...)
+    {
+        return Attach(Clone(pidl));
+    }
 
-	PidlType Detach() throw()
-	{
-		PidlType pidl = m_pidl;
-		m_pidl = NULL;
-		return pidl;
-	}
+    PidlType Detach() throw()
+    {
+        PidlType pidl = m_pidl;
+        m_pidl = NULL;
+        return pidl;
+    }
 
-	void Delete()
-	{
-		::ILFree(m_pidl);
-		m_pidl = NULL;
-	}
+    void Delete()
+    {
+        ::ILFree(m_pidl);
+        m_pidl = NULL;
+    }
 
-	CPidl& Append(__in_opt PCUIDLIST_RELATIVE pidl) throw(...)
-	{
-		if (::ILIsEmpty(pidl))
-			return *this;
+    CPidl& Append(__in_opt PCUIDLIST_RELATIVE pidl) throw(...)
+    {
+        if (::ILIsEmpty(pidl))
+            return *this;
 
-		return Attach(CPidl(m_pidl, pidl).Detach());
-	}
+        return Attach(CPidl(m_pidl, pidl).Detach());
+    }
 };
 
 /**

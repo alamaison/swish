@@ -44,11 +44,11 @@ class DropActionCallback;
 class Plan
 {
 public:
-	virtual ~Plan() {}
+    virtual ~Plan() {}
 
-	virtual void execute_plan(
-		DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
-		comet::com_ptr<ISftpConsumer> consumer) const = 0;
+    virtual void execute_plan(
+        DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<ISftpConsumer> consumer) const = 0;
 };
 
 }}

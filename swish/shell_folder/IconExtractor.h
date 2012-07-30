@@ -34,46 +34,46 @@
 #include <shlobj.h>     // Windows Shell API
 
 class ATL_NO_VTABLE CIconExtractor :
-	public IExtractIconW,
-	public IExtractIconA,
-	public ATL::CComObjectRoot,
-	public swish::CCoFactory<CIconExtractor>
+    public IExtractIconW,
+    public IExtractIconA,
+    public ATL::CComObjectRoot,
+    public swish::CCoFactory<CIconExtractor>
 {
 public:
 
-	BEGIN_COM_MAP(CIconExtractor)
-		COM_INTERFACE_ENTRY(IExtractIconW)
-		COM_INTERFACE_ENTRY(IExtractIconA)
-	END_COM_MAP()
+    BEGIN_COM_MAP(CIconExtractor)
+        COM_INTERFACE_ENTRY(IExtractIconW)
+        COM_INTERFACE_ENTRY(IExtractIconA)
+    END_COM_MAP()
 
-	CIconExtractor() : m_fForFolder(false) {}
+    CIconExtractor() : m_fForFolder(false) {}
 
-	static ATL::CComPtr<IExtractIconW> Create(
-		PCTSTR szFilename, bool fIsFolder);
-	void Initialize(PCTSTR szFilename, bool fIsFolder);
+    static ATL::CComPtr<IExtractIconW> Create(
+        PCTSTR szFilename, bool fIsFolder);
+    void Initialize(PCTSTR szFilename, bool fIsFolder);
 
-	// IExtractIconW
-	IFACEMETHODIMP GetIconLocation(
-		UINT uFlags, __out_ecount(cchMax) PWSTR pwszIconFile, UINT cchMax,
-		__out int *piIndex, __out UINT *pwFlags);
-
-	IFACEMETHODIMP Extract(
-		PCWSTR pszFile, UINT nIconIndex, __out_opt HICON *phiconLarge,
-		__out_opt HICON *phiconSmall, UINT nIconSize);
-
-	// IExtractIconA
-	IFACEMETHODIMP GetIconLocation(
-		UINT uFlags, __out_ecount(cchMax) LPSTR szIconFile, UINT cchMax,
-		__out int *piIndex, __out UINT *pwFlags);
+    // IExtractIconW
+    IFACEMETHODIMP GetIconLocation(
+        UINT uFlags, __out_ecount(cchMax) PWSTR pwszIconFile, UINT cchMax,
+        __out int *piIndex, __out UINT *pwFlags);
 
     IFACEMETHODIMP Extract(
-		PCSTR pszFile, UINT nIconIndex, __out_opt HICON *phiconLarge,
-		__out_opt HICON *phiconSmall, UINT nIconSize);
+        PCWSTR pszFile, UINT nIconIndex, __out_opt HICON *phiconLarge,
+        __out_opt HICON *phiconSmall, UINT nIconSize);
+
+    // IExtractIconA
+    IFACEMETHODIMP GetIconLocation(
+        UINT uFlags, __out_ecount(cchMax) LPSTR szIconFile, UINT cchMax,
+        __out int *piIndex, __out UINT *pwFlags);
+
+    IFACEMETHODIMP Extract(
+        PCSTR pszFile, UINT nIconIndex, __out_opt HICON *phiconLarge,
+        __out_opt HICON *phiconSmall, UINT nIconSize);
 
 private:
-	int _GetIconIndex(UINT uFlags);
+    int _GetIconIndex(UINT uFlags);
 
-	bool m_fForFolder;           ///< Are we trying to extract the icon 
-	                             ///< for a Folder?
-	ATL::CString m_strFilename;  ///< File to get default icon for.
+    bool m_fForFolder;           ///< Are we trying to extract the icon 
+                                 ///< for a Folder?
+    ATL::CString m_strFilename;  ///< File to get default icon for.
 };

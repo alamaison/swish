@@ -48,64 +48,64 @@
 
 template<> struct comet::comtype<IExplorerCommand>
 {
-	static const IID& uuid() throw() { return IID_IExplorerCommand; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IExplorerCommand; }
+    typedef IUnknown base;
 };
 
 template<> struct comet::comtype<IExplorerCommandProvider>
 {
-	static const IID& uuid() throw() { return IID_IExplorerCommandProvider; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IExplorerCommandProvider; }
+    typedef IUnknown base;
 };
 
 template<> struct comet::comtype<IEnumExplorerCommand>
 {
-	static const IID& uuid() throw() { return IID_IEnumExplorerCommand; }
-	typedef IUnknown base;
+    static const IID& uuid() throw() { return IID_IEnumExplorerCommand; }
+    typedef IUnknown base;
 };
 
 namespace swish {
 namespace nse {
 
 class CExplorerCommandProvider : 
-	public comet::simple_object<IExplorerCommandProvider>
+    public comet::simple_object<IExplorerCommandProvider>
 {
 public:
 
-	typedef std::vector<comet::com_ptr<IExplorerCommand> > ordered_commands;
-	typedef std::map<comet::uuid_t, comet::com_ptr<IExplorerCommand> >
-		command_map;
+    typedef std::vector<comet::com_ptr<IExplorerCommand> > ordered_commands;
+    typedef std::map<comet::uuid_t, comet::com_ptr<IExplorerCommand> >
+        command_map;
 
-	CExplorerCommandProvider(const ordered_commands& commands);
+    CExplorerCommandProvider(const ordered_commands& commands);
 
-	/**
-	 * Return an Explorer command instance.
-	 *
-	 * @param[in] punkSite  Optional, pointer through which to set a site.
-	 * @param[in] riid      IID of the requested interface (typically 
-	 *                      IEnumExplorerCommand).
-	 * @param[out] ppv      Location in which to return the requested
-	 *                      interface.
-	 */
-	IFACEMETHODIMP GetCommands(
-		IUnknown* punkSite, const IID& riid, void** ppv);
+    /**
+     * Return an Explorer command instance.
+     *
+     * @param[in] punkSite  Optional, pointer through which to set a site.
+     * @param[in] riid      IID of the requested interface (typically 
+     *                      IEnumExplorerCommand).
+     * @param[out] ppv      Location in which to return the requested
+     *                      interface.
+     */
+    IFACEMETHODIMP GetCommands(
+        IUnknown* punkSite, const IID& riid, void** ppv);
 
-	/**
-	 * Return an enumerator of IExplorerCommand instances.
-	 *
-	 * @param[in] rguidCommandId  GUID of the requested command.
-	 * @param[in] riid            IID of the requested interface (typically 
-	 *                            IExplorerCommand).
-	 * @param[out] ppv            Location in which to return the requested
-	 *                            interface.
-	 */
-	IFACEMETHODIMP GetCommand(
-		const GUID& rguidCommandId, const IID& riid, void** ppv);
+    /**
+     * Return an enumerator of IExplorerCommand instances.
+     *
+     * @param[in] rguidCommandId  GUID of the requested command.
+     * @param[in] riid            IID of the requested interface (typically 
+     *                            IExplorerCommand).
+     * @param[out] ppv            Location in which to return the requested
+     *                            interface.
+     */
+    IFACEMETHODIMP GetCommand(
+        const GUID& rguidCommandId, const IID& riid, void** ppv);
 
 private:
 
-	ordered_commands m_commands;
-	command_map m_guid_mapping;
+    ordered_commands m_commands;
+    command_map m_guid_mapping;
 };
 
 /**
@@ -118,58 +118,58 @@ class CExplorerCommandErrorAdapter : public IExplorerCommand
 {
 public:
 
-	typedef IExplorerCommand interface_is;
+    typedef IExplorerCommand interface_is;
 
-	/** @name IExplorerCommand external COM methods. */
-	// @{
+    /** @name IExplorerCommand external COM methods. */
+    // @{
 
-	IFACEMETHODIMP GetTitle(
-		IShellItemArray* psiItemArray, wchar_t** ppszName);
+    IFACEMETHODIMP GetTitle(
+        IShellItemArray* psiItemArray, wchar_t** ppszName);
 
-	IFACEMETHODIMP GetIcon(
-		IShellItemArray* psiItemArray, wchar_t** ppszIcon);
+    IFACEMETHODIMP GetIcon(
+        IShellItemArray* psiItemArray, wchar_t** ppszIcon);
 
-	IFACEMETHODIMP GetToolTip(
-		IShellItemArray* psiItemArray, wchar_t** ppszInfotip);
+    IFACEMETHODIMP GetToolTip(
+        IShellItemArray* psiItemArray, wchar_t** ppszInfotip);
 
-	IFACEMETHODIMP GetCanonicalName(GUID* pguidCommandName);
+    IFACEMETHODIMP GetCanonicalName(GUID* pguidCommandName);
 
-	IFACEMETHODIMP GetState(
-		IShellItemArray* psiItemArray, BOOL fOkToBeSlow,
-		EXPCMDSTATE* pCmdState);
+    IFACEMETHODIMP GetState(
+        IShellItemArray* psiItemArray, BOOL fOkToBeSlow,
+        EXPCMDSTATE* pCmdState);
 
-	IFACEMETHODIMP Invoke(
-		IShellItemArray* psiItemArray, IBindCtx* pbc);
+    IFACEMETHODIMP Invoke(
+        IShellItemArray* psiItemArray, IBindCtx* pbc);
 
-	IFACEMETHODIMP GetFlags(EXPCMDFLAGS* pFlags);
+    IFACEMETHODIMP GetFlags(EXPCMDFLAGS* pFlags);
 
-	IFACEMETHODIMP EnumSubCommands(IEnumExplorerCommand** ppEnum);
+    IFACEMETHODIMP EnumSubCommands(IEnumExplorerCommand** ppEnum);
 
-	// @}
+    // @}
 
 private:
 
-	/** @name NVI internal interface.
-	 *
-	 * Implement this to create IExplorerCommand instances.
-	 */
-	// @{
-	virtual const comet::uuid_t& canonical_name() const = 0;
-	virtual std::wstring title(
-		const comet::com_ptr<IShellItemArray>& items) const = 0;
-	virtual std::wstring tool_tip(
-		const comet::com_ptr<IShellItemArray>& items) const = 0;
-	virtual std::wstring icon(
-		const comet::com_ptr<IShellItemArray>& items) const = 0;
-	virtual EXPCMDSTATE state(
-		const comet::com_ptr<IShellItemArray>& items,
-		bool ok_to_be_slow) const = 0;
-	virtual EXPCMDFLAGS flags() const = 0;
-	virtual comet::com_ptr<IEnumExplorerCommand> subcommands() const = 0;
-	virtual void invoke(
-		const comet::com_ptr<IShellItemArray>& items,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
-	// @}
+    /** @name NVI internal interface.
+     *
+     * Implement this to create IExplorerCommand instances.
+     */
+    // @{
+    virtual const comet::uuid_t& canonical_name() const = 0;
+    virtual std::wstring title(
+        const comet::com_ptr<IShellItemArray>& items) const = 0;
+    virtual std::wstring tool_tip(
+        const comet::com_ptr<IShellItemArray>& items) const = 0;
+    virtual std::wstring icon(
+        const comet::com_ptr<IShellItemArray>& items) const = 0;
+    virtual EXPCMDSTATE state(
+        const comet::com_ptr<IShellItemArray>& items,
+        bool ok_to_be_slow) const = 0;
+    virtual EXPCMDFLAGS flags() const = 0;
+    virtual comet::com_ptr<IEnumExplorerCommand> subcommands() const = 0;
+    virtual void invoke(
+        const comet::com_ptr<IShellItemArray>& items,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
+    // @}
 };
 
 
@@ -178,128 +178,128 @@ private:
 #endif
 
 #define EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, classname, initialiser) \
-	BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
-	explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
-		: initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
+    BOOST_PP_EXPR_IF(N, template<BOOST_PP_ENUM_PARAMS(N, typename A)>) \
+    explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
+        : initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
 
 template<typename COMET_LIST_TEMPLATE>
 class CExplorerCommandImplAux :
-	public comet::simple_object<COMET_LIST_ARG_1> {};
+    public comet::simple_object<COMET_LIST_ARG_1> {};
 
 template<COMET_LIST_TEMPLATE>
 class CExplorerCommandImpl :
-	public comet::simple_object<CExplorerCommandErrorAdapter, COMET_LIST_ARG_0>
+    public comet::simple_object<CExplorerCommandErrorAdapter, COMET_LIST_ARG_0>
 {
 public:
 
 // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommandImpl, m_command)
+    EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommandImpl, m_command)
 
 #define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
 protected:
 
-	typedef X00 command_type;
+    typedef X00 command_type;
 
-	command_type& command() { return m_command; }
+    command_type& command() { return m_command; }
 
 private:
 
-	/**
-	 * Return command's unique GUID.
-	 */
-	const comet::uuid_t& canonical_name() const
-	{
-		return m_command.guid();
-	}
-		
-	/**
-	 * Return command's title string.
-	 *
-	 * @param items  Optional array of PIDLs that command would be executed
-	 *               upon.
-	 */
-	std::wstring title(const comet::com_ptr<IShellItemArray>& items) const
-	{
-		return m_command.title(data_object_from_item_array(items));
-	}
+    /**
+     * Return command's unique GUID.
+     */
+    const comet::uuid_t& canonical_name() const
+    {
+        return m_command.guid();
+    }
+        
+    /**
+     * Return command's title string.
+     *
+     * @param items  Optional array of PIDLs that command would be executed
+     *               upon.
+     */
+    std::wstring title(const comet::com_ptr<IShellItemArray>& items) const
+    {
+        return m_command.title(data_object_from_item_array(items));
+    }
 
-	/**
-	 * Return command's tool tip.
-	 *
-	 * @param items  Optional array of PIDLs that command would be executed
-	 *               upon.
-	 */
-	std::wstring tool_tip(const comet::com_ptr<IShellItemArray>& items) const
-	{
-		return m_command.tool_tip(data_object_from_item_array(items));
-	}
+    /**
+     * Return command's tool tip.
+     *
+     * @param items  Optional array of PIDLs that command would be executed
+     *               upon.
+     */
+    std::wstring tool_tip(const comet::com_ptr<IShellItemArray>& items) const
+    {
+        return m_command.tool_tip(data_object_from_item_array(items));
+    }
 
-	/**
-	 * Return command's icon descriptor.
-	 *
-	 * This takes the form "shell32.dll,-249" where 249 is the icon's
-	 * resource ID.
-	 *
-	 * @param items  Optional array of PIDLs that command would be executed 
-	 *               upon.
-	 */
-	std::wstring icon(const comet::com_ptr<IShellItemArray>& items) const
-	{
-		return m_command.icon_descriptor(data_object_from_item_array(items));
-	}
+    /**
+     * Return command's icon descriptor.
+     *
+     * This takes the form "shell32.dll,-249" where 249 is the icon's
+     * resource ID.
+     *
+     * @param items  Optional array of PIDLs that command would be executed 
+     *               upon.
+     */
+    std::wstring icon(const comet::com_ptr<IShellItemArray>& items) const
+    {
+        return m_command.icon_descriptor(data_object_from_item_array(items));
+    }
 
-	/**
-	 * Return the command's state given array of PIDLs.
-	 *
-	 * @param items          Optional array of PIDLs that command would be 
-	 *                       executed upon.
-	 * @param ok_to_be_slow  Indicates whether slow operations can be used
-	 *                       when calculating the state.  If false and slow
-	 *                       operations are required, throw E_PENDING.
-	 */
-	EXPCMDSTATE state(
-		const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow)
-	const
-	{
-		EXPCMDSTATE state = ECS_ENABLED;
-		comet::com_ptr<IDataObject> data_object = 
-			data_object_from_item_array(items);
+    /**
+     * Return the command's state given array of PIDLs.
+     *
+     * @param items          Optional array of PIDLs that command would be 
+     *                       executed upon.
+     * @param ok_to_be_slow  Indicates whether slow operations can be used
+     *                       when calculating the state.  If false and slow
+     *                       operations are required, throw E_PENDING.
+     */
+    EXPCMDSTATE state(
+        const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow)
+    const
+    {
+        EXPCMDSTATE state = ECS_ENABLED;
+        comet::com_ptr<IDataObject> data_object = 
+            data_object_from_item_array(items);
 
-		if (m_command.disabled(data_object, ok_to_be_slow))
-			state |= ECS_DISABLED;
-		if (m_command.hidden(data_object, ok_to_be_slow))
-			state |= ECS_HIDDEN;
-		return state;
-	}
+        if (m_command.disabled(data_object, ok_to_be_slow))
+            state |= ECS_DISABLED;
+        if (m_command.hidden(data_object, ok_to_be_slow))
+            state |= ECS_HIDDEN;
+        return state;
+    }
 
-	EXPCMDFLAGS flags() const
-	{
-		return 0;
-	}
+    EXPCMDFLAGS flags() const
+    {
+        return 0;
+    }
 
-	comet::com_ptr<IEnumExplorerCommand> subcommands() const
-	{
-		BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
-		return NULL;
-	}
+    comet::com_ptr<IEnumExplorerCommand> subcommands() const
+    {
+        BOOST_THROW_EXCEPTION(comet::com_error(E_NOTIMPL));
+        return NULL;
+    }
 
-	/**
-	 * Execute the code associated with this command.
-	 *
-	 * @param items     Optional array of PIDLs that command is executed upon.
-	 * @param bind_ctx  Optional bind context.
-	 */
-	void invoke(
-		const comet::com_ptr<IShellItemArray>& items,
-		const comet::com_ptr<IBindCtx>& bind_ctx) const
-	{
-		m_command(data_object_from_item_array(items, bind_ctx), bind_ctx);
-	}
+    /**
+     * Execute the code associated with this command.
+     *
+     * @param items     Optional array of PIDLs that command is executed upon.
+     * @param bind_ctx  Optional bind context.
+     */
+    void invoke(
+        const comet::com_ptr<IShellItemArray>& items,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const
+    {
+        m_command(data_object_from_item_array(items, bind_ctx), bind_ctx);
+    }
 
-	command_type m_command;
+    command_type m_command;
 };
 
 /**
@@ -312,11 +312,11 @@ class CExplorerCommand : public CExplorerCommandImpl<T>
 {
 public:
 
-	typedef CExplorerCommandImpl<T> super;
+    typedef CExplorerCommandImpl<T> super;
 
-	// Define pass-through constructors with variable numbers of arguments
+    // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommand, super)
+    EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommand, super)
 
 #define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
@@ -334,28 +334,28 @@ public:
  */
 template<typename T>
 class CExplorerCommandWithSite :
-	public CExplorerCommandImpl<T, winapi::object_with_site>
+    public CExplorerCommandImpl<T, winapi::object_with_site>
 {
 public:
 
-	typedef CExplorerCommandImpl<T, winapi::object_with_site> super;
+    typedef CExplorerCommandImpl<T, winapi::object_with_site> super;
 
 // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \
-	EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommandWithSite, super)
+    EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR(N, CExplorerCommandWithSite, super)
 
 #define BOOST_PP_LOCAL_LIMITS (0, SWISH_COMMAND_CONSTRUCTOR_MAX_ARGUMENTS)
 #include BOOST_PP_LOCAL_ITERATE()
 
 private:
 
-	/**
-	 * Notify the command functor of the site we have been embedded in.
-	 */
-	virtual void on_set_site(comet::com_ptr<IUnknown> ole_site)
-	{
-		command().set_site(ole_site);
-	}
+    /**
+     * Notify the command functor of the site we have been embedded in.
+     */
+    virtual void on_set_site(comet::com_ptr<IUnknown> ole_site)
+    {
+        command().set_site(ole_site);
+    }
 };
 
 #undef EXPLORER_COMMAND_VARIADIC_CONSTRUCTOR

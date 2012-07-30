@@ -51,93 +51,93 @@ namespace data_object {
 
 namespace { // private
 
-	/**
-	 * Lifetime-management class for a CIDA held in global memory in a
-	 * STGMEDIUM.
-	 *
-	 * The lifetimes of a STGMEDIUM holding an HGLOBAL, a lock on that
-	 * HGLOBAL and the pointer to the memory it contains.  The pointer
-	 * is only valid for the duration of the lock which, in turn, can only
-	 * exist while the global memory in the STGMEDIUM is allocated.
-	 *
-	 * Therefore, this class exists to make it easy to manage the lifetimes
-	 * of these three items together.  A caller to get() is free to use the
-	 * CIDA returned as long as the instance of this class remains in scope.
-	 * Copying is explicity prevented as that reallocates the STGMEDIUM
-	 * invalidating both the lock and the pointer to the original memory.
-	 */
-	class GlobalCida
-	{
-	public:
-		GlobalCida(const StorageMedium& medium) : 
-		  m_medium(medium), m_lock(m_medium.get().hGlobal)
-		{
-		}
+    /**
+     * Lifetime-management class for a CIDA held in global memory in a
+     * STGMEDIUM.
+     *
+     * The lifetimes of a STGMEDIUM holding an HGLOBAL, a lock on that
+     * HGLOBAL and the pointer to the memory it contains.  The pointer
+     * is only valid for the duration of the lock which, in turn, can only
+     * exist while the global memory in the STGMEDIUM is allocated.
+     *
+     * Therefore, this class exists to make it easy to manage the lifetimes
+     * of these three items together.  A caller to get() is free to use the
+     * CIDA returned as long as the instance of this class remains in scope.
+     * Copying is explicity prevented as that reallocates the STGMEDIUM
+     * invalidating both the lock and the pointer to the original memory.
+     */
+    class GlobalCida
+    {
+    public:
+        GlobalCida(const StorageMedium& medium) : 
+          m_medium(medium), m_lock(m_medium.get().hGlobal)
+        {
+        }
 
-		const CIDA& get() const
-		{
-			CIDA* pcida = m_lock.get();
-			if (!pcida)
-				BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
-			return *pcida;
-		}
+        const CIDA& get() const
+        {
+            CIDA* pcida = m_lock.get();
+            if (!pcida)
+                BOOST_THROW_EXCEPTION(com_error(E_UNEXPECTED));
+            return *pcida;
+        }
 
-	private:
-		GlobalCida(const GlobalCida& cida); // Disabled
-		GlobalCida& operator=(const GlobalCida& cida); // Disabled
-		StorageMedium m_medium;
-		GlobalLocker<CIDA> m_lock;
-	};
+    private:
+        GlobalCida(const GlobalCida& cida); // Disabled
+        GlobalCida& operator=(const GlobalCida& cida); // Disabled
+        StorageMedium m_medium;
+        GlobalLocker<CIDA> m_lock;
+    };
 
-	/**
-	 * Return a STGMEDIUM with a list of PIDLs in global memory.
-	 */
-	StorageMedium cfstr_shellidlist_from_data_object(
-		const com_ptr<IDataObject> data_object)
-	{
-		FORMATETC fetc = {
-			register_format(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1,
-			TYMED_HGLOBAL
-		};
+    /**
+     * Return a STGMEDIUM with a list of PIDLs in global memory.
+     */
+    StorageMedium cfstr_shellidlist_from_data_object(
+        const com_ptr<IDataObject> data_object)
+    {
+        FORMATETC fetc = {
+            register_format(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1,
+            TYMED_HGLOBAL
+        };
 
-		StorageMedium medium;
-		HRESULT hr = data_object->GetData(&fetc, medium.out());
-		if (FAILED(hr))
-			BOOST_THROW_EXCEPTION(com_error(hr));
+        StorageMedium medium;
+        HRESULT hr = data_object->GetData(&fetc, medium.out());
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error(hr));
 
-		assert(medium.get().hGlobal);
-		return medium;
-	}
+        assert(medium.get().hGlobal);
+        return medium;
+    }
 
 #pragma region CIDA Accessors
 
-	/**
-	 * Return a pointer to the ith PIDL in the CIDA.
-	 */
-	pidl_t pidl_from_cida(const CIDA& cida, int i)
-	{
-		unsigned int offset = cida.aoffset[i];
-		const BYTE* position = reinterpret_cast<const BYTE*>(&cida) + offset;
+    /**
+     * Return a pointer to the ith PIDL in the CIDA.
+     */
+    pidl_t pidl_from_cida(const CIDA& cida, int i)
+    {
+        unsigned int offset = cida.aoffset[i];
+        const BYTE* position = reinterpret_cast<const BYTE*>(&cida) + offset;
 
-		return reinterpret_cast<PCIDLIST_RELATIVE>(position);
-	}
+        return reinterpret_cast<PCIDLIST_RELATIVE>(position);
+    }
 
-	/**
-	 * Return a pointer to the PIDL corresponding to the parent folder of the 
-	 * other PIDLs.
-	 */
-	apidl_t parent_from_cida(const CIDA& cida)
-	{
-		return winapi::shell::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
-	}
+    /**
+     * Return a pointer to the PIDL corresponding to the parent folder of the 
+     * other PIDLs.
+     */
+    apidl_t parent_from_cida(const CIDA& cida)
+    {
+        return winapi::shell::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
+    }
 
-	/**
-	 * Return a pointer to the ith child PIDL in the CIDA (i+1th PIDL).
-	 */
-	pidl_t child_from_cida(const CIDA& cida, int i)
-	{
-		return pidl_from_cida(cida, i + 1);
-	}
+    /**
+     * Return a pointer to the ith child PIDL in the CIDA (i+1th PIDL).
+     */
+    pidl_t child_from_cida(const CIDA& cida, int i)
+    {
+        return pidl_from_cida(cida, i + 1);
+    }
 
 #pragma endregion
 }
@@ -145,7 +145,7 @@ namespace { // private
 #pragma region ShellDataObject implementation
 
 ShellDataObject::ShellDataObject( IDataObject *pDataObj ) :
-	m_spDataObj(pDataObj)
+    m_spDataObj(pDataObj)
 {
 }
 
@@ -163,12 +163,12 @@ ShellDataObject::~ShellDataObject()
  */
 bool ShellDataObject::has_pidl_format() const
 {
-	FORMATETC fetc = {
-		register_format(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1,
-		TYMED_HGLOBAL
-	};
+    FORMATETC fetc = {
+        register_format(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1,
+        TYMED_HGLOBAL
+    };
 
-	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_spDataObj->QueryGetData(&fetc) == S_OK;
 }
 
 /**
@@ -181,11 +181,11 @@ bool ShellDataObject::has_pidl_format() const
  */
 bool ShellDataObject::has_hdrop_format() const
 {
-	FORMATETC fetc = {
-		CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
-	};
+    FORMATETC fetc = {
+        CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
+    };
 
-	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_spDataObj->QueryGetData(&fetc) == S_OK;
 }
 
 /**
@@ -199,8 +199,8 @@ bool ShellDataObject::has_hdrop_format() const
  */
 bool ShellDataObject::has_file_group_descriptor_format() const
 {
-	return has_unicode_file_group_descriptor_format() || 
-		has_ansi_file_group_descriptor_format();
+    return has_unicode_file_group_descriptor_format() || 
+        has_ansi_file_group_descriptor_format();
 }
 
 /**
@@ -213,12 +213,12 @@ bool ShellDataObject::has_file_group_descriptor_format() const
  */
 bool ShellDataObject::has_unicode_file_group_descriptor_format() const
 {
-	FORMATETC fetc = {
-		register_format(CFSTR_FILEDESCRIPTORW), NULL, DVASPECT_CONTENT, -1,
-		TYMED_HGLOBAL
-	};
+    FORMATETC fetc = {
+        register_format(CFSTR_FILEDESCRIPTORW), NULL, DVASPECT_CONTENT, -1,
+        TYMED_HGLOBAL
+    };
 
-	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_spDataObj->QueryGetData(&fetc) == S_OK;
 }
 
 /**
@@ -231,12 +231,12 @@ bool ShellDataObject::has_unicode_file_group_descriptor_format() const
  */
 bool ShellDataObject::has_ansi_file_group_descriptor_format() const
 {
-	FORMATETC fetc = {
-		register_format(CFSTR_FILEDESCRIPTORA), NULL, DVASPECT_CONTENT, -1,
-		TYMED_HGLOBAL
-	};
+    FORMATETC fetc = {
+        register_format(CFSTR_FILEDESCRIPTORA), NULL, DVASPECT_CONTENT, -1,
+        TYMED_HGLOBAL
+    };
 
-	return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_spDataObj->QueryGetData(&fetc) == S_OK;
 }
 
 #pragma endregion
@@ -244,7 +244,7 @@ bool ShellDataObject::has_ansi_file_group_descriptor_format() const
 #pragma region PidlFormat implementation
 
 PidlFormat::PidlFormat(const com_ptr<IDataObject>& data_object) :
-	m_data_object(data_object)
+    m_data_object(data_object)
 {}
 
 PidlFormat::~PidlFormat() {}
@@ -255,13 +255,13 @@ PidlFormat::~PidlFormat() {}
  */
 apidl_t PidlFormat::parent_folder() const
 {
-	if (!m_data_object)
-		BOOST_THROW_EXCEPTION(std::logic_error("Empty (NULL) Data Object"));
+    if (!m_data_object)
+        BOOST_THROW_EXCEPTION(std::logic_error("Empty (NULL) Data Object"));
 
-	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
+    GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
 
-	apidl_t pidl = parent_from_cida(global_cida.get());
-	return pidl;
+    apidl_t pidl = parent_from_cida(global_cida.get());
+    return pidl;
 }
 
 /**
@@ -269,10 +269,10 @@ apidl_t PidlFormat::parent_folder() const
  */
 apidl_t PidlFormat::file(UINT i) const
 {
-	if (pidl_count() == 0)
-		BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
+    if (pidl_count() == 0)
+        BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
 
-	return parent_folder() + relative_file(i);
+    return parent_folder() + relative_file(i);
 }
 
 /**
@@ -280,17 +280,17 @@ apidl_t PidlFormat::file(UINT i) const
  */
 pidl_t PidlFormat::relative_file(UINT i) const
 {
-	if (!m_data_object)
-		BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
+    if (!m_data_object)
+        BOOST_THROW_EXCEPTION(std::range_error("Empty (NULL) Data Object"));
 
-	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
-	if (i >= global_cida.get().cidl)
-		BOOST_THROW_EXCEPTION(std::range_error(
-			"The index is greater than the number of PIDLs in the "
-			"Data Object"));
+    GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
+    if (i >= global_cida.get().cidl)
+        BOOST_THROW_EXCEPTION(std::range_error(
+            "The index is greater than the number of PIDLs in the "
+            "Data Object"));
 
-	pidl_t pidl = child_from_cida(global_cida.get(), i);
-	return pidl;
+    pidl_t pidl = child_from_cida(global_cida.get(), i);
+    return pidl;
 }
 
 /**
@@ -299,11 +299,11 @@ pidl_t PidlFormat::relative_file(UINT i) const
  */
 UINT PidlFormat::pidl_count() const
 {
-	if (!m_data_object)
-		return 0;
+    if (!m_data_object)
+        return 0;
 
-	GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
-	return global_cida.get().cidl;
+    GlobalCida global_cida(cfstr_shellidlist_from_data_object(m_data_object));
+    return global_cida.get().cidl;
 }
 
 #pragma endregion

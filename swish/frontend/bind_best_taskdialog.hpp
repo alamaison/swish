@@ -38,9 +38,9 @@ winapi::gui::task_dialog::tdi_function bind_best_taskdialog();
 class best_taskdialog : public winapi::gui::task_dialog::tdi_implementation
 {
 public:
-	best_taskdialog()
-		: winapi::gui::task_dialog::tdi_implementation(bind_best_taskdialog())
-	{}
+    best_taskdialog()
+        : winapi::gui::task_dialog::tdi_implementation(bind_best_taskdialog())
+    {}
 };
 
 }} // namespace swish::frontend

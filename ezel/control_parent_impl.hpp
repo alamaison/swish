@@ -44,39 +44,39 @@ namespace detail {
 class control_parent_impl : public window_impl
 {
 public:
-	typedef window_impl super;
+    typedef window_impl super;
 
-	typedef message_map<WM_COMMAND> messages;
+    typedef message_map<WM_COMMAND> messages;
 
-	virtual LRESULT handle_message(
-		UINT message, WPARAM wparam, LPARAM lparam)
-	{
-		return dispatch_message(this, message, wparam, lparam);
-	}
+    virtual LRESULT handle_message(
+        UINT message, WPARAM wparam, LPARAM lparam)
+    {
+        return dispatch_message(this, message, wparam, lparam);
+    }
 
-	/**
-	 * What to do if this window is sent a command message by a child window.
-	 *
-	 * We reflect the command back to the control that sent it in case
-	 * wants to react to it.
-	 */
-	LRESULT on(message<WM_COMMAND> m)
-	{
-		window_impl* w = window_from_hwnd(m.control_hwnd());
-		assert(w != this);
-		
-		w->handle_command(m.command_code(), m.wparam(), m.lparam());
-		
-		return default_message_handler(m);
-	}
+    /**
+     * What to do if this window is sent a command message by a child window.
+     *
+     * We reflect the command back to the control that sent it in case
+     * wants to react to it.
+     */
+    LRESULT on(message<WM_COMMAND> m)
+    {
+        window_impl* w = window_from_hwnd(m.control_hwnd());
+        assert(w != this);
+        
+        w->handle_command(m.command_code(), m.wparam(), m.lparam());
+        
+        return default_message_handler(m);
+    }
 
 protected:
 
-	control_parent_impl(
-		const std::wstring& title, short left, short top, short width,
-		short height)
-		:
-		window_impl(title, left, top, width, height) {}
+    control_parent_impl(
+        const std::wstring& title, short left, short top, short width,
+        short height)
+        :
+        window_impl(title, left, top, width, height) {}
 };
 
 }} // namespace ezel::detail

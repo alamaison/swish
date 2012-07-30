@@ -44,22 +44,22 @@ namespace remote_folder {
 namespace commands {
 
 comet::com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
-	const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
-	const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
+    HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
+    const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+    const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 
 std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
 remote_folder_task_pane_titles(
-	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+    HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 
 std::pair<
-	comet::com_ptr<nse::IEnumUICommand>,
-	comet::com_ptr<nse::IEnumUICommand> >
+    comet::com_ptr<nse::IEnumUICommand>,
+    comet::com_ptr<nse::IEnumUICommand> >
 remote_folder_task_pane_tasks(
-	HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
-	comet::com_ptr<IUnknown> ole_site,
-	const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
-	const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
+    HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
+    comet::com_ptr<IUnknown> ole_site,
+    const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+    const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 
 }}} // namespace swish::remote_folder::commands
 

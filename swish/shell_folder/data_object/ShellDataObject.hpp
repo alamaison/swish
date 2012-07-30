@@ -41,17 +41,17 @@ namespace data_object {
 class ShellDataObject
 {
 public:
-	ShellDataObject(__in IDataObject *pDataObj);
-	~ShellDataObject();
+    ShellDataObject(__in IDataObject *pDataObj);
+    ~ShellDataObject();
 
-	bool has_pidl_format() const;
-	bool has_hdrop_format() const;
-	bool has_file_group_descriptor_format() const;
-	bool has_unicode_file_group_descriptor_format() const;
-	bool has_ansi_file_group_descriptor_format() const;
+    bool has_pidl_format() const;
+    bool has_hdrop_format() const;
+    bool has_file_group_descriptor_format() const;
+    bool has_unicode_file_group_descriptor_format() const;
+    bool has_ansi_file_group_descriptor_format() const;
 
 private:
-	ATL::CComPtr<IDataObject> m_spDataObj;
+    ATL::CComPtr<IDataObject> m_spDataObj;
 };
 
 /**
@@ -60,16 +60,16 @@ private:
 class PidlFormat
 {
 public:
-	PidlFormat(const comet::com_ptr<IDataObject>& data_object);
-	~PidlFormat();
+    PidlFormat(const comet::com_ptr<IDataObject>& data_object);
+    ~PidlFormat();
 
-	winapi::shell::pidl::apidl_t parent_folder() const;
-	winapi::shell::pidl::apidl_t file(UINT i) const;
-	winapi::shell::pidl::pidl_t relative_file(UINT i) const;
-	UINT pidl_count() const;
+    winapi::shell::pidl::apidl_t parent_folder() const;
+    winapi::shell::pidl::apidl_t file(UINT i) const;
+    winapi::shell::pidl::pidl_t relative_file(UINT i) const;
+    UINT pidl_count() const;
 
 private:
-	comet::com_ptr<IDataObject> m_data_object;
+    comet::com_ptr<IDataObject> m_data_object;
 };
 
 }}} // namespace swish::shell_folder::data_object

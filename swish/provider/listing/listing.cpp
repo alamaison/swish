@@ -55,9 +55,9 @@ using std::string;
 
 namespace { // private
 
-	const boost::regex regex("\\S{10,}\\s+\\d+\\s+(\\S+)\\s+(\\S+)\\s+.+");
-	const unsigned int USER_MATCH = 1;
-	const unsigned int GROUP_MATCH = 2;
+    const boost::regex regex("\\S{10,}\\s+\\d+\\s+(\\S+)\\s+(\\S+)\\s+.+");
+    const unsigned int USER_MATCH = 1;
+    const unsigned int GROUP_MATCH = 2;
 }
 
 
@@ -84,11 +84,11 @@ namespace listing {
  */
 bstr_t parse_user_from_long_entry(const string& long_entry)
 {
-	boost::smatch match;
-	if (regex_match(long_entry, match, regex) && match[USER_MATCH].matched)
-		return Utf8StringToWideString(match[USER_MATCH].str());
-	else
-		return comet::bstr_t();
+    boost::smatch match;
+    if (regex_match(long_entry, match, regex) && match[USER_MATCH].matched)
+        return Utf8StringToWideString(match[USER_MATCH].str());
+    else
+        return comet::bstr_t();
 }
 
 /**
@@ -98,11 +98,11 @@ bstr_t parse_user_from_long_entry(const string& long_entry)
  */
 bstr_t parse_group_from_long_entry(const string& long_entry)
 {
-	boost::smatch match;
-	if (regex_match(long_entry, match, regex) && match[GROUP_MATCH].matched)
-		return Utf8StringToWideString(match[GROUP_MATCH].str());
-	else
-		return comet::bstr_t();
+    boost::smatch match;
+    if (regex_match(long_entry, match, regex) && match[GROUP_MATCH].matched)
+        return Utf8StringToWideString(match[GROUP_MATCH].str());
+    else
+        return comet::bstr_t();
 }
 
 /**
@@ -119,65 +119,65 @@ bstr_t parse_group_from_long_entry(const string& long_entry)
  * @returns A listing object representing the file.
  */
 Listing fill_listing_entry(
-	const string& utf8_file_name, const string& utf8_long_entry,
-	const LIBSSH2_SFTP_ATTRIBUTES& attributes)
+    const string& utf8_file_name, const string& utf8_long_entry,
+    const LIBSSH2_SFTP_ATTRIBUTES& attributes)
 {
-	Listing lt = Listing();
+    Listing lt = Listing();
 
-	bstr_t file_name;
-	bstr_t owner;
-	bstr_t group;
+    bstr_t file_name;
+    bstr_t owner;
+    bstr_t group;
 
-	// This function isn't allowed to fail because it would leak BSTRs in
-	// a Listing so we catch any exceptions and return and empty string for
-	// any fields not yet completed
-	try
-	{
-		// Filename
-		file_name = Utf8StringToWideString(utf8_file_name);
+    // This function isn't allowed to fail because it would leak BSTRs in
+    // a Listing so we catch any exceptions and return and empty string for
+    // any fields not yet completed
+    try
+    {
+        // Filename
+        file_name = Utf8StringToWideString(utf8_file_name);
 
-		// Permissions
-		if (attributes.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
-		{
-			lt.uPermissions = attributes.permissions;
-			lt.fIsLink = LIBSSH2_SFTP_S_ISLNK(attributes.permissions);
-			lt.fIsDirectory = LIBSSH2_SFTP_S_ISDIR(attributes.permissions);
-		}
+        // Permissions
+        if (attributes.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)
+        {
+            lt.uPermissions = attributes.permissions;
+            lt.fIsLink = LIBSSH2_SFTP_S_ISLNK(attributes.permissions);
+            lt.fIsDirectory = LIBSSH2_SFTP_S_ISDIR(attributes.permissions);
+        }
 
-		// User & Group
-		if (attributes.flags & LIBSSH2_SFTP_ATTR_UIDGID)
-		{
-			// To be on the safe side assume that the long entry doesn't hold
-			// valid owner and group info if the UID and GID aren't valid
+        // User & Group
+        if (attributes.flags & LIBSSH2_SFTP_ATTR_UIDGID)
+        {
+            // To be on the safe side assume that the long entry doesn't hold
+            // valid owner and group info if the UID and GID aren't valid
 
-			owner = parse_user_from_long_entry(utf8_long_entry);
-			group = parse_group_from_long_entry(utf8_long_entry);
+            owner = parse_user_from_long_entry(utf8_long_entry);
+            group = parse_group_from_long_entry(utf8_long_entry);
 
-			// Numerical fields (UID and GID)
-			lt.uUid = attributes.uid;
-			lt.uGid = attributes.gid;
-		}
+            // Numerical fields (UID and GID)
+            lt.uUid = attributes.uid;
+            lt.uGid = attributes.gid;
+        }
 
-		// Size of file
-		if (attributes.flags & LIBSSH2_SFTP_ATTR_SIZE)
-			lt.uSize = attributes.filesize;
+        // Size of file
+        if (attributes.flags & LIBSSH2_SFTP_ATTR_SIZE)
+            lt.uSize = attributes.filesize;
 
-		// Access & Modification time
-		if (attributes.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)
-		{
-			COleDateTime dateModified(static_cast<time_t>(attributes.mtime));
-			COleDateTime dateAccessed(static_cast<time_t>(attributes.atime));
-			lt.dateModified = dateModified;
-			lt.dateAccessed = dateAccessed;
-		}
-	}
-	catch (const std::exception&) { /* ignore */ }
+        // Access & Modification time
+        if (attributes.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)
+        {
+            COleDateTime dateModified(static_cast<time_t>(attributes.mtime));
+            COleDateTime dateAccessed(static_cast<time_t>(attributes.atime));
+            lt.dateModified = dateModified;
+            lt.dateAccessed = dateAccessed;
+        }
+    }
+    catch (const std::exception&) { /* ignore */ }
 
-	lt.bstrFilename = bstr_t::detach(file_name);
-	lt.bstrOwner = bstr_t::detach(owner);
-	lt.bstrGroup = bstr_t::detach(group);
+    lt.bstrFilename = bstr_t::detach(file_name);
+    lt.bstrOwner = bstr_t::detach(owner);
+    lt.bstrGroup = bstr_t::detach(group);
 
-	return lt;
+    return lt;
 }
 
 }}} // namespace swish::provider::listing
