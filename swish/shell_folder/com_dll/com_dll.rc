@@ -27,17 +27,17 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""atlres.h""\r\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "#include ""shell_folder.rc""\r\n"
     "1 TYPELIB ""Swish.tlb""\r\0"
@@ -52,8 +52,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,3,0
- PRODUCTVERSION 0,6,3,0
+ FILEVERSION 0,7,0,0
+ PRODUCTVERSION 0,7,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x3L
@@ -70,12 +70,12 @@ BEGIN
         BEGIN
             VALUE "Comments", "Secure access to remote directories from Windows Explorer via SSH/SFTP"
             VALUE "FileDescription", "Swish ATL module and in-proc COM server"
-            VALUE "FileVersion", "0.6.3.0"
+            VALUE "FileVersion", "0.7.0.0"
             VALUE "InternalName", "swish-com_dll"
             VALUE "LegalCopyright", "Copyright (C) 2011, 2012 Alexander Lamaison <awl03@doc.ic.ac.uk>"
             VALUE "OriginalFilename", "shell_folder-com_dll.dll"
             VALUE "ProductName", "Swish"
-            VALUE "ProductVersion", "0.6.3.0"
+            VALUE "ProductVersion", "0.7.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -97,7 +97,7 @@ IDR_SWISH               REGISTRY                "Swish.rgs"
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PROJNAME            "Swish"
 END
@@ -137,4 +137,3 @@ IDR_REMOTEFOLDER        REGISTRY                "RemoteFolder.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

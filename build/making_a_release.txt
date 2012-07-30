@@ -17,4 +17,4 @@ Add notable changes to NEWS.
 Make sure .po files are compiled to .mo files.
 
 To build the final multi-architecture EXE, run this command in the top level:
-"C:\Program Files (x86)\dotNetInstaller\bin\InstallerLinker.exe" /Output:swish-0.6.3.exe /Template:"C:\Program Files (x86)\dotNetInstaller\bin\dotNetInstaller.exe" /Configuration:setup_conf.xml
+"C:\Program Files (x86)\dotNetInstaller\bin\InstallerLinker.exe" /Output:swish.exe /Template:"C:\Program Files (x86)\dotNetInstaller\bin\dotNetInstaller.exe" /Configuration:setup_conf.xml

@@ -1,3 +1,7 @@
+swish-0.7.0
+-Added support for public key authentication through Pageant key agent.
+-Updated Czech, Spanish, Japanese, Dutch and Portuguese (Brazil) translations.
+
 swish-0.6.3
 -Fixed errors with Windows 8.
 -Disabled compression to support a greater range of SSH servers.
@@ -60,7 +64,7 @@ swish-0.4.1
 -Confirmation before overwriting existing files.
 -Improved write progress indicator.
 -Better error reporting.
--Fix bug where 'Remove' option missing from host menu. 
+-Fix bug where 'Remove' option missing from host menu.
 -German translation.
 
 swish-0.4.0
@@ -125,7 +129,7 @@ swish-0.2.1.8
 -Fixed bug when overwriting existing directories.
 
 swish-0.2.1.7
--Files and folders can be renamed.  If an item with the chosen name already 
+-Files and folders can be renamed.  If an item with the chosen name already
  exists, we offer to overwrite it.  Due to the limitations of SFTP versions 4
  and below, we do this non-atomically which is not ideal.  Time will tell
  whether this is more trouble than it's worth.
@@ -137,17 +141,17 @@ swish-0.2.1.6
 
 swish-0.2.1.5
 -SFTP sessions (connections) are now pooled in the COM ROT so that subsequent
- requests can reuse them without prompting the user for a password or having to 
+ requests can reuse them without prompting the user for a password or having to
  renegotiate with the server.
 
 swish-0.2.1.4
 -Replace the PuTTY-based dataprovider component with one based in libssh2. This
- is vastly more stable. The new backend has all the abilities of the of the 
+ is vastly more stable. The new backend has all the abilities of the of the
  old one with a few exceptions, namely, host-verification (aka known_hosts),
  key-interactive authentication and public-key authentication. Replacing these
  is a priority.
 -The frontend has been integrate much more closely with Explorer.
--Connections are added with a dialog invoked from the Tools menu and are stored 
+-Connections are added with a dialog invoked from the Tools menu and are stored
  in the registry.
 -Explorer displays the default icon for files based on their extension (this
  doesn't work in Windows 98 yet).

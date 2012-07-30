@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "1 TYPELIB ""swish-provider-com_dll.tlb""\r\n"
     "\0"
@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,3,0
- PRODUCTVERSION 0,6,3,0
+ FILEVERSION 0,7,0,0
+ PRODUCTVERSION 0,7,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,13 +70,13 @@ BEGIN
         BLOCK "080004e4"
         BEGIN
             VALUE "FileDescription", "Swish libssh2-based SFTP connection provider"
-            VALUE "FileVersion", "0.6.3.0"
+            VALUE "FileVersion", "0.7.0.0"
             VALUE "InternalName", "provider-com_dll.dll"
             VALUE "LegalCopyright", "Copyright (C) 2011, 2012 Alexander Lamaison <awl03@doc.ic.ac.uk>"
             VALUE "LegalTrademarks", "This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/)"
             VALUE "OriginalFilename", "provider-com_dll.dll"
             VALUE "ProductName", "Swish"
-            VALUE "ProductVersion", "0.6.3.0"
+            VALUE "ProductVersion", "0.7.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -99,4 +99,3 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-
