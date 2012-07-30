@@ -6,9 +6,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-13 11:59-0000\n"
-"PO-Revision-Date: 2012-05-15 07:42+0000\n"
-"Last-Translator: Alessandro Calorì <axelgenus@gmail.com>\n"
+"POT-Creation-Date: 2012-07-30 14:18-0000\n"
+"PO-Revision-Date: 2012-07-30 13:20+0000\n"
+"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -286,50 +286,65 @@ msgctxt "Property"
 msgid "Type"
 msgstr "Tipo"
 
-#: ../../swish/host_folder/commands.cpp:110
-msgid "&Add SFTP Connection"
-msgstr "&Aggiungi Connessione SFTP"
-
-#: ../../swish/host_folder/commands.cpp:111
-msgid "Create a new SFTP connection with Swish."
-msgstr "Crea nuova connessione SFTP con Swish."
-
-#: ../../swish/host_folder/commands.cpp:112
-msgid "&Add SFTP Connection..."
-msgstr "&Aggiungi Connessione SFTP..."
-
-#: ../../swish/host_folder/commands.cpp:113
-msgid "Add Connection"
-msgstr "Aggiungi Connessione"
-
-#: ../../swish/host_folder/commands.cpp:143
-msgid "&Remove SFTP Connection"
-msgstr "&Rimuovi Connessione SFTP"
-
-#: ../../swish/host_folder/commands.cpp:144
-msgid "Remove a SFTP connection created with Swish."
-msgstr "Rimuovi Connessione SFTP creata con Swish."
-
-#: ../../swish/host_folder/commands.cpp:145
-msgid "&Remove SFTP Connection..."
-msgstr "&Rimuovi Connessione SFTP..."
-
-#: ../../swish/host_folder/commands.cpp:146
-msgid "Remove Connection"
-msgstr "Rimuovi Connessione"
-
-#: ../../swish/host_folder/commands.cpp:200
-msgid "SFTP Tasks"
-msgstr "Attività SFTP"
-
-#: ../../swish/host_folder/commands.cpp:213
-msgid "These tasks help you manage Swish SFTP connections."
-msgstr "Queste attività consentono di gestire connessioni SFTP Swish."
-
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
 msgid "Network Drive"
 msgstr "Unità di Rete"
+
+#: ../../swish/host_folder/commands/Add.cpp:83
+msgid "&Add SFTP Connection"
+msgstr "&Aggiungi Connessione SFTP"
+
+#: ../../swish/host_folder/commands/Add.cpp:84
+msgid "Create a new SFTP connection with Swish."
+msgstr "Crea nuova connessione SFTP con Swish."
+
+#: ../../swish/host_folder/commands/Add.cpp:85
+msgid "&Add SFTP Connection..."
+msgstr "&Aggiungi Connessione SFTP..."
+
+#: ../../swish/host_folder/commands/Add.cpp:86
+msgid "Add Connection"
+msgstr "Aggiungi Connessione"
+
+#: ../../swish/host_folder/commands/commands.cpp:91
+msgid "SFTP Tasks"
+msgstr "Attività SFTP"
+
+#: ../../swish/host_folder/commands/commands.cpp:104
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Queste attività consentono di gestire connessioni SFTP Swish."
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:98
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:103
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "&Launch key agent"
+msgstr ""
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:99
+msgid "Launch Putty SSH key agent, Pageant."
+msgstr ""
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:106
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "Launch key agent"
+msgstr ""
+
+#: ../../swish/host_folder/commands/Remove.cpp:83
+msgid "&Remove SFTP Connection"
+msgstr "&Rimuovi Connessione SFTP"
+
+#: ../../swish/host_folder/commands/Remove.cpp:84
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Rimuovi Connessione SFTP creata con Swish."
+
+#: ../../swish/host_folder/commands/Remove.cpp:85
+msgid "&Remove SFTP Connection..."
+msgstr "&Rimuovi Connessione SFTP..."
+
+#: ../../swish/host_folder/commands/Remove.cpp:86
+msgid "Remove Connection"
+msgstr "Rimuovi Connessione"
 
 #: ../../swish/remote_folder/columns.cpp:82
 msgctxt "Property"
@@ -371,61 +386,61 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr "ID Gruppo"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:155
+#: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
 msgstr "Apri co&llegamento"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:177
+#: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
 msgstr "Apri"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:271
+#: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
 msgstr "Impossibile aprire il collegamento"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:272
-#: ../../swish/remote_folder/context_menu_callback.cpp:376
-#: ../../swish/remote_folder/commands/commands.cpp:262
+#: ../../swish/remote_folder/context_menu_callback.cpp:274
+#: ../../swish/remote_folder/context_menu_callback.cpp:379
 #: ../../swish/remote_folder/commands/delete.cpp:232
+#: ../../swish/remote_folder/commands/NewFolder.cpp:240
 msgid "You might not have permission."
 msgstr "Potresti non avere i permessi."
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:375
+#: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
 msgstr "Impossibile aprire il file"
 
-#: ../../swish/remote_folder/commands/commands.cpp:191
-msgid "New &folder"
-msgstr "Nuova &cartella"
-
-#: ../../swish/remote_folder/commands/commands.cpp:192
-msgid "Create a new, empty folder in the folder you have open."
-msgstr "Crea una nuova cartella vuota nella cartella che hai aperto."
-
-#: ../../swish/remote_folder/commands/commands.cpp:194
-msgid "Make a new folder"
-msgstr "Crea una nuova cartella"
-
-#: ../../swish/remote_folder/commands/commands.cpp:233
-msgctxt "Initial name"
-msgid "New folder"
-msgstr "Nuova Cartella"
-
-#: ../../swish/remote_folder/commands/commands.cpp:261
-msgid "Could not create a new folder"
-msgstr "Non si riesce a creare una nuova cartella"
-
-#: ../../swish/remote_folder/commands/commands.cpp:290
+#: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
 msgstr "Operazioni su files e cartelle."
 
-#: ../../swish/remote_folder/commands/commands.cpp:302
+#: ../../swish/remote_folder/commands/commands.cpp:105
 msgid "These tasks help you manage your remote files."
 msgstr "Queste operazioni ti permettono di gestire i tuoi files remoti."
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
 msgstr "Non si riesce a cancellare l'oggetto."
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:168
+msgid "New &folder"
+msgstr "Nuova &cartella"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:169
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Crea una nuova cartella vuota nella cartella che hai aperto."
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:171
+msgid "Make a new folder"
+msgstr "Crea una nuova cartella"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:211
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Nuova Cartella"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:239
+msgid "Could not create a new folder"
+msgstr "Non si riesce a creare una nuova cartella"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"

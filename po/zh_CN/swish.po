@@ -6,9 +6,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-13 11:59-0000\n"
-"PO-Revision-Date: 2012-05-22 10:21+0000\n"
-"Last-Translator: Rob . <rbnwmk@gmail.com>\n"
+"POT-Creation-Date: 2012-07-30 14:18-0000\n"
+"PO-Revision-Date: 2012-07-30 13:20+0000\n"
+"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -286,50 +286,65 @@ msgctxt "Property"
 msgid "Type"
 msgstr "种类"
 
-#: ../../swish/host_folder/commands.cpp:110
-msgid "&Add SFTP Connection"
-msgstr "添加 SFTP 连接(&A)"
-
-#: ../../swish/host_folder/commands.cpp:111
-msgid "Create a new SFTP connection with Swish."
-msgstr "用 Swish 创建新的 SFTP 连接。"
-
-#: ../../swish/host_folder/commands.cpp:112
-msgid "&Add SFTP Connection..."
-msgstr "添加 SFTP 连接(&A)..."
-
-#: ../../swish/host_folder/commands.cpp:113
-msgid "Add Connection"
-msgstr "添加连接"
-
-#: ../../swish/host_folder/commands.cpp:143
-msgid "&Remove SFTP Connection"
-msgstr "删除 SFTP 连接(&R)"
-
-#: ../../swish/host_folder/commands.cpp:144
-msgid "Remove a SFTP connection created with Swish."
-msgstr "删除一个 Swish 创建的 SFTP 连接。"
-
-#: ../../swish/host_folder/commands.cpp:145
-msgid "&Remove SFTP Connection..."
-msgstr "删除 SFTP 连接(&R)..."
-
-#: ../../swish/host_folder/commands.cpp:146
-msgid "Remove Connection"
-msgstr "删除连接"
-
-#: ../../swish/host_folder/commands.cpp:200
-msgid "SFTP Tasks"
-msgstr "SFTP 任务"
-
-#: ../../swish/host_folder/commands.cpp:213
-msgid "These tasks help you manage Swish SFTP connections."
-msgstr "此任务帮你管理 SFTP 连接。"
-
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
 msgid "Network Drive"
 msgstr "网络驱动器"
+
+#: ../../swish/host_folder/commands/Add.cpp:83
+msgid "&Add SFTP Connection"
+msgstr "添加 SFTP 连接(&A)"
+
+#: ../../swish/host_folder/commands/Add.cpp:84
+msgid "Create a new SFTP connection with Swish."
+msgstr "用 Swish 创建新的 SFTP 连接。"
+
+#: ../../swish/host_folder/commands/Add.cpp:85
+msgid "&Add SFTP Connection..."
+msgstr "添加 SFTP 连接(&A)..."
+
+#: ../../swish/host_folder/commands/Add.cpp:86
+msgid "Add Connection"
+msgstr "添加连接"
+
+#: ../../swish/host_folder/commands/commands.cpp:91
+msgid "SFTP Tasks"
+msgstr "SFTP 任务"
+
+#: ../../swish/host_folder/commands/commands.cpp:104
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "此任务帮你管理 SFTP 连接。"
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:98
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:103
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "&Launch key agent"
+msgstr ""
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:99
+msgid "Launch Putty SSH key agent, Pageant."
+msgstr ""
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:106
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "Launch key agent"
+msgstr ""
+
+#: ../../swish/host_folder/commands/Remove.cpp:83
+msgid "&Remove SFTP Connection"
+msgstr "删除 SFTP 连接(&R)"
+
+#: ../../swish/host_folder/commands/Remove.cpp:84
+msgid "Remove a SFTP connection created with Swish."
+msgstr "删除一个 Swish 创建的 SFTP 连接。"
+
+#: ../../swish/host_folder/commands/Remove.cpp:85
+msgid "&Remove SFTP Connection..."
+msgstr "删除 SFTP 连接(&R)..."
+
+#: ../../swish/host_folder/commands/Remove.cpp:86
+msgid "Remove Connection"
+msgstr "删除连接"
 
 #: ../../swish/remote_folder/columns.cpp:82
 msgctxt "Property"
@@ -371,61 +386,61 @@ msgctxt "Property"
 msgid "Group ID"
 msgstr "组 ID"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:155
+#: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
 msgstr "打开連接(&l)"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:177
+#: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
 msgstr "打开(&O)"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:271
+#: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
 msgstr "无法打开连接"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:272
-#: ../../swish/remote_folder/context_menu_callback.cpp:376
-#: ../../swish/remote_folder/commands/commands.cpp:262
+#: ../../swish/remote_folder/context_menu_callback.cpp:274
+#: ../../swish/remote_folder/context_menu_callback.cpp:379
 #: ../../swish/remote_folder/commands/delete.cpp:232
+#: ../../swish/remote_folder/commands/NewFolder.cpp:240
 msgid "You might not have permission."
 msgstr "也许您没有权限。"
 
-#: ../../swish/remote_folder/context_menu_callback.cpp:375
+#: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
 msgstr "无法打开相关文件"
 
-#: ../../swish/remote_folder/commands/commands.cpp:191
-msgid "New &folder"
-msgstr "新 &文件夹"
-
-#: ../../swish/remote_folder/commands/commands.cpp:192
-msgid "Create a new, empty folder in the folder you have open."
-msgstr "在你已打开的文件夹内创建一个新的空文件夹。"
-
-#: ../../swish/remote_folder/commands/commands.cpp:194
-msgid "Make a new folder"
-msgstr "创建一个新文件夹"
-
-#: ../../swish/remote_folder/commands/commands.cpp:233
-msgctxt "Initial name"
-msgid "New folder"
-msgstr "新文件夹"
-
-#: ../../swish/remote_folder/commands/commands.cpp:261
-msgid "Could not create a new folder"
-msgstr "无法创建新文件夹"
-
-#: ../../swish/remote_folder/commands/commands.cpp:290
+#: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
 msgstr "文件和文件夹任务"
 
-#: ../../swish/remote_folder/commands/commands.cpp:302
+#: ../../swish/remote_folder/commands/commands.cpp:105
 msgid "These tasks help you manage your remote files."
 msgstr "此任务帮你管理你的远程文件。"
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
 msgstr "无法删除项目"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:168
+msgid "New &folder"
+msgstr "新 &文件夹"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:169
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "在你已打开的文件夹内创建一个新的空文件夹。"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:171
+msgid "Make a new folder"
+msgstr "创建一个新文件夹"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:211
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "新文件夹"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:239
+msgid "Could not create a new folder"
+msgstr "无法创建新文件夹"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
