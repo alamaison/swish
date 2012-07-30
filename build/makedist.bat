@@ -1,18 +1,18 @@
 @echo off
 rem Script to create a Swish source distribution
-rem 
-rem Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
-rem 
+rem
+rem Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+rem
 rem This program is free software; you can redistribute it and/or modify
 rem it under the terms of the GNU General Public License as published by
 rem the Free Software Foundation; either version 2 of the License, or
 rem (at your option) any later version.
-rem 
+rem
 rem This program is distributed in the hope that it will be useful,
 rem but WITHOUT ANY WARRANTY; without even the implied warranty of
 rem MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 rem GNU General Public License for more details.
-rem 
+rem
 rem You should have received a copy of the GNU General Public License along
 rem with this program; if not, write to the Free Software Foundation, Inc.,
 rem 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -20,15 +20,21 @@ rem 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 setlocal
 echo.
 
-set DIST=dist
-set STAGING=dist.temp
+set DIST=%~dp0\..\dist
+set STAGING=%DIST%.temp
+echo Creating distribution at : %DIST%
+
+set WGET=%~dp0\wget\wget.exe -N
+echo Using wget at : %WGET%
+
+set SEVENZ=%~dp0\7za\7za.exe
+echo using 7zip at %SEVENZ%
 
 cd ..
-set WGET=build\wget\wget.exe -N
-set SEVENZ=build\7za\7za.exe
 
 echo ===- Copying the local Git repository ...
 if exist %STAGING% rd /S /Q %STAGING%
+if exist %STAGING%2 rd /S /Q %STAGING%2
 
 rem Use a second staging dir so we can xcopy removing .gits later
 call git clone -l . %STAGING%2/ || (
@@ -55,11 +61,11 @@ if not exist %DIST% md %DIST%
 pushd %STAGING%
 set VERSION=git
 set PKG_NAME=swish-%VERSION%-src
-if exist ..\%DIST%.\%PKG_NAME%.7z del ..\%DIST%.\%PKG_NAME%.7z
-..\%SEVENZ% a -t7z ..\%DIST%.\%PKG_NAME%.7z * || (
+if exist %DIST%.\%PKG_NAME%.7z del %DIST%.\%PKG_NAME%.7z
+%SEVENZ% a -t7z %DIST%.\%PKG_NAME%.7z * || (
 	echo ===- Error creating .7z package & goto error)
-if exist ..\%DIST%.\%PKG_NAME%.zip del ..\%DIST%.\%PKG_NAME%.zip
-..\%SEVENZ% a -tzip ..\%DIST%.\%PKG_NAME%.zip * || (
+if exist %DIST%.\%PKG_NAME%.zip del %DIST%.\%PKG_NAME%.zip
+%SEVENZ% a -tzip %DIST%.\%PKG_NAME%.zip * || (
 	echo ===- Error creating .zip package & goto error)
 popd
 
