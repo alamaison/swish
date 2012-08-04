@@ -230,28 +230,6 @@ STDMETHODIMP CMockSftpProvider::Rename(
     }
 }
 
-STDMETHODIMP CMockSftpProvider::Delete(
-    ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
-{
-    CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
-    CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
-    // Temporary condtion - remove for Windows support
-    CPPUNIT_ASSERT( CComBSTR(bstrPath)[0] == OLECHAR('/') );
-
-    return S_OK;
-}
-
-STDMETHODIMP CMockSftpProvider::DeleteDirectory(
-    ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
-{
-    CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() > 0 );
-    CPPUNIT_ASSERT( CComBSTR(bstrPath).Length() <= MAX_FILENAME_LEN );
-    // Temporary condtion - remove for Windows support
-    CPPUNIT_ASSERT( CComBSTR(bstrPath)[0] == OLECHAR('/') );
-
-    return S_OK;
-}
-
 STDMETHODIMP CMockSftpProvider::CreateNewFile(
     ISftpConsumer* /*pConsumer*/, BSTR bstrPath)
 {

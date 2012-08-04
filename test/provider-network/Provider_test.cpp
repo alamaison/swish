@@ -75,8 +75,12 @@ public:
     {
         if (_FileExists(_TestArea()))
         {
-            m_pProvider->DeleteDirectory(
-                m_pConsumer, bstr_t(_TestArea()).in());
+            try
+            {
+                m_pProvider->delete_directory(
+                    m_pConsumer, bstr_t(_TestArea()).in());
+            }
+            catch (const std::exception&) { /* ignore */ }
         }
 
         if (m_pProvider) // Possible for test to fail before initialised
@@ -367,7 +371,7 @@ BOOST_AUTO_TEST_CASE( GetListingIndependence )
         BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
 
     // Delete one of the files
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, two.in()));
+    m_pProvider->delete_file(m_pConsumer, two.in());
 
     // Fetch second listing enumerator
     com_ptr<IEnumListing> enum_after;
@@ -391,8 +395,8 @@ BOOST_AUTO_TEST_CASE( GetListingIndependence )
         L"GetListingIndependence3", enum_after));
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, one.in()));
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, three.in()));
+    m_pProvider->delete_file(m_pConsumer, one.in());
+    m_pProvider->delete_file(m_pConsumer, three.in());
 }
 
 BOOST_AUTO_TEST_CASE( Rename )
@@ -427,7 +431,7 @@ BOOST_AUTO_TEST_CASE( Rename )
     CHECK_PATH_NOT_EXISTS(target.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, subject.in()));
+    m_pProvider->delete_file(m_pConsumer, subject.in());
 }
 
 BOOST_AUTO_TEST_CASE( RenameWithObstruction )
@@ -471,7 +475,7 @@ BOOST_AUTO_TEST_CASE( RenameWithObstruction )
     CHECK_PATH_NOT_EXISTS(swish_temp.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, target.in()));
+    m_pProvider->delete_file(m_pConsumer, target.in());
     CHECK_PATH_NOT_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 }
@@ -506,7 +510,7 @@ BOOST_AUTO_TEST_CASE( RenameNoDirectory )
     BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, subject.in()));
+    m_pProvider->delete_file(m_pConsumer, subject.in());
 }
 
 BOOST_AUTO_TEST_CASE( RenameFolder )
@@ -541,8 +545,7 @@ BOOST_AUTO_TEST_CASE( RenameFolder )
     CHECK_PATH_NOT_EXISTS(target.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->DeleteDirectory(
-        m_pConsumer, subject.in()));
+    m_pProvider->delete_directory(m_pConsumer, subject.in());
     CHECK_PATH_NOT_EXISTS(subject.in());
 }
 
@@ -595,8 +598,7 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
     CHECK_PATH_NOT_EXISTS(swish_temp.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(
-        m_pProvider->DeleteDirectory(m_pConsumer, target.in()));
+    m_pProvider->delete_directory(m_pConsumer, target.in());
     CHECK_PATH_NOT_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 }
@@ -635,8 +637,8 @@ BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
     CHECK_PATH_EXISTS(target.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, subject.in()));
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, target.in()));
+    m_pProvider->delete_file(m_pConsumer, subject.in());
+    m_pProvider->delete_file(m_pConsumer, target.in());
     CHECK_PATH_NOT_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 }
@@ -676,10 +678,8 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithRefusedConfirmation )
     CHECK_PATH_EXISTS(target.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(
-        m_pProvider->DeleteDirectory(m_pConsumer, subject.in()));
-    BOOST_REQUIRE_OK(
-        m_pProvider->DeleteDirectory(m_pConsumer, target.in()));
+    m_pProvider->delete_directory(m_pConsumer, subject.in());
+    m_pProvider->delete_directory(m_pConsumer, target.in());
     CHECK_PATH_NOT_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 }
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeFolder )
     CHECK_PATH_NOT_EXISTS(target.in());
 
     // Cleanup
-    BOOST_REQUIRE_OK(m_pProvider->Delete(m_pConsumer, subject.in()));
+    m_pProvider->delete_file(m_pConsumer, subject.in());
     CHECK_PATH_NOT_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 }
@@ -758,8 +758,7 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeSubfolder )
     CHECK_PATH_NOT_EXISTS(target.in());
     
     // Cleanup
-    BOOST_REQUIRE_OK(
-        m_pProvider->DeleteDirectory(m_pConsumer, folder.in()));
+    m_pProvider->delete_directory(m_pConsumer, folder.in());
     CHECK_PATH_NOT_EXISTS(folder.in());
 }
 
@@ -779,8 +778,7 @@ BOOST_AUTO_TEST_CASE( CreateAndDelete )
     BOOST_REQUIRE_OK(hr);
 
     // Test deleting file
-    hr = m_pProvider->Delete(m_pConsumer, subject.in());
-    BOOST_REQUIRE_OK(hr);
+    m_pProvider->delete_file(m_pConsumer, subject.in());
 
     // Check that the file does not still exist
     CHECK_PATH_NOT_EXISTS(subject.in());
@@ -802,9 +800,8 @@ BOOST_AUTO_TEST_CASE( CreateAndDeleteEmptyDirectory )
     BOOST_REQUIRE_OK(hr);
 
     // Test deleting directory
-    hr = m_pProvider->DeleteDirectory(m_pConsumer, subject.in());
-    BOOST_REQUIRE_OK(hr);
-
+    m_pProvider->delete_directory(m_pConsumer, subject.in());
+    
     // Check that the directory does not still exist
     CHECK_PATH_NOT_EXISTS(subject.in());
 }
@@ -831,8 +828,7 @@ BOOST_AUTO_TEST_CASE( CreateAndDeleteDirectoryRecursive )
     BOOST_REQUIRE_OK(hr);
 
     // Test deleting directory
-    hr = m_pProvider->DeleteDirectory(m_pConsumer, directory.in());
-    BOOST_REQUIRE_OK(hr);
+    m_pProvider->delete_directory(m_pConsumer, directory.in());
 
     // Check that the directory does not still exist
     CHECK_PATH_NOT_EXISTS(directory.in());

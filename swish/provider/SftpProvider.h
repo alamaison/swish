@@ -47,152 +47,180 @@
  */
 
 struct Listing {
-	BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
-	ULONG uPermissions;   ///< Unix file permissions
-	BSTR bstrOwner;       ///< The user name of the file's owner
-	BSTR bstrGroup;       ///< The name of the group to which the file belongs
-	ULONG uUid;           ///< Numerical ID of file's owner
-	ULONG uGid;           ///< Numerical ID of group to which the file belongs
-	ULONGLONG uSize;      ///< The file's size in bytes
-	ULONG cHardLinks;     ///< The number of hard links referencing this file
-	DATE dateModified;    ///< The date and time at which the file was 
-	                      ///< last modified in automation-compatible format
-	DATE dateAccessed;    ///< The date and time at which the file was 
-	                      ///< last accessed in automation-compatible format
-	BOOL fIsDirectory;    ///< This filesystem item can be listed for items
-	                      ///< under it.
-	BOOL fIsLink;         ///< This file is a link to another file or directory
+    BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
+    ULONG uPermissions;   ///< Unix file permissions
+    BSTR bstrOwner;       ///< The user name of the file's owner
+    BSTR bstrGroup;       ///< The name of the group to which the file belongs
+    ULONG uUid;           ///< Numerical ID of file's owner
+    ULONG uGid;           ///< Numerical ID of group to which the file belongs
+    ULONGLONG uSize;      ///< The file's size in bytes
+    ULONG cHardLinks;     ///< The number of hard links referencing this file
+    DATE dateModified;    ///< The date and time at which the file was 
+                          ///< last modified in automation-compatible format
+    DATE dateAccessed;    ///< The date and time at which the file was 
+                          ///< last accessed in automation-compatible format
+    BOOL fIsDirectory;    ///< This filesystem item can be listed for items
+                          ///< under it.
+    BOOL fIsLink;         ///< This file is a link to another file or directory
 };
 
 class IEnumListing : public IUnknown
 {
 public:
 
-	virtual HRESULT Next (
-		ULONG celt,
-		struct Listing *rgelt,
-		ULONG *pceltFetched) = 0;
-	virtual HRESULT Skip (ULONG celt) = 0;
-	virtual HRESULT Reset () = 0;
-	virtual HRESULT Clone (IEnumListing **ppEnum) = 0;
+    virtual HRESULT Next (
+        ULONG celt,
+        struct Listing *rgelt,
+        ULONG *pceltFetched) = 0;
+    virtual HRESULT Skip (ULONG celt) = 0;
+    virtual HRESULT Reset () = 0;
+    virtual HRESULT Clone (IEnumListing **ppEnum) = 0;
 };
 
 class ISftpConsumer : public IUnknown
 {
 public:
 
-	virtual HRESULT OnPasswordRequest(
+    virtual HRESULT OnPasswordRequest(
         BSTR bstrRequest,
         BSTR *pbstrPassword
-	) = 0;
-	virtual HRESULT OnKeyboardInteractiveRequest(
+    ) = 0;
+    virtual HRESULT OnKeyboardInteractiveRequest(
         BSTR bstrName,
         BSTR bstrInstruction,
         SAFEARRAY* saPrompts,
         SAFEARRAY* saShowResponses,
         SAFEARRAY* *psaResponses
-	) = 0;
-	virtual HRESULT OnPrivateKeyFileRequest(
+    ) = 0;
+    virtual HRESULT OnPrivateKeyFileRequest(
         BSTR *pbstrPrivateKeyFile
-	) = 0;
-	virtual HRESULT OnPublicKeyFileRequest(
+    ) = 0;
+    virtual HRESULT OnPublicKeyFileRequest(
         BSTR *pbstrPublicKeyFile
-	) = 0;
-	virtual HRESULT OnConfirmOverwrite(
+    ) = 0;
+    virtual HRESULT OnConfirmOverwrite(
         BSTR bstrOldFile,
         BSTR bstrNewFile
-	) = 0;
-	virtual HRESULT OnHostkeyMismatch(
+    ) = 0;
+    virtual HRESULT OnHostkeyMismatch(
         BSTR bstrHostName,
         BSTR bstrHostKey,
         BSTR bstrHostKeyType
-	) = 0;
-	virtual HRESULT OnHostkeyUnknown(
+    ) = 0;
+    virtual HRESULT OnHostkeyUnknown(
         BSTR bstrHostName,
         BSTR bstrHostKey,
         BSTR bstrHostKeyType
-	) = 0;
+    ) = 0;
 };
 
-class ISftpProvider : public IUnknown
+namespace swish {
+namespace provider {
+
+class provider_interface
 {
 public:
-	virtual HRESULT Initialize(
+    virtual ~provider_interface() {}
+
+    virtual void initialize(BSTR user, BSTR host, UINT port) = 0;
+
+    virtual IEnumListing* get_listing(
+        ISftpConsumer* consumer, BSTR directory) = 0;
+
+    virtual IStream* get_file(
+        ISftpConsumer* consumer, BSTR file_path, BOOL writeable) = 0;
+
+    virtual VARIANT_BOOL rename(
+        ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
+
+    /**
+     * @name Deletion methods
+     * We use two methods rather than one for safety.  This makes it explicit 
+     * what the intended consequence was. It's possible for a user to ask
+     * for a file to be deleted but, meanwhile, it has been changed to a 
+     * directory by someone else.  We do not want to delete the directory 
+     * without the user knowing.
+     */
+    // @{
+
+    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
+
+    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
+
+    // @}
+
+    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
+
+    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
+
+    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
+
+    virtual Listing stat(
+        ISftpConsumer* consumer, BSTR path, BOOL follow_links) = 0;
+};
+
+}}
+
+class ISftpProvider : public IUnknown, public swish::provider::provider_interface
+{
+public:
+    virtual HRESULT Initialize(
         BSTR bstrUser,
         BSTR bstrHost,
         UINT uPort
-	) = 0;
-	virtual HRESULT GetListing(
+    ) = 0;
+    virtual HRESULT GetListing(
         ISftpConsumer *pConsumer,
         BSTR bstrDirectory,
         IEnumListing **ppEnum
-	) = 0;
-	virtual HRESULT GetFile(
+    ) = 0;
+    virtual HRESULT GetFile(
         ISftpConsumer *pConsumer,
-		BSTR bstrFilePath,
-		BOOL fWriteable,
-		IStream **ppStream
-	) = 0;
-	virtual HRESULT Rename(
-		ISftpConsumer *pConsumer,
-		BSTR bstrFromPath,
-		BSTR bstrToPath,
-		VARIANT_BOOL *fWasTargetOverwritten
-	) = 0;
+        BSTR bstrFilePath,
+        BOOL fWriteable,
+        IStream **ppStream
+    ) = 0;
+    virtual HRESULT Rename(
+        ISftpConsumer *pConsumer,
+        BSTR bstrFromPath,
+        BSTR bstrToPath,
+        VARIANT_BOOL *fWasTargetOverwritten
+    ) = 0;
 
-	/**
-	 * @name Deletion methods
-	 * We use two methods rather than one for safety.  This makes it explicit 
-	 * what the @b intended consequence was. It's possible for a user to ask
-	 * for a file to be deleted but, meanwhile, it has been changed to a 
-	 * directory by someone else.  We do not want to delete the directory 
-	 * without the user knowing.
-	 */
-	// @{
-	virtual HRESULT Delete(
-		ISftpConsumer *pConsumer,
-		BSTR bstrPath
-	) = 0;
-	virtual HRESULT DeleteDirectory(
-		ISftpConsumer *pConsumer,
-		BSTR bstrPath
-	) = 0;
-	// @}
-
-	/**
-	 * @name Creation methods
-	 * These are the dual of the deletion methods.  The first one, CreateFile,
-	 * is mainly for the test-suite.  It just creates an empty file at the
-	 * given path (roughly equivalent to Unix @c touch).
-	 */
-	// @{
-	virtual HRESULT CreateNewFile(
-		ISftpConsumer *pConsumer,
-		BSTR bstrPath
-	) = 0;
-	virtual HRESULT CreateNewDirectory(
-		ISftpConsumer *pConsumer,
+    /**
+     * @name Creation methods
+     * These are the dual of the deletion methods.  The first one, CreateFile,
+     * is mainly for the test-suite.  It just creates an empty file at the
+     * given path (roughly equivalent to Unix @c touch).
+     */
+    // @{
+    virtual HRESULT CreateNewFile(
+        ISftpConsumer *pConsumer,
         BSTR bstrPath
-	) = 0;
-	// @}
+    ) = 0;
+    virtual HRESULT CreateNewDirectory(
+        ISftpConsumer *pConsumer,
+        BSTR bstrPath
+    ) = 0;
+    // @}
 
-	/**
-	 * Return the canonical path of the given non-canonical path.
-	 *
-	 * While generally used to resolve symlinks, it can also be used to
-	 * convert paths relative to the startup directory into absolute paths.
-	 */
-	virtual HRESULT ResolveLink(
+    /**
+     * Return the canonical path of the given non-canonical path.
+     *
+     * While generally used to resolve symlinks, it can also be used to
+     * convert paths relative to the startup directory into absolute paths.
+     */
+    virtual HRESULT ResolveLink(
         ISftpConsumer *pConsumer,
         BSTR bstrLinkPath,
         BSTR *pbstrTargetPathOut
-	) = 0;
+    ) = 0;
 
-	virtual HRESULT Stat(
+    virtual HRESULT Stat(
         ISftpConsumer *pConsumer,
         BSTR bstrPath, BOOL fFollowLinks,
-		struct Listing * pplt
-	) = 0;
+        struct Listing * pplt
+    ) = 0;
 };
 
 namespace comet {

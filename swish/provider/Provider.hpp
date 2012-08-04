@@ -50,7 +50,7 @@ namespace provider {
 class provider;
 
 class CProvider :
-    public comet::simple_object<provider_error_adapter, provider_interface>
+    public comet::simple_object<provider_error_adapter>
 {
 public:
 

@@ -51,34 +51,6 @@
 namespace swish {
 namespace provider {
 
-class provider_interface
-{
-public:
-    virtual void initialize(BSTR user, BSTR host, UINT port) = 0;
-
-    virtual IEnumListing* get_listing(
-        ISftpConsumer* consumer, BSTR directory) = 0;
-
-    virtual IStream* get_file(
-        ISftpConsumer* consumer, BSTR file_path, BOOL writeable) = 0;
-
-    virtual VARIANT_BOOL rename(
-        ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
-
-    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
-
-    virtual Listing stat(
-        ISftpConsumer* consumer, BSTR path, BOOL follow_links) = 0;
-};
-
 /**
  * @c Abstract ISftpProvider outer layer that translates exceptions.
  *
@@ -195,35 +167,6 @@ public:
 
             *pfWasTargetOverwritten = impl().rename(
                 pConsumer, bstrFromPath, bstrToPath);
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
-    virtual IFACEMETHODIMP Delete(ISftpConsumer* pConsumer, BSTR bstrPath)
-    {
-        try
-        {
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            impl().delete_file(pConsumer, bstrPath);
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
-    virtual IFACEMETHODIMP DeleteDirectory(
-        ISftpConsumer* pConsumer, BSTR bstrPath)
-    {
-        try
-        {
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            impl().delete_directory(pConsumer, bstrPath);
         }
         WINAPI_COM_CATCH_AUTO_INTERFACE();
 

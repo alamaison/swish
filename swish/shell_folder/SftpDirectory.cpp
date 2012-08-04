@@ -383,11 +383,9 @@ void CSftpDirectory::Delete(const cpidl_t& file)
     
     HRESULT hr;
     if (remote_itemid_view(file).is_folder())
-        hr = m_provider->DeleteDirectory(m_consumer.in(), target_path.in());
+        m_provider->delete_directory(m_consumer.in(), target_path.in());
     else
-        hr = m_provider->Delete(m_consumer.in(), target_path.in());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+        m_provider->delete_file(m_consumer.in(), target_path.in());
 
     try
     {

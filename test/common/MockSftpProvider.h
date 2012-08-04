@@ -134,12 +134,6 @@ public:
         __in BSTR bstrToPath,
         __deref_out VARIANT_BOOL *fWasTargetOverwritten
     );
-    IFACEMETHODIMP Delete(
-        __in ISftpConsumer* pConsumer,
-        __in BSTR bstrPath );
-    IFACEMETHODIMP DeleteDirectory(
-        __in ISftpConsumer* pConsumer,
-        __in BSTR bstrPath );
     IFACEMETHODIMP CreateNewFile(
         __in ISftpConsumer* pConsumer,
         __in BSTR bstrPath );
