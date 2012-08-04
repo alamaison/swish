@@ -29,7 +29,7 @@
 #define SWISH_SHELL_FOLDER_POOL_HPP
 #pragma once
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 

@@ -28,7 +28,7 @@
 #define SWISH_REMOTE_FOLDER_CONTEXT_MENU_CALLBACK_HPP
 #pragma once
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider, ISftpConsumer
 #include "swish/nse/default_context_menu_callback.hpp"
                                                // default_context_menu_callback
 

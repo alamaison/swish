@@ -38,7 +38,7 @@
 
 #include "Session.hpp"
 
-#include "swish/interfaces/SftpProvider.h" // ISftpConsumer
+#include "swish/provider/SftpProvider.h" // ISftpConsumer
 
 #include <winerror.h>  // HRESULT
 

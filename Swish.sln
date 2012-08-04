@@ -11,23 +11,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{D3818F0B-C311-4E86-AD4A-AA9AFE387E24}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "provider", "swish\provider\provider.vcproj", "{CFC0C998-B275-48AB-AAD3-C99272154656}"
-	ProjectSection(ProjectDependencies) = postProject
-		{58748987-258D-435D-80B6-EE067F90A688} = {58748987-258D-435D-80B6-EE067F90A688}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libssh2", "thirdparty\libssh2.vcproj", "{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{9866A391-2C55-4E6E-81AF-627C789FA76A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-common", "test\common\common.vcproj", "{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{58748987-258D-435D-80B6-EE067F90A688} = {58748987-258D-435D-80B6-EE067F90A688}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell_folder", "swish\shell_folder\shell_folder.vcproj", "{859B89CB-90B5-4F71-B501-07D5A3600271}"
-	ProjectSection(ProjectDependencies) = postProject
-		{58748987-258D-435D-80B6-EE067F90A688} = {58748987-258D-435D-80B6-EE067F90A688}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-com_dll", "test\shell_folder-com_dll\shell_folder-com_dll.vcproj", "{D5415386-FA78-4411-AAAA-7B1FEB0D25AF}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -57,8 +48,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-shell_folder-legacy", "test\shell_folder-legacy\shell_folder-legacy.vcproj", "{408AB4A6-1F61-4776-AA16-48BD3E981293}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-common_boost", "test\common_boost\common_boost.vcproj", "{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "interfaces", "swish\interfaces\interfaces.vcproj", "{58748987-258D-435D-80B6-EE067F90A688}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-ssh", "test\ssh\ssh.vcproj", "{641FDC69-2237-418B-8006-5DE78E7E9299}"
 EndProject
@@ -93,9 +82,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-nse", "test\nse\nse.vcproj", "{21A62AE6-312E-4BAD-BFDD-FE21170BA6EB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "frontend", "swish\frontend\frontend.vcproj", "{58F5F798-25C4-4769-BF8C-8646BA44C349}"
-	ProjectSection(ProjectDependencies) = postProject
-		{58748987-258D-435D-80B6-EE067F90A688} = {58748987-258D-435D-80B6-EE067F90A688}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test-provider-network", "test\provider-network\provider-network.vcproj", "{B71660CB-CC46-49C7-8C61-A708EAA690A5}"
 EndProject
@@ -179,14 +165,6 @@ Global
 		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Release|Win32.Build.0 = Release|Win32
 		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Release|x64.ActiveCfg = Release|x64
 		{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}.Release|x64.Build.0 = Release|x64
-		{58748987-258D-435D-80B6-EE067F90A688}.Debug|Win32.ActiveCfg = Debug|Win32
-		{58748987-258D-435D-80B6-EE067F90A688}.Debug|Win32.Build.0 = Debug|Win32
-		{58748987-258D-435D-80B6-EE067F90A688}.Debug|x64.ActiveCfg = Debug|x64
-		{58748987-258D-435D-80B6-EE067F90A688}.Debug|x64.Build.0 = Debug|x64
-		{58748987-258D-435D-80B6-EE067F90A688}.Release|Win32.ActiveCfg = Release|Win32
-		{58748987-258D-435D-80B6-EE067F90A688}.Release|Win32.Build.0 = Release|Win32
-		{58748987-258D-435D-80B6-EE067F90A688}.Release|x64.ActiveCfg = Release|x64
-		{58748987-258D-435D-80B6-EE067F90A688}.Release|x64.Build.0 = Release|x64
 		{641FDC69-2237-418B-8006-5DE78E7E9299}.Debug|Win32.ActiveCfg = Debug|Win32
 		{641FDC69-2237-418B-8006-5DE78E7E9299}.Debug|Win32.Build.0 = Debug|Win32
 		{641FDC69-2237-418B-8006-5DE78E7E9299}.Debug|x64.ActiveCfg = Debug|x64
@@ -352,7 +330,6 @@ Global
 		{CFC0C998-B275-48AB-AAD3-C99272154656} = {D3818F0B-C311-4E86-AD4A-AA9AFE387E24}
 		{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E} = {D3818F0B-C311-4E86-AD4A-AA9AFE387E24}
 		{2F807758-6412-49B4-988D-4E7444C276F7} = {D3818F0B-C311-4E86-AD4A-AA9AFE387E24}
-		{58748987-258D-435D-80B6-EE067F90A688} = {AAB28A44-0697-484F-980B-F6553EA157BE}
 		{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82} = {AAB28A44-0697-484F-980B-F6553EA157BE}
 		{09F3BF08-CB72-409C-BACC-557891E4C221} = {AAB28A44-0697-484F-980B-F6553EA157BE}
 	EndGlobalSection

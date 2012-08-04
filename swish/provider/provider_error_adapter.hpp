@@ -38,7 +38,7 @@
 #define SWISH_PROVIDER_PROVIDER_ERROR_ADAPTER_HPP
 #pragma once
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider
+#include "swish/provider/SftpProvider.h" // ISftpProvider
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 

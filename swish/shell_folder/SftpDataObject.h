@@ -29,7 +29,7 @@
 #include "DataObject.h"
 #include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/shell_folder/Pidl.h"
 
 #include <winapi/shell/pidl.hpp> // cpidl_t

@@ -28,7 +28,7 @@
 #define SWISH_REMOTE_FOLDER_COMMANDS_DELETE_HPP
 #pragma once
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider, ISftpConsumer
 
 #include <comet/ptr.h> // com_ptr
 

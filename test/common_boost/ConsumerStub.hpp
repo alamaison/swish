@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "swish/interfaces/SftpProvider.h"
+#include "swish/provider/SftpProvider.h"
 
 #include "test/common_boost/helpers.hpp"
 

@@ -243,11 +243,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
-			RelativePathToProject=".\thirdparty\libssh2\libssh2.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
-			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
+			RelativePathToProject=".\thirdparty\libssh2.vcproj"
 		/>
 	</References>
 	<Files>

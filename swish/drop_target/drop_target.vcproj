@@ -242,10 +242,6 @@
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
-			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter

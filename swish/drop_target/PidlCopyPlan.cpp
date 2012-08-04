@@ -29,7 +29,7 @@
 #include "swish/drop_target/CopyFileOperation.hpp"
 #include "swish/drop_target/CreateDirectoryOperation.hpp"
 #include "swish/drop_target/RootedSource.hpp"
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
 
 #include <boost/bind.hpp> // bind
 #include <boost/filesystem/path.hpp> // wpath

@@ -36,7 +36,7 @@
 
 #include "listing.hpp"
 
-#include "swish/interfaces/SftpProvider.h" // Listing
+#include "swish/provider/SftpProvider.h" // Listing
 #include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <ATLComTime.h>    // COleDateTime

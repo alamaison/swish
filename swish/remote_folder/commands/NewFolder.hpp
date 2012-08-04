@@ -28,7 +28,7 @@
 #define SWISH_REMOTE_FOLDER_COMMANDS_NEW_FOLDER_HPP
 #pragma once
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider, ISftpConsumer
 #include "swish/nse/Command.hpp" // Command
 
 #include <winapi/shell/pidl.hpp> // apidl_t

@@ -36,7 +36,7 @@
 
 #include "KeyboardInteractive.hpp"
 
-#include "swish/interfaces/SftpProvider.h" // ISftpConsumer
+#include "swish/provider/SftpProvider.h" // ISftpConsumer
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>

@@ -36,7 +36,7 @@
 
 #include "Dispenser.hpp"
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider
+#include "swish/provider/SftpProvider.h" // ISftpProvider
 #include "swish/utils.hpp" // running_object_table
 #include "swish/trace.hpp" // trace
 

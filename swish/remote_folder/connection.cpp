@@ -27,7 +27,7 @@
 
 #include "connection.hpp"
 
-#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/port_conversion.hpp" // port_to_wstring
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_item_view
 #include "swish/provider/Provider.hpp"
