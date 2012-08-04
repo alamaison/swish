@@ -95,9 +95,10 @@ Requirements to build:
     zlib binaries are available at http://www.zlib.net/.
 
 Requirements for testing:
-    CppUnit (works with v1.12.0, may work with other versions) must be present
-    on the local machine.  Many tests also require a remote host available to
-    connect to over SSH.  Swish assumes this is unix-based and that the test
+    Some old unit tests (not enabled by default) require CppUnit.  The others
+    just use Boost.Test.
+    The tests in projects ending with `-network` need a remote host available
+    to connect to over SSH.  Swish assumes this is unix-based and that the test
     user account has a home directory named /home/username.
 
     Environment variables:

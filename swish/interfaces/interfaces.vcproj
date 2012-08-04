@@ -253,27 +253,11 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\SftpProvider.idl"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Generated Files"
 			SourceControlFiles="false"
 			>
-			<File
-				RelativePath="$(OutDir)generated-files\swish\$(ProjectName)\_SftpProvider.h"
-				>
-			</File>
-			<File
-				RelativePath="$(OutDir)generated-files\swish\$(ProjectName)\SftpProvider_i.c"
-				>
-			</File>
-			<File
-				RelativePath="$(OutDir)generated-files\swish\$(ProjectName)\SftpProvider_p.c"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

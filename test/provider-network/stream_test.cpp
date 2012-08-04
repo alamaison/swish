@@ -71,6 +71,7 @@ public:
     RemoteSftpFixture() : m_consumer(new MockConsumer())
     {
         remote_test_config config;
+        m_consumer->set_password_behaviour(MockConsumer::CustomPassword);
         m_consumer->set_password(config.GetPassword());
 
         m_session = shared_ptr<CSession>(CSessionFactory::CreateSftpSession(

@@ -42,9 +42,8 @@
 #include "SftpStream.hpp"
 #include "listing/listing.hpp"   // SFTP directory listing helper functions
 
-#include "swish/port_conversion.hpp" // port_to_wstring
 #include "swish/remotelimits.h"
-#include "swish/utils.hpp" // running_object_table, WideStringToUtf8String
+#include "swish/utils.hpp" // WideStringToUtf8String
 #include "swish/trace.hpp" // trace
 
 #include <comet/bstr.h> // bstr_t
@@ -59,14 +58,16 @@
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
 #include <boost/make_shared.hpp> // make_shared<provider>
+#include <boost/thread/locks.hpp> // lock_guard
+#include <boost/thread/mutex.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error, system_category
 
+#include <cassert> // assert
 #include <exception>
 #include <string>
 #include <vector> // to hold listing
 
-using swish::utils::com::running_object_table;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
@@ -78,11 +79,13 @@ using comet::datetime_t;
 using comet::stl_enumeration;
 
 using boost::filesystem::wpath;
+using boost::lock_guard;
 using boost::make_filter_iterator;
 using boost::make_shared;
-using boost::system::system_error;
-using boost::system::system_category;
+using boost::mutex;
 using boost::shared_ptr;
+using boost::system::system_category;
+using boost::system::system_error;
 
 using ssh::sftp::attributes;
 using ssh::sftp::canonical_path;
@@ -132,6 +135,8 @@ public:
     virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
 
 private:
+
+    boost::mutex m_mutex;
     boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
 
     /** @name Fields used for lazy connection. */
@@ -167,97 +172,7 @@ private:
         __in_z const char *szPath, wstring& error_out);
 };
 
-
-namespace {
-
-    /**
-     * Create an item moniker for the session with the given parameters.
-     *
-     * e.g. !user@host:port
-     */
-    com_ptr<IMoniker> create_item_moniker(
-        const wstring& user, const wstring& host, int port)
-    {
-        wstring moniker_name = 
-            user + L'@' + host + L':' + port_to_wstring(port);
-
-        com_ptr<IMoniker> moniker;
-        HRESULT hr = ::CreateItemMoniker(
-            OLESTR("!"), moniker_name.c_str(), moniker.out());
-        assert(SUCCEEDED(hr));
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error(hr));
-
-        return moniker;
-    }
-
-    /**
-     * Register a session with the Running Object Table.
-     *
-     *
-     * The connection is registered with a moniker of the form 
-     * !sftp://user@host:port.  By default, the ROT will hold a strong 
-     * reference to this instance preventing it from being released unless 
-     * explicitly revoked.
-     *
-     * @note  The connection doesn't actually have to be connected to the 
-     * remote server to be registered.  This object instance, connection or 
-     * otherwise, is the connection as far as clients are concerned.
-     *
-     * @returns  A cookie identifying the registration.
-     */
-    DWORD register_in_rot(
-        const com_ptr<ISftpProvider>& provider, const wstring& user,
-        const wstring& host, int port,
-        DWORD flags=ROTFLAGS_REGISTRATIONKEEPSALIVE)
-    {
-        com_ptr<IMoniker> moniker = create_item_moniker(user, host, port);
-        com_ptr<IRunningObjectTable> rot = running_object_table();
-        com_ptr<IUnknown> unknown = provider;
-
-        DWORD cookie = 0;
-        HRESULT hr = rot->Register(flags, unknown.in(), moniker.in(), &cookie);
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error(hr));
-
-        return cookie;
-    }
-
-    /**
-     * Remove this connection instance from the Running Object Table.
-     *
-     * The target instance will be registered with a moniker of the form 
-     * !sftp://user@host:port.  The ROT will release its reference to
-     * this instance and, if that was the last one, this object will be freed.
-     */
-    void revoke_from_rot(DWORD cookie)
-    {
-        com_ptr<IRunningObjectTable> rot = running_object_table();
-
-        HRESULT hr = rot->Revoke(cookie);
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error(hr));
-    }
-}
-
-
-CProvider::CProvider() : m_dwCookie(0) {}
-
-/**
- * Remove from ROT.
- */
-CProvider::~CProvider() throw()
-{
-    try
-    {
-        if (m_dwCookie)
-            revoke_from_rot(m_dwCookie);
-    }
-    catch (const std::exception& e)
-    {
-        trace("EXCEPTION THROWN IN DESTRUCTOR: %s") % e.what();
-    }
-}
+CProvider::CProvider() {}
 
 provider_interface& CProvider::impl() {    return *this; }
 
@@ -269,7 +184,6 @@ void CProvider::initialize(BSTR user, BSTR host, UINT port)
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     m_provider = make_shared<provider>(user, host, port);
-    m_dwCookie = register_in_rot(this, user, host, port);
 }
 
 IEnumListing* CProvider::get_listing(ISftpConsumer* consumer, BSTR directory)
@@ -316,10 +230,12 @@ provider::provider(const wstring& user, const wstring& host, int port)
 }
 
 /**
- * Free libssh2 and remove from ROT.
+ * Free libssh2.
  */
 provider::~provider() throw()
 {
+    lock_guard<mutex> lock(m_mutex);
+
     try
     {
         _Disconnect(); // Destroy session before shutting down Winsock
@@ -327,6 +243,7 @@ provider::~provider() throw()
     catch (const std::exception& e)
     {
         trace("EXCEPTION THROWN IN DESTRUCTOR: %s") % e.what();
+        assert(!"EXCEPTION THROWN IN DESTRUCTOR");
     }
 }
 
@@ -394,6 +311,8 @@ IEnumListing* provider::get_listing(
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
+    lock_guard<mutex> lock(m_mutex);
+
     _Connect(consumer);
 
     sftp_channel channel(m_session->get(), m_session->sftp());
@@ -427,6 +346,8 @@ IStream* provider::get_file(
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(com_error("File cannot be empty", E_INVALIDARG));
+
+    lock_guard<mutex> lock(m_mutex);
 
     _Connect(consumer);
 
@@ -489,11 +410,14 @@ VARIANT_BOOL provider::rename(
     if (from_path == to_path)
         return VARIANT_FALSE;
 
-    _Connect(consumer);
-
     // Attempt to rename old path to new path
     string from = WideStringToUtf8String(from_path.string());
     string to = WideStringToUtf8String(to_path.string());
+
+    lock_guard<mutex> lock(m_mutex);
+
+    _Connect(consumer);
+
     HRESULT hr = _RenameSimple(from, to);
     if (SUCCEEDED(hr)) // Rename was successful without overwrite
         return VARIANT_FALSE;
@@ -693,6 +617,8 @@ void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
     if (path.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
+    lock_guard<mutex> lock(m_mutex);
+
     _Connect(consumer);
 
     // Delete file
@@ -719,11 +645,14 @@ void provider::delete_directory(
     if (path.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
+    string utf8_path = WideStringToUtf8String(path.string());
+
+    lock_guard<mutex> lock(m_mutex);
+
     _Connect(consumer);
 
     // Delete directory recursively
     wstring error_out;
-    string utf8_path = WideStringToUtf8String(path.string());
     HRESULT hr = _DeleteDirectory(utf8_path.c_str(), error_out);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
@@ -809,9 +738,12 @@ void provider::create_new_file(
     if (path.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
+    string utf8_path = WideStringToUtf8String(path.string());
+
+    lock_guard<mutex> lock(m_mutex);
+
     _Connect(consumer);
 
-    string utf8_path = WideStringToUtf8String(path.string());
     LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
         *m_session, utf8_path.c_str(), LIBSSH2_FXF_CREAT, 0644);
     if (pHandle == NULL)
@@ -829,18 +761,23 @@ void provider::create_new_directory(
             com_error(
                 "Cannot create a directory without a name", E_INVALIDARG));
 
+    string utf8_path = WideStringToUtf8String(path.string());
+
+    lock_guard<mutex> lock(m_mutex);
+
     _Connect(consumer);
 
-    string utf8_path = WideStringToUtf8String(path.string());
     if (libssh2_sftp_mkdir(*m_session, utf8_path.c_str(), 0755) != 0)
         BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
 }
 
 BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
-    _Connect(consumer);
-
     string utf8_path = WideStringToUtf8String(path.string());
+
+    lock_guard<mutex> lock(m_mutex);
+
+    _Connect(consumer);
 
     sftp_channel channel(m_session->get(), m_session->sftp());
     bstr_t target =
@@ -857,9 +794,12 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
  */
 Listing provider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
 {
+    string utf8_path = WideStringToUtf8String(bstr_t(path).w_str());
+
+    lock_guard<mutex> lock(m_mutex);
+
     _Connect(consumer);
     
-    string utf8_path = WideStringToUtf8String(bstr_t(path).w_str());
     sftp_channel channel(m_session->get(), m_session->sftp());
 
     file_attributes attr = attributes(

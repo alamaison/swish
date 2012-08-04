@@ -293,10 +293,6 @@
 			RelativePathToProject=".\swish\drop_target\drop_target.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
-			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{58F5F798-25C4-4769-BF8C-8646BA44C349}"
 			RelativePathToProject=".\swish\frontend\frontend.vcproj"
 		/>

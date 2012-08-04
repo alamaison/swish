@@ -29,14 +29,18 @@
 #define SWISH_SHELL_FOLDER_POOL_HPP
 #pragma once
 
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+
 #include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/threading.h> // critical_section
 
-#include <string>
+#include <boost/shared_ptr.hpp>
 
-struct ISftpProvider;
+#include <string>
+#include <map>
+
 
 namespace swish {
 namespace remote_folder {
@@ -51,6 +55,7 @@ public:
 
 private:
     static comet::critical_section m_cs;
+    static std::map<std::wstring, comet::com_ptr<ISftpProvider> > m_connections;
 };
 
 

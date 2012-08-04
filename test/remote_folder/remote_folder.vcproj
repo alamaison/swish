@@ -292,10 +292,6 @@
 			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
 			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{80E49BC7-B636-46F4-BD4B-24C1AB4F84D0}"
-			RelativePathToProject=".\swish\provider\com_dll\com_dll.vcproj"
-		/>
 	</References>
 	<Files>
 		<File

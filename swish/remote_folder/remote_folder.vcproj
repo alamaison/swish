@@ -242,6 +242,10 @@
 			ReferencedProjectIdentifier="{58F5F798-25C4-4769-BF8C-8646BA44C349}"
 			RelativePathToProject=".\swish\frontend\frontend.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
+			RelativePathToProject=".\swish\provider\provider.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

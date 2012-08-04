@@ -28,6 +28,8 @@
 #define SWISH_DROP_TARGET_OPERATION_HPP
 #pragma once
 
+#include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
+
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/function.hpp> // function
 
@@ -35,9 +37,6 @@
 
 #include <cassert> // assert
 #include <string>
-
-struct ISftpProvider;
-struct ISftpConsumer;
 
 namespace swish {
 namespace drop_target {

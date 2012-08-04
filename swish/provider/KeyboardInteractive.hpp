@@ -39,7 +39,7 @@
 #include "swish/atl.hpp"                     // Common ATL setup
 #include <atlsafe.h>                         // CComSafeArray
 
-struct ISftpConsumer;
+class ISftpConsumer;
 
 typedef struct _LIBSSH2_USERAUTH_KBDINT_PROMPT  // Forward-decls
     LIBSSH2_USERAUTH_KBDINT_PROMPT;

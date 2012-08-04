@@ -55,7 +55,7 @@
 			<Tool
 				Name="VCPreLinkEventTool"
 				Description="Copying WinSparkle DLL and Pageant EXE to target directory ..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q /C &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -128,7 +128,7 @@
 			<Tool
 				Name="VCPreLinkEventTool"
 				Description="Copying WinSparkle DLL and Pageant EXE to target directory ..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q /C &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -201,7 +201,7 @@
 			<Tool
 				Name="VCPreLinkEventTool"
 				Description="Copying WinSparkle DLL and Pageant EXE to target directory ..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q /C &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -274,7 +274,7 @@
 			<Tool
 				Name="VCPreLinkEventTool"
 				Description="Copying WinSparkle DLL and Pageant EXE to target directory ..."
-				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul"
+				CommandLine="xcopy &quot;$(SolutionDir)thirdparty\winsparkle\$(PlatformName)\WinSparkle.dll&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q &gt; nul &amp;&amp; xcopy &quot;$(SolutionDir)thirdparty\putty\pageant.exe&quot; &quot;$(TargetDir)&quot; /Y /V /I /R /Q /C &gt; nul"
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -321,8 +321,8 @@
 			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{58748987-258D-435D-80B6-EE067F90A688}"
-			RelativePathToProject=".\swish\interfaces\interfaces.vcproj"
+			ReferencedProjectIdentifier="{7F112C5B-3DFD-4FB1-AFF0-4441CBBC0D37}"
+			RelativePathToProject=".\swish\remote_folder\remote_folder.vcproj"
 		/>
 	</References>
 	<Files>

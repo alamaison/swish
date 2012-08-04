@@ -38,11 +38,11 @@
 
 #include "Session.hpp"
 
+#include "swish/interfaces/SftpProvider.h" // ISftpConsumer
+
 #include <winerror.h>  // HRESULT
 
 #include <memory>      // auto_ptr
-
-struct ISftpConsumer;
 
 class CSessionFactory
 {

@@ -28,8 +28,9 @@
 #define SWISH_INTERFACES_SFTP_PROVIDER_H
 #pragma once
 
-#include "swish/interfaces/_SftpProvider.h" // MIDL-generated definitions
+//#include "swish/interfaces/_SftpProvider.h" // MIDL-generated definitions
 
+#include <oaidl.h>
 #ifdef __cplusplus
 
 #include <comet/interface.h> // comtype
@@ -38,23 +39,191 @@
 #include <OleAuto.h> // SysAllocStringLen, SysStringLen, SysFreeString,
                      // VarBstrCmp
 
+/**
+ * The record structure returned by the GetListing() method of the SFTPProvider.
+ *
+ * This structure represents a single file contained in the directory 
+ * specified to GetListing().
+ */
+
+struct Listing {
+	BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
+	ULONG uPermissions;   ///< Unix file permissions
+	BSTR bstrOwner;       ///< The user name of the file's owner
+	BSTR bstrGroup;       ///< The name of the group to which the file belongs
+	ULONG uUid;           ///< Numerical ID of file's owner
+	ULONG uGid;           ///< Numerical ID of group to which the file belongs
+	ULONGLONG uSize;      ///< The file's size in bytes
+	ULONG cHardLinks;     ///< The number of hard links referencing this file
+	DATE dateModified;    ///< The date and time at which the file was 
+	                      ///< last modified in automation-compatible format
+	DATE dateAccessed;    ///< The date and time at which the file was 
+	                      ///< last accessed in automation-compatible format
+	BOOL fIsDirectory;    ///< This filesystem item can be listed for items
+	                      ///< under it.
+	BOOL fIsLink;         ///< This file is a link to another file or directory
+};
+
+class IEnumListing : public IUnknown
+{
+public:
+
+	virtual HRESULT Next (
+		ULONG celt,
+		struct Listing *rgelt,
+		ULONG *pceltFetched) = 0;
+	virtual HRESULT Skip (ULONG celt) = 0;
+	virtual HRESULT Reset () = 0;
+	virtual HRESULT Clone (IEnumListing **ppEnum) = 0;
+};
+
+class ISftpConsumer : public IUnknown
+{
+public:
+
+	virtual HRESULT OnPasswordRequest(
+        BSTR bstrRequest,
+        BSTR *pbstrPassword
+	) = 0;
+	virtual HRESULT OnKeyboardInteractiveRequest(
+        BSTR bstrName,
+        BSTR bstrInstruction,
+        SAFEARRAY* saPrompts,
+        SAFEARRAY* saShowResponses,
+        SAFEARRAY* *psaResponses
+	) = 0;
+	virtual HRESULT OnPrivateKeyFileRequest(
+        BSTR *pbstrPrivateKeyFile
+	) = 0;
+	virtual HRESULT OnPublicKeyFileRequest(
+        BSTR *pbstrPublicKeyFile
+	) = 0;
+	virtual HRESULT OnConfirmOverwrite(
+        BSTR bstrOldFile,
+        BSTR bstrNewFile
+	) = 0;
+	virtual HRESULT OnHostkeyMismatch(
+        BSTR bstrHostName,
+        BSTR bstrHostKey,
+        BSTR bstrHostKeyType
+	) = 0;
+	virtual HRESULT OnHostkeyUnknown(
+        BSTR bstrHostName,
+        BSTR bstrHostKey,
+        BSTR bstrHostKeyType
+	) = 0;
+};
+
+class ISftpProvider : public IUnknown
+{
+public:
+	virtual HRESULT Initialize(
+        BSTR bstrUser,
+        BSTR bstrHost,
+        UINT uPort
+	) = 0;
+	virtual HRESULT GetListing(
+        ISftpConsumer *pConsumer,
+        BSTR bstrDirectory,
+        IEnumListing **ppEnum
+	) = 0;
+	virtual HRESULT GetFile(
+        ISftpConsumer *pConsumer,
+		BSTR bstrFilePath,
+		BOOL fWriteable,
+		IStream **ppStream
+	) = 0;
+	virtual HRESULT Rename(
+		ISftpConsumer *pConsumer,
+		BSTR bstrFromPath,
+		BSTR bstrToPath,
+		VARIANT_BOOL *fWasTargetOverwritten
+	) = 0;
+
+	/**
+	 * @name Deletion methods
+	 * We use two methods rather than one for safety.  This makes it explicit 
+	 * what the @b intended consequence was. It's possible for a user to ask
+	 * for a file to be deleted but, meanwhile, it has been changed to a 
+	 * directory by someone else.  We do not want to delete the directory 
+	 * without the user knowing.
+	 */
+	// @{
+	virtual HRESULT Delete(
+		ISftpConsumer *pConsumer,
+		BSTR bstrPath
+	) = 0;
+	virtual HRESULT DeleteDirectory(
+		ISftpConsumer *pConsumer,
+		BSTR bstrPath
+	) = 0;
+	// @}
+
+	/**
+	 * @name Creation methods
+	 * These are the dual of the deletion methods.  The first one, CreateFile,
+	 * is mainly for the test-suite.  It just creates an empty file at the
+	 * given path (roughly equivalent to Unix @c touch).
+	 */
+	// @{
+	virtual HRESULT CreateNewFile(
+		ISftpConsumer *pConsumer,
+		BSTR bstrPath
+	) = 0;
+	virtual HRESULT CreateNewDirectory(
+		ISftpConsumer *pConsumer,
+        BSTR bstrPath
+	) = 0;
+	// @}
+
+	/**
+	 * Return the canonical path of the given non-canonical path.
+	 *
+	 * While generally used to resolve symlinks, it can also be used to
+	 * convert paths relative to the startup directory into absolute paths.
+	 */
+	virtual HRESULT ResolveLink(
+        ISftpConsumer *pConsumer,
+        BSTR bstrLinkPath,
+        BSTR *pbstrTargetPathOut
+	) = 0;
+
+	virtual HRESULT Stat(
+        ISftpConsumer *pConsumer,
+        BSTR bstrPath, BOOL fFollowLinks,
+		struct Listing * pplt
+	) = 0;
+};
+
 namespace comet {
 
 template<> struct comtype<ISftpProvider>
 {
-    static const IID& uuid() throw() { return IID_ISftpProvider; }
+    static const IID& uuid() throw()
+    {
+        static comet::uuid_t iid("E2D6A1D6-48EB-4F38-9D00-3C4536416C49");
+        return iid;
+    }
     typedef IUnknown base;
 };
 
 template<> struct comtype<ISftpConsumer>
 {
-    static const IID& uuid() throw() { return IID_ISftpConsumer; }
+    static const IID& uuid() throw()
+    {
+        static comet::uuid_t iid("304982B4-4FB1-4C2E-A892-3536DF59ACF5");
+        return iid;
+    }
     typedef IUnknown base;
 };
 
 template<> struct comtype<IEnumListing>
 {
-    static const IID& uuid() throw() { return IID_IEnumListing; }
+    static const IID& uuid() throw()
+    {
+        static comet::uuid_t iid("304982B4-4FB1-4C2E-A892-3536DF59ACF5");
+        return iid;
+    }
     typedef IUnknown base;
 };
 

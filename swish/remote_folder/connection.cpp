@@ -30,11 +30,10 @@
 #include "swish/interfaces/SftpProvider.h" // ISftpProvider/Consumer
 #include "swish/port_conversion.hpp" // port_to_wstring
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_item_view
+#include "swish/provider/Provider.hpp"
 #include "swish/remotelimits.h" // Text field limits
-#include "swish/utils.hpp" // running_object_table
 
-#include <winapi/com/object.hpp> // object_from_moniker_name
-
+#include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
 #include <comet/interface.h> // uuidof, comtype
 
@@ -45,10 +44,9 @@
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
 
-using winapi::com::create_bind_context;
-using winapi::com::object_from_moniker_name;
 using winapi::shell::pidl::apidl_t;
 
+using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
 using comet::critical_section;
@@ -57,12 +55,6 @@ using comet::uuidof;
 
 using std::wstring;
 
-
-template<> struct comet::comtype<IBindStatusCallback>
-{
-    static const IID& uuid() throw() { return IID_IBindStatusCallback; }
-    typedef IUnknown base;
-};
 
 namespace swish {
 namespace remote_folder {
@@ -86,48 +78,7 @@ namespace {
 }
 
 critical_section CPool::m_cs;
-
-namespace {
-
-/**
- * UI-supressing bind status callback.
- */
-class CBindCallbackStub : public comet::simple_object<IBindStatusCallback>
-{
-public:
-    IFACEMETHODIMP OnStartBinding(DWORD /*dwReserved*/, IBinding* /*pib*/)
-    { return S_OK; }
-    
-    IFACEMETHODIMP GetPriority(LONG* /*pnPriority*/)
-    { return E_NOTIMPL; }
-    
-    IFACEMETHODIMP OnLowResource(DWORD /*reserved*/)
-    { return E_NOTIMPL; }
-    
-    IFACEMETHODIMP OnProgress(
-        ULONG /*ulProgress*/, ULONG /*ulProgressMax*/, ULONG /*ulStatusCode*/,
-        LPCWSTR /*szStatusText*/)
-    { return S_OK; }
-    
-    IFACEMETHODIMP OnStopBinding(HRESULT /*hresult*/, LPCWSTR /*szError*/)
-    { return S_OK; }
-    
-    IFACEMETHODIMP GetBindInfo(DWORD* grfBINDF, BINDINFO* /*pbindinfo*/)
-    {
-        *grfBINDF = BINDF_NO_UI | BINDF_SILENTOPERATION;
-        return S_OK;
-    }
-    
-    IFACEMETHODIMP OnDataAvailable(
-        DWORD /*grfBSCF*/, DWORD /*dwSize*/, FORMATETC* /*pformatetc*/,
-        STGMEDIUM* /*pstgmed*/)
-    { return S_OK; };
-    
-    IFACEMETHODIMP OnObjectAvailable(REFIID /*riid*/, IUnknown* /*punk*/)
-    { return S_OK; };    
-};
-
-}
+std::map<std::wstring, comet::com_ptr<ISftpProvider> > CPool::m_connections;
 
 /**
  * Retrieves an SFTP session for a global pool or creates it if none exists.
@@ -159,22 +110,21 @@ com_ptr<ISftpProvider> CPool::GetSession(
     // Try to get the session from the global pool
     wstring display_name = provider_moniker_name(user, host, port);
 
-    // The default class moniker's BindStatusCallback creates a progress
-    // dialogue which steals window focus even though it's never
-    // displayed!!  The only way I've found to prevent this is to use a
-    // custom callback object which does nothing except specify that
-    // UI is forbidden.
-    com_ptr<IBindCtx> bind_context = create_bind_context();
-    com_ptr<IBindStatusCallback> callback = new CBindCallbackStub();
-    HRESULT hr = ::RegisterBindStatusCallback(
-        bind_context.get(), callback.get(), NULL, 0);
+    std::map<std::wstring, comet::com_ptr<ISftpProvider> >::iterator connection
+        = m_connections.find(display_name);
+
+    if (connection != m_connections.end())
+        return connection->second;
+
+    com_ptr<ISftpProvider> provider = new swish::provider::CProvider();
+    HRESULT hr = provider->Initialize(bstr_t(user).in(), bstr_t(host).in(),
+        port);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(comet::com_error(hr)) <<
-            boost::errinfo_api_function("RegisterBindStatusCallback"));
+            boost::enable_error_info(comet::com_error(hr)));
 
-    return object_from_moniker_name<ISftpProvider>(
-        display_name, bind_context);
+    m_connections[display_name] = provider;
+    return provider;
 }
 
 namespace {

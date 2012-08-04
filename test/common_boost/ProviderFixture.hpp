@@ -29,10 +29,7 @@
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, ComFixture
 
-#include "swish/interfaces/SftpProvider.h"  // ISftpProvider
-#include "swish/port_conversion.hpp" // port_to_wstring
-
-#include <winapi/com/object.hpp> // object_from_moniker_name
+#include "swish/provider/Provider.hpp"
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
@@ -52,11 +49,14 @@ namespace detail {
     inline comet::com_ptr<ISftpProvider> provider_instance(
         const comet::bstr_t& host, const comet::bstr_t& user, int port)
     {
-        std::wstring item_name = 
-            L"clsid:b816a864-5022-11dc-9153-0090f5284f85:!" + user + L"@" + 
-            host + L":" + swish::port_to_wstring(port);
+        comet::com_ptr<ISftpProvider> provider
+            = new swish::provider::CProvider();
+        HRESULT hr = provider->Initialize(user.in(), host.in(), port);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(comet::com_error(hr)));
 
-        return winapi::com::object_from_moniker_name<ISftpProvider>(item_name);
+        return provider;
     }
 
     /**

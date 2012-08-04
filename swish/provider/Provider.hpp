@@ -42,18 +42,19 @@
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
+#include <comet/server.h>
+
 namespace swish {
 namespace provider {
 
 class provider;
 
 class CProvider :
-    public provider_interface, public provider_error_adapter
+    public comet::simple_object<provider_error_adapter, provider_interface>
 {
 public:
 
     CProvider();
-    virtual ~CProvider() throw();
 
     /** @name ISftpProvider implementation via provider_error_adapter */
     // @{
@@ -85,7 +86,6 @@ public:
 
 private:
     boost::shared_ptr<provider> m_provider;
-    DWORD m_dwCookie;  ///< Running Object Table registration
 };
 
 }} // namespace swish::provider

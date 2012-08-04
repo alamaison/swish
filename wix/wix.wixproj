@@ -52,16 +52,6 @@
     <Compile Include="pt_BR.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\swish\interfaces\interfaces_dll.vcproj">
-      <Name>interfaces_dll</Name>
-      <Project>{dfe19ebd-f9d6-4a7a-84a4-07aac6fbf951}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\swish\provider\com_dll\com_dll.vcproj">
-      <Name>provider-com_dll</Name>
-      <Project>{80e49bc7-b636-46f4-bd4b-24c1ab4f84d0}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\swish\shell_folder\com_dll\com_dll.vcproj">
       <Name>shell_folder-com_dll</Name>
       <Project>{3f48c01a-fe7d-4907-860b-b7f45926f277}</Project>

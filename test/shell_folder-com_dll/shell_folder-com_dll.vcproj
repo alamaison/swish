@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish-Debug-Win32.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish-Debug-Win32.vsprops;..\..\build\boost_test_runner.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -85,7 +85,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish-Debug-x64.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish-Debug-x64.vsprops;..\..\build\boost_test_runner.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			>
@@ -150,7 +150,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish-Release-x64.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish-Release-x64.vsprops;..\..\build\boost_test_runner.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -215,7 +215,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\cppunit_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;$(SolutionDir)\build\swish-Release-x64.vsprops"
+			InheritedPropertySheets="$(SolutionDir)\build\swish-Release-x64.vsprops;..\..\build\boost_test_runner.vsprops"
 			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"

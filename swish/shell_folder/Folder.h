@@ -159,7 +159,6 @@ public: // IPersist methods
      */
     IFACEMETHODIMP GetClassID(CLSID* pClassID)
     {
-        METHOD_TRACE;
         ATLENSURE_RETURN_HR(pClassID, E_POINTER);
 
         *pClassID = clsid();
@@ -183,7 +182,6 @@ public: // IPersistFolder methods
      */
     IFACEMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl)
     {
-        METHOD_TRACE;
         ATLENSURE_RETURN_HR(!::ILIsEmpty(pidl), E_INVALIDARG);
         ATLENSURE_RETURN_HR(!m_root_pidl, E_UNEXPECTED); // Multiple init
 
@@ -207,7 +205,6 @@ public: // IPersistFolder2 methods
      */
     IFACEMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE* ppidl)
     {
-        METHOD_TRACE;
         ATLENSURE_RETURN_HR(ppidl, E_POINTER);
 
         *ppidl = NULL;
@@ -231,7 +228,6 @@ public: // IPersistFolder3 methods
         IBindCtx* /*pbc*/, PCIDLIST_ABSOLUTE pidlRoot, 
         const PERSIST_FOLDER_TARGET_INFO* /*ppfti*/)
     {
-        METHOD_TRACE;
         ATLENSURE_RETURN_HR(pidlRoot, E_POINTER);
 
         return Initialize(pidlRoot);
@@ -239,7 +235,6 @@ public: // IPersistFolder3 methods
     
     IFACEMETHODIMP GetFolderTargetInfo(PERSIST_FOLDER_TARGET_INFO* ppfti)
     {
-        METHOD_TRACE;
         ATLENSURE_RETURN_HR(ppfti, E_POINTER);
 
         ::ZeroMemory(ppfti, sizeof(PERSIST_FOLDER_TARGET_INFO));
@@ -250,13 +245,11 @@ public: // IPersistIDList methods
 
     IFACEMETHODIMP SetIDList(PCIDLIST_ABSOLUTE pidl)
     {
-        METHOD_TRACE;
         return Initialize(pidl);
     }
         
     IFACEMETHODIMP GetIDList(PIDLIST_ABSOLUTE* ppidl)
     {
-        METHOD_TRACE;
         return GetCurFolder(ppidl);
     }
 

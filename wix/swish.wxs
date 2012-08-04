@@ -52,21 +52,6 @@
     </Directory>
 
     <DirectoryRef Id="INSTALLDIR">
-      <Component Id="Interfaces" Guid="*" Win64="$(var.Win64)">
-        <File Id="InterfacesDll" Source="$(var.TargetDir)interfaces_dll.dll" KeyPath="yes">
-          <Class Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Context="InprocServer32" Description="PSFactoryBuffer" ThreadingModel="both" />
-        </File>
-        <!-- CHANGE THESE IF THE INTERFACE DEFINITIONS CHANGE! -->
-        <!-- *EXTRA CAREFUL*: If the IID of the first interface
-           changes, ProxyStubClassId32 of all the interfaces must
-           change too as well as the CLSDID of the PSFactoryBuffer
-           above.  It seems to be picked from this first
-           interface. -->
-        <Interface Id="304982B4-4FB1-4C2E-A892-3536DF59ACF5" Name="IEnumListing" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="7" />
-        <Interface Id="8BEDB4C6-16D4-4EA6-9685-64DAC2A8A189" Name="ISftpConsumer" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="10" />
-        <Interface Id="E2D6A1D6-48EB-4F38-9D00-3C4536416C49" Name="ISftpProvider" ProxyStubClassId32="304982B4-4FB1-4C2E-A892-3536DF59ACF5" NumMethods="13" />
-      </Component>
-
       <Component Id="ShellFolder" Guid="*" Win64="$(var.Win64)">
         <File Id="ShellFolderDll" Source="$(var.TargetDir)shell_folder-com_dll.dll" KeyPath="yes">
 
@@ -101,34 +86,6 @@
         <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="Removal Message" Value="Please don't remove Swish this way - uninstall it." Type="string" Action="write" />
         <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish HostFolder" Type="string" Action="write" />
         <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83c-5022-11dc-9153-0090f5284f85}" Value="Swish SFTP Folder" Type="string" Action="write" />
-      </Component>
-
-      <Component Id="Provider" Guid="*" Win64="$(var.Win64)">
-        <File Id="ProviderDll" Source="$(var.TargetDir)provider-com_dll.dll"
-            KeyPath="yes">
-          <TypeLib Id="b816a861-5022-11dc-9153-0090f5284f85" Description="Swish SFTP Provider 0.1 Type Library" Language="0" MajorVersion="0" MinorVersion="1">
-            <AppId Description="Swish SFTP Provider" Id="{b816a860-5022-11dc-9153-0090f5284f85}">
-
-              <Class Id="b816a862-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="Provider Component" ThreadingModel="apartment">
-                <ProgId Id="Provider.Provider.1" Description="Provider Component">
-                  <ProgId Id="Provider.Provider" Description="Provider Component" />
-                </ProgId>
-              </Class>
-
-              <Class Id="b816a863-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="RealDispenser Component" ThreadingModel="both">
-                <ProgId Id="Provider.RealDispenser.1" Description="RealDispenser Component">
-                  <ProgId Id="Provider.RealDispenser" Description="RealDispenser Component" />
-                </ProgId>
-              </Class>
-
-              <Class Id="b816a864-5022-11dc-9153-0090f5284f85" Context="InprocServer32" Description="Dispenser Component" ThreadingModel="free">
-                <ProgId Id="Provider.Dispenser.1" Description="Dispenser Component">
-                  <ProgId Id="Provider.Dispenser" Description="Dispenser Component" />
-                </ProgId>
-              </Class>
-            </AppId>
-          </TypeLib>
-        </File>
       </Component>
 
       <!-- Ideally, this should use the same Guid="*" as the other components but it's too late as we already hardcoded it -->
