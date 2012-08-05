@@ -149,9 +149,19 @@ public:
 
     // @}
 
+    /**
+     * @name Creation methods
+     * These are the dual of the deletion methods.  `create_new_file`
+     * is mainly for the test-suite.  It just creates an empty file at the
+     * given path (roughly equivalent to Unix `touch`).
+     */
+    // @{
+
     virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
 
     virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
+
+    // @}
 
     virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
 
@@ -180,23 +190,6 @@ public:
         BOOL fWriteable,
         IStream **ppStream
     ) = 0;
-
-    /**
-     * @name Creation methods
-     * These are the dual of the deletion methods.  The first one, CreateFile,
-     * is mainly for the test-suite.  It just creates an empty file at the
-     * given path (roughly equivalent to Unix @c touch).
-     */
-    // @{
-    virtual HRESULT CreateNewFile(
-        ISftpConsumer *pConsumer,
-        BSTR bstrPath
-    ) = 0;
-    virtual HRESULT CreateNewDirectory(
-        ISftpConsumer *pConsumer,
-        BSTR bstrPath
-    ) = 0;
-    // @}
 
     /**
      * Return the canonical path of the given non-canonical path.

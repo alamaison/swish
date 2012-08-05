@@ -152,36 +152,6 @@ public:
         return S_OK;
     }
 
-    virtual IFACEMETHODIMP CreateNewFile(
-        ISftpConsumer* pConsumer, BSTR bstrPath)
-    {
-        try
-        {
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            impl().create_new_file(pConsumer, bstrPath);
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
-    virtual IFACEMETHODIMP CreateNewDirectory(
-        ISftpConsumer* pConsumer, BSTR bstrPath)
-    {
-        try
-        {
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            impl().create_new_directory(pConsumer, bstrPath);
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
     virtual IFACEMETHODIMP ResolveLink(
         ISftpConsumer* pConsumer, BSTR bstrLinkPath, BSTR* pbstrTargetPathOut)
     {

@@ -127,10 +127,8 @@ protected:
         // Create test area (not used by all tests)
         if (!_FileExists(_TestArea()))
         {
-            HRESULT hr = m_pProvider->CreateNewDirectory(
+            m_pProvider->create_new_directory(
                 m_pConsumer, bstr_t(_TestArea()).in());
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
         }
     }
 
@@ -360,9 +358,9 @@ BOOST_AUTO_TEST_CASE( GetListingIndependence )
     bstr_t one(_TestArea(L"GetListingIndependence1"));
     bstr_t two(_TestArea(L"GetListingIndependence2"));
     bstr_t three(_TestArea(L"GetListingIndependence3"));
-    BOOST_REQUIRE_OK(m_pProvider->CreateNewFile(m_pConsumer, one.in()));
-    BOOST_REQUIRE_OK(m_pProvider->CreateNewFile(m_pConsumer, two.in()));
-    BOOST_REQUIRE_OK(m_pProvider->CreateNewFile(m_pConsumer, three.in()));
+    m_pProvider->create_new_file(m_pConsumer, one.in());
+    m_pProvider->create_new_file(m_pConsumer, two.in());
+    m_pProvider->create_new_file(m_pConsumer, three.in());
 
     // Fetch first listing enumerator
     com_ptr<IEnumListing> enum_before;
@@ -408,8 +406,7 @@ BOOST_AUTO_TEST_CASE( Rename )
     bstr_t target(_TestArea(L"Rename_Passed"));
 
     // Create our test subject and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 
@@ -444,10 +441,8 @@ BOOST_AUTO_TEST_CASE( RenameWithObstruction )
         _TestArea(L"RenameWithObstruction_Obstruction.swish_rename_temp"));
 
     // Create our test subjects and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, target.in()));
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
+    m_pProvider->create_new_file(m_pConsumer, target.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_EXISTS(target.in());
 
@@ -483,8 +478,7 @@ BOOST_AUTO_TEST_CASE( RenameNoDirectory )
 
     bstr_t subject(L"RenameNoDirectory");
     bstr_t target(L"RenameNoDirectory_Passed");
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
 
     // Test renaming file
     BOOST_CHECK(
@@ -508,8 +502,7 @@ BOOST_AUTO_TEST_CASE( RenameFolder )
     bstr_t target(_TestArea(L"RenameFolder_Passed"));
 
     // Create our test subject and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewDirectory(m_pConsumer, subject.in()));
+    m_pProvider->create_new_directory(m_pConsumer, subject.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 
@@ -548,16 +541,13 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
         L"RenameFolderWithObstruction_Obstruction.swish_rename_temp"));
 
     // Create our test subjects and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewDirectory(m_pConsumer, subject.in()));
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewDirectory(m_pConsumer, target.in()));
+    m_pProvider->create_new_directory(m_pConsumer, subject.in());
+    m_pProvider->create_new_directory(m_pConsumer, target.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_EXISTS(target.in());
 
     // Add a file in the obstructing directory to make it harder to delete
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, targetContents.in()));
+    m_pProvider->create_new_file(m_pConsumer, targetContents.in());
     CHECK_PATH_EXISTS(targetContents.in());
 
     // Check that the non-atomic overwrite temp does not already exists
@@ -602,10 +592,8 @@ BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
         _TestArea(L"RenameWithRefusedConfirmation_Obstruction"));
 
     // Create our test subjects and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, target.in()));
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
+    m_pProvider->create_new_file(m_pConsumer, target.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_EXISTS(target.in());
 
@@ -639,10 +627,8 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithRefusedConfirmation )
         _TestArea(L"RenameFolderWithRefusedConfirmation_Obstruction"));
 
     // Create our test subjects and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewDirectory(m_pConsumer, subject.in()));
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewDirectory(m_pConsumer, target.in()));
+    m_pProvider->create_new_directory(m_pConsumer, subject.in());
+    m_pProvider->create_new_directory(m_pConsumer, target.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_EXISTS(target.in());
 
@@ -670,8 +656,7 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeFolder )
     bstr_t target(L"/tmp/swishRenameInNonHomeFolder_Passed");
 
     // Create our test subjects and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 
@@ -705,10 +690,8 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeSubfolder )
         L"/tmp/swishSubfolder/RenameInNonHomeSubfolder_Passed");
 
     // Create our test subjects and check existence
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewDirectory(m_pConsumer, folder.in()));
-    BOOST_REQUIRE_OK(
-        m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
+    m_pProvider->create_new_directory(m_pConsumer, folder.in());
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 
@@ -734,16 +717,13 @@ BOOST_AUTO_TEST_CASE( CreateAndDelete )
 {
     _StandardSetup();
 
-    HRESULT hr;
-
     bstr_t subject(_TestArea(L"CreateAndDelete"));
 
     // Check that the file does not already exist
     CHECK_PATH_NOT_EXISTS(subject.in());
 
     // Test creating file
-    hr = m_pProvider->CreateNewFile(m_pConsumer, subject.in());
-    BOOST_REQUIRE_OK(hr);
+    m_pProvider->create_new_file(m_pConsumer, subject.in());
 
     // Test deleting file
     m_pProvider->delete_file(m_pConsumer, subject.in());
@@ -756,16 +736,13 @@ BOOST_AUTO_TEST_CASE( CreateAndDeleteEmptyDirectory )
 {
     _StandardSetup();
 
-    HRESULT hr;
-
     bstr_t subject(_TestArea(L"CreateAndDeleteEmptyDirectory"));
 
     // Check that the directory does not already exist
     CHECK_PATH_NOT_EXISTS(subject.in());
 
     // Test creating directory
-    hr = m_pProvider->CreateNewDirectory(m_pConsumer, subject.in());
-    BOOST_REQUIRE_OK(hr);
+    m_pProvider->create_new_directory(m_pConsumer, subject.in());
 
     // Test deleting directory
     m_pProvider->delete_directory(m_pConsumer, subject.in());
@@ -778,8 +755,6 @@ BOOST_AUTO_TEST_CASE( CreateAndDeleteDirectoryRecursive )
 {
     _StandardSetup();
 
-    HRESULT hr;
-
     bstr_t directory(_TestArea(L"CreateAndDeleteDirectory"));
     bstr_t file(_TestArea(L"CreateAndDeleteDirectory/Recursive"));
 
@@ -788,12 +763,10 @@ BOOST_AUTO_TEST_CASE( CreateAndDeleteDirectoryRecursive )
     CHECK_PATH_NOT_EXISTS(file.in());
 
     // Create directory
-    hr = m_pProvider->CreateNewDirectory(m_pConsumer, directory.in());
-    BOOST_REQUIRE_OK(hr);
+    m_pProvider->create_new_directory(m_pConsumer, directory.in());
 
     // Add file to directory
-    hr = m_pProvider->CreateNewFile(m_pConsumer, file.in());
-    BOOST_REQUIRE_OK(hr);
+    m_pProvider->create_new_file(m_pConsumer, file.in());
 
     // Test deleting directory
     m_pProvider->delete_directory(m_pConsumer, directory.in());

@@ -403,10 +403,7 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
         name, true, false, L"", L"", 0, 0, 0, 0, datetime_t::now(),
         datetime_t::now());
 
-    HRESULT hr = m_provider->CreateNewDirectory(
-        m_consumer.in(), target_path.in());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+    m_provider->create_new_directory(m_consumer.in(), target_path.in());
 
     try
     {
