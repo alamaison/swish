@@ -59,7 +59,7 @@ namespace detail {
      * Return an iterator to the node in the mock filesystem indicated by the
      * path given as a string.
      */
-    FilesystemLocation find_location_from_path(
+    inline FilesystemLocation find_location_from_path(
         const Filesystem& filesystem, const boost::filesystem::wpath& path)
     {
         // Start searching in root of 'filesystem'
@@ -93,7 +93,7 @@ namespace detail {
         return current_dir;
     }
 
-    swish::SmartListing make_file_listing(
+    inline swish::SmartListing make_file_listing(
         comet::bstr_t name, ULONG permissions, ULONGLONG size,
         ULONG hardlink_count, comet::datetime_t date)
     {
@@ -109,7 +109,7 @@ namespace detail {
         return lt;
     }
 
-    swish::SmartListing make_directory_listing(comet::bstr_t name)
+    inline swish::SmartListing make_directory_listing(comet::bstr_t name)
     {
         swish::SmartListing lt = make_file_listing(
             name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
@@ -117,7 +117,7 @@ namespace detail {
         return lt;
     }
 
-    swish::SmartListing make_link_listing(comet::bstr_t name)
+    inline swish::SmartListing make_link_listing(comet::bstr_t name)
     {
         swish::SmartListing lt = make_file_listing(
             name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
@@ -125,20 +125,20 @@ namespace detail {
         return lt;
     }
 
-    comet::bstr_t tag_filename(
+    inline comet::bstr_t tag_filename(
         const wchar_t* filename, const boost::filesystem::wpath& directory)
     {
         return str(boost::wformat(filename) % directory.filename());
     }
 
-    void make_item_in(
+    inline void make_item_in(
         Filesystem& filesystem, FilesystemLocation loc,
         const swish::SmartListing& item)
     {
         filesystem.append_child(loc, item);
     }
 
-    void make_item_in(
+    inline void make_item_in(
         Filesystem& filesystem, const boost::filesystem::wpath& path,
         const swish::SmartListing& item)
     {
@@ -151,7 +151,7 @@ namespace detail {
      * the name of the parent folder.  This allows us to detect a correct
      * listing later.
      */
-    void fill_mock_listing(
+    inline void fill_mock_listing(
         Filesystem& filesystem, const boost::filesystem::wpath& directory)
     {
         std::vector<comet::bstr_t> filenames;

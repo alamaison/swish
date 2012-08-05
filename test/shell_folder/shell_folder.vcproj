@@ -298,6 +298,14 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\data_object_test.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\exercise_data_object.h"
+			>
+		</File>
+		<File
 			RelativePath=".\file_group_descriptor_test.cpp"
 			>
 		</File>
@@ -347,6 +355,10 @@
 		</File>
 		<File
 			RelativePath=".\remote_folder_test.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\sftp_data_object_nasty_old_test.cpp"
 			>
 		</File>
 		<File
