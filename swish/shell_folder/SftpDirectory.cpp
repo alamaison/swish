@@ -56,6 +56,7 @@ using winapi::shell::pidl::pidl_iterator;
 using winapi::shell::pidl::raw_pidl_iterator;
 using winapi::trace;
 
+using comet::auto_attach;
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_error_from_interface;
@@ -426,12 +427,8 @@ apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
 {
     remote_itemid_view symlink(item);
     bstr_t link_path = (m_directory / symlink.filename()).string();
-    bstr_t target_path;
-
-    HRESULT hr = m_provider->ResolveLink(
-        m_consumer.in(), link_path.in(), target_path.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+    bstr_t target_path(
+        auto_attach(m_provider->resolve_link(m_consumer.in(), link_path.in())));
 
     // XXX: HACK:
     // Currently, we create the new PIDL for the resolved path by copying all

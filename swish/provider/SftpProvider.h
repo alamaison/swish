@@ -163,6 +163,12 @@ public:
 
     // @}
 
+    /**
+     * Return the canonical path of the given non-canonical path.
+     *
+     * While generally used to resolve symlinks, it can also be used to
+     * convert paths relative to the startup directory into absolute paths.
+     */
     virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
 
     virtual Listing stat(
@@ -189,18 +195,6 @@ public:
         BSTR bstrFilePath,
         BOOL fWriteable,
         IStream **ppStream
-    ) = 0;
-
-    /**
-     * Return the canonical path of the given non-canonical path.
-     *
-     * While generally used to resolve symlinks, it can also be used to
-     * convert paths relative to the startup directory into absolute paths.
-     */
-    virtual HRESULT ResolveLink(
-        ISftpConsumer *pConsumer,
-        BSTR bstrLinkPath,
-        BSTR *pbstrTargetPathOut
     ) = 0;
 
     virtual HRESULT Stat(
