@@ -42,6 +42,7 @@
 #include <vector>
 
 using comet::bstr_t;
+using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::datetime_t;
@@ -403,8 +404,6 @@ BOOST_AUTO_TEST_CASE( Rename )
 {
     _StandardSetup();
 
-    HRESULT hr;
-
     bstr_t subject(_TestArea(L"Rename"));
     bstr_t target(_TestArea(L"Rename_Passed"));
 
@@ -415,17 +414,14 @@ BOOST_AUTO_TEST_CASE( Rename )
     CHECK_PATH_NOT_EXISTS(target.in());
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_FALSE);
 
     // Test renaming file back
-    hr = m_pProvider->Rename(
-        m_pConsumer, target.in(), subject.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        == VARIANT_FALSE);
 
     // Check that the target does not still exist
     CHECK_PATH_NOT_EXISTS(target.in());
@@ -437,8 +433,6 @@ BOOST_AUTO_TEST_CASE( Rename )
 BOOST_AUTO_TEST_CASE( RenameWithObstruction )
 {
     _StandardSetup();
-
-    HRESULT hr;
 
     // Choose mock behaviour
     m_pCoConsumer->set_confirm_overwrite_behaviour(MockConsumer::AllowOverwrite);
@@ -461,11 +455,9 @@ BOOST_AUTO_TEST_CASE( RenameWithObstruction )
     CHECK_PATH_NOT_EXISTS(swish_temp.in());
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_TRUE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_TRUE);
 
     // Check that the old file no longer exists but the target does
     CHECK_PATH_NOT_EXISTS(subject.in());
@@ -489,25 +481,20 @@ BOOST_AUTO_TEST_CASE( RenameNoDirectory )
 {
     _StandardSetup();
 
-    HRESULT hr;
-
     bstr_t subject(L"RenameNoDirectory");
     bstr_t target(L"RenameNoDirectory_Passed");
     BOOST_REQUIRE_OK(
         m_pProvider->CreateNewFile(m_pConsumer, subject.in()));
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_FALSE);
 
     // Test renaming file back
-    hr = m_pProvider->Rename(
-        m_pConsumer, target.in(), subject.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        == VARIANT_FALSE);
 
     // Cleanup
     m_pProvider->delete_file(m_pConsumer, subject.in());
@@ -516,8 +503,6 @@ BOOST_AUTO_TEST_CASE( RenameNoDirectory )
 BOOST_AUTO_TEST_CASE( RenameFolder )
 {
     _StandardSetup();
-
-    HRESULT hr;
 
     bstr_t subject(_TestArea(L"RenameFolder"));
     bstr_t target(_TestArea(L"RenameFolder_Passed"));
@@ -528,18 +513,15 @@ BOOST_AUTO_TEST_CASE( RenameFolder )
     CHECK_PATH_EXISTS(subject.in());
     CHECK_PATH_NOT_EXISTS(target.in());
 
-    // Test renaming directory
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    // Test renaming file
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_FALSE);
 
-    // Test renaming directory back
-    hr = m_pProvider->Rename(
-        m_pConsumer, target.in(), subject.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    // Test renaming file back
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        == VARIANT_FALSE);
 
     // Check that the target does not still exist
     CHECK_PATH_NOT_EXISTS(target.in());
@@ -552,8 +534,6 @@ BOOST_AUTO_TEST_CASE( RenameFolder )
 BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
 {
     _StandardSetup();
-
-    HRESULT hr;
 
     // Choose mock behaviour
     m_pCoConsumer->set_confirm_overwrite_behaviour(
@@ -584,11 +564,9 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
     CHECK_PATH_NOT_EXISTS(swish_temp.in());
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_TRUE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_TRUE);
 
     // Check that the old file no longer exists but the target does
     CHECK_PATH_NOT_EXISTS(subject.in());
@@ -603,11 +581,17 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
     CHECK_PATH_NOT_EXISTS(target.in());
 }
 
+namespace {
+
+    bool is_abort(const com_error& error)
+    {
+        return error.hr() == E_ABORT;
+    }
+}
+
 BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
 {
     _StandardSetup();
-
-    HRESULT hr;
 
     // Choose mock behaviour
     m_pCoConsumer->set_confirm_overwrite_behaviour(
@@ -626,11 +610,9 @@ BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
     CHECK_PATH_EXISTS(target.in());
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_CHECK(FAILED(hr));
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK_EXCEPTION(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in()),
+        com_error, is_abort);
 
     // Check that both files still exist
     CHECK_PATH_EXISTS(subject.in());
@@ -646,8 +628,6 @@ BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
 BOOST_AUTO_TEST_CASE( RenameFolderWithRefusedConfirmation )
 {
     _StandardSetup();
-
-    HRESULT hr;
 
     // Choose mock behaviour
     m_pCoConsumer->set_confirm_overwrite_behaviour(
@@ -667,11 +647,9 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithRefusedConfirmation )
     CHECK_PATH_EXISTS(target.in());
 
     // Test renaming directory
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_CHECK(FAILED(hr));
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK_EXCEPTION(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in()),
+        com_error, is_abort);
 
     // Check that both directories still exist
     CHECK_PATH_EXISTS(subject.in());
@@ -688,8 +666,6 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeFolder )
 {
     _StandardSetup();
 
-    HRESULT hr;
-
     bstr_t subject(L"/tmp/swishRenameInNonHomeFolder");
     bstr_t target(L"/tmp/swishRenameInNonHomeFolder_Passed");
 
@@ -700,17 +676,14 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeFolder )
     CHECK_PATH_NOT_EXISTS(target.in());
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_FALSE);
 
     // Test renaming file back
-    hr = m_pProvider->Rename(
-        m_pConsumer, target.in(), subject.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        == VARIANT_FALSE);
 
     // Check that the target does not still exist
     CHECK_PATH_NOT_EXISTS(target.in());
@@ -724,8 +697,6 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeFolder )
 BOOST_AUTO_TEST_CASE( RenameInNonHomeSubfolder )
 {
     _StandardSetup();
-
-    HRESULT hr;
 
     bstr_t folder(L"/tmp/swishSubfolder");
     bstr_t subject(
@@ -742,17 +713,14 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeSubfolder )
     CHECK_PATH_NOT_EXISTS(target.in());
 
     // Test renaming file
-    VARIANT_BOOL fWasOverwritten = VARIANT_FALSE;
-    hr = m_pProvider->Rename(
-        m_pConsumer, subject.in(), target.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        == VARIANT_FALSE);
 
     // Test renaming file back
-    hr = m_pProvider->Rename(
-        m_pConsumer, target.in(), subject.in(), &fWasOverwritten);
-    BOOST_REQUIRE_OK(hr);
-    BOOST_CHECK(fWasOverwritten == VARIANT_FALSE);
+    BOOST_CHECK(
+        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        == VARIANT_FALSE);
 
     // Check that the target does not still exist
     CHECK_PATH_NOT_EXISTS(target.in());

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -179,12 +179,6 @@ public:
         BSTR bstrFilePath,
         BOOL fWriteable,
         IStream **ppStream
-    ) = 0;
-    virtual HRESULT Rename(
-        ISftpConsumer *pConsumer,
-        BSTR bstrFromPath,
-        BSTR bstrToPath,
-        VARIANT_BOOL *fWasTargetOverwritten
     ) = 0;
 
     /**

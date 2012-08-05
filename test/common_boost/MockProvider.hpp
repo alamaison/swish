@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -232,8 +232,7 @@ namespace detail {
 }
 
 class MockProvider :
-    public comet::simple_object<swish::provider::provider_error_adapter>,
-    public swish::provider::provider_interface
+    public comet::simple_object<swish::provider::provider_error_adapter>
 {
 public:
 

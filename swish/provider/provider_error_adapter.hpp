@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -146,27 +146,6 @@ public:
             *ppStream = impl().get_file(pConsumer, bstrFilePath, fWriteable);
 
             assert(*ppStream || !"No error but no retval");
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
-    virtual IFACEMETHODIMP Rename(
-        ISftpConsumer* pConsumer, BSTR bstrFromPath, BSTR bstrToPath,
-        VARIANT_BOOL* pfWasTargetOverwritten)
-    {
-        try
-        {
-            if (!pfWasTargetOverwritten)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-            *pfWasTargetOverwritten = VARIANT_FALSE;
-
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            *pfWasTargetOverwritten = impl().rename(
-                pConsumer, bstrFromPath, bstrToPath);
         }
         WINAPI_COM_CATCH_AUTO_INTERFACE();
 

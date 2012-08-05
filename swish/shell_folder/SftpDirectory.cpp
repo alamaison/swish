@@ -362,18 +362,13 @@ bool CSftpDirectory::exists(const cpidl_t& file)
 bool CSftpDirectory::Rename(
     const cpidl_t& old_file, const wstring& new_filename)
 {
-    VARIANT_BOOL was_target_overwritten = VARIANT_FALSE;
     bstr_t old_file_path =
         (m_directory / remote_itemid_view(old_file).filename()).string();
     bstr_t new_file_path = (m_directory / new_filename).string();
 
-    HRESULT hr = m_provider->Rename(
-        m_consumer.in(), old_file_path.in(), new_file_path.in(),
-        &was_target_overwritten);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
-
-    return (was_target_overwritten == VARIANT_TRUE);
+    return m_provider->rename(
+        m_consumer.in(), old_file_path.in(), new_file_path.in())
+        == VARIANT_TRUE;
 }
 
 void CSftpDirectory::Delete(const cpidl_t& file)
@@ -381,7 +376,6 @@ void CSftpDirectory::Delete(const cpidl_t& file)
     bstr_t target_path =
         (m_directory / remote_itemid_view(file).filename()).string();
     
-    HRESULT hr;
     if (remote_itemid_view(file).is_folder())
         m_provider->delete_directory(m_consumer.in(), target_path.in());
     else
