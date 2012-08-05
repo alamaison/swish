@@ -313,15 +313,10 @@ CSftpDirectory CSftpDirectory::GetSubdirectory(const cpidl_t& directory)
  */
 com_ptr<IStream> CSftpDirectory::GetFile(const cpidl_t& file, bool writeable)
 {
-    bstr_t file_path =
+    wstring file_path =
         (m_directory / remote_itemid_view(file).filename()).string();
 
-    com_ptr<IStream> stream;
-    HRESULT hr = m_provider->GetFile(
-        m_consumer.in(), file_path.in(), writeable, stream.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
-    return stream;
+    return m_provider->get_file(m_consumer, file_path, writeable);
 }
 
 /**
@@ -339,25 +334,25 @@ com_ptr<IStream> CSftpDirectory::GetFile(const cpidl_t& file, bool writeable)
 com_ptr<IStream> CSftpDirectory::GetFileByPath(
     const wpath& file, bool writeable)
 {
-    bstr_t file_path = (m_directory / file).string();
-
-    com_ptr<IStream> stream;
-    HRESULT hr = m_provider->GetFile(
-        m_consumer.in(), file_path.in(), writeable, stream.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
-    return stream;
+    return m_provider->get_file(
+        m_consumer, (m_directory / file).string(), writeable);
 }
 
 bool CSftpDirectory::exists(const cpidl_t& file)
 {
-    bstr_t file_path =
+    wstring file_path =
         (m_directory / remote_itemid_view(file).filename()).string();
 
-    com_ptr<IStream> stream;
-    HRESULT hr = m_provider->GetFile(
-        m_consumer.in(), file_path.in(), false, stream.out());
-    return SUCCEEDED(hr);
+    try
+    {
+        m_provider->get_file(m_consumer, file_path, false);
+    }
+    catch (const exception&)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool CSftpDirectory::Rename(

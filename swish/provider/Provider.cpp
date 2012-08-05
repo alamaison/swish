@@ -65,6 +65,7 @@
 
 #include <cassert> // assert
 #include <exception>
+#include <stdexcept> // invalid_argument
 #include <string>
 #include <vector> // to hold listing
 
@@ -96,6 +97,7 @@ using ssh::sftp::sftp_file;
 using ssh::sftp::unsupported_attribute_error;
 
 using std::exception;
+using std::invalid_argument;
 using std::string;
 using std::wstring;
 using std::vector;
@@ -113,8 +115,8 @@ public:
     IEnumListing* get_listing(
         com_ptr<ISftpConsumer> consumer, const wpath& directory);
 
-    IStream* get_file(
-        com_ptr<ISftpConsumer> consumer, const wpath& file_path,
+    virtual comet::com_ptr<IStream> get_file(
+        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
         bool writeable);
 
     VARIANT_BOOL rename(
@@ -189,9 +191,10 @@ void CProvider::initialize(BSTR user, BSTR host, UINT port)
 IEnumListing* CProvider::get_listing(ISftpConsumer* consumer, BSTR directory)
 { return m_provider->get_listing(consumer, directory); }
 
-IStream* CProvider::get_file(
-    ISftpConsumer* consumer, BSTR file_path, BOOL writeable)
-{ return m_provider->get_file(consumer, file_path, writeable == TRUE); }
+comet::com_ptr<IStream> CProvider::get_file(
+    comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
+    bool writeable)
+{ return m_provider->get_file(consumer, file_path, writeable); }
 
 VARIANT_BOOL CProvider::rename(
     ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
@@ -338,14 +341,11 @@ IEnumListing* provider::get_listing(
         *holder->m_collection, unknown).detach();
 }
 
-/**
- * @todo  Add flag to interface to allow choice of read or write.
- */
-IStream* provider::get_file(
-    com_ptr<ISftpConsumer> consumer, const wpath& file_path, bool writeable)
+com_ptr<IStream> provider::get_file(
+    com_ptr<ISftpConsumer> consumer, wstring file_path, bool writeable)
 {
     if (file_path.empty())
-        BOOST_THROW_EXCEPTION(com_error("File cannot be empty", E_INVALIDARG));
+        BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
 
     lock_guard<mutex> lock(m_mutex);
 
@@ -355,9 +355,8 @@ IStream* provider::get_file(
     if (writeable)
         flags |= CSftpStream::write | CSftpStream::create;
 
-    string path = WideStringToUtf8String(file_path.string());
-    com_ptr<IStream> stream = new CSftpStream(m_session, path, flags);
-    return stream.detach();
+    string path = WideStringToUtf8String(file_path);
+    return new CSftpStream(m_session, path, flags);
 }
 
 /**

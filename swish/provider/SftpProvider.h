@@ -33,11 +33,14 @@
 #include <oaidl.h>
 #ifdef __cplusplus
 
-#include <comet/interface.h> // comtype
 #include <comet/enum_common.h> // enumerated_type_of
+#include <comet/interface.h> // comtype
+#include <comet/ptr.h> // com_ptr
 
 #include <OleAuto.h> // SysAllocStringLen, SysStringLen, SysFreeString,
                      // VarBstrCmp
+
+#include <string> // wstring
 
 /**
  * The record structure returned by the GetListing() method of the SFTPProvider.
@@ -127,8 +130,9 @@ public:
     virtual IEnumListing* get_listing(
         ISftpConsumer* consumer, BSTR directory) = 0;
 
-    virtual IStream* get_file(
-        ISftpConsumer* consumer, BSTR file_path, BOOL writeable) = 0;
+    virtual comet::com_ptr<IStream> get_file(
+        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
+        bool writeable) = 0;
 
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
@@ -189,12 +193,6 @@ public:
         ISftpConsumer *pConsumer,
         BSTR bstrDirectory,
         IEnumListing **ppEnum
-    ) = 0;
-    virtual HRESULT GetFile(
-        ISftpConsumer *pConsumer,
-        BSTR bstrFilePath,
-        BOOL fWriteable,
-        IStream **ppStream
     ) = 0;
 
     virtual HRESULT Stat(

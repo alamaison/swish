@@ -129,28 +129,6 @@ public:
 
         return S_OK;
     }
-
-    virtual IFACEMETHODIMP GetFile(
-        ISftpConsumer* pConsumer, BSTR bstrFilePath, BOOL fWriteable,
-        IStream** ppStream)
-    {
-        try
-        {
-            if (!ppStream)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-            *ppStream = NULL;
-
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            *ppStream = impl().get_file(pConsumer, bstrFilePath, fWriteable);
-
-            assert(*ppStream || !"No error but no retval");
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
     
     virtual IFACEMETHODIMP Stat(
         ISftpConsumer *pConsumer, BSTR bstrPath, BOOL fFollowLinks,

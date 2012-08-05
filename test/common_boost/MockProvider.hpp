@@ -335,15 +335,18 @@ public:
         return comet::make_smart_enumeration<IEnumListing>(files).detach();
     }
 
-    virtual IStream* get_file(
-        ISftpConsumer* /*consumer*/, BSTR file_path, BOOL /*writeable*/)
+
+    virtual comet::com_ptr<IStream> get_file(
+        comet::com_ptr<ISftpConsumer> /*consumer*/, std::wstring file_path,
+        bool /*writeable*/)
     {
         detail::find_location_from_path(
             m_filesystem, file_path); // test existence
 
         // Create IStream instance whose data is the file path
         return ::SHCreateMemStream(
-            reinterpret_cast<BYTE*>(file_path), ::SysStringByteLen(file_path));
+            reinterpret_cast<const BYTE*>(file_path.c_str()),
+            (file_path.size() + 1) * sizeof(wchar_t));
     }
 
     virtual VARIANT_BOOL rename(
