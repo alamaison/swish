@@ -358,6 +358,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SwishPidlFixture.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tree.hh"
+				>
+			</File>
+			<File
 				RelativePath=".\tree.hpp"
 				>
 			</File>

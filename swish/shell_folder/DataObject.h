@@ -52,7 +52,8 @@
  * @p lindex value (not necessarily a continuous series), a std::map is
  * used as a sparse array.
  */
-class CDataObject : public comet::simple_object<IDataObject>
+class CDataObject :
+    public comet::simple_object<IDataObject>
 {
 public:
 

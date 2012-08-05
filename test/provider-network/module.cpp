@@ -1,11 +1,11 @@
 /**
     @file
 
-    ATL Module required for ATL support.
+    Test module
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,30 +34,5 @@
     @endif
 */
 
-#include "swish/atl.hpp"
-
-namespace test {
-namespace swish {
-namespace provider {
-
-using ATL::CAtlModule;
-
-/**
- * ATL module needed to use ATL-based objects, e.g. CMockSftpConsumer.
- */
-class CModule : public CAtlModule
-{
-public :
-    
-    virtual HRESULT AddCommonRGSReplacements(IRegistrarBase*) throw()
-    {
-        return S_OK;
-    }
-};
-
-}}}
-
-test::swish::provider::CModule _AtlModule; ///< Global module instance
-
-#define BOOST_TEST_MODULE swish::provider stream tests
+#define BOOST_TEST_MODULE swish::provider network tests
 #include <boost/test/unit_test.hpp>

@@ -50,7 +50,7 @@ public:
         BOOST_WARN_MESSAGE(SUCCEEDED(hr), "::CoInitialize failed");
     }
 
-    ~ComFixture()
+    virtual ~ComFixture()
     {
         ::CoUninitialize();
     }
@@ -71,7 +71,7 @@ public:
                 err, boost::system::get_system_category());
     }
 
-    ~WinsockFixture()
+    virtual ~WinsockFixture()
     {
         ::WSACleanup();
     }
@@ -84,7 +84,7 @@ class OpenSshFixture : public WinsockFixture
 {
 public:
     OpenSshFixture();
-    ~OpenSshFixture();
+    virtual ~OpenSshFixture();
 
     int StopServer();
 
@@ -110,7 +110,7 @@ class SandboxFixture
 {
 public:
     SandboxFixture();
-    ~SandboxFixture();
+    virtual ~SandboxFixture();
 
     boost::filesystem::wpath Sandbox();
     boost::filesystem::wpath NewFileInSandbox();
