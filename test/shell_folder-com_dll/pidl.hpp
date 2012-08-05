@@ -24,8 +24,6 @@
     @endif
 */
 
-#include "test/common/testlimits.h"
-
 #define STRICT_TYPED_ITEMIDS ///< Better type safety for PIDLs (must be 
                              ///< before <shtypes.h> or <shlobj.h>).
 #include <shlobj.h>  // For PIDLs and PIDL-handling functions
@@ -44,7 +42,7 @@ namespace pidl {
 
     PITEMID_CHILD MakeHostPidl(
         PCWSTR user, PCWSTR host, PCWSTR path, 
-        USHORT port=SFTP_DEFAULT_PORT, PCWSTR label=L"");
+        USHORT port=22, PCWSTR label=L"");
 
     PITEMID_CHILD MakeRemotePidl(
         PCWSTR filename, bool fIsFolder=false, PCWSTR owner=L"", 

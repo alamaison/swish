@@ -335,6 +335,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SftpProvider.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SftpStream.hpp"
 				>
 			</File>

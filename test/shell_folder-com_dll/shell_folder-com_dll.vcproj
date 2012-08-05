@@ -280,10 +280,6 @@
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-			RelativePathToProject=".\test\common\common.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter

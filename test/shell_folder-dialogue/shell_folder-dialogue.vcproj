@@ -288,10 +288,6 @@
 			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
 			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
 		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{D14C2313-0735-4D50-9107-21DEDAF5EBA1}"
-			RelativePathToProject=".\test\common\common.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter
