@@ -365,34 +365,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<Filter
-			Name="dispenser"
-			>
-			<Filter
-				Name="Header Files"
-				>
-				<File
-					RelativePath=".\dispenser\DelegateDispenser.hpp"
-					>
-				</File>
-				<File
-					RelativePath=".\dispenser\Dispenser.hpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Source Files"
-				>
-				<File
-					RelativePath=".\dispenser\DelegateDispenser.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\dispenser\Dispenser.cpp"
-					>
-				</File>
-			</Filter>
-		</Filter>
 	</Files>
 	<Globals>
 	</Globals>
