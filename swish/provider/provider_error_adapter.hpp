@@ -117,26 +117,6 @@ public:
 
         return S_OK;
     }
-    
-    virtual IFACEMETHODIMP Stat(
-        ISftpConsumer *pConsumer, BSTR bstrPath, BOOL fFollowLinks,
-        struct Listing *pplt)
-    {
-        try
-        {
-            if (!pplt)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-            *pplt = Listing();
-
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            *pplt = impl().stat(pConsumer, bstrPath, fFollowLinks);
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
 
 private:
 

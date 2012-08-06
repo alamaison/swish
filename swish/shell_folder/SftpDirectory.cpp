@@ -231,21 +231,23 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
                 bstr_t link_path =
                     (m_directory / lt.get().bstrFilename).string();
 
-                SmartListing ltTarget;
-                if (FAILED(
-                    m_provider->Stat(
-                        m_consumer.in(), link_path.in(), TRUE, ltTarget.out())))
+                try
                 {
-                    // Broken links are treated like files.  There isn't really
-                    // anything else sensible to do with them.
-                    lt.out()->fIsDirectory = false;
-                }
-                else
-                {
+                    SmartListing ltTarget;
+                    // HACK: Make listings manage their own memory
+                    *(ltTarget.out()) = m_provider->stat(
+                        m_consumer.in(), link_path.in(), TRUE);
+
                     // TODO: consider what other properties we might want to
                     // take from the target instead of the link.  Currently
                     // we only take on folderness.
                     lt.out()->fIsDirectory = ltTarget.get().fIsDirectory;
+                }
+                catch(const exception&)
+                {
+                    // Broken links are treated like files.  There isn't really
+                    // anything else sensible to do with them.
+                    lt.out()->fIsDirectory = false;
                 }
 
                 assert(lt.get().fIsLink);

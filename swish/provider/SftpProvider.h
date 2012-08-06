@@ -187,12 +187,6 @@ public:
         BSTR bstrDirectory,
         IEnumListing **ppEnum
     ) = 0;
-
-    virtual HRESULT Stat(
-        ISftpConsumer *pConsumer,
-        BSTR bstrPath, BOOL fFollowLinks,
-        struct Listing * pplt
-    ) = 0;
 };
 
 namespace comet {
