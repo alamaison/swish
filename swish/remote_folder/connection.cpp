@@ -43,6 +43,7 @@
 
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
+using swish::provider::CProvider;
 
 using winapi::shell::pidl::apidl_t;
 
@@ -116,12 +117,7 @@ com_ptr<ISftpProvider> CPool::GetSession(
     if (connection != m_connections.end())
         return connection->second;
 
-    com_ptr<ISftpProvider> provider = new swish::provider::CProvider();
-    HRESULT hr = provider->Initialize(bstr_t(user).in(), bstr_t(host).in(),
-        port);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(comet::com_error(hr)));
+    com_ptr<ISftpProvider> provider = new CProvider(user, host, port);
 
     m_connections[display_name] = provider;
     return provider;

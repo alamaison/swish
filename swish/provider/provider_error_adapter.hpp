@@ -97,18 +97,6 @@ class provider_error_adapter : public ISftpProvider
 public:
     typedef ISftpProvider interface_is;
 
-    virtual IFACEMETHODIMP Initialize(
-        BSTR bstrUser, BSTR bstrHost, UINT uPort)
-    {
-        try
-        {
-            impl().initialize(bstrUser, bstrHost, uPort);
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
     virtual IFACEMETHODIMP GetListing(
         ISftpConsumer* pConsumer, BSTR bstrDirectory, IEnumListing** ppEnum)
     {

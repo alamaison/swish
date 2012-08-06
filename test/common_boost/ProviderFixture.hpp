@@ -30,6 +30,7 @@
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, ComFixture
 
 #include "swish/provider/Provider.hpp"
+#include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
@@ -47,16 +48,12 @@ namespace test {
 namespace detail {
 
     inline comet::com_ptr<ISftpProvider> provider_instance(
-        const comet::bstr_t& host, const comet::bstr_t& user, int port)
+        const std::string& host, const std::string& user, int port)
     {
-        comet::com_ptr<ISftpProvider> provider
-            = new swish::provider::CProvider();
-        HRESULT hr = provider->Initialize(user.in(), host.in(), port);
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(comet::com_error(hr)));
-
-        return provider;
+        return new swish::provider::CProvider(
+            swish::utils::Utf8StringToWideString(user),
+            swish::utils::Utf8StringToWideString(host),
+            port);
     }
 
     /**

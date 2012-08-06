@@ -41,6 +41,8 @@
 #include <string> // wstring
 #include <vector>
 
+using swish::provider::CProvider;
+
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_error_from_interface;
@@ -55,82 +57,218 @@ using std::wstring;
 
 namespace test {
 
-#define CHECK_PATH_EXISTS(path) _CheckPathExists(path)
-#define CHECK_PATH_NOT_EXISTS(path) _CheckPathNotExists(path)
+namespace {
+    
+    com_ptr<ISftpProvider> create_provider()
+    {
+        remote_test_config config;
+        wstring user = config.GetUser();
+        wstring host = config.GetHost();
 
+        return new CProvider(user, host, config.GetPort());
+    }
+
+    /**
+     * Check that the given provider responds sensibly to a request given
+     * a particular consumer.
+     *
+     * This may mean that the provider wasn't authenticated but survived
+     * an attempt to make it do something (presumably) by authenticating.
+     */
+    predicate_result alive(
+        com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer)
+    {
+        com_ptr<IEnumListing> listing;
+        HRESULT hr = provider->GetListing(
+            consumer.in(), bstr_t(L"/").in(), listing.out());
+        if (FAILED(hr))
+        {
+            predicate_result res(false);
+            res.message()
+                << "Provider seems to be dead: "
+                << com_error_from_interface(provider, hr).what();
+            return res;
+        }
+        else
+        {
+            predicate_result res(true);
+            res.message()
+                << "Provider seems to be alive: "
+                << com_error_from_interface(provider, hr).what();
+            return res;
+        }
+    }
+    
+    /**
+     * Check that the given provider responds sensibly to a request.
+     */
+    predicate_result alive(com_ptr<ISftpProvider> provider)
+    {
+        return alive(provider, new MockConsumer());
+    }
+}
+
+BOOST_AUTO_TEST_SUITE( provider_legacy_auth_tests )
+
+BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
+{
+    // Choose mock behaviours to force only simple password authentication
+    com_ptr<MockConsumer> consumer = new MockConsumer();
+    consumer->set_password_behaviour(MockConsumer::CustomPassword);
+    consumer->set_keyboard_interactive_behaviour(MockConsumer::FailResponse);
+
+    remote_test_config config;
+    consumer->set_password(config.GetPassword());
+
+    com_ptr<ISftpProvider> provider = create_provider();
+
+    BOOST_CHECK(alive(provider, consumer));
+}
+
+BOOST_AUTO_TEST_CASE( WrongPassword )
+{
+    com_ptr<MockConsumer> consumer = new MockConsumer();
+
+    consumer->set_password_behaviour(MockConsumer::WrongPassword);
+
+    com_ptr<ISftpProvider> provider = create_provider();
+
+    BOOST_CHECK(!alive(provider, consumer));
+}
+
+BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
+{
+    // Choose mock behaviours to force only kbd-interactive authentication
+    com_ptr<MockConsumer> consumer = new MockConsumer();
+    consumer->set_password_behaviour(MockConsumer::FailPassword);
+    consumer->set_keyboard_interactive_behaviour(MockConsumer::CustomResponse);
+
+    remote_test_config config;
+    consumer->set_password(config.GetPassword());
+
+    com_ptr<ISftpProvider> provider = create_provider();
+
+    // This may fail if the server (which we can't control) doesn't allow
+    // ki-auth
+    BOOST_CHECK(alive(provider, consumer));
+}
+
+/**
+ * Test to see that we can connect successfully after an aborted attempt.
+ */
+BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
+{
+    // Choose mock behaviours to simulate a user cancelling authentication
+    com_ptr<MockConsumer> consumer = new MockConsumer();
+    consumer->set_password_behaviour(MockConsumer::AbortPassword);
+    consumer->set_keyboard_interactive_behaviour(
+        MockConsumer::AbortResponse);
+
+    com_ptr<ISftpProvider> provider = create_provider();
+
+    // Try to fetch a listing enumerator - it should fail
+    BOOST_CHECK(!alive(provider, consumer));
+
+    // Change mock behaviours so that authentication succeeds
+    consumer->set_password_max_attempts(2);
+    consumer->set_password_behaviour(MockConsumer::CustomPassword);
+    consumer->set_keyboard_interactive_behaviour(MockConsumer::CustomResponse);
+
+    remote_test_config config;
+    consumer->set_password(config.GetPassword());
+
+    BOOST_CHECK(alive(provider, consumer));
+}
+
+BOOST_AUTO_TEST_SUITE_END();
+
+namespace {
+
+predicate_result file_exists_in_listing(
+    const wstring& filename, com_ptr<IEnumListing> enumerator)
+{
+    HRESULT hr;
+
+    Listing lt;
+    hr = enumerator->Reset();
+    BOOST_REQUIRE_OK(hr);
+
+    hr = enumerator->Next(1, &lt, NULL);
+    if (hr != S_OK)
+    {
+        predicate_result res(false);
+        res.message() << "Enumerator is empty";
+        return res;
+    }
+    else
+    {
+        while (hr == S_OK)
+        {
+            if (filename == bstr_t(lt.bstrFilename))
+            {
+                predicate_result res(true);
+                res.message() << "File found in enumerator: " << filename;
+                return res;
+            }
+
+            hr = enumerator->Next(1, &lt, NULL);
+        }
+
+        predicate_result res(false);
+        res.message() << "File not in enumerator: " << filename;
+        return res;
+    }
+}
+
+/**
+ * Performs a typical test setup.
+ *
+ * The mock consumer is set to authenticate using the correct password
+ * and throw an exception on all other callbacks to it.  This setup is 
+ * suitable for any tests that simply to test functionality rather than
+ * testing the process of authentication itself.  If the test expects
+ * the provider to callback to the consumer, these behaviours can be added
+ * after this method is called.
+ */
 class ProviderLegacyFixture
 {
 public:
-    ProviderLegacyFixture() :
-      m_pProvider(new swish::provider::CProvider()), m_pConsumer(NULL),
+    ProviderLegacyFixture()
+        :
+    provider(create_provider()), consumer(new MockConsumer()),
+        m_pConsumer(consumer.get()),
         home_directory(wpath(L"/home") / config.GetUser())
     {
-        m_pProvider->AddRef();
+        consumer->set_password_behaviour(MockConsumer::CustomPassword);
+        consumer->set_password(config.GetPassword());
 
-        // Create mock SftpConsumer for use in Initialize()
-        m_pCoConsumer = _CreateMockSftpConsumer();
-        m_pConsumer = m_pCoConsumer.get();
+        // Create test area (not used by all tests)
+        if (!path_exists(_TestArea()))
+        {
+            provider->create_new_directory(
+                m_pConsumer, bstr_t(_TestArea()).in());
+        }
     }
 
     ~ProviderLegacyFixture()
     {
-        if (_FileExists(_TestArea()))
+        if (path_exists(_TestArea()))
         {
             try
             {
-                m_pProvider->delete_directory(
+                provider->delete_directory(
                     m_pConsumer, bstr_t(_TestArea()).in());
             }
             catch (const std::exception&) { /* ignore */ }
         }
-
-        if (m_pProvider) // Possible for test to fail before initialised
-        {
-            ULONG cRefs = m_pProvider->Release();
-            cRefs;
-            //BOOST_CHECK_EQUAL( (ULONG)0, cRefs );
-        }
-        m_pProvider = NULL;
     }
 
 protected:
-    com_ptr<MockConsumer> m_pCoConsumer;
+    com_ptr<ISftpProvider> provider;
+    com_ptr<MockConsumer> consumer;
     ISftpConsumer *m_pConsumer;
-    ISftpProvider *m_pProvider;
     remote_test_config config;
     wpath home_directory;
-
-    /**
-     * Performs a typical test setup.
-     *
-     * The mock consumer is set to authenticate using the correct password
-     * and throw an exception on all other callbacks to it.  This setup is 
-     * suitable for any tests that simply to test functionality rather than
-     * testing the process of authentication itself.  If the test expects
-     * the provider to callback to the consumer, these behaviours can be added
-     * after this method is called.
-     */
-    void _StandardSetup()
-    {
-        bstr_t user = config.GetUser();
-        bstr_t host = config.GetHost();
-
-        // Standard mock behaviours
-        m_pCoConsumer->set_password_behaviour(MockConsumer::CustomPassword);
-        m_pCoConsumer->set_password(config.GetPassword());
-
-        HRESULT hr = m_pProvider->Initialize(
-            user.in(), host.in(), config.GetPort());
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
-
-        // Create test area (not used by all tests)
-        if (!_FileExists(_TestArea()))
-        {
-            m_pProvider->create_new_directory(
-                m_pConsumer, bstr_t(_TestArea()).in());
-        }
-    }
 
     /**
      * Tests that the format of the enumeration of listings is correct.
@@ -182,51 +320,17 @@ protected:
         BOOST_CHECK(hr == S_FALSE);
     }
 
-    bool _FileExistsInListing(
-        const bstr_t& filename, com_ptr<IEnumListing> enumerator)
-    {
-        HRESULT hr;
-
-        // Search for file
-        Listing lt;
-        hr = enumerator->Reset();
-        BOOST_REQUIRE_OK(hr);
-        hr = enumerator->Next(1, &lt, NULL);
-        BOOST_CHECK(SUCCEEDED(hr));
-        while (hr == S_OK)
-        {
-            if (filename == lt.bstrFilename)
-                return true;
-
-            hr = enumerator->Next(1, &lt, NULL);
-        }
-
-        return false;
-    }
-
-    bool _FileExists(const wpath& file_path)
+    predicate_result path_exists(const wpath& file_path)
     {
         // Fetch listing enumerator
         com_ptr<IEnumListing> enumerator;
-        HRESULT hr = m_pProvider->GetListing(
+        HRESULT hr = provider->GetListing(
             m_pConsumer, bstr_t(file_path.parent_path().string()).in(),
             enumerator.out());
         if (FAILED(hr))
             return false;
 
-        return _FileExistsInListing(file_path.filename(), enumerator);
-    }
-
-    void _CheckPathExists(const wpath& path)
-    {
-        BOOST_CHECK_MESSAGE(
-            _FileExists(path), L"Expected file not found: " + path.string());
-    }
-
-    void _CheckPathNotExists(const wpath& path)
-    {
-        BOOST_CHECK_MESSAGE(
-            !_FileExists(path), L"File unexpectedly found: " + path.string());
+        return file_exists_in_listing(file_path.filename(), enumerator);
     }
 
     /**
@@ -244,113 +348,41 @@ protected:
     {
         return (_HomeDir(L"testArea") / path).string();
     }
-
-    static com_ptr<MockConsumer> _CreateMockSftpConsumer()
-    {
-        return new MockConsumer();
-    }
-
-    /**
-     * Check that the given provider responds sensibly to a request.
-     */
-    predicate_result alive(com_ptr<ISftpProvider> provider)
-    {
-        com_ptr<IEnumListing> listing;
-        HRESULT hr = provider->GetListing(
-            m_pConsumer, bstr_t(L"/home").in(), listing.out());
-        if (FAILED(hr))
-        {
-            predicate_result res(false);
-            res.message()
-                << "Provider seems to be dead: "
-                << com_error_from_interface(provider, hr).what();
-            return res;
-        }
-        else
-        {
-            return true;
-        }
-    }
 };
+
+}
 
 BOOST_FIXTURE_TEST_SUITE(provider_legacy_tests, ProviderLegacyFixture)
 
-BOOST_AUTO_TEST_CASE( Initialize )
-{
-    bstr_t user = config.GetUser();
-    bstr_t host = config.GetHost();
-
-    // Test with invalid port values
-#pragma warning (push)
-#pragma warning (disable: 4245) // unsigned signed mismatch
-    BOOST_CHECK_EQUAL(
-        E_INVALIDARG,
-        m_pProvider->Initialize(user.in(), host.in(), -1)
-    );
-    BOOST_CHECK_EQUAL(
-        E_INVALIDARG,
-        m_pProvider->Initialize(user.in(), host.in(), 65536)
-    );
-#pragma warning (pop)
-
-    // Run real test
-    BOOST_REQUIRE_OK(
-        m_pProvider->Initialize(user.in(), host.in(), config.GetPort()));
-}
-
 BOOST_AUTO_TEST_CASE( GetListing )
 {
-    _StandardSetup();
-
     // Fetch listing enumerator
     com_ptr<IEnumListing> enumerator;
-    HRESULT hr = m_pProvider->GetListing(
+    HRESULT hr = provider->GetListing(
         m_pConsumer, bstr_t(L"/tmp").in(), enumerator.out());
     if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
+        BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
 
     // Check format of listing is sensible
     _TestListingFormat(enumerator);
 }
 
-BOOST_AUTO_TEST_CASE( GetListing_WrongPassword )
-{
-    bstr_t user = config.GetUser();
-    bstr_t host = config.GetHost();
-
-    // Choose mock behaviours
-    m_pCoConsumer->set_password_behaviour(MockConsumer::WrongPassword);
-
-    BOOST_REQUIRE_OK(
-        m_pProvider->Initialize(user.in(), host.in(), config.GetPort()));
-
-    // Fetch listing enumerator
-    com_ptr<IEnumListing> enumerator;
-    HRESULT hr = m_pProvider->GetListing(
-        m_pConsumer, bstr_t(L"/tmp").in(), enumerator.out());
-    BOOST_CHECK(FAILED(hr));
-}
-
 BOOST_AUTO_TEST_CASE( GetListingRepeatedly )
 {
-    _StandardSetup();
-
     // Fetch 5 listing enumerators
     vector< com_ptr<IEnumListing> > enums(5);
 
     BOOST_FOREACH(com_ptr<IEnumListing> listing, enums)
     {
-        HRESULT hr = m_pProvider->GetListing(
+        HRESULT hr = provider->GetListing(
             m_pConsumer, bstr_t(L"/tmp").in(), listing.out());
         if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
+            BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
     }
 }
 
 BOOST_AUTO_TEST_CASE( GetListingIndependence )
 {
-    _StandardSetup();
-
     HRESULT hr;
 
     // Put some files in the test area
@@ -358,81 +390,75 @@ BOOST_AUTO_TEST_CASE( GetListingIndependence )
     bstr_t one(_TestArea(L"GetListingIndependence1"));
     bstr_t two(_TestArea(L"GetListingIndependence2"));
     bstr_t three(_TestArea(L"GetListingIndependence3"));
-    m_pProvider->create_new_file(m_pConsumer, one.in());
-    m_pProvider->create_new_file(m_pConsumer, two.in());
-    m_pProvider->create_new_file(m_pConsumer, three.in());
+    provider->create_new_file(m_pConsumer, one.in());
+    provider->create_new_file(m_pConsumer, two.in());
+    provider->create_new_file(m_pConsumer, three.in());
 
     // Fetch first listing enumerator
     com_ptr<IEnumListing> enum_before;
-    hr = m_pProvider->GetListing(
+    hr = provider->GetListing(
         m_pConsumer, directory.in(), enum_before.out());
     if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
+        BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
 
     // Delete one of the files
-    m_pProvider->delete_file(m_pConsumer, two.in());
+    provider->delete_file(m_pConsumer, two.in());
 
     // Fetch second listing enumerator
     com_ptr<IEnumListing> enum_after;
-    hr = m_pProvider->GetListing(
+    hr = provider->GetListing(
         m_pConsumer, directory.in(), enum_after.out());
     if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_pProvider, hr));
+        BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
 
     // The first listing should still show the file. The second should not.
-    BOOST_CHECK(_FileExistsInListing(
-        L"GetListingIndependence1", enum_before));
-    BOOST_CHECK(_FileExistsInListing(
-        L"GetListingIndependence2", enum_before));
-    BOOST_CHECK(_FileExistsInListing(
-        L"GetListingIndependence3", enum_before));
-    BOOST_CHECK(_FileExistsInListing(
-        L"GetListingIndependence1", enum_after));
-    BOOST_CHECK(!_FileExistsInListing(
-        L"GetListingIndependence2", enum_after));
-    BOOST_CHECK(_FileExistsInListing(
-        L"GetListingIndependence3", enum_after));
+    BOOST_CHECK(
+        file_exists_in_listing(L"GetListingIndependence1", enum_before));
+    BOOST_CHECK(
+        file_exists_in_listing(L"GetListingIndependence2", enum_before));
+    BOOST_CHECK(
+        file_exists_in_listing(L"GetListingIndependence3", enum_before));
+    BOOST_CHECK(file_exists_in_listing(L"GetListingIndependence1", enum_after));
+    BOOST_CHECK(
+        !file_exists_in_listing(L"GetListingIndependence2", enum_after));
+    BOOST_CHECK(file_exists_in_listing(L"GetListingIndependence3", enum_after));
 
     // Cleanup
-    m_pProvider->delete_file(m_pConsumer, one.in());
-    m_pProvider->delete_file(m_pConsumer, three.in());
+    provider->delete_file(m_pConsumer, one.in());
+    provider->delete_file(m_pConsumer, three.in());
 }
 
 BOOST_AUTO_TEST_CASE( Rename )
 {
-    _StandardSetup();
-
     bstr_t subject(_TestArea(L"Rename"));
     bstr_t target(_TestArea(L"Rename_Passed"));
 
     // Create our test subject and check existence
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->create_new_file(m_pConsumer, subject.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_FALSE);
 
     // Test renaming file back
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        provider->rename(m_pConsumer, target.in(), subject.in())
         == VARIANT_FALSE);
 
     // Check that the target does not still exist
-    CHECK_PATH_NOT_EXISTS(target.in());
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Cleanup
-    m_pProvider->delete_file(m_pConsumer, subject.in());
+    provider->delete_file(m_pConsumer, subject.in());
 }
 
 BOOST_AUTO_TEST_CASE( RenameWithObstruction )
 {
-    _StandardSetup();
-
     // Choose mock behaviour
-    m_pCoConsumer->set_confirm_overwrite_behaviour(MockConsumer::AllowOverwrite);
+    consumer->set_confirm_overwrite_behaviour(MockConsumer::AllowOverwrite);
 
     bstr_t subject(_TestArea(L"RenameWithObstruction"));
     bstr_t target(
@@ -441,30 +467,30 @@ BOOST_AUTO_TEST_CASE( RenameWithObstruction )
         _TestArea(L"RenameWithObstruction_Obstruction.swish_rename_temp"));
 
     // Create our test subjects and check existence
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
-    m_pProvider->create_new_file(m_pConsumer, target.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    provider->create_new_file(m_pConsumer, subject.in());
+    provider->create_new_file(m_pConsumer, target.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Check that the non-atomic overwrite temp does not already exists
-    CHECK_PATH_NOT_EXISTS(swish_temp.in());
+    BOOST_CHECK(!path_exists(swish_temp.in()));
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_TRUE);
 
     // Check that the old file no longer exists but the target does
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Check that the non-atomic overwrite temp has been removed
-    CHECK_PATH_NOT_EXISTS(swish_temp.in());
+    BOOST_CHECK(!path_exists(swish_temp.in()));
 
     // Cleanup
-    m_pProvider->delete_file(m_pConsumer, target.in());
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->delete_file(m_pConsumer, target.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 }
 
 /**
@@ -474,62 +500,56 @@ BOOST_AUTO_TEST_CASE( RenameWithObstruction )
  */
 BOOST_AUTO_TEST_CASE( RenameNoDirectory )
 {
-    _StandardSetup();
-
     bstr_t subject(L"RenameNoDirectory");
     bstr_t target(L"RenameNoDirectory_Passed");
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
+    provider->create_new_file(m_pConsumer, subject.in());
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_FALSE);
 
     // Test renaming file back
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        provider->rename(m_pConsumer, target.in(), subject.in())
         == VARIANT_FALSE);
 
     // Cleanup
-    m_pProvider->delete_file(m_pConsumer, subject.in());
+    provider->delete_file(m_pConsumer, subject.in());
 }
 
 BOOST_AUTO_TEST_CASE( RenameFolder )
 {
-    _StandardSetup();
-
     bstr_t subject(_TestArea(L"RenameFolder"));
     bstr_t target(_TestArea(L"RenameFolder_Passed"));
 
     // Create our test subject and check existence
-    m_pProvider->create_new_directory(m_pConsumer, subject.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->create_new_directory(m_pConsumer, subject.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_FALSE);
 
     // Test renaming file back
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        provider->rename(m_pConsumer, target.in(), subject.in())
         == VARIANT_FALSE);
 
     // Check that the target does not still exist
-    CHECK_PATH_NOT_EXISTS(target.in());
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Cleanup
-    m_pProvider->delete_directory(m_pConsumer, subject.in());
-    CHECK_PATH_NOT_EXISTS(subject.in());
+    provider->delete_directory(m_pConsumer, subject.in());
+    BOOST_CHECK(!path_exists(subject.in()));
 }
 
 BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
 {
-    _StandardSetup();
-
     // Choose mock behaviour
-    m_pCoConsumer->set_confirm_overwrite_behaviour(
+    consumer->set_confirm_overwrite_behaviour(
         MockConsumer::AllowOverwrite);
 
     bstr_t subject(_TestArea(L"RenameFolderWithObstruction"));
@@ -541,34 +561,34 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithObstruction )
         L"RenameFolderWithObstruction_Obstruction.swish_rename_temp"));
 
     // Create our test subjects and check existence
-    m_pProvider->create_new_directory(m_pConsumer, subject.in());
-    m_pProvider->create_new_directory(m_pConsumer, target.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    provider->create_new_directory(m_pConsumer, subject.in());
+    provider->create_new_directory(m_pConsumer, target.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Add a file in the obstructing directory to make it harder to delete
-    m_pProvider->create_new_file(m_pConsumer, targetContents.in());
-    CHECK_PATH_EXISTS(targetContents.in());
+    provider->create_new_file(m_pConsumer, targetContents.in());
+    BOOST_CHECK(path_exists(targetContents.in()));
 
     // Check that the non-atomic overwrite temp does not already exists
-    CHECK_PATH_NOT_EXISTS(swish_temp.in());
+    BOOST_CHECK(!path_exists(swish_temp.in()));
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_TRUE);
 
     // Check that the old file no longer exists but the target does
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Check that the non-atomic overwrite temp has been removed
-    CHECK_PATH_NOT_EXISTS(swish_temp.in());
+    BOOST_CHECK(!path_exists(swish_temp.in()));
 
     // Cleanup
-    m_pProvider->delete_directory(m_pConsumer, target.in());
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->delete_directory(m_pConsumer, target.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 }
 
 namespace {
@@ -581,10 +601,8 @@ namespace {
 
 BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
 {
-    _StandardSetup();
-
     // Choose mock behaviour
-    m_pCoConsumer->set_confirm_overwrite_behaviour(
+    consumer->set_confirm_overwrite_behaviour(
         MockConsumer::PreventOverwrite);
 
     bstr_t subject(_TestArea(L"RenameWithRefusedConfirmation"));
@@ -592,33 +610,31 @@ BOOST_AUTO_TEST_CASE( RenameWithRefusedConfirmation )
         _TestArea(L"RenameWithRefusedConfirmation_Obstruction"));
 
     // Create our test subjects and check existence
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
-    m_pProvider->create_new_file(m_pConsumer, target.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    provider->create_new_file(m_pConsumer, subject.in());
+    provider->create_new_file(m_pConsumer, target.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Test renaming file
     BOOST_CHECK_EXCEPTION(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in()),
+        provider->rename(m_pConsumer, subject.in(), target.in()),
         com_error, is_abort);
 
     // Check that both files still exist
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Cleanup
-    m_pProvider->delete_file(m_pConsumer, subject.in());
-    m_pProvider->delete_file(m_pConsumer, target.in());
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->delete_file(m_pConsumer, subject.in());
+    provider->delete_file(m_pConsumer, target.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 }
 
 BOOST_AUTO_TEST_CASE( RenameFolderWithRefusedConfirmation )
 {
-    _StandardSetup();
-
     // Choose mock behaviour
-    m_pCoConsumer->set_confirm_overwrite_behaviour(
+    consumer->set_confirm_overwrite_behaviour(
         MockConsumer::PreventOverwrite);
 
     bstr_t subject(
@@ -627,62 +643,58 @@ BOOST_AUTO_TEST_CASE( RenameFolderWithRefusedConfirmation )
         _TestArea(L"RenameFolderWithRefusedConfirmation_Obstruction"));
 
     // Create our test subjects and check existence
-    m_pProvider->create_new_directory(m_pConsumer, subject.in());
-    m_pProvider->create_new_directory(m_pConsumer, target.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    provider->create_new_directory(m_pConsumer, subject.in());
+    provider->create_new_directory(m_pConsumer, target.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Test renaming directory
     BOOST_CHECK_EXCEPTION(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in()),
+        provider->rename(m_pConsumer, subject.in(), target.in()),
         com_error, is_abort);
 
     // Check that both directories still exist
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_EXISTS(target.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(path_exists(target.in()));
 
     // Cleanup
-    m_pProvider->delete_directory(m_pConsumer, subject.in());
-    m_pProvider->delete_directory(m_pConsumer, target.in());
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->delete_directory(m_pConsumer, subject.in());
+    provider->delete_directory(m_pConsumer, target.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 }
 
 BOOST_AUTO_TEST_CASE( RenameInNonHomeFolder )
 {
-    _StandardSetup();
-
     bstr_t subject(L"/tmp/swishRenameInNonHomeFolder");
     bstr_t target(L"/tmp/swishRenameInNonHomeFolder_Passed");
 
     // Create our test subjects and check existence
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->create_new_file(m_pConsumer, subject.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_FALSE);
 
     // Test renaming file back
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        provider->rename(m_pConsumer, target.in(), subject.in())
         == VARIANT_FALSE);
 
     // Check that the target does not still exist
-    CHECK_PATH_NOT_EXISTS(target.in());
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Cleanup
-    m_pProvider->delete_file(m_pConsumer, subject.in());
-    CHECK_PATH_NOT_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->delete_file(m_pConsumer, subject.in());
+    BOOST_CHECK(!path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 }
 
 BOOST_AUTO_TEST_CASE( RenameInNonHomeSubfolder )
 {
-    _StandardSetup();
-
     bstr_t folder(L"/tmp/swishSubfolder");
     bstr_t subject(
         L"/tmp/swishSubfolder/RenameInNonHomeSubfolder");
@@ -690,161 +702,83 @@ BOOST_AUTO_TEST_CASE( RenameInNonHomeSubfolder )
         L"/tmp/swishSubfolder/RenameInNonHomeSubfolder_Passed");
 
     // Create our test subjects and check existence
-    m_pProvider->create_new_directory(m_pConsumer, folder.in());
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
-    CHECK_PATH_EXISTS(subject.in());
-    CHECK_PATH_NOT_EXISTS(target.in());
+    provider->create_new_directory(m_pConsumer, folder.in());
+    provider->create_new_file(m_pConsumer, subject.in());
+    BOOST_CHECK(path_exists(subject.in()));
+    BOOST_CHECK(!path_exists(target.in()));
 
     // Test renaming file
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, subject.in(), target.in())
+        provider->rename(m_pConsumer, subject.in(), target.in())
         == VARIANT_FALSE);
 
     // Test renaming file back
     BOOST_CHECK(
-        m_pProvider->rename(m_pConsumer, target.in(), subject.in())
+        provider->rename(m_pConsumer, target.in(), subject.in())
         == VARIANT_FALSE);
 
     // Check that the target does not still exist
-    CHECK_PATH_NOT_EXISTS(target.in());
+    BOOST_CHECK(!path_exists(target.in()));
     
     // Cleanup
-    m_pProvider->delete_directory(m_pConsumer, folder.in());
-    CHECK_PATH_NOT_EXISTS(folder.in());
+    provider->delete_directory(m_pConsumer, folder.in());
+    BOOST_CHECK(!path_exists(folder.in()));
 }
 
 BOOST_AUTO_TEST_CASE( CreateAndDelete )
 {
-    _StandardSetup();
-
     bstr_t subject(_TestArea(L"CreateAndDelete"));
 
     // Check that the file does not already exist
-    CHECK_PATH_NOT_EXISTS(subject.in());
+    BOOST_CHECK(!path_exists(subject.in()));
 
     // Test creating file
-    m_pProvider->create_new_file(m_pConsumer, subject.in());
+    provider->create_new_file(m_pConsumer, subject.in());
 
     // Test deleting file
-    m_pProvider->delete_file(m_pConsumer, subject.in());
+    provider->delete_file(m_pConsumer, subject.in());
 
     // Check that the file does not still exist
-    CHECK_PATH_NOT_EXISTS(subject.in());
+    BOOST_CHECK(!path_exists(subject.in()));
 }
 
 BOOST_AUTO_TEST_CASE( CreateAndDeleteEmptyDirectory )
 {
-    _StandardSetup();
-
     bstr_t subject(_TestArea(L"CreateAndDeleteEmptyDirectory"));
 
     // Check that the directory does not already exist
-    CHECK_PATH_NOT_EXISTS(subject.in());
+    BOOST_CHECK(!path_exists(subject.in()));
 
     // Test creating directory
-    m_pProvider->create_new_directory(m_pConsumer, subject.in());
+    provider->create_new_directory(m_pConsumer, subject.in());
 
     // Test deleting directory
-    m_pProvider->delete_directory(m_pConsumer, subject.in());
+    provider->delete_directory(m_pConsumer, subject.in());
     
     // Check that the directory does not still exist
-    CHECK_PATH_NOT_EXISTS(subject.in());
+    BOOST_CHECK(!path_exists(subject.in()));
 }
 
 BOOST_AUTO_TEST_CASE( CreateAndDeleteDirectoryRecursive )
 {
-    _StandardSetup();
-
     bstr_t directory(_TestArea(L"CreateAndDeleteDirectory"));
     bstr_t file(_TestArea(L"CreateAndDeleteDirectory/Recursive"));
 
     // Check that subjects do not already exist
-    CHECK_PATH_NOT_EXISTS(directory.in());
-    CHECK_PATH_NOT_EXISTS(file.in());
+    BOOST_CHECK(!path_exists(directory.in()));
+    BOOST_CHECK(!path_exists(file.in()));
 
     // Create directory
-    m_pProvider->create_new_directory(m_pConsumer, directory.in());
+    provider->create_new_directory(m_pConsumer, directory.in());
 
     // Add file to directory
-    m_pProvider->create_new_file(m_pConsumer, file.in());
+    provider->create_new_file(m_pConsumer, file.in());
 
     // Test deleting directory
-    m_pProvider->delete_directory(m_pConsumer, directory.in());
+    provider->delete_directory(m_pConsumer, directory.in());
 
     // Check that the directory does not still exist
-    CHECK_PATH_NOT_EXISTS(directory.in());
-}
-
-BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
-{
-    bstr_t user = config.GetUser();
-    bstr_t host = config.GetHost();
-
-    // Choose mock behaviours to force only kbd-interactive authentication
-    m_pCoConsumer->set_password_behaviour(MockConsumer::FailPassword);
-    m_pCoConsumer->set_keyboard_interactive_behaviour(
-        MockConsumer::CustomResponse);
-    m_pCoConsumer->set_password(config.GetPassword());
-
-    BOOST_REQUIRE_OK(
-        m_pProvider->Initialize(user.in(), host.in(), config.GetPort()));
-
-    // This may fail if the server (which we can't control) doesn't allow
-    // ki-auth
-    BOOST_CHECK(alive(m_pProvider));
-}
-
-BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
-{
-    bstr_t user = config.GetUser();
-    bstr_t host = config.GetHost();
-
-    // Choose mock behaviours to force only simple password authentication
-    m_pCoConsumer->set_password_behaviour(MockConsumer::CustomPassword);
-    m_pCoConsumer->set_keyboard_interactive_behaviour(
-        MockConsumer::FailResponse);
-    m_pCoConsumer->set_password(config.GetPassword());
-
-    BOOST_REQUIRE_OK(
-        m_pProvider->Initialize(user.in(), host.in(), config.GetPort()));
-
-    BOOST_CHECK(alive(m_pProvider));
-}
-
-/**
- * Test to see that we can connect successfully after an aborted attempt.
- */
-BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
-{
-    bstr_t user = config.GetUser();
-    bstr_t host = config.GetHost();
-
-    BOOST_REQUIRE_OK(
-        m_pProvider->Initialize(user.in(), host.in(), config.GetPort()));
-
-    // Choose mock behaviours to simulate a user cancelling authentication
-    m_pCoConsumer->set_password_behaviour(MockConsumer::AbortPassword);
-    m_pCoConsumer->set_keyboard_interactive_behaviour(
-        MockConsumer::AbortResponse);
-
-    // Try to fetch a listing enumerator - it should fail
-    com_ptr<IEnumListing> enumerator;
-    bstr_t directory("/tmp");
-    HRESULT hr = m_pProvider->GetListing(
-        m_pConsumer, directory.in(), enumerator.out());
-    BOOST_CHECK(FAILED(hr));
-
-    // Choose mock behaviours so that authentication succeeds
-    m_pCoConsumer->set_password_max_attempts(2);
-    m_pCoConsumer->set_password_behaviour(MockConsumer::CustomPassword);
-    m_pCoConsumer->set_keyboard_interactive_behaviour(
-        MockConsumer::CustomResponse);
-    m_pCoConsumer->set_password(config.GetPassword());
-
-    // Try to fetch a listing again - this time is should succeed
-    BOOST_CHECK(!enumerator);
-    hr = m_pProvider->GetListing(m_pConsumer, directory.in(), enumerator.out());
-    BOOST_REQUIRE_OK(hr);
+    BOOST_CHECK(!path_exists(directory.in()));
 }
 
 } // namespace test

@@ -79,9 +79,6 @@ public:
         // Create mock object coclass instances
         m_pConsumer = com_ptr<ISftpConsumer>(new MockConsumer());
         m_pProvider = com_ptr<ISftpProvider>(new MockProvider());
-
-        m_pProvider->Initialize(
-            bstr_t(L"blah").in(), bstr_t(L"more blah").in(), 12);
     }
 
 protected:

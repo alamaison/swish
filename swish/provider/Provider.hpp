@@ -54,12 +54,10 @@ class CProvider :
 {
 public:
 
-    CProvider();
+    CProvider(const std::wstring& user, const std::wstring& host, UINT port);
 
     /** @name ISftpProvider implementation via provider_error_adapter */
     // @{
-    virtual void initialize(BSTR user, BSTR host, UINT port);
-
     virtual IEnumListing* get_listing(
         ISftpConsumer* consumer, BSTR directory);
 

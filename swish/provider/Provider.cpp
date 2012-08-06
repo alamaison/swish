@@ -174,19 +174,19 @@ private:
         __in_z const char *szPath, wstring& error_out);
 };
 
-CProvider::CProvider() {}
-
-provider_interface& CProvider::impl() {    return *this; }
-
-void CProvider::initialize(BSTR user, BSTR host, UINT port)
+CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
 {
-    if (::SysStringLen(user) == 0 || ::SysStringLen(host) == 0)
-        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+    if (user.empty())
+        BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
+    if (host.empty())
+        BOOST_THROW_EXCEPTION(invalid_argument("Host name required"));
     if (port < MIN_PORT || port > MAX_PORT)
-        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+        BOOST_THROW_EXCEPTION(invalid_argument("Not a valid port number"));
 
     m_provider = make_shared<provider>(user, host, port);
 }
+
+provider_interface& CProvider::impl() { return *this; }
 
 IEnumListing* CProvider::get_listing(ISftpConsumer* consumer, BSTR directory)
 { return m_provider->get_listing(consumer, directory); }

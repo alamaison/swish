@@ -125,8 +125,6 @@ class provider_interface
 public:
     virtual ~provider_interface() {}
 
-    virtual void initialize(BSTR user, BSTR host, UINT port) = 0;
-
     virtual IEnumListing* get_listing(
         ISftpConsumer* consumer, BSTR directory) = 0;
 
@@ -184,11 +182,6 @@ public:
 class ISftpProvider : public IUnknown, public swish::provider::provider_interface
 {
 public:
-    virtual HRESULT Initialize(
-        BSTR bstrUser,
-        BSTR bstrHost,
-        UINT uPort
-    ) = 0;
     virtual HRESULT GetListing(
         ISftpConsumer *pConsumer,
         BSTR bstrDirectory,
