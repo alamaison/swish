@@ -26,7 +26,7 @@
 
 #include "SnitchingDropTarget.hpp"
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
@@ -39,6 +39,7 @@
 #include <comet/ptr.h>  // com_ptr
 
 using swish::frontend::rethrow_and_announce;
+using swish::provider::sftp_provider;
 
 using winapi::shell::pidl::apidl_t;
 
@@ -53,7 +54,7 @@ namespace swish {
 namespace drop_target {
 
 CSnitchingDropTarget::CSnitchingDropTarget(
-    HWND hwnd_owner, com_ptr<ISftpProvider> provider,
+    HWND hwnd_owner, com_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
     shared_ptr<DropActionCallback> callback)
     :

@@ -47,7 +47,7 @@ namespace test {
 
 namespace detail {
 
-    inline comet::com_ptr<ISftpProvider> provider_instance(
+    inline comet::com_ptr<swish::provider::sftp_provider> provider_instance(
         const std::string& host, const std::string& user, int port)
     {
         return new swish::provider::CProvider(
@@ -67,11 +67,11 @@ namespace detail {
             const std::string& host, const std::string& user, int port)
             : m_provider(provider_instance(host, user, port)) {}
 
-        comet::com_ptr<ISftpProvider> get() const { return m_provider; }
+        comet::com_ptr<swish::provider::sftp_provider> get() const { return m_provider; }
 
     private:
         comet::auto_coinit coinit;
-        comet::com_ptr<ISftpProvider> m_provider;
+        comet::com_ptr<swish::provider::sftp_provider> m_provider;
     };
 
     static boost::shared_ptr<static_provider> s_provider; ///< static provider
@@ -148,7 +148,7 @@ public:
      *
      * Created on demand on the first request.
      */
-    comet::com_ptr<ISftpProvider> provider() const
+    comet::com_ptr<swish::provider::sftp_provider> provider() const
     {
         if (!detail::s_provider)
         {
@@ -183,7 +183,7 @@ public:
     /**
      * Return a pointer to a new provider instance.
      */
-    comet::com_ptr<ISftpProvider> provider()
+    comet::com_ptr<swish::provider::sftp_provider> provider()
     {
         if (!m_provider)
         {
@@ -197,7 +197,7 @@ public:
 private:
     comet::auto_coinit m_coinit;
     ServerType m_server;
-    comet::com_ptr<ISftpProvider> m_provider;
+    comet::com_ptr<swish::provider::sftp_provider> m_provider;
 
     const ServerType& server() const { return m_server; }
 };
@@ -211,7 +211,7 @@ public:
     /**
      * Get a CProvider instance connected to the fixture SSH server.
      */
-    comet::com_ptr<ISftpProvider> ProviderFixtureT::Provider()
+    comet::com_ptr<swish::provider::sftp_provider> ProviderFixtureT::Provider()
     {
         return m_policy.provider();
     }

@@ -28,7 +28,7 @@
 #define SWISH_REMOTE_FOLDER_COMMANDS_NEW_FOLDER_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/nse/Command.hpp" // Command
 
 #include <winapi/shell/pidl.hpp> // apidl_t
@@ -48,7 +48,7 @@ class NewFolder : public swish::nse::Command
 public:
     NewFolder(
         const winapi::shell::pidl::apidl_t& folder_pidl,
-        const boost::function<comet::com_ptr<ISftpProvider>()>& provider,
+        const boost::function<comet::com_ptr<swish::provider::sftp_provider>()>& provider,
         const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
     
     bool disabled(const comet::com_ptr<IDataObject>& data_object,
@@ -65,7 +65,7 @@ public:
 private:
     HWND m_hwnd;
     winapi::shell::pidl::apidl_t m_folder_pidl;
-    boost::function<comet::com_ptr<ISftpProvider>()> m_provider;
+    boost::function<comet::com_ptr<swish::provider::sftp_provider>()> m_provider;
     boost::function<comet::com_ptr<ISftpConsumer>()> m_consumer;
     comet::com_ptr<IUnknown> m_site;
 };

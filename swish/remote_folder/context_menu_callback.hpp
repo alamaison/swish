@@ -28,7 +28,7 @@
 #define SWISH_REMOTE_FOLDER_CONTEXT_MENU_CALLBACK_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/nse/default_context_menu_callback.hpp"
                                                // default_context_menu_callback
 
@@ -49,7 +49,7 @@ class context_menu_callback : public swish::nse::default_context_menu_callback
 {
 public:
     context_menu_callback(
-        boost::function<comet::com_ptr<ISftpProvider>(HWND)> provider_factory,
+        boost::function<comet::com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
         boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
 
 private:
@@ -80,7 +80,7 @@ private:
         HWND hwnd_view, comet::com_ptr<IDataObject> selection,
         UINT& default_command_id);
 
-    boost::function<comet::com_ptr<ISftpProvider>(HWND)> m_provider_factory;
+    boost::function<comet::com_ptr<swish::provider::sftp_provider>(HWND)> m_provider_factory;
     boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 };
 

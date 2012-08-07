@@ -168,7 +168,7 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
     try
     {
-        com_ptr<ISftpProvider> provider =
+        com_ptr<swish::provider::sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
@@ -328,7 +328,7 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
     try
     {
-        com_ptr<ISftpProvider> provider =
+        com_ptr<swish::provider::sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
@@ -689,7 +689,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
     try
     {
-        com_ptr<ISftpProvider> provider =
+        com_ptr<swish::provider::sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
@@ -718,7 +718,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
     try
     {
-        com_ptr<ISftpProvider> provider =
+        com_ptr<swish::provider::sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 

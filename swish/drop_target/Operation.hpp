@@ -28,7 +28,7 @@
 #define SWISH_DROP_TARGET_OPERATION_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/function.hpp> // function
@@ -85,7 +85,7 @@ public:
 
     virtual void operator()(
         OperationCallback& callback,
-        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer)
         const = 0;
 

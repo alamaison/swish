@@ -31,6 +31,8 @@
 #include <boost/locale/message.hpp> // translate
 #include <boost/locale/format.hpp> // wformat
 
+using swish::provider::sftp_provider;
+
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 
@@ -74,7 +76,7 @@ wstring CreateDirectoryOperation::description() const
 
 void CreateDirectoryOperation::operator()(
     OperationCallback& callback,
-    com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
+    com_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
 {
     callback.update_progress(0, 1);
 

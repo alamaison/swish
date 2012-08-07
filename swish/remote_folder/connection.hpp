@@ -29,7 +29,7 @@
 #define SWISH_SHELL_FOLDER_POOL_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
@@ -49,13 +49,13 @@ class CPool
 {
 public:
 
-    comet::com_ptr<ISftpProvider> GetSession(
+    comet::com_ptr<swish::provider::sftp_provider> GetSession(
         const std::wstring& host, const std::wstring& user, int port,
         HWND hwnd);
 
 private:
     static comet::critical_section m_cs;
-    static std::map<std::wstring, comet::com_ptr<ISftpProvider> > m_connections;
+    static std::map<std::wstring, comet::com_ptr<swish::provider::sftp_provider> > m_connections;
 };
 
 
@@ -73,7 +73,7 @@ private:
  *                             as the parent window for any user interaction.
  * @throws ATL exceptions on failure.
  */
-comet::com_ptr<ISftpProvider> connection_from_pidl(
+comet::com_ptr<swish::provider::sftp_provider> connection_from_pidl(
     const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
 
 /**
@@ -92,7 +92,7 @@ comet::com_ptr<ISftpProvider> connection_from_pidl(
 {
 public:
     virtual ~connection_maker() = 0;
-    virtual comet::com_ptr<ISftpProvider> provider() = 0;
+    virtual comet::com_ptr<swish::provider::sftp_provider> provider() = 0;
     virtual comet::com_ptr<ISftpConsumer> consumer() = 0;
 };*/
 

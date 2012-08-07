@@ -26,7 +26,7 @@
 
 #include "SequentialPlan.hpp"
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/drop_target/DropActionCallback.hpp"
 #include "swish/drop_target/Operation.hpp"
 
@@ -39,6 +39,8 @@
 
 #include <cassert> // assert
 #include <memory> // auto_ptr
+
+using swish::provider::sftp_provider;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -144,7 +146,8 @@ namespace {
 
         void operator()(
             const Operation& operation, size_t operation_index,
-            size_t total_operations, com_ptr<ISftpProvider> provider,
+            size_t total_operations,
+            com_ptr<sftp_provider> provider,
             com_ptr<ISftpConsumer> consumer)
         {
             progress().line_path(1, operation.title());
@@ -202,7 +205,7 @@ namespace {
 }
 
 void SequentialPlan::execute_plan(
-    DropActionCallback& callback, com_ptr<ISftpProvider> provider,
+    DropActionCallback& callback, com_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer) const
 {
     OperationExecutor executor(callback);

@@ -29,7 +29,7 @@
 #include "swish/drop_target/CopyFileOperation.hpp"
 #include "swish/drop_target/CreateDirectoryOperation.hpp"
 #include "swish/drop_target/RootedSource.hpp"
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // ISftpConsumer
 
 #include <boost/bind.hpp> // bind
 #include <boost/filesystem/path.hpp> // wpath
@@ -174,7 +174,7 @@ PidlCopyPlan::PidlCopyPlan(
 }
 
 void PidlCopyPlan::execute_plan(
-    DropActionCallback& callback, com_ptr<ISftpProvider> provider,
+    DropActionCallback& callback, com_ptr<swish::provider::sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer) const
 {
     m_plan.execute_plan(callback, provider, consumer);

@@ -46,6 +46,7 @@
 #include <iosfwd> // wstringstream
 #include <utility> // pair
 
+using swish::provider::sftp_provider;
 using swish::remote_folder::create_remote_itemid;
 
 using winapi::shell::pidl::apidl_t;
@@ -117,7 +118,7 @@ namespace {
      *       a way to do this atomically such as locking a file.
      */
     void copy_stream_to_remote_destination(
-        com_ptr<IStream> local_stream, com_ptr<ISftpProvider> provider,
+        com_ptr<IStream> local_stream, com_ptr<sftp_provider> provider,
         com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
         OperationCallback& callback)
     {
@@ -263,7 +264,7 @@ std::wstring CopyFileOperation::description() const
 
 void CopyFileOperation::operator()(
     OperationCallback& callback,
-    com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer) const
+    com_ptr<swish::provider::sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
 {
     com_ptr<IStream> stream = stream_from_pidl(m_source.pidl());
 

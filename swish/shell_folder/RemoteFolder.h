@@ -23,7 +23,7 @@
 #include "SwishFolder.hpp"      // Superclass
 
 #include "swish/CoFactory.hpp"  // CComObject factory
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/remote_folder/columns.hpp" // Column
 #include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
 

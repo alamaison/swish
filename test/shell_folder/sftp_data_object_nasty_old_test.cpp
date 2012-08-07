@@ -78,13 +78,13 @@ public:
     {
         // Create mock object coclass instances
         m_pConsumer = com_ptr<ISftpConsumer>(new MockConsumer());
-        m_pProvider = com_ptr<ISftpProvider>(new MockProvider());
+        m_pProvider = com_ptr<swish::provider::sftp_provider>(new MockProvider());
     }
 
 protected:
 
     com_ptr<ISftpConsumer> m_pConsumer;
-    com_ptr<ISftpProvider> m_pProvider;
+    com_ptr<swish::provider::sftp_provider> m_pProvider;
 };
 
 }

@@ -162,7 +162,7 @@ namespace {
 
 NewFolder::NewFolder(
     const apidl_t& folder_pidl,
-    const function<com_ptr<ISftpProvider>()>& provider,
+    const function<com_ptr<swish::provider::sftp_provider>()>& provider,
     const function<com_ptr<ISftpConsumer>()>& consumer) :
     Command(
         translate("New &folder"), NEW_FOLDER_COMMAND_ID,

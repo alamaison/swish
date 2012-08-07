@@ -84,7 +84,7 @@ template<> struct comtype<IDataObject>
  */
 CSftpDataObject::CSftpDataObject(
     UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-    PCIDLIST_ABSOLUTE pidlCommonParent, com_ptr<ISftpProvider> provider,
+    PCIDLIST_ABSOLUTE pidlCommonParent, com_ptr<swish::provider::sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer)
     : CDataObject(cPidl, aPidl, pidlCommonParent),
     // Make a copy of the PIDLs.  These are used to delay-render the 

@@ -31,7 +31,7 @@
 
 #include "swish/provider/SftpStream.hpp"
 #include "swish/provider/SessionFactory.hpp" // CSessionFactory
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 
 #include <comet/ptr.h> // com_ptr
 

@@ -38,7 +38,7 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // provider_interface
+#include "swish/provider/SftpProvider.h" // sftp_provider
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -49,7 +49,7 @@ namespace provider {
 
 class provider;
 
-class CProvider : public comet::simple_object<ISftpProvider>
+class CProvider : public comet::simple_object<swish::provider::sftp_provider>
 {
 public:
 

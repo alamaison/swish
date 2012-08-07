@@ -73,11 +73,11 @@ namespace {
      */
     void do_delete(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<com_ptr<ISftpProvider>(HWND)> provider_factory,
+        function<com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
         function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
         const apidl_t& parent_folder)
     {
-        com_ptr<ISftpProvider> provider = provider_factory(hwnd_view);
+        com_ptr<swish::provider::sftp_provider> provider = provider_factory(hwnd_view);
         com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
         // Create instance of our directory handler class
@@ -170,7 +170,7 @@ namespace {
      */
     void execute_death_row(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<com_ptr<ISftpProvider>(HWND)> provider_factory,
+        function<com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
         function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
         const apidl_t& parent_folder)
     {
@@ -202,7 +202,7 @@ namespace {
 
 
 Delete::Delete(
-    function<com_ptr<ISftpProvider>(HWND)> provider_factory,
+    function<com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
     function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
     : m_provider_factory(provider_factory), m_consumer_factory(consumer_factory)
 {}

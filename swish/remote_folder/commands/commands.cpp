@@ -73,7 +73,7 @@ namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
     HWND /*hwnd*/, const apidl_t& folder_pidl,
-    const function<com_ptr<ISftpProvider>()>& provider,
+    const function<com_ptr<swish::provider::sftp_provider>()>& provider,
     const function<com_ptr<ISftpConsumer>()>& consumer)
 {
     CExplorerCommandProvider::ordered_commands commands;
@@ -116,7 +116,7 @@ std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
     HWND /*hwnd*/, const apidl_t& folder_pidl,
     com_ptr<IUnknown> ole_site,
-    const function<com_ptr<ISftpProvider>()>& provider,
+    const function<com_ptr<swish::provider::sftp_provider>()>& provider,
     const function<com_ptr<ISftpConsumer>()>& consumer)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;

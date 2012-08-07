@@ -75,7 +75,7 @@ namespace { // private
     class PoolFixture : public OpenSshFixture
     {
     public:
-        com_ptr<ISftpProvider> GetSession()
+        com_ptr<swish::provider::sftp_provider> GetSession()
         {
             CPool pool;
             return pool.GetSession(
@@ -94,7 +94,7 @@ namespace { // private
         /**
          * Check that the given provider responds sensibly to a request.
          */
-        predicate_result alive(com_ptr<ISftpProvider> provider)
+        predicate_result alive(com_ptr<swish::provider::sftp_provider> provider)
         {
             try
             {
@@ -122,7 +122,7 @@ BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
  */
 BOOST_AUTO_TEST_CASE( session )
 {
-    com_ptr<ISftpProvider> provider = GetSession();
+    com_ptr<swish::provider::sftp_provider> provider = GetSession();
     BOOST_CHECK(alive(provider));
 }
 
@@ -131,10 +131,10 @@ BOOST_AUTO_TEST_CASE( session )
  */
 BOOST_AUTO_TEST_CASE( twice )
 {
-    com_ptr<ISftpProvider> first_provider = GetSession();
+    com_ptr<swish::provider::sftp_provider> first_provider = GetSession();
     BOOST_CHECK(alive(first_provider));
 
-    com_ptr<ISftpProvider> second_provider = GetSession();
+    com_ptr<swish::provider::sftp_provider> second_provider = GetSession();
     BOOST_CHECK(alive(second_provider));
 
     BOOST_REQUIRE(second_provider == first_provider);
@@ -154,11 +154,11 @@ private:
         try
         {
             {
-                com_ptr<ISftpProvider> first_provider = 
+                com_ptr<swish::provider::sftp_provider> first_provider = 
                     m_fixture->GetSession();
                 BOOST_CHECK(m_fixture->alive(first_provider));
 
-                com_ptr<ISftpProvider> second_provider = 
+                com_ptr<swish::provider::sftp_provider> second_provider = 
                     m_fixture->GetSession();
                 BOOST_CHECK(m_fixture->alive(second_provider));
 

@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer/SmartListing
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer/SmartListing
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <winapi/shell/pidl.hpp> // apidl_t
@@ -44,7 +44,7 @@ class CSftpDirectory
 public:
     CSftpDirectory(
         const winapi::shell::pidl::apidl_t& directory,
-        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer);
 
     comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
@@ -70,7 +70,7 @@ public:
     comet::enum_iterator<IEnumListing, swish::SmartListing> end() const;
 
 private:
-    comet::com_ptr<ISftpProvider> m_provider;  ///< Backend data provider
+    comet::com_ptr<swish::provider::sftp_provider> m_provider;  ///< Backend data provider
     comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
     boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
     const winapi::shell::pidl::apidl_t m_directory_pidl;

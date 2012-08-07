@@ -48,7 +48,7 @@ class SequentialPlan /* final */ : public Plan
 public: // Plan
 
     virtual void execute_plan(
-        DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+        DropActionCallback& callback, comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer) const;
 
 public:

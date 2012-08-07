@@ -52,7 +52,7 @@ public: // Operation
 
     virtual void operator()(
         OperationCallback& callback,
-        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer) const;
 
 private:

@@ -29,7 +29,7 @@
 #include "DataObject.h"
 #include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/shell_folder/Pidl.h"
 
 #include <winapi/shell/pidl.hpp> // cpidl_t
@@ -55,7 +55,7 @@
  * client Releases the IStream.
  *
  * These operations are expensive---they require the DataObject to contact
- * the remote server via an ISftpProvider to retrieve file data---and may not
+ * the remote server via an swish::provider::sftp_provider to retrieve file data---and may not
  * be needed if the client simply wants, say, a CFSTR_SHELLIDLIST format,
  * so delay-rendering is employed to postpone this expense until we are sure
  * it is required (GetData() is called with for one of the two formats).
@@ -73,7 +73,7 @@ public:
     CSftpDataObject(
         UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
         __in PCIDLIST_ABSOLUTE pidlCommonParent,
-        comet::com_ptr<ISftpProvider> provider,
+        comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer);
 
 public: // IDataObject methods
@@ -103,7 +103,7 @@ private:
     typedef std::vector<ExpandedItem> ExpandedList;
     // @}
 
-    comet::com_ptr<ISftpProvider> m_provider; ///< Connection to backend
+    comet::com_ptr<swish::provider::sftp_provider> m_provider; ///< Connection to backend
     comet::com_ptr<ISftpConsumer> m_consumer; ///< UI callback
 
     /** @name Cached PIDLs */

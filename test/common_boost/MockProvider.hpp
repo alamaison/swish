@@ -1,7 +1,7 @@
 /**
     @file
 
-    Mock implementation of ISftpProvider.
+    Mock implementation of swish::provider::sftp_provider.
 
     @if license
 
@@ -30,7 +30,7 @@
 
 #include "test/common_boost/tree.hpp" // tree container for mocking filesystem
 
-#include "swish/provider/SftpProvider.h" // provider_interface
+#include "swish/provider/SftpProvider.h" // sftp_provider
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
@@ -232,7 +232,7 @@ namespace detail {
 }
 
 class MockProvider :
-    public comet::simple_object<ISftpProvider>
+    public comet::simple_object<swish::provider::sftp_provider>
 {
 public:
 
@@ -436,7 +436,7 @@ public:
 
 private:
 
-    provider_interface& impl() { return *this; }
+    swish::provider::sftp_provider& impl() { return *this; }
 
     detail::Filesystem m_filesystem;
     ListingBehaviour m_listing_behaviour;

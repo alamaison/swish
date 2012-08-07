@@ -27,7 +27,7 @@
 
 #include "connection.hpp"
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/port_conversion.hpp" // port_to_wstring
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_item_view
 #include "swish/provider/Provider.hpp"
@@ -79,7 +79,7 @@ namespace {
 }
 
 critical_section CPool::m_cs;
-std::map<std::wstring, comet::com_ptr<ISftpProvider> > CPool::m_connections;
+std::map<std::wstring, comet::com_ptr<swish::provider::sftp_provider> > CPool::m_connections;
 
 /**
  * Retrieves an SFTP session for a global pool or creates it if none exists.
@@ -97,9 +97,9 @@ std::map<std::wstring, comet::com_ptr<ISftpProvider> > CPool::m_connections;
  * @param hwnd  Isn't used but could be in future to correctly parent any
  *              elevation window.
  *
- * @returns pointer to the session (ISftpProvider).
+ * @returns pointer to the session (swish::provider::sftp_provider).
  */
-com_ptr<ISftpProvider> CPool::GetSession(
+com_ptr<swish::provider::sftp_provider> CPool::GetSession(
     const wstring& host, const wstring& user, int port, HWND /*hwnd*/)
 {
     if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
@@ -111,13 +111,13 @@ com_ptr<ISftpProvider> CPool::GetSession(
     // Try to get the session from the global pool
     wstring display_name = provider_moniker_name(user, host, port);
 
-    std::map<std::wstring, comet::com_ptr<ISftpProvider> >::iterator connection
+    std::map<std::wstring, comet::com_ptr<swish::provider::sftp_provider> >::iterator connection
         = m_connections.find(display_name);
 
     if (connection != m_connections.end())
         return connection->second;
 
-    com_ptr<ISftpProvider> provider = new CProvider(user, host, port);
+    com_ptr<swish::provider::sftp_provider> provider = new CProvider(user, host, port);
 
     m_connections[display_name] = provider;
     return provider;
@@ -143,7 +143,7 @@ namespace {
     /**
      * Gets connection for given SFTP session parameters.
      */
-    com_ptr<ISftpProvider> connection(
+    com_ptr<swish::provider::sftp_provider> connection(
         const wstring& host, const wstring& user, int port, HWND hwnd)
     {
         CPool pool;
@@ -151,7 +151,7 @@ namespace {
     }
 }
 
-com_ptr<ISftpProvider> connection_from_pidl(const apidl_t& pidl, HWND hwnd)
+com_ptr<swish::provider::sftp_provider> connection_from_pidl(const apidl_t& pidl, HWND hwnd)
 {
     // Extract connection info from PIDL
     wstring user, host, path;

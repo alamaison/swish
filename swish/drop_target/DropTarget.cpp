@@ -27,7 +27,7 @@
 #include "DropTarget.hpp"
 
 #include "swish/drop_target/PidlCopyPlan.hpp"
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
                                                   // PidlFormat, ShellDataObject
 
@@ -43,6 +43,7 @@
 
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
+using swish::provider::sftp_provider;
 
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
@@ -92,7 +93,7 @@ namespace { // private
  * @param progress          Progress dialogue.
  */
 void copy_format_to_provider(
-    PidlFormat source_format, com_ptr<ISftpProvider> provider,
+    PidlFormat source_format, com_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
     DropActionCallback& callback)
 {
@@ -110,7 +111,7 @@ void copy_format_to_provider(
  *                          to copy items into.
  */
 void copy_data_to_provider(
-    com_ptr<IDataObject> data_object, com_ptr<ISftpProvider> provider, 
+    com_ptr<IDataObject> data_object, com_ptr<sftp_provider> provider, 
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
     DropActionCallback& callback)
 {
@@ -132,7 +133,7 @@ void copy_data_to_provider(
  * Create an instance of the DropTarget initialised with a data provider.
  */
 CDropTarget::CDropTarget(
-    com_ptr<ISftpProvider> provider,
+    com_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
     shared_ptr<DropActionCallback> callback)
     :

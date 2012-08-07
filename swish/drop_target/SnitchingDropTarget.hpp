@@ -54,7 +54,7 @@ class CSnitchingDropTarget :
 public:
 
     CSnitchingDropTarget(
-        HWND hwnd_owner, comet::com_ptr<ISftpProvider> provider,
+        HWND hwnd_owner, comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer,
         const winapi::shell::pidl::apidl_t& remote_directory,
         boost::shared_ptr<DropActionCallback> callback);

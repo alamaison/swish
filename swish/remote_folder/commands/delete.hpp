@@ -28,7 +28,7 @@
 #define SWISH_REMOTE_FOLDER_COMMANDS_DELETE_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider, ISftpConsumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 
 #include <comet/ptr.h> // com_ptr
 
@@ -44,14 +44,14 @@ class Delete
 {
 public:
     Delete(
-        boost::function<comet::com_ptr<ISftpProvider>(HWND)> provider_factory,
+        boost::function<comet::com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
         boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
 
     void operator()(
         HWND hwnd_view, comet::com_ptr<IDataObject> selection) const;
 
 private:
-    boost::function<comet::com_ptr<ISftpProvider>(HWND)> m_provider_factory;
+    boost::function<comet::com_ptr<swish::provider::sftp_provider>(HWND)> m_provider_factory;
     boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 };
 

@@ -1,7 +1,7 @@
 /**
     @file
 
-    Wrapped C++ version of ISftpProvider et. al.
+    SFTP backed interfaces.
 
     @if license
 
@@ -120,11 +120,12 @@ public:
 namespace swish {
 namespace provider {
 
-class provider_interface : public IUnknown
+class sftp_provider : public IUnknown
 {
 public:
+    typedef sftp_provider interface_is;
 
-    virtual ~provider_interface() {}
+    virtual ~sftp_provider() {}
 
     virtual comet::com_ptr<IEnumListing> get_listing(
         comet::com_ptr<ISftpConsumer> consumer,
@@ -181,20 +182,13 @@ public:
 
 }}
 
-class ISftpProvider : public swish::provider::provider_interface
-{
-public:
-
-    typedef ISftpProvider interface_is;
-};
-
 namespace comet {
 
-template<> struct comtype<ISftpProvider>
+    template<> struct comtype<swish::provider::sftp_provider>
 {
     static const IID& uuid() throw()
     {
-        static comet::uuid_t iid("E2D6A1D6-48EB-4F38-9D00-3C4536416C49");
+        static comet::uuid_t iid;
         return iid;
     }
     typedef IUnknown base;

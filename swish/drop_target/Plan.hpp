@@ -28,7 +28,7 @@
 #define SWISH_DROP_TARGET_PLAN_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpProvider/Consumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/drop_target/Progress.hpp"
 
 namespace swish {
@@ -45,7 +45,7 @@ public:
     virtual ~Plan() {}
 
     virtual void execute_plan(
-        DropActionCallback& callback, comet::com_ptr<ISftpProvider> provider,
+        DropActionCallback& callback, comet::com_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer) const = 0;
 };
 

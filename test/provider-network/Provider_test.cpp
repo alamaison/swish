@@ -61,7 +61,7 @@ namespace test {
 
 namespace {
     
-    com_ptr<ISftpProvider> create_provider()
+    com_ptr<swish::provider::sftp_provider> create_provider()
     {
         remote_test_config config;
         wstring user = config.GetUser();
@@ -78,7 +78,7 @@ namespace {
      * an attempt to make it do something (presumably) by authenticating.
      */
     predicate_result alive(
-        com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer)
+        com_ptr<swish::provider::sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         try
         {
@@ -99,7 +99,7 @@ namespace {
     /**
      * Check that the given provider responds sensibly to a request.
      */
-    predicate_result alive(com_ptr<ISftpProvider> provider)
+    predicate_result alive(com_ptr<swish::provider::sftp_provider> provider)
     {
         return alive(provider, new MockConsumer());
     }
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    com_ptr<ISftpProvider> provider = create_provider();
+    com_ptr<swish::provider::sftp_provider> provider = create_provider();
 
     BOOST_CHECK(alive(provider, consumer));
 }
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE( WrongPassword )
 
     consumer->set_password_behaviour(MockConsumer::WrongPassword);
 
-    com_ptr<ISftpProvider> provider = create_provider();
+    com_ptr<swish::provider::sftp_provider> provider = create_provider();
 
     BOOST_CHECK(!alive(provider, consumer));
 }
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    com_ptr<ISftpProvider> provider = create_provider();
+    com_ptr<swish::provider::sftp_provider> provider = create_provider();
 
     // This may fail if the server (which we can't control) doesn't allow
     // ki-auth
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
     consumer->set_keyboard_interactive_behaviour(
         MockConsumer::AbortResponse);
 
-    com_ptr<ISftpProvider> provider = create_provider();
+    com_ptr<swish::provider::sftp_provider> provider = create_provider();
 
     // Try to fetch a listing enumerator - it should fail
     BOOST_CHECK(!alive(provider, consumer));
@@ -261,7 +261,7 @@ public:
     }
 
 protected:
-    com_ptr<ISftpProvider> provider;
+    com_ptr<swish::provider::sftp_provider> provider;
     com_ptr<MockConsumer> consumer;
     ISftpConsumer *m_pConsumer;
     remote_test_config config;
