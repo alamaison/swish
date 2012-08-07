@@ -58,8 +58,10 @@ public:
 
     /** @name ISftpProvider implementation via provider_error_adapter */
     // @{
-    virtual IEnumListing* get_listing(
-        ISftpConsumer* consumer, BSTR directory);
+
+    virtual comet::com_ptr<IEnumListing> get_listing(
+        comet::com_ptr<ISftpConsumer> consumer,
+        const std::wstring& directory);
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,

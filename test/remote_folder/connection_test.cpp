@@ -43,9 +43,10 @@
 #include <boost/foreach.hpp>  // BOOST_FOREACH
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 
+#include <algorithm>
+#include <exception>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 using swish::remote_folder::CPool;
 using swish::utils::Utf8StringToWideString;
@@ -59,10 +60,12 @@ using comet::thread;
 
 using boost::filesystem::path;
 using boost::shared_ptr;
+using boost::test_tools::predicate_result;
 
+using std::exception;
 using std::string;
-using std::wstring;
 using std::vector;
+using std::wstring;
 
 namespace { // private
 
@@ -91,15 +94,24 @@ namespace { // private
         /**
          * Check that the given provider responds sensibly to a request.
          */
-        void CheckAlive(const com_ptr<ISftpProvider>& provider)
+        predicate_result alive(com_ptr<ISftpProvider> provider)
         {
-            BOOST_REQUIRE(provider);
+            try
+            {
+                provider->get_listing(Consumer(), L"/");
 
-            com_ptr<IEnumListing> listing;
-            HRESULT hr = provider->GetListing(
-                Consumer().in(), bstr_t(L"/home").in(), listing.out());
-            BOOST_CHECK(SUCCEEDED(hr));
+                predicate_result res(true);
+                res.message() << "Provider seems to be alive";
+                return res;
+            }
+            catch(const exception& e)
+            {
+                predicate_result res(false);
+                res.message() << "Provider seems to be dead: " << e.what();
+                return res;
+            }
         }
+
     };
 }
 
@@ -111,7 +123,7 @@ BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
 BOOST_AUTO_TEST_CASE( session )
 {
     com_ptr<ISftpProvider> provider = GetSession();
-    CheckAlive(provider);
+    BOOST_CHECK(alive(provider));
 }
 
 /**
@@ -120,10 +132,10 @@ BOOST_AUTO_TEST_CASE( session )
 BOOST_AUTO_TEST_CASE( twice )
 {
     com_ptr<ISftpProvider> first_provider = GetSession();
-    CheckAlive(first_provider);
+    BOOST_CHECK(alive(first_provider));
 
     com_ptr<ISftpProvider> second_provider = GetSession();
-    CheckAlive(second_provider);
+    BOOST_CHECK(alive(second_provider));
 
     BOOST_REQUIRE(second_provider == first_provider);
 }
@@ -144,11 +156,11 @@ private:
             {
                 com_ptr<ISftpProvider> first_provider = 
                     m_fixture->GetSession();
-                m_fixture->CheckAlive(first_provider);
+                BOOST_CHECK(m_fixture->alive(first_provider));
 
                 com_ptr<ISftpProvider> second_provider = 
                     m_fixture->GetSession();
-                m_fixture->CheckAlive(second_provider);
+                BOOST_CHECK(m_fixture->alive(second_provider));
 
                 BOOST_REQUIRE(second_provider == first_provider);
             }

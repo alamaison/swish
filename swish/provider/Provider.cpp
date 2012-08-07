@@ -112,7 +112,7 @@ public:
     provider(const wstring& user, const wstring& host, int port);
     ~provider() throw();
 
-    IEnumListing* get_listing(
+    virtual com_ptr<IEnumListing> get_listing(
         com_ptr<ISftpConsumer> consumer, const wpath& directory);
 
     virtual comet::com_ptr<IStream> get_file(
@@ -188,7 +188,8 @@ CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
 
 provider_interface& CProvider::impl() { return *this; }
 
-IEnumListing* CProvider::get_listing(ISftpConsumer* consumer, BSTR directory)
+com_ptr<IEnumListing> CProvider::get_listing(
+    com_ptr<ISftpConsumer> consumer, const std::wstring& directory)
 { return m_provider->get_listing(consumer, directory); }
 
 comet::com_ptr<IStream> CProvider::get_file(
@@ -308,7 +309,7 @@ namespace {
 *
 * @see Listing for details of what file information is retrieved.
 */
-IEnumListing* provider::get_listing(
+com_ptr<IEnumListing> provider::get_listing(
     com_ptr<ISftpConsumer> consumer, const wpath& directory)
 {
     if (directory.empty())
@@ -338,7 +339,7 @@ IEnumListing* provider::get_listing(
     IUnknown* unknown = holder->get_unknown();
 
     return stl_enumeration<IEnumListing>::create(
-        *holder->m_collection, unknown).detach();
+        *holder->m_collection, unknown);
 }
 
 com_ptr<IStream> provider::get_file(

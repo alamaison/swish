@@ -204,15 +204,12 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
     bool include_non_folders = (flags & SHCONTF_NONFOLDERS) != 0;
     bool include_hidden = (flags & SHCONTF_INCLUDEHIDDEN) != 0;
 
-    com_ptr<IEnumListing> directory_enum;
-    HRESULT hr = m_provider->GetListing(
-        m_consumer.in(), bstr_t(m_directory.string()).in(),
-        directory_enum.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+    com_ptr<IEnumListing> directory_enum = m_provider->get_listing(
+        m_consumer.in(), m_directory.string());
 
     shared_ptr< vector<cpidl_t> > pidls = make_shared< vector<cpidl_t> >();
 
+    HRESULT hr;
     do {
         SmartListing lt;
         ULONG fetched = 0;
@@ -270,12 +267,8 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 
 enum_iterator<IEnumListing, SmartListing> CSftpDirectory::begin() const
 {
-    com_ptr<IEnumListing> directory_enum;
-    HRESULT hr = m_provider->GetListing(
-        m_consumer.in(), bstr_t(m_directory.string()).in(),
-        directory_enum.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(m_provider, hr));
+    com_ptr<IEnumListing> directory_enum = m_provider->get_listing(
+        m_consumer.in(), m_directory.string());
 
     return enum_iterator<IEnumListing, SmartListing>(directory_enum);
 }

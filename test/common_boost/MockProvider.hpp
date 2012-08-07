@@ -294,8 +294,9 @@ public:
 
     virtual void initialize(BSTR /*user*/, BSTR /*host*/, UINT /*port*/) {}
 
-    virtual IEnumListing* get_listing(
-        ISftpConsumer* /*consumer*/, BSTR directory)
+    virtual comet::com_ptr<IEnumListing> get_listing(
+        comet::com_ptr<ISftpConsumer> /*consumer*/,
+        const std::wstring& directory)
     {
         boost::shared_ptr< std::vector<swish::SmartListing> > files = 
             boost::make_shared< std::vector<swish::SmartListing> >();
@@ -332,7 +333,7 @@ public:
                 "Unreachable: Unrecognised mock behaviour", E_UNEXPECTED));
         }
 
-        return comet::make_smart_enumeration<IEnumListing>(files).detach();
+        return comet::make_smart_enumeration<IEnumListing>(files);
     }
 
 

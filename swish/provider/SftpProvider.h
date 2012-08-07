@@ -125,8 +125,9 @@ class provider_interface
 public:
     virtual ~provider_interface() {}
 
-    virtual IEnumListing* get_listing(
-        ISftpConsumer* consumer, BSTR directory) = 0;
+    virtual comet::com_ptr<IEnumListing> get_listing(
+        comet::com_ptr<ISftpConsumer> consumer,
+        const std::wstring& directory) = 0;
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
@@ -182,11 +183,6 @@ public:
 class ISftpProvider : public IUnknown, public swish::provider::provider_interface
 {
 public:
-    virtual HRESULT GetListing(
-        ISftpConsumer *pConsumer,
-        BSTR bstrDirectory,
-        IEnumListing **ppEnum
-    ) = 0;
 };
 
 namespace comet {

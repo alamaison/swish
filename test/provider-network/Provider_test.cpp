@@ -38,6 +38,7 @@
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/test/unit_test.hpp>
 
+#include <exception>
 #include <string> // wstring
 #include <vector>
 
@@ -52,6 +53,7 @@ using comet::datetime_t;
 using boost::filesystem::wpath;
 using boost::test_tools::predicate_result;
 
+using std::exception;
 using std::vector;
 using std::wstring;
 
@@ -78,23 +80,18 @@ namespace {
     predicate_result alive(
         com_ptr<ISftpProvider> provider, com_ptr<ISftpConsumer> consumer)
     {
-        com_ptr<IEnumListing> listing;
-        HRESULT hr = provider->GetListing(
-            consumer.in(), bstr_t(L"/").in(), listing.out());
-        if (FAILED(hr))
+        try
         {
-            predicate_result res(false);
-            res.message()
-                << "Provider seems to be dead: "
-                << com_error_from_interface(provider, hr).what();
+            provider->get_listing(consumer, L"/");
+
+            predicate_result res(true);
+            res.message() << "Provider seems to be alive";
             return res;
         }
-        else
+        catch(const exception& e)
         {
-            predicate_result res(true);
-            res.message()
-                << "Provider seems to be alive: "
-                << com_error_from_interface(provider, hr).what();
+            predicate_result res(false);
+            res.message() << "Provider seems to be dead: " << e.what();
             return res;
         }
     }
@@ -270,65 +267,21 @@ protected:
     remote_test_config config;
     wpath home_directory;
 
-    /**
-     * Tests that the format of the enumeration of listings is correct.
-     *
-     * @param pEnum The Listing enumerator to be tested.
-     */
-    void _TestListingFormat(com_ptr<IEnumListing> enumerator) const
-    {
-        // Check format of listing is sensible
-        HRESULT hr = enumerator->Reset();
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error_from_interface(enumerator, hr));
-
-        Listing lt;
-        hr = enumerator->Next(1, &lt, NULL);
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error_from_interface(enumerator, hr));
-        while (hr == S_OK)
-        {
-            wstring filename = lt.bstrFilename;
-            wstring owner = lt.bstrOwner;
-            wstring group = lt.bstrGroup;
-
-            BOOST_CHECK(!filename.empty());
-            BOOST_CHECK_NE(filename, L".");
-            BOOST_CHECK_NE(filename, L"..");
-
-            BOOST_CHECK(!owner.empty());
-            BOOST_CHECK(!group.empty());
-
-            BOOST_CHECK( lt.dateModified );
-            datetime_t modified(lt.dateModified);
-            BOOST_CHECK(modified.valid());
-            BOOST_CHECK_LE(modified.year(), datetime_t::now().year());
-
-            // TODO: test numerical permissions using old swish C 
-            //       permissions functions here
-            //BOOST_CHECK(
-            //    strPermissions[0] == _T('d') ||
-            //    strPermissions[0] == _T('b') ||
-            //    strPermissions[0] == _T('c') ||
-            //    strPermissions[0] == _T('l') ||
-            //    strPermissions[0] == _T('p') ||
-            //    strPermissions[0] == _T('s') ||
-            //    strPermissions[0] == _T('-'));
-
-            hr = enumerator->Next(1, &lt, NULL);
-        }
-        BOOST_CHECK(hr == S_FALSE);
-    }
-
     predicate_result path_exists(const wpath& file_path)
     {
-        // Fetch listing enumerator
         com_ptr<IEnumListing> enumerator;
-        HRESULT hr = provider->GetListing(
-            m_pConsumer, bstr_t(file_path.parent_path().string()).in(),
-            enumerator.out());
-        if (FAILED(hr))
-            return false;
+        try
+        {
+            enumerator = provider->get_listing(
+                m_pConsumer, file_path.parent_path().string());
+        }
+        catch (const exception&)
+        {
+            predicate_result res(false);
+            res.message()
+                << "Parent path does not exist: " << file_path.parent_path();
+            return res;
+        }
 
         return file_exists_in_listing(file_path.filename(), enumerator);
     }
@@ -356,15 +309,51 @@ BOOST_FIXTURE_TEST_SUITE(provider_legacy_tests, ProviderLegacyFixture)
 
 BOOST_AUTO_TEST_CASE( GetListing )
 {
-    // Fetch listing enumerator
-    com_ptr<IEnumListing> enumerator;
-    HRESULT hr = provider->GetListing(
-        m_pConsumer, bstr_t(L"/tmp").in(), enumerator.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
+    com_ptr<IEnumListing> enumerator =
+        provider->get_listing(consumer, L"/tmp");
 
     // Check format of listing is sensible
-    _TestListingFormat(enumerator);
+
+    HRESULT hr = enumerator->Reset();
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error_from_interface(enumerator, hr));
+
+    Listing lt;
+    hr = enumerator->Next(1, &lt, NULL);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error_from_interface(enumerator, hr));
+    while (hr == S_OK)
+    {
+        wstring filename = lt.bstrFilename;
+        wstring owner = lt.bstrOwner;
+        wstring group = lt.bstrGroup;
+
+        BOOST_CHECK(!filename.empty());
+        BOOST_CHECK_NE(filename, L".");
+        BOOST_CHECK_NE(filename, L"..");
+
+        BOOST_CHECK(!owner.empty());
+        BOOST_CHECK(!group.empty());
+
+        BOOST_CHECK( lt.dateModified );
+        datetime_t modified(lt.dateModified);
+        BOOST_CHECK(modified.valid());
+        BOOST_CHECK_LE(modified.year(), datetime_t::now().year());
+
+        // TODO: test numerical permissions using old swish C 
+        //       permissions functions here
+        //BOOST_CHECK(
+        //    strPermissions[0] == _T('d') ||
+        //    strPermissions[0] == _T('b') ||
+        //    strPermissions[0] == _T('c') ||
+        //    strPermissions[0] == _T('l') ||
+        //    strPermissions[0] == _T('p') ||
+        //    strPermissions[0] == _T('s') ||
+        //    strPermissions[0] == _T('-'));
+
+        hr = enumerator->Next(1, &lt, NULL);
+    }
+    BOOST_CHECK(hr == S_FALSE);
 }
 
 BOOST_AUTO_TEST_CASE( GetListingRepeatedly )
@@ -374,19 +363,14 @@ BOOST_AUTO_TEST_CASE( GetListingRepeatedly )
 
     BOOST_FOREACH(com_ptr<IEnumListing> listing, enums)
     {
-        HRESULT hr = provider->GetListing(
-            m_pConsumer, bstr_t(L"/tmp").in(), listing.out());
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
+        provider->get_listing(m_pConsumer, L"/tmp");
     }
 }
 
 BOOST_AUTO_TEST_CASE( GetListingIndependence )
 {
-    HRESULT hr;
-
     // Put some files in the test area
-    bstr_t directory(_TestArea());
+    wstring directory(_TestArea());
     bstr_t one(_TestArea(L"GetListingIndependence1"));
     bstr_t two(_TestArea(L"GetListingIndependence2"));
     bstr_t three(_TestArea(L"GetListingIndependence3"));
@@ -395,21 +379,15 @@ BOOST_AUTO_TEST_CASE( GetListingIndependence )
     provider->create_new_file(m_pConsumer, three.in());
 
     // Fetch first listing enumerator
-    com_ptr<IEnumListing> enum_before;
-    hr = provider->GetListing(
-        m_pConsumer, directory.in(), enum_before.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
+    com_ptr<IEnumListing> enum_before = provider->get_listing(
+        m_pConsumer, directory);
 
     // Delete one of the files
     provider->delete_file(m_pConsumer, two.in());
 
     // Fetch second listing enumerator
-    com_ptr<IEnumListing> enum_after;
-    hr = provider->GetListing(
-        m_pConsumer, directory.in(), enum_after.out());
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(provider, hr));
+    com_ptr<IEnumListing> enum_after =
+        provider->get_listing(m_pConsumer, directory);
 
     // The first listing should still show the file. The second should not.
     BOOST_CHECK(

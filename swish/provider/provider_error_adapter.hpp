@@ -97,27 +97,6 @@ class provider_error_adapter : public ISftpProvider
 public:
     typedef ISftpProvider interface_is;
 
-    virtual IFACEMETHODIMP GetListing(
-        ISftpConsumer* pConsumer, BSTR bstrDirectory, IEnumListing** ppEnum)
-    {
-        try
-        {
-            if (!ppEnum)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-            *ppEnum = NULL;
-
-            if (!pConsumer)
-                BOOST_THROW_EXCEPTION(comet::com_error(E_POINTER));
-
-            *ppEnum = impl().get_listing(pConsumer, bstrDirectory);
-
-            assert(*ppEnum || !"No error but no retval");
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
 private:
 
     virtual provider_interface& impl() = 0;
