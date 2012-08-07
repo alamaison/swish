@@ -30,7 +30,7 @@
 
 #include "test/common_boost/tree.hpp" // tree container for mocking filesystem
 
-#include "swish/provider/provider_error_adapter.hpp" // provider_error_adapter
+#include "swish/provider/SftpProvider.h" // provider_interface
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
@@ -232,7 +232,7 @@ namespace detail {
 }
 
 class MockProvider :
-    public comet::simple_object<swish::provider::provider_error_adapter>
+    public comet::simple_object<ISftpProvider>
 {
 public:
 
@@ -291,8 +291,6 @@ public:
     {
         m_rename_behaviour = behaviour;
     }
-
-    virtual void initialize(BSTR /*user*/, BSTR /*host*/, UINT /*port*/) {}
 
     virtual comet::com_ptr<IEnumListing> get_listing(
         comet::com_ptr<ISftpConsumer> /*consumer*/,

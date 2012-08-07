@@ -38,7 +38,7 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
-#include "swish/provider/provider_error_adapter.hpp" // provider_error_adapter
+#include "swish/provider/SftpProvider.h" // provider_interface
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -49,15 +49,11 @@ namespace provider {
 
 class provider;
 
-class CProvider :
-    public comet::simple_object<provider_error_adapter>
+class CProvider : public comet::simple_object<ISftpProvider>
 {
 public:
 
     CProvider(const std::wstring& user, const std::wstring& host, UINT port);
-
-    /** @name ISftpProvider implementation via provider_error_adapter */
-    // @{
 
     virtual comet::com_ptr<IEnumListing> get_listing(
         comet::com_ptr<ISftpConsumer> consumer,
@@ -81,9 +77,6 @@ public:
     virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
 
     virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
-    // @}
-
-    virtual provider_interface& impl();
 
 private:
     boost::shared_ptr<provider> m_provider;

@@ -186,8 +186,6 @@ CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
     m_provider = make_shared<provider>(user, host, port);
 }
 
-provider_interface& CProvider::impl() { return *this; }
-
 com_ptr<IEnumListing> CProvider::get_listing(
     com_ptr<ISftpConsumer> consumer, const std::wstring& directory)
 { return m_provider->get_listing(consumer, directory); }

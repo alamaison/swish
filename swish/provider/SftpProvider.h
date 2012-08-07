@@ -120,9 +120,10 @@ public:
 namespace swish {
 namespace provider {
 
-class provider_interface
+class provider_interface : public IUnknown
 {
 public:
+
     virtual ~provider_interface() {}
 
     virtual comet::com_ptr<IEnumListing> get_listing(
@@ -180,9 +181,11 @@ public:
 
 }}
 
-class ISftpProvider : public IUnknown, public swish::provider::provider_interface
+class ISftpProvider : public swish::provider::provider_interface
 {
 public:
+
+    typedef ISftpProvider interface_is;
 };
 
 namespace comet {
