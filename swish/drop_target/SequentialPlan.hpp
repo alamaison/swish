@@ -29,7 +29,7 @@
 #pragma once
 
 #include "swish/drop_target/Plan.hpp"
-#include "swish/provider/SftpProvider.h"
+#include "swish/provider/sftp_provider.hpp"
 
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/shared_ptr.hpp>

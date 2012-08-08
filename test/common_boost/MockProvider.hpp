@@ -30,7 +30,7 @@
 
 #include "test/common_boost/tree.hpp" // tree container for mocking filesystem
 
-#include "swish/provider/SftpProvider.h" // sftp_provider
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t

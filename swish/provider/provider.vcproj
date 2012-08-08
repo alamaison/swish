@@ -331,7 +331,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SftpProvider.h"
+				RelativePath=".\sftp_provider.hpp"
 				>
 			</File>
 			<File

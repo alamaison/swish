@@ -29,7 +29,7 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
 #include "swish/drop_target/Progress.hpp" // Progress
 

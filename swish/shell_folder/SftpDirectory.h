@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer/SmartListing
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer/SmartListing
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <winapi/shell/pidl.hpp> // apidl_t

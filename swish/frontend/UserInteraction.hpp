@@ -29,7 +29,7 @@
 #define SWISH_FRONTEND_USERINTERACTION_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
 #include <comet/server.h> // simple_object
 

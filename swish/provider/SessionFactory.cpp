@@ -39,7 +39,7 @@
 
 #include "KeyboardInteractive.hpp"
 
-#include "swish/provider/SftpProvider.h" // ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 #include "swish/debug.hpp"
 #include "swish/trace.hpp"
 #include "swish/utils.hpp"

@@ -26,7 +26,7 @@
 
 #include "SnitchingDropTarget.hpp"
 
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE

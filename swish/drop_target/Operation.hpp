@@ -28,7 +28,7 @@
 #define SWISH_DROP_TARGET_OPERATION_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/function.hpp> // function

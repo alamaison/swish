@@ -31,7 +31,7 @@
 #include "swish/drop_target/Operation.hpp"
 #include "swish/drop_target/RootedSource.hpp"
 #include "swish/drop_target/SftpDestination.hpp"
-#include "swish/provider/SftpProvider.h"
+#include "swish/provider/sftp_provider.hpp"
 
 #include <boost/shared_ptr.hpp>
 

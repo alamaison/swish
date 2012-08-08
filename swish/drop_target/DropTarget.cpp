@@ -27,7 +27,7 @@
 #include "DropTarget.hpp"
 
 #include "swish/drop_target/PidlCopyPlan.hpp"
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
                                                   // PidlFormat, ShellDataObject
 

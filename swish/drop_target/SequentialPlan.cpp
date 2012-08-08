@@ -26,7 +26,7 @@
 
 #include "SequentialPlan.hpp"
 
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/drop_target/DropActionCallback.hpp"
 #include "swish/drop_target/Operation.hpp"
 

@@ -28,7 +28,7 @@
 #define SWISH_DROP_TARGET_PLAN_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/drop_target/Progress.hpp"
 
 #include <boost/shared_ptr.hpp>

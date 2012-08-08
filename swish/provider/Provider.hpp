@@ -39,7 +39,7 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h" // sftp_provider
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 

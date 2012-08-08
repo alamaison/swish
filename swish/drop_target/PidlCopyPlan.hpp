@@ -31,7 +31,7 @@
 #include "swish/drop_target/Operation.hpp"
 #include "swish/drop_target/Plan.hpp"
 #include "swish/drop_target/SequentialPlan.hpp"
-#include "swish/provider/SftpProvider.h"
+#include "swish/provider/sftp_provider.hpp"
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // PidlFormat
 
 #include <boost/shared_ptr.hpp>

@@ -28,7 +28,7 @@
 #define TEST_COMMON_BOOST_MOCK_CONSUMER_HPP
 #pragma once
 
-#include "swish/provider/SftpProvider.h"
+#include "swish/provider/sftp_provider.hpp"
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/bstr.h> // bstr_t

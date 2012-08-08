@@ -30,7 +30,7 @@
 
 #include "DropTarget.hpp" // CDropTarget wrapped inner
 
-#include <swish/provider/SftpProvider.h>
+#include <swish/provider/sftp_provider.hpp>
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 

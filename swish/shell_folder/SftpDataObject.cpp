@@ -22,7 +22,7 @@
 #include "SftpDirectory.h"
 #include "data_object/StorageMedium.hpp"  // StorageMedium
 
-#include "swish/provider/SftpProvider.h"
+#include "swish/provider/sftp_provider.hpp"
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
                                                // path_from_remote_pidl
 
