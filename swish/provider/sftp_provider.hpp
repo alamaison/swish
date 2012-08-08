@@ -1,7 +1,7 @@
 /**
     @file
 
-    SFTP backed interfaces.
+    SFTP backend interfaces.
 
     @if license
 
@@ -24,14 +24,9 @@
     @endif
 */
 
-#ifndef SWISH_INTERFACES_SFTP_PROVIDER_H
-#define SWISH_INTERFACES_SFTP_PROVIDER_H
+#ifndef SWISH_PROVIDER_SFTP_PROVIDER_H
+#define SWISH_PROVIDER_SFTP_PROVIDER_H
 #pragma once
-
-//#include "swish/interfaces/_SftpProvider.h" // MIDL-generated definitions
-
-#include <oaidl.h>
-#ifdef __cplusplus
 
 #include <comet/enum_common.h> // enumerated_type_of
 #include <comet/interface.h> // comtype
@@ -349,6 +344,4 @@ template<> struct impl::type_policy<Listing>
 
 } // namespace comet
 
-#endif // __cplusplus
-
-#endif SWISH_INTERFACES_SFTP_PROVIDER_H
+#endif
