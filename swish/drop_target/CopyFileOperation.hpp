@@ -31,6 +31,9 @@
 #include "swish/drop_target/Operation.hpp"
 #include "swish/drop_target/RootedSource.hpp"
 #include "swish/drop_target/SftpDestination.hpp"
+#include "swish/provider/SftpProvider.h"
+
+#include <boost/shared_ptr.hpp>
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
@@ -52,7 +55,7 @@ public: // Operation
 
     virtual void operator()(
         OperationCallback& callback,
-        comet::com_ptr<swish::provider::sftp_provider> provider,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer) const;
 
 private:

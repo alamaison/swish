@@ -49,6 +49,7 @@
 
 using swish::frontend::rethrow_and_announce;
 using swish::nse::Command;
+using swish::provider::sftp_provider;
 using swish::SmartListing;
 
 using winapi::shell::pidl::apidl_t;
@@ -64,6 +65,7 @@ using comet::enum_iterator;
 using comet::uuid_t;
 
 using boost::function;
+using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::locale::translate;
 using boost::regex_match;
@@ -162,7 +164,7 @@ namespace {
 
 NewFolder::NewFolder(
     const apidl_t& folder_pidl,
-    const function<com_ptr<swish::provider::sftp_provider>()>& provider,
+    const function<shared_ptr<sftp_provider>()>& provider,
     const function<com_ptr<ISftpConsumer>()>& consumer) :
     Command(
         translate("New &folder"), NEW_FOLDER_COMMAND_ID,

@@ -48,6 +48,7 @@
 #include <string>
 #include <vector>
 
+using swish::provider::sftp_provider;
 using swish::remote_folder::CPool;
 using swish::utils::Utf8StringToWideString;
 
@@ -75,13 +76,13 @@ namespace { // private
     class PoolFixture : public OpenSshFixture
     {
     public:
-        com_ptr<swish::provider::sftp_provider> GetSession()
+        shared_ptr<sftp_provider> GetSession()
         {
             CPool pool;
             return pool.GetSession(
                 Utf8StringToWideString(GetHost()).c_str(), 
                 Utf8StringToWideString(GetUser()).c_str(), GetPort(),
-                NULL).get();
+                NULL);
         }
 
         com_ptr<ISftpConsumer> Consumer()
@@ -94,7 +95,7 @@ namespace { // private
         /**
          * Check that the given provider responds sensibly to a request.
          */
-        predicate_result alive(com_ptr<swish::provider::sftp_provider> provider)
+        predicate_result alive(shared_ptr<sftp_provider> provider)
         {
             try
             {
@@ -122,7 +123,7 @@ BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
  */
 BOOST_AUTO_TEST_CASE( session )
 {
-    com_ptr<swish::provider::sftp_provider> provider = GetSession();
+    shared_ptr<sftp_provider> provider = GetSession();
     BOOST_CHECK(alive(provider));
 }
 
@@ -131,10 +132,10 @@ BOOST_AUTO_TEST_CASE( session )
  */
 BOOST_AUTO_TEST_CASE( twice )
 {
-    com_ptr<swish::provider::sftp_provider> first_provider = GetSession();
+    shared_ptr<sftp_provider> first_provider = GetSession();
     BOOST_CHECK(alive(first_provider));
 
-    com_ptr<swish::provider::sftp_provider> second_provider = GetSession();
+    shared_ptr<sftp_provider> second_provider = GetSession();
     BOOST_CHECK(alive(second_provider));
 
     BOOST_REQUIRE(second_provider == first_provider);
@@ -154,11 +155,11 @@ private:
         try
         {
             {
-                com_ptr<swish::provider::sftp_provider> first_provider = 
+                shared_ptr<sftp_provider> first_provider = 
                     m_fixture->GetSession();
                 BOOST_CHECK(m_fixture->alive(first_provider));
 
-                com_ptr<swish::provider::sftp_provider> second_provider = 
+                shared_ptr<sftp_provider> second_provider = 
                     m_fixture->GetSession();
                 BOOST_CHECK(m_fixture->alive(second_provider));
 

@@ -31,6 +31,8 @@
 #include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 #include "swish/drop_target/Progress.hpp"
 
+#include <boost/shared_ptr.hpp>
+
 namespace swish {
 namespace drop_target {
 
@@ -45,7 +47,8 @@ public:
     virtual ~Plan() {}
 
     virtual void execute_plan(
-        DropActionCallback& callback, comet::com_ptr<swish::provider::sftp_provider> provider,
+        DropActionCallback& callback,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer) const = 0;
 };
 

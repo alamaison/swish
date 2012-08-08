@@ -35,7 +35,8 @@
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/function.hpp> // function
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <shobjidl.h> // IExplorerCommandProvider
 
@@ -45,7 +46,8 @@ namespace commands {
 
 comet::com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
     HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
-    const boost::function<comet::com_ptr<swish::provider::sftp_provider>()>& provider,
+    const boost::function<
+        boost::shared_ptr<swish::provider::sftp_provider>()>& provider,
     const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 
 std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
@@ -58,7 +60,8 @@ std::pair<
 remote_folder_task_pane_tasks(
     HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
     comet::com_ptr<IUnknown> ole_site,
-    const boost::function<comet::com_ptr<swish::provider::sftp_provider>()>& provider,
+    const boost::function<
+        boost::shared_ptr<swish::provider::sftp_provider>()>& provider,
     const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
 
 }}} // namespace swish::remote_folder::commands

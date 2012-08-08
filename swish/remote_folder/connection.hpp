@@ -33,7 +33,6 @@
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
-#include <comet/ptr.h> // com_ptr
 #include <comet/threading.h> // critical_section
 
 #include <boost/shared_ptr.hpp>
@@ -49,13 +48,16 @@ class CPool
 {
 public:
 
-    comet::com_ptr<swish::provider::sftp_provider> GetSession(
+    boost::shared_ptr<swish::provider::sftp_provider> GetSession(
         const std::wstring& host, const std::wstring& user, int port,
         HWND hwnd);
 
 private:
     static comet::critical_section m_cs;
-    static std::map<std::wstring, comet::com_ptr<swish::provider::sftp_provider> > m_connections;
+    static std::map<
+        std::wstring,
+        boost::shared_ptr<swish::provider::sftp_provider>
+    > m_connections;
 };
 
 
@@ -73,7 +75,7 @@ private:
  *                             as the parent window for any user interaction.
  * @throws ATL exceptions on failure.
  */
-comet::com_ptr<swish::provider::sftp_provider> connection_from_pidl(
+boost::shared_ptr<swish::provider::sftp_provider> connection_from_pidl(
     const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
 
 /**
@@ -92,7 +94,7 @@ comet::com_ptr<swish::provider::sftp_provider> connection_from_pidl(
 {
 public:
     virtual ~connection_maker() = 0;
-    virtual comet::com_ptr<swish::provider::sftp_provider> provider() = 0;
+    virtual boost::shared_ptr<swish::provider::sftp_provider> provider() = 0;
     virtual comet::com_ptr<ISftpConsumer> consumer() = 0;
 };*/
 

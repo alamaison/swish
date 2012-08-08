@@ -41,6 +41,7 @@
 #include <exception> // exception
 #include <vector>
 
+using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::remote_itemid_view;
@@ -110,7 +111,7 @@ template<> struct impl::type_policy<PITEMID_CHILD>
  */
 CSftpDirectory::CSftpDirectory(
     const apidl_t& directory_pidl,
-    com_ptr<swish::provider::sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
 : 
 m_provider(provider), m_consumer(consumer), m_directory_pidl(directory_pidl),
 m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}

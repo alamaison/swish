@@ -43,6 +43,7 @@
 #include <Windows.h> // IsolationAwareMessageBox
 
 using swish::frontend::rethrow_and_announce;
+using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 
 using winapi::shell::pidl::apidl_t;
@@ -53,6 +54,7 @@ using comet::com_ptr;
 
 using boost::function;
 using boost::locale::translate;
+using boost::shared_ptr;
 using boost::wformat;
 
 using std::vector;
@@ -73,11 +75,11 @@ namespace {
      */
     void do_delete(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
+        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
         function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
         const apidl_t& parent_folder)
     {
-        com_ptr<swish::provider::sftp_provider> provider = provider_factory(hwnd_view);
+        shared_ptr<sftp_provider> provider = provider_factory(hwnd_view);
         com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
         // Create instance of our directory handler class
@@ -170,7 +172,7 @@ namespace {
      */
     void execute_death_row(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
+        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
         function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
         const apidl_t& parent_folder)
     {
@@ -202,7 +204,7 @@ namespace {
 
 
 Delete::Delete(
-    function<com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
+    function<shared_ptr<sftp_provider>(HWND)> provider_factory,
     function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
     : m_provider_factory(provider_factory), m_consumer_factory(consumer_factory)
 {}

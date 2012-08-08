@@ -231,8 +231,7 @@ namespace detail {
     }
 }
 
-class MockProvider :
-    public comet::simple_object<swish::provider::sftp_provider>
+class MockProvider : public swish::provider::sftp_provider
 {
 public:
 
@@ -435,8 +434,6 @@ public:
     }
 
 private:
-
-    swish::provider::sftp_provider& impl() { return *this; }
 
     detail::Filesystem m_filesystem;
     ListingBehaviour m_listing_behaviour;

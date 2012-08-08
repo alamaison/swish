@@ -29,11 +29,12 @@
 #include "swish/drop_target/CopyFileOperation.hpp"
 #include "swish/drop_target/CreateDirectoryOperation.hpp"
 #include "swish/drop_target/RootedSource.hpp"
-#include "swish/provider/SftpProvider.h" // ISftpConsumer
+#include "swish/provider/SftpProvider.h" // sftp_provider, ISftpConsumer
 
 #include <boost/bind.hpp> // bind
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/function_output_iterator.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <winapi/shell/shell.hpp> // stream_from_pidl, bind_to_handler_object
@@ -43,6 +44,7 @@
 
 #include <string>
 
+using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 
 using winapi::shell::bind_to_handler_object;
@@ -58,6 +60,7 @@ using comet::com_ptr;
 using boost::bind;
 using boost::filesystem::wpath;
 using boost::make_function_output_iterator;
+using boost::shared_ptr;
 using boost::ref;
 
 using std::wstring;
@@ -174,7 +177,7 @@ PidlCopyPlan::PidlCopyPlan(
 }
 
 void PidlCopyPlan::execute_plan(
-    DropActionCallback& callback, com_ptr<swish::provider::sftp_provider> provider,
+    DropActionCallback& callback, shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer) const
 {
     m_plan.execute_plan(callback, provider, consumer);

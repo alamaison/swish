@@ -29,8 +29,10 @@
 #pragma once
 
 #include "swish/drop_target/Plan.hpp"
+#include "swish/provider/SftpProvider.h"
 
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace swish {
 namespace drop_target {
@@ -48,7 +50,8 @@ class SequentialPlan /* final */ : public Plan
 public: // Plan
 
     virtual void execute_plan(
-        DropActionCallback& callback, comet::com_ptr<swish::provider::sftp_provider> provider,
+        DropActionCallback& callback,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer) const;
 
 public:

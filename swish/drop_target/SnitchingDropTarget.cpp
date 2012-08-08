@@ -54,7 +54,7 @@ namespace swish {
 namespace drop_target {
 
 CSnitchingDropTarget::CSnitchingDropTarget(
-    HWND hwnd_owner, com_ptr<sftp_provider> provider,
+    HWND hwnd_owner, shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
     shared_ptr<DropActionCallback> callback)
     :

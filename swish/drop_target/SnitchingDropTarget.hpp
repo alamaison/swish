@@ -30,10 +30,12 @@
 
 #include "DropTarget.hpp" // CDropTarget wrapped inner
 
+#include <swish/provider/SftpProvider.h>
+
 #include <winapi/shell/pidl.hpp> // apidl_t
 
 #include <boost/filesystem.hpp>  // wpath
-#include <boost/shared_ptr.hpp> // shared_ptr to UI callback
+#include <boost/shared_ptr.hpp>
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
@@ -54,7 +56,8 @@ class CSnitchingDropTarget :
 public:
 
     CSnitchingDropTarget(
-        HWND hwnd_owner, comet::com_ptr<swish::provider::sftp_provider> provider,
+        HWND hwnd_owner,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer,
         const winapi::shell::pidl::apidl_t& remote_directory,
         boost::shared_ptr<DropActionCallback> callback);

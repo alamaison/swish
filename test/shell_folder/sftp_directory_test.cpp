@@ -47,6 +47,9 @@
 #include <string>
 #include <vector>
 
+using test::MockProvider;
+using test::MockConsumer;
+
 using swish::host_folder::create_host_itemid;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::remote_itemid_view;
@@ -59,8 +62,8 @@ using comet::com_ptr;
 using comet::datetime_t;
 using comet::enum_iterator;
 
-using test::MockProvider;
-using test::MockConsumer;
+using boost::make_shared;
+using boost::shared_ptr;
 
 using std::vector;
 using std::wstring;
@@ -106,13 +109,14 @@ namespace { // private
     class SftpDirectoryFixture
     {
     private:
-        com_ptr<MockProvider> m_provider;
+        shared_ptr<MockProvider> m_provider;
         com_ptr<MockConsumer> m_consumer;
 
     public:
 
         SftpDirectoryFixture()
-            : m_provider(new MockProvider()), m_consumer(new MockConsumer()) {}
+            : m_provider(make_shared<MockProvider>()),
+            m_consumer(new MockConsumer()) {}
 
         CSftpDirectory directory()
         {
@@ -121,10 +125,10 @@ namespace { // private
 
         CSftpDirectory directory(const apidl_t& pidl)
         {
-            return CSftpDirectory(pidl.get(), provider(), consumer());
+            return CSftpDirectory(pidl, provider(), consumer());
         }
 
-        com_ptr<MockProvider> provider()
+        shared_ptr<MockProvider> provider()
         {
             return m_provider;
         }

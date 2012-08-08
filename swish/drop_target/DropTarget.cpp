@@ -93,7 +93,7 @@ namespace { // private
  * @param progress          Progress dialogue.
  */
 void copy_format_to_provider(
-    PidlFormat source_format, com_ptr<sftp_provider> provider,
+    PidlFormat source_format, shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
     DropActionCallback& callback)
 {
@@ -111,7 +111,7 @@ void copy_format_to_provider(
  *                          to copy items into.
  */
 void copy_data_to_provider(
-    com_ptr<IDataObject> data_object, com_ptr<sftp_provider> provider, 
+    com_ptr<IDataObject> data_object, shared_ptr<sftp_provider> provider, 
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
     DropActionCallback& callback)
 {
@@ -133,7 +133,7 @@ void copy_data_to_provider(
  * Create an instance of the DropTarget initialised with a data provider.
  */
 CDropTarget::CDropTarget(
-    com_ptr<sftp_provider> provider,
+    shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
     shared_ptr<DropActionCallback> callback)
     :

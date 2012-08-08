@@ -66,6 +66,7 @@
 using swish::drop_target::CSnitchingDropTarget;
 using swish::drop_target::DropUI;
 using swish::frontend::rethrow_and_announce;
+using swish::provider::sftp_provider;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
 using swish::remote_folder::context_menu_callback;
@@ -92,6 +93,7 @@ using boost::bind;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
+using boost::shared_ptr;
 
 using ATL::CComPtr;
 
@@ -168,7 +170,7 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
     try
     {
-        com_ptr<swish::provider::sftp_provider> provider =
+        shared_ptr<sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
@@ -328,7 +330,7 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
     try
     {
-        com_ptr<swish::provider::sftp_provider> provider =
+        shared_ptr<sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
@@ -689,7 +691,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
     try
     {
-        com_ptr<swish::provider::sftp_provider> provider =
+        shared_ptr<sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
@@ -718,7 +720,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
     try
     {
-        com_ptr<swish::provider::sftp_provider> provider =
+        shared_ptr<sftp_provider> provider =
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 

@@ -45,7 +45,10 @@
 #include <vector>
 
 using swish::host_folder::create_host_itemid;
+using swish::provider::sftp_provider;
 using swish::remote_folder::remote_itemid_view;
+
+using boost::shared_ptr;
 
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
@@ -78,13 +81,13 @@ public:
     {
         // Create mock object coclass instances
         m_pConsumer = com_ptr<ISftpConsumer>(new MockConsumer());
-        m_pProvider = com_ptr<swish::provider::sftp_provider>(new MockProvider());
+        m_pProvider = shared_ptr<sftp_provider>(new MockProvider());
     }
 
 protected:
 
     com_ptr<ISftpConsumer> m_pConsumer;
-    com_ptr<swish::provider::sftp_provider> m_pProvider;
+    shared_ptr<sftp_provider> m_pProvider;
 };
 
 }

@@ -33,6 +33,7 @@
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
+#include <boost/shared_array.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <comet/error.h> // com_error
@@ -47,6 +48,7 @@ using comet::com_ptr;
 
 using boost::filesystem::wpath;
 using boost::numeric_cast;
+using boost::shared_ptr;
 using boost::uintmax_t;
 
 using std::auto_ptr;
@@ -147,7 +149,7 @@ namespace {
         void operator()(
             const Operation& operation, size_t operation_index,
             size_t total_operations,
-            com_ptr<sftp_provider> provider,
+            shared_ptr<sftp_provider> provider,
             com_ptr<ISftpConsumer> consumer)
         {
             progress().line_path(1, operation.title());
@@ -205,7 +207,7 @@ namespace {
 }
 
 void SequentialPlan::execute_plan(
-    DropActionCallback& callback, com_ptr<sftp_provider> provider,
+    DropActionCallback& callback, shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer) const
 {
     OperationExecutor executor(callback);

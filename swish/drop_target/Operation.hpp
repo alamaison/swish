@@ -32,6 +32,7 @@
 
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/function.hpp> // function
+#include <boost/shared_ptr.hpp>
 
 #include <comet/ptr.h> // com_ptr
 
@@ -85,7 +86,7 @@ public:
 
     virtual void operator()(
         OperationCallback& callback,
-        comet::com_ptr<swish::provider::sftp_provider> provider,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer)
         const = 0;
 

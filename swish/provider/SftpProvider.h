@@ -120,7 +120,7 @@ public:
 namespace swish {
 namespace provider {
 
-class sftp_provider : public IUnknown
+class sftp_provider
 {
 public:
     typedef sftp_provider interface_is;
@@ -183,16 +183,6 @@ public:
 }}
 
 namespace comet {
-
-    template<> struct comtype<swish::provider::sftp_provider>
-{
-    static const IID& uuid() throw()
-    {
-        static comet::uuid_t iid;
-        return iid;
-    }
-    typedef IUnknown base;
-};
 
 template<> struct comtype<ISftpConsumer>
 {

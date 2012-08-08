@@ -36,6 +36,8 @@
 
 #include <comet/ptr.h> // com_ptr
 
+#include <boost/shared_ptr.hpp>
+
 #include <vector>
 
 /**
@@ -73,7 +75,7 @@ public:
     CSftpDataObject(
         UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
         __in PCIDLIST_ABSOLUTE pidlCommonParent,
-        comet::com_ptr<swish::provider::sftp_provider> provider,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer);
 
 public: // IDataObject methods
@@ -103,7 +105,8 @@ private:
     typedef std::vector<ExpandedItem> ExpandedList;
     // @}
 
-    comet::com_ptr<swish::provider::sftp_provider> m_provider; ///< Connection to backend
+    boost::shared_ptr<swish::provider::sftp_provider> m_provider;
+                                                     ///< Connection to backend
     comet::com_ptr<ISftpConsumer> m_consumer; ///< UI callback
 
     /** @name Cached PIDLs */

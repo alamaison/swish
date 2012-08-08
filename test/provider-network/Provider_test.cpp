@@ -36,6 +36,8 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
@@ -43,6 +45,7 @@
 #include <vector>
 
 using swish::provider::CProvider;
+using swish::provider::sftp_provider;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -52,6 +55,8 @@ using comet::datetime_t;
 
 using boost::filesystem::wpath;
 using boost::test_tools::predicate_result;
+using boost::make_shared;
+using boost::shared_ptr;
 
 using std::exception;
 using std::vector;
@@ -61,13 +66,13 @@ namespace test {
 
 namespace {
     
-    com_ptr<swish::provider::sftp_provider> create_provider()
+    shared_ptr<sftp_provider> create_provider()
     {
         remote_test_config config;
         wstring user = config.GetUser();
         wstring host = config.GetHost();
 
-        return new CProvider(user, host, config.GetPort());
+        return make_shared<CProvider>(user, host, config.GetPort());
     }
 
     /**
@@ -78,7 +83,7 @@ namespace {
      * an attempt to make it do something (presumably) by authenticating.
      */
     predicate_result alive(
-        com_ptr<swish::provider::sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+        shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         try
         {
@@ -99,7 +104,7 @@ namespace {
     /**
      * Check that the given provider responds sensibly to a request.
      */
-    predicate_result alive(com_ptr<swish::provider::sftp_provider> provider)
+    predicate_result alive(shared_ptr<sftp_provider> provider)
     {
         return alive(provider, new MockConsumer());
     }
@@ -117,7 +122,7 @@ BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    com_ptr<swish::provider::sftp_provider> provider = create_provider();
+    shared_ptr<sftp_provider> provider = create_provider();
 
     BOOST_CHECK(alive(provider, consumer));
 }
@@ -128,7 +133,7 @@ BOOST_AUTO_TEST_CASE( WrongPassword )
 
     consumer->set_password_behaviour(MockConsumer::WrongPassword);
 
-    com_ptr<swish::provider::sftp_provider> provider = create_provider();
+    shared_ptr<sftp_provider> provider = create_provider();
 
     BOOST_CHECK(!alive(provider, consumer));
 }
@@ -143,7 +148,7 @@ BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    com_ptr<swish::provider::sftp_provider> provider = create_provider();
+    shared_ptr<sftp_provider> provider = create_provider();
 
     // This may fail if the server (which we can't control) doesn't allow
     // ki-auth
@@ -161,7 +166,7 @@ BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
     consumer->set_keyboard_interactive_behaviour(
         MockConsumer::AbortResponse);
 
-    com_ptr<swish::provider::sftp_provider> provider = create_provider();
+    shared_ptr<sftp_provider> provider = create_provider();
 
     // Try to fetch a listing enumerator - it should fail
     BOOST_CHECK(!alive(provider, consumer));
@@ -261,7 +266,7 @@ public:
     }
 
 protected:
-    com_ptr<swish::provider::sftp_provider> provider;
+    shared_ptr<sftp_provider> provider;
     com_ptr<MockConsumer> consumer;
     ISftpConsumer *m_pConsumer;
     remote_test_config config;

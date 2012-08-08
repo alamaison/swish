@@ -36,7 +36,7 @@
 #include <winapi/object_with_site.hpp> // object_with_site
 #include <winapi/shell/pidl.hpp> // apidl_t
 
-#include <boost/shared_ptr.hpp> // shared_ptr to UI callback
+#include <boost/shared_ptr.hpp>
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
@@ -62,7 +62,7 @@ public:
     typedef IDropTarget interface_is;
 
     CDropTarget(
-        comet::com_ptr<swish::provider::sftp_provider> provider,
+        boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer,
         const winapi::shell::pidl::apidl_t& remote_directory,
         boost::shared_ptr<DropActionCallback> callback);
@@ -95,7 +95,7 @@ private:
 
     virtual void on_set_site(comet::com_ptr<IUnknown> ole_site);
 
-    comet::com_ptr<swish::provider::sftp_provider> m_provider;
+    boost::shared_ptr<swish::provider::sftp_provider> m_provider;
     comet::com_ptr<ISftpConsumer> m_consumer;
 
     winapi::shell::pidl::apidl_t m_remote_directory;
@@ -105,7 +105,7 @@ private:
 
 void copy_data_to_provider(
     comet::com_ptr<IDataObject> data_object,
-    comet::com_ptr<swish::provider::sftp_provider> provider,
+    boost::shared_ptr<swish::provider::sftp_provider> provider,
     comet::com_ptr<ISftpConsumer> consumer,
     const winapi::shell::pidl::apidl_t& remote_directory,
     DropActionCallback& callback);

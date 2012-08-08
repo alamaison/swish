@@ -40,6 +40,7 @@ using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
 using boost::locale::wformat;
+using boost::shared_ptr;
 
 using comet::com_ptr;
 
@@ -76,7 +77,7 @@ wstring CreateDirectoryOperation::description() const
 
 void CreateDirectoryOperation::operator()(
     OperationCallback& callback,
-    com_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
+    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
 {
     callback.update_progress(0, 1);
 

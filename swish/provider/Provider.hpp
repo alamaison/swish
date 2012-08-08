@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2012
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,14 +43,12 @@
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
-#include <comet/server.h>
-
 namespace swish {
 namespace provider {
 
 class provider;
 
-class CProvider : public comet::simple_object<swish::provider::sftp_provider>
+class CProvider : public sftp_provider
 {
 public:
 

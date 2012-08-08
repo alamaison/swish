@@ -34,7 +34,8 @@
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/function.hpp> // function
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 
@@ -49,7 +50,9 @@ class context_menu_callback : public swish::nse::default_context_menu_callback
 {
 public:
     context_menu_callback(
-        boost::function<comet::com_ptr<swish::provider::sftp_provider>(HWND)> provider_factory,
+        boost::function<
+            boost::shared_ptr<swish::provider::sftp_provider>(HWND)
+        > provider_factory,
         boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
 
 private:
@@ -80,7 +83,9 @@ private:
         HWND hwnd_view, comet::com_ptr<IDataObject> selection,
         UINT& default_command_id);
 
-    boost::function<comet::com_ptr<swish::provider::sftp_provider>(HWND)> m_provider_factory;
+    boost::function<
+        boost::shared_ptr<swish::provider::sftp_provider>(HWND)
+    > m_provider_factory;
     boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 };
 

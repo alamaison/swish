@@ -22,6 +22,7 @@
 #include "SftpDirectory.h"
 #include "data_object/StorageMedium.hpp"  // StorageMedium
 
+#include "swish/provider/SftpProvider.h"
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
                                                // path_from_remote_pidl
 
@@ -35,10 +36,13 @@
 #pragma warning(pop)
 #include <boost/iterator/transform_iterator.hpp> // transform_iterator
 #include <boost/mem_fn.hpp> // mem_fn
+#include <boost/shared_ptr.hpp>
+
 #include <boost/utility.hpp> // next
 
 #include <stdexcept> // runtime_error
 
+using swish::provider::sftp_provider;
 using swish::remote_folder::path_from_remote_pidl;
 using swish::remote_folder::remote_itemid_view;
 using swish::shell_folder::data_object::FileGroupDescriptor;
@@ -57,6 +61,7 @@ using comet::com_ptr;
 using boost::make_transform_iterator;
 using boost::mem_fn;
 using boost::next;
+using boost::shared_ptr;
 
 using std::runtime_error;
 
@@ -84,7 +89,7 @@ template<> struct comtype<IDataObject>
  */
 CSftpDataObject::CSftpDataObject(
     UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
-    PCIDLIST_ABSOLUTE pidlCommonParent, com_ptr<swish::provider::sftp_provider> provider,
+    PCIDLIST_ABSOLUTE pidlCommonParent, shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer)
     : CDataObject(cPidl, aPidl, pidlCommonParent),
     // Make a copy of the PIDLs.  These are used to delay-render the 
