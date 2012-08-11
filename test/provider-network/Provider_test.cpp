@@ -47,7 +47,7 @@
 #include <vector>
 
 using swish::provider::CProvider;
-using swish::provider::SmartListing;
+using swish::provider::sftp_filesystem_item;
 using swish::provider::directory_listing;
 using swish::provider::sftp_provider;
 
@@ -201,7 +201,7 @@ predicate_result file_exists_in_listing(
     }
     else
     {
-        BOOST_FOREACH(const SmartListing& entry, listing)
+        BOOST_FOREACH(const sftp_filesystem_item& entry, listing)
         {
             if (filename == bstr_t(entry.bstrFilename))
             {
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE( GetListing )
     directory_listing listing = provider->listing(consumer, L"/tmp");
 
     // Check format of listing is sensible
-    BOOST_FOREACH(const SmartListing& entry, listing)
+    BOOST_FOREACH(const sftp_filesystem_item& entry, listing)
     {
         wstring filename = entry.bstrFilename;
         wstring owner = entry.bstrOwner;

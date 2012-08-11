@@ -305,6 +305,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sftp_filesystem_item.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SftpStream.cpp"
 				>
 			</File>
@@ -328,6 +332,10 @@
 			</File>
 			<File
 				RelativePath=".\SessionFactory.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sftp_filesystem_item.hpp"
 				>
 			</File>
 			<File

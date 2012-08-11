@@ -50,7 +50,7 @@
 
 using swish::frontend::rethrow_and_announce;
 using swish::nse::Command;
-using swish::provider::SmartListing;
+using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 
@@ -105,7 +105,7 @@ wstring prefix_if_necessary(
     bool collision = false;
     vector<unsigned long> suffixes;
     BOOST_FOREACH(
-        const SmartListing& lt, provider->listing(consumer, directory))
+        const sftp_filesystem_item& lt, provider->listing(consumer, directory))
     {
         wstring filename = wstring(lt.bstrFilename);
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))

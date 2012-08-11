@@ -134,7 +134,7 @@ public:
 
     BSTR resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path);
 
-    virtual SmartListing stat(
+    virtual sftp_filesystem_item stat(
         com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
         bool follow_links);
 
@@ -219,7 +219,7 @@ void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
 BSTR CProvider::resolve_link(ISftpConsumer* consumer, BSTR path)
 { return m_provider->resolve_link(consumer, path); }
 
-SmartListing CProvider::stat(
+sftp_filesystem_item CProvider::stat(
     com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
     bool follow_links)
 {
@@ -282,7 +282,7 @@ void provider::_Disconnect()
 
 namespace {
 
-    SmartListing listing_from_sftp_file(const sftp_file& file)
+    sftp_filesystem_item listing_from_sftp_file(const sftp_file& file)
     {
         return listing::fill_listing_entry(
             file.name(), file.long_entry(), file.raw_attributes());
@@ -315,7 +315,7 @@ directory_listing provider::listing(
 
     string path = WideStringToUtf8String(directory.string());
 
-    vector<SmartListing> files;
+    vector<sftp_filesystem_item> files;
     transform(
         make_filter_iterator(
             not_special_file, directory_iterator(channel, path)),
@@ -777,7 +777,7 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
  * The Listing returned by this function doesn't include a long entry or
  * owner and group names as string (these being derived from the long entry).
  */
-SmartListing provider::stat(
+sftp_filesystem_item provider::stat(
     com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
     bool follow_links)
 {
@@ -792,7 +792,7 @@ SmartListing provider::stat(
     file_attributes attr = attributes(
         channel, utf8_path, follow_links != FALSE);
 
-    SmartListing lt = SmartListing();
+    sftp_filesystem_item lt = sftp_filesystem_item();
 
     // Permissions
     try

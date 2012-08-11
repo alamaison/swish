@@ -75,7 +75,7 @@ public:
 
     virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
 
-    virtual SmartListing stat(
+    virtual sftp_filesystem_item stat(
         comet::com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
         bool follow_links);
 

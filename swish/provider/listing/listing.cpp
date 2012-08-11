@@ -36,7 +36,7 @@
 
 #include "listing.hpp"
 
-#include "swish/provider/sftp_provider.hpp" // SmartListing
+#include "swish/provider/sftp_provider.hpp" // sftp_filesystem_item
 #include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <ATLComTime.h>    // COleDateTime
@@ -118,11 +118,11 @@ bstr_t parse_group_from_long_entry(const string& long_entry)
  *
  * @returns A listing object representing the file.
  */
-SmartListing fill_listing_entry(
+sftp_filesystem_item fill_listing_entry(
     const string& utf8_file_name, const string& utf8_long_entry,
     const LIBSSH2_SFTP_ATTRIBUTES& attributes)
 {
-    SmartListing lt = SmartListing();
+    sftp_filesystem_item lt = sftp_filesystem_item();
 
     bstr_t file_name;
     bstr_t owner;

@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include <swish/provider/sftp_provider.hpp> // SmartListing
+#include <swish/provider/sftp_provider.hpp> // sftp_filesystem_item
 
 #include <comet/bstr.h> // bstr_t
 
@@ -53,7 +53,7 @@ namespace listing {
 
     comet::bstr_t parse_group_from_long_entry(const std::string& long_entry);
 
-    SmartListing fill_listing_entry(
+    sftp_filesystem_item fill_listing_entry(
         const std::string& utf8_file_name,
         const std::string& utf8_long_entry,
         const LIBSSH2_SFTP_ATTRIBUTES& attributes);

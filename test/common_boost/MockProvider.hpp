@@ -49,7 +49,7 @@
 namespace test {
 namespace detail {
 
-    typedef tree<swish::provider::SmartListing> Filesystem;
+    typedef tree<swish::provider::sftp_filesystem_item> Filesystem;
     typedef Filesystem::iterator FilesystemLocation;
 
     /**
@@ -90,11 +90,11 @@ namespace detail {
         return current_dir;
     }
 
-    inline swish::provider::SmartListing make_file_listing(
+    inline swish::provider::sftp_filesystem_item make_file_listing(
         comet::bstr_t name, ULONG permissions, ULONGLONG size,
         comet::datetime_t date)
     {
-        swish::provider::SmartListing lt;
+        swish::provider::sftp_filesystem_item lt;
         lt.bstrFilename = name.detach();
         lt.uPermissions = permissions;
         lt.bstrOwner = comet::bstr_t("mockowner").detach();
@@ -105,18 +105,19 @@ namespace detail {
         return lt;
     }
 
-    inline swish::provider::SmartListing make_directory_listing(
+    inline swish::provider::sftp_filesystem_item make_directory_listing(
         comet::bstr_t name)
     {
-        swish::provider::SmartListing lt = make_file_listing(
+        swish::provider::sftp_filesystem_item lt = make_file_listing(
             name, 040777, 42, comet::datetime_t(1601, 10, 5, 13, 54, 22));
         lt.fIsDirectory = TRUE;
         return lt;
     }
 
-    inline swish::provider::SmartListing make_link_listing(comet::bstr_t name)
+    inline swish::provider::sftp_filesystem_item make_link_listing(
+        comet::bstr_t name)
     {
-        swish::provider::SmartListing lt = make_file_listing(
+        swish::provider::sftp_filesystem_item lt = make_file_listing(
             name, 040777, 42, comet::datetime_t(1601, 10, 5, 13, 54, 22));
         lt.fIsLink = TRUE;
         return lt;
@@ -130,14 +131,14 @@ namespace detail {
 
     inline void make_item_in(
         Filesystem& filesystem, FilesystemLocation loc,
-        const swish::provider::SmartListing& item)
+        const swish::provider::sftp_filesystem_item& item)
     {
         filesystem.append_child(loc, item);
     }
 
     inline void make_item_in(
         Filesystem& filesystem, const boost::filesystem::wpath& path,
-        const swish::provider::SmartListing& item)
+        const swish::provider::sftp_filesystem_item& item)
     {
         make_item_in(
             filesystem, find_location_from_path(filesystem, path), item);
@@ -292,7 +293,7 @@ public:
         comet::com_ptr<ISftpConsumer> /*consumer*/,
         const swish::provider::sftp_provider_path& directory)
     {
-        std::vector<swish::provider::SmartListing> files;
+        std::vector<swish::provider::sftp_filesystem_item> files;
 
         switch (m_listing_behaviour)
         {
@@ -406,7 +407,7 @@ public:
             return comet::bstr_t(L"/tmp/testtmpfile").detach();
     };
 
-    virtual swish::provider::SmartListing stat(
+    virtual swish::provider::sftp_filesystem_item stat(
         comet::com_ptr<ISftpConsumer> consumer,
         const swish::provider::sftp_provider_path& path,
         bool follow_links)

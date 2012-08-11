@@ -28,14 +28,12 @@
 #define SWISH_PROVIDER_SFTP_PROVIDER_H
 #pragma once
 
+#include <swish/provider/sftp_filesystem_item.hpp> // sftp_filesystem_item
 #include <boost/filesystem/path.hpp> // wpath
-//#include <boost/range/any_range.hpp>
+//#include <boost/range/any_range.hpp> USE ONCE WE UPGRADE BOOST
 
 #include <comet/interface.h> // comtype
 #include <comet/ptr.h> // com_ptr
-
-#include <OleAuto.h> // SysAllocStringLen, SysStringLen, SysFreeString,
-                     // VarBstrCmp
 
 #include <string> // wstring
 #include <vector>
@@ -82,123 +80,11 @@ namespace provider {
 
 typedef boost::filesystem::wpath sftp_provider_path;
 
-/**
- * An entry in a remote SFTP directory.
- */
-class SmartListing
-{
-public:
-
-    SmartListing()
-    {
-        bstrFilename = NULL;
-        uPermissions = 0U;
-        bstrOwner = NULL;
-        bstrGroup = NULL;
-        uUid = 0U;
-        uGid = 0U;
-        uSize = 0U;
-        dateModified = 0;
-        dateAccessed = 0;
-        fIsDirectory = FALSE;
-        fIsLink = FALSE;
-    }
-
-    SmartListing(const SmartListing& other)
-    {
-        bstrFilename = ::SysAllocStringLen(
-            other.bstrFilename, ::SysStringLen(other.bstrFilename));
-        uPermissions = other.uPermissions;
-        bstrOwner = ::SysAllocStringLen(
-            other.bstrOwner, ::SysStringLen(other.bstrOwner));
-        bstrGroup = ::SysAllocStringLen(
-            other.bstrGroup, ::SysStringLen(other.bstrGroup));
-        uUid = other.uUid;
-        uGid = other.uGid;
-        uSize = other.uSize;
-        dateModified = other.dateModified;
-        dateAccessed = other.dateAccessed;
-        fIsDirectory = other.fIsDirectory;
-        fIsLink = other.fIsLink;
-    }
-
-    friend void swap(SmartListing& lhs, SmartListing& rhs)
-    {
-        std::swap(lhs.bstrFilename, rhs.bstrFilename);
-        std::swap(lhs.uPermissions, rhs.uPermissions);
-        std::swap(lhs.bstrOwner, rhs.bstrOwner);
-        std::swap(lhs.bstrGroup, rhs.bstrGroup);
-        std::swap(lhs.uUid, rhs.uUid);
-        std::swap(lhs.uGid, rhs.uGid);
-        std::swap(lhs.uSize, rhs.uSize);
-        std::swap(lhs.dateModified, rhs.dateModified);
-        std::swap(lhs.dateAccessed, rhs.dateAccessed);
-        std::swap(lhs.fIsDirectory, rhs.fIsDirectory);
-        std::swap(lhs.fIsLink, rhs.fIsLink);
-    }
-
-    SmartListing& operator=(const SmartListing& other)
-    {
-        SmartListing copy(other);
-        swap(*this, copy);
-        return *this;
-    }
-
-    ~SmartListing()
-    {
-        ::SysFreeString(bstrFilename);
-        ::SysFreeString(bstrGroup);
-        ::SysFreeString(bstrOwner);
-    }
-
-    bool operator<(const SmartListing& other) const
-    {
-        if (bstrFilename == 0)
-            return other.bstrFilename != 0;
-
-        if (other.bstrFilename == 0)
-            return false;
-
-        return ::VarBstrCmp(
-            bstrFilename, other.bstrFilename,
-            ::GetThreadLocale(), 0) == VARCMP_LT;
-    }
-
-    bool operator==(const SmartListing& other) const
-    {
-        if (bstrFilename == 0 && other.bstrFilename == 0)
-            return true;
-
-        return ::VarBstrCmp(
-            bstrFilename, other.bstrFilename,
-            ::GetThreadLocale(), 0) == VARCMP_EQ;
-    }
-
-    bool operator==(const comet::bstr_t& name) const
-    {
-        return bstrFilename == name;
-    }
-
-    BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
-    ULONG uPermissions;   ///< Unix file permissions
-    BSTR bstrOwner;       ///< The user name of the file's owner
-    BSTR bstrGroup;       ///< The name of the group to which the file belongs
-    ULONG uUid;           ///< Numerical ID of file's owner
-    ULONG uGid;           ///< Numerical ID of group to which the file belongs
-    ULONGLONG uSize;      ///< The file's size in bytes
-    DATE dateModified;    ///< The date and time at which the file was 
-                          ///< last modified in automation-compatible format
-    DATE dateAccessed;    ///< The date and time at which the file was 
-                          ///< last accessed in automation-compatible format
-    BOOL fIsDirectory;    ///< This filesystem item can be listed for items
-                          ///< under it.
-    BOOL fIsLink;         ///< This file is a link to another file or directory
-};
-
 //typedef boost::any_range<
-//    SmartListing, boost::forward_traversal_tag, SmartListing&, std::ptrdiff_t>
+//    sftp_filesystem_item, boost::forward_traversal_tag,
+//    sftp_filesystem_item&, std::ptrdiff_t>
 //    directory_listing;
-typedef std::vector<SmartListing> directory_listing;
+typedef std::vector<sftp_filesystem_item> directory_listing;
 
 class sftp_provider
 {
@@ -254,7 +140,7 @@ public:
      */
     virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
 
-    virtual SmartListing stat(
+    virtual sftp_filesystem_item stat(
         comet::com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
         bool follow_links) = 0;
 };

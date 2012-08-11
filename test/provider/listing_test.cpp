@@ -98,7 +98,8 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
     attrs.filesize = 348;
     attrs.permissions = 0677;
 
-    SmartListing lt = listing::fill_listing_entry(filename, longentry, attrs);
+    sftp_filesystem_item lt =
+        listing::fill_listing_entry(filename, longentry, attrs);
 
     // Check fields that should be set
     BOOST_CHECK_EQUAL(lt.bstrFilename, L".cshrc test");

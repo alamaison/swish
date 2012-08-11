@@ -52,7 +52,7 @@ using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::remote_itemid_view;
-using swish::provider::SmartListing;
+using swish::provider::sftp_filesystem_item;
 
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::find_host_itemid;
@@ -129,11 +129,11 @@ m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
 namespace {
 
-    bool is_link(const SmartListing& lt)
+    bool is_link(const sftp_filesystem_item& lt)
     { return lt.fIsLink != FALSE; }
 
     bool is_directory(
-        const SmartListing& lt, const wpath& directory, 
+        const sftp_filesystem_item& lt, const wpath& directory, 
         shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         if (is_link(lt))
@@ -145,7 +145,7 @@ namespace {
 
             try
             {
-                SmartListing ltTarget = provider->stat(
+                sftp_filesystem_item ltTarget = provider->stat(
                     consumer.in(), link_path.in(), TRUE);
 
                 // TODO: consider what other properties we might want to
@@ -168,11 +168,11 @@ namespace {
         }
     }
 
-    bool is_dotted(const SmartListing& lt)
+    bool is_dotted(const sftp_filesystem_item& lt)
     { return lt.bstrFilename[0] == OLECHAR('.'); }
 
     cpidl_t convert_directory_entry_to_pidl(
-        const SmartListing& lt, const wpath& directory,
+        const sftp_filesystem_item& lt, const wpath& directory,
         shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         return create_remote_itemid(
@@ -250,27 +250,27 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
     bool include_non_folders = (flags & SHCONTF_NONFOLDERS) != 0;
     bool include_hidden = (flags & SHCONTF_INCLUDEHIDDEN) != 0;
 
-    vector<SmartListing> directory_enum = m_provider->listing(
+    vector<sftp_filesystem_item> directory_enum = m_provider->listing(
         m_consumer, m_directory);
 
     // XXX: PERFORMANCE:
     // For a link, we look its target details up 3 times!  Once to see if it is
     // a directory, once to see if it isn't a directory and once to see if its
     // a directory whilst converting to PIDL.  This info should be cached in
-    // the SmartListing
+    // the sftp_filesystem_item
 
-    function<bool(const SmartListing&)> hidden_filter =
+    function<bool(const sftp_filesystem_item&)> hidden_filter =
         include_hidden || !bind(is_dotted, _1);
 
-    function<bool(const SmartListing&)> directory_filter =
+    function<bool(const sftp_filesystem_item&)> directory_filter =
         include_folders ||
         !bind(is_directory, _1, m_directory, m_provider, m_consumer);
 
-    function<bool(const SmartListing&)> non_directory_filter =
+    function<bool(const sftp_filesystem_item&)> non_directory_filter =
         include_non_folders ||
         bind(is_directory, _1, m_directory, m_provider, m_consumer);
 
-    function<cpidl_t(const SmartListing&)> pidl_converter =
+    function<cpidl_t(const sftp_filesystem_item&)> pidl_converter =
         bind(
             convert_directory_entry_to_pidl, _1, m_directory, m_provider,
             m_consumer);
