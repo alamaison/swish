@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 
 #include "listing.hpp"
 
-#include "swish/provider/sftp_provider.hpp" // Listing
+#include "swish/provider/sftp_provider.hpp" // SmartListing
 #include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <ATLComTime.h>    // COleDateTime
@@ -122,7 +122,7 @@ SmartListing fill_listing_entry(
     const string& utf8_file_name, const string& utf8_long_entry,
     const LIBSSH2_SFTP_ATTRIBUTES& attributes)
 {
-    Listing lt = Listing();
+    SmartListing lt = SmartListing();
 
     bstr_t file_name;
     bstr_t owner;
@@ -143,6 +143,12 @@ SmartListing fill_listing_entry(
             lt.fIsLink = LIBSSH2_SFTP_S_ISLNK(attributes.permissions);
             lt.fIsDirectory = LIBSSH2_SFTP_S_ISDIR(attributes.permissions);
         }
+        else
+        {
+            lt.uPermissions = 0U;
+            lt.fIsLink = FALSE;
+            lt.fIsDirectory = FALSE;
+        }
 
         // User & Group
         if (attributes.flags & LIBSSH2_SFTP_ATTR_UIDGID)
@@ -157,10 +163,21 @@ SmartListing fill_listing_entry(
             lt.uUid = attributes.uid;
             lt.uGid = attributes.gid;
         }
+        else
+        {
+            lt.uUid = 0U;
+            lt.uGid = 0U;
+        }
 
         // Size of file
         if (attributes.flags & LIBSSH2_SFTP_ATTR_SIZE)
+        {
             lt.uSize = attributes.filesize;
+        }
+        else
+        {
+            lt.uSize = 0;
+        }
 
         // Access & Modification time
         if (attributes.flags & LIBSSH2_SFTP_ATTR_ACMODTIME)
@@ -170,6 +187,11 @@ SmartListing fill_listing_entry(
             lt.dateModified = dateModified;
             lt.dateAccessed = dateAccessed;
         }
+        else
+        {
+            lt.dateAccessed = 0U;
+            lt.dateModified = 0U;
+        }
     }
     catch (const std::exception&) { /* ignore */ }
 
@@ -177,7 +199,7 @@ SmartListing fill_listing_entry(
     lt.bstrOwner = bstr_t::detach(owner);
     lt.bstrGroup = bstr_t::detach(group);
 
-    return SmartListing(lt);
+    return lt;
 }
 
 }}} // namespace swish::provider::listing

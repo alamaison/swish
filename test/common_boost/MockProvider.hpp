@@ -92,16 +92,15 @@ namespace detail {
 
     inline swish::provider::SmartListing make_file_listing(
         comet::bstr_t name, ULONG permissions, ULONGLONG size,
-        ULONG hardlink_count, comet::datetime_t date)
+        comet::datetime_t date)
     {
         swish::provider::SmartListing lt;
-        lt.out()->bstrFilename = name.detach();
-        lt.out()->uPermissions = permissions;
-        lt.out()->bstrOwner = comet::bstr_t("mockowner").detach();
-        lt.out()->bstrGroup = comet::bstr_t("mockgroup").detach();
-        lt.out()->uSize = size;
-        lt.out()->cHardLinks = hardlink_count;
-        lt.out()->dateModified = date.get();
+        lt.bstrFilename = name.detach();
+        lt.uPermissions = permissions;
+        lt.bstrOwner = comet::bstr_t("mockowner").detach();
+        lt.bstrGroup = comet::bstr_t("mockgroup").detach();
+        lt.uSize = size;
+        lt.dateModified = date.get();
 
         return lt;
     }
@@ -110,16 +109,16 @@ namespace detail {
         comet::bstr_t name)
     {
         swish::provider::SmartListing lt = make_file_listing(
-            name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
-        lt.out()->fIsDirectory = TRUE;
+            name, 040777, 42, comet::datetime_t(1601, 10, 5, 13, 54, 22));
+        lt.fIsDirectory = TRUE;
         return lt;
     }
 
     inline swish::provider::SmartListing make_link_listing(comet::bstr_t name)
     {
         swish::provider::SmartListing lt = make_file_listing(
-            name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
-        lt.out()->fIsLink = TRUE;
+            name, 040777, 42, comet::datetime_t(1601, 10, 5, 13, 54, 22));
+        lt.fIsLink = TRUE;
         return lt;
     }
 
@@ -187,7 +186,7 @@ namespace detail {
             make_item_in(
                 filesystem, directory,
                 make_file_listing(
-                    filenames.back(), permissions, size, cycle, dates.back()));
+                    filenames.back(), permissions, size, dates.back()));
 
             dates.pop_back();
             filenames.pop_back();
@@ -407,27 +406,30 @@ public:
             return comet::bstr_t(L"/tmp/testtmpfile").detach();
     };
 
-    virtual swish::provider::Listing stat(
-        ISftpConsumer* consumer, BSTR path, BOOL fFollowLinks)
+    virtual swish::provider::SmartListing stat(
+        comet::com_ptr<ISftpConsumer> consumer,
+        const swish::provider::sftp_provider_path& path,
+        bool follow_links)
     {
         boost::filesystem::wpath target;
-        if (fFollowLinks)
+        if (follow_links)
         {
             target =
                 comet::bstr_t(
-                    comet::auto_attach(resolve_link(consumer, path))).w_str();
+                    comet::auto_attach(
+                        resolve_link(
+                            consumer.get(),
+                            comet::bstr_t(path.string()).in()))).w_str();
         }
         else
         {
-            target = comet::bstr_t(path).w_str();
+            target = path;
         }
 
         detail::FilesystemLocation dir =
             detail::find_location_from_path(m_filesystem, target);
 
-        // copy listing because caller gets ownership
-        swish::provider::SmartListing return_listing = *dir;
-        return return_listing.detach();
+        return *dir;
     }
 
 private:

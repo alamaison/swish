@@ -47,7 +47,6 @@
 #include <vector>
 
 using swish::provider::CProvider;
-using swish::provider::Listing;
 using swish::provider::SmartListing;
 using swish::provider::directory_listing;
 using swish::provider::sftp_provider;
@@ -204,7 +203,7 @@ predicate_result file_exists_in_listing(
     {
         BOOST_FOREACH(const SmartListing& entry, listing)
         {
-            if (filename == bstr_t(entry.get().bstrFilename))
+            if (filename == bstr_t(entry.bstrFilename))
             {
                 predicate_result res(true);
                 res.message() << "File found in enumerator: " << filename;
@@ -314,10 +313,9 @@ BOOST_AUTO_TEST_CASE( GetListing )
     // Check format of listing is sensible
     BOOST_FOREACH(const SmartListing& entry, listing)
     {
-        const Listing& lt = entry.get();
-        wstring filename = lt.bstrFilename;
-        wstring owner = lt.bstrOwner;
-        wstring group = lt.bstrGroup;
+        wstring filename = entry.bstrFilename;
+        wstring owner = entry.bstrOwner;
+        wstring group = entry.bstrGroup;
 
         BOOST_CHECK(!filename.empty());
         BOOST_CHECK_NE(filename, L".");
@@ -326,8 +324,8 @@ BOOST_AUTO_TEST_CASE( GetListing )
         BOOST_CHECK(!owner.empty());
         BOOST_CHECK(!group.empty());
 
-        BOOST_CHECK( lt.dateModified );
-        datetime_t modified(lt.dateModified);
+        BOOST_CHECK( entry.dateModified );
+        datetime_t modified(entry.dateModified);
         BOOST_CHECK(modified.valid());
         BOOST_CHECK_LE(modified.year(), datetime_t::now().year());
 

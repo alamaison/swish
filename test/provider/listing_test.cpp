@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -98,8 +98,7 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
     attrs.filesize = 348;
     attrs.permissions = 0677;
 
-    SmartListing slt = listing::fill_listing_entry(filename, longentry, attrs);
-    const Listing& lt = slt.get();
+    SmartListing lt = listing::fill_listing_entry(filename, longentry, attrs);
 
     // Check fields that should be set
     BOOST_CHECK_EQUAL(lt.bstrFilename, L".cshrc test");
@@ -111,7 +110,6 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
     BOOST_CHECK_EQUAL(lt.uPermissions, static_cast<ULONG>(0677));
 
     // Check fields that should not be set
-    BOOST_CHECK_EQUAL(lt.cHardLinks, static_cast<ULONG>(0));
     BOOST_CHECK_EQUAL(lt.dateModified, static_cast<ULONG>(0));
 }
 

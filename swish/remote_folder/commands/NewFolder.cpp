@@ -107,7 +107,7 @@ wstring prefix_if_necessary(
     BOOST_FOREACH(
         const SmartListing& lt, provider->listing(consumer, directory))
     {
-        wstring filename = wstring(lt.get().bstrFilename);
+        wstring filename = wstring(lt.bstrFilename);
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))
         {
             assert(digit_suffix_match.size() == 2); // complete + capture group

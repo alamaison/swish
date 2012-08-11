@@ -130,7 +130,7 @@ m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 namespace {
 
     bool is_link(const SmartListing& lt)
-    { return lt.get().fIsLink != FALSE; }
+    { return lt.fIsLink != FALSE; }
 
     bool is_directory(
         const SmartListing& lt, const wpath& directory, 
@@ -141,19 +141,17 @@ namespace {
             // Links don't indicate anything about their target such as
             // whether it is a file or folder so we have to interrogate
             // its target
-            bstr_t link_path = (directory / lt.get().bstrFilename).string();
+            bstr_t link_path = (directory / lt.bstrFilename).string();
 
             try
             {
-                SmartListing ltTarget;
-                // HACK: Make listings manage their own memory
-                *(ltTarget.out()) = provider->stat(
+                SmartListing ltTarget = provider->stat(
                     consumer.in(), link_path.in(), TRUE);
 
                 // TODO: consider what other properties we might want to
                 // take from the target instead of the link.  Currently
                 // we only take on folderness.
-                return ltTarget.get().fIsDirectory;
+                return ltTarget.fIsDirectory;
             }
             catch(const exception&)
             {
@@ -162,33 +160,33 @@ namespace {
                 return false;
             }
 
-            assert(lt.get().fIsLink);
+            assert(lt.fIsLink);
         }
         else
         {
-            return lt.get().fIsDirectory != FALSE;
+            return lt.fIsDirectory != FALSE;
         }
     }
 
     bool is_dotted(const SmartListing& lt)
-    { return lt.get().bstrFilename[0] == OLECHAR('.'); }
+    { return lt.bstrFilename[0] == OLECHAR('.'); }
 
     cpidl_t convert_directory_entry_to_pidl(
         const SmartListing& lt, const wpath& directory,
         shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         return create_remote_itemid(
-            lt.get().bstrFilename,
+            lt.bstrFilename,
             is_directory(lt, directory, provider, consumer),
-            lt.get().fIsLink != FALSE,
-            lt.get().bstrOwner,
-            lt.get().bstrGroup,
-            lt.get().uUid,
-            lt.get().uGid,
-            lt.get().uPermissions,
-            lt.get().uSize,
-            datetime_t(lt.get().dateModified),
-            datetime_t(lt.get().dateAccessed));
+            lt.fIsLink != FALSE,
+            lt.bstrOwner,
+            lt.bstrGroup,
+            lt.uUid,
+            lt.uGid,
+            lt.uPermissions,
+            lt.uSize,
+            datetime_t(lt.dateModified),
+            datetime_t(lt.dateAccessed));
     }
     
     /**

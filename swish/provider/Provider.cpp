@@ -134,7 +134,9 @@ public:
 
     BSTR resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path);
 
-    virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links);
+    virtual SmartListing stat(
+        com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
+        bool follow_links);
 
 private:
 
@@ -217,7 +219,9 @@ void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
 BSTR CProvider::resolve_link(ISftpConsumer* consumer, BSTR path)
 { return m_provider->resolve_link(consumer, path); }
 
-Listing CProvider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
+SmartListing CProvider::stat(
+    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
+    bool follow_links)
 {
     return m_provider->stat(consumer, path, follow_links);
 }
@@ -773,9 +777,11 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
  * The Listing returned by this function doesn't include a long entry or
  * owner and group names as string (these being derived from the long entry).
  */
-Listing provider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
+SmartListing provider::stat(
+    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
+    bool follow_links)
 {
-    string utf8_path = WideStringToUtf8String(bstr_t(path).w_str());
+    string utf8_path = WideStringToUtf8String(path.string());
 
     lock_guard<mutex> lock(m_mutex);
 
@@ -786,7 +792,7 @@ Listing provider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
     file_attributes attr = attributes(
         channel, utf8_path, follow_links != FALSE);
 
-    Listing lt = Listing();
+    SmartListing lt = SmartListing();
 
     // Permissions
     try
@@ -818,7 +824,7 @@ Listing provider::stat(ISftpConsumer* consumer, BSTR path, BOOL follow_links)
         lt.dateAccessed = accessed.detach();
     } catch (const unsupported_attribute_error&) {}
 
-    lt.bstrFilename = bstr_t(wpath(bstr_t(path).w_str()).filename()).detach();
+    lt.bstrFilename = bstr_t(path.filename()).detach();
 
     return lt;
 }
