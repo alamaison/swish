@@ -28,7 +28,9 @@
 #define SWISH_PROVIDER_SFTP_PROVIDER_H
 #pragma once
 
-#include <comet/enum_common.h> // enumerated_type_of
+#include <boost/filesystem/path.hpp> // wpath
+//#include <boost/range/any_range.hpp>
+
 #include <comet/interface.h> // comtype
 #include <comet/ptr.h> // com_ptr
 
@@ -36,44 +38,7 @@
                      // VarBstrCmp
 
 #include <string> // wstring
-
-/**
- * The record structure returned by the GetListing() method of the SFTPProvider.
- *
- * This structure represents a single file contained in the directory 
- * specified to GetListing().
- */
-
-struct Listing {
-    BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
-    ULONG uPermissions;   ///< Unix file permissions
-    BSTR bstrOwner;       ///< The user name of the file's owner
-    BSTR bstrGroup;       ///< The name of the group to which the file belongs
-    ULONG uUid;           ///< Numerical ID of file's owner
-    ULONG uGid;           ///< Numerical ID of group to which the file belongs
-    ULONGLONG uSize;      ///< The file's size in bytes
-    ULONG cHardLinks;     ///< The number of hard links referencing this file
-    DATE dateModified;    ///< The date and time at which the file was 
-                          ///< last modified in automation-compatible format
-    DATE dateAccessed;    ///< The date and time at which the file was 
-                          ///< last accessed in automation-compatible format
-    BOOL fIsDirectory;    ///< This filesystem item can be listed for items
-                          ///< under it.
-    BOOL fIsLink;         ///< This file is a link to another file or directory
-};
-
-class IEnumListing : public IUnknown
-{
-public:
-
-    virtual HRESULT Next (
-        ULONG celt,
-        struct Listing *rgelt,
-        ULONG *pceltFetched) = 0;
-    virtual HRESULT Skip (ULONG celt) = 0;
-    virtual HRESULT Reset () = 0;
-    virtual HRESULT Clone (IEnumListing **ppEnum) = 0;
-};
+#include <vector>
 
 class ISftpConsumer : public IUnknown
 {
@@ -115,96 +80,32 @@ public:
 namespace swish {
 namespace provider {
 
-class sftp_provider
-{
-public:
-    typedef sftp_provider interface_is;
+typedef boost::filesystem::wpath sftp_provider_path;
 
-    virtual ~sftp_provider() {}
+/**
+ * The record structure returned by the GetListing() method of the SFTPProvider.
+ *
+ * This structure represents a single file contained in the directory 
+ * specified to GetListing().
+ */
 
-    virtual comet::com_ptr<IEnumListing> get_listing(
-        comet::com_ptr<ISftpConsumer> consumer,
-        const std::wstring& directory) = 0;
-
-    virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        bool writeable) = 0;
-
-    virtual VARIANT_BOOL rename(
-        ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
-
-    /**
-     * @name Deletion methods
-     * We use two methods rather than one for safety.  This makes it explicit 
-     * what the intended consequence was. It's possible for a user to ask
-     * for a file to be deleted but, meanwhile, it has been changed to a 
-     * directory by someone else.  We do not want to delete the directory 
-     * without the user knowing.
-     */
-    // @{
-
-    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    // @}
-
-    /**
-     * @name Creation methods
-     * These are the dual of the deletion methods.  `create_new_file`
-     * is mainly for the test-suite.  It just creates an empty file at the
-     * given path (roughly equivalent to Unix `touch`).
-     */
-    // @{
-
-    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    // @}
-
-    /**
-     * Return the canonical path of the given non-canonical path.
-     *
-     * While generally used to resolve symlinks, it can also be used to
-     * convert paths relative to the startup directory into absolute paths.
-     */
-    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
-
-    virtual Listing stat(
-        ISftpConsumer* consumer, BSTR path, BOOL follow_links) = 0;
+struct Listing {
+    BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
+    ULONG uPermissions;   ///< Unix file permissions
+    BSTR bstrOwner;       ///< The user name of the file's owner
+    BSTR bstrGroup;       ///< The name of the group to which the file belongs
+    ULONG uUid;           ///< Numerical ID of file's owner
+    ULONG uGid;           ///< Numerical ID of group to which the file belongs
+    ULONGLONG uSize;      ///< The file's size in bytes
+    ULONG cHardLinks;     ///< The number of hard links referencing this file
+    DATE dateModified;    ///< The date and time at which the file was 
+                          ///< last modified in automation-compatible format
+    DATE dateAccessed;    ///< The date and time at which the file was 
+                          ///< last accessed in automation-compatible format
+    BOOL fIsDirectory;    ///< This filesystem item can be listed for items
+                          ///< under it.
+    BOOL fIsLink;         ///< This file is a link to another file or directory
 };
-
-}}
-
-namespace comet {
-
-template<> struct comtype<ISftpConsumer>
-{
-    static const IID& uuid() throw()
-    {
-        static comet::uuid_t iid("304982B4-4FB1-4C2E-A892-3536DF59ACF5");
-        return iid;
-    }
-    typedef IUnknown base;
-};
-
-template<> struct comtype<IEnumListing>
-{
-    static const IID& uuid() throw()
-    {
-        static comet::uuid_t iid("304982B4-4FB1-4C2E-A892-3536DF59ACF5");
-        return iid;
-    }
-    typedef IUnknown base;
-};
-
-template<> struct enumerated_type_of<IEnumListing>
-{ typedef Listing is; };
-
-}
-
-namespace swish {
 
 namespace detail {
 
@@ -305,43 +206,83 @@ private:
     Listing lt;
 };
 
-} // namespace swish
+//typedef boost::any_range<
+//    SmartListing, boost::forward_traversal_tag, SmartListing&, std::ptrdiff_t>
+//    directory_listing;
+typedef std::vector<SmartListing> directory_listing;
 
+class sftp_provider
+{
+public:
+    virtual ~sftp_provider() {}
+
+    virtual directory_listing listing(
+        comet::com_ptr<ISftpConsumer> consumer,
+        const sftp_provider_path& directory) = 0;
+
+    virtual comet::com_ptr<IStream> get_file(
+        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
+        bool writeable) = 0;
+
+    virtual VARIANT_BOOL rename(
+        ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
+
+    /**
+     * @name Deletion methods
+     * We use two methods rather than one for safety.  This makes it explicit 
+     * what the intended consequence was. It's possible for a user to ask
+     * for a file to be deleted but, meanwhile, it has been changed to a 
+     * directory by someone else.  We do not want to delete the directory 
+     * without the user knowing.
+     */
+    // @{
+
+    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
+
+    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
+
+    // @}
+
+    /**
+     * @name Creation methods
+     * These are the dual of the deletion methods.  `create_new_file`
+     * is mainly for the test-suite.  It just creates an empty file at the
+     * given path (roughly equivalent to Unix `touch`).
+     */
+    // @{
+
+    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
+
+    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
+
+    // @}
+
+    /**
+     * Return the canonical path of the given non-canonical path.
+     *
+     * While generally used to resolve symlinks, it can also be used to
+     * convert paths relative to the startup directory into absolute paths.
+     */
+    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
+
+    virtual Listing stat(
+        ISftpConsumer* consumer, BSTR path, BOOL follow_links) = 0;
+};
+
+}}
 
 namespace comet {
 
-/**
- * Copy-policy for use by enumerators of Listing items.
- */
-template<> struct impl::type_policy<Listing>
+template<> struct comtype<ISftpConsumer>
 {
-    static void init(Listing& t, const swish::SmartListing& s) 
+    static const IID& uuid() throw()
     {
-        swish::SmartListing copy = s;
-        t = copy.detach();
+        static comet::uuid_t iid("304982B4-4FB1-4C2E-A892-3536DF59ACF5");
+        return iid;
     }
-
-    static void init(Listing& t, const Listing& s) 
-    {
-        t = swish::detail::copy_listing(s);
-    }
-
-    static void init(swish::SmartListing& t, const Listing& s) 
-    {
-        t = swish::SmartListing(s);
-    }
-
-    static void clear(Listing& t)
-    {
-        ::SysFreeString(t.bstrFilename);
-        ::SysFreeString(t.bstrOwner);
-        ::SysFreeString(t.bstrGroup);
-        t = Listing();
-    }
-
-    static void clear(swish::SmartListing&) {}
+    typedef IUnknown base;
 };
 
-} // namespace comet
+}
 
 #endif

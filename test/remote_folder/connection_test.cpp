@@ -99,7 +99,7 @@ namespace { // private
         {
             try
             {
-                provider->get_listing(Consumer(), L"/");
+                provider->listing(Consumer(), L"/");
 
                 predicate_result res(true);
                 res.message() << "Provider seems to be alive";

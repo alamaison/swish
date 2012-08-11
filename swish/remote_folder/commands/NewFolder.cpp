@@ -27,6 +27,7 @@
 #include "NewFolder.hpp"
 
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
@@ -49,8 +50,9 @@
 
 using swish::frontend::rethrow_and_announce;
 using swish::nse::Command;
+using swish::provider::SmartListing;
 using swish::provider::sftp_provider;
-using swish::SmartListing;
+using swish::remote_folder::absolute_path_from_swish_pidl;
 
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::pidl::cpidl_t;
@@ -64,6 +66,7 @@ using comet::com_ptr;
 using comet::enum_iterator;
 using comet::uuid_t;
 
+using boost::filesystem::wpath;
 using boost::function;
 using boost::shared_ptr;
 using boost::lexical_cast;
@@ -92,7 +95,8 @@ namespace {
  *        place.
  */
 wstring prefix_if_necessary(
-    const wstring& initial_name, const CSftpDirectory& directory)
+    const wstring& initial_name, shared_ptr<sftp_provider> provider,
+    com_ptr<ISftpConsumer> consumer, const wpath& directory)
 {
     wregex new_folder_pattern(
         str(wformat(L"%1%|%1% \\((\\d+)\\)") % initial_name));
@@ -100,10 +104,10 @@ wstring prefix_if_necessary(
 
     bool collision = false;
     vector<unsigned long> suffixes;
-    enum_iterator<IEnumListing, SmartListing> it = directory.begin();
-    for (; it != directory.end(); ++it)
+    BOOST_FOREACH(
+        const SmartListing& lt, provider->listing(consumer, directory))
     {
-        wstring filename = wstring(it->get().bstrFilename);
+        wstring filename = wstring(lt.get().bstrFilename);
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))
         {
             assert(digit_suffix_match.size() == 2); // complete + capture group
@@ -211,7 +215,9 @@ const
         // The default New Folder name may already exist in the folder. If it
         // does, we append a number to it to make it unique
         wstring initial_name = translate("Initial name", "New folder");
-        initial_name = prefix_if_necessary(initial_name, directory);
+        initial_name = prefix_if_necessary(
+            initial_name, m_provider(), m_consumer(),
+            absolute_path_from_swish_pidl(m_folder_pidl));
 
         cpidl_t pidl = directory.CreateDirectory(initial_name);
 

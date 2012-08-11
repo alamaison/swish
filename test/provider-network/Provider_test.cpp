@@ -36,7 +36,9 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/make_shared.hpp>
+#include <boost/range/empty.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -45,6 +47,9 @@
 #include <vector>
 
 using swish::provider::CProvider;
+using swish::provider::Listing;
+using swish::provider::SmartListing;
+using swish::provider::directory_listing;
 using swish::provider::sftp_provider;
 
 using comet::bstr_t;
@@ -54,9 +59,9 @@ using comet::com_ptr;
 using comet::datetime_t;
 
 using boost::filesystem::wpath;
-using boost::test_tools::predicate_result;
 using boost::make_shared;
 using boost::shared_ptr;
+using boost::test_tools::predicate_result;
 
 using std::exception;
 using std::vector;
@@ -87,7 +92,7 @@ namespace {
     {
         try
         {
-            provider->get_listing(consumer, L"/");
+            provider->listing(consumer, L"/");
 
             predicate_result res(true);
             res.message() << "Provider seems to be alive";
@@ -187,16 +192,9 @@ BOOST_AUTO_TEST_SUITE_END();
 namespace {
 
 predicate_result file_exists_in_listing(
-    const wstring& filename, com_ptr<IEnumListing> enumerator)
+    const wstring& filename, const directory_listing& listing)
 {
-    HRESULT hr;
-
-    Listing lt;
-    hr = enumerator->Reset();
-    BOOST_REQUIRE_OK(hr);
-
-    hr = enumerator->Next(1, &lt, NULL);
-    if (hr != S_OK)
+    if (boost::empty(listing))
     {
         predicate_result res(false);
         res.message() << "Enumerator is empty";
@@ -204,16 +202,14 @@ predicate_result file_exists_in_listing(
     }
     else
     {
-        while (hr == S_OK)
+        BOOST_FOREACH(const SmartListing& entry, listing)
         {
-            if (filename == bstr_t(lt.bstrFilename))
+            if (filename == bstr_t(entry.get().bstrFilename))
             {
                 predicate_result res(true);
                 res.message() << "File found in enumerator: " << filename;
                 return res;
             }
-
-            hr = enumerator->Next(1, &lt, NULL);
         }
 
         predicate_result res(false);
@@ -274,11 +270,10 @@ protected:
 
     predicate_result path_exists(const wpath& file_path)
     {
-        com_ptr<IEnumListing> enumerator;
+        directory_listing listing;
         try
         {
-            enumerator = provider->get_listing(
-                m_pConsumer, file_path.parent_path().string());
+            listing = provider->listing(m_pConsumer, file_path.parent_path());
         }
         catch (const exception&)
         {
@@ -288,7 +283,7 @@ protected:
             return res;
         }
 
-        return file_exists_in_listing(file_path.filename(), enumerator);
+        return file_exists_in_listing(file_path.filename(), listing);
     }
 
     /**
@@ -314,21 +309,12 @@ BOOST_FIXTURE_TEST_SUITE(provider_legacy_tests, ProviderLegacyFixture)
 
 BOOST_AUTO_TEST_CASE( GetListing )
 {
-    com_ptr<IEnumListing> enumerator =
-        provider->get_listing(consumer, L"/tmp");
+    directory_listing listing = provider->listing(consumer, L"/tmp");
 
     // Check format of listing is sensible
-
-    HRESULT hr = enumerator->Reset();
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(enumerator, hr));
-
-    Listing lt;
-    hr = enumerator->Next(1, &lt, NULL);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error_from_interface(enumerator, hr));
-    while (hr == S_OK)
+    BOOST_FOREACH(const SmartListing& entry, listing)
     {
+        const Listing& lt = entry.get();
         wstring filename = lt.bstrFilename;
         wstring owner = lt.bstrOwner;
         wstring group = lt.bstrGroup;
@@ -355,20 +341,17 @@ BOOST_AUTO_TEST_CASE( GetListing )
         //    strPermissions[0] == _T('p') ||
         //    strPermissions[0] == _T('s') ||
         //    strPermissions[0] == _T('-'));
-
-        hr = enumerator->Next(1, &lt, NULL);
     }
-    BOOST_CHECK(hr == S_FALSE);
 }
 
 BOOST_AUTO_TEST_CASE( GetListingRepeatedly )
 {
     // Fetch 5 listing enumerators
-    vector< com_ptr<IEnumListing> > enums(5);
+    vector<directory_listing> enums(5);
 
-    BOOST_FOREACH(com_ptr<IEnumListing> listing, enums)
+    BOOST_FOREACH(directory_listing& listing, enums)
     {
-        provider->get_listing(m_pConsumer, L"/tmp");
+        listing = provider->listing(m_pConsumer, L"/tmp");
     }
 }
 
@@ -384,27 +367,28 @@ BOOST_AUTO_TEST_CASE( GetListingIndependence )
     provider->create_new_file(m_pConsumer, three.in());
 
     // Fetch first listing enumerator
-    com_ptr<IEnumListing> enum_before = provider->get_listing(
-        m_pConsumer, directory);
+    directory_listing listing_before =
+        provider->listing(m_pConsumer, directory);
 
     // Delete one of the files
     provider->delete_file(m_pConsumer, two.in());
 
     // Fetch second listing enumerator
-    com_ptr<IEnumListing> enum_after =
-        provider->get_listing(m_pConsumer, directory);
+    directory_listing listing_after = provider->listing(m_pConsumer, directory);
 
     // The first listing should still show the file. The second should not.
     BOOST_CHECK(
-        file_exists_in_listing(L"GetListingIndependence1", enum_before));
+        file_exists_in_listing(L"GetListingIndependence1", listing_before));
     BOOST_CHECK(
-        file_exists_in_listing(L"GetListingIndependence2", enum_before));
+        file_exists_in_listing(L"GetListingIndependence2", listing_before));
     BOOST_CHECK(
-        file_exists_in_listing(L"GetListingIndependence3", enum_before));
-    BOOST_CHECK(file_exists_in_listing(L"GetListingIndependence1", enum_after));
+        file_exists_in_listing(L"GetListingIndependence3", listing_before));
     BOOST_CHECK(
-        !file_exists_in_listing(L"GetListingIndependence2", enum_after));
-    BOOST_CHECK(file_exists_in_listing(L"GetListingIndependence3", enum_after));
+        file_exists_in_listing(L"GetListingIndependence1", listing_after));
+    BOOST_CHECK(
+        !file_exists_in_listing(L"GetListingIndependence2", listing_after));
+    BOOST_CHECK(
+        file_exists_in_listing(L"GetListingIndependence3", listing_after));
 
     // Cleanup
     provider->delete_file(m_pConsumer, one.in());

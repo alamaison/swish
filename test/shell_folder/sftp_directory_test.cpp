@@ -42,6 +42,7 @@
 #include <comet/error.h> // com_error
 #include <comet/ptr.h>  // com_ptr
 
+#include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <string>

@@ -67,9 +67,6 @@ public:
     winapi::shell::pidl::apidl_t ResolveLink(
         const winapi::shell::pidl::cpidl_t& item);
 
-    comet::enum_iterator<IEnumListing, swish::SmartListing> begin() const;
-    comet::enum_iterator<IEnumListing, swish::SmartListing> end() const;
-
 private:
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
                                                       ///< Backend data provider

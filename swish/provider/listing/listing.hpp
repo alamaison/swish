@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "swish/atl.hpp"  // Common ATL setup
+#include <swish/provider/sftp_provider.hpp> // SmartListing
 
 #include <comet/bstr.h> // bstr_t
 
@@ -44,8 +44,6 @@
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
-
-struct Listing;
 
 namespace swish {
 namespace provider {
@@ -55,7 +53,7 @@ namespace listing {
 
     comet::bstr_t parse_group_from_long_entry(const std::string& long_entry);
 
-    Listing fill_listing_entry(
+    SmartListing fill_listing_entry(
         const std::string& utf8_file_name,
         const std::string& utf8_long_entry,
         const LIBSSH2_SFTP_ATTRIBUTES& attributes);

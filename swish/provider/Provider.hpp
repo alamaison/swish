@@ -39,7 +39,7 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider
+#include "swish/provider/sftp_provider.hpp"
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -54,9 +54,9 @@ public:
 
     CProvider(const std::wstring& user, const std::wstring& host, UINT port);
 
-    virtual comet::com_ptr<IEnumListing> get_listing(
+    virtual directory_listing listing(
         comet::com_ptr<ISftpConsumer> consumer,
-        const std::wstring& directory);
+        const sftp_provider_path& directory);
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,

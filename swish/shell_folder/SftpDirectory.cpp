@@ -34,10 +34,17 @@
 #include <comet/smart_enum.h> // make_smart_enumeration
 
 #include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/function.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/lambda.hpp> // _1
 #include <boost/make_shared.hpp> // make_shared
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <algorithm> // transform
 #include <exception> // exception
 #include <vector>
 
@@ -45,7 +52,7 @@ using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::remote_itemid_view;
-using swish::SmartListing;
+using swish::provider::SmartListing;
 
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::find_host_itemid;
@@ -66,7 +73,11 @@ using comet::datetime_t;
 using comet::enum_iterator;
 using comet::make_smart_enumeration;
 
+using boost::adaptors::filtered;
+using boost::adaptors::transformed;
 using boost::filesystem::wpath;
+using boost::function;
+using namespace boost::lambda;
 using boost::make_shared;
 using boost::shared_ptr;
 
@@ -118,20 +129,57 @@ m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
 namespace {
 
-    bool is_directory(const SmartListing& lt)
-    { return lt.get().fIsDirectory != FALSE; }
-
     bool is_link(const SmartListing& lt)
     { return lt.get().fIsLink != FALSE; }
+
+    bool is_directory(
+        const SmartListing& lt, const wpath& directory, 
+        shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+    {
+        if (is_link(lt))
+        {
+            // Links don't indicate anything about their target such as
+            // whether it is a file or folder so we have to interrogate
+            // its target
+            bstr_t link_path = (directory / lt.get().bstrFilename).string();
+
+            try
+            {
+                SmartListing ltTarget;
+                // HACK: Make listings manage their own memory
+                *(ltTarget.out()) = provider->stat(
+                    consumer.in(), link_path.in(), TRUE);
+
+                // TODO: consider what other properties we might want to
+                // take from the target instead of the link.  Currently
+                // we only take on folderness.
+                return ltTarget.get().fIsDirectory;
+            }
+            catch(const exception&)
+            {
+                // Broken links are treated like files.  There isn't really
+                // anything else sensible to do with them.
+                return false;
+            }
+
+            assert(lt.get().fIsLink);
+        }
+        else
+        {
+            return lt.get().fIsDirectory != FALSE;
+        }
+    }
 
     bool is_dotted(const SmartListing& lt)
     { return lt.get().bstrFilename[0] == OLECHAR('.'); }
 
-    cpidl_t to_pidl(const SmartListing& lt)
+    cpidl_t convert_directory_entry_to_pidl(
+        const SmartListing& lt, const wpath& directory,
+        shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         return create_remote_itemid(
             lt.get().bstrFilename,
-            lt.get().fIsDirectory != FALSE,
+            is_directory(lt, directory, provider, consumer),
             lt.get().fIsLink != FALSE,
             lt.get().bstrOwner,
             lt.get().bstrGroup,
@@ -181,7 +229,6 @@ namespace {
             SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
             (parent_folder + file_or_folder).get(), NULL);
     }
-
 }
 
 /**
@@ -205,78 +252,41 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
     bool include_non_folders = (flags & SHCONTF_NONFOLDERS) != 0;
     bool include_hidden = (flags & SHCONTF_INCLUDEHIDDEN) != 0;
 
-    com_ptr<IEnumListing> directory_enum = m_provider->get_listing(
-        m_consumer.in(), m_directory.string());
+    vector<SmartListing> directory_enum = m_provider->listing(
+        m_consumer, m_directory);
+
+    // XXX: PERFORMANCE:
+    // For a link, we look its target details up 3 times!  Once to see if it is
+    // a directory, once to see if it isn't a directory and once to see if its
+    // a directory whilst converting to PIDL.  This info should be cached in
+    // the SmartListing
+
+    function<bool(const SmartListing&)> hidden_filter =
+        include_hidden || !bind(is_dotted, _1);
+
+    function<bool(const SmartListing&)> directory_filter =
+        include_folders ||
+        !bind(is_directory, _1, m_directory, m_provider, m_consumer);
+
+    function<bool(const SmartListing&)> non_directory_filter =
+        include_non_folders ||
+        bind(is_directory, _1, m_directory, m_provider, m_consumer);
+
+    function<cpidl_t(const SmartListing&)> pidl_converter =
+        bind(
+            convert_directory_entry_to_pidl, _1, m_directory, m_provider,
+            m_consumer);
 
     shared_ptr< vector<cpidl_t> > pidls = make_shared< vector<cpidl_t> >();
-
-    HRESULT hr;
-    do {
-        SmartListing lt;
-        ULONG fetched = 0;
-        hr = directory_enum->Next(1, lt.out(), &fetched);
-        if (hr == S_OK)
-        {
-            if (!include_hidden && is_dotted(lt))
-                continue;
-
-            bool is_dir;
-            if (is_link(lt))
-            {
-                // Links don't indicate anything about their target such as
-                // whether it is a file or folder so we have to interrogate
-                // its target
-                bstr_t link_path =
-                    (m_directory / lt.get().bstrFilename).string();
-
-                try
-                {
-                    SmartListing ltTarget;
-                    // HACK: Make listings manage their own memory
-                    *(ltTarget.out()) = m_provider->stat(
-                        m_consumer.in(), link_path.in(), TRUE);
-
-                    // TODO: consider what other properties we might want to
-                    // take from the target instead of the link.  Currently
-                    // we only take on folderness.
-                    lt.out()->fIsDirectory = ltTarget.get().fIsDirectory;
-                }
-                catch(const exception&)
-                {
-                    // Broken links are treated like files.  There isn't really
-                    // anything else sensible to do with them.
-                    lt.out()->fIsDirectory = false;
-                }
-
-                assert(lt.get().fIsLink);
-            }
-
-            is_dir = is_directory(lt);
-
-            if (!include_folders && is_dir)
-                continue;
-            if (!include_non_folders && !is_dir)
-                continue;
-
-            pidls->push_back(to_pidl(lt));
-        }
-    } while (hr == S_OK);
-
-    return make_smart_enumeration<IEnumIDList>(pidls).get();
-}
-
-
-enum_iterator<IEnumListing, SmartListing> CSftpDirectory::begin() const
-{
-    com_ptr<IEnumListing> directory_enum = m_provider->get_listing(
-        m_consumer.in(), m_directory.string());
-
-    return enum_iterator<IEnumListing, SmartListing>(directory_enum);
-}
-
-enum_iterator<IEnumListing, SmartListing> CSftpDirectory::end() const
-{
-    return enum_iterator<IEnumListing, SmartListing>();
+    boost::copy(
+        directory_enum |
+        filtered(hidden_filter) |
+        filtered(directory_filter) |
+        filtered(non_directory_filter) |
+        transformed(pidl_converter),
+        back_inserter(*pidls));
+    
+    return make_smart_enumeration<IEnumIDList>(pidls);
 }
 
 /**

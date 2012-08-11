@@ -118,7 +118,7 @@ bstr_t parse_group_from_long_entry(const string& long_entry)
  *
  * @returns A listing object representing the file.
  */
-Listing fill_listing_entry(
+SmartListing fill_listing_entry(
     const string& utf8_file_name, const string& utf8_long_entry,
     const LIBSSH2_SFTP_ATTRIBUTES& attributes)
 {
@@ -177,7 +177,7 @@ Listing fill_listing_entry(
     lt.bstrOwner = bstr_t::detach(owner);
     lt.bstrGroup = bstr_t::detach(group);
 
-    return lt;
+    return SmartListing(lt);
 }
 
 }}} // namespace swish::provider::listing

@@ -98,7 +98,8 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
     attrs.filesize = 348;
     attrs.permissions = 0677;
 
-    Listing lt = listing::fill_listing_entry(filename, longentry, attrs);
+    SmartListing slt = listing::fill_listing_entry(filename, longentry, attrs);
+    const Listing& lt = slt.get();
 
     // Check fields that should be set
     BOOST_CHECK_EQUAL(lt.bstrFilename, L".cshrc test");
@@ -112,11 +113,6 @@ BOOST_AUTO_TEST_CASE( create_listing_test )
     // Check fields that should not be set
     BOOST_CHECK_EQUAL(lt.cHardLinks, static_cast<ULONG>(0));
     BOOST_CHECK_EQUAL(lt.dateModified, static_cast<ULONG>(0));
-
-    // Clean up memory
-    ::SysFreeString(lt.bstrFilename);
-    ::SysFreeString(lt.bstrGroup);
-    ::SysFreeString(lt.bstrOwner);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

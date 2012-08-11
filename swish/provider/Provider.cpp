@@ -112,8 +112,8 @@ public:
     provider(const wstring& user, const wstring& host, int port);
     ~provider() throw();
 
-    virtual com_ptr<IEnumListing> get_listing(
-        com_ptr<ISftpConsumer> consumer, const wpath& directory);
+    virtual directory_listing listing(
+        com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory);
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
@@ -186,9 +186,12 @@ CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
     m_provider = make_shared<provider>(user, host, port);
 }
 
-com_ptr<IEnumListing> CProvider::get_listing(
-    com_ptr<ISftpConsumer> consumer, const std::wstring& directory)
-{ return m_provider->get_listing(consumer, directory); }
+
+directory_listing CProvider::listing(
+    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory)
+{
+    return m_provider->listing(consumer, directory);
+}
 
 comet::com_ptr<IStream> CProvider::get_file(
     comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
@@ -275,16 +278,7 @@ void provider::_Disconnect()
 
 namespace {
 
-    template<typename Collection>
-    class stl_enum_holder : public comet::simple_object<> //<IUnknown>
-    {
-    public:
-        stl_enum_holder(shared_ptr<Collection> collection)
-            : m_collection(collection) {}
-        shared_ptr<Collection> m_collection;
-    };
-
-    Listing listing_from_sftp_file(const sftp_file& file)
+    SmartListing listing_from_sftp_file(const sftp_file& file)
     {
         return listing::fill_listing_entry(
             file.name(), file.long_entry(), file.raw_attributes());
@@ -300,15 +294,11 @@ namespace {
 /**
 * Retrieves a file listing, @c ls, of a given directory.
 *
-* The listing is returned as an IEnumListing of Listing objects.
-*
 * @param consumer   UI callback.  
 * @param directory  Absolute path of the directory to list.
-*
-* @see Listing for details of what file information is retrieved.
 */
-com_ptr<IEnumListing> provider::get_listing(
-    com_ptr<ISftpConsumer> consumer, const wpath& directory)
+directory_listing provider::listing(
+    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory)
 {
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
@@ -321,23 +311,16 @@ com_ptr<IEnumListing> provider::get_listing(
 
     string path = WideStringToUtf8String(directory.string());
 
-    shared_ptr<vector<Listing> > files(make_shared<vector<Listing> >());
+    vector<SmartListing> files;
     transform(
         make_filter_iterator(
             not_special_file, directory_iterator(channel, path)),
         make_filter_iterator(
             not_special_file, directory_iterator()),
-        back_inserter(*files),
+        back_inserter(files),
         listing_from_sftp_file);
 
-    // Put the list of Listings into an AddReffed 'holder' so the
-    // IEnumListing implementation can control its lifetime
-    com_ptr<stl_enum_holder<vector<Listing> > > holder = 
-        new stl_enum_holder<vector<Listing> >(files);
-    IUnknown* unknown = holder->get_unknown();
-
-    return stl_enumeration<IEnumListing>::create(
-        *holder->m_collection, unknown);
+    return files;
 }
 
 com_ptr<IStream> provider::get_file(

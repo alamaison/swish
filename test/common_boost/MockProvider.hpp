@@ -34,13 +34,10 @@
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
-#include <comet/smart_enum.h> // make_smart_enumeration
 
 #include <boost/filesystem.hpp> // wpath
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/format.hpp> // wformat
-#include <boost/make_shared.hpp> // make_shared
-#include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <functional> // equal_to, less
@@ -52,7 +49,7 @@
 namespace test {
 namespace detail {
 
-    typedef tree<swish::SmartListing> Filesystem;
+    typedef tree<swish::provider::SmartListing> Filesystem;
     typedef Filesystem::iterator FilesystemLocation;
 
     /**
@@ -93,11 +90,11 @@ namespace detail {
         return current_dir;
     }
 
-    inline swish::SmartListing make_file_listing(
+    inline swish::provider::SmartListing make_file_listing(
         comet::bstr_t name, ULONG permissions, ULONGLONG size,
         ULONG hardlink_count, comet::datetime_t date)
     {
-        swish::SmartListing lt;
+        swish::provider::SmartListing lt;
         lt.out()->bstrFilename = name.detach();
         lt.out()->uPermissions = permissions;
         lt.out()->bstrOwner = comet::bstr_t("mockowner").detach();
@@ -109,17 +106,18 @@ namespace detail {
         return lt;
     }
 
-    inline swish::SmartListing make_directory_listing(comet::bstr_t name)
+    inline swish::provider::SmartListing make_directory_listing(
+        comet::bstr_t name)
     {
-        swish::SmartListing lt = make_file_listing(
+        swish::provider::SmartListing lt = make_file_listing(
             name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
         lt.out()->fIsDirectory = TRUE;
         return lt;
     }
 
-    inline swish::SmartListing make_link_listing(comet::bstr_t name)
+    inline swish::provider::SmartListing make_link_listing(comet::bstr_t name)
     {
-        swish::SmartListing lt = make_file_listing(
+        swish::provider::SmartListing lt = make_file_listing(
             name, 040777, 42, 7, comet::datetime_t(1601, 10, 5, 13, 54, 22));
         lt.out()->fIsLink = TRUE;
         return lt;
@@ -133,14 +131,14 @@ namespace detail {
 
     inline void make_item_in(
         Filesystem& filesystem, FilesystemLocation loc,
-        const swish::SmartListing& item)
+        const swish::provider::SmartListing& item)
     {
         filesystem.append_child(loc, item);
     }
 
     inline void make_item_in(
         Filesystem& filesystem, const boost::filesystem::wpath& path,
-        const swish::SmartListing& item)
+        const swish::provider::SmartListing& item)
     {
         make_item_in(
             filesystem, find_location_from_path(filesystem, path), item);
@@ -291,12 +289,11 @@ public:
         m_rename_behaviour = behaviour;
     }
 
-    virtual comet::com_ptr<IEnumListing> get_listing(
+    virtual swish::provider::directory_listing listing(
         comet::com_ptr<ISftpConsumer> /*consumer*/,
-        const std::wstring& directory)
+        const swish::provider::sftp_provider_path& directory)
     {
-        boost::shared_ptr< std::vector<swish::SmartListing> > files = 
-            boost::make_shared< std::vector<swish::SmartListing> >();
+        std::vector<swish::provider::SmartListing> files;
 
         switch (m_listing_behaviour)
         {
@@ -309,10 +306,10 @@ public:
                     detail::find_location_from_path(m_filesystem, directory);
 
                 // Copy directory out of tree and sort alphabetically
-                files->insert(
-                    files->begin(), m_filesystem.begin(dir),
+                files.insert(
+                    files.begin(), m_filesystem.begin(dir),
                     m_filesystem.end(dir));
-                std::sort(files->begin(), files->end());
+                std::sort(files.begin(), files.end());
             }
             break;
 
@@ -330,9 +327,8 @@ public:
                 "Unreachable: Unrecognised mock behaviour", E_UNEXPECTED));
         }
 
-        return comet::make_smart_enumeration<IEnumListing>(files);
+        return files;
     }
-
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> /*consumer*/, std::wstring file_path,
@@ -411,7 +407,8 @@ public:
             return comet::bstr_t(L"/tmp/testtmpfile").detach();
     };
 
-    virtual Listing stat(ISftpConsumer* consumer, BSTR path, BOOL fFollowLinks)
+    virtual swish::provider::Listing stat(
+        ISftpConsumer* consumer, BSTR path, BOOL fFollowLinks)
     {
         boost::filesystem::wpath target;
         if (fFollowLinks)
@@ -429,7 +426,7 @@ public:
             detail::find_location_from_path(m_filesystem, target);
 
         // copy listing because caller gets ownership
-        swish::SmartListing return_listing = *dir;
+        swish::provider::SmartListing return_listing = *dir;
         return return_listing.detach();
     }
 
