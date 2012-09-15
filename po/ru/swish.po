@@ -1,25 +1,27 @@
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-07-30 13:20+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
+"PO-Revision-Date: 2012-09-15 21:50+0400\n"
+"Last-Translator: Sergei Lomakov <sergei@lomakov.net>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ru\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"X-Generator: Poedit 1.5.3\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "Невозможно создать файл на этом сервере"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -27,7 +29,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "Копирование '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -36,7 +38,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "в '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -57,11 +59,11 @@ msgstr "Копирую..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "Невозможно передать файлы"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "Возможно, у вас нет разрешения на запись в эту директорию"
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -82,8 +84,7 @@ msgstr "Пример: \"Домашний\"."
 
 #: ../../swish/forms/add_host.cpp:151
 msgid ""
-"Specify the details of the computer and account you would like to connect "
-"to:"
+"Specify the details of the computer and account you would like to connect to:"
 msgstr "Укажите параметры хоста и аккаунта, к которому Вы соединяетесь:"
 
 #: ../../swish/forms/add_host.cpp:155
@@ -177,7 +178,14 @@ msgid ""
 "with this one?\n"
 "\n"
 "\t%2%"
-msgstr "Вы хотите заменить существующий файл\n\n\t%1%\n\nэтим?\n\n\t%2%"
+msgstr ""
+"Вы хотите заменить существующий файл\n"
+"\n"
+"\t%1%\n"
+"\n"
+"этим?\n"
+"\n"
+"\t%2%"
 
 #: ../../swish/frontend/UserInteraction.cpp:204
 msgid "File already exists"
@@ -197,7 +205,10 @@ msgid ""
 "key for this server.  This could mean a third-party is pretending to be the "
 "computer you're trying to connect to or the system administrator may have "
 "just changed the key."
-msgstr "Ключ SSH хоста '%1%' не совпадает с известным ключем от этого сервера.  Это может означать присутствие третьей стороны в канале передачи данных или смену ключа администратором системы."
+msgstr ""
+"Ключ SSH хоста '%1%' не совпадает с известным ключем от этого сервера.  Это "
+"может означать присутствие третьей стороны в канале передачи данных или "
+"смену ключа администратором системы."
 
 #: ../../swish/frontend/UserInteraction.cpp:256
 msgid "It is important to check this is the right key fingerprint:"
@@ -207,20 +218,26 @@ msgstr "Важно проверить отпечаток ключа:"
 msgid ""
 "I trust this key: &update and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr "Я доверяю этому ключу: &Обновить и соединить\nВам не надо будет проверять этот ключ, пока он не сменится"
+msgstr ""
+"Я доверяю этому ключу: &Обновить и соединить\n"
+"Вам не надо будет проверять этот ключ, пока он не сменится"
 
 #: ../../swish/frontend/UserInteraction.cpp:270
 msgid ""
 "I trust this key: &just connect\n"
 "You will be warned about this key again next time you connect"
-msgstr "Я доверяю этому ключу: &Просто соединить\nВ следующий раз вы будете снова предупреждены о ключе"
+msgstr ""
+"Я доверяю этому ключу: &Просто соединить\n"
+"В следующий раз вы будете снова предупреждены о ключе"
 
 #: ../../swish/frontend/UserInteraction.cpp:276
 #: ../../swish/frontend/UserInteraction.cpp:320
 msgid ""
 "&Cancel\n"
 "Choose this option unless you are sure the key is correct"
-msgstr "О&тмена\nВыбирайте эту опцию, пока Вы не уверены в ключе сервера"
+msgstr ""
+"О&тмена\n"
+"Выбирайте эту опцию, пока Вы не уверены в ключе сервера"
 
 #: ../../swish/frontend/UserInteraction.cpp:289
 msgid "Unknown host-key"
@@ -234,9 +251,11 @@ msgstr "Сервер  '%1%' идентифицировал себя с SSH хо�
 
 #: ../../swish/frontend/UserInteraction.cpp:299
 msgid ""
-"If you are not expecting this key, a third-party may be pretending to be the"
-" computer you're trying to connect to."
-msgstr "Если вы ожидаете не этого ключа, третья сторона может присутствовать в канале передачи данных."
+"If you are not expecting this key, a third-party may be pretending to be the "
+"computer you're trying to connect to."
+msgstr ""
+"Если вы ожидаете не этого ключа, третья сторона может присутствовать в "
+"канале передачи данных."
 
 #: ../../swish/frontend/UserInteraction.cpp:302
 msgid "Verify unknown SSH host-key"
@@ -246,13 +265,17 @@ msgstr "Проверьте неизвестный SSH хост-ключ"
 msgid ""
 "I trust this key: &store and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr "Я доверяю этому ключу: &Сохранить и соединить\nВам не надо будет проверять этот ключ, пока он не сменится"
+msgstr ""
+"Я доверяю этому ключу: &Сохранить и соединить\n"
+"Вам не надо будет проверять этот ключ, пока он не сменится"
 
 #: ../../swish/frontend/UserInteraction.cpp:314
 msgid ""
 "I trust this key: &just connect\n"
 "You will be asked to verify the key again next time you connect"
-msgstr "Я доверяю этому ключу: &Просто соединить\nВ следующий раз вы будете снова предупреждены о ключе"
+msgstr ""
+"Я доверяю этому ключу: &Просто соединить\n"
+"В следующий раз вы будете снова предупреждены о ключе"
 
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
@@ -317,16 +340,16 @@ msgstr "Эти задачи управляют соединениями Swish SF
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:103
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "&Launch key agent"
-msgstr ""
+msgstr "&Запустить менеджер ключей"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:99
 msgid "Launch Putty SSH key agent, Pageant."
-msgstr ""
+msgstr "Запустить менеджер ключей Putty SSH, Pageant"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "Запустить менеджер ключей"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
@@ -386,15 +409,15 @@ msgstr "ID группы"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
-msgstr ""
+msgstr "Открыть &ссылку"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
-msgstr ""
+msgstr "&Открыть"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
-msgstr ""
+msgstr "Невозможно открыть ссылку"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:274
 #: ../../swish/remote_folder/context_menu_callback.cpp:379
@@ -405,7 +428,7 @@ msgstr "У вас не хватает прав."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
-msgstr ""
+msgstr "Невозможно открыть файл"
 
 #: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
