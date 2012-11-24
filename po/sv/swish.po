@@ -1,25 +1,26 @@
 # 
 # Translators:
+#   <sopor@hotmail.com>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-07-30 13:20+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
+"PO-Revision-Date: 2012-08-10 22:14+0000\n"
+"Last-Translator: Sopor <sopor@hotmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: sv\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "Kunde inte skapa någon fil på servern:"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -27,7 +28,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "Kopierar '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -36,7 +37,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "Till '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -44,7 +45,7 @@ msgstr "Denna mappen innehåller redan en fil med namnet '{1}'."
 
 #: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
-msgstr "Vill ersätta den?"
+msgstr "Vill du ersätta den?"
 
 #: ../../swish/drop_target/DropUI.cpp:327
 msgid "Confirm File Replace"
@@ -53,19 +54,19 @@ msgstr "Bekräfta filersättning"
 #: ../../swish/drop_target/DropUI.cpp:366
 msgctxt "Progress"
 msgid "Copying..."
-msgstr "kopierar..."
+msgstr "Kopierar..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "Kunde inte överföra filerna"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "Du verkar inte ha skrivrättigheter i denna mappen."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
-msgstr "Ny STFP anslutning"
+msgstr "Ny STFP-anslutning"
 
 #: ../../swish/forms/add_host.cpp:122
 msgid "Create"
@@ -78,7 +79,7 @@ msgstr "&Etikett:"
 
 #: ../../swish/forms/add_host.cpp:148
 msgid "For example: \"Home Computer\"."
-msgstr "Till exampel: \"Dator hemma\"."
+msgstr "Till exampel: \"Hemdatorn\"."
 
 #: ../../swish/forms/add_host.cpp:151
 msgid ""
@@ -89,7 +90,7 @@ msgstr "Specificera detaljerna för datorn och kontot du vill ansluta till:"
 #: ../../swish/forms/add_host.cpp:155
 msgctxt "New Host"
 msgid "&Host:"
-msgstr "&Host:"
+msgstr "&Värd:"
 
 #: ../../swish/forms/add_host.cpp:159
 msgctxt "New Host"
@@ -114,7 +115,7 @@ msgstr "S&ökväg:"
 
 #: ../../swish/forms/add_host.cpp:177
 msgid "Example: /home/yourusername"
-msgstr "Exampel: /hemma/dittanvändarnamn"
+msgstr "Exempel: /hemma/dittanvändarnamn"
 
 #: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
 msgid "Cancel"
@@ -138,7 +139,7 @@ msgstr "Användarnamnet är ogiltigt."
 
 #: ../../swish/forms/add_host.cpp:349
 msgid "The path is invalid."
-msgstr "Sökvägen är  är ogiltig."
+msgstr "Sökvägen är ogiltig."
 
 #: ../../swish/forms/add_host.cpp:355
 msgid "A connection with the same label already exists. Please try another."
@@ -185,11 +186,11 @@ msgstr "Filen finns redan"
 
 #: ../../swish/frontend/UserInteraction.cpp:242
 msgid "Mismatched host-key"
-msgstr "Stämmer värdnyckel"
+msgstr "Ogiltig värdnyckel"
 
 #: ../../swish/frontend/UserInteraction.cpp:243
 msgid "WARNING: the SSH host-key has changed!"
-msgstr "VARNING: SSH värd-nyckel har förändrats!"
+msgstr "VARNING: SSH-värdnyckel har ändrats!"
 
 #: ../../swish/frontend/UserInteraction.cpp:249
 msgid ""
@@ -197,40 +198,40 @@ msgid ""
 "key for this server.  This could mean a third-party is pretending to be the "
 "computer you're trying to connect to or the system administrator may have "
 "just changed the key."
-msgstr "SSH värd-nyckel skickas '%1%' för att identifiera sig själv stämmer inte med kända nyckel för den här servern. Detta kan innebära en tredje part som låtsas vara den dator du försöker ansluta till eller systemadministratören kan ha just ändrat nyckeln."
+msgstr "SSH-värdnyckel skickad med '%1%' för att identifiera sig stämmer inte överens med nyckel för den här servern. Detta kan innebära en tredje part låtsas vara den dator du försöker ansluta till eller så har systemadministratören nyligen ändrat nyckeln."
 
 #: ../../swish/frontend/UserInteraction.cpp:256
 msgid "It is important to check this is the right key fingerprint:"
-msgstr "Det är viktigt att kontrollera detta är rätt nyckel fingeravtryck:"
+msgstr "Det är viktigt att kontrollera om detta är rätt nyckel:"
 
 #: ../../swish/frontend/UserInteraction.cpp:265
 msgid ""
 "I trust this key: &update and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr "Jag litar på denna nyckel: &uppdatera och anslut \nDu kommer inte att behöva verifiera denna nyckel igen om den inte ändras"
+msgstr "Jag litar på denna nyckeln: &uppdatera och anslut \nDu kommer inte att behöva verifiera denna nyckel igen om den inte ändras"
 
 #: ../../swish/frontend/UserInteraction.cpp:270
 msgid ""
 "I trust this key: &just connect\n"
 "You will be warned about this key again next time you connect"
-msgstr "Jag litar på denna nyckel: &bara anslut \nDu kommer att varnas för denna nyckel igen nästa gång du ansluter"
+msgstr "Jag litar på denna nyckeln: &bara anslut \nDu kommer att varnas för denna nyckel igen nästa gång du ansluter"
 
 #: ../../swish/frontend/UserInteraction.cpp:276
 #: ../../swish/frontend/UserInteraction.cpp:320
 msgid ""
 "&Cancel\n"
 "Choose this option unless you are sure the key is correct"
-msgstr "&Avbryt \nVälj detta alternativ om du inte är säker på att nyckeln är korrekt"
+msgstr "&Avbryt \nVälj detta alternativ om du är säker på att nyckeln är felaktig"
 
 #: ../../swish/frontend/UserInteraction.cpp:289
 msgid "Unknown host-key"
-msgstr "Okänd värd-nyckel"
+msgstr "Okänd värdnyckel"
 
 #: ../../swish/frontend/UserInteraction.cpp:295
 msgid ""
 "The server '%1%' has identified itself with an SSH host-key whose "
 "fingerprint is:"
-msgstr "Servern '%1%' har identifierat sig med en SSH värd-nyckel, vars fingeravtryck är:"
+msgstr "Servern '%1%' har identifierat sig med en SSH-värdnyckel, vars fingeravtryck är:"
 
 #: ../../swish/frontend/UserInteraction.cpp:299
 msgid ""
@@ -240,7 +241,7 @@ msgstr "Om du inte väntar på denna nyckel kan en tredje part som låtsas vara 
 
 #: ../../swish/frontend/UserInteraction.cpp:302
 msgid "Verify unknown SSH host-key"
-msgstr "Verifiera okända SSH värd-nyckel"
+msgstr "Verifiera okända SSH-värdnyckel"
 
 #: ../../swish/frontend/UserInteraction.cpp:309
 msgid ""
@@ -252,7 +253,7 @@ msgstr "Jag litar på denna nyckel: &spara och anslut\nDu kommer inte att behöv
 msgid ""
 "I trust this key: &just connect\n"
 "You will be asked to verify the key again next time you connect"
-msgstr "Jag litar på denna nyckel: &bara anslut\nDu kommer inte att behöva verifiera denna nyckel igen om den inte ändras"
+msgstr "Jag litar på denna nyckeln: &bara anslut\nDu kommer inte att behöva verifiera denna nyckel igen om den inte ändras"
 
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
@@ -287,19 +288,19 @@ msgstr "Typ"
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
 msgid "Network Drive"
-msgstr "Nätverksdisk"
+msgstr "Nätverksenhet"
 
 #: ../../swish/host_folder/commands/Add.cpp:83
 msgid "&Add SFTP Connection"
-msgstr "&Lägg till SFTP-anslutning"
+msgstr "Lägg till SFTP-anslutning"
 
 #: ../../swish/host_folder/commands/Add.cpp:84
 msgid "Create a new SFTP connection with Swish."
-msgstr "Skapa en ny SFTP anslutning med Swish."
+msgstr "Skapa en ny SFTP-anslutning med Swish."
 
 #: ../../swish/host_folder/commands/Add.cpp:85
 msgid "&Add SFTP Connection..."
-msgstr "%Skapa en ny SFTP anslutning..."
+msgstr "Skapa en ny SFTP anslutning..."
 
 #: ../../swish/host_folder/commands/Add.cpp:86
 msgid "Add Connection"
@@ -307,7 +308,7 @@ msgstr "Skapa anslutning"
 
 #: ../../swish/host_folder/commands/commands.cpp:91
 msgid "SFTP Tasks"
-msgstr "SFTP aktiviteter"
+msgstr "SFTP-aktiviteter"
 
 #: ../../swish/host_folder/commands/commands.cpp:104
 msgid "These tasks help you manage Swish SFTP connections."
@@ -317,28 +318,28 @@ msgstr "Dessa uppgifter hjälper dig att hantera Swish SFTP-anslutningar."
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:103
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "&Launch key agent"
-msgstr ""
+msgstr "Starta nyckelagenten"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:99
 msgid "Launch Putty SSH key agent, Pageant."
-msgstr ""
+msgstr "Starta Putty SSH-nyckelagent, Pageant."
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "Starta nyckelagenten"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
-msgstr "&Ta bort SFTP anslutning"
+msgstr "Ta bort SFTP-anslutning"
 
 #: ../../swish/host_folder/commands/Remove.cpp:84
 msgid "Remove a SFTP connection created with Swish."
-msgstr "Ta bort en SFTP anslutning skapad med Swish"
+msgstr "Ta bort en SFTP-anslutning skapad med Swish"
 
 #: ../../swish/host_folder/commands/Remove.cpp:85
 msgid "&Remove SFTP Connection..."
-msgstr "&Ta bort en SFTP anslutning"
+msgstr "Ta bort en SFTP-anslutning"
 
 #: ../../swish/host_folder/commands/Remove.cpp:86
 msgid "Remove Connection"
@@ -377,24 +378,24 @@ msgstr "Grupp"
 #: ../../swish/remote_folder/columns.cpp:105
 msgctxt "Property"
 msgid "Owner ID"
-msgstr "Ägare ID"
+msgstr "Ägar-ID"
 
 #: ../../swish/remote_folder/columns.cpp:108
 msgctxt "Property"
 msgid "Group ID"
-msgstr "Grupp ID"
+msgstr "Grupp-ID"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
-msgstr ""
+msgstr "Öppna &länk"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
-msgstr ""
+msgstr "&Öppna"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
-msgstr ""
+msgstr "Kunde inte öppna länken"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:274
 #: ../../swish/remote_folder/context_menu_callback.cpp:379
@@ -405,7 +406,7 @@ msgstr "Du kanske inte har behörighet."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
-msgstr ""
+msgstr "Kunde inte öppna filen"
 
 #: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
@@ -442,7 +443,7 @@ msgstr "Kunde inte skapa en ny mapp"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
-msgstr "Begäran om tangentbord-interativitet"
+msgstr "Begäran om tangentbords-interativitet"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
@@ -450,7 +451,7 @@ msgstr "Det går inte att komma åt katalogen"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr "Sökväg hittas inte"
+msgstr "Sökvägen hittas inte"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
