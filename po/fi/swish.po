@@ -1,0 +1,474 @@
+# 
+# Translators:
+# Heikki Salko <hezecc@gmail.com>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-07-30 14:18-0000\n"
+"PO-Revision-Date: 2012-09-05 12:40+0000\n"
+"Last-Translator: Heikki Salko <hezecc@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"X-Poedit-SearchPath-0: ../../swish\n"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:152
+msgid "Unable to create file on the server:"
+msgstr "Tiedostoa ei voida luoda palvelimella:"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:249
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
+msgctxt ""
+"Top line of a transfer progress window saying which file is being copied. "
+"{1} is replaced with the file path and must be included in your translation."
+msgid "Copying '{1}'"
+msgstr "Kopioidaan '{1}'"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:260
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
+msgctxt ""
+"Second line of a transfer progress window giving the destination directory. "
+"{1} is replaced with the directory path and must be included in your "
+"translation."
+msgid "To '{1}'"
+msgstr "Kohteeseen '{1}'"
+
+#: ../../swish/drop_target/DropUI.cpp:316
+msgid "This folder already contains a file named '{1}'."
+msgstr "Tässä kansiossa on jo tiedosto nimeltä '{1}'."
+
+#: ../../swish/drop_target/DropUI.cpp:319
+msgid "Would you like to replace it?"
+msgstr "Haluatko korvata sen?"
+
+#: ../../swish/drop_target/DropUI.cpp:327
+msgid "Confirm File Replace"
+msgstr "Vahvista tiedoston korvaaminen"
+
+#: ../../swish/drop_target/DropUI.cpp:366
+msgctxt "Progress"
+msgid "Copying..."
+msgstr "Kopioidaan..."
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:125
+msgid "Unable to transfer files"
+msgstr "Tiedostoja ei voida siirtää"
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:127
+msgid "You might not have permission to write to this directory."
+msgstr "Sinulla ei ehkä ole oikeuksia kirjoittaa tähän hakemistoon."
+
+#: ../../swish/forms/add_host.cpp:102
+msgid "New SFTP Connection"
+msgstr "Uusi SFTP-yhteys"
+
+#: ../../swish/forms/add_host.cpp:122
+msgid "Create"
+msgstr "Luo"
+
+#: ../../swish/forms/add_host.cpp:143
+msgctxt "New Host"
+msgid "&Label:"
+msgstr "&Nimi:"
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "For example: \"Home Computer\"."
+msgstr "Esimerkiksi \"Kotikone\"."
+
+#: ../../swish/forms/add_host.cpp:151
+msgid ""
+"Specify the details of the computer and account you would like to connect "
+"to:"
+msgstr "Määritä tietokoneen ja käyttäjätunnuksen tiedot, johon haluat yhdistää:"
+
+#: ../../swish/forms/add_host.cpp:155
+msgctxt "New Host"
+msgid "&Host:"
+msgstr "&Isäntä:"
+
+#: ../../swish/forms/add_host.cpp:159
+msgctxt "New Host"
+msgid "&Port:"
+msgstr "&Portti:"
+
+#: ../../swish/forms/add_host.cpp:164
+msgctxt "New Host"
+msgid "&User:"
+msgstr "&Käyttäjä:"
+
+#: ../../swish/forms/add_host.cpp:169
+msgid ""
+"Specify the directory on the server that you would like Swish to start the "
+"connection in:"
+msgstr "Määritä palvelimen hakemisto, jossa haluat Swish:n aloittavan yhteyden:"
+
+#: ../../swish/forms/add_host.cpp:173
+msgctxt "New Host"
+msgid "P&ath:"
+msgstr "P&olku:"
+
+#: ../../swish/forms/add_host.cpp:177
+msgid "Example: /home/yourusername"
+msgstr "Esimerkki: /home/kayttaja"
+
+#: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The label cannot be longer than 30 characters."
+msgstr "Nimi ei voi olla pidempi kuin 30 merkkiä."
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The host name is invalid."
+msgstr "Isännän nimi ei ole kelvollinen."
+
+#: ../../swish/forms/add_host.cpp:341
+msgid "The port is not valid (between 0 and 65535)."
+msgstr "Portti ei ole kelvollinen (0 ja 65535 välillä)."
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "The username is invalid."
+msgstr "Käyttäjänimi ei ole kelvollinen."
+
+#: ../../swish/forms/add_host.cpp:349
+msgid "The path is invalid."
+msgstr "Polku ei ole kelvollinen."
+
+#: ../../swish/forms/add_host.cpp:355
+msgid "A connection with the same label already exists. Please try another."
+msgstr "Tämä nimi on jo toisen yhteyden käytössä. Kokeile toista."
+
+#: ../../swish/forms/add_host.cpp:361
+msgid "Complete all fields."
+msgstr "Täytä kaikki kentät."
+
+#: ../../swish/forms/password.cpp:57
+msgid "Password"
+msgstr "Salasana"
+
+#: ../../swish/forms/password.cpp:64
+msgid "OK"
+msgstr "OK"
+
+#: ../../swish/frontend/announce_error.cpp:136
+msgid "Show &details (which may not be in your language)"
+msgstr "Näytä &lisätiedot (jotka eivät välttämättä ole kielelläsi)"
+
+#: ../../swish/frontend/announce_error.cpp:137
+msgid "Hide &details"
+msgstr "Piilota &lisätiedot"
+
+#: ../../swish/frontend/UserInteraction.cpp:195
+msgid "The folder already contains a file named '%1%'"
+msgstr "Kansiossa on jo tiedosto nimeltä '%1%'"
+
+#: ../../swish/frontend/UserInteraction.cpp:200
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr "Haluatko korvata olemassaolevan tiedoston\n\n\t%1%\n\ntällä?\n\n\t%2%"
+
+#: ../../swish/frontend/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "Tiedosto on jo olemassa."
+
+#: ../../swish/frontend/UserInteraction.cpp:242
+msgid "Mismatched host-key"
+msgstr "Isäntä-avain ei täsmää"
+
+#: ../../swish/frontend/UserInteraction.cpp:243
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "VAROITUS: SSH:n isäntä-avain on muuttunut!"
+
+#: ../../swish/frontend/UserInteraction.cpp:249
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
+msgstr "Tietokoneen '%1%' tunnistamistaan varten lähettämä SSH:n isäntä-avain ei täsmää tämän palvelimen tunnetun avaimen kanssa. Tämä saattaa tarkoittaa, että jokin kolmas osapuoli esiintyy tietokoneena, johon yrität yhdistää, tai järjestelmän ylläpitäjä on voinut vaihtaa avaimen."
+
+#: ../../swish/frontend/UserInteraction.cpp:256
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "On tärkeää tarkistaa, että tämä on oikea avaimen sormenjälki:"
+
+#: ../../swish/frontend/UserInteraction.cpp:265
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Luotan tähän avaimeen: pä&ivitä ja yhdistä\\nSinun ei tarvitse vahvistaa tätä avainta uudelleen, ellei se muutu"
+
+#: ../../swish/frontend/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr "Luotan tähän avaimeen: &yhdistä\nSinua varoitetaan tästä avaimesta uudelleen, kun yhdistät seuraavan kerran"
+
+#: ../../swish/frontend/UserInteraction.cpp:276
+#: ../../swish/frontend/UserInteraction.cpp:320
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr "&Peruuta\nValitse tämä vaihtoehto, ellet ole varma avaimen oikeellisuudesta"
+
+#: ../../swish/frontend/UserInteraction.cpp:289
+msgid "Unknown host-key"
+msgstr "Tuntematon isäntä-avain"
+
+#: ../../swish/frontend/UserInteraction.cpp:295
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
+msgstr "Palvelin '%1%' on tunnistanut itsensä SSH:n isäntä-avaimella, jonka sormenjälki on:"
+
+#: ../../swish/frontend/UserInteraction.cpp:299
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Jos et odota tätä avainta, jokin kolmas osapuoli saattaa esiintyä tietokoneena, johon yrität yhdistää."
+
+#: ../../swish/frontend/UserInteraction.cpp:302
+msgid "Verify unknown SSH host-key"
+msgstr "Vahvista tuntematon SSH:n isäntä-avain"
+
+#: ../../swish/frontend/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Luotan tähän avaimeen: &tallenna ja yhdistä\nSinun ei tarvitse vahvistaa tätä avainta uudelleen, ellei se muutu"
+
+#: ../../swish/frontend/UserInteraction.cpp:314
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr "Luotan tähän avaimeen: &yhdistä\nSinua varoitetaan tästä avaimesta uudelleen, kun yhdistät seuraavan kerran"
+
+#: ../../swish/host_folder/columns.cpp:57
+msgctxt "Property (filename/label)"
+msgid "Name"
+msgstr "Nimi"
+
+#: ../../swish/host_folder/columns.cpp:60
+msgctxt "Property"
+msgid "Host"
+msgstr "Isäntä"
+
+#: ../../swish/host_folder/columns.cpp:63
+msgctxt "Property"
+msgid "Username"
+msgstr "Käyttäjätunnus"
+
+#: ../../swish/host_folder/columns.cpp:66
+msgctxt "Property"
+msgid "Port"
+msgstr "Portti"
+
+#: ../../swish/host_folder/columns.cpp:69
+msgctxt "Property"
+msgid "Remote path"
+msgstr "Etäpolku"
+
+#: ../../swish/host_folder/columns.cpp:72
+msgctxt "Property"
+msgid "Type"
+msgstr "Tyyppi"
+
+#: ../../swish/host_folder/properties.cpp:79
+msgctxt "FileType"
+msgid "Network Drive"
+msgstr "Verkkoasema"
+
+#: ../../swish/host_folder/commands/Add.cpp:83
+msgid "&Add SFTP Connection"
+msgstr "&Lisää SFTP-yhteys"
+
+#: ../../swish/host_folder/commands/Add.cpp:84
+msgid "Create a new SFTP connection with Swish."
+msgstr "Luo uusi SFTP-yhteys Swish:llä."
+
+#: ../../swish/host_folder/commands/Add.cpp:85
+msgid "&Add SFTP Connection..."
+msgstr "&Lisää SFTP-yhteys..."
+
+#: ../../swish/host_folder/commands/Add.cpp:86
+msgid "Add Connection"
+msgstr "Lisää yhteys"
+
+#: ../../swish/host_folder/commands/commands.cpp:91
+msgid "SFTP Tasks"
+msgstr "SFTP-tehtävät"
+
+#: ../../swish/host_folder/commands/commands.cpp:104
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Nämä tehtävät auttavat sinua hallitsemaan Swish:n SFTP-yhteyksiä."
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:98
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:103
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "&Launch key agent"
+msgstr "A&vaa avainagentti"
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:99
+msgid "Launch Putty SSH key agent, Pageant."
+msgstr "Avaa PuTTY:n SSH-avainagentti, Pageant"
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:106
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "Launch key agent"
+msgstr "Avaa avainagentti"
+
+#: ../../swish/host_folder/commands/Remove.cpp:83
+msgid "&Remove SFTP Connection"
+msgstr "&Poista SFTP-yhteys"
+
+#: ../../swish/host_folder/commands/Remove.cpp:84
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Poista Swish:llä luotu SFTP-yhteys."
+
+#: ../../swish/host_folder/commands/Remove.cpp:85
+msgid "&Remove SFTP Connection..."
+msgstr "&Poista SFTP-yhteys..."
+
+#: ../../swish/host_folder/commands/Remove.cpp:86
+msgid "Remove Connection"
+msgstr "Poista yhteys"
+
+#: ../../swish/remote_folder/columns.cpp:82
+msgctxt "Property"
+msgid "Size"
+msgstr "Koko"
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgctxt "Property"
+msgid "Date Modified"
+msgstr "Viimeksi muokattu"
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgctxt "Property"
+msgid "Date Accessed"
+msgstr "Viimeksi käytetty"
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgctxt "Property"
+msgid "Permissions"
+msgstr "Oikeudet"
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgctxt "Property"
+msgid "Owner"
+msgstr "Omistaja"
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgctxt "Property"
+msgid "Group"
+msgstr "Ryhmä"
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgctxt "Property"
+msgid "Owner ID"
+msgstr "Omistajan ID"
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgctxt "Property"
+msgid "Group ID"
+msgstr "Ryhmän ID"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:157
+msgid "Open &link"
+msgstr "Avaa &linkki"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:179
+msgid "&Open"
+msgstr "&Avaa"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:273
+msgid "Unable to open the link"
+msgstr "Linkkiä ei voida avata"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:274
+#: ../../swish/remote_folder/context_menu_callback.cpp:379
+#: ../../swish/remote_folder/commands/delete.cpp:232
+#: ../../swish/remote_folder/commands/NewFolder.cpp:240
+msgid "You might not have permission."
+msgstr "Sinulla ei ehkä ole oikeuksia."
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:378
+msgid "Unable to open the file"
+msgstr "Tiedostoa ei voida avata"
+
+#: ../../swish/remote_folder/commands/commands.cpp:93
+msgid "File and Folder Tasks"
+msgstr "Tiedosto- ja kansiotehtävät"
+
+#: ../../swish/remote_folder/commands/commands.cpp:105
+msgid "These tasks help you manage your remote files."
+msgstr "Nämä tehtävät helpottavat etätiedostojen hallintaa."
+
+#: ../../swish/remote_folder/commands/delete.cpp:231
+msgid "Unable to delete the item"
+msgstr "Tiedostoa ei voida poistaa"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:168
+msgid "New &folder"
+msgstr "Uusi &kansio"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:169
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Luo avoinna olevaan kansioon uusi, tyhjä kansio."
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:171
+msgid "Make a new folder"
+msgstr "Luo uusi kansio"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:211
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Uusi kansio"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:239
+msgid "Could not create a new folder"
+msgstr "Uutta kansiota ei voida luoda"
+
+#: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
+msgid "Keyboard-interactive request"
+msgstr "Näppäimistö-interaktiivinen pyyntö"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:182
+msgid "Unable to access the directory"
+msgstr "Hakemistoon ei saada pääsyä"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:255
+msgid "Path not recognised"
+msgstr "Polkua ei tunnistettu"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:256
+msgid "Check that the path was entered correctly."
+msgstr "Tarkista, että polku on syötetty oikein."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:377
+msgid "Unable to rename the item"
+msgstr "Kohdetta ei voida nimetä uudelleen"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:704
+msgid "Unable to access the item"
+msgstr "Kohteeseen ei saada pääsyä"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:705
+msgid "Unable to access the items"
+msgstr "Kohteisiin ei saada pääsyä"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:732
+msgid "Unable to access the folder"
+msgstr "Kansiota ei voida avata"
