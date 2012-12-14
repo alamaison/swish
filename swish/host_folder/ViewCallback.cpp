@@ -159,7 +159,7 @@ namespace {
         version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
         if (::GetVersionEx(&version) == FALSE)
             BOOST_THROW_EXCEPTION(
-                enable_error_info(last_error()) << 
+                enable_error_info(last_error()) <<
                 errinfo_api_function("GetVersionEx"));
 
         return version.dwMajorVersion > 5;
@@ -176,7 +176,7 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
     m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_first_command_id(0),
     m_winsparkle(
         "http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
-        L"0.6.3", L"", "Software\\Swish\\Updates") {}
+        L"0.7.0", L"", "Software\\Swish\\Updates") {}
 
 /**
  * The folder window is being created.
@@ -284,7 +284,7 @@ bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
     //assert(::IsMenu(menu_info.hmenu));
     m_first_command_id = menu_info.idCmdFirst;
 
-    // Try to get a handle to the  Explorer Tools menu and insert 
+    // Try to get a handle to the  Explorer Tools menu and insert
     // add and remove connection menu items into it if we find it
     m_tools_menu = tools_menu_with_fallback(
         menu_handle::foster_handle(menu_info.hmenu));
@@ -364,7 +364,7 @@ bool CViewCallback::on_get_help_text(
     {
         return false;
     }
-    
+
     size_t copied = help_text.copy(buffer, buffer_size - 1);
     buffer[copied] = _T('\0');
     return true;

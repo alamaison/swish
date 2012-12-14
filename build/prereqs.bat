@@ -1,6 +1,6 @@
 :: Script to fetch Swish build prerequisites
 ::
-:: Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+:: Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 ::
 :: This program is free software; you can redistribute it and/or modify
 :: it under the terms of the GNU General Public License as published by
@@ -20,6 +20,11 @@
 setlocal
 echo.
 
+set WGET=%~dp0\wget\wget.exe -N
+echo Using wget at : %WGET%
+set SEVENZ=%~dp0\7za\7za.exe
+echo using 7zip at %SEVENZ%
+
 cd ..
 
 :: Git submodules: libssh2, winapi
@@ -32,11 +37,7 @@ echo ===- Cloning GIT submodules ...
 call git submodule update || (
 	echo ===- Error while Initialising GIT submodules & goto error)
 
-
 cd thirdparty
-
-set WGET=..\build\wget\wget.exe -N
-set SEVENZ=..\build\7za\7za.exe
 
 :: OpenSSL
 
@@ -106,7 +107,7 @@ echo.
 echo ===- Downloading Pageant ...
 md putty
 cd putty
-%WGET% -O putty\pageant.exe "http://the.earth.li/~sgtatham/putty/latest/x86/pageant.exe" || (
+%WGET% "http://the.earth.li/~sgtatham/putty/latest/x86/pageant.exe" || (
 	echo ===- Error while trying to download Pageant. & goto error)
 cd ..
 
