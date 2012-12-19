@@ -20,9 +20,9 @@
 setlocal
 echo.
 
-set WGET=%~dp0\wget\wget.exe -N
+set WGET="%~dp0\wget\wget.exe" -N
 echo Using wget at : %WGET%
-set SEVENZ=%~dp0\7za\7za.exe
+set SEVENZ="%~dp0\7za\7za.exe"
 echo using 7zip at %SEVENZ%
 
 cd ..
