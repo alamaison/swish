@@ -130,28 +130,30 @@ m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 namespace {
 
     bool is_link(const sftp_filesystem_item& lt)
-    { return lt.fIsLink != FALSE; }
+    {
+        return lt.type() == sftp_filesystem_item::type::link;
+    }
 
     bool is_directory(
-        const sftp_filesystem_item& lt, const wpath& directory, 
+        const sftp_filesystem_item& file, const wpath& directory, 
         shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
-        if (is_link(lt))
+        if (is_link(file))
         {
             // Links don't indicate anything about their target such as
             // whether it is a file or folder so we have to interrogate
             // its target
-            bstr_t link_path = (directory / lt.bstrFilename).string();
+            bstr_t link_path = (directory / file.filename()).string();
 
             try
             {
-                sftp_filesystem_item ltTarget = provider->stat(
+                sftp_filesystem_item target = provider->stat(
                     consumer.in(), link_path.in(), TRUE);
 
                 // TODO: consider what other properties we might want to
                 // take from the target instead of the link.  Currently
                 // we only take on folderness.
-                return ltTarget.fIsDirectory;
+                return target.type() == sftp_filesystem_item::type::directory;
             }
             catch(const exception&)
             {
@@ -159,34 +161,31 @@ namespace {
                 // anything else sensible to do with them.
                 return false;
             }
-
-            assert(lt.fIsLink);
         }
         else
         {
-            return lt.fIsDirectory != FALSE;
+            return file.type() == sftp_filesystem_item::type::directory;
         }
     }
 
-    bool is_dotted(const sftp_filesystem_item& lt)
-    { return lt.bstrFilename[0] == OLECHAR('.'); }
+    bool is_dotted(const sftp_filesystem_item& file)
+    {
+        wstring filename = file.filename().string();
+        return filename[0] == L'.';
+    }
 
     cpidl_t convert_directory_entry_to_pidl(
-        const sftp_filesystem_item& lt, const wpath& directory,
+        const sftp_filesystem_item& file, const wpath& directory,
         shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
     {
         return create_remote_itemid(
-            lt.bstrFilename,
-            is_directory(lt, directory, provider, consumer),
-            lt.fIsLink != FALSE,
-            lt.bstrOwner,
-            lt.bstrGroup,
-            lt.uUid,
-            lt.uGid,
-            lt.uPermissions,
-            lt.uSize,
-            datetime_t(lt.dateModified),
-            datetime_t(lt.dateAccessed));
+            file.filename().string(),
+            is_directory(file, directory, provider, consumer),
+            is_link(file), 
+            (file.owner()) ? *file.owner() : wstring(),
+            (file.group()) ? *file.group() : wstring(),
+            file.uid(), file.gid(), file.permissions(), file.size_in_bytes(),
+            file.last_modified(), file.last_accessed());
     }
     
     /**

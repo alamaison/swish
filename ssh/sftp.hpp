@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,8 +46,9 @@
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
+#include <boost/optional/optional.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION, throw_exception_
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION, throw_exception
 
 #include <algorithm> // min
 #include <cassert> // assert
@@ -62,7 +63,7 @@ namespace sftp {
 
 namespace detail {
 
-const char* sftp_part_of_error_message(unsigned long error)
+inline const char* sftp_part_of_error_message(unsigned long error)
 {
     switch (error)
     {
@@ -415,35 +416,7 @@ namespace detail {
             session, channel, path_string.data(), path_string.size(),
             0, 0, LIBSSH2_SFTP_OPENDIR);
     }
-
-    std::string attribute_type_to_string(unsigned long attribute_type)
-    {
-        switch (attribute_type)
-        {
-        case LIBSSH2_SFTP_ATTR_SIZE:
-            return "Size";
-        case LIBSSH2_SFTP_ATTR_UIDGID:
-            return "UID/GID";
-        case LIBSSH2_SFTP_ATTR_PERMISSIONS:
-            return "Permissions";
-        case LIBSSH2_SFTP_ATTR_ACMODTIME:
-            return "Access & modification times";
-        case LIBSSH2_SFTP_ATTR_EXTENDED:
-            return "Extended";
-        default:
-            return "Unknown";
-        }
-    }
 }
-
-class unsupported_attribute_error : public std::runtime_error
-{
-public:
-    unsupported_attribute_error(unsigned long attribute_type) :
-      std::runtime_error(
-          detail::attribute_type_to_string(attribute_type) +
-          " attribute not supported") {}
-};
 
 class file_attributes
 {
@@ -463,69 +436,110 @@ public:
 
     file_type type() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_PERMISSIONS);
-
-        switch (m_attributes.permissions & LIBSSH2_SFTP_S_IFMT)
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_PERMISSIONS))
         {
-        case LIBSSH2_SFTP_S_IFIFO:
-            return named_pipe;
-        case LIBSSH2_SFTP_S_IFCHR:
-            return character_device;
-        case LIBSSH2_SFTP_S_IFDIR:
-            return directory;
-        case LIBSSH2_SFTP_S_IFBLK:
-            return block_device;
-        case LIBSSH2_SFTP_S_IFREG:
-            return normal_file;
-        case LIBSSH2_SFTP_S_IFLNK:
-            return symbolic_link;
-        case LIBSSH2_SFTP_S_IFSOCK:
-            return socket;
-        default:
+            switch (m_attributes.permissions & LIBSSH2_SFTP_S_IFMT)
+            {
+            case LIBSSH2_SFTP_S_IFIFO:
+                return named_pipe;
+            case LIBSSH2_SFTP_S_IFCHR:
+                return character_device;
+            case LIBSSH2_SFTP_S_IFDIR:
+                return directory;
+            case LIBSSH2_SFTP_S_IFBLK:
+                return block_device;
+            case LIBSSH2_SFTP_S_IFREG:
+                return normal_file;
+            case LIBSSH2_SFTP_S_IFLNK:
+                return symbolic_link;
+            case LIBSSH2_SFTP_S_IFSOCK:
+                return socket;
+            default:
+                return unknown;
+            }
+        }
+        else
+        {
             return unknown;
         }
     }
 
-    unsigned long permissions() const
+    boost::optional<unsigned long> permissions() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_PERMISSIONS);
-        return m_attributes.permissions;
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_PERMISSIONS))
+        {
+            return m_attributes.permissions;
+        }
+        else
+        {
+            return boost::optional<unsigned long>();
+        }
     }
 
-    boost::uint64_t size() const
+    boost::optional<boost::uint64_t> size() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_SIZE);
-        return m_attributes.filesize;
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_SIZE))
+        {
+            return m_attributes.filesize;
+        }
+        else
+        {
+            return boost::optional<boost::uint64_t>();
+        }
     }
 
-    unsigned long uid() const
+    boost::optional<unsigned long> uid() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_UIDGID);
-        return m_attributes.uid;
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_UIDGID))
+        {
+            return m_attributes.uid;
+        }
+        else
+        {
+            return boost::optional<unsigned long>();
+        }
     }
 
-    unsigned long gid() const
+    boost::optional<unsigned long> gid() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_UIDGID);
-        return m_attributes.gid;
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_UIDGID))
+        {
+            return m_attributes.gid;
+        }
+        else
+        {
+            return boost::optional<unsigned long>();
+        }
     }
 
     /**
      * @todo  Use Boost.DateTime or other decent datatype.
      */
-    unsigned long atime() const
+    boost::optional<unsigned long> last_accessed() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_ACMODTIME);
-        return m_attributes.atime;
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_ACMODTIME))
+        {
+            return m_attributes.atime;
+        }
+        else
+        {
+            return boost::optional<unsigned long>();
+        }
     }
 
     /**
      * @todo  Use Boost.DateTime or other decent datatype.
      */
-    unsigned long mtime() const
+    boost::optional<unsigned long> last_modified() const
     {
-        throw_if_not_valid_attribute(LIBSSH2_SFTP_ATTR_ACMODTIME);
-        return m_attributes.mtime;
+        if (is_valid_attribute(LIBSSH2_SFTP_ATTR_ACMODTIME))
+        {
+            return m_attributes.mtime;
+        }
+        else
+        {
+            return boost::optional<unsigned long>();
+        }
     }
 
 private:
@@ -540,13 +554,6 @@ private:
     bool is_valid_attribute(unsigned long attribute_type) const
     {
         return (m_attributes.flags & attribute_type) != 0;
-    }
-
-    void throw_if_not_valid_attribute(unsigned long attribute_type) const
-    {
-        if (!is_valid_attribute(attribute_type))
-            BOOST_THROW_EXCEPTION(
-                unsupported_attribute_error(attribute_type));
     }
 
     LIBSSH2_SFTP_ATTRIBUTES m_attributes;

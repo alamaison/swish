@@ -35,9 +35,11 @@
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
 
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp> // wpath
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/format.hpp> // wformat
+#include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <functional> // equal_to, less
@@ -51,6 +53,13 @@ namespace detail {
 
     typedef tree<swish::provider::sftp_filesystem_item> Filesystem;
     typedef Filesystem::iterator FilesystemLocation;
+
+    inline bool name_match(
+        const std::wstring& name,
+        const swish::provider::sftp_filesystem_item& sftp_item)
+    {
+        return name == sftp_item.filename();
+    }
 
     /**
      * Return an iterator to the node in the mock filesystem indicated by the
@@ -70,9 +79,9 @@ namespace detail {
             if (name == L".")
                 continue;
 
-            FilesystemLocation dir = find(
+            FilesystemLocation dir = find_if(
                 filesystem.begin(current_dir), filesystem.end(current_dir),
-                name);
+                boost::bind(&name_match, name, _1));
 
             if (dir == filesystem.end(current_dir))
             {
@@ -90,38 +99,217 @@ namespace detail {
         return current_dir;
     }
 
-    inline swish::provider::sftp_filesystem_item make_file_listing(
-        comet::bstr_t name, ULONG permissions, ULONGLONG size,
-        comet::datetime_t date)
+    class mock_filesystem_file :
+        public swish::provider::sftp_filesystem_item_interface
     {
-        swish::provider::sftp_filesystem_item lt;
-        lt.bstrFilename = name.detach();
-        lt.uPermissions = permissions;
-        lt.bstrOwner = comet::bstr_t("mockowner").detach();
-        lt.bstrGroup = comet::bstr_t("mockgroup").detach();
-        lt.uSize = size;
-        lt.dateModified = date.get();
+    public:
+        static swish::provider::sftp_filesystem_item create(
+            const std::wstring& name, ULONG permissions, ULONGLONG size,
+            comet::datetime_t date)
+        {
+            return swish::provider::sftp_filesystem_item(
+                boost::shared_ptr<swish::provider::sftp_filesystem_item_interface>(
+                    new mock_filesystem_file(name, permissions, size, date)));
+        }
 
-        return lt;
-    }
+        BOOST_SCOPED_ENUM(type) type() const
+        {
+            return type::file;
+        }
 
-    inline swish::provider::sftp_filesystem_item make_directory_listing(
-        comet::bstr_t name)
+        swish::provider::sftp_provider_path filename() const
+        {
+            return m_name;
+        }
+
+        unsigned long permissions() const
+        {
+            return m_permissions;
+        }
+
+        boost::optional<std::wstring> owner() const
+        {
+            return L"mockowner";
+        }
+
+        unsigned long uid() const
+        {
+            return 42;
+        }
+
+        boost::optional<std::wstring> group() const
+        {
+            return L"mockgroup";
+        }
+
+        unsigned long gid() const
+        {
+            return 24;
+        }
+
+        boost::uint64_t size_in_bytes() const
+        {
+            return m_size;
+        }
+
+        comet::datetime_t last_accessed() const
+        {
+            return comet::datetime_t();
+        }
+
+        comet::datetime_t last_modified() const
+        {
+            return m_date;
+        }
+
+    private:
+        mock_filesystem_file(
+            const std::wstring& name, ULONG permissions,
+            ULONGLONG size, comet::datetime_t date)
+            :
+        m_name(name), m_permissions(permissions), m_size(size), m_date(date) {}
+
+        std::wstring m_name;
+        ULONG m_permissions;
+        ULONGLONG m_size;
+        comet::datetime_t m_date;
+    };
+
+    class mock_filesystem_directory :
+        public swish::provider::sftp_filesystem_item_interface
     {
-        swish::provider::sftp_filesystem_item lt = make_file_listing(
-            name, 040777, 42, comet::datetime_t(1601, 10, 5, 13, 54, 22));
-        lt.fIsDirectory = TRUE;
-        return lt;
-    }
+    public:
+        static swish::provider::sftp_filesystem_item create(
+            const std::wstring& name)
+        {
+            return swish::provider::sftp_filesystem_item(
+                boost::shared_ptr<swish::provider::sftp_filesystem_item_interface>(
+                    new mock_filesystem_directory(name)));
+        }
 
-    inline swish::provider::sftp_filesystem_item make_link_listing(
-        comet::bstr_t name)
+        BOOST_SCOPED_ENUM(type) type() const
+        {
+            return type::directory;
+        }
+
+        swish::provider::sftp_provider_path filename() const
+        {
+            return m_name;
+        }
+
+        unsigned long permissions() const
+        {
+            return 040777;
+        }
+
+        boost::optional<std::wstring> owner() const
+        {
+            return L"mockowner";
+        }
+
+        unsigned long uid() const
+        {
+            return 42;
+        }
+
+        boost::optional<std::wstring> group() const
+        {
+            return L"mockgroup";
+        }
+
+        unsigned long gid() const
+        {
+            return 24;
+        }
+
+        boost::uint64_t size_in_bytes() const
+        {
+            return 0U;
+        }
+
+        comet::datetime_t last_accessed() const
+        {
+            return comet::datetime_t();
+        }
+
+        comet::datetime_t last_modified() const
+        {
+            return comet::datetime_t(1601, 10, 5, 13, 54, 22);
+        }
+
+    private:
+        mock_filesystem_directory(const std::wstring& name) : m_name(name) {}
+
+        std::wstring m_name;
+    };
+
+    class mock_filesystem_link :
+        public swish::provider::sftp_filesystem_item_interface
     {
-        swish::provider::sftp_filesystem_item lt = make_file_listing(
-            name, 040777, 42, comet::datetime_t(1601, 10, 5, 13, 54, 22));
-        lt.fIsLink = TRUE;
-        return lt;
-    }
+    public:
+        static swish::provider::sftp_filesystem_item create(
+            const std::wstring& name)
+        {
+            return swish::provider::sftp_filesystem_item(
+                boost::shared_ptr<swish::provider::sftp_filesystem_item_interface>(
+                    new mock_filesystem_link(name)));
+        }
+
+        BOOST_SCOPED_ENUM(type) type() const
+        {
+            return type::link;
+        }
+
+        swish::provider::sftp_provider_path filename() const
+        {
+            return m_name;
+        }
+
+        unsigned long permissions() const
+        {
+            return 040777;
+        }
+
+        boost::optional<std::wstring> owner() const
+        {
+            return L"mockowner";
+        }
+
+        unsigned long uid() const
+        {
+            return 42;
+        }
+
+        boost::optional<std::wstring> group() const
+        {
+            return L"mockgroup";
+        }
+
+        unsigned long gid() const
+        {
+            return 24;
+        }
+
+        boost::uint64_t size_in_bytes() const
+        {
+            return 0U;
+        }
+
+        comet::datetime_t last_accessed() const
+        {
+            return comet::datetime_t();
+        }
+
+        comet::datetime_t last_modified() const
+        {
+            return comet::datetime_t(1601, 10, 5, 13, 54, 22);
+        }
+
+    private:
+        mock_filesystem_link(const std::wstring& name) : m_name(name) {}
+
+        std::wstring m_name;
+    };
 
     inline comet::bstr_t tag_filename(
         const wchar_t* filename, const boost::filesystem::wpath& directory)
@@ -186,7 +374,7 @@ namespace detail {
 
             make_item_in(
                 filesystem, directory,
-                make_file_listing(
+                mock_filesystem_file::create(
                     filenames.back(), permissions, size, dates.back()));
 
             dates.pop_back();
@@ -208,7 +396,7 @@ namespace detail {
         {
             make_item_in(
                 filesystem, directory,
-                make_directory_listing(folder_names.back()));
+                mock_filesystem_directory::create(folder_names.back()));
             folder_names.pop_back();
         }
 
@@ -223,10 +411,22 @@ namespace detail {
         while (!link_names.empty())
         {
             make_item_in(
-                filesystem, directory, make_link_listing(link_names.back()));
+                filesystem, directory,
+                mock_filesystem_link::create(link_names.back()));
             link_names.pop_back();
         }
     }
+
+    struct comparator
+    {
+        bool operator()(
+            const swish::provider::sftp_filesystem_item& left,
+            const swish::provider::sftp_filesystem_item& right)
+        {
+            return left.filename() < right.filename();
+        }
+    };
+
 }
 
 class MockProvider : public swish::provider::sftp_provider
@@ -260,16 +460,17 @@ public:
     {
         // Create filesystem root
         detail::FilesystemLocation root = m_filesystem.insert(
-            m_filesystem.begin(), detail::make_directory_listing(L"/"));
+            m_filesystem.begin(),
+            detail::mock_filesystem_directory::create(L"/"));
 
         // Create two subdirectories and fill them with an expected set of items
         // whose names are 'tagged' with the directory name
         detail::FilesystemLocation tmp =
             m_filesystem.append_child(
-                root, detail::make_directory_listing(L"tmp"));
+                root, detail::mock_filesystem_directory::create(L"tmp"));
         detail::FilesystemLocation swish =
             m_filesystem.append_child(
-                tmp, detail::make_directory_listing(L"swish"));
+                tmp, detail::mock_filesystem_directory::create(L"swish"));
         detail::fill_mock_listing(m_filesystem, L"/tmp");
         detail::fill_mock_listing(m_filesystem, L"/tmp/swish");
     }
@@ -309,7 +510,8 @@ public:
                 files.insert(
                     files.begin(), m_filesystem.begin(dir),
                     m_filesystem.end(dir));
-                std::sort(files.begin(), files.end());
+
+                std::sort(files.begin(), files.end(), detail::comparator());
             }
             break;
 

@@ -40,8 +40,9 @@
 #include "KeyboardInteractive.hpp"
 #include "SessionFactory.hpp" // CSession
 #include "SftpStream.hpp"
-#include "listing/listing.hpp"   // SFTP directory listing helper functions
 
+#include "swish/provider/libssh2_sftp_filesystem_item.hpp"
+#include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
 #include "swish/utils.hpp" // WideStringToUtf8String
 #include "swish/trace.hpp" // trace
@@ -94,7 +95,6 @@ using ssh::sftp::directory_iterator;
 using ssh::sftp::file_attributes;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_file;
-using ssh::sftp::unsupported_attribute_error;
 
 using std::exception;
 using std::invalid_argument;
@@ -282,12 +282,6 @@ void provider::_Disconnect()
 
 namespace {
 
-    sftp_filesystem_item listing_from_sftp_file(const sftp_file& file)
-    {
-        return listing::fill_listing_entry(
-            file.name(), file.long_entry(), file.raw_attributes());
-    }
-
     bool not_special_file(const sftp_file& file)
     {
         return file.name() != "." && file.name() != "..";
@@ -322,7 +316,7 @@ directory_listing provider::listing(
         make_filter_iterator(
             not_special_file, directory_iterator()),
         back_inserter(files),
-        listing_from_sftp_file);
+        libssh2_sftp_filesystem_item::create_from_libssh2_file);
 
     return files;
 }
@@ -774,7 +768,7 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
 /**
  * Get the details of a file by path.
  *
- * The Listing returned by this function doesn't include a long entry or
+ * The item returned by this function doesn't include a long entry or
  * owner and group names as string (these being derived from the long entry).
  */
 sftp_filesystem_item provider::stat(
@@ -789,44 +783,11 @@ sftp_filesystem_item provider::stat(
     
     sftp_channel channel(m_session->get(), m_session->sftp());
 
-    file_attributes attr = attributes(
+    file_attributes stat_result = attributes(
         channel, utf8_path, follow_links != FALSE);
 
-    sftp_filesystem_item lt = sftp_filesystem_item();
-
-    // Permissions
-    try
-    {
-        lt.uPermissions = attr.permissions();
-        lt.fIsLink = attr.type() == file_attributes::symbolic_link;
-        lt.fIsDirectory = attr.type() == file_attributes::directory;
-    } catch (const unsupported_attribute_error&) {}
-
-    // User & Group
-    try
-    {
-        lt.uUid = attr.uid();
-        lt.uGid = attr.gid();
-    } catch (const unsupported_attribute_error&) {}
-
-    // Size of file
-    try
-    {
-        lt.uSize = attr.size();
-    } catch (const unsupported_attribute_error&) {}
-
-    // Access & Modification time
-    try
-    {
-        datetime_t modified(static_cast<time_t>(attr.mtime()));
-        datetime_t accessed(static_cast<time_t>(attr.atime()));
-        lt.dateModified = modified.detach();
-        lt.dateAccessed = accessed.detach();
-    } catch (const unsupported_attribute_error&) {}
-
-    lt.bstrFilename = bstr_t(path.filename()).detach();
-
-    return lt;
+    return libssh2_sftp_filesystem_item::create_from_libssh2_attributes(
+        utf8_path, stat_result);
 }
 
 /**

@@ -257,6 +257,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\libssh2_sftp_filesystem_item.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
@@ -305,10 +309,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\sftp_filesystem_item.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SftpStream.cpp"
 				>
 			</File>
@@ -320,6 +320,10 @@
 			>
 			<File
 				RelativePath=".\KeyboardInteractive.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\libssh2_sftp_filesystem_item.hpp"
 				>
 			</File>
 			<File
@@ -343,31 +347,13 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sftp_provider_path.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SftpStream.hpp"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="listing"
-			>
-			<Filter
-				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
-				>
-				<File
-					RelativePath=".\listing\listing.hpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-				>
-				<File
-					RelativePath=".\listing\listing.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

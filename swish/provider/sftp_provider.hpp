@@ -28,7 +28,9 @@
 #define SWISH_PROVIDER_SFTP_PROVIDER_H
 #pragma once
 
-#include <swish/provider/sftp_filesystem_item.hpp> // sftp_filesystem_item
+#include "swish/provider/sftp_filesystem_item.hpp"
+#include "swish/provider/sftp_provider_path.hpp"
+
 #include <boost/filesystem/path.hpp> // wpath
 //#include <boost/range/any_range.hpp> USE ONCE WE UPGRADE BOOST
 
@@ -77,8 +79,6 @@ public:
 
 namespace swish {
 namespace provider {
-
-typedef boost::filesystem::wpath sftp_provider_path;
 
 //typedef boost::any_range<
 //    sftp_filesystem_item, boost::forward_traversal_tag,

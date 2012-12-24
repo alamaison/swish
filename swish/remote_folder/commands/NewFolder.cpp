@@ -27,6 +27,7 @@
 #include "NewFolder.hpp"
 
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
@@ -107,7 +108,7 @@ wstring prefix_if_necessary(
     BOOST_FOREACH(
         const sftp_filesystem_item& lt, provider->listing(consumer, directory))
     {
-        wstring filename = wstring(lt.bstrFilename);
+        wstring filename = lt.filename().string();
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))
         {
             assert(digit_suffix_match.size() == 2); // complete + capture group

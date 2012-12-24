@@ -1,7 +1,7 @@
 /**
     @file
 
-    SFTP backend filesystem item.
+    SFTP backend filesystem item interface.
 
     @if license
 
@@ -32,61 +32,132 @@
 #ifndef SWISH_PROVIDER_SFTP_FILESYSTEM_ITEM_HPP
 #define SWISH_PROVIDER_SFTP_FILESYSTEM_ITEM_HPP
 
-#include <OleAuto.h> // BSTR, DATE
+#include "swish/provider/sftp_provider_path.hpp"
+
+#include <boost/cstdint.hpp> // uint64_t
+#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
+#include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
+
+#include <comet/datetime.h> // datetime_t
+
+#include <string>
+
 
 namespace swish {
 namespace provider {
 
 /**
- * An entry in an SFTP directory.
+ * Interface to Swish's representation of an SFTP file's properties.
+ *
+ * All attributes are technically optional according to the SFTP standard
+ * (i.e. the server could set the flags to say the returned value isn't valid),
+ * but, to simplify things inside Swish, we only make this optionality
+ * explicit for `owner` and `group` as they are the only ones with a realistic
+ * prospect of not being supported.  The others have sensible defaults.
  */
-class sftp_filesystem_item
+class sftp_filesystem_item_interface
 {
 public:
 
-    sftp_filesystem_item();
-
-    sftp_filesystem_item(const sftp_filesystem_item& other);
-
-    sftp_filesystem_item& operator=(const sftp_filesystem_item& other);
-
-    ~sftp_filesystem_item();
-
-    bool operator<(const sftp_filesystem_item& other) const;
-
-    bool operator==(const sftp_filesystem_item& other) const;
-
-    bool operator==(const comet::bstr_t& name) const;
-
-    friend void swap(sftp_filesystem_item& lhs, sftp_filesystem_item& rhs)
+    BOOST_SCOPED_ENUM_START(type)
     {
-        std::swap(lhs.bstrFilename, rhs.bstrFilename);
-        std::swap(lhs.uPermissions, rhs.uPermissions);
-        std::swap(lhs.bstrOwner, rhs.bstrOwner);
-        std::swap(lhs.bstrGroup, rhs.bstrGroup);
-        std::swap(lhs.uUid, rhs.uUid);
-        std::swap(lhs.uGid, rhs.uGid);
-        std::swap(lhs.uSize, rhs.uSize);
-        std::swap(lhs.dateModified, rhs.dateModified);
-        std::swap(lhs.dateAccessed, rhs.dateAccessed);
-        std::swap(lhs.fIsDirectory, rhs.fIsDirectory);
-        std::swap(lhs.fIsLink, rhs.fIsLink);
-    }
+        /// File that can be opened and whose contents can be accessed
+        /// (permissions permitting).
+        file,
+          
+        /// This filesystem item can be listed for items under it.
+        directory,
 
-    BSTR bstrFilename;    ///< Directory-relative filename (e.g. README.txt)
-    ULONG uPermissions;   ///< Unix file permissions
-    BSTR bstrOwner;       ///< The user name of the file's owner
-    BSTR bstrGroup;       ///< The name of the group to which the file belongs
-    ULONG uUid;           ///< Numerical ID of file's owner
-    ULONG uGid;           ///< Numerical ID of group to which the file belongs
-    ULONGLONG uSize;      ///< The file's size in bytes
-    DATE dateModified;    ///< The date and time at which the file was 
-                          ///< last modified in automation-compatible format
-    DATE dateAccessed;    ///< The date and time at which the file was 
-                          ///< last accessed in automation-compatible format
-    BOOL fIsDirectory;    ///< This filesystem item can be listed for items
-                          ///< under it.
-    BOOL fIsLink;         ///< This file is a link to another file or directory
+        /// This file is a link to another item
+        link,
+
+        /// An item of a type we don't recognise or the server didn't send any
+        /// information about the type
+        unknown
+    };
+    BOOST_SCOPED_ENUM_END();
+
+    /// Type of item represented by this object.
+    virtual BOOST_SCOPED_ENUM(type) type() const = 0;
+
+    /// Filename relative to directory (e.g. `README.txt`).
+    virtual sftp_provider_path filename() const = 0;
+
+    /// Unix file permissions.
+    virtual unsigned long permissions() const = 0;
+
+    /// The user name of the file's owner.
+    /// This may not exist if the server doesn't report named users.  This may
+    /// also be incorrect if the server responds in an unusual way so should
+    /// only be used for information.
+    virtual boost::optional<std::wstring> owner() const = 0;
+
+    /// Numeric ID of file's owner.
+    virtual unsigned long uid() const = 0;
+
+    /// The name of the user group to which the file belongs
+    /// This may not exist if the server doesn't report named groups.  This may
+    /// also be incorrect if the server responds in an unusual way so should
+    /// only be used for information.
+    virtual boost::optional<std::wstring> group() const = 0;
+
+    /// Numeric ID of group to which the file belongs.
+    virtual unsigned long gid() const = 0;
+
+    /// The file's size in bytes.
+    virtual boost::uint64_t size_in_bytes() const = 0;
+
+    /// The date and time at which the file was last accessed.
+    virtual comet::datetime_t last_accessed() const = 0;
+
+    /// The date and time at which the file was last modified.
+    virtual comet::datetime_t last_modified() const = 0;
+};
+
+/**
+ * Type erasure interface to SFTP representation implementations.
+ */
+class sftp_filesystem_item : public sftp_filesystem_item_interface
+{
+public:
+
+    BOOST_SCOPED_ENUM(type) type() const
+    { return m_inner->type(); }
+
+    sftp_provider_path filename() const
+    { return m_inner ->filename(); }
+
+    unsigned long permissions() const
+    { return m_inner->permissions(); }
+
+    boost::optional<std::wstring> owner() const
+    { return m_inner->owner(); }
+
+    unsigned long uid() const
+    { return m_inner->uid(); }
+
+    boost::optional<std::wstring> group() const
+    { return m_inner->group(); }
+
+    unsigned long gid() const
+    { return m_inner->gid(); }
+
+    boost::uint64_t size_in_bytes() const
+    { return m_inner->size_in_bytes(); }
+
+    comet::datetime_t last_accessed() const
+    { return m_inner->last_accessed(); }
+
+    comet::datetime_t last_modified() const
+    { return m_inner->last_modified(); }
+
+    explicit sftp_filesystem_item(
+        boost::shared_ptr<sftp_filesystem_item_interface> inner)
+        : m_inner(inner) {}
+
+private:
+    boost::shared_ptr<sftp_filesystem_item_interface> m_inner;
 };
 
 }}

@@ -203,7 +203,7 @@ predicate_result file_exists_in_listing(
     {
         BOOST_FOREACH(const sftp_filesystem_item& entry, listing)
         {
-            if (filename == bstr_t(entry.bstrFilename))
+            if (filename == entry.filename())
             {
                 predicate_result res(true);
                 res.message() << "File found in enumerator: " << filename;
@@ -313,9 +313,9 @@ BOOST_AUTO_TEST_CASE( GetListing )
     // Check format of listing is sensible
     BOOST_FOREACH(const sftp_filesystem_item& entry, listing)
     {
-        wstring filename = entry.bstrFilename;
-        wstring owner = entry.bstrOwner;
-        wstring group = entry.bstrGroup;
+        wstring filename = entry.filename().string();
+        wstring owner = *entry.owner();
+        wstring group = *entry.group();
 
         BOOST_CHECK(!filename.empty());
         BOOST_CHECK_NE(filename, L".");
@@ -324,10 +324,10 @@ BOOST_AUTO_TEST_CASE( GetListing )
         BOOST_CHECK(!owner.empty());
         BOOST_CHECK(!group.empty());
 
-        BOOST_CHECK( entry.dateModified );
-        datetime_t modified(entry.dateModified);
-        BOOST_CHECK(modified.valid());
-        BOOST_CHECK_LE(modified.year(), datetime_t::now().year());
+        BOOST_CHECK(entry.last_modified().valid());
+        BOOST_CHECK_LE(entry.last_modified().year(), datetime_t::now().year());
+        BOOST_CHECK(entry.last_accessed().valid());
+        BOOST_CHECK_LE(entry.last_accessed().year(), datetime_t::now().year());
 
         // TODO: test numerical permissions using old swish C 
         //       permissions functions here
