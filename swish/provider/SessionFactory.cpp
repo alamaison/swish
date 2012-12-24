@@ -76,9 +76,6 @@ using comet::bstr_t;
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 
-using ATL::CT2A;
-using ATL::CComBSTR;
-
 using std::auto_ptr;
 using std::exception;
 using std::string;
@@ -196,11 +193,11 @@ void CSessionFactory::_AuthenticateUser(
     PCWSTR pwszUser, CSession& session, ISftpConsumer *pConsumer) throw(...)
 {
     ATLASSUME(pwszUser[0] != '\0');
-    CT2A szUsername(pwszUser);
+    string utf8_username = WideStringToUtf8String(pwszUser);
 
     // Check which authentication methods are available
     char *szAuthList = libssh2_userauth_list(
-        session, szUsername, ::strlen(szUsername));
+        session, utf8_username.data(), utf8_username.size());
     if (!szAuthList || *szAuthList == '\0')
     {
         // If empty, server refused to let user connect
@@ -215,19 +212,20 @@ void CSessionFactory::_AuthenticateUser(
     if (::strstr(szAuthList, "publickey"))
     {
         TRACE("Trying public-key authentication");
-        hr = _PublicKeyAuthentication(szUsername, session, pConsumer);
+        hr = _PublicKeyAuthentication(utf8_username, session, pConsumer);
     }
     if (FAILED(hr) && ::strstr(szAuthList, "keyboard-interactive"))
     {
         TRACE("Trying keyboard-interactive authentication");
-        hr = _KeyboardInteractiveAuthentication(szUsername, session, pConsumer);
+        hr = _KeyboardInteractiveAuthentication(
+            utf8_username, session, pConsumer);
         if (hr == E_ABORT)
             AtlThrow(hr); // User cancelled
     }
     if (FAILED(hr) && ::strstr(szAuthList, "password"))
     {
         TRACE("Trying simple password authentication");
-        hr = _PasswordAuthentication(szUsername, session, pConsumer);
+        hr = _PasswordAuthentication(utf8_username, session, pConsumer);
     }
 
     if (FAILED(hr))
@@ -247,22 +245,25 @@ void CSessionFactory::_AuthenticateUser(
  * - E_FAIL otherwise
  */
 HRESULT CSessionFactory::_PasswordAuthentication(
-    PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+    const string& utf8_username, CSession& session, ISftpConsumer *pConsumer)
 {
     HRESULT hr;
-    CComBSTR bstrPrompt = _T("Please enter your password:");
-    CComBSTR bstrPassword;
+    bstr_t prompt = L"Please enter your password:";
+    bstr_t password;
 
     // Loop until successfully authenticated or request returns cancel
     int ret = -1; // default to failure
     do {
-        hr = pConsumer->OnPasswordRequest( bstrPrompt, &bstrPassword );
+        hr = pConsumer->OnPasswordRequest(prompt.in(), password.out());
         if FAILED(hr)
             return hr;
-        CT2A szPassword(bstrPassword);
-        ret = libssh2_userauth_password(session, szUsername, szPassword);
+        
+        string utf8_password = WideStringToUtf8String(password.w_str());
+        ret = libssh2_userauth_password_ex(
+            session, utf8_username.data(), utf8_username.size(),
+            utf8_password.data(), utf8_password.size(),
+            NULL);
         // TODO: handle password change callback here
-        bstrPassword.Empty(); // Prevent memory leak on repeat
     } while (ret != 0);
 
     ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
@@ -281,7 +282,7 @@ HRESULT CSessionFactory::_PasswordAuthentication(
  * - E_FAIL otherwise
  */
 HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
-    PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+    const string& utf8_username, CSession& session, ISftpConsumer *pConsumer)
 {
     // Create instance of keyboard-interactive authentication handler
     CKeyboardInteractive handler(pConsumer);
@@ -292,8 +293,9 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
     // If the user cancels the operation, our callback should throw an
     // E_ABORT exception which we catch here.
     *libssh2_session_abstract(session) = &handler;
-    int rc = libssh2_userauth_keyboard_interactive(session,
-        szUsername, &(CKeyboardInteractive::OnKeyboardInteractive));
+    int rc = libssh2_userauth_keyboard_interactive_ex(
+        session, utf8_username.data(), utf8_username.size(),
+        &(CKeyboardInteractive::OnKeyboardInteractive));
     
     // Check for two possible types of failure
     if (FAILED(handler.GetErrorState()))
@@ -306,28 +308,31 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
 namespace {
 
     HRESULT pubkey_auth_the_nasty_old_way(
-        PCSTR szUsername, CSession& session, ISftpConsumer *pConsumer)
+        const string& utf8_username, CSession& session,
+        ISftpConsumer *pConsumer)
     {
         ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
 
         try
         {
-            CComBSTR bstrPrivateKey;
-            HRESULT hr = pConsumer->OnPrivateKeyFileRequest(&bstrPrivateKey);
+            bstr_t private_key_path;
+            HRESULT hr =
+                pConsumer->OnPrivateKeyFileRequest(private_key_path.out());
             if (FAILED(hr))
                 return hr;
 
-            CComBSTR bstrPublicKey;
-            hr = pConsumer->OnPublicKeyFileRequest(&bstrPublicKey);
+            bstr_t public_key_path;
+            hr = pConsumer->OnPublicKeyFileRequest(public_key_path.out());
             if (FAILED(hr))
                 return hr;
 
-            string privateKey = WideStringToUtf8String(bstrPrivateKey.m_str);
-            string publicKey = WideStringToUtf8String(bstrPublicKey.m_str);
+            string privateKey = WideStringToUtf8String(private_key_path.w_str());
+            string publicKey = WideStringToUtf8String(public_key_path.w_str());
 
             // TODO: unlock public key using passphrase
-            int rc = libssh2_userauth_publickey_fromfile(
-                session, szUsername, publicKey.c_str(), privateKey.c_str(), "");
+            int rc = libssh2_userauth_publickey_fromfile_ex(
+                session, utf8_username.data(), utf8_username.size(),
+                publicKey.c_str(), privateKey.c_str(), "");
             if (rc)
                 return E_ABORT;
 
@@ -340,13 +345,14 @@ namespace {
 }
 
 HRESULT CSessionFactory::_PublicKeyAuthentication(
-    PCSTR szUsername, CSession& yukky_session, ISftpConsumer *pConsumer)
+    const string& utf8_username, CSession& yukky_session,
+    ISftpConsumer *pConsumer)
 {
     // This old way is only kept around to support the tests.  Its almost
     // useless for anything else as we don't pass the 'consumer' enough
     // information to identify which key to use.
     HRESULT hr = pubkey_auth_the_nasty_old_way(
-        szUsername, yukky_session, pConsumer);
+        utf8_username, yukky_session, pConsumer);
     if (SUCCEEDED(hr))
         return hr;
 
@@ -360,7 +366,7 @@ HRESULT CSessionFactory::_PublicKeyAuthentication(
         {
             try
             {
-                key.authenticate(szUsername);
+                key.authenticate(utf8_username);
                 return S_OK;
             }
             catch (const exception&)

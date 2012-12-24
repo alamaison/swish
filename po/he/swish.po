@@ -1,25 +1,26 @@
 # 
 # Translators:
+#   <aharonoosh1@gmail.com>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-07-30 13:20+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
+"PO-Revision-Date: 2012-10-11 19:20+0000\n"
+"Last-Translator: aharonoosh <aharonoosh1@gmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: he\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "לא ניתן ליצור קובץ בשרת:"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -27,7 +28,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "מעתיק '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -36,7 +37,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "ל '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -57,11 +58,11 @@ msgstr "מעתיק..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "לא ניתן להעביר קבצים"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "אולי אין לך הרשאה לכתוב לספרייה זו."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -326,7 +327,7 @@ msgstr ""
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "הפעל סוכן מפתח"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
@@ -394,30 +395,30 @@ msgstr ""
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
-msgstr ""
+msgstr "לא ניתן לפתוח את הקישור"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:274
 #: ../../swish/remote_folder/context_menu_callback.cpp:379
 #: ../../swish/remote_folder/commands/delete.cpp:232
 #: ../../swish/remote_folder/commands/NewFolder.cpp:240
 msgid "You might not have permission."
-msgstr ""
+msgstr "אולי אין לך רשות."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
-msgstr ""
+msgstr "לא ניתן לפתוח את הקובץ"
 
 #: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
-msgstr ""
+msgstr "משימות קובץ ותיקיה"
 
 #: ../../swish/remote_folder/commands/commands.cpp:105
 msgid "These tasks help you manage your remote files."
-msgstr ""
+msgstr "משימות אלה תעזורנה לך לנהל את הקבצים המרוחקים שלך."
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
-msgstr ""
+msgstr "אין אפשרות למחוק את הפריט"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:168
 msgid "New &folder"
@@ -425,20 +426,20 @@ msgstr ""
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:169
 msgid "Create a new, empty folder in the folder you have open."
-msgstr ""
+msgstr "צור תיקייה חדשה וריקה בתיקייה שפתחת."
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:171
 msgid "Make a new folder"
-msgstr ""
+msgstr "צור תיקייה חדשה"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:211
 msgctxt "Initial name"
 msgid "New folder"
-msgstr ""
+msgstr "תיקייה חדשה"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:239
 msgid "Could not create a new folder"
-msgstr ""
+msgstr "לא ניתן ליצור תיקייה חדשה"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
@@ -446,28 +447,28 @@ msgstr "מקלדת-בקשה אינטראקטיבית"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
-msgstr ""
+msgstr "אין אפשרות לגשת לספרייה"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr ""
+msgstr "נתיב לא מוכר"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
-msgstr ""
+msgstr "ודאו כי הנתיב הוזן כהלכה."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
-msgstr ""
+msgstr "לא ניתן לשנות את שם הפריט"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
-msgstr ""
+msgstr "אין אפשרות לגשת לפריט"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:705
 msgid "Unable to access the items"
-msgstr ""
+msgstr "לא ניתן לגשת לפריטים"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
-msgstr ""
+msgstr "לא ניתן לגשת לתיקייה"

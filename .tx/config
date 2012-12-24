@@ -1,0 +1,8 @@
+[main]
+host = https://www.transifex.net
+
+[swish.swish]
+file_filter = po\<lang>\swish.po
+source_file = po\template\swish.pot
+source_lang = en_GB
+type = PO

@@ -43,6 +43,7 @@
 #include <winerror.h>  // HRESULT
 
 #include <memory>      // auto_ptr
+#include <string>
 
 class CSessionFactory
 {
@@ -56,18 +57,18 @@ private:
         PCWSTR pwszHost, CSession& session, __in ISftpConsumer *pConsumer);
 
     static void _AuthenticateUser(
-        const wchar_t* pwszUser, CSession& session, 
+        PCWSTR pwszUser, CSession& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _PasswordAuthentication(
-        const char* szUsername, CSession& session, 
+        const std::string& utf8_username, CSession& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _KeyboardInteractiveAuthentication(
-        const char*  szUsername, CSession& session, 
+        const std::string& utf8_username, CSession& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _PublicKeyAuthentication(
-        const char*  szUsername, CSession& session, 
+        const std::string& utf8_username, CSession& session, 
         __in ISftpConsumer* pConsumer);
 };
