@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir2EDB99921FA555A0F8A72F9ECFA4261B" Name="el_GR" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="ELGRTrans">
+      <Component Id="cmpD4F7D2C780E78080557FA0DC22697688" Directory="dirAFAF24B3882BDBD5314999CD292ACFDD" Guid="*">
+        <File Id="filAD76ECC70E69DD60541C9D7F2CC04F06" KeyPath="yes" Source="$(var.SolutionDir)\po\el_GR\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir2EDB99921FA555A0F8A72F9ECFA4261B">
+      <Directory Id="dirAFAF24B3882BDBD5314999CD292ACFDD" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir95F05E1B548F11499DC286492F3BBD34" Name="fi" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="FITrans">
+      <Component Id="cmpB332AA9CB224B1AE54DC56102B5EE63E" Directory="dir0601B9D489568248CDA74B8B29026827" Guid="*">
+        <File Id="filAACF3A7BCAADE53F0C77B69CA984C39A" KeyPath="yes" Source="$(var.SolutionDir)\po\fi\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir95F05E1B548F11499DC286492F3BBD34">
+      <Directory Id="dir0601B9D489568248CDA74B8B29026827" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>
