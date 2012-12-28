@@ -9,7 +9,7 @@
       <title>Version 0.7.2</title>
       <sparkle:releaseNotesLink>http://www.swish-sftp.org/autoupdate/NEWS-0.7.2.html</sparkle:releaseNotesLink>
       <pubDate>28 December 2012</pubDate>
-      <enclosure url="http://sourceforge.net/projects/swish/files/swish/swish-0.7.2/swish-0.7.2.exe/download"
+      <enclosure url="http://sourceforge.net/projects/swish/files/swish/swish-0.7.2/swish-0.7.2.exe"
                  sparkle:version="0.7.2"
                  type="application/octet-stream"/>
     </item>
