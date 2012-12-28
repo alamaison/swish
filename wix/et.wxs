@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir2C4A21B07B8FA2296707A86D0BCBF403" Name="et" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="ETTrans">
+      <Component Id="cmpE2C185A7696096745FBE6AF20713C7DF" Directory="dirB2F588BF9DE0CDFC3AB37C4810F8E333" Guid="*">
+        <File Id="filA2C04E8660C02154F911B35A1D5756F1" KeyPath="yes" Source="$(var.SolutionDir)\po\et\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir2C4A21B07B8FA2296707A86D0BCBF403">
+      <Directory Id="dirB2F588BF9DE0CDFC3AB37C4810F8E333" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>

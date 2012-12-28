@@ -43,6 +43,12 @@
     <Compile Include="sk.wxs" />
     <Compile Include="sv.wxs" />
     <Compile Include="swish.wxs" />
+    <Compile Include="da_DK.wxs" />
+    <Compile Include="ko.wxs" />
+    <Compile Include="et.wxs" />
+    <Compile Include="fi.wxs" />
+    <Compile Include="el_GR.wxs" />
+    <Compile Include="cy.wxs" />
     <Compile Include="tr.wxs" />
     <Compile Include="it.wxs" />
     <Compile Include="ja.wxs" />

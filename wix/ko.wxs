@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir2186C0E09ED9E2C2DF1E3F86A047E824" Name="ko" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="KOTrans">
+      <Component Id="cmp5EED4D9B47E41CC75931A541C4555EC8" Directory="dirD86512A5DB6CB6CA7C38A68698B48F63" Guid="*">
+        <File Id="fil9CD796FE7C576C421316D69C7E10FE79" KeyPath="yes" Source="$(var.SolutionDir)\po\ko\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir2186C0E09ED9E2C2DF1E3F86A047E824">
+      <Directory Id="dirD86512A5DB6CB6CA7C38A68698B48F63" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>
