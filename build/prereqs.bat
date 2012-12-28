@@ -95,11 +95,11 @@ del boost_locale.tar
 
 echo.
 echo ===- Downloading Winsparkle ...
-%WGET% "http://sourceforge.net/projects/swish/files/winsparkle-swish/winsparkle.zip/download" || (
+%WGET% "http://sourceforge.net/projects/swish/files/winsparkle-swish/winsparkle-4477633.7z/download" || (
 	echo ===- Error while trying to download Winsparkle. & goto error)
-%SEVENZ% x winsparkle.zip -owinsparkle -aoa || (
+%SEVENZ% x winsparkle-4477633.7z -owinsparkle -aoa || (
 	echo ===- Error while trying to extract Winsparkle. & goto error)
-del winsparkle.zip
+del winsparkle-4477633.7z
 
 :: Pageant
 
