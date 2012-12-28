@@ -1,5 +1,10 @@
 swish-0.7.2
 -Added direct downloading and installation of updates.
+-More detailed error messages.
+-Fixed bug with non-ASCII characters in usernames and passwords.
+-New Welsh, Danish, Greek, Estonian, Finnish and Korean translations.
+-Updated Bulgarian, Czech, German, Spanish, French, Hebrew, Italian, Japanese,
+ Dutch, Polish, Russian, Swedish and Chinese (Simplified) translations.
 
 swish-0.7.0
 -Added support for public key authentication through Pageant key agent.
