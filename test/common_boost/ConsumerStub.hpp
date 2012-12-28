@@ -52,13 +52,13 @@ public:
         : m_privateKey(privatekey), m_publicKey(publickey) {}
 
     // ISftpConsumer methods
-    IFACEMETHODIMP OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
+    HRESULT OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
     {
         *pbstrPassword = NULL;
         return E_NOTIMPL;
     }
 
-    IFACEMETHODIMP OnKeyboardInteractiveRequest(
+    HRESULT OnKeyboardInteractiveRequest(
         BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
         SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
         SAFEARRAY ** /*ppsaResponses*/)
@@ -72,7 +72,7 @@ public:
      *
      * The path is set via SetKeyPaths().
      */
-    IFACEMETHODIMP OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
+    HRESULT OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
     {
         ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
         *pbstrPrivateKeyFile = NULL;
@@ -92,7 +92,7 @@ public:
      *
      * The path is set via SetKeyPaths().
      */
-    IFACEMETHODIMP OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
+    HRESULT OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
     {
         ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
         *pbstrPublicKeyFile = NULL;
@@ -107,20 +107,20 @@ public:
         return S_OK;
     }
 
-    IFACEMETHODIMP OnConfirmOverwrite(
+    HRESULT OnConfirmOverwrite(
         BSTR /*bstrOldFile*/, BSTR /*bstrNewFile*/)
     {
         BOOST_ERROR("Unexpected call to "__FUNCTION__);
         return E_NOTIMPL;
     }
 
-    IFACEMETHODIMP OnHostkeyMismatch(
+    HRESULT OnHostkeyMismatch(
         BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
     {
         return S_FALSE;
     }
 
-    IFACEMETHODIMP OnHostkeyUnknown(
+    HRESULT OnHostkeyUnknown(
         BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
     {
         return S_FALSE;

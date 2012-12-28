@@ -84,7 +84,7 @@ CUserInteraction::CUserInteraction(HWND hwnd) : m_hwnd(hwnd) {}
  * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
  *         forbidden and S_OK otherwise.
  */
-STDMETHODIMP CUserInteraction::OnPasswordRequest(
+HRESULT CUserInteraction::OnPasswordRequest(
     BSTR bstrRequest, BSTR *pbstrPassword
 )
 {
@@ -104,7 +104,7 @@ STDMETHODIMP CUserInteraction::OnPasswordRequest(
     return S_OK;
 }
 
-STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
+HRESULT CUserInteraction::OnKeyboardInteractiveRequest(
     BSTR bstrName, BSTR bstrInstruction, SAFEARRAY *psaPrompts, 
     SAFEARRAY *psaShowResponses, SAFEARRAY **ppsaResponses
 )
@@ -159,7 +159,7 @@ STDMETHODIMP CUserInteraction::OnKeyboardInteractiveRequest(
 /**
  * Return the path of the file containing the private key.
  */
-STDMETHODIMP CUserInteraction::OnPrivateKeyFileRequest(
+HRESULT CUserInteraction::OnPrivateKeyFileRequest(
     BSTR *pbstrPrivateKeyFile)
 {
     ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
@@ -171,7 +171,7 @@ STDMETHODIMP CUserInteraction::OnPrivateKeyFileRequest(
 /**
  * Return the path of the file containing the public key.
  */
-STDMETHODIMP CUserInteraction::OnPublicKeyFileRequest(
+HRESULT CUserInteraction::OnPublicKeyFileRequest(
     BSTR *pbstrPublicKeyFile)
 {
     ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
@@ -216,7 +216,7 @@ HRESULT on_confirm_overwrite(
 
 }
 
-STDMETHODIMP CUserInteraction::OnConfirmOverwrite(
+HRESULT CUserInteraction::OnConfirmOverwrite(
     BSTR bstrOldFile, BSTR bstrNewFile )
 {
     try
@@ -324,7 +324,7 @@ HRESULT on_hostkey_unknown(
 }
 }
 
-STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
+HRESULT CUserInteraction::OnHostkeyMismatch(
     BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
 {
     try
@@ -335,7 +335,7 @@ STDMETHODIMP CUserInteraction::OnHostkeyMismatch(
     WINAPI_COM_CATCH_AUTO_INTERFACE();
 }
 
-STDMETHODIMP CUserInteraction::OnHostkeyUnknown(
+HRESULT CUserInteraction::OnHostkeyUnknown(
     BSTR bstrHostName, BSTR bstrHostKey, BSTR bstrHostKeyType)
 {
     try

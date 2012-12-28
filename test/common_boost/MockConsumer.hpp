@@ -130,7 +130,7 @@ public:
     bool confirmed_overwrite() const { return m_confirmed_overwrite; }
 
     // ISftpConsumer methods
-    IFACEMETHODIMP OnPasswordRequest(BSTR request, BSTR *password_out)
+    HRESULT OnPasswordRequest(BSTR request, BSTR *password_out)
     {
         ++m_password_attempt_count;
         *password_out = NULL;
@@ -178,7 +178,7 @@ public:
         return S_OK;
     }
 
-    IFACEMETHODIMP OnKeyboardInteractiveRequest(
+    HRESULT OnKeyboardInteractiveRequest(
         BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
         SAFEARRAY * prompts, SAFEARRAY * show_responses,
         SAFEARRAY ** responses_out)
@@ -249,17 +249,17 @@ public:
         return S_OK;
     }
 
-    IFACEMETHODIMP OnPrivateKeyFileRequest(BSTR * /*pbstrPrivateKeyFile*/)
+    HRESULT OnPrivateKeyFileRequest(BSTR * /*pbstrPrivateKeyFile*/)
     {
         return E_NOTIMPL;
     }
 
-    IFACEMETHODIMP OnPublicKeyFileRequest(BSTR * /*pbstrPublicKeyFile*/)
+    HRESULT OnPublicKeyFileRequest(BSTR * /*pbstrPublicKeyFile*/)
     {
         return E_NOTIMPL;
     }
 
-    IFACEMETHODIMP OnConfirmOverwrite(
+    HRESULT OnConfirmOverwrite(
         BSTR /*bstrOldFile*/, BSTR /*bstrNewFile*/)
     {
         m_confirmed_overwrite = true;
@@ -277,13 +277,13 @@ public:
         }
     }
 
-    IFACEMETHODIMP OnHostkeyMismatch(
+    HRESULT OnHostkeyMismatch(
         BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
     {
         return S_FALSE;
     }
 
-    IFACEMETHODIMP OnHostkeyUnknown(
+    HRESULT OnHostkeyUnknown(
         BSTR /*bstrHostName*/, BSTR /*bstrHostKey*/, BSTR /*bstrHostKeyType*/)
     {
         return S_FALSE;

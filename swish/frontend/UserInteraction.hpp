@@ -49,31 +49,31 @@ public:
      * @{
      */
     // ISftpConsumer Methods
-    IFACEMETHODIMP OnPasswordRequest(
+    HRESULT OnPasswordRequest(
         __in BSTR bstrRequest, __out BSTR *pbstrPassword
     );
-    IFACEMETHODIMP OnKeyboardInteractiveRequest(
+    HRESULT OnKeyboardInteractiveRequest(
         __in BSTR bstrName, __in BSTR bstrInstruction,
         __in SAFEARRAY *psaPrompts,
         __in SAFEARRAY *psaShowResponses,
         __deref_out SAFEARRAY **ppsaResponses
     );
-    IFACEMETHODIMP OnPrivateKeyFileRequest(
+    HRESULT OnPrivateKeyFileRequest(
         __out BSTR *pbstrPrivateKeyFile
     );
-    IFACEMETHODIMP OnPublicKeyFileRequest(
+    HRESULT OnPublicKeyFileRequest(
         __out BSTR *pbstrPublicKeyFile
     );
-    IFACEMETHODIMP OnConfirmOverwrite(
+    HRESULT OnConfirmOverwrite(
         __in BSTR bstrOldFile,
         __in BSTR bstrNewFile
     );
-    IFACEMETHODIMP OnHostkeyMismatch(
+    HRESULT OnHostkeyMismatch(
         __in BSTR bstrHostName,
         __in BSTR bstrHostKey,
         __in BSTR bstrHostKeyType
     );
-    IFACEMETHODIMP OnHostkeyUnknown(
+    HRESULT OnHostkeyUnknown(
         __in BSTR bstrHostName,
         __in BSTR bstrHostKey,
         __in BSTR bstrHostKeyType
