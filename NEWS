@@ -1,3 +1,6 @@
+swish-0.7.2
+-Added direct downloading and installation of updates.
+
 swish-0.7.0
 -Added support for public key authentication through Pageant key agent.
 -Updated Czech, Spanish, Japanese, Dutch and Portuguese (Brazil) translations.

@@ -6,11 +6,11 @@
     <description>Appcast for Swish updates.</description>
     <language>en</language>
     <item>
-      <title>Version 0.7.0</title>
-      <sparkle:releaseNotesLink>http://www.swish-sftp.org/autoupdate/NEWS-0.7.0.html</sparkle:releaseNotesLink>
-      <pubDate>30 July 2012</pubDate>
-      <enclosure url="http://sourceforge.net/projects/swish/files/swish/swish-0.7.0/swish-0.7.0.exe/download"
-                 sparkle:version="0.7.0"
+      <title>Version 0.7.2</title>
+      <sparkle:releaseNotesLink>http://www.swish-sftp.org/autoupdate/NEWS-0.7.2.html</sparkle:releaseNotesLink>
+      <pubDate>28 December 2012</pubDate>
+      <enclosure url="http://sourceforge.net/projects/swish/files/swish/swish-0.7.2/swish-0.7.2.exe/download"
+                 sparkle:version="0.7.2"
                  type="application/octet-stream"/>
     </item>
   </channel>
