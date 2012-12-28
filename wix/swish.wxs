@@ -177,9 +177,7 @@
     </ComponentGroup>
 
     <Feature Id="Complete" Level="1" Title="Swish" ConfigurableDirectory='INSTALLDIR'>
-      <ComponentRef Id="Interfaces" />
       <ComponentRef Id="ShellFolder" />
-      <ComponentRef Id="Provider" />
       <ComponentRef Id="Libssh2" />
       <ComponentRef Id="WinSparkle" />
       <ComponentRef Id="Pageant" />
