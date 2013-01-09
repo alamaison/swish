@@ -4,3 +4,6 @@
 [submodule "thirdparty/winapi"]
 	path = thirdparty/winapi
 	url = git://github.com/alamaison/winapi.git
+[submodule "thirdparty/comet"]
+	path = thirdparty/comet
+	url = git://github.com/alamaison/comet.git

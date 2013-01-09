@@ -178,14 +178,14 @@ void libssh2_sftp_filesystem_item::common_init(
     {
         m_accessed.from_unixtime(
             static_cast<time_t>(*attributes.last_accessed()),
-            datetime_t::ucm_none);
+            datetime_t::utc_convert_mode::utc_to_local);
     }
 
     if (attributes.last_modified())
     {
         m_modified.from_unixtime(
             static_cast<time_t>(*attributes.last_modified()),
-            datetime_t::ucm_none);
+            datetime_t::utc_convert_mode::utc_to_local);
     }
 }
 

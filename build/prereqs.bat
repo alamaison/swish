@@ -27,7 +27,7 @@ echo using 7zip at %SEVENZ%
 
 cd ..
 
-:: Git submodules: libssh2, winapi
+:: Git submodules: libssh2, winapi, comet
 
 echo ===- Initialising GIT submodules ...
 call git submodule init || (
@@ -59,20 +59,6 @@ echo ===- Downloading WTL ...
 %SEVENZ% x WTL81_9127.zip -owtl -aoa || (
 	echo ===- Error while trying to extract WTL. & goto error)
 del WTL81_9127.zip
-
-:: comet
-
-echo.
-echo ===- Downloading comet ...
-%WGET% --no-check-certificate "http://bitbucket.org/alamaison/swish_comet/get/1174e9540bae.zip" || (
-	echo ===- Error while trying to download comet. & goto error)
-%SEVENZ% x 1174e9540bae.zip -aoa || (
-	echo ===- Error while trying to extract comet. & goto error)
-xcopy /E /Q /Y /I alamaison-swish_comet-1174e9540bae comet || (
-	echo ===- Error while trying to copy comet files & goto error)
-rd /S /Q alamaison-swish_comet-1174e9540bae || (
-	echo ===- Error while trying to clean up comet files & goto error)
-del 1174e9540bae.zip
 
 :: Boost.Locale
 

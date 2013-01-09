@@ -59,8 +59,7 @@ Requirements to build:
         https://connect.microsoft.com/VisualStudio/Downloads/DownloadDetails.aspx?DownloadID=18623
     Comet
         A modern C++ template library for COM.
-        http://bitbucket.org/alamaison/swish_comet/overview/ (custom Swish fork)
-        or http://bitbucket.org/sofusmortensen/comet/overview/.
+        https://github.com/alamaison/comet.
     WTL 8 which can be obtained from Microsoft or through SourceForge
         Microsoft Permissive Licence: http://www.microsoft.com/downloads/
         details.aspx?familyid=E5BA5BA4-6E6B-462A-B24C-61115E846F0C
