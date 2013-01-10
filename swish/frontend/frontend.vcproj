@@ -243,6 +243,10 @@
 			ReferencedProjectIdentifier="{F0D481E1-ED53-4833-878B-4EFE1368A6F5}"
 			RelativePathToProject=".\swish\forms\forms.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{B61A1D27-9D09-4E9C-8665-D23506CA53FD}"
+			RelativePathToProject=".\swish\version\version.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -322,6 +326,18 @@
 			</File>
 			<File
 				RelativePath=".\winsparkle_shower.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="commands"
+			>
+			<File
+				RelativePath=".\commands\About.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\About.hpp"
 				>
 			</File>
 		</Filter>

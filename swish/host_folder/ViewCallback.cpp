@@ -27,10 +27,11 @@
 
 #include "ViewCallback.hpp"
 
-#include "swish/host_folder/commands/commands.hpp" // host commands
+#include "swish/frontend/commands/About.hpp"
 #include "swish/host_folder/commands/Add.hpp"
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
+#include "swish/host_folder/commands/commands.hpp" // host commands
 #include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
 
 #include <winapi/error.hpp> // last_error
@@ -55,6 +56,7 @@
 #include <string>
 
 using swish::frontend::winsparkle_shower;
+using swish::frontend::commands::About;
 using swish::host_folder::commands::Add;
 using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
@@ -92,13 +94,14 @@ namespace host_folder {
 
 namespace {
 
-    // Menu command ID offsets for Explorer Tools menu
+    // Menu command ID offsets for Explorer menus
     enum MENUOFFSET
     {
         MENUIDOFFSET_FIRST = 0,
         MENUIDOFFSET_ADD = MENUIDOFFSET_FIRST,
         MENUIDOFFSET_REMOVE,
         MENUIDOFFSET_LAUNCH_AGENT,
+        MENUIDOFFSET_ABOUT,
         MENUIDOFFSET_LAST
     };
 
@@ -126,6 +129,27 @@ namespace {
         catch (const std::exception& e)
         {
             trace("Failed getting tools menu: %s") % diagnostic_information(e);
+
+            // Fall back to using File menu
+            return item_from_menu(parent_menu, FCIDM_MENU_FILE);
+        }
+    }
+
+    /**
+     * Get handle to explorer 'Help' menu.
+     *
+     * The menu we want to insert into is actually the @e submenu of the
+     * Help menu @e item.  Confusing!
+     */
+    item help_menu_with_fallback(const menu_bar& parent_menu)
+    {
+        try
+        {
+            return item_from_menu(parent_menu, FCIDM_MENU_HELP);
+        }
+        catch (const std::exception& e)
+        {
+            trace("Failed getting help menu: %s") % diagnostic_information(e);
 
             // Fall back to using File menu
             return item_from_menu(parent_menu, FCIDM_MENU_FILE);
@@ -221,13 +245,13 @@ bool CViewCallback::on_fs_notify(
     return true;
 }
 
-class merge_command_items
+class merge_tools_command_items
 {
 public:
 
     typedef void result_type;
 
-    merge_command_items(HWND hwnd_view, apidl_t pidl, UINT first_command_id)
+    merge_tools_command_items(HWND hwnd_view, apidl_t pidl, UINT first_command_id)
         : m_hwnd_view(hwnd_view), m_folder_pidl(pidl),
           m_first_command_id(first_command_id) {}
 
@@ -277,6 +301,47 @@ private:
     UINT m_first_command_id;
 };
 
+class merge_help_command_items
+{
+public:
+
+    typedef void result_type;
+
+    merge_help_command_items(
+        HWND hwnd_view, apidl_t pidl, UINT first_command_id)
+        : m_hwnd_view(hwnd_view), m_folder_pidl(pidl),
+          m_first_command_id(first_command_id) {}
+
+    void operator()(sub_menu_item& sub_menu)
+    {
+        // Inserting into the bottom of the menu
+        menu::iterator insert_position = sub_menu.menu().end();
+        MenuCommandTitleAdapter<About> about(m_hwnd_view);
+
+        command_item_description about_item(
+            string_button_description(about.title(NULL).c_str()),
+            m_first_command_id + MENUIDOFFSET_ABOUT);
+        sub_menu.menu().insert(about_item, insert_position);
+    }
+
+    void operator()(command_item&)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Cannot insert into command item"));
+    }
+
+    void operator()(separator_item&)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Cannot insert into separator"));
+    }
+
+private:
+    HWND m_hwnd_view;
+    apidl_t m_folder_pidl;
+    UINT m_first_command_id;
+};
+
 bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
 {
     assert(menu_info.idCmdFirst >= FCIDM_SHVIEWFIRST);
@@ -289,10 +354,18 @@ bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
     m_tools_menu = tools_menu_with_fallback(
         menu_handle::foster_handle(menu_info.hmenu));
     m_tools_menu->accept(
-        merge_command_items(m_hwnd_view, m_folder_pidl, m_first_command_id));
+        merge_tools_command_items(
+            m_hwnd_view, m_folder_pidl, m_first_command_id));
+
+    // Try to get a handle to the  Explorer Help menu and insert About box
+    m_help_menu = help_menu_with_fallback(
+        menu_handle::foster_handle(menu_info.hmenu));
+    m_help_menu->accept(
+        merge_help_command_items(
+            m_hwnd_view, m_folder_pidl, m_first_command_id));
 
     // Return value of last menu ID plus 1
-    menu_info.idCmdFirst += MENUIDOFFSET_LAST; // Added 2 items
+    menu_info.idCmdFirst += MENUIDOFFSET_LAST; // Added 3 items
 
     return true;
 
@@ -334,6 +407,12 @@ bool CViewCallback::on_invoke_command(UINT command_id)
         command(selection(), NULL);
         return true;
     }
+    else if (command_id == MENUIDOFFSET_ABOUT)
+    {
+        About command(m_hwnd_view);
+        command(selection(), NULL);
+        return true;
+    }
 
     return false;
 }
@@ -358,6 +437,11 @@ bool CViewCallback::on_get_help_text(
     else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
     {
         LaunchAgent command(m_hwnd_view, m_folder_pidl);
+        help_text = command.tool_tip(selection());
+    }
+    else if (command_id == MENUIDOFFSET_ABOUT)
+    {
+        About command(m_hwnd_view);
         help_text = command.tool_tip(selection());
     }
     else
@@ -489,6 +573,15 @@ public:
        item launch_item = item_from_menu(
            sub_menu.menu(), m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
        launch_item.accept(selectability_setter(launch_state));
+
+       About about(m_hwnd_view);
+       BOOST_SCOPED_ENUM(selectability) about_state =
+           about.disabled(m_selection, false) ?
+           selectability::disabled : selectability::enabled;
+
+       item about_item = item_from_menu(
+           sub_menu.menu(), m_first_command_id + MENUIDOFFSET_ABOUT);
+       about_item.accept(selectability_setter(about_state));
     }
 
     void operator()(command_item&)

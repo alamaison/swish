@@ -77,6 +77,8 @@ private:
     HWND m_hwnd_view;         ///< Handle to folder view window
     boost::optional<winapi::gui::menu::item> m_tools_menu;
                               ///< Handle to the Explorer 'Tools' menu
+    boost::optional<winapi::gui::menu::item> m_help_menu;
+                              ///< Handle to the Explorer 'Help' menu
     UINT m_first_command_id;  ///< Start of our tools menu ID range
     winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
                                                 ///< folder
