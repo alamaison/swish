@@ -27,7 +27,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version file from Git"
-				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --abbrev^=4 --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
+				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --long --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -86,7 +86,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version file from Git"
-				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --abbrev^=4 --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
+				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --long --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -147,7 +147,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version file from Git"
-				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --abbrev^=4 --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
+				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --long --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -207,7 +207,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating version file from Git"
-				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --abbrev^=4 --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
+				CommandLine="mkdir &quot;$(IntDir)swish&quot;&#x0D;&#x0A;mkdir &quot;$(IntDir)swish\version&quot;&#x0D;&#x0A;set VerFile=$(IntDir)swish\version\git_version.hpp&#x0D;&#x0A;del &quot;%VerFile%&quot;&#x0D;&#x0A;for /f %%i in (&apos;git describe --long --dirty --always&apos;) do set version=%%i&#x0D;&#x0A;echo const char* git_version=^&quot;%version%^&quot; &gt; &quot;%VerFile%&quot;;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

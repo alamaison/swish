@@ -58,6 +58,7 @@ using boost::locale::translate;
 using boost::filesystem::path;
 
 using std::ostringstream;
+using std::string;
 
 // http://stackoverflow.com/a/557859/67013
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -103,13 +104,19 @@ const
 void About::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
 const
 {
+    string snapshot = snapshot_version();
+    if (snapshot.empty())
+    {
+        snapshot = translate(
+            "Placeholder version if actual version is not known",
+            "unknown").str<char>();
+    }
+
     ostringstream message;
     message
-        << "Swish\n"
+        << "Swish " << release_version().as_string() << "\n"
         << translate(
             "A short description of Swish", "Easy SFTP for Windows Explorer")
-        << "\n\n"
-        << release_version().as_string()
         << "\n\n"
         << "Copyright (C) 2006-2013  Alexander Lamaison and contributors.\n\n"
         << "This program comes with ABSOLUTELY NO WARRANTY. This is free "
@@ -118,7 +125,7 @@ const
            "Software Foundation, either version 3 of the License, or "
            "(at your option) any later version.\n\n"
         << translate("Title of a version description", "Snapshot:")
-        << " " << snapshot_version() << "\n"
+        << " " <<  snapshot << "\n"
         << translate("Title for a date and time", "Build time:")
         << " " << build_date() << " " << build_time() << "\n"
         << translate("Title of a filesystem path", "Installation path:")
