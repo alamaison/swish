@@ -260,6 +260,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\menu_command_manager.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\pch.cpp"
 				>
 				<FileConfiguration
@@ -319,6 +323,10 @@
 			</File>
 			<File
 				RelativePath=".\host_pidl.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\menu_command_manager.hpp"
 				>
 			</File>
 			<File
