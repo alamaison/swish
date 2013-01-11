@@ -52,7 +52,7 @@
 
 #include <algorithm> // find_if
 #include <cassert> // assert
-#include <stdexcept> // logic_error
+#include <stdexcept> // logic_error, runtime_error
 #include <string>
 
 using swish::frontend::winsparkle_shower;
@@ -81,6 +81,7 @@ using boost::errinfo_api_function;
 
 using std::find_if;
 using std::pair;
+using std::runtime_error;
 using std::wstring;
 
 template<> struct comet::comtype<IDataObject>
@@ -110,8 +111,24 @@ namespace {
         const basic_menu<DescriptionType, HandleCreator>& parent_menu,
         UINT menu_id)
     {
-        return *find_first_item_with_id(
-            parent_menu.begin(), parent_menu.end(), menu_id);
+        basic_menu<DescriptionType, HandleCreator>::iterator position =
+            find_first_item_with_id(
+                parent_menu.begin(), parent_menu.end(), menu_id);
+
+        if (position != parent_menu.end())
+        {
+            return *position;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                runtime_error("Unable to find menu with given ID"));
+        }
+    }
+
+    item fallback_menu(const menu_bar& parent_menu)
+    {
+        return item_from_menu(parent_menu, FCIDM_MENU_FILE);
     }
 
     /**
@@ -128,10 +145,9 @@ namespace {
         }
         catch (const std::exception& e)
         {
-            trace("Failed getting tools menu: %s") % diagnostic_information(e);
+            trace("Failed getting Tools menu: %s") % diagnostic_information(e);
 
-            // Fall back to using File menu
-            return item_from_menu(parent_menu, FCIDM_MENU_FILE);
+            return fallback_menu(parent_menu);
         }
     }
 
@@ -151,8 +167,7 @@ namespace {
         {
             trace("Failed getting help menu: %s") % diagnostic_information(e);
 
-            // Fall back to using File menu
-            return item_from_menu(parent_menu, FCIDM_MENU_FILE);
+            return fallback_menu(parent_menu);
         }
     }
 
