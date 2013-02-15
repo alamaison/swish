@@ -1,12 +1,12 @@
 # 
 # Translators:
-#   <swkim85@gmail.com>, 2012.
+#   <swkim85@gmail.com>, 2012-2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-12-28 01:05+0000\n"
+"PO-Revision-Date: 2013-01-02 07:02+0000\n"
 "Last-Translator: swkim85 <swkim85@gmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "서버에 파일을 만들 수 없습니다."
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -28,7 +28,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "복사중 '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -37,7 +37,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "'{1}' 으로"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -58,11 +58,11 @@ msgstr "복사중..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "파일을 전송할 수 없습니다."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "폴더에 쓰기 권한이 없습니다."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -75,7 +75,7 @@ msgstr "만들기"
 #: ../../swish/forms/add_host.cpp:143
 msgctxt "New Host"
 msgid "&Label:"
-msgstr ""
+msgstr "라벨:"
 
 #: ../../swish/forms/add_host.cpp:148
 msgid "For example: \"Home Computer\"."
@@ -85,33 +85,33 @@ msgstr "예: \"내 컴퓨터\""
 msgid ""
 "Specify the details of the computer and account you would like to connect "
 "to:"
-msgstr ""
+msgstr "연결하려는 컴퓨터의 계정과 상세정보를 입력하세요."
 
 #: ../../swish/forms/add_host.cpp:155
 msgctxt "New Host"
 msgid "&Host:"
-msgstr ""
+msgstr "호스트:"
 
 #: ../../swish/forms/add_host.cpp:159
 msgctxt "New Host"
 msgid "&Port:"
-msgstr ""
+msgstr "포트:"
 
 #: ../../swish/forms/add_host.cpp:164
 msgctxt "New Host"
 msgid "&User:"
-msgstr ""
+msgstr "사용자:"
 
 #: ../../swish/forms/add_host.cpp:169
 msgid ""
 "Specify the directory on the server that you would like Swish to start the "
 "connection in:"
-msgstr ""
+msgstr "접속을 시작할 서버상의 디렉터리 경로를 입력"
 
 #: ../../swish/forms/add_host.cpp:173
 msgctxt "New Host"
 msgid "P&ath:"
-msgstr ""
+msgstr "경로"
 
 #: ../../swish/forms/add_host.cpp:177
 msgid "Example: /home/yourusername"
@@ -123,7 +123,7 @@ msgstr "취소"
 
 #: ../../swish/forms/add_host.cpp:331
 msgid "The label cannot be longer than 30 characters."
-msgstr ""
+msgstr "라벨명은 30글자까지 제한됩니다."
 
 #: ../../swish/forms/add_host.cpp:335
 msgid "The host name is invalid."
@@ -139,23 +139,23 @@ msgstr "사용자명이 유효하지 않습니다."
 
 #: ../../swish/forms/add_host.cpp:349
 msgid "The path is invalid."
-msgstr ""
+msgstr "경로가 올바르지 않습니다."
 
 #: ../../swish/forms/add_host.cpp:355
 msgid "A connection with the same label already exists. Please try another."
-msgstr ""
+msgstr "같은 라벨의 접속이 존재합니다. 다른 라벨을 입력하세요."
 
 #: ../../swish/forms/add_host.cpp:361
 msgid "Complete all fields."
-msgstr ""
+msgstr "모든 필드를 입력하세요."
 
 #: ../../swish/forms/password.cpp:57
 msgid "Password"
-msgstr ""
+msgstr "비밀번호"
 
 #: ../../swish/forms/password.cpp:64
 msgid "OK"
-msgstr ""
+msgstr "확인"
 
 #: ../../swish/frontend/announce_error.cpp:136
 msgid "Show &details (which may not be in your language)"
@@ -182,15 +182,15 @@ msgstr ""
 
 #: ../../swish/frontend/UserInteraction.cpp:204
 msgid "File already exists"
-msgstr ""
+msgstr "파일이 이미 존재합니다."
 
 #: ../../swish/frontend/UserInteraction.cpp:242
 msgid "Mismatched host-key"
-msgstr ""
+msgstr "일치하지 않는 호스트 키"
 
 #: ../../swish/frontend/UserInteraction.cpp:243
 msgid "WARNING: the SSH host-key has changed!"
-msgstr ""
+msgstr "경고: SSH 호스트키가 변경됨"
 
 #: ../../swish/frontend/UserInteraction.cpp:249
 msgid ""
@@ -202,7 +202,7 @@ msgstr ""
 
 #: ../../swish/frontend/UserInteraction.cpp:256
 msgid "It is important to check this is the right key fingerprint:"
-msgstr ""
+msgstr "올바른 key fingerprint 인지 확인하세요."
 
 #: ../../swish/frontend/UserInteraction.cpp:265
 msgid ""
@@ -225,7 +225,7 @@ msgstr ""
 
 #: ../../swish/frontend/UserInteraction.cpp:289
 msgid "Unknown host-key"
-msgstr ""
+msgstr "알려지지 않은 호스트 키"
 
 #: ../../swish/frontend/UserInteraction.cpp:295
 msgid ""
@@ -241,7 +241,7 @@ msgstr ""
 
 #: ../../swish/frontend/UserInteraction.cpp:302
 msgid "Verify unknown SSH host-key"
-msgstr ""
+msgstr "알려지지 않은 SSH 호스트 키를 확인"
 
 #: ../../swish/frontend/UserInteraction.cpp:309
 msgid ""
@@ -258,57 +258,57 @@ msgstr ""
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
 msgid "Name"
-msgstr ""
+msgstr "이름"
 
 #: ../../swish/host_folder/columns.cpp:60
 msgctxt "Property"
 msgid "Host"
-msgstr ""
+msgstr "호스트"
 
 #: ../../swish/host_folder/columns.cpp:63
 msgctxt "Property"
 msgid "Username"
-msgstr ""
+msgstr "사용자"
 
 #: ../../swish/host_folder/columns.cpp:66
 msgctxt "Property"
 msgid "Port"
-msgstr ""
+msgstr "포트"
 
 #: ../../swish/host_folder/columns.cpp:69
 msgctxt "Property"
 msgid "Remote path"
-msgstr ""
+msgstr "원격경로"
 
 #: ../../swish/host_folder/columns.cpp:72
 msgctxt "Property"
 msgid "Type"
-msgstr ""
+msgstr "종류"
 
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
 msgid "Network Drive"
-msgstr ""
+msgstr "네트워크 드라이브"
 
 #: ../../swish/host_folder/commands/Add.cpp:83
 msgid "&Add SFTP Connection"
-msgstr ""
+msgstr "SFTP 연결 추가"
 
 #: ../../swish/host_folder/commands/Add.cpp:84
 msgid "Create a new SFTP connection with Swish."
-msgstr ""
+msgstr "Swish로 새로운 SFTP 연결을 생성"
 
 #: ../../swish/host_folder/commands/Add.cpp:85
 msgid "&Add SFTP Connection..."
-msgstr ""
+msgstr "SFTP 연결 추가"
 
 #: ../../swish/host_folder/commands/Add.cpp:86
 msgid "Add Connection"
-msgstr ""
+msgstr "연결 추가"
 
 #: ../../swish/host_folder/commands/commands.cpp:91
 msgid "SFTP Tasks"
-msgstr ""
+msgstr "SFTP 작업들"
 
 #: ../../swish/host_folder/commands/commands.cpp:104
 msgid "These tasks help you manage Swish SFTP connections."
@@ -318,7 +318,7 @@ msgstr ""
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:103
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "&Launch key agent"
-msgstr ""
+msgstr "키 에이전트 실행"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:99
 msgid "Launch Putty SSH key agent, Pageant."
@@ -327,11 +327,11 @@ msgstr ""
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "키 에이전트 실행"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
-msgstr ""
+msgstr "SFTP 연결을 삭제"
 
 #: ../../swish/host_folder/commands/Remove.cpp:84
 msgid "Remove a SFTP connection created with Swish."
@@ -339,78 +339,78 @@ msgstr ""
 
 #: ../../swish/host_folder/commands/Remove.cpp:85
 msgid "&Remove SFTP Connection..."
-msgstr ""
+msgstr "SFTP 접속 삭제"
 
 #: ../../swish/host_folder/commands/Remove.cpp:86
 msgid "Remove Connection"
-msgstr ""
+msgstr "연결을 삭제"
 
 #: ../../swish/remote_folder/columns.cpp:82
 msgctxt "Property"
 msgid "Size"
-msgstr ""
+msgstr "크기"
 
 #: ../../swish/remote_folder/columns.cpp:89
 msgctxt "Property"
 msgid "Date Modified"
-msgstr ""
+msgstr "수정한 날짜"
 
 #: ../../swish/remote_folder/columns.cpp:93
 msgctxt "Property"
 msgid "Date Accessed"
-msgstr ""
+msgstr "접근한 날짜"
 
 #: ../../swish/remote_folder/columns.cpp:96
 msgctxt "Property"
 msgid "Permissions"
-msgstr ""
+msgstr "퍼미션"
 
 #: ../../swish/remote_folder/columns.cpp:99
 msgctxt "Property"
 msgid "Owner"
-msgstr ""
+msgstr "사용자"
 
 #: ../../swish/remote_folder/columns.cpp:102
 msgctxt "Property"
 msgid "Group"
-msgstr ""
+msgstr "그룹"
 
 #: ../../swish/remote_folder/columns.cpp:105
 msgctxt "Property"
 msgid "Owner ID"
-msgstr ""
+msgstr "사용자ID"
 
 #: ../../swish/remote_folder/columns.cpp:108
 msgctxt "Property"
 msgid "Group ID"
-msgstr ""
+msgstr "그룹ID"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
-msgstr ""
+msgstr "링크 열기"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
-msgstr ""
+msgstr "열기"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
-msgstr ""
+msgstr "링크를 열 수 없습니다."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:274
 #: ../../swish/remote_folder/context_menu_callback.cpp:379
 #: ../../swish/remote_folder/commands/delete.cpp:232
 #: ../../swish/remote_folder/commands/NewFolder.cpp:240
 msgid "You might not have permission."
-msgstr ""
+msgstr "퍼미션이 없습니다."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
-msgstr ""
+msgstr "파일을 열 수 없습니다."
 
 #: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
-msgstr ""
+msgstr "파일과 폴더 작업"
 
 #: ../../swish/remote_folder/commands/commands.cpp:105
 msgid "These tasks help you manage your remote files."
@@ -418,11 +418,11 @@ msgstr ""
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
-msgstr ""
+msgstr "항목을 삭제할 수 없습니다."
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:168
 msgid "New &folder"
-msgstr ""
+msgstr "새로운 폴더"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:169
 msgid "Create a new, empty folder in the folder you have open."
@@ -430,45 +430,45 @@ msgstr ""
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:171
 msgid "Make a new folder"
-msgstr ""
+msgstr "새로운 폴더를 생성"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:211
 msgctxt "Initial name"
 msgid "New folder"
-msgstr ""
+msgstr "새 폴더"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:239
 msgid "Could not create a new folder"
-msgstr ""
+msgstr "새 폴더를 생성할 수 없습니다."
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
-msgstr ""
+msgstr "Keyboard-interactive request"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
-msgstr ""
+msgstr "디렉터리에 접근할 수 없습니다."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr ""
+msgstr "경로가 올바르지 않습니다."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
-msgstr ""
+msgstr "경로가 정확한지 확인하세요."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
-msgstr ""
+msgstr "이름을 변경할 수 없습니다"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
-msgstr ""
+msgstr "접근할 수 없습니다."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:705
 msgid "Unable to access the items"
-msgstr ""
+msgstr "항목에 접근할 수 없습니다"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
-msgstr ""
+msgstr "폴더에 접근할 수 없습니다."
