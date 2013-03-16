@@ -1,3 +1,7 @@
+swish-0.7.3
+-Fixed drag-and-drop crash on Windows 8.
+-New Romanian translation.
+
 swish-0.7.2
 -Added direct downloading and installation of updates.
 -More detailed error messages.
