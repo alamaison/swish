@@ -154,6 +154,7 @@
     </DirectoryRef>
 
     <ComponentGroup Id="Translations">
+      <ComponentGroupRef Id="ROTrans" />
       <ComponentGroupRef Id="DADKTrans" />
       <ComponentGroupRef Id="KOTrans" />
       <ComponentGroupRef Id="ETTrans" />
