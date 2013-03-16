@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@
 #include <cassert> // assert
 #include <exception>
 #include <iosfwd> // wstringstream
-#include <utility> // pair
 
 using swish::provider::sftp_provider;
 using swish::remote_folder::create_remote_itemid;
@@ -67,8 +66,6 @@ using comet::com_ptr;
 using comet::datetime_t;
 
 using std::exception;
-using std::make_pair;
-using std::pair;
 using std::wstringstream;
 
 namespace swish {
@@ -79,25 +76,16 @@ namespace {
     const size_t COPY_CHUNK_SIZE = 1024 * 32;
 
     /**
-     * Duplicated stat_stream in DropTarget.cpp.
-     */
-    pair<wpath, int64_t> stat_stream(const com_ptr<IStream>& stream)
-    {
-        STATSTG statstg;
-        HRESULT hr = stream->Stat(&statstg, STATFLAG_DEFAULT);
-        if (FAILED(hr))
-            BOOST_THROW_EXCEPTION(com_error_from_interface(stream, hr));
-
-        shared_ptr<OLECHAR> name(statstg.pwcsName, ::CoTaskMemFree);
-        return make_pair(name.get(), statstg.cbSize.QuadPart);
-    }
-
-    /**
      * Return size of the streamed object in bytes.
      */
     int64_t size_of_stream(const com_ptr<IStream>& stream)
     {
-        return stat_stream(stream).second;
+        STATSTG statstg;
+        HRESULT hr = stream->Stat(&statstg, STATFLAG_NONAME);
+        if (FAILED(hr))
+            BOOST_THROW_EXCEPTION(com_error_from_interface(stream, hr));
+
+        return statstg.cbSize.QuadPart;
     }
 
     /**
