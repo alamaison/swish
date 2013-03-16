@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 lang=${1}
-heat="C:\Program Files (x86)\WiX Toolset v3.6\bin\heat.exe"
+heat="${WIX}bin\heat.exe"
 
 # strip underscores and make uppercase for WiX component name
 componentprefix="$(echo ${lang} | tr -d _ | tr '[a-z]' '[A-Z]')"
