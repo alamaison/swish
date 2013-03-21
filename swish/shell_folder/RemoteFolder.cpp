@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,7 @@
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/shell/shell.hpp> // string_to_strret
+#include <winapi/window/window.hpp>
 
 #include <comet/datetime.h> // datetime_t
 
@@ -82,6 +83,8 @@ using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::string_to_strret;
+using winapi::window::window;
+using winapi::window::window_handle;
 
 using comet::com_ptr;
 using comet::com_error;
@@ -725,8 +728,10 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         return new CSnitchingDropTarget(
-            hwnd, provider, consumer, root_pidl(),
-            make_shared<DropUI>(hwnd));
+            hwnd, provider,
+            consumer, root_pidl(),
+            make_shared<DropUI>(
+                window<wchar_t>(window_handle::foster_handle(hwnd))));
     }
     catch (...)
     {

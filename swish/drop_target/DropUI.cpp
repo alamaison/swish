@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,62 +28,49 @@
 
 #include "swish/trace.hpp" // trace
 
+#include <winapi/com/ole_window.hpp> // window_from_ole_window
 #include <winapi/gui/message_box.hpp> // message_box
-#include <winapi/gui/windows/window.hpp> // window to hide progress dialog
+#include <winapi/gui/progress.hpp>
+#include <winapi/window/window.hpp>
+#include <winapi/window/window_handle.hpp>
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/locale.hpp> // translate, wformat
-#include <boost/scoped_ptr.hpp> // scoped_ptr
+#include <boost/noncopyable.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 #include <iosfwd> // wstringstream
 #include <string>
 
-#include <OleIdl.h> // IOleWindow, IOleInPlaceFrame
 #include <shobjidl.h> // IShellView, IShellBrowser
 
 using swish::tracing::trace;
 
+using winapi::com::window_from_ole_window;
 using namespace winapi::gui::message_box;
-using winapi::gui::window;
 using winapi::gui::progress;
+using winapi::window::window;
+using winapi::window::window_handle;
 
 using comet::com_error;
 using comet::com_ptr;
 
+using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::locale::wformat;
-using boost::filesystem::wpath;
-using boost::scoped_ptr;
+using boost::noncopyable;
+using boost::optional;
 
 using std::auto_ptr;
 using std::wstringstream;
 using std::wstring;
 
-template<> struct comet::comtype<IOleWindow>
-{
-    static const IID& uuid() throw() { return IID_IOleWindow; }
-    typedef IUnknown base;
-};
-
-template<> struct comet::comtype<IOleInPlaceFrame>
-{
-    static const IID& uuid() throw() { return IID_IOleInPlaceFrame; }
-    typedef IOleInPlaceUIWindow base;
-};
-
 template<> struct comet::comtype<IShellBrowser>
 {
     static const IID& uuid() throw() { return IID_IShellBrowser; }
-    typedef IOleWindow base;
-};
-
-template<> struct comet::comtype<IShellView>
-{
-    static const IID& uuid() throw() { return IID_IShellView; }
     typedef IOleWindow base;
 };
 
@@ -175,61 +162,29 @@ namespace {
     private:
         com_ptr<IUnknown> m_site;
     };
-
-    /**
-     * Ask windowed OLE container for its window handle.
-     *
-     * There are different types of OLE object with which could support this
-     * operation.  Try them in turn until one works.
-     *
-     * @todo  Add more supported OLE object types.
-     */
-    HWND hwnd_from_ole_window(com_ptr<IUnknown> ole_window)
-    {
-        HWND hwnd = NULL;
-
-        if (com_ptr<IOleWindow> window = com_cast(ole_window))
-        {
-            window->GetWindow(&hwnd);
-        }
-        else if (com_ptr<IShellView> view = com_cast(ole_window))
-        {
-            view->GetWindow(&hwnd);
-        }
-
-        return hwnd;
-    }
     
-
     /**
      * Exception-safe lifetime manager for an IProgressDialog object.
      *
      * Calls StartProgressDialog when created and StopProgressDialog when
      * destroyed.
      */
-    class AutoStartProgressDialog : public Progress
+    class DropProgress : public noncopyable, public Progress
     {
     public:
-        AutoStartProgressDialog(
-            com_ptr<IProgressDialog> progress_instance, HWND hwnd,
-            const wstring& title, com_ptr<IUnknown> ole_site=NULL)
+
+        DropProgress(
+            const optional< window<wchar_t> >& parent, const wstring& title,
+            com_ptr<IUnknown> ole_site=NULL)
             :
-            m_inner(
-                new    progress(
-                    progress_instance, hwnd, title,
-                    progress::modality::non_modal,
-                    progress::time_estimation::automatic_time_estimate,
-                    progress::bar_type::progress,
-                    progress::minimisable::yes,
-                    progress::cancellability::cancellable, ole_site))
-        {}
+        m_inner(create_dialog(parent, title, ole_site)) {}
 
         /**
          * Has the user cancelled the operation via the progress dialogue?
          */
-        bool user_cancelled() const
+        bool user_cancelled()
         {
-            return m_inner->user_cancelled();
+            return m_inner.user_cancelled();
         }
 
         /**
@@ -237,7 +192,7 @@ namespace {
          */
         void line(DWORD index, const wstring& text)
         {
-            m_inner->line(index, text);
+            m_inner.line(index, text);
         }
 
         /**
@@ -247,7 +202,7 @@ namespace {
          */
         void line_path(DWORD index, const wstring& text)
         {
-            m_inner->line_compress_paths_if_needed(index, text);
+            m_inner.line_compress_paths_if_needed(index, text);
         }
 
         /**
@@ -255,11 +210,54 @@ namespace {
          */
         void update(ULONGLONG so_far, ULONGLONG out_of)
         {
-            m_inner->update(so_far, out_of);
+            m_inner.update(so_far, out_of);
+        }
+
+        /**
+         * Force the dialogue window to disappear.
+         *
+         * Useful, for instance, to temporarily hide the progress display while
+         * displaying other dialogues in the middle of the process whose
+         * progress is being monitored.
+         */
+        void hide()
+        {
+            optional< window<wchar_t> > window = m_inner.window();
+            if (window)
+                window->enable(false);
+        }
+
+        /**
+         * Force the dialogue window to appear.
+         *
+         * Useful to force the window to appear quicker than it normally would,
+         * and to redisplay the window after hiding it.
+         *
+         * @see hide
+         */
+        void show()
+        {
+            optional< window<wchar_t> > window = m_inner.window();
+            if (window)
+                window->enable(true);
         }
 
     private:
-        scoped_ptr<progress> m_inner;
+
+        static progress create_dialog(
+            const optional< window<wchar_t> >& parent, const wstring& title,
+            com_ptr<IUnknown> ole_site)
+        {
+            return progress(
+                parent, title,
+                progress::modality::non_modal,
+                progress::time_estimation::automatic_time_estimate,
+                progress::bar_type::progress,
+                progress::minimisable::yes,
+                progress::cancellability::cancellable, ole_site);
+        }
+
+        progress m_inner;
     };
 
     /**
@@ -268,31 +266,22 @@ namespace {
     class ScopedDisabler
     {
     public:
-        ScopedDisabler(com_ptr<IUnknown> ole_window)
-            : m_ole_window(ole_window), m_hwnd(hwnd_from_ole_window(ole_window))
+        ScopedDisabler(Progress& progress) : m_progress(progress)
         {
-            if (m_hwnd)
-            {
-                window<wchar_t> w(m_hwnd);
-                w.enable(false);
-            }
+            m_progress.hide();
         }
 
         ~ScopedDisabler()
         {
-            if (m_hwnd)
-            {
-                window<wchar_t> w(m_hwnd);
-                w.enable(true);
-            }
+            m_progress.show();
         }
+
     private:
-        com_ptr<IUnknown> m_ole_window;
-        HWND m_hwnd;
+        Progress& m_progress;
     };
 }
 
-DropUI::DropUI(HWND hwnd_owner) : m_hwnd_owner(hwnd_owner) {}
+DropUI::DropUI(const optional< window<wchar_t> >& owner) : m_owner(owner) {}
 
 /**
  * Associate with a container site.
@@ -308,7 +297,7 @@ void DropUI::site(com_ptr<IUnknown> ole_site) { m_ole_site = ole_site; }
  */
 bool DropUI::can_overwrite(const wpath& target)
 {
-    if (!m_hwnd_owner)
+    if (!m_owner)
         return false;
 
     wstringstream message;
@@ -320,11 +309,13 @@ bool DropUI::can_overwrite(const wpath& target)
 
     AutoModal modal_scope(m_ole_site); // force container non-modal
 
-    ScopedDisabler disable_progress(m_progress); // force-hide progress as it
-                                                 // gets in the way of other UI
+    // If the caller has already displayed the progress dialog, we must
+    // force-hide it as it gets in the way of other UI
+    ScopedDisabler disable_progress(*m_progress); 
 
     button_type::type button = message_box(
-        m_hwnd_owner, message.str(), translate("Confirm File Replace"),
+        (m_owner) ? m_owner->hwnd() : NULL,
+        message.str(), translate("Confirm File Replace"),
         box_type::yes_no_cancel, icon_type::question);
     switch (button)
     {
@@ -341,7 +332,7 @@ bool DropUI::can_overwrite(const wpath& target)
 /**
  * Pass ownership of a progress display scope to caller.
  *
- * We hang on to the real progress dialog so that we can hide it if and when we
+ * We hang on to the progress dialog so that we can hide it if and when we
  * show other dialogs (something the built-in Explorer FTP extension doesn't
  * do and really should).
  *
@@ -352,18 +343,23 @@ bool DropUI::can_overwrite(const wpath& target)
  */
 auto_ptr<Progress> DropUI::progress()
 {
-    if (!m_hwnd_owner)
-        m_hwnd_owner = hwnd_from_ole_window(m_ole_site);
+    if (!m_owner)
+    {
+        m_owner = window_from_ole_window(m_ole_site);
+    }
 
-    if (!m_hwnd_owner)
+    if (!m_owner)
         trace("Creating UI without a parent Window");
 
-    m_progress = com_ptr<IProgressDialog>(CLSID_ProgressDialog);
+    auto_ptr<Progress> p(new DropProgress(
+        m_owner, translate("Progress", "Copying..."), m_ole_site));
 
-    return auto_ptr<Progress>(
-        new AutoStartProgressDialog(
-            m_progress, m_hwnd_owner,
-            translate("Progress", "Copying..."), m_ole_site));
+    // HACK: we keep a raw copy of the pointer so we can hide the progress
+    // if needed later when displaying the confirm-overwrite box.  There
+    // has got to be a safer way to do this.
+    m_progress = p.get();
+
+    return p;
 }
 
 }} // namespace swish::drop_target

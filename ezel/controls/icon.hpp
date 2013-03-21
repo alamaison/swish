@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #include <ezel/control.hpp> // control base class
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/gui/windows/icon.hpp> // icon_window
+#include <winapi/window/icon.hpp> // icon_window
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -71,7 +71,8 @@ public:
         }
         else
         {
-            winapi::gui::icon_window<wchar_t> icon(hwnd());
+            winapi::window::icon_window<wchar_t> icon(
+                winapi::window::window_handle::foster_handle(hwnd()));
             return icon.change_icon(new_icon);
         }
     }
