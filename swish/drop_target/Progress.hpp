@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,10 +37,12 @@ class Progress
 {
 public:
     virtual ~Progress() {}
-    virtual bool user_cancelled() const = 0;
+    virtual bool user_cancelled() = 0;
     virtual void line(DWORD index, const std::wstring& text) = 0;
     virtual void line_path(DWORD index, const std::wstring& text) = 0;
     virtual void update(ULONGLONG so_far, ULONGLONG out_of) = 0;
+    virtual void hide() = 0;
+    virtual void show() = 0;
 };
 
 }}

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,11 +31,11 @@
 #include "swish/drop_target/DropActionCallback.hpp"
 #include "swish/drop_target/Progress.hpp"
 
-#include <winapi/gui/progress.hpp> // comet::comtype<IProgressDialog>, progress
+#include <winapi/window/window.hpp>
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/optional.hpp>
 
 #include <memory> // auto_ptr
 
@@ -49,7 +49,8 @@ namespace drop_target {
     class DropUI : public DropActionCallback
     {
     public:
-        DropUI(HWND hwnd_owner);
+        DropUI(
+            const boost::optional< winapi::window::window<wchar_t> >& owner);
 
         virtual void site(comet::com_ptr<IUnknown> ole_site);
 
@@ -57,9 +58,9 @@ namespace drop_target {
         virtual std::auto_ptr<Progress> progress();
         
     private:
-        HWND m_hwnd_owner;
+        boost::optional< winapi::window::window<wchar_t> > m_owner;
         comet::com_ptr<IUnknown> m_ole_site;
-        comet::com_ptr<IProgressDialog> m_progress;
+        Progress* m_progress;
     };
 
 }} // namespace swish::drop_target
