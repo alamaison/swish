@@ -153,10 +153,12 @@ namespace { // private
     class ProgressStub : public Progress
     {
     public:
-        bool user_cancelled() const { return false; }
+        bool user_cancelled() { return false; }
         void line(DWORD, const wstring&) {}
         void line_path(DWORD, const wstring&) {}
         void update(ULONGLONG, ULONGLONG) {}
+        void hide() {}
+        void show() {}
     };
 
     class CopyCallbackStub : public DropActionCallback
