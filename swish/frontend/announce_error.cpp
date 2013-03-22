@@ -32,6 +32,7 @@
 
 #include <comet/error.h> // com_error
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <boost/locale.hpp> // translate
 
 #include <cassert> // assert
@@ -45,6 +46,7 @@ using namespace winapi::gui::task_dialog;
 using comet::com_error;
 
 using boost::locale::translate;
+using boost::diagnostic_information;
 
 using std::exception;
 using std::wstring;
@@ -106,6 +108,8 @@ namespace {
         wstringstream details;
 
         details << error.what();
+        details << "\n\nBug report information: "
+            << diagnostic_information(error).c_str();
 
         return details.str();
     }
@@ -116,6 +120,8 @@ namespace {
 
         details << error.w_str();
         details << L"\n\nHRESULT: " << hresult_code(error.hr());
+        details << "\n\nBug report information: "
+            << diagnostic_information(error).c_str();
 
         return details.str();
     }
