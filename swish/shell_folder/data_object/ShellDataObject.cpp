@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +44,14 @@ using winapi::shell::pidl::apidl_t;
 using boost::shared_ptr;
 
 using comet::com_error;
+using comet::com_error_from_interface;
 using comet::com_ptr;
+
+template<> struct comet::comtype<IAsyncOperation>
+{
+    static const IID& uuid() throw() { return IID_IAsyncOperation; }
+    typedef IUnknown base;
+};
 
 namespace swish {
 namespace shell_folder {
@@ -144,13 +152,38 @@ namespace { // private
 
 #pragma region ShellDataObject implementation
 
-ShellDataObject::ShellDataObject( IDataObject *pDataObj ) :
-    m_spDataObj(pDataObj)
+ShellDataObject::ShellDataObject(com_ptr<IDataObject> data_object) :
+    m_data_object(data_object)
 {
 }
 
 ShellDataObject::~ShellDataObject()
 {
+}
+
+/**
+ * Can the data_object be used asynchronously?
+ */
+bool ShellDataObject::supports_async() const
+{
+    com_ptr<IAsyncOperation> async = com_cast(m_data_object);
+    if (!async)
+        return false;
+
+    BOOL support;
+    HRESULT hr = async->GetAsyncMode(&support);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error_from_interface(async, hr));
+
+    // Ignoring what MSDN says: the result is *not* a VARIANT_BOOL
+    // and should *not* be compared with VARIANT_TRUE.  WTF?
+    return support != FALSE;
+}
+
+com_ptr<IAsyncOperation> ShellDataObject::async() const
+{
+    com_ptr<IAsyncOperation> async = try_cast(m_data_object);
+    return async;
 }
 
 /**
@@ -168,7 +201,7 @@ bool ShellDataObject::has_pidl_format() const
         TYMED_HGLOBAL
     };
 
-    return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_data_object->QueryGetData(&fetc) == S_OK;
 }
 
 /**
@@ -185,7 +218,7 @@ bool ShellDataObject::has_hdrop_format() const
         CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
     };
 
-    return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_data_object->QueryGetData(&fetc) == S_OK;
 }
 
 /**
@@ -218,7 +251,7 @@ bool ShellDataObject::has_unicode_file_group_descriptor_format() const
         TYMED_HGLOBAL
     };
 
-    return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_data_object->QueryGetData(&fetc) == S_OK;
 }
 
 /**
@@ -236,7 +269,7 @@ bool ShellDataObject::has_ansi_file_group_descriptor_format() const
         TYMED_HGLOBAL
     };
 
-    return m_spDataObj->QueryGetData(&fetc) == S_OK;
+    return m_data_object->QueryGetData(&fetc) == S_OK;
 }
 
 #pragma endregion

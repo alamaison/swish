@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,9 +42,12 @@ namespace data_object {
 class ShellDataObject
 {
 public:
-    ShellDataObject(__in IDataObject *pDataObj);
+
+    ShellDataObject(comet::com_ptr<IDataObject> data_object);
     ~ShellDataObject();
 
+    bool supports_async() const;
+    comet::com_ptr<IAsyncOperation> async() const;
     bool has_pidl_format() const;
     bool has_hdrop_format() const;
     bool has_file_group_descriptor_format() const;
@@ -51,7 +55,7 @@ public:
     bool has_ansi_file_group_descriptor_format() const;
 
 private:
-    ATL::CComPtr<IDataObject> m_spDataObj;
+    comet::com_ptr<IDataObject> m_data_object;
 };
 
 /**

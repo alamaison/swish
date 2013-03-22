@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,6 +60,7 @@ using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::filesystem::ifstream;
 using boost::make_shared;
+using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 
 using std::string;
@@ -236,9 +238,10 @@ BOOST_AUTO_TEST_CASE( copy_single )
     wpath destination = Sandbox() / L"copy-destination";
     create_directory(destination);
 
-    CopyCallbackStub cb;
+    shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     wpath expected = destination / local.filename();
     BOOST_REQUIRE(exists(expected));
@@ -264,9 +267,10 @@ BOOST_AUTO_TEST_CASE( copy_many )
     wpath destination = Sandbox() / L"copy-destination";
     create_directory(destination);
 
-    CopyCallbackStub cb;
+    shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     vector<wpath>::const_iterator it;
     for (it = locals.begin(); it != locals.end(); ++it)
@@ -329,9 +333,10 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
     wpath destination = Sandbox() / L"copy-destination";
     create_directory(destination);
 
-    CopyCallbackStub cb;
+    shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     wpath expected;
 
@@ -398,9 +403,10 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
     wpath destination = Sandbox() / L"copy-destination";
     create_directory(destination);
 
-    CopyCallbackStub cb;
+    shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     wpath expected;
 
@@ -455,9 +461,10 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK(!file_contents_correct(obstruction));
 
-    AllowOverwrite cb;
+    shared_ptr<AllowOverwrite> cb(new AllowOverwrite);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK(file_contents_correct(obstruction));
@@ -480,9 +487,10 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_no )
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK(!file_contents_correct(obstruction));
 
-    ForbidOverwrite cb;
+    shared_ptr<ForbidOverwrite> cb(new ForbidOverwrite);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
@@ -512,9 +520,10 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
     BOOST_REQUIRE(exists(obstruction));
     BOOST_REQUIRE(!file_contents_correct(obstruction));
 
-    AllowOverwrite cb;
+    shared_ptr<AllowOverwrite> cb(new AllowOverwrite);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination), cb);
+        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
+        cb, NULL);
 
     BOOST_REQUIRE(exists(obstruction));
     BOOST_REQUIRE(file_contents_correct(obstruction));

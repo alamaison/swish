@@ -32,7 +32,7 @@
 #include "IconExtractor.h"
 #include "Registry.h"
 #include "swish/debug.hpp"
-#include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
+#include "swish/drop_target/DropTarget.hpp" // CDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
 #include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
@@ -64,7 +64,7 @@
 #include <cassert> // assert
 #include <string>
 
-using swish::drop_target::CSnitchingDropTarget;
+using swish::drop_target::CDropTarget;
 using swish::drop_target::DropUI;
 using swish::frontend::rethrow_and_announce;
 using swish::provider::sftp_provider;
@@ -727,9 +727,8 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
-        return new CSnitchingDropTarget(
-            hwnd, provider,
-            consumer, root_pidl(),
+        return new CDropTarget(
+            provider, consumer, root_pidl(),
             make_shared<DropUI>(
                 window<wchar_t>(window_handle::foster_handle(hwnd))));
     }

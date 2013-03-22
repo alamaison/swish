@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,33 +28,56 @@
 #include "DropTarget.hpp"
 
 #include "swish/drop_target/PidlCopyPlan.hpp"
+#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
                                                   // PidlFormat, ShellDataObject
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/ole_window.hpp> // window_from_ole_window
 
+#include <boost/locale.hpp> // translate
 #include <boost/shared_ptr.hpp>  // shared_ptr
+#include <boost/thread.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <comet/error.h> // com_error
+#include <comet/git.h>
 #include <comet/ptr.h>  // com_ptr
+#include <comet/util.h> // auto_coinit
 
-#include <memory> // auto_ptr
-
+using swish::frontend::rethrow_and_announce;
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::provider::sftp_provider;
 
+using winapi::com::window_from_ole_window;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
+using winapi::window::window;
 
 using boost::shared_ptr;
+using boost::thread;
+using boost::locale::translate;
+using boost::optional;
 
+using comet::auto_coinit;
 using comet::com_error;
 using comet::com_ptr;
+using comet::GIT;
+using comet::GIT_cookie;
 
-using std::auto_ptr;
+template<> struct comet::comtype<IAsyncOperation>
+{
+    static const IID& uuid() throw() { return IID_IAsyncOperation; }
+    typedef IUnknown base;
+};
+
+template<> struct comet::comtype<IDataObject>
+{
+    static const IID& uuid() throw() { return IID_IDataObject; }
+    typedef IUnknown base;
+};
 
 namespace swish {
 namespace drop_target {
@@ -95,11 +119,76 @@ namespace { // private
 void copy_format_to_provider(
     PidlFormat source_format, shared_ptr<sftp_provider> provider,
     com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
-    DropActionCallback& callback)
+    shared_ptr<DropActionCallback> callback)
 {
     PidlCopyPlan copy_list(source_format, destination_root);
 
-    copy_list.execute_plan(callback, provider, consumer);
+    copy_list.execute_plan(*callback, provider, consumer);
+}
+
+namespace {
+
+void async_copy_format_to_provider(
+    GIT_cookie<IDataObject> data_marshalling_cookie,
+    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer,
+    apidl_t destination_root, shared_ptr<DropActionCallback> callback,
+    GIT_cookie<IUnknown> site_marshalling_cookie)
+{
+    auto_coinit com;
+    GIT git;
+
+    // These interface from the GIT will be properly marshalled across thread
+    // apartments
+    com_ptr<IDataObject> data_object =
+        git.get_interface(data_marshalling_cookie);
+    com_ptr<IAsyncOperation> async = try_cast(data_object);
+
+    try
+    {
+        com_ptr<IUnknown> ole_site =
+            git.get_interface(site_marshalling_cookie);
+        try
+        {
+            copy_format_to_provider(
+                PidlFormat(data_object), provider, consumer, destination_root,
+                callback);
+        }
+        catch (...)
+        {
+            // Only report errors with a dialog if we are given a site whose
+            // window we can use as a parent.  We can assume if the caller
+            // didn't set a site, they don't want UI.
+            optional< window<wchar_t> > parent;
+            if (ole_site)
+                parent = window_from_ole_window(ole_site);
+
+            if (parent)
+            {
+                rethrow_and_announce(
+                    parent->hwnd(), translate("Unable to transfer files"),
+                    translate(
+                        "You might not have permission to write to this "
+                        "directory."));
+            }
+            else
+            {
+                throw;
+            }
+        }
+    }
+    catch (const com_error& e)
+    {
+        async->EndOperation(e.hr(), NULL, DROPEFFECT_COPY);
+    }
+    catch (...)
+    {
+        async->EndOperation(E_FAIL, NULL, DROPEFFECT_COPY);
+    }
+
+    git.revoke_interface(data_marshalling_cookie);
+    git.revoke_interface(site_marshalling_cookie);
+}
+
 }
 
 /**
@@ -113,14 +202,38 @@ void copy_format_to_provider(
 void copy_data_to_provider(
     com_ptr<IDataObject> data_object, shared_ptr<sftp_provider> provider, 
     com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-    DropActionCallback& callback)
+    shared_ptr<DropActionCallback> callback, com_ptr<IUnknown> ole_site)
 {
-    ShellDataObject data(data_object.get());
+    ShellDataObject data(data_object);
     if (data.has_pidl_format())
     {
-        copy_format_to_provider(
-            PidlFormat(data_object), provider, consumer, remote_directory,
-            callback);
+        if (data.supports_async())
+        {
+            com_ptr<IAsyncOperation> async = data.async();
+            HRESULT hr = async->StartOperation(NULL);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(com_error_from_interface(async, hr));
+
+            // We place the interfaces in the Global Interface Table because
+            // the other thread needs marshalled versions of the interfaces.
+            // The GIT promises to provide that.
+            GIT git;
+            GIT_cookie<IDataObject> data_marshalling_cookie =
+                git.register_interface(data_object);
+            GIT_cookie<IUnknown> site_marshalling_cookie =
+                git.register_interface(ole_site);
+
+            thread(
+                &async_copy_format_to_provider, data_marshalling_cookie,
+                provider, consumer, remote_directory, callback,
+                site_marshalling_cookie).detach();
+        }
+        else
+        {
+            copy_format_to_provider(
+                PidlFormat(data_object), provider, consumer, remote_directory,
+                callback);
+        }
     }
     else
     {
@@ -215,19 +328,47 @@ STDMETHODIMP CDropTarget::Drop(
 {
     try
     {
-        if (!pdwEffect)
-            BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+        try
+        {
+            if (!pdwEffect)
+                BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-        // Drop doesn't need to maintain any state and is handed a fresh copy
-        // of the IDataObject so we can can immediately cancel the one we were
-        // using for the other parts of the drag-drop loop
-        m_data_object = NULL;
+            // Drop doesn't need to maintain any state and is handed a fresh
+            // copy of the IDataObject so we can can immediately cancel the
+            // one we were using for the other parts of the drag-drop loop
+            m_data_object = NULL;
 
-        *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
+            *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
 
-        if (pdo && *pdwEffect == DROPEFFECT_COPY)
-            copy_data_to_provider(
-                pdo, m_provider, m_consumer, m_remote_directory, *m_callback);
+            if (pdo && *pdwEffect == DROPEFFECT_COPY)
+            {
+                copy_data_to_provider(
+                    pdo, m_provider, m_consumer, m_remote_directory,
+                    m_callback, ole_site());
+            }
+        }
+        catch (...)
+        {
+            // Only report errors with a dialog if we are given a site whose
+            // window we can use as a parent.  We can assume if the caller
+            // didn't set a site, they don't want UI.
+            optional< window<wchar_t> > parent;
+            if (ole_site())
+                parent = window_from_ole_window(ole_site());
+
+            if (parent)
+            {
+                rethrow_and_announce(
+                    parent->hwnd(), translate("Unable to transfer files"),
+                    translate(
+                        "You might not have permission to write to this "
+                        "directory."));
+            }
+            else
+            {
+                throw;
+            }
+        }
     }
     WINAPI_COM_CATCH_AUTO_INTERFACE();
 
