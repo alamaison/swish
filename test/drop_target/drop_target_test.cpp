@@ -173,6 +173,8 @@ namespace { // private
 
         bool can_overwrite(const wpath&)
         { throw std::exception("unexpected request to confirm overwrite"); }
+
+        void handle_and_rethrow_last_exception() { throw; }
     };
 
     class ForbidOverwrite : public CopyCallbackStub
@@ -241,7 +243,7 @@ BOOST_AUTO_TEST_CASE( copy_single )
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     wpath expected = destination / local.filename();
     BOOST_REQUIRE(exists(expected));
@@ -270,7 +272,7 @@ BOOST_AUTO_TEST_CASE( copy_many )
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     vector<wpath>::const_iterator it;
     for (it = locals.begin(); it != locals.end(); ++it)
@@ -336,7 +338,7 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     wpath expected;
 
@@ -406,7 +408,7 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     wpath expected;
 
@@ -464,7 +466,7 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
     shared_ptr<AllowOverwrite> cb(new AllowOverwrite);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK(file_contents_correct(obstruction));
@@ -490,7 +492,7 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_no )
     shared_ptr<ForbidOverwrite> cb(new ForbidOverwrite);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
@@ -523,7 +525,7 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
     shared_ptr<AllowOverwrite> cb(new AllowOverwrite);
     copy_data_to_provider(
         spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb, NULL);
+        cb);
 
     BOOST_REQUIRE(exists(obstruction));
     BOOST_REQUIRE(file_contents_correct(obstruction));

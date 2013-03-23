@@ -96,6 +96,7 @@ using boost::bind;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
+using boost::optional;
 using boost::shared_ptr;
 
 using ATL::CComPtr;
@@ -727,10 +728,31 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
+        optional< window<wchar_t> > owner;
+        if (hwnd)
+            owner = window<wchar_t>(window_handle::foster_handle(hwnd));
+
+        // HACKish:
+        // UI happens via the given owner window given here.  We used to do it
+        // via the window of the OLE site instead, but this is incompatible
+        // with asynchronous operations because the shell clears the site
+        // when Drop returns (at which point the operation is still running
+        // and may need an owner window for UI).
+        //
+        // We could hang on to a copy of the site but that seems .. impolite.
+        // After all, the shell presumably cleared the site for a reason.
+        //
+        // That said, what we're doing now seems pretty naughty too. We use the
+        // window we were passed as an owner window when we were created.  This
+        // window is probably the one the shell passed to our folder's
+        // GetUIObjectOf or CreateViewObject methods.  MSDN documents this
+        // window as the 'owner' to be used for UI but doesn't make clear how
+        // long the window is guarantted to remain alive: until the
+        // GetUIObjectOf/CreateViewObject call returns or for as long as this
+        // drop target is in use.  Nevertheless, this seems to work so it's
+        // what we're doing for now.
         return new CDropTarget(
-            provider, consumer, root_pidl(),
-            make_shared<DropUI>(
-                window<wchar_t>(window_handle::foster_handle(hwnd))));
+            provider, consumer, root_pidl(), make_shared<DropUI>(owner));
     }
     catch (...)
     {
