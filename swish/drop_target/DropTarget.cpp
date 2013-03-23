@@ -143,7 +143,8 @@ void async_copy_format_to_provider(
         }
         catch (...)
         {
-            callback->handle_and_rethrow_last_exception();
+            callback->handle_last_exception();
+            throw;
         }
     }
     catch (const com_error& e)
@@ -310,7 +311,8 @@ STDMETHODIMP CDropTarget::Drop(
         }
         catch (...)
         {
-            m_callback->handle_and_rethrow_last_exception();
+            m_callback->handle_last_exception();
+            throw;
         }
     }
     WINAPI_COM_CATCH_AUTO_INTERFACE();

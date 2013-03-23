@@ -46,7 +46,7 @@ public:
     virtual ~DropActionCallback() {}
     virtual bool can_overwrite(const boost::filesystem::wpath& target) = 0;
     virtual std::auto_ptr<Progress> progress() = 0;
-    virtual void handle_and_rethrow_last_exception() = 0;
+    virtual void handle_last_exception() = 0;
 };
 
 }}

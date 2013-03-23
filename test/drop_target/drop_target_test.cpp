@@ -174,7 +174,7 @@ namespace { // private
         bool can_overwrite(const wpath&)
         { throw std::exception("unexpected request to confirm overwrite"); }
 
-        void handle_and_rethrow_last_exception() { throw; }
+        void handle_last_exception() {}
     };
 
     class ForbidOverwrite : public CopyCallbackStub

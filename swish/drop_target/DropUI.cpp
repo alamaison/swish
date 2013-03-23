@@ -26,7 +26,7 @@
 
 #include "DropUI.hpp"
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/trace.hpp" // trace
 
 #include <winapi/com/ole_window.hpp> // window_from_ole_window
@@ -46,7 +46,7 @@
 #include <iosfwd> // wstringstream
 #include <string>
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::tracing::trace;
 
 using winapi::com::window_from_ole_window;
@@ -227,23 +227,21 @@ bool DropUI::can_overwrite(const wpath& target)
     }
 }
 
-void DropUI::handle_and_rethrow_last_exception()
+void DropUI::handle_last_exception()
 {
     // Only report errors with a dialog if we are given a window we
     // can use as a dialogue owner.  We can assume if the caller
     // didn't give us one, they don't want UI.
     if (m_owner)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             m_owner->hwnd(), translate("Unable to transfer files"),
             translate(
                 "You might not have permission to write to this "
                 "directory."));
     }
-    else
-    {
-        throw;
-    }
+
+    throw;
 }
 
 namespace {

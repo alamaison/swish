@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #include "swish/remote_folder/commands/delete.hpp"
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
@@ -42,7 +42,7 @@
 
 #include <Windows.h> // IsolationAwareMessageBox
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 
@@ -229,9 +229,10 @@ const
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd_view, translate("Unable to delete the item"),
             translate("You might not have permission."));
+        throw;
     }
 }
 

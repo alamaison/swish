@@ -34,7 +34,7 @@
 #include "swish/debug.hpp"
 #include "swish/drop_target/DropTarget.hpp" // CDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands/commands.hpp"
                                            // remote_folder_command_provider
@@ -66,7 +66,7 @@
 
 using swish::drop_target::CDropTarget;
 using swish::drop_target::DropUI;
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
@@ -184,9 +184,10 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to access the directory"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -257,9 +258,10 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Path not recognised"),
             translate("Check that the path was entered correctly."));
+        throw;
     }
 }
 
@@ -379,9 +381,10 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to rename the item"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -705,11 +708,12 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd,
             (cpidl > 1) ? translate("Unable to access the item") :
                           translate("Unable to access the items"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -756,9 +760,10 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to access the folder"),
             translate("You might not have permission."));
+        throw;
     }
 }
 

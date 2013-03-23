@@ -52,7 +52,7 @@ namespace drop_target {
 
         virtual bool can_overwrite(const boost::filesystem::wpath& target);
         virtual std::auto_ptr<Progress> progress();
-        virtual void handle_and_rethrow_last_exception();
+        virtual void handle_last_exception();
         
     private:
         boost::optional< winapi::window::window<wchar_t> > m_owner;
