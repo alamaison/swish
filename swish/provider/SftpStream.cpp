@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -54,6 +55,7 @@ using ATL::CString;
 
 using comet::com_error;
 
+using boost::mutex;
 using boost::shared_ptr;
 
 using std::string;
@@ -258,6 +260,8 @@ CSftpStream::CSftpStream(
     long mode = // rw-r--r--
         LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR | LIBSSH2_SFTP_S_IRGRP |
         LIBSSH2_SFTP_S_IROTH;
+
+    mutex::scoped_lock lock = m_session->aquire_lock();
 
     m_handle = shared_ptr<LIBSSH2_SFTP_HANDLE>(
         libssh2_sftp_open(*m_session, file.c_str(), libssh2_flags, mode),
@@ -581,6 +585,8 @@ void CSftpStream::_Read(char* pbuf, ULONG cb, ULONG& cbRead)
 
 ULONG CSftpStream::_ReadOne(char* pbuf, ULONG cb)
 {
+    mutex::scoped_lock lock = m_session->aquire_lock();
+
     ssize_t rc = libssh2_sftp_read(m_handle.get(), pbuf, cb);
     if (rc < 0)
     {
@@ -617,6 +623,8 @@ void CSftpStream::_Write(const char* pbuf, ULONG cb, ULONG& cbWritten)
 
 ULONG CSftpStream::_WriteOne(const char* pbuf, ULONG cb)
 {
+    mutex::scoped_lock lock = m_session->aquire_lock();
+
     ssize_t rc = libssh2_sftp_write(m_handle.get(), pbuf, cb);
     if (rc < 0)
     {
@@ -717,6 +725,8 @@ ULONGLONG CSftpStream::_Seek(LONGLONG nMove, DWORD dwOrigin) throw(...)
 {
     ULONGLONG uNewPosition = _CalculateNewFilePosition(nMove, dwOrigin);
 
+    mutex::scoped_lock lock = m_session->aquire_lock();
+
     libssh2_sftp_seek64(m_handle.get(), uNewPosition);
 
     return uNewPosition;
@@ -739,14 +749,18 @@ STATSTG CSftpStream::_Stat(bool bWantName) throw(...)
     ::ZeroMemory(&attrs, sizeof attrs);
     attrs.flags = LIBSSH2_SFTP_ATTR_SIZE | LIBSSH2_SFTP_ATTR_ACMODTIME;
 
-    if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
     {
-        UNREACHABLE;
-        TRACE("libssh2_sftp_fstat() failed: %ws", 
-            GetLastErrorMessage(*m_session));
+        mutex::scoped_lock lock = m_session->aquire_lock();
 
-        HRESULT hr = last_storage_error(*m_session);
-        BOOST_THROW_EXCEPTION(com_error(hr));
+        if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
+        {
+            UNREACHABLE;
+            TRACE("libssh2_sftp_fstat() failed: %ws", 
+                GetLastErrorMessage(*m_session));
+
+            HRESULT hr = last_storage_error(*m_session);
+            BOOST_THROW_EXCEPTION(com_error(hr));
+        }
     }
 
     statstg.cbSize.QuadPart = attrs.filesize;
@@ -804,6 +818,8 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
         break;
     case STREAM_SEEK_CUR: // Relative to current position
     {
+        mutex::scoped_lock lock = m_session->aquire_lock();
+
         nNewPosition = libssh2_sftp_tell64(m_handle.get());
         nNewPosition += nMove;
         break;
@@ -816,6 +832,9 @@ ULONGLONG CSftpStream::_CalculateNewFilePosition(
         LIBSSH2_SFTP_ATTRIBUTES attrs;
         ::ZeroMemory(&attrs, sizeof attrs);
         attrs.flags = LIBSSH2_SFTP_ATTR_SIZE;
+
+        mutex::scoped_lock lock = m_session->aquire_lock();
+
         if (libssh2_sftp_fstat(m_handle.get(), &attrs) != 0)
         {        
             HRESULT hr = last_storage_error(*m_session);
