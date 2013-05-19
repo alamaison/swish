@@ -246,7 +246,7 @@ void DropUI::handle_last_exception()
 
 namespace {
 
-class DummyProgress
+class DummyProgress : public Progress
 {
 public:
     virtual bool user_cancelled()
