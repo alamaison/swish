@@ -28,12 +28,14 @@
 #define SWISH_DROP_TARGET_PROGRESS_HPP
 #pragma once
 
+#include <boost/noncopyable.hpp>
+
 #include <string>
 
 namespace swish {
 namespace drop_target {
 
-class Progress
+class Progress : private boost::noncopyable
 {
 public:
     virtual ~Progress() {}

@@ -38,12 +38,18 @@
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 
+#include <boost/function.hpp>
 #include <boost/locale.hpp> // translate, wformat
+#include <boost/move/move.hpp> // BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/future.hpp> // unique_future, promise
+#include <boost/thread/thread.hpp> // thread, mutex
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 #include <iosfwd> // wstringstream
+#include <queue>
 #include <string>
 
 using swish::frontend::announce_last_exception;
@@ -58,13 +64,22 @@ using winapi::window::window_handle;
 using comet::com_error;
 using comet::com_ptr;
 
+using boost::condition_variable;
 using boost::filesystem::wpath;
+using boost::function;
 using boost::locale::translate;
 using boost::locale::wformat;
+using boost::move;
+using boost::mutex;
 using boost::noncopyable;
 using boost::optional;
+using boost::promise;
+using boost::shared_ptr;
+using boost::thread;
+using boost::unique_future;
 
 using std::auto_ptr;
+using std::queue;
 using std::wstringstream;
 using std::wstring;
 
@@ -79,7 +94,7 @@ namespace {
      * Calls StartProgressDialog when created and StopProgressDialog when
      * destroyed.
      */
-    class DropProgress : public noncopyable, public Progress
+    class DropProgress : public Progress
     {
     public:
 
@@ -166,6 +181,325 @@ namespace {
         }
 
         progress m_inner;
+    };
+    
+    void do_events()
+    {
+        MSG msg;
+        BOOL result;
+
+        while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            result = ::GetMessage(&msg, NULL, 0, 0);
+            if (result == 0) // WM_QUIT
+            {                
+                ::PostQuitMessage(msg.wParam);
+                break;
+            }
+            else if (result == -1)
+            {
+                return;
+            }
+            else 
+            {
+                ::TranslateMessage(&msg);
+                ::DispatchMessage(&msg);
+            }
+        }
+    }
+    
+
+    typedef shared_ptr<DropProgress> inner_ref;
+
+    /**
+     * Functor running AsyncDropProgress loop.
+     */
+    class AsyncDropProgressLoop : noncopyable
+    {
+        BOOST_MOVABLE_BUT_NOT_COPYABLE(AsyncDropProgressLoop);
+
+        typedef function<void(DropProgress&)> event_handler;
+
+    public:
+
+        AsyncDropProgressLoop(
+            promise<inner_ref> inner_dialog_promise,
+            const optional< window<wchar_t> >& owner,
+            const wstring& title)
+            :
+        m_promise(move(inner_dialog_promise)), m_owner(owner), m_title(title),
+        m_time_to_die(false)
+        {}
+
+        ~AsyncDropProgressLoop()
+        {
+            m_time_to_die = true;
+
+            // The loop is probably waiting for events so prod it to
+            // go round one more time
+            m_events_available.notify_all();
+        }
+/*
+        // Move constructor        
+        AsyncDropProgressLoop(BOOST_RV_REF(AsyncDropProgressLoop) other)
+            : m_promise(move(other.m_promise)), m_owner(other.m_owner),
+            m_title(other.m_title)
+        {}
+
+        // Move assignment
+        AsyncDropProgressLoop& operator=(
+            BOOST_RV_REF(AsyncDropProgressLoop) other)
+        {
+            if (this != &other)
+            {
+                m_promise = move(other.m_promise);
+                m_owner = other.m_owner;
+                m_title = other.m_title;
+            }
+            return *this;
+        }
+*/
+        void operator()()
+        {
+            inner_ref progress(new DropProgress(m_owner, m_title));
+            m_promise.set_value(progress);
+
+            while (!m_time_to_die)
+            {
+                event_handler handler = next_event();
+
+                handler(*progress);
+
+                do_events();
+            }
+            /*
+            MSG msg;
+            while (::GetMessage(&msg, NULL, 0, 0) > 0)
+            {
+                ::TranslateMessage(&msg);
+                ::DispatchMessage(&msg);
+            }
+            */
+            //return msg.wParam;
+        }
+
+        template<typename Event>
+        void event_occurred(Event new_event)
+        {
+            mutex::scoped_lock lock(m_event_list_guard);
+            m_events.push(new_event);
+
+            m_events_available.notify_one();
+        }
+
+    private:
+
+        event_handler next_event()
+        {
+            mutex::scoped_lock lock(m_event_list_guard);
+
+            while(m_events.empty())
+            {
+                m_events_available.wait(lock);
+            }
+
+            event_handler h = m_events.front();
+            m_events.pop();
+            return h;
+        }
+
+        promise<inner_ref> m_promise;
+        optional< window<wchar_t> > m_owner;
+        wstring m_title;
+
+        mutex m_event_list_guard;
+        queue<event_handler> m_events;
+
+        condition_variable m_events_available;
+
+        boolean m_time_to_die;
+    };
+
+    /**
+     * Glorified shared pointer to the loop.  Makes it callable so we can
+     * add pass it to a thread.
+     *
+     * We wouldn't need this if Boost.Thread in 1.49 supported Boost.Move.
+     */
+    class CallableLoopRef
+    {
+    public:
+        CallableLoopRef(shared_ptr<AsyncDropProgressLoop> loop)
+            : m_loop(loop) {}
+
+        void operator()()
+        {
+            (*m_loop)();
+        }
+
+    private:
+        shared_ptr<AsyncDropProgressLoop> m_loop;
+    };
+
+    /**
+     * Version on DropProgress that manages UI on separate thread.
+     *
+     * Helps UI update when the creating/calling thread is doing the operation
+     * whose progress is being shown.
+     */
+    class AsyncDropProgress : public Progress
+    {
+        BOOST_MOVABLE_BUT_NOT_COPYABLE(AsyncDropProgress)
+
+    public:
+
+        AsyncDropProgress(
+            const optional< window<wchar_t> >& owner, const wstring& title)
+            :
+        m_inner(start_thread(owner, title)) {}
+
+        // Move constructor        
+        AsyncDropProgress(BOOST_RV_REF(AsyncDropProgress) other)
+            : m_inner(move(other.m_inner))
+        {}
+
+        // Move assignment
+        AsyncDropProgress& operator=(BOOST_RV_REF(AsyncDropProgress) other)
+        {
+            if (this != &other)
+            {
+                m_inner = move(other.m_inner);
+            }
+            return *this;
+        }
+
+        /**
+         * Has the user cancelled the operation via the progress dialogue?
+         */
+        bool user_cancelled()
+        {
+            return m_inner.get()->user_cancelled();
+        }
+
+        /**
+         * Set the indexth line of the display to the given text.
+         */
+        void line(DWORD index, const wstring& text)
+        {
+            m_loop->event_occurred(LineEvent(index, text));
+        }
+
+        /**
+         * Set the indexth line of the display to the given path.
+         *
+         * Uses the inbuilt path compression.
+         */
+        void line_path(DWORD index, const wstring& text)
+        {
+            m_loop->event_occurred(LinePathEvent(index, text));
+        }
+
+        /**
+         * Update the indicator to show current progress level.
+         */
+        void update(ULONGLONG so_far, ULONGLONG out_of)
+        {
+            m_loop->event_occurred(UpdateEvent(so_far, out_of));
+        }
+
+        /**
+         * Force the dialogue window to disappear.
+         *
+         * Useful, for instance, to temporarily hide the progress display while
+         * displaying other dialogues in the middle of the process whose
+         * progress is being monitored.
+         */
+        void hide()
+        {
+            m_inner.get()->hide();
+        }
+
+        /**
+         * Force the dialogue window to appear.
+         *
+         * Useful to force the window to appear quicker than it normally would,
+         * and to redisplay the window after hiding it.
+         *
+         * @see hide
+         */
+        void show()
+        {
+            m_inner.get()->show();
+        }
+
+    private:
+
+        class UpdateEvent
+        {
+        public:
+            UpdateEvent(ULONGLONG so_far, ULONGLONG out_of)
+                : m_so_far(so_far), m_out_of(out_of) {}
+
+            void operator()(DropProgress& progress)
+            {
+                progress.update(m_so_far, m_out_of);
+            }
+
+        private:
+            ULONGLONG m_so_far;
+            ULONGLONG m_out_of;
+        };
+
+        class LineEvent
+        {
+        public:
+            LineEvent(DWORD index, const wstring& text)
+                : m_index(index), m_text(text) {}
+
+            void operator()(DropProgress& progress)
+            {
+                progress.line(m_index, m_text);
+            }
+
+        private:
+            DWORD m_index;
+            wstring m_text;
+        };
+
+        class LinePathEvent
+        {
+        public:
+            LinePathEvent(DWORD index, const wstring& text)
+                : m_index(index), m_text(text) {}
+
+            void operator()(DropProgress& progress)
+            {
+                progress.line_path(m_index, m_text);
+            }
+
+        private:
+            DWORD m_index;
+            wstring m_text;
+        };
+
+        unique_future<inner_ref> start_thread(
+            const optional< window<wchar_t> >& owner, const wstring& title)
+        {
+            promise<inner_ref> inner_dialog_promise;
+
+            unique_future<inner_ref> future_dialog
+                = inner_dialog_promise.get_future();
+
+            m_loop = shared_ptr<AsyncDropProgressLoop>(
+                new AsyncDropProgressLoop(
+                    move(inner_dialog_promise), owner, title));
+            thread(CallableLoopRef(m_loop)).detach();
+
+            return move(future_dialog);
+        }
+
+        shared_ptr<AsyncDropProgressLoop> m_loop;
+        unique_future<inner_ref> m_inner;
     };
 
     /**
@@ -281,7 +615,8 @@ auto_ptr<Progress> DropUI::progress()
     if (m_owner)
     {
         p = auto_ptr<Progress>(
-            new DropProgress(m_owner, translate("Progress", "Copying...")));
+            new AsyncDropProgress(
+                m_owner, translate("Progress", "Copying...")));
     }
     else
     {
