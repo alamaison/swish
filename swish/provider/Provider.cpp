@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -140,7 +140,7 @@ public:
 
 private:
 
-    boost::mutex m_mutex;
+    boost::mutex m_session_creation_mutex;
     boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
 
     /** @name Fields used for lazy connection. */
@@ -243,8 +243,6 @@ provider::provider(const wstring& user, const wstring& host, int port)
  */
 provider::~provider() throw()
 {
-    lock_guard<mutex> lock(m_mutex);
-
     try
     {
         _Disconnect(); // Destroy session before shutting down Winsock
@@ -268,6 +266,7 @@ provider::~provider() throw()
  */
 void provider::_Connect(com_ptr<ISftpConsumer> consumer)
 {
+    lock_guard<mutex> lock(m_session_creation_mutex);
     if (!m_session || m_session->IsDead())
     {
         m_session = CSessionFactory::CreateSftpSession(
@@ -277,6 +276,7 @@ void provider::_Connect(com_ptr<ISftpConsumer> consumer)
 
 void provider::_Disconnect()
 {
+    lock_guard<mutex> lock(m_session_creation_mutex);
     m_session.reset();
 }
 
@@ -301,9 +301,9 @@ directory_listing provider::listing(
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
+
+    mutex::scoped_lock lock = m_session->aquire_lock();
 
     sftp_channel channel(m_session->get(), m_session->sftp());
 
@@ -326,8 +326,6 @@ com_ptr<IStream> provider::get_file(
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
-
-    lock_guard<mutex> lock(m_mutex);
 
     _Connect(consumer);
 
@@ -393,8 +391,6 @@ VARIANT_BOOL provider::rename(
     string from = WideStringToUtf8String(from_path.string());
     string to = WideStringToUtf8String(to_path.string());
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
 
     HRESULT hr = _RenameSimple(from, to);
@@ -404,13 +400,21 @@ VARIANT_BOOL provider::rename(
     // Rename failed - this is OK, it might be an overwrite - check
     bstr_t message;
     int nErr; PSTR pszErr; int cchErr;
-    nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
+    {
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        nErr = libssh2_session_last_error(
+            *m_session, &pszErr, &cchErr, false);
+    }
+
     if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
     {
         wstring error_out;
+        
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        ULONG sftp_last_error = libssh2_sftp_last_error(*m_session);
+
         hr = _RenameRetryWithOverwrite(
-            consumer.get(), libssh2_sftp_last_error(*m_session), from, to,
-            error_out);
+            consumer.get(), sftp_last_error, from, to, error_out);
         if (SUCCEEDED(hr))
             return VARIANT_TRUE;
         else if (hr == E_ABORT) // User denied overwrite
@@ -437,6 +441,7 @@ VARIANT_BOOL provider::rename(
  */
 HRESULT provider::_RenameSimple(const string& from, const string& to)
 {
+    mutex::scoped_lock lock = m_session->aquire_lock();
     int rc = libssh2_sftp_rename_ex(
         *m_session, from.data(), from.size(), to.data(), to.size(),
         LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
@@ -495,7 +500,13 @@ HRESULT provider::_RenameRetryWithOverwrite(
         // for race conditions.
         LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
         ::ZeroMemory(&attrsTarget, sizeof attrsTarget);
-        if (!libssh2_sftp_stat(*m_session, to.c_str(), &attrsTarget))
+        
+        int rc;
+        {
+            mutex::scoped_lock lock = m_session->aquire_lock();
+            rc = libssh2_sftp_stat(*m_session, to.c_str(), &attrsTarget);
+        }
+        if (!rc)
         {
             // File already exists
             hr = pConsumer->OnConfirmOverwrite(
@@ -525,11 +536,15 @@ HRESULT provider::_RenameRetryWithOverwrite(
 HRESULT provider::_RenameAtomicOverwrite(
     const string& from, const string& to, wstring& error_out)
 {
+    // Lock must not be released until after we get the error message
+    // or we might get a message produced on another thread
+
+    mutex::scoped_lock lock = m_session->aquire_lock();
+
     int rc = libssh2_sftp_rename_ex(
         *m_session, from.data(), from.size(), to.data(), to.size(), 
         LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
-        LIBSSH2_SFTP_RENAME_NATIVE
-    );
+        LIBSSH2_SFTP_RENAME_NATIVE);
 
     if (!rc)
         return S_OK;
@@ -538,6 +553,7 @@ HRESULT provider::_RenameAtomicOverwrite(
         char *pszMessage; int cchMessage;
         libssh2_session_last_error(
             *m_session, &pszMessage, &cchMessage, false);
+        
         error_out = Utf8StringToWideString(pszMessage);
         return E_FAIL;
     }
@@ -563,11 +579,20 @@ HRESULT provider::_RenameNonAtomicOverwrite(
     // First, rename existing file to temporary
     string temporary(to);
     temporary += ".swish_rename_temp";
-    int rc = libssh2_sftp_rename(*m_session, to.c_str(), temporary.c_str());
+    int rc;
+    
+    {
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        rc = libssh2_sftp_rename(*m_session, to.c_str(), temporary.c_str());
+    }
+
     if (!rc)
     {
         // Rename our subject
-        rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
+        {
+            mutex::scoped_lock lock = m_session->aquire_lock();
+            rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
+        }
         if (!rc)
         {
             // Delete temporary
@@ -579,7 +604,10 @@ HRESULT provider::_RenameNonAtomicOverwrite(
         }
 
         // Rename failed, rename our temporary back to its old name
-        rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
+        {
+            mutex::scoped_lock lock = m_session->aquire_lock();
+            rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
+        }
         assert(!rc);
 
         error_out = _T("Cannot overwrite \"");
@@ -596,8 +624,6 @@ void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
     if (path.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
 
     // Delete file
@@ -610,9 +636,13 @@ void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
 
 HRESULT provider::_Delete( const char *szPath, wstring& error_out )
 {
+    // Lock must not be released until after we get the error message
+    // or we might get a message produced on another thread
+
+    mutex::scoped_lock lock = m_session->aquire_lock();
     if (libssh2_sftp_unlink(*m_session, szPath) == 0)
         return S_OK;
-
+ 
     // Delete failed
     error_out = _GetLastErrorMessage();
     return E_FAIL;
@@ -625,8 +655,6 @@ void provider::delete_directory(
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     string utf8_path = WideStringToUtf8String(path.string());
-
-    lock_guard<mutex> lock(m_mutex);
 
     _Connect(consumer);
 
@@ -642,24 +670,38 @@ HRESULT provider::_DeleteDirectory(const char* szPath, wstring& error_out)
     HRESULT hr;
 
     // Open directory
-    LIBSSH2_SFTP_HANDLE *pSftpHandle = libssh2_sftp_opendir(
-        *m_session, szPath
-    );
-    if (!pSftpHandle)
+    LIBSSH2_SFTP_HANDLE *pSftpHandle;
+    
     {
-        error_out = _GetLastErrorMessage();
-        return E_FAIL;
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        pSftpHandle = libssh2_sftp_opendir(*m_session, szPath);
+    
+        // Lock must not be released until after we get the error message
+        // or we might get a message produced on another thread
+        if (!pSftpHandle)
+        {
+            error_out = _GetLastErrorMessage();
+            return E_FAIL;
+        }
     }
 
     // Delete content of directory
+
+    // BUG: If deletion fails in this loop the user gets the wrong error
+    // message because the real error is ignored and the user only get
+    // to see the one caused by trying to delete the non-empty top directory
     do {
         // Read filename and attributes. Returns length of filename.
         char szFilename[MAX_FILENAME_LENZ];
         LIBSSH2_SFTP_ATTRIBUTES attrs;
         ::ZeroMemory(&attrs, sizeof(attrs));
-        int rc = libssh2_sftp_readdir(
-            pSftpHandle, szFilename, sizeof(szFilename), &attrs
-        );
+
+        int rc;
+        {
+            mutex::scoped_lock lock = m_session->aquire_lock();
+            rc = libssh2_sftp_readdir(
+                pSftpHandle, szFilename, sizeof(szFilename), &attrs);
+        }
         if (rc <= 0)
             break;
 
@@ -675,20 +717,29 @@ HRESULT provider::_DeleteDirectory(const char* szPath, wstring& error_out)
         hr = _DeleteRecursive(strSubPath.c_str(), error_out);
         if (FAILED(hr))
         {
+            mutex::scoped_lock lock = m_session->aquire_lock();
             rc = libssh2_sftp_close_handle(pSftpHandle);
             assert(rc == 0);
             return hr;
         }
     } while (true);
-    int rc = libssh2_sftp_close_handle(pSftpHandle);
-    assert(rc == 0); (void)rc;
+
+    {
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        int rc = libssh2_sftp_close_handle(pSftpHandle);
+        assert(rc == 0); (void)rc;
+    }
 
     // Delete directory itself
-    if (libssh2_sftp_rmdir(*m_session, szPath) == 0)
-        return S_OK;
+    {
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        if (libssh2_sftp_rmdir(*m_session, szPath) == 0)
+            return S_OK;
 
-    // Delete failed
-    error_out = _GetLastErrorMessage();
+        // Delete failed
+        error_out = _GetLastErrorMessage();
+    }
+
     return E_FAIL;
 }
 
@@ -697,10 +748,13 @@ HRESULT provider::_DeleteRecursive(
 {
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     ::ZeroMemory(&attrs, sizeof attrs);
-    if (libssh2_sftp_lstat(*m_session, szPath, &attrs) != 0)
     {
-        error_out = _GetLastErrorMessage();
-        return E_FAIL;
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        if (libssh2_sftp_lstat(*m_session, szPath, &attrs) != 0)
+        {
+            error_out = _GetLastErrorMessage();
+            return E_FAIL;
+        }
     }
 
     assert( // Permissions field is valid
@@ -719,9 +773,9 @@ void provider::create_new_file(
 
     string utf8_path = WideStringToUtf8String(path.string());
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
+    
+    mutex::scoped_lock lock = m_session->aquire_lock();
 
     LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
         *m_session, utf8_path.c_str(), LIBSSH2_FXF_CREAT, 0644);
@@ -742,10 +796,9 @@ void provider::create_new_directory(
 
     string utf8_path = WideStringToUtf8String(path.string());
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
 
+    mutex::scoped_lock lock = m_session->aquire_lock();
     if (libssh2_sftp_mkdir(*m_session, utf8_path.c_str(), 0755) != 0)
         BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
 }
@@ -754,10 +807,9 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
 
+    mutex::scoped_lock lock = m_session->aquire_lock();
     sftp_channel channel(m_session->get(), m_session->sftp());
     bstr_t target =
         Utf8StringToWideString(canonical_path(channel, utf8_path).string());
@@ -777,10 +829,10 @@ sftp_filesystem_item provider::stat(
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    lock_guard<mutex> lock(m_mutex);
-
     _Connect(consumer);
     
+    mutex::scoped_lock lock = m_session->aquire_lock();
+
     sftp_channel channel(m_session->get(), m_session->sftp());
 
     file_attributes stat_result = attributes(

@@ -32,9 +32,9 @@
 #include "IconExtractor.h"
 #include "Registry.h"
 #include "swish/debug.hpp"
-#include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
+#include "swish/drop_target/DropTarget.hpp" // CDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands/commands.hpp"
                                            // remote_folder_command_provider
@@ -64,9 +64,9 @@
 #include <cassert> // assert
 #include <string>
 
-using swish::drop_target::CSnitchingDropTarget;
+using swish::drop_target::CDropTarget;
 using swish::drop_target::DropUI;
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
@@ -96,6 +96,7 @@ using boost::bind;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
+using boost::optional;
 using boost::shared_ptr;
 
 using ATL::CComPtr;
@@ -183,9 +184,10 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to access the directory"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -256,9 +258,10 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Path not recognised"),
             translate("Check that the path was entered correctly."));
+        throw;
     }
 }
 
@@ -378,9 +381,10 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to rename the item"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -704,11 +708,12 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd,
             (cpidl > 1) ? translate("Unable to access the item") :
                           translate("Unable to access the items"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -727,17 +732,38 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
-        return new CSnitchingDropTarget(
-            hwnd, provider,
-            consumer, root_pidl(),
-            make_shared<DropUI>(
-                window<wchar_t>(window_handle::foster_handle(hwnd))));
+        optional< window<wchar_t> > owner;
+        if (hwnd)
+            owner = window<wchar_t>(window_handle::foster_handle(hwnd));
+
+        // HACKish:
+        // UI happens via the given owner window given here.  We used to do it
+        // via the window of the OLE site instead, but this is incompatible
+        // with asynchronous operations because the shell clears the site
+        // when Drop returns (at which point the operation is still running
+        // and may need an owner window for UI).
+        //
+        // We could hang on to a copy of the site but that seems .. impolite.
+        // After all, the shell presumably cleared the site for a reason.
+        //
+        // That said, what we're doing now seems pretty naughty too. We use the
+        // window we were passed as an owner window when we were created.  This
+        // window is probably the one the shell passed to our folder's
+        // GetUIObjectOf or CreateViewObject methods.  MSDN documents this
+        // window as the 'owner' to be used for UI but doesn't make clear how
+        // long the window is guarantted to remain alive: until the
+        // GetUIObjectOf/CreateViewObject call returns or for as long as this
+        // drop target is in use.  Nevertheless, this seems to work so it's
+        // what we're doing for now.
+        return new CDropTarget(
+            provider, consumer, root_pidl(), make_shared<DropUI>(owner));
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to access the folder"),
             translate("You might not have permission."));
+        throw;
     }
 }
 

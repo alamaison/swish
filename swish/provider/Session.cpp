@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -55,6 +55,7 @@ using swish::utils::WideStringToUtf8String;
 
 using boost::asio::ip::tcp;
 using boost::asio::error::host_not_found;
+using boost::mutex;
 using boost::shared_ptr;
 using boost::system::get_system_category;
 using boost::system::system_error;
@@ -73,6 +74,12 @@ CSession::~CSession()
 {
     _DestroySftpChannel();
     _DestroySession();
+}
+
+
+mutex::scoped_lock CSession::aquire_lock()
+{
+    return mutex::scoped_lock(m_mutex);
 }
 
 CSession::operator LIBSSH2_SESSION*() const

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011, 2012
+    Copyright (C) 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -61,6 +61,9 @@ public:
 
     typedef IDropTarget interface_is;
 
+    /**
+     * Create SFTP drop target.
+     */
     CDropTarget(
         boost::shared_ptr<swish::provider::sftp_provider> provider,
         comet::com_ptr<ISftpConsumer> consumer,
@@ -93,8 +96,6 @@ public:
 
 private:
 
-    virtual void on_set_site(comet::com_ptr<IUnknown> ole_site);
-
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
     comet::com_ptr<ISftpConsumer> m_consumer;
 
@@ -108,7 +109,7 @@ void copy_data_to_provider(
     boost::shared_ptr<swish::provider::sftp_provider> provider,
     comet::com_ptr<ISftpConsumer> consumer,
     const winapi::shell::pidl::apidl_t& remote_directory,
-    DropActionCallback& callback);
+    boost::shared_ptr<DropActionCallback> callback);
 
 }} // namespace swish::drop_target
 

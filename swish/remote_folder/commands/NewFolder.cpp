@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #include "NewFolder.hpp"
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
@@ -49,7 +49,7 @@
 #include <string>
 #include <vector>
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::nse::Command;
 using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
@@ -244,9 +244,10 @@ const
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Could not create a new folder"),
             translate("You might not have permission."));
+        throw;
     }
 }
 

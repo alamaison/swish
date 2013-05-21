@@ -26,6 +26,7 @@
 
 #include "DropUI.hpp"
 
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/trace.hpp" // trace
 
 #include <winapi/com/ole_window.hpp> // window_from_ole_window
@@ -45,8 +46,7 @@
 #include <iosfwd> // wstringstream
 #include <string>
 
-#include <shobjidl.h> // IShellView, IShellBrowser
-
+using swish::frontend::announce_last_exception;
 using swish::tracing::trace;
 
 using winapi::com::window_from_ole_window;
@@ -68,102 +68,11 @@ using std::auto_ptr;
 using std::wstringstream;
 using std::wstring;
 
-template<> struct comet::comtype<IShellBrowser>
-{
-    static const IID& uuid() throw() { return IID_IShellBrowser; }
-    typedef IOleWindow base;
-};
-
 namespace swish {
 namespace drop_target {
 
 namespace {
 
-    /**
-     * Set site UI modality.
-     *
-     * There are many types of OLE site with subtly different EnableModeless
-     * methods.  Try them in turn until one works.
-     *
-     * @todo  Add more supported site types.
-     */
-    void modal(com_ptr<IUnknown> site, bool state)
-    {
-        BOOL enable = (state) ? TRUE : FALSE;
-
-        if (com_ptr<IShellBrowser> browser = com_cast(site))
-        {
-            HRESULT hr = browser->EnableModelessSB(enable);
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(browser, hr));
-        }
-        else if (com_ptr<IOleInPlaceFrame> ole_frame = com_cast(site))
-        {
-            HRESULT hr = ole_frame->EnableModeless(enable);
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(ole_frame, hr));
-        }
-        else if (com_ptr<IShellView> view = com_cast(site))
-        {
-            HRESULT hr = view->EnableModeless(state);
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(com_error("No supported site found"));
-        }
-    }
-
-    /**
-     * Prevent the OLE site from showing UI for scope of this object.
-     *
-     * The idea here is that we are about to display something like a modal
-     * dialogue box and we don't want our OLE container, such as the Explorer
-     * browser, showing its own non-modal (or even modal?) UI at the same time.
-     *
-     * OLE sites provides the EnableModeless method to disable UI for a
-     * time and this class makes sure it is reenabled safely when we go out
-     * of scope.
-     *
-     * If we fail to call this method because, for instance we can't find a
-     * suitable site we swallow the error.  This failure isn't serious enough
-     * to warrant aborting whatever wider task we're trying to achieve.
-     */
-    class AutoModal
-    {
-    public:
-
-        AutoModal(com_ptr<IUnknown> site) : m_site(site)
-        {
-            try
-            {
-                modal(m_site, false);
-            }
-            catch (const std::exception& e)
-            {
-                trace("Unable to make OLE site non-modal: %s") % e.what();
-            }
-        }
-
-        ~AutoModal()
-        {
-            try
-            {
-                modal(m_site, true);
-            }
-            catch (const std::exception& e)
-            {
-                trace("AutoModal threw in destructor: %s") % e.what();
-                assert(false);
-            }
-        }
-
-    private:
-        com_ptr<IUnknown> m_site;
-    };
-    
- 
     /**
      * Drain any messages in the queue.
      */
@@ -204,10 +113,9 @@ namespace {
     public:
 
         DropProgress(
-            const optional< window<wchar_t> >& parent, const wstring& title,
-            com_ptr<IUnknown> ole_site=NULL)
+            const optional< window<wchar_t> >& owner, const wstring& title)
             :
-        m_inner(create_dialog(parent, title, ole_site)) {}
+        m_inner(create_dialog(owner, title)) {}
 
         /**
          * Has the user cancelled the operation via the progress dialogue?
@@ -294,23 +202,23 @@ namespace {
     private:
 
         static progress create_dialog(
-            const optional< window<wchar_t> >& parent, const wstring& title,
-            com_ptr<IUnknown> ole_site)
+            const optional< window<wchar_t> >& owner, const wstring& title)
         {
             return progress(
-                parent, title,
+                owner, title,
                 progress::modality::non_modal,
                 progress::time_estimation::automatic_time_estimate,
                 progress::bar_type::progress,
                 progress::minimisable::yes,
-                progress::cancellability::cancellable, ole_site);
+                progress::cancellability::cancellable);
         }
 
         progress m_inner;
     };
 
     /**
-     * Disables an OLE window for duration of its scope and reenables after.
+     * Disables a progress window for duration of its scope and reenables
+     * after.
      */
     class ScopedDisabler
     {
@@ -333,15 +241,6 @@ namespace {
 DropUI::DropUI(const optional< window<wchar_t> >& owner) : m_owner(owner) {}
 
 /**
- * Associate with a container site.
- *
- * The DropTarget is only informed of its site just before the call to Drop
- * (after this object has been created) so it informs us of the site once it
- * knows.
- */
-void DropUI::site(com_ptr<IUnknown> ole_site) { m_ole_site = ole_site; }
-
-/**
  * Does user give permission to overwrite remote target file?
  */
 bool DropUI::can_overwrite(const wpath& target)
@@ -355,8 +254,6 @@ bool DropUI::can_overwrite(const wpath& target)
         % target.filename();
     message << "\n\n";
     message << translate("Would you like to replace it?");
-
-    AutoModal modal_scope(m_ole_site); // force container non-modal
 
     // If the caller has already displayed the progress dialog, we must
     // force-hide it as it gets in the way of other UI
@@ -378,6 +275,42 @@ bool DropUI::can_overwrite(const wpath& target)
     }
 }
 
+void DropUI::handle_last_exception()
+{
+    // Only report errors with a dialog if we are given a window we
+    // can use as a dialogue owner.  We can assume if the caller
+    // didn't give us one, they don't want UI.
+    if (m_owner)
+    {
+        announce_last_exception(
+            m_owner->hwnd(), translate("Unable to transfer files"),
+            translate(
+                "You might not have permission to write to this "
+                "directory."));
+    }
+
+    throw;
+}
+
+namespace {
+
+class DummyProgress : public Progress
+{
+public:
+    virtual bool user_cancelled()
+    {
+        return false;
+    };
+
+    virtual void line(DWORD, const std::wstring&) {}
+    virtual void line_path(DWORD, const std::wstring&) {}
+    virtual void update(ULONGLONG, ULONGLONG) {}
+    virtual void hide() {}
+    virtual void show() {}
+};
+
+}
+
 /**
  * Pass ownership of a progress display scope to caller.
  *
@@ -392,16 +325,16 @@ bool DropUI::can_overwrite(const wpath& target)
  */
 auto_ptr<Progress> DropUI::progress()
 {
-    if (!m_owner)
+    auto_ptr<Progress> p;
+    if (m_owner)
     {
-        m_owner = window_from_ole_window(m_ole_site);
+        p = auto_ptr<Progress>(
+            new DropProgress(m_owner, translate("Progress", "Copying...")));
     }
-
-    if (!m_owner)
-        trace("Creating UI without a parent Window");
-
-    auto_ptr<Progress> p(new DropProgress(
-        m_owner, translate("Progress", "Copying..."), m_ole_site));
+    else
+    {
+        p = auto_ptr<Progress>(new DummyProgress());
+    }
 
     // HACK: we keep a raw copy of the pointer so we can hide the progress
     // if needed later when displaying the confirm-overwrite box.  There

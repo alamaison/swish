@@ -33,8 +33,6 @@
 
 #include <winapi/window/window.hpp>
 
-#include <comet/ptr.h> // com_ptr
-
 #include <boost/optional.hpp>
 
 #include <memory> // auto_ptr
@@ -52,14 +50,12 @@ namespace drop_target {
         DropUI(
             const boost::optional< winapi::window::window<wchar_t> >& owner);
 
-        virtual void site(comet::com_ptr<IUnknown> ole_site);
-
         virtual bool can_overwrite(const boost::filesystem::wpath& target);
         virtual std::auto_ptr<Progress> progress();
+        virtual void handle_last_exception();
         
     private:
         boost::optional< winapi::window::window<wchar_t> > m_owner;
-        comet::com_ptr<IUnknown> m_ole_site;
         Progress* m_progress;
     };
 
