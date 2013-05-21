@@ -33,6 +33,8 @@
 #include "swish/host_folder/commands/Remove.hpp"
 #include "swish/host_folder/commands/commands.hpp" // host commands
 #include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
+#include "swish/utils.hpp" // Utf8StringToWideString
+#include "swish/version/version.hpp" // release_version
 
 #include <winapi/error.hpp> // last_error
 #include <winapi/gui/menu/basic_menu.hpp> // find_first_item_with_id
@@ -65,6 +67,8 @@ using swish::host_folder::commands::host_folder_task_pane_titles;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUIElement;
 using swish::nse::MenuCommandTitleAdapter;
+using swish::release_version;
+using swish::utils::Utf8StringToWideString;
 
 using comet::com_ptr;
 
@@ -200,7 +204,8 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
     m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_first_command_id(0),
     m_winsparkle(
         "http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
-        L"0.7.3", L"", "Software\\Swish\\Updates") {}
+        Utf8StringToWideString(release_version().as_string()),
+        L"", "Software\\Swish\\Updates") {}
 
 /**
  * The folder window is being created.

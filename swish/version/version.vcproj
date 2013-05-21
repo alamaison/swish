@@ -262,6 +262,10 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\metadata.h"
+			>
+		</File>
+		<File
 			RelativePath=".\version.cpp"
 			>
 		</File>

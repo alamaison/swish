@@ -1,7 +1,7 @@
 /**
     @file
 
-    Swish version information.
+    C++ interface to Swish version information.
 
     @if license
 
