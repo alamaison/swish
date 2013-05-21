@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "swish/version/metadata.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -52,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,7,3,0
- PRODUCTVERSION 0,7,3,0
+ FILEVERSION SWISH_MAJOR_VERSION,SWISH_MINOR_VERSION,SWISH_BUGFIX_VERSION,0
+ PRODUCTVERSION SWISH_MAJOR_VERSION,SWISH_MINOR_VERSION,SWISH_BUGFIX_VERSION,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x3L
@@ -68,14 +69,14 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "Comments", "Secure access to remote directories from Windows Explorer via SSH/SFTP"
-            VALUE "FileDescription", "Swish ATL module and in-proc COM server"
-            VALUE "FileVersion", "0.7.3.0"
+            VALUE "Comments", SWISH_DESCRIPTION
+            VALUE "FileDescription", "Swish Explorer plugin DLL"
+            VALUE "FileVersion", SWISH_VERSION_STRING
             VALUE "InternalName", "swish-com_dll"
-            VALUE "LegalCopyright", "Copyright (C) 2007-2013 Alexander Lamaison <awl03@doc.ic.ac.uk>"
+            VALUE "LegalCopyright", SWISH_COPYRIGHT
             VALUE "OriginalFilename", "shell_folder-com_dll.dll"
-            VALUE "ProductName", "Swish"
-            VALUE "ProductVersion", "0.7.3.0"
+            VALUE "ProductName", SWISH_PROGRAM_NAME
+            VALUE "ProductVersion", SWISH_VERSION_STRING
         END
     END
     BLOCK "VarFileInfo"
