@@ -53,6 +53,7 @@
 #include <winapi/window/window.hpp>
 
 #include <comet/datetime.h> // datetime_t
+#include <comet/regkey.h>
 
 #include <boost/bind.hpp> // bind
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
@@ -89,6 +90,7 @@ using winapi::window::window_handle;
 using comet::com_ptr;
 using comet::com_error;
 using comet::datetime_t;
+using comet::regkey;
 using comet::throw_com_error;
 using comet::variant_t;
 
@@ -265,6 +267,46 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
     }
 }
 
+namespace {
+
+    bool extension_hiding_disabled_in_registry()
+    {
+        if (regkey user_settings = regkey(HKEY_CURRENT_USER).open_nothrow(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\"
+            L"Advanced"))
+        {
+            regkey::mapped_type extension_setting =
+                user_settings[L"HideFileExt"];
+
+            if (extension_setting.exists())
+            {
+                return extension_setting == 0U;
+            }
+        }
+        
+        // We only reach here if the user settings didn't exist, not if
+        // they just said "no".  This means the global settings don't 
+        // override the user settings, which seems the right way round.
+        if (regkey global_settings = regkey(HKEY_LOCAL_MACHINE).open_nothrow(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\"
+            L"Advanced\\Folder\\HideFileExt"))
+        {
+            regkey::mapped_type extension_setting =
+                global_settings[L"DefaultValue"];
+
+            if (extension_setting.exists())
+            {
+                return extension_setting == 0U;
+            }
+        }
+
+        // It's unlikely that neither will be set but we're prepared for it
+        // anyway
+        return false;
+    }
+
+}
+
 /**
  * Retrieve the display name for the specified file object or subfolder.
  *
@@ -320,7 +362,24 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
     {
         ATLASSERT(flags == SHGDN_NORMAL || flags == SHGDN_INFOLDER);
 
-        name = filename_without_extension(pidl);
+        if (extension_hiding_disabled_in_registry())
+        {
+            // The table of SHGDN examples on MSDN implies that the
+            // presence of the SHGDN_FORPARSING flag means include the file
+            // extension and its absence means remove it.
+            // But that's not the full story.  The SHGDN_FORPARSING flag
+            // indeed means include the file extension, but its absence means
+            // do what the user wants.  In other words, remove the extension
+            // if their Explorer settings say that's what they want.
+            // Checking the Explorer settings is up to the individual
+            // namespace extension.
+
+            name = remote_itemid_view(pidl).filename();
+        }
+        else
+        {
+            name = filename_without_extension(pidl);
+        }
     }
 
     return string_to_strret(name);

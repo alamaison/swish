@@ -268,6 +268,9 @@ namespace {
  * anywhere in Windows and therefore may need disambiguation information
  * included.  For example 'filename on host' rather than just 'filename'.
  *
+ * The result may or may not include the extension depending on the user's
+ * settings, so we accept either as a successful result.
+ *
  * Currently we don't support disambiguation information in Swish.
  *
  * This name does not have to be parseable.
@@ -277,10 +280,14 @@ BOOST_AUTO_TEST_CASE( display_name_file )
     wpath file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL;
-    wstring expected = L"testfile";
+    wstring expected_with = L"testfile.txt";
+    wstring expected_without = L"testfile";
 
     BOOST_CHECK(
-        display_name_matches(folder(), flags, file.filename(), expected));
+        display_name_matches(
+            folder(), flags, file.filename(), expected_with) ||
+        display_name_matches(
+            folder(), flags, file.filename(), expected_without));
 }
 
 /**
@@ -289,6 +296,9 @@ BOOST_AUTO_TEST_CASE( display_name_file )
  * On Unix files are considered to be hidden if they start with a full-stop.
  * We adhere to this convention and should not treat an initial dot dot as part
  * of the extension.
+ *
+ * The result may or may not include the extension depending on the user's
+ * settings, so we accept either as a successful result.
  */
 BOOST_AUTO_TEST_CASE( display_name_hidden_file )
 {
@@ -297,12 +307,16 @@ BOOST_AUTO_TEST_CASE( display_name_hidden_file )
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected1 = L".hidden";
-    wstring expected2 = L".testfile";
+    wstring expected2_with = L".testfile.txt";
+    wstring expected2_without = L".testfile";
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file1.filename(), expected1));
     BOOST_CHECK(
-        display_name_matches(folder(), flags, file2.filename(), expected2));
+        display_name_matches(
+            folder(), flags, file2.filename(), expected2_with) ||
+        display_name_matches(
+            folder(), flags, file2.filename(), expected2_without));
 }
 
 /**
@@ -346,6 +360,9 @@ BOOST_AUTO_TEST_CASE( address_bar_name_file )
  * In particular, this doesn't need disambiguation information that relates
  * to the folder it is in as this name is only used within the parent folder.
  *
+ * The result may or may not include the extension depending on the user's
+ * settings, so we accept either as a successful result.
+ *
  * This name does not have to be parseable.
  */
 BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
@@ -353,10 +370,14 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
     wpath file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER;
-    wstring expected = L"testfile";
+    wstring expected_with = L"testfile.txt";
+    wstring expected_without = L"testfile";
 
     BOOST_CHECK(
-        display_name_matches(folder(), flags, file.filename(), expected));
+        display_name_matches(
+            folder(), flags, file.filename(), expected_with) ||
+        display_name_matches(
+            folder(), flags, file.filename(), expected_without));
 }
 
 
@@ -369,6 +390,9 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
  *
  * Our files over SFTP don't have any decorative text but we do have to deal
  * with the extension.
+ *
+ * The FORPARSING flag forces the file extension to be included, regardless
+ * of any user setting.
  */
 BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
 {
