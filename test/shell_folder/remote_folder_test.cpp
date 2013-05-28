@@ -380,6 +380,30 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
             folder(), flags, file.filename(), expected_without));
 }
 
+/**
+ * Check the display name for a file of unregistered type as it should be
+ * shown in a listing of its containing folder.
+ * In particular, this doesn't need disambiguation information that relates
+ * to the folder it is in as this name is only used within the parent folder.
+ *
+ * This test differs from in_folder_display_name_file in that the file
+ * extension is of an unregistered type.  These should always show the
+ * extension.
+ *
+ * This name does not have to be parseable.
+ */
+BOOST_AUTO_TEST_CASE( in_folder_display_name_unknown_file )
+{
+    // May fail if .xyz is actually a registered type
+    wpath file = NewFileInSandbox(L"testfile.xyz");
+
+    SHGDNF flags = SHGDN_INFOLDER;
+    wstring expected = L"testfile.xyz";
+
+    BOOST_CHECK(
+        display_name_matches(folder(), flags, file.filename(), expected));
+}
+
 
 /**
  * Check the parsing name of a file relative to its containing folder.

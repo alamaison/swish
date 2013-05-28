@@ -307,6 +307,36 @@ namespace {
 
 }
 
+
+
+bool CRemoteFolder::show_extension(PCUITEMID_CHILD pidl)
+{
+    if (extension_hiding_disabled_in_registry())
+        return true;
+
+    HKEY raw_class_key = NULL;
+    com_ptr<IQueryAssociations> associations = query_associations(
+        NULL, 1, &pidl);
+    HRESULT hr = associations->GetKey(
+        0, ASSOCKEY_CLASS, NULL, &raw_class_key);
+    regkey class_key(raw_class_key);
+
+    // Failing to find the key indicates an unknown file type.  As the
+    // user setting say 'Hide extensions for *known* filetypes' we
+    // show the extension if the file is unknown.
+    if FAILED(hr)
+    {
+        return true;
+    }
+    else
+    {
+        // In practice, Explorer returns the "Unknown" key for unregistered
+        // file types.  But that's ok; it contains an AlwaysShowExt value
+        // so we obey that and it all comes out in the wash.
+        return class_key[L"AlwaysShowExt"].exists();
+    }
+}
+
 /**
  * Retrieve the display name for the specified file object or subfolder.
  *
@@ -362,7 +392,7 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
     {
         ATLASSERT(flags == SHGDN_NORMAL || flags == SHGDN_INFOLDER);
 
-        if (extension_hiding_disabled_in_registry())
+        if (show_extension(pidl))
         {
             // The table of SHGDN examples on MSDN implies that the
             // presence of the SHGDN_FORPARSING flag means include the file
