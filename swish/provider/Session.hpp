@@ -38,6 +38,7 @@
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
 #include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/thread/mutex.hpp>
 
 typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
 typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
@@ -47,6 +48,7 @@ class CSession
 public:
     CSession();
     ~CSession();
+    boost::mutex::scoped_lock aquire_lock();
     operator LIBSSH2_SESSION*() const;
     operator LIBSSH2_SFTP*() const;
 
@@ -58,6 +60,7 @@ public:
     boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
     boost::shared_ptr<LIBSSH2_SFTP> sftp() { return m_sftp_session; }
 private:
+    boost::mutex m_mutex;
     boost::asio::io_service m_io; ///< Boost IO system
     boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
     boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session

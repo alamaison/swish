@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,9 +28,9 @@
 #define EZEL_WINDOW_PROC_HPP
 #pragma once
 
-#include <winapi/gui/windows/dialog.hpp> // dialog
-#include <winapi/gui/windows/window.hpp> // window
 #include <winapi/trace.hpp> // trace
+#include <winapi/window/dialog.hpp> // dialog
+#include <winapi/window/window.hpp> // window
 
 #include <cassert> // assert
 #include <exception>
@@ -58,7 +58,8 @@ public:
      * Subclass window.
      */
     window_proc(HWND hwnd, WNDPROC new_proc) :
-        m_window(hwnd), m_proc(new_proc),
+        m_window(winapi::window::window_handle::foster_handle(hwnd)),
+        m_proc(new_proc),
         m_sub_proc(m_window.change_window_procedure(m_proc)) {}
 
     /**
@@ -92,10 +93,10 @@ public:
     }
 
 protected:
-    winapi::gui::window<wchar_t>& window() { return m_window; }
+    winapi::window::window<wchar_t>& window() { return m_window; }
 
 private:
-    winapi::gui::window<wchar_t> m_window;
+    winapi::window::window<wchar_t> m_window;
     WNDPROC m_proc;
     WNDPROC m_sub_proc; ///< Subclassed window's default message handler
 };

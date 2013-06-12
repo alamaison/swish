@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,9 @@
 #include "IconExtractor.h"
 #include "Registry.h"
 #include "swish/debug.hpp"
-#include "swish/drop_target/SnitchingDropTarget.hpp" // CSnitchingDropTarget
+#include "swish/drop_target/DropTarget.hpp" // CDropTarget
 #include "swish/drop_target/DropUI.hpp" // DropUI
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands/commands.hpp"
                                            // remote_folder_command_provider
@@ -50,8 +50,10 @@
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <winapi/shell/shell.hpp> // string_to_strret
+#include <winapi/window/window.hpp>
 
 #include <comet/datetime.h> // datetime_t
+#include <comet/regkey.h>
 
 #include <boost/bind.hpp> // bind
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
@@ -63,9 +65,9 @@
 #include <cassert> // assert
 #include <string>
 
-using swish::drop_target::CSnitchingDropTarget;
+using swish::drop_target::CDropTarget;
 using swish::drop_target::DropUI;
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::remote_folder::commands::remote_folder_command_provider;
 using swish::remote_folder::connection_from_pidl;
@@ -82,10 +84,13 @@ using winapi::shell::pidl::cpidl_t;
 using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::string_to_strret;
+using winapi::window::window;
+using winapi::window::window_handle;
 
 using comet::com_ptr;
 using comet::com_error;
 using comet::datetime_t;
+using comet::regkey;
 using comet::throw_com_error;
 using comet::variant_t;
 
@@ -93,6 +98,7 @@ using boost::bind;
 using boost::filesystem::wpath;
 using boost::locale::translate;
 using boost::make_shared;
+using boost::optional;
 using boost::shared_ptr;
 
 using ATL::CComPtr;
@@ -180,9 +186,10 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to access the directory"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -253,9 +260,80 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Path not recognised"),
             translate("Check that the path was entered correctly."));
+        throw;
+    }
+}
+
+namespace {
+
+    bool extension_hiding_disabled_in_registry()
+    {
+        if (regkey user_settings = regkey(HKEY_CURRENT_USER).open_nothrow(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\"
+            L"Advanced"))
+        {
+            regkey::mapped_type extension_setting =
+                user_settings[L"HideFileExt"];
+
+            if (extension_setting.exists())
+            {
+                return extension_setting == 0U;
+            }
+        }
+        
+        // We only reach here if the user settings didn't exist, not if
+        // they just said "no".  This means the global settings don't 
+        // override the user settings, which seems the right way round.
+        if (regkey global_settings = regkey(HKEY_LOCAL_MACHINE).open_nothrow(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\"
+            L"Advanced\\Folder\\HideFileExt"))
+        {
+            regkey::mapped_type extension_setting =
+                global_settings[L"DefaultValue"];
+
+            if (extension_setting.exists())
+            {
+                return extension_setting == 0U;
+            }
+        }
+
+        // It's unlikely that neither will be set but we're prepared for it
+        // anyway
+        return false;
+    }
+
+}
+
+
+
+bool CRemoteFolder::show_extension(PCUITEMID_CHILD pidl)
+{
+    if (extension_hiding_disabled_in_registry())
+        return true;
+
+    HKEY raw_class_key = NULL;
+    com_ptr<IQueryAssociations> associations = query_associations(
+        NULL, 1, &pidl);
+    HRESULT hr = associations->GetKey(
+        0, ASSOCKEY_CLASS, NULL, &raw_class_key);
+    regkey class_key(raw_class_key);
+
+    // Failing to find the key indicates an unknown file type.  As the
+    // user setting say 'Hide extensions for *known* filetypes' we
+    // show the extension if the file is unknown.
+    if FAILED(hr)
+    {
+        return true;
+    }
+    else
+    {
+        // In practice, Explorer returns the "Unknown" key for unregistered
+        // file types.  But that's ok; it contains an AlwaysShowExt value
+        // so we obey that and it all comes out in the wash.
+        return class_key[L"AlwaysShowExt"].exists();
     }
 }
 
@@ -314,7 +392,24 @@ STRRET CRemoteFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
     {
         ATLASSERT(flags == SHGDN_NORMAL || flags == SHGDN_INFOLDER);
 
-        name = filename_without_extension(pidl);
+        if (show_extension(pidl))
+        {
+            // The table of SHGDN examples on MSDN implies that the
+            // presence of the SHGDN_FORPARSING flag means include the file
+            // extension and its absence means remove it.
+            // But that's not the full story.  The SHGDN_FORPARSING flag
+            // indeed means include the file extension, but its absence means
+            // do what the user wants.  In other words, remove the extension
+            // if their Explorer settings say that's what they want.
+            // Checking the Explorer settings is up to the individual
+            // namespace extension.
+
+            name = remote_itemid_view(pidl).filename();
+        }
+        else
+        {
+            name = filename_without_extension(pidl);
+        }
     }
 
     return string_to_strret(name);
@@ -375,9 +470,10 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to rename the item"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -701,11 +797,12 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd,
             (cpidl > 1) ? translate("Unable to access the item") :
                           translate("Unable to access the items"),
             translate("You might not have permission."));
+        throw;
     }
 }
 
@@ -724,15 +821,38 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
             connection_from_pidl(root_pidl(), hwnd);
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
-        return new CSnitchingDropTarget(
-            hwnd, provider, consumer, root_pidl(),
-            make_shared<DropUI>(hwnd));
+        optional< window<wchar_t> > owner;
+        if (hwnd)
+            owner = window<wchar_t>(window_handle::foster_handle(hwnd));
+
+        // HACKish:
+        // UI happens via the given owner window given here.  We used to do it
+        // via the window of the OLE site instead, but this is incompatible
+        // with asynchronous operations because the shell clears the site
+        // when Drop returns (at which point the operation is still running
+        // and may need an owner window for UI).
+        //
+        // We could hang on to a copy of the site but that seems .. impolite.
+        // After all, the shell presumably cleared the site for a reason.
+        //
+        // That said, what we're doing now seems pretty naughty too. We use the
+        // window we were passed as an owner window when we were created.  This
+        // window is probably the one the shell passed to our folder's
+        // GetUIObjectOf or CreateViewObject methods.  MSDN documents this
+        // window as the 'owner' to be used for UI but doesn't make clear how
+        // long the window is guarantted to remain alive: until the
+        // GetUIObjectOf/CreateViewObject call returns or for as long as this
+        // drop target is in use.  Nevertheless, this seems to work so it's
+        // what we're doing for now.
+        return new CDropTarget(
+            provider, consumer, root_pidl(), make_shared<DropUI>(owner));
     }
     catch (...)
     {
-        rethrow_and_announce(
+        announce_last_exception(
             hwnd, translate("Unable to access the folder"),
             translate("You might not have permission."));
+        throw;
     }
 }
 

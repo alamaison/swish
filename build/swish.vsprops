@@ -8,7 +8,7 @@
 	<Tool
 		Name="VCCLCompilerTool"
 		AdditionalIncludeDirectories="$(SolutionDir);$(SolutionDir)\thirdparty\boost.process;$(SolutionDir)\thirdparty\comet\include;$(SolutionDir)\thirdparty\winapi\include"
-		PreprocessorDefinitions="WIN32;_WINDOWS;WIN32_LEAN_AND_MEAN;ISOLATION_AWARE_ENABLED;USING_PRECOMPILED_HEADERS;STRICT_TYPED_ITEMIDS;"
+		PreprocessorDefinitions="WIN32;_WINDOWS;WIN32_LEAN_AND_MEAN;ISOLATION_AWARE_ENABLED;USING_PRECOMPILED_HEADERS;STRICT_TYPED_ITEMIDS;BOOST_FILESYSTEM_VERSION=2"
 		UsePrecompiledHeader="2"
 		PrecompiledHeaderThrough="swish/pch.h"
 		WarningLevel="4"

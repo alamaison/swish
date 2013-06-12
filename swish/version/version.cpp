@@ -32,11 +32,9 @@
 #include "version.hpp"
 
 #include "swish/version/git_version.hpp" // generated
-
-#include <sstream> // ostringstream
+#include "swish/version/metadata.h"
 
 using std::auto_ptr;
-using std::ostringstream;
 using std::string;
 
 namespace swish {
@@ -95,24 +93,22 @@ structured_version release_version()
     public:
         virtual int major() const
         {
-            return 0;
+            return SWISH_MAJOR_VERSION;
         }
 
         virtual int minor() const
         {
-            return 7;
+            return SWISH_MINOR_VERSION;
         }
 
         virtual int bugfix() const
         {
-            return 2;
+            return SWISH_BUGFIX_VERSION;
         }
 
         virtual string as_string() const
         {
-            ostringstream formatted;
-            formatted << major() << "." << minor() << "." << bugfix();
-            return formatted.str();
+            return SWISH_VERSION_STRING;
         }
 
         virtual auto_ptr<structured_version_impl> clone() const

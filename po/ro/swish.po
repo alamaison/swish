@@ -1,27 +1,26 @@
 # 
 # Translators:
-# Alexander Lamaison <alexander.lamaison@gmail.com>, 2013
-# rdj <rhysjones437@googlemail.com>, 2012
+#  <ssuceveanu@yahoo.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2013-04-20 08:49+0000\n"
-"Last-Translator: Alexander Lamaison <alexander.lamaison@gmail.com>\n"
-"Language-Team: Welsh (http://www.transifex.com/projects/p/swish/language/cy/)\n"
+"PO-Revision-Date: 2013-02-18 23:01+0000\n"
+"Last-Translator: Stefan Suceveanu <ssuceveanu@yahoo.com>\n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: cy\n"
-"Plural-Forms: nplurals=4; plural=(n==1) ? 0 : (n==2) ? 1 : (n != 8 && n != 11) ? 2 : 3;\n"
+"Language: ro\n"
+"Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
 "X-Poedit-SearchPath-0: ../../swish\n"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "Nu a fost posibilă creerea fișierului pe server:"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -29,7 +28,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr "Copio '{1}'"
+msgstr "Copiem '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -38,121 +37,121 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr "I '{1}"
+msgstr "în '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
-msgstr "Mae'r ffolder yn cynnwys y ffeil '{1}' yn barod"
+msgstr "Acest director deja conține un fișier cu numele '{1}'."
 
 #: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
-msgstr "Hoffech chi eu cyfnewid?"
+msgstr "Vrei să îl înlocuiești?"
 
 #: ../../swish/drop_target/DropUI.cpp:327
 msgid "Confirm File Replace"
-msgstr "Cadarnhewch y cyfnewidiad"
+msgstr "Confirmă înlocuire fișierului"
 
 #: ../../swish/drop_target/DropUI.cpp:366
 msgctxt "Progress"
 msgid "Copying..."
-msgstr "Adysgrifio..."
+msgstr "Copiere ..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr "Methu danfod ty ffeiliau"
+msgstr "Fișierul nu a putut fi transferat"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "E posibil ca să nu aveți drepturile necesare de a scrie în acest director."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
-msgstr "Cysylltiad STFP Newydd"
+msgstr "Conexiune SFTP nouă"
 
 #: ../../swish/forms/add_host.cpp:122
 msgid "Create"
-msgstr "Creu"
+msgstr "Crează"
 
 #: ../../swish/forms/add_host.cpp:143
 msgctxt "New Host"
 msgid "&Label:"
-msgstr "&Label:"
+msgstr "Nume&le conexiunii:"
 
 #: ../../swish/forms/add_host.cpp:148
 msgid "For example: \"Home Computer\"."
-msgstr "Er engraifft: \"Cyfrifiadur Cartref\"."
+msgstr "De exemplu: \"Calculatorul de acasă\"."
 
 #: ../../swish/forms/add_host.cpp:151
 msgid ""
 "Specify the details of the computer and account you would like to connect "
 "to:"
-msgstr "Nodwch y wybodaeth amdano'r cyfrifiadur ac yr cyfrif hoffech chi cysylltu a:"
+msgstr "Specifică detaliile contului și a calculatorului la care vrei să te conectezi:"
 
 #: ../../swish/forms/add_host.cpp:155
 msgctxt "New Host"
 msgid "&Host:"
-msgstr "&Cynhaliwr"
+msgstr "&Server:"
 
 #: ../../swish/forms/add_host.cpp:159
 msgctxt "New Host"
 msgid "&Port:"
-msgstr "&Porth:"
+msgstr "&Port:"
 
 #: ../../swish/forms/add_host.cpp:164
 msgctxt "New Host"
 msgid "&User:"
-msgstr "&Defnyddiwr:"
+msgstr "&Utilizator:"
 
 #: ../../swish/forms/add_host.cpp:169
 msgid ""
 "Specify the directory on the server that you would like Swish to start the "
 "connection in:"
-msgstr "Nodwch pa cyfarwyddiadur ar y gwasanaethydd hoffwch Swish i ddechrau cysylltiad a"
+msgstr "Specifică directorul de pe server în care Swish se va poziționa la conectare:"
 
 #: ../../swish/forms/add_host.cpp:173
 msgctxt "New Host"
 msgid "P&ath:"
-msgstr "P&arth:"
+msgstr "C&alea:"
 
 #: ../../swish/forms/add_host.cpp:177
 msgid "Example: /home/yourusername"
-msgstr "Er enghraifft: /Cartref/eichcyfeirenw"
+msgstr "Exemplu: /home/numeletau"
 
 #: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
 msgid "Cancel"
-msgstr "Dirymu"
+msgstr "Abandon"
 
 #: ../../swish/forms/add_host.cpp:331
 msgid "The label cannot be longer than 30 characters."
-msgstr "Ni all y label fod yn fwy na 30 llythyren o hyd."
+msgstr "Numele conexiunii nu poate fi mai mare de 30 de caractere."
 
 #: ../../swish/forms/add_host.cpp:335
 msgid "The host name is invalid."
-msgstr "Mae enw'r cynhaliwr yn annilys."
+msgstr "Numele serverului este invalid."
 
 #: ../../swish/forms/add_host.cpp:341
 msgid "The port is not valid (between 0 and 65535)."
-msgstr "Dydy'r porth ddim yn ddilys (rhwng 0 a 65535)"
+msgstr "Portul nu este corect (valori permise între 0 și 65535)."
 
 #: ../../swish/forms/add_host.cpp:345
 msgid "The username is invalid."
-msgstr "Mae'r cyfrifenw yn annilys."
+msgstr "Numele utilizatorului nu este corect."
 
 #: ../../swish/forms/add_host.cpp:349
 msgid "The path is invalid."
-msgstr "Mae'r llwybr yn annilys."
+msgstr "Calea nu este corectă."
 
 #: ../../swish/forms/add_host.cpp:355
 msgid "A connection with the same label already exists. Please try another."
-msgstr "Mae cysylltiad gyda'r un label yn bodoli. A wnewch chi trio un arall."
+msgstr "Mai există o conexiune cu același nume. Încercați un alt nume."
 
 #: ../../swish/forms/add_host.cpp:361
 msgid "Complete all fields."
-msgstr "Cwblhewch pob maes."
+msgstr "Completați toate câmpurile."
 
 #: ../../swish/forms/password.cpp:57
 msgid "Password"
-msgstr "Cyfrinair"
+msgstr "Parola"
 
 #: ../../swish/forms/password.cpp:64
 msgid "OK"
@@ -160,15 +159,15 @@ msgstr "OK"
 
 #: ../../swish/frontend/announce_error.cpp:136
 msgid "Show &details (which may not be in your language)"
-msgstr "Dangos &manylion (nid oes angen iddo fod yn eich iaith)"
+msgstr "Afișează &detaliile (pot fi în altă limbă)"
 
 #: ../../swish/frontend/announce_error.cpp:137
 msgid "Hide &details"
-msgstr "Cuddiwch &gwybodaeth"
+msgstr "Ascunde &detaliile"
 
 #: ../../swish/frontend/UserInteraction.cpp:195
 msgid "The folder already contains a file named '%1%'"
-msgstr "Mae'r ffolder yn cynnwy y ffeil o'r enw '%1%' yn barod"
+msgstr "Directorul conține deja un fișier cu numele '%1%'"
 
 #: ../../swish/frontend/UserInteraction.cpp:200
 msgid ""
@@ -179,19 +178,19 @@ msgid ""
 "with this one?\n"
 "\n"
 "\t%2%"
-msgstr "Hoffech chi amnewid y ffeil presennol\n \n»%1%\n\ngyda?\n\n»%2% "
+msgstr "Dorești înlocuire fișierului existent ⏎ ⏎ »%1%⏎ ⏎ cu acest fișier?⏎ ⏎ »%2%"
 
 #: ../../swish/frontend/UserInteraction.cpp:204
 msgid "File already exists"
-msgstr "Ffeil yn bodoli"
+msgstr "Fișierul deja există"
 
 #: ../../swish/frontend/UserInteraction.cpp:242
 msgid "Mismatched host-key"
-msgstr ""
+msgstr "Nepotrivire la cheia serverului"
 
 #: ../../swish/frontend/UserInteraction.cpp:243
 msgid "WARNING: the SSH host-key has changed!"
-msgstr ""
+msgstr "ATENȚIE: cheia SSH a serverului a fost schimbată!"
 
 #: ../../swish/frontend/UserInteraction.cpp:249
 msgid ""
@@ -199,277 +198,277 @@ msgid ""
 "key for this server.  This could mean a third-party is pretending to be the "
 "computer you're trying to connect to or the system administrator may have "
 "just changed the key."
-msgstr ""
+msgstr "Cheia SSH trimisă de serverul '%1%' pentru identificare nu se potrivește cu cheia cunoscută a acestui server. Această poate însemna că un alt sistem  poate pretinde ca este calculatorul la care vrei să te conectezi sau administratorul sistemului poate a schimbat cheia de curând."
 
 #: ../../swish/frontend/UserInteraction.cpp:256
 msgid "It is important to check this is the right key fingerprint:"
-msgstr ""
+msgstr "Este important să verifici că aceasta este cheia amprentă corectă: "
 
 #: ../../swish/frontend/UserInteraction.cpp:265
 msgid ""
 "I trust this key: &update and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr ""
+msgstr "Am încredere în această cheie: act&ualizare și conectare⏎ Nu mai este necesară verificarea acestei chei atâta timp cât ea nu se va schimba"
 
 #: ../../swish/frontend/UserInteraction.cpp:270
 msgid ""
 "I trust this key: &just connect\n"
 "You will be warned about this key again next time you connect"
-msgstr ""
+msgstr "Am încredere în această cheie: &numai conectare⏎ Vei fi atenționat din nou la următoarea conectare despre nepotrivirea acestei chei."
 
 #: ../../swish/frontend/UserInteraction.cpp:276
 #: ../../swish/frontend/UserInteraction.cpp:320
 msgid ""
 "&Cancel\n"
 "Choose this option unless you are sure the key is correct"
-msgstr ""
+msgstr "&Renunță⏎ Alege această opțiune numai dacă nu ești sigur că această cheie este corectă"
 
 #: ../../swish/frontend/UserInteraction.cpp:289
 msgid "Unknown host-key"
-msgstr ""
+msgstr "Cheia serverului este necunoscută"
 
 #: ../../swish/frontend/UserInteraction.cpp:295
 msgid ""
 "The server '%1%' has identified itself with an SSH host-key whose "
 "fingerprint is:"
-msgstr ""
+msgstr "Serverul '%1%' s-a identificat cu cheia SSH a serverului a cărei amprentă este:"
 
 #: ../../swish/frontend/UserInteraction.cpp:299
 msgid ""
 "If you are not expecting this key, a third-party may be pretending to be the"
 " computer you're trying to connect to."
-msgstr ""
+msgstr "Dacă nu recunoști această cheie e posibil ca un alt sistem să pretindă că este calculatorul la care încerci să te conectezi."
 
 #: ../../swish/frontend/UserInteraction.cpp:302
 msgid "Verify unknown SSH host-key"
-msgstr ""
+msgstr "Verifică cheia SSH a serverului"
 
 #: ../../swish/frontend/UserInteraction.cpp:309
 msgid ""
 "I trust this key: &store and connect\n"
 "You won't have to verify this key again unless it changes"
-msgstr ""
+msgstr "Am încredere în această cheie: &memoare și conectare⏎ Nu mai este necesară verificarea acestei chei atâta timp cât ea nu se va schimba"
 
 #: ../../swish/frontend/UserInteraction.cpp:314
 msgid ""
 "I trust this key: &just connect\n"
 "You will be asked to verify the key again next time you connect"
-msgstr ""
+msgstr "Am încredere în această cheie: &numai conectare⏎ La următoarea conectare vei fi rugat din nou să verifici cheia."
 
 #: ../../swish/host_folder/columns.cpp:57
 msgctxt "Property (filename/label)"
 msgid "Name"
-msgstr "Enw"
+msgstr "Nume"
 
 #: ../../swish/host_folder/columns.cpp:60
 msgctxt "Property"
 msgid "Host"
-msgstr "Cynhaliwr"
+msgstr "Server"
 
 #: ../../swish/host_folder/columns.cpp:63
 msgctxt "Property"
 msgid "Username"
-msgstr "Cyfeirenw"
+msgstr "Utilizator"
 
 #: ../../swish/host_folder/columns.cpp:66
 msgctxt "Property"
 msgid "Port"
-msgstr "Porth"
+msgstr "Port"
 
 #: ../../swish/host_folder/columns.cpp:69
 msgctxt "Property"
 msgid "Remote path"
-msgstr "Llwybr anghysbell"
+msgstr "Calea de pe server"
 
 #: ../../swish/host_folder/columns.cpp:72
 msgctxt "Property"
 msgid "Type"
-msgstr "Math"
+msgstr "Tip"
 
 #: ../../swish/host_folder/properties.cpp:79
 msgctxt "FileType"
 msgid "Network Drive"
-msgstr "Gyriant Rhyngwaith"
+msgstr "Disk de rețea"
 
 #: ../../swish/host_folder/commands/Add.cpp:83
 msgid "&Add SFTP Connection"
-msgstr "&Ychwanegu Cysylltiad SFTP"
+msgstr "&Adaugă o conexiune SFTP"
 
 #: ../../swish/host_folder/commands/Add.cpp:84
 msgid "Create a new SFTP connection with Swish."
-msgstr "Creu Cysylltiad SFTP newydd gyda Swish"
+msgstr "Crează o nouă conexiune SFTP folosind Swish."
 
 #: ../../swish/host_folder/commands/Add.cpp:85
 msgid "&Add SFTP Connection..."
-msgstr "&Ychwanegu Cysylltiad SFTP..."
+msgstr "&Adaugă o conexiune SFTP ..."
 
 #: ../../swish/host_folder/commands/Add.cpp:86
 msgid "Add Connection"
-msgstr "Ychwanegwch Cysylltiad"
+msgstr "Adaugă o conexiune"
 
 #: ../../swish/host_folder/commands/commands.cpp:91
 msgid "SFTP Tasks"
-msgstr "Tasgau SFTP"
+msgstr "Gestiune SFTP"
 
 #: ../../swish/host_folder/commands/commands.cpp:104
 msgid "These tasks help you manage Swish SFTP connections."
-msgstr "Mae'r tasgau yma yn eich helpu rheoli eich cysylltiadau SFTP."
+msgstr "Aici poți gestiona conexiunile SFTP Swish."
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:98
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:103
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "&Launch key agent"
-msgstr ""
+msgstr "&Lansare key-agent"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:99
 msgid "Launch Putty SSH key agent, Pageant."
-msgstr ""
+msgstr "Lansare Pageant, agentul pentru cheile SHH Putty."
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "Lansare key-agent"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
-msgstr "&Tynnu'r Cysylltiad SFTP"
+msgstr "Ște&rge conexiunea SFTP"
 
 #: ../../swish/host_folder/commands/Remove.cpp:84
 msgid "Remove a SFTP connection created with Swish."
-msgstr "Tynnu cysylltiad a greuwyd gyda Swish."
+msgstr "Șterge o conexiunea SFTP creată folosind Swish."
 
 #: ../../swish/host_folder/commands/Remove.cpp:85
 msgid "&Remove SFTP Connection..."
-msgstr "&Tynnu'r Cysylltiad SFTP..."
+msgstr "Ște&rge conexiunea SFTP ..."
 
 #: ../../swish/host_folder/commands/Remove.cpp:86
 msgid "Remove Connection"
-msgstr "Tynnu Cysylltiad"
+msgstr "Șterge conexiunea"
 
 #: ../../swish/remote_folder/columns.cpp:82
 msgctxt "Property"
 msgid "Size"
-msgstr "Maint"
+msgstr "Dimensiune"
 
 #: ../../swish/remote_folder/columns.cpp:89
 msgctxt "Property"
 msgid "Date Modified"
-msgstr "Dyddiad Newidiwyd"
+msgstr "Data modificării"
 
 #: ../../swish/remote_folder/columns.cpp:93
 msgctxt "Property"
 msgid "Date Accessed"
-msgstr "Dyddiad Agorwyd"
+msgstr "Data accesării"
 
 #: ../../swish/remote_folder/columns.cpp:96
 msgctxt "Property"
 msgid "Permissions"
-msgstr "Caniataodau"
+msgstr "Permisiuni"
 
 #: ../../swish/remote_folder/columns.cpp:99
 msgctxt "Property"
 msgid "Owner"
-msgstr "Perchenog"
+msgstr "Proprietar"
 
 #: ../../swish/remote_folder/columns.cpp:102
 msgctxt "Property"
 msgid "Group"
-msgstr "Grwp"
+msgstr "Grup"
 
 #: ../../swish/remote_folder/columns.cpp:105
 msgctxt "Property"
 msgid "Owner ID"
-msgstr "Adnabyddiaeth Perchennog"
+msgstr "ID Proprietar"
 
 #: ../../swish/remote_folder/columns.cpp:108
 msgctxt "Property"
 msgid "Group ID"
-msgstr "Adnabyddiaeth Grwp"
+msgstr "ID Grup"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
-msgstr "Agor &linc"
+msgstr "Deschide &link-ul"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
-msgstr "&Agor"
+msgstr "&Deschide"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
-msgstr "Methu agor y cysylltiad"
+msgstr "Link-ul este imposibil de deschis"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:274
 #: ../../swish/remote_folder/context_menu_callback.cpp:379
 #: ../../swish/remote_folder/commands/delete.cpp:232
 #: ../../swish/remote_folder/commands/NewFolder.cpp:240
 msgid "You might not have permission."
-msgstr "Efallai nid oes caniatad  ganddoch chi"
+msgstr "E posibil să nu ai drepturile necesare."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
-msgstr "Methu agor y ffeil"
+msgstr "Fișierul este imposibil de deschis"
 
 #: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"
-msgstr ""
+msgstr "Gestiunea fișierelor și directoarelor"
 
 #: ../../swish/remote_folder/commands/commands.cpp:105
 msgid "These tasks help you manage your remote files."
-msgstr ""
+msgstr "Te ajută să gestionezi fișierele de pe server."
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
-msgstr "Methu dileu'r eitem"
+msgstr "Obiectul nu poate fi șters"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:168
 msgid "New &folder"
-msgstr ""
+msgstr "&Director nou"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:169
 msgid "Create a new, empty folder in the folder you have open."
-msgstr ""
+msgstr "Crează un director nou, gol, în directorul actual."
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:171
 msgid "Make a new folder"
-msgstr ""
+msgstr "Crează un director nou"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:211
 msgctxt "Initial name"
 msgid "New folder"
-msgstr ""
+msgstr "Director nou"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:239
 msgid "Could not create a new folder"
-msgstr ""
+msgstr "Nu a fost posibilă crearea unui director nou"
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
-msgstr "Cais bysyllfwrdd rhyngweithiol"
+msgstr "Cerere de introducere manuală de la tastatură"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
-msgstr "Methu cyrchu y cyfarwyddiadur"
+msgstr "Nu pot accesa directorul"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr "Llwybr heb eu cydnabod"
+msgstr "Calea nu este recunoscută."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
-msgstr "Gwiriwch bod y llwybr wedi ei mewnbynnu yn gywir."
+msgstr "Verifică dacă calea este introdusă corect."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
-msgstr "Methu ailenwi'r eitem"
+msgstr "Redenumirea obiectului nu este posibilă"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
-msgstr "Methu ailenwi'r gwrthrych"
+msgstr "Obiectul nu poate fi accesat"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:705
 msgid "Unable to access the items"
-msgstr "Methu agor y gwrthrychau"
+msgstr "Obiectele nu pot fi accesate"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
-msgstr "Methu cyrchu'r ffolder"
+msgstr "Directorul nu poate fi accesat"

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 #define SWISH_SHELL_FOLDER_SNITCHING_DATA_OBJECT_HPP
 #pragma once
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
@@ -146,11 +146,12 @@ public: // IDataObject methods
                 // drag-and-drop *succeeded*.
                 // I'm out of options.  Let's just hope the shell doesn't often
                 // need no-UI drag-and-drop.
-                swish::frontend::rethrow_and_announce(
+                swish::frontend::announce_last_exception(
                     NULL,
                     boost::locale::translate("Unable to access the item"),
                     boost::locale::translate("You might not have permission."),
                     true);
+                throw;
             }
         }
         WINAPI_COM_CATCH_AUTO_INTERFACE();

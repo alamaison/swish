@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@
 
 #include <winapi/gui/messages.hpp> // message
 #include <winapi/gui/commands.hpp> // command
-#include <winapi/gui/windows/window.hpp> // window
 #include <winapi/trace.hpp> // trace
+#include <winapi/window/window.hpp>
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/make_shared.hpp> // make_shared
@@ -151,7 +151,8 @@ template<typename T>
 class real_window : public internal_window<T>
 {
 public:
-    real_window(HWND hwnd) : m_window(hwnd)
+    real_window(HWND hwnd) :
+        m_window(winapi::window::window_handle::foster_handle(hwnd))
     {
         if (hwnd == NULL)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid window handle"));
@@ -191,10 +192,10 @@ public:
 
 private:
 
-    winapi::gui::window<T>& window() { return m_window; }
-    const winapi::gui::window<T>& window() const { return m_window; }
+    winapi::window::window<T>& window() { return m_window; }
+    const winapi::window::window<T>& window() const { return m_window; }
 
-    winapi::gui::window<T> m_window;
+    winapi::window::window<T> m_window;
 };
 
 template<typename T>

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@
 
 #include <boost/filesystem.hpp> // wpath
 
-#include <comet/ptr.h> // com_ptr
-
 #include <memory> // auto_ptr
 
 namespace swish {
@@ -46,9 +44,9 @@ class DropActionCallback
 {
 public:
     virtual ~DropActionCallback() {}
-    virtual void site(comet::com_ptr<IUnknown> ole_site) = 0;
     virtual bool can_overwrite(const boost::filesystem::wpath& target) = 0;
     virtual std::auto_ptr<Progress> progress() = 0;
+    virtual void handle_last_exception() = 0;
 };
 
 }}

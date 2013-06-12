@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
     @endif
 */
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell_folder/shell.hpp" // ui_object_of_item
@@ -51,7 +51,7 @@
 #include <ShellApi.h> // ShellExecuteEx
 #include <Windows.h> // InsertMenu, SetMenuDefaultItem
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::ui_object_of_item;
@@ -271,9 +271,10 @@ namespace {
             }
             catch (...)
             {
-                rethrow_and_announce(
+                announce_last_exception(
                     hwnd_view, translate("Unable to open the link"),
                     translate("You might not have permission."));
+                throw;
             }
 
             return true; // Even if the above fails, we don't want to invoke
@@ -376,9 +377,10 @@ namespace {
             }
             catch (...)
             {
-                rethrow_and_announce(
+                announce_last_exception(
                     hwnd_view, translate("Unable to open the file"),
                     translate("You might not have permission."));
+                throw;
             }
 
             return true; // Even if the above fails, we don't want to invoke

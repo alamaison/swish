@@ -3,10 +3,9 @@ Update version number in
 - Doxyfile
 - appcast.xml (x5 and date)
 - setup_conf.xml (x4)
-- swish/host_folder/ViewCallback.cpp
-- swish/shell_folder/com_dll/com_dll.rc (x4)
 - swish/wix/swish.wxs
 - swish/wix/wix.wixproj
+- swish/version/metadata.h
 
 Add notable changes to NEWS.
 
