@@ -35,10 +35,6 @@
 
 #include <boost/lambda/lambda.hpp>
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
-#pragma warning(push)
-#pragma warning(disable:4180) // qualifier applied to func type has no meaning
-#include <boost/bind.hpp>
-#pragma warning(pop)
 
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::host_itemid_view;
