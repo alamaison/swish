@@ -278,13 +278,26 @@ public:
     void operator()(sub_menu_item& sub_menu)
     {
         menu::iterator insert_position = sub_menu.menu().begin();
-        insert_position += 2;
+
+        // We hope the 1st and 2nd items are map and unmap network drive, so we
+        // just skip them.  So that we don't fail completely if the Tools
+        // menu is bizarre, we make sure there's actually room to skip first.
+        if (sub_menu.menu().size() >= 2)
+        {
+            insert_position += 2;
+        }
+
         MenuCommandTitleAdapter<Add> add(m_hwnd_view, m_folder_pidl);
+
+        // We have to be careful to increment the iterator *after* each calls to
+        // insert in case we are inserting at the end.  Doing insert_position++
+        // in the call to insert would step off the end;
 
         command_item_description add_item(
             string_button_description(add.title(NULL).c_str()),
             m_first_command_id + MENUIDOFFSET_ADD);
-        sub_menu.menu().insert(add_item, insert_position++);
+        sub_menu.menu().insert(add_item, insert_position);
+        ++insert_position;
 
         MenuCommandTitleAdapter<Remove> remove(m_hwnd_view, m_folder_pidl);
 
@@ -292,7 +305,8 @@ public:
             string_button_description(remove.title(NULL).c_str()),
             m_first_command_id + MENUIDOFFSET_REMOVE);
         remove_item.selectability(selectability::disabled);
-        sub_menu.menu().insert(remove_item, insert_position++);
+        sub_menu.menu().insert(remove_item, insert_position);
+        ++insert_position;
 
         MenuCommandTitleAdapter<LaunchAgent> launch(m_hwnd_view, m_folder_pidl);
 
@@ -300,7 +314,8 @@ public:
              string_button_description(launch.title(NULL).c_str()),
              m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
         launch_item.selectability(selectability::disabled);
-        sub_menu.menu().insert(launch_item, insert_position++);
+        sub_menu.menu().insert(launch_item, insert_position);
+        ++insert_position; // must be after insert in case we're at end
     }
 
     void operator()(command_item&)
