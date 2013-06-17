@@ -31,7 +31,7 @@
 #include <comet/error.h>
 
 #include <boost/system/error_code.hpp>
-#include <boost/test/test_tools.hpp>
+#include <boost/test/test_tools.hpp> // predicate_result
 #include <boost/filesystem.hpp>
 
 #include <string>
@@ -64,15 +64,43 @@ namespace std {
 namespace test {
 namespace detail {
 
-    inline void boost_require_ok(HRESULT hr)
+inline boost::test_tools::predicate_result s_ok(HRESULT hr)
+{
+    if (hr == S_OK)
     {
-        if (hr != S_OK)
-        {
-            std::string message("COM return status was not S_OK: ");
-            message += comet::com_error(hr).s_str();
-            BOOST_FAIL(message);
-        }
+        boost::test_tools::predicate_result res(true);
+        res.message() << "COM status code was S_OK";
+        return res;
     }
+    else
+    {
+        boost::test_tools::predicate_result res(false);
+        res.message() << "COM status code was not S_OK: ";
+        res.message() << comet::com_error(hr).s_str();
+        return res;
+    }
+}
+
+template<typename Itf>
+inline boost::test_tools::predicate_result s_ok_error_info(
+    comet::com_ptr<Itf> failure_source, HRESULT hr)
+{
+    if (hr == S_OK)
+    {
+        boost::test_tools::predicate_result res(true);
+        res.message() << "COM status code was S_OK";
+        return res;
+    }
+    else
+    {
+        boost::test_tools::predicate_result res(false);
+        res.message() << "COM status code was not S_OK: ";
+        res.message() <<
+            comet::com_error_from_interface(failure_source, hr).s_str();
+        return res;
+    }
+}
+
 }
 }
 
@@ -80,9 +108,14 @@ namespace detail {
  * COM HRESULT-specific assertions
  * @{
  */
-#define BOOST_REQUIRE_OK(hr)                 \
-do                                           \
-{                                            \
-    test::detail::boost_require_ok( (hr) );  \
-} while (0)
+#define BOOST_REQUIRE_OK(hr) BOOST_REQUIRE(test::detail::s_ok( (hr) ))
+#define BOOST_CHECK_OK(hr) BOOST_CHECK(test::detail::s_ok( (hr) ))
+#define BOOST_WARN_OK(hr) BOOST_WARN(test::detail::s_ok( (hr) ))
+
+#define BOOST_REQUIRE_INTERFACE_OK(failure_source, hr) \
+    BOOST_REQUIRE(test::detail::s_ok_error_info( (failure_source), (hr) ))
+#define BOOST_CHECK_INTERFACE_OK(failure_source, hr) \
+    BOOST_CHECK(test::detail::s_ok_error_info( (failure_source), (hr) ))
+#define BOOST_WARN_INTERFACE_OK(failure_source, hr) \
+    BOOST_WARN(test::detail::s_ok_error_info( (failure_source), (hr) ))
 /* @} */

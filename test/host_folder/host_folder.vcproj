@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\winsparkle_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -84,7 +84,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\winsparkle_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -148,7 +148,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\winsparkle_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -212,7 +212,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-x64.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-x64.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\winsparkle_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -284,6 +284,10 @@
 			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
 			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{859B89CB-90B5-4F71-B501-07D5A3600271}"
+			RelativePathToProject=".\swish\shell_folder\shell_folder.vcproj"
+		/>
 	</References>
 	<Files>
 		<File
@@ -340,6 +344,10 @@
 		</File>
 		<File
 			RelativePath=".\test.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\view_callback_test.cpp"
 			>
 		</File>
 	</Files>

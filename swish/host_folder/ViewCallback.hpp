@@ -30,16 +30,20 @@
 #pragma once
 
 #include "swish/frontend/winsparkle_shower.hpp" // winsparkle_shower
+#include "swish/host_folder/menu_command_manager.hpp"
 #include "swish/nse/view_callback.hpp" // CViewCallback
 
 #include <winapi/object_with_site.hpp> // object_with_site
 #include <winapi/gui/menu/item/item.hpp>
 #include <winapi/shell/pidl.hpp> // apidl_t
+#include <winapi/window/window.hpp>
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
 
 #include <boost/optional/optional.hpp> // optional
+
+#include <memory>
 
 namespace swish {
 namespace host_folder {
@@ -74,15 +78,14 @@ private:
     comet::com_ptr<IDataObject> selection();
     void update_menus();
 
-    HWND m_hwnd_view;         ///< Handle to folder view window
-    boost::optional<winapi::gui::menu::item> m_tools_menu;
-                              ///< Handle to the Explorer 'Tools' menu
-    boost::optional<winapi::gui::menu::item> m_help_menu;
-                              ///< Handle to the Explorer 'Help' menu
-    UINT m_first_command_id;  ///< Start of our tools menu ID range
-    winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
-                                                ///< folder
+    boost::optional<winapi::window::window<wchar_t>> m_view;
+    ///< Folder view window
+
+    winapi::shell::pidl::apidl_t m_folder; ///< Owning folder
+
     swish::frontend::winsparkle_shower m_winsparkle; ///< Autoupdate checker
+
+    std::auto_ptr<menu_command_manager> m_menu_manager;
 };
 
 }} // namespace swish::host_folder
