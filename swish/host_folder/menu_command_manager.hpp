@@ -32,13 +32,17 @@
 #ifndef SWISH_HOST_FOLDER_MENU_COMMAND_MANAGER
 #define SWISH_HOST_FOLDER_MENU_COMMAND_MANAGER
 
+#include "swish/nse/Command.hpp"
+
 #include <winapi/shell/pidl.hpp> // apidl_t
 #include <winapi/window/window.hpp>
 
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/optional/optional.hpp>
+#include <boost/shared_ptr.hpp>
 
+#include <map>
 #include <string>
 
 #include <ShlObj.h> // QCMINFO
@@ -88,6 +92,9 @@ private:
     winapi::shell::pidl::apidl_t m_folder; ///< Owning folder
 
     UINT m_first_command_id;  ///< Start of our tools menu ID range
+
+    std::map<UINT, boost::shared_ptr<swish::nse::Command>> m_commands;
+    ///< Commands in menu with their menu item ID
 
     boost::optional<winapi::gui::menu::item> m_tools_menu;
     ///< Handle to the Explorer 'Tools' menu
