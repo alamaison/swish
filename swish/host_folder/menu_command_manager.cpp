@@ -35,7 +35,6 @@
 #include "swish/host_folder/commands/Add.hpp"
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
-#include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
 
 #include <winapi/gui/menu/basic_menu.hpp> // find_first_item_with_id
 #include <winapi/gui/menu/button/string_button_description.hpp>
@@ -47,6 +46,8 @@
 #include <winapi/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+#include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
@@ -56,7 +57,7 @@ using swish::frontend::commands::About;
 using swish::host_folder::commands::Add;
 using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
-using swish::nse::MenuCommandTitleAdapter;
+using swish::nse::Command;
 
 using namespace winapi::gui::menu;
 using winapi::shell::pidl::apidl_t;
@@ -66,9 +67,12 @@ using winapi::window::window;
 using comet::com_ptr;
 
 using boost::diagnostic_information;
+using boost::make_shared;
 using boost::optional;
+using boost::shared_ptr;
 
 using std::logic_error;
+using std::map;
 using std::runtime_error;
 using std::wstring;
 
@@ -78,15 +82,14 @@ namespace host_folder {
 namespace {
 
 // Menu command ID offsets for Explorer menus
-enum MENUOFFSET
-{
-    MENUIDOFFSET_FIRST = 0,
-    MENUIDOFFSET_ADD = MENUIDOFFSET_FIRST,
-    MENUIDOFFSET_REMOVE,
-    MENUIDOFFSET_LAUNCH_AGENT,
-    MENUIDOFFSET_ABOUT,
-    MENUIDOFFSET_LAST
-};
+const UINT MENUIDOFFSET_ADD = 1;
+const UINT MENUIDOFFSET_REMOVE = 2;
+const UINT MENUIDOFFSET_LAUNCH_AGENT = 3;
+const UINT MENUIDOFFSET_ABOUT = 4;
+const UINT MENUIDOFFSET_LAST = 5;
+
+typedef std::map<UINT, boost::shared_ptr<swish::nse::Command>>
+    menu_id_command_map;
 
 template<typename DescriptionType, typename HandleCreator>
 item item_from_menu(
@@ -153,6 +156,48 @@ item help_menu_with_fallback(const menu_bar& parent_menu)
     }
 }
 
+void merge_command_items(
+    UINT first_command_id, const UINT max_command_id,
+    menu destination, menu::iterator insert_position, 
+    const menu_id_command_map& commands)
+{
+    typedef menu_id_command_map::iterator::value_type mapped_command;
+
+    BOOST_FOREACH(const mapped_command& menu_command, commands)
+    {
+        UINT new_command_id = first_command_id + menu_command.first;
+        if (new_command_id > max_command_id)
+            BOOST_THROW_EXCEPTION(
+                runtime_error("Exeeded permitted merge space"));
+
+        command_item_description item(
+            string_button_description(
+                menu_command.second->menu_title(NULL)),
+            new_command_id);
+        
+        // TODO: work out how to hide hidden() items.  For the moment we
+        // treat them the same as disabled().
+        // I don't know how to insert a hidden menu item, but Windows Forms
+        // seems to allow it.  Maybe they maintain a list of menu items
+        // separate from the menu itself and insert/remove the item to
+        // show/hide it.
+
+        BOOST_SCOPED_ENUM(selectability) item_state =
+            (menu_command.second->disabled(NULL, false) ||
+             menu_command.second->hidden(NULL, false)) ?
+                selectability::disabled : selectability::enabled;
+
+        item.selectability(item_state);
+
+        // We have to be careful to increment the iterator *after* calling
+        // insert in case we are inserting at the end.  Doing 
+        // insert_position++ in the call to insert would step off the end.
+
+        destination.insert(item, insert_position);
+        ++insert_position;
+    }
+}
+
 class merge_tools_command_items
 {
 public:
@@ -160,10 +205,11 @@ public:
     typedef void result_type;
 
     merge_tools_command_items(
-        const optional<window<wchar_t>>& view,
-        const apidl_t& folder, UINT first_command_id)
-        : m_view(view), m_folder(folder),
-          m_first_command_id(first_command_id) {}
+        UINT first_command_id, const UINT max_command_id,
+        const menu_id_command_map& commands)
+        :
+    m_first_command_id(first_command_id),
+    m_max_command_id(max_command_id), m_commands(commands) {}
 
     void operator()(sub_menu_item& sub_menu)
     {
@@ -177,37 +223,9 @@ public:
             insert_position += 2;
         }
 
-        HWND view_handle = (m_view) ? m_view->hwnd() : NULL;
-
-        MenuCommandTitleAdapter<Add> add(view_handle, m_folder);
-
-        // We have to be careful to increment the iterator *after* each calls to
-        // insert in case we are inserting at the end.  Doing insert_position++
-        // in the call to insert would step off the end;
-
-        command_item_description add_item(
-            string_button_description(add.title(NULL).c_str()),
-            m_first_command_id + MENUIDOFFSET_ADD);
-        sub_menu.menu().insert(add_item, insert_position);
-        ++insert_position;
-
-        MenuCommandTitleAdapter<Remove> remove(view_handle, m_folder);
-
-        command_item_description remove_item(
-            string_button_description(remove.title(NULL).c_str()),
-            m_first_command_id + MENUIDOFFSET_REMOVE);
-        remove_item.selectability(selectability::disabled);
-        sub_menu.menu().insert(remove_item, insert_position);
-        ++insert_position;
-
-        MenuCommandTitleAdapter<LaunchAgent> launch(view_handle, m_folder);
-
-        command_item_description launch_item(
-             string_button_description(launch.title(NULL).c_str()),
-             m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
-        launch_item.selectability(selectability::disabled);
-        sub_menu.menu().insert(launch_item, insert_position);
-        ++insert_position; // must be after insert in case we're at end
+        merge_command_items(
+            m_first_command_id, m_max_command_id, sub_menu.menu(),
+            insert_position, m_commands);
     }
 
     void operator()(command_item&)
@@ -223,9 +241,9 @@ public:
     }
 
 private:
-    optional<window<wchar_t>> m_view;
-    apidl_t m_folder;
     UINT m_first_command_id;
+    const UINT m_max_command_id;
+    menu_id_command_map m_commands;
 };
 
 class merge_help_command_items
@@ -235,22 +253,20 @@ public:
     typedef void result_type;
 
     merge_help_command_items(
-        const optional<window<wchar_t>>& view, const apidl_t& /*folder*/,
-        UINT first_command_id)
+        UINT first_command_id, const UINT max_command_id,
+        const menu_id_command_map& commands)
         :
-    m_view(view), m_first_command_id(first_command_id) {}
+    m_first_command_id(first_command_id),
+    m_max_command_id(max_command_id), m_commands(commands) {}
 
     void operator()(sub_menu_item& sub_menu)
     {
         // Inserting into the bottom of the menu
         menu::iterator insert_position = sub_menu.menu().end();
 
-        MenuCommandTitleAdapter<About> about((m_view) ? m_view->hwnd() : NULL);
-
-        command_item_description about_item(
-            string_button_description(about.title(NULL).c_str()),
-            m_first_command_id + MENUIDOFFSET_ABOUT);
-        sub_menu.menu().insert(about_item, insert_position);
+        merge_command_items(
+            m_first_command_id, m_max_command_id, sub_menu.menu(),
+            insert_position, m_commands);
     }
 
     void operator()(command_item&)
@@ -266,8 +282,9 @@ public:
     }
 
 private:
-    optional<window<wchar_t>> m_view;
     UINT m_first_command_id;
+    const UINT m_max_command_id;
+    menu_id_command_map m_commands;
 };
 
 }
@@ -283,90 +300,76 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
     assert(menu_info.idCmdLast <= FCIDM_SHVIEWLAST);
     //assert(::IsMenu(menu_info.hmenu));
 
-    // Try to get a handle to the  Explorer Tools menu and insert
+    HWND view_handle = (m_view) ? m_view->hwnd() : NULL;
+
+    menu_id_command_map tools_menu_commands;
+
+    UINT offset = MENUIDOFFSET_ADD;
+    tools_menu_commands[offset++] = make_shared<Add>(view_handle, m_folder);
+    tools_menu_commands[offset++] = make_shared<Remove>(view_handle, m_folder);
+    tools_menu_commands[offset++] =
+        make_shared<LaunchAgent>(view_handle, m_folder);
+
+    // Try to get a handle to the Explorer Tools menu and insert
     // add and remove connection menu items into it if we find it
     m_tools_menu = tools_menu_with_fallback(
         menu_handle::foster_handle(menu_info.hmenu));
     m_tools_menu->accept(
-        merge_tools_command_items(m_view, m_folder, m_first_command_id));
+        merge_tools_command_items(
+            m_first_command_id, menu_info.idCmdLast, tools_menu_commands));
 
-    // Try to get a handle to the  Explorer Help menu and insert About box
+    menu_id_command_map help_menu_commands;
+    help_menu_commands[offset++] = make_shared<About>(view_handle);
+
+    // Try to get a handle to the Explorer Help menu and insert About box
     m_help_menu = help_menu_with_fallback(
         menu_handle::foster_handle(menu_info.hmenu));
     m_help_menu->accept(
-        merge_help_command_items(m_view, m_folder, m_first_command_id));
+        merge_help_command_items(
+            m_first_command_id, menu_info.idCmdLast, help_menu_commands));
+
+    m_commands.insert(tools_menu_commands.begin(), tools_menu_commands.end());
+    m_commands.insert(help_menu_commands.begin(), help_menu_commands.end());
 
     // Return value of last menu ID plus 1
-    menu_info.idCmdFirst += MENUIDOFFSET_LAST; // Added 3 items
+    // The following works because maps are sorted so rbegin points to the
+    // last and highest item
+    if (m_commands.rbegin() != m_commands.rend())
+    {
+        menu_info.idCmdFirst += m_commands.rbegin()->first + 1;
+    }
+    
+    // if no commands were added, leave idCmdFirst alone
 }
 
 bool menu_command_manager::invoke(
     UINT command_id, com_ptr<IDataObject> selection)
 {
-    HWND view_handle = (m_view) ? m_view->hwnd() : NULL;
-
-    if (command_id == MENUIDOFFSET_ADD)
+    menu_id_command_map::iterator pos = m_commands.find(command_id);
+    if (pos != m_commands.end())
     {
-        Add command(view_handle, m_folder);
-        command(selection, NULL);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_REMOVE)
-    {
-        Remove command(view_handle, m_folder);
-        command(selection, NULL);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
-    {
-        LaunchAgent command(view_handle, m_folder);
-        command(selection, NULL);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_ABOUT)
-    {
-        About command(view_handle);
-        command(selection, NULL);
-        return true;
-    }
-
-    return false;
-}
-
-bool menu_command_manager::help_text(
-    UINT command_id, wstring& text_out, com_ptr<IDataObject> selection)
-{
-    HWND view_handle = (m_view) ? m_view->hwnd() : NULL;
-
-    if (command_id == MENUIDOFFSET_ADD)
-    {
-        Add command(view_handle, m_folder);
-        text_out = command.tool_tip(selection);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_REMOVE)
-    {
-        Remove command(view_handle, m_folder);
-        text_out = command.tool_tip(selection);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
-    {
-        LaunchAgent command(view_handle, m_folder);
-        text_out = command.tool_tip(selection);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_ABOUT)
-    {
-        About command(view_handle);
-        text_out = command.tool_tip(selection);
+        (*(pos->second))(selection, NULL);
         return true;
     }
     else
     {
         return false;
     }
+}
 
+bool menu_command_manager::help_text(
+    UINT command_id, wstring& text_out, com_ptr<IDataObject> selection)
+{
+    menu_id_command_map::iterator pos = m_commands.find(command_id);
+    if (pos != m_commands.end())
+    {
+        text_out = pos->second->tool_tip(selection);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 namespace {
@@ -378,12 +381,11 @@ public:
     typedef void result_type;
 
     update_command_items(
-        const optional<window<wchar_t>>& view,
-        const apidl_t& folder, com_ptr<IDataObject> selection,
-        UINT first_command_id)
+        com_ptr<IDataObject> selection, UINT first_command_id,
+        const menu_id_command_map& commands)
         :
-    m_view(view), m_folder(folder), m_selection(selection),
-    m_first_command_id(first_command_id) {}
+    m_selection(selection), m_first_command_id(first_command_id),
+    m_commands(commands) {}
 
     class selectability_setter
     {
@@ -411,62 +413,34 @@ public:
 
     void operator()(sub_menu_item& sub_menu)
     {
-        HWND view_handle = (m_view) ? m_view->hwnd() : NULL;
+        typedef menu_id_command_map::iterator::value_type mapped_command;
 
-        Add add(view_handle, m_folder);
-        BOOST_SCOPED_ENUM(selectability) add_state =
-            add.disabled(m_selection, false) ?
-            selectability::disabled : selectability::enabled;
+        BOOST_FOREACH(const mapped_command& menu_command, m_commands)
+        {
+            BOOST_SCOPED_ENUM(selectability) command_state =
+                menu_command.second->disabled(m_selection, false) ?
+                    selectability::disabled : selectability::enabled;
 
-        item add_item = item_from_menu(
-            sub_menu.menu(), m_first_command_id + MENUIDOFFSET_ADD);
-        add_item.accept(selectability_setter(add_state));
-
-        Remove remove(view_handle, m_folder);
-        BOOST_SCOPED_ENUM(selectability) remove_state =
-            remove.disabled(m_selection, false) ?
-            selectability::disabled : selectability::enabled;
-
-        item remove_item = item_from_menu(
-            sub_menu.menu(), m_first_command_id + MENUIDOFFSET_REMOVE);
-        remove_item.accept(selectability_setter(remove_state));
-
-        LaunchAgent launch(view_handle, m_folder);
-        BOOST_SCOPED_ENUM(selectability) launch_state =
-            launch.disabled(m_selection, false) ?
-            selectability::disabled : selectability::enabled;
-
-       item launch_item = item_from_menu(
-           sub_menu.menu(), m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
-       launch_item.accept(selectability_setter(launch_state));
-
-       About about(view_handle);
-       BOOST_SCOPED_ENUM(selectability) about_state =
-           about.disabled(m_selection, false) ?
-           selectability::disabled : selectability::enabled;
-
-       item about_item = item_from_menu(
-           sub_menu.menu(), m_first_command_id + MENUIDOFFSET_ABOUT);
-       about_item.accept(selectability_setter(about_state));
+            item menu_item = item_from_menu(
+                sub_menu.menu(), m_first_command_id + menu_command.first);
+            menu_item.accept(selectability_setter(command_state));
+        }
     }
 
     void operator()(command_item&)
     {
-        BOOST_THROW_EXCEPTION(
-            logic_error("Cannot insert into command item"));
+        BOOST_THROW_EXCEPTION(logic_error("Cannot insert into command item"));
     }
 
     void operator()(separator_item&)
     {
-        BOOST_THROW_EXCEPTION(
-            logic_error("Cannot insert into separator"));
+        BOOST_THROW_EXCEPTION(logic_error("Cannot insert into separator"));
     }
 
 private:
-    optional<window<wchar_t>> m_view;
-    apidl_t m_folder;
     com_ptr<IDataObject> m_selection;
     UINT m_first_command_id;
+    menu_id_command_map m_commands;
 };
 
 }
@@ -477,7 +451,7 @@ void menu_command_manager::update_state(com_ptr<IDataObject> selection)
         BOOST_THROW_EXCEPTION(logic_error("Missing menu"));
 
     m_tools_menu->accept(
-        update_command_items(m_view, m_folder, selection, m_first_command_id));
+        update_command_items(selection, m_first_command_id, m_commands));
 }
 
 }}

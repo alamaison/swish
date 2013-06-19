@@ -43,6 +43,7 @@
 
 #include <comet/ptr.h> // com_ptr
 
+#include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -127,19 +128,27 @@ BOOST_AUTO_TEST_CASE( merge_menu )
     bar.insert(dummy_file_menu());
     bar.insert(dummy_help_menu());
 
-    QCMINFO q = { raw_menu, 7, 42, 999, NULL };
+    size_t size_before = bar.size();
+
+    UINT first_id_before = 42;
+    QCMINFO q = { raw_menu, 7, first_id_before, 999, NULL };
     BOOST_CHECK_INTERFACE_OK(
         cb,
         cb->MessageSFVCB(SFVM_MERGEMENU, NULL, reinterpret_cast<LPARAM>(&q)));
 
-    // Merge should have inserted some items
-    size_t count = 0;
-    for (menu_bar::iterator it = bar.begin(); it != bar.end(); ++it)
-    {
-        count += it->accept(counting_visitor());
-    }
+    // Merge should not have inserted anything into the menu bar
+    BOOST_CHECK_EQUAL(bar.size(), size_before);
 
+    // But should definitely have inserted something in one of its submenus
+    size_t count = 0;
+    BOOST_FOREACH(const menu_bar::iterator::value_type& item, bar)
+    {
+        count += item.accept(counting_visitor());
+    }
     BOOST_CHECK_GT(count, 0U);
+
+    // The QCMINFO should have been updated to reflect the added items
+    BOOST_CHECK_GT(q.idCmdFirst, first_id_before);
 }
 
 BOOST_AUTO_TEST_CASE( merge_menu_no_tools )

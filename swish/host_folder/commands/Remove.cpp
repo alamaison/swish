@@ -90,6 +90,12 @@ bool Remove::disabled(
     const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
 const
 {
+    if (!data_object)
+    {
+        // Selection unknown.  Default to disabled.
+        return true;
+    }
+
     PidlFormat format(data_object);
     return format.pidl_count() != 1;
 }
