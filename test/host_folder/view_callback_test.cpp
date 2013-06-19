@@ -130,7 +130,8 @@ BOOST_AUTO_TEST_CASE( merge_menu )
 
     size_t size_before = bar.size();
 
-    QCMINFO q = { raw_menu, 7, 42, 999, NULL };
+    UINT first_id_before = 42;
+    QCMINFO q = { raw_menu, 7, first_id_before, 999, NULL };
     BOOST_CHECK_INTERFACE_OK(
         cb,
         cb->MessageSFVCB(SFVM_MERGEMENU, NULL, reinterpret_cast<LPARAM>(&q)));
@@ -140,11 +141,14 @@ BOOST_AUTO_TEST_CASE( merge_menu )
 
     // But should definitely have inserted something in one of its submenus
     size_t count = 0;
-    BOOST_FOREACH(menu_bar::iterator::value_type& item, bar)
+    BOOST_FOREACH(const menu_bar::iterator::value_type& item, bar)
     {
         count += item.accept(counting_visitor());
     }
     BOOST_CHECK_GT(count, 0U);
+
+    // The QCMINFO should have been updated to reflect the added items
+    BOOST_CHECK_GT(q.idCmdFirst, first_id_before);
 }
 
 BOOST_AUTO_TEST_CASE( merge_menu_no_tools )
