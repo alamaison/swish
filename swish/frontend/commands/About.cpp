@@ -87,18 +87,11 @@ About::About(HWND hwnd) :
           "Displays version, licence and copyright information for Swish.")),
    m_hwnd(hwnd) {}
 
-bool About::disabled(
+BOOST_SCOPED_ENUM(Command::state) About::state(
    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
 {
-    return false;
-}
-
-bool About::hidden(
-   const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
-const
-{
-    return false;
+    return state::enabled;
 }
 
 void About::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)

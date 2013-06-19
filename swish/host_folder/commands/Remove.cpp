@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -86,25 +87,31 @@ Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
         translate("Remove Connection")),
     m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
-bool Remove::disabled(
+BOOST_SCOPED_ENUM(Command::state) Remove::state(
     const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
 const
 {
     if (!data_object)
     {
-        // Selection unknown.  Default to disabled.
-        return true;
+        // Selection unknown.
+        return state::hidden;
     }
 
     PidlFormat format(data_object);
-    return format.pidl_count() != 1;
-}
+    switch (format.pidl_count())
+    {
+    case 1:
+        return state::enabled;
+    case 0:
+        return state::hidden;
+    default:
+        // This means multiple items are selected. We disable rather than
+        // hide the buttons to let the user know the option exists but that
+        // we don't support multi-host removal yet.
 
-bool Remove::hidden(
-    const comet::com_ptr<IDataObject>& data_object, bool ok_to_be_slow)
-const
-{
-    return disabled(data_object, ok_to_be_slow);
+        // TODO: support multi-host removal
+        return state::disabled;
+    }
 }
 
 void Remove::operator()(

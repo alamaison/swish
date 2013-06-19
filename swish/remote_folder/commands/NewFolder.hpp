@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,9 +53,8 @@ public:
             boost::shared_ptr<swish::provider::sftp_provider>()>& provider,
         const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
     
-    bool disabled(const comet::com_ptr<IDataObject>& data_object,
-        bool ok_to_be_slow) const;
-    bool hidden(const comet::com_ptr<IDataObject>& data_object,
+    virtual BOOST_SCOPED_ENUM(state) state(
+        const comet::com_ptr<IDataObject>& data_object,
         bool ok_to_be_slow) const;
 
     void operator()(

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include <comet/ptr.h> // com_ptr
 #include <comet/uuid_fwd.h> // uuid_t
 
+#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
 #include <boost/function.hpp> // function
 #include <boost/preprocessor.hpp> // creating variadic pass-through contructors
 
@@ -101,10 +102,15 @@ public:
 
     /** @name State. */
     // @{
-    virtual bool disabled(
-        const comet::com_ptr<IDataObject>& data_object,
-        bool ok_to_be_slow) const = 0;
-    virtual bool hidden(
+    BOOST_SCOPED_ENUM_START(state)
+    {
+        enabled,
+        disabled,
+        hidden
+    };
+    BOOST_SCOPED_ENUM_END
+
+    virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
         bool ok_to_be_slow) const = 0;
     // @}

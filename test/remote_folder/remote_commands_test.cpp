@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -87,8 +87,7 @@ BOOST_AUTO_TEST_CASE( non_execution_properties )
     BOOST_CHECK(!command.title(NULL).empty());
     BOOST_CHECK(!command.tool_tip(NULL).empty());
     BOOST_CHECK(!command.icon_descriptor(NULL).empty());
-    BOOST_CHECK(!command.disabled(NULL, true));
-    BOOST_CHECK(!command.hidden(NULL, true));
+    BOOST_CHECK_EQUAL(command.state(NULL, true), NewFolder::state::enabled);
 }
 
 /**

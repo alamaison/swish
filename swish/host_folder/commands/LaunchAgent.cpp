@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -106,17 +106,14 @@ LaunchAgent::LaunchAgent(HWND hwnd, const apidl_t& folder_pidl) :
         "Launch key agent")),
    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
-bool LaunchAgent::disabled(
-   const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
-const
-{ return false; }
 
-bool LaunchAgent::hidden(
-   const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+BOOST_SCOPED_ENUM(Command::state) LaunchAgent::state(
+    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
 {
     HWND hwnd = ::FindWindowW(L"Pageant", L"Pageant");
-    return hwnd != NULL;
+
+    return (hwnd) ? state::hidden : state::enabled;
 }
 
 void LaunchAgent::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)

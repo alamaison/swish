@@ -183,9 +183,8 @@ void merge_command_items(
         // show/hide it.
 
         BOOST_SCOPED_ENUM(selectability) item_state =
-            (menu_command.second->disabled(NULL, false) ||
-             menu_command.second->hidden(NULL, false)) ?
-                selectability::disabled : selectability::enabled;
+            menu_command.second->state(NULL, false) == Command::state::enabled ?
+                selectability::enabled : selectability::disabled;
 
         item.selectability(item_state);
 
@@ -418,8 +417,9 @@ public:
         BOOST_FOREACH(const mapped_command& menu_command, m_commands)
         {
             BOOST_SCOPED_ENUM(selectability) command_state =
-                menu_command.second->disabled(m_selection, false) ?
-                    selectability::disabled : selectability::enabled;
+                menu_command.second->state(m_selection, false)
+                == Command::state::enabled ?
+                    selectability::enabled : selectability::disabled;
 
             item menu_item = item_from_menu(
                 sub_menu.menu(), m_first_command_id + menu_command.first);

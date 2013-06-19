@@ -178,15 +178,12 @@ NewFolder::NewFolder(
         translate("Make a new folder")),
     m_folder_pidl(folder_pidl), m_provider(provider), m_consumer(consumer) {}
 
-bool NewFolder::disabled(
+BOOST_SCOPED_ENUM(Command::state) NewFolder::state(
     const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
-{ return false; }
-
-bool NewFolder::hidden(
-    const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
-const
-{ return false; }
+{
+    return state::enabled;
+}
 
 void NewFolder::operator()(
     const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)

@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -86,15 +87,12 @@ Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
         translate("Add Connection")),
     m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
-bool Add::disabled(
+BOOST_SCOPED_ENUM(Command::state) Add::state(
     const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
-{ return false; }
-
-bool Add::hidden(
-    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
-const
-{ return false; }
+{
+    return state::enabled;
+}
 
 /** Display dialog to get connection info from user. */
 void Add::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
