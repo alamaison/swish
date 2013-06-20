@@ -85,7 +85,6 @@ public:
         if (user.empty())
             BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
 
-
         // Try to get the session from the global pool
         wstring display_name = provider_moniker_name(user, host, port);
 
@@ -102,6 +101,20 @@ public:
         return provider;
     }
 
+    bool has_session(const wstring& host, const wstring& user, int port) const
+    {
+        if (host.empty())
+            BOOST_THROW_EXCEPTION(invalid_argument("Host name required"));
+        if (user.empty())
+            BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
+
+        // Try to get the session from the global pool
+        wstring display_name = provider_moniker_name(user, host, port);
+
+        auto_cs lock(m_cs);
+        return m_sessions.find(display_name) != m_sessions.end();
+    }
+
 private:
     static critical_section m_cs;
     static map<wstring, shared_ptr<swish::provider::sftp_provider>>
@@ -115,12 +128,26 @@ std::map<std::wstring, shared_ptr<sftp_provider> > CPool::m_sessions;
 
 connection_spec::connection_spec(
     const wstring& host, const wstring& user, int port)
-: m_host(host), m_user(user), m_port(port) {}
+: m_host(host), m_user(user), m_port(port)
+{
+    if (host.empty())
+        BOOST_THROW_EXCEPTION(invalid_argument("Host name required"));
+    if (user.empty())
+        BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
+}
 
 shared_ptr<sftp_provider> connection_spec::pooled_session() const
 {
-    CPool session_pool;
-    return session_pool.GetSession(m_host, m_user, m_port);
+    return CPool().GetSession(m_host, m_user, m_port);
+}
+
+BOOST_SCOPED_ENUM(connection_spec::session_status)
+connection_spec::session_status() const
+{
+   if(CPool().has_session(m_host, m_user, m_port))
+       return session_status::running;
+   else
+       return session_status::not_running;
 }
 
 }} // namespace swish::connection

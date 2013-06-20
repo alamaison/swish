@@ -31,6 +31,7 @@
 
 #include "swish/provider/sftp_provider.hpp" // sftp_provider
 
+#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -54,13 +55,29 @@ public:
         const std::wstring& host, const std::wstring& user, int port);
 
     /**
-    * Returns a running SFTP session based on this specification.
-    * 
-    * If an appropriate SFTP session already exists in the global pool,
-    * the connection is reused.  Otherwise a new one is created, and added
-    * to the pool.
-    */
+     * Returns a running SFTP session based on this specification.
+     * 
+     * If an appropriate SFTP session already exists in the global pool,
+     * the connection is reused.  Otherwise a new one is created, and added
+     * to the pool.
+     */
     boost::shared_ptr<swish::provider::sftp_provider> pooled_session() const;
+
+    BOOST_SCOPED_ENUM_START(session_status)
+    {
+        running,
+        not_running
+    };
+    BOOST_SCOPED_ENUM_END;
+
+    /**
+     * The status of a connection with this specification.
+     *
+     * Indicates whether the session matches one already running or whether
+     * the session would need to to be created anew, should the caller decide to
+     * call pooled_session().
+     */
+    BOOST_SCOPED_ENUM(session_status) session_status() const;
 
 private:
     std::wstring m_host;

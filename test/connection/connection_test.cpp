@@ -77,9 +77,14 @@ namespace { // private
     public:
         shared_ptr<sftp_provider> GetSession()
         {
+            return get_connection().pooled_session();
+        }
+
+        connection_spec get_connection()
+        {
             return connection_spec(
                 Utf8StringToWideString(GetHost()), 
-                Utf8StringToWideString(GetUser()), GetPort()).pooled_session();
+                Utf8StringToWideString(GetUser()), GetPort());
         }
 
         com_ptr<ISftpConsumer> Consumer()
@@ -116,11 +121,84 @@ namespace { // private
 BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
 
 /**
- * Test a single call to GetSession().
+ * Test that a connection specification can create a session and report its
+ * status correctly.
  */
-BOOST_AUTO_TEST_CASE( session )
+BOOST_AUTO_TEST_CASE( connection_create_session )
 {
+    connection_spec connection(get_connection());
+
+    BOOST_CHECK_EQUAL(
+        connection.session_status(),
+        connection_spec::session_status::not_running);
+
     shared_ptr<sftp_provider> provider = GetSession();
+
+    BOOST_CHECK_EQUAL(
+        connection.session_status(),
+        connection_spec::session_status::running);
+
+    BOOST_CHECK(alive(provider));
+}
+
+/**
+ * Test that a connection specification can create a session and report its
+ * status correctly. This test differs from above in that the connection spec
+ * is created afresh before and after.
+ */
+BOOST_AUTO_TEST_CASE( connection_create_session_fresh )
+{
+    BOOST_CHECK_EQUAL(
+        get_connection().session_status(),
+        connection_spec::session_status::not_running);
+
+    shared_ptr<sftp_provider> provider = GetSession();
+
+    BOOST_CHECK_EQUAL(
+        get_connection().session_status(),
+        connection_spec::session_status::running);
+
+    BOOST_CHECK(alive(provider));
+}
+
+/**
+ * Test that an unrelated connection specification doesn't have its status
+ * altered by creating a different session.
+ */
+BOOST_AUTO_TEST_CASE( connection_create_session_unrelated )
+{
+    connection_spec connection(L"Unrelated", L"Spec", 123);
+
+    BOOST_CHECK_EQUAL(
+        connection.session_status(),
+        connection_spec::session_status::not_running);
+
+    shared_ptr<sftp_provider> provider = GetSession();
+
+    BOOST_CHECK_EQUAL(
+        connection.session_status(),
+        connection_spec::session_status::not_running);
+
+    BOOST_CHECK(alive(provider));
+}
+
+/**
+ * Test that an unrelated connection specification doesn't have its status
+ * altered by creating a different session. This test differs from above
+ * in that the connection spec is created afresh before and after.
+ */
+BOOST_AUTO_TEST_CASE( connection_create_session_unrelated_fresh )
+{
+    BOOST_CHECK_EQUAL(
+        connection_spec(L"Unrelated", L"Spec", 123).session_status(),
+        connection_spec::session_status::not_running);
+
+    shared_ptr<sftp_provider> provider = GetSession();
+
+    BOOST_CHECK_EQUAL(
+        connection_spec(L"Unrelated", L"Spec", 123).session_status(),
+        connection_spec::session_status::not_running);
+
     BOOST_CHECK(alive(provider));
 }
 
@@ -129,13 +207,25 @@ BOOST_AUTO_TEST_CASE( session )
  */
 BOOST_AUTO_TEST_CASE( twice )
 {
+    BOOST_CHECK_EQUAL(
+        get_connection().session_status(),
+        connection_spec::session_status::not_running);
+
     shared_ptr<sftp_provider> first_provider = GetSession();
     BOOST_CHECK(alive(first_provider));
+
+    BOOST_CHECK_EQUAL(
+        get_connection().session_status(),
+        connection_spec::session_status::running);
 
     shared_ptr<sftp_provider> second_provider = GetSession();
     BOOST_CHECK(alive(second_provider));
 
-    BOOST_REQUIRE(second_provider == first_provider);
+    BOOST_CHECK_EQUAL(
+        get_connection().session_status(),
+        connection_spec::session_status::running);
+
+    BOOST_CHECK(second_provider == first_provider);
 }
 
 const int THREAD_COUNT = 30;
@@ -152,15 +242,35 @@ private:
         try
         {
             {
+                // This first call may or may not return running depending on
+                // whether it is on the first thread scheduled, so we don't test
+                // its value, just that it succeeds.
+                m_fixture->get_connection().session_status();
+
                 shared_ptr<sftp_provider> first_provider = 
                     m_fixture->GetSession();
+
+                // However, by this point it *must* be running
+                BOOST_CHECK_EQUAL(
+                    m_fixture->get_connection().session_status(),
+                    connection_spec::session_status::running);
+
                 BOOST_CHECK(m_fixture->alive(first_provider));
+
+                BOOST_CHECK_EQUAL(
+                    m_fixture->get_connection().session_status(),
+                    connection_spec::session_status::running);
 
                 shared_ptr<sftp_provider> second_provider = 
                     m_fixture->GetSession();
+
+                BOOST_CHECK_EQUAL(
+                    m_fixture->get_connection().session_status(),
+                    connection_spec::session_status::running);
+
                 BOOST_CHECK(m_fixture->alive(second_provider));
 
-                BOOST_REQUIRE(second_provider == first_provider);
+                BOOST_CHECK(second_provider == first_provider);
             }
         }
         catch (const std::exception& e)
@@ -177,7 +287,7 @@ private:
 typedef use_session_thread<PoolFixture> test_thread;
 
 /**
- * Retrieve an prod a session from many threads.
+ * Retrieve and prod a session from many threads.
  */
 BOOST_AUTO_TEST_CASE( threaded )
 {
