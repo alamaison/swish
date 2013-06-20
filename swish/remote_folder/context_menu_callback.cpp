@@ -29,7 +29,7 @@
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell_folder/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 

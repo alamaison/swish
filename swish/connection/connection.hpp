@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -25,13 +25,11 @@
     @endif
 */
 
-#ifndef SWISH_SHELL_FOLDER_POOL_HPP
-#define SWISH_SHELL_FOLDER_POOL_HPP
+#ifndef SWISH_CONNECTION_CONNECTION_HPP
+#define SWISH_CONNECTION_CONNECTION_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
-
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 
 #include <comet/threading.h> // critical_section
 
@@ -42,7 +40,7 @@
 
 
 namespace swish {
-namespace remote_folder {
+namespace connection {
 
 class CPool
 {
@@ -59,24 +57,6 @@ private:
         boost::shared_ptr<swish::provider::sftp_provider>
     > m_connections;
 };
-
-
-/**
- * Creates an SFTP connection.
- *
- * The connection is created from the information stored in this
- * folder's PIDL, @a pidl, and the window handle to be used as the owner
- * window for any user interaction. This window handle can be NULL but (in order
- * to enforce good UI etiquette - we shouldn't attempt to interact with the user
- * if Explorer isn't expecting us to) any operation which requires user 
- * interaction should quietly fail.  
- *
- * @param hwndUserInteraction  A handle to the window which should be used
- *                             as the parent window for any user interaction.
- * @throws ATL exceptions on failure.
- */
-boost::shared_ptr<swish::provider::sftp_provider> connection_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
 
 /**
  * Interface for connection making logic.

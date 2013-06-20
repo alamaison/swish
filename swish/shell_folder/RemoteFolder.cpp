@@ -38,7 +38,7 @@
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands/commands.hpp"
                                            // remote_folder_command_provider
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 #include "swish/remote_folder/properties.hpp" // property_from_pidl

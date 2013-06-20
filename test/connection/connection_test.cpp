@@ -1,11 +1,12 @@
 /**
     @file
 
-    Tests for the SFTP directory listing helper functions.
+    Tests for the pool of SFTP connections.
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,9 +25,7 @@
     @endif
 */
 
-#include "swish/atl.hpp"
-
-#include "swish/remote_folder/connection.hpp"  // Test subject
+#include "swish/connection/connection.hpp"  // Test subject
 #include "swish/utils.hpp"
 
 #include "test/common_boost/helpers.hpp"
@@ -49,7 +48,7 @@
 #include <vector>
 
 using swish::provider::sftp_provider;
-using swish::remote_folder::CPool;
+using swish::connection::CPool;
 using swish::utils::Utf8StringToWideString;
 
 using test::OpenSshFixture;

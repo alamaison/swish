@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/remote_folder/commands/commands.hpp" // NewFolder
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 
 #include <winapi/error.hpp> // last_error
 

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -27,32 +27,22 @@
 
 #include "connection.hpp"
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/port_conversion.hpp" // port_to_wstring
-#include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_item_view
-#include "swish/provider/Provider.hpp"
+#include "swish/provider/Provider.hpp" // CProvider
 #include "swish/remotelimits.h" // Text field limits
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
-#include <comet/interface.h> // uuidof, comtype
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cstring> // memset
 
-using swish::host_folder::find_host_itemid;
-using swish::host_folder::host_itemid_view;
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
-using winapi::shell::pidl::apidl_t;
-
-using comet::bstr_t;
 using comet::com_error;
 using comet::critical_section;
 using comet::auto_cs;
-using comet::uuidof;
 
 using boost::shared_ptr;
 
@@ -60,7 +50,7 @@ using std::wstring;
 
 
 namespace swish {
-namespace remote_folder {
+namespace connection {
 
 namespace {
 
@@ -125,42 +115,4 @@ shared_ptr<sftp_provider> CPool::GetSession(
     return provider;
 }
 
-namespace {
-
-    void params_from_pidl(
-        const apidl_t& pidl, wstring& user, wstring& host, int& port)
-    {
-        // Find HOSTPIDL part of this folder's absolute pidl to extract server
-        // info
-        host_itemid_view host_itemid(*find_host_itemid(pidl));
-        assert(host_itemid.valid());
-
-        user = host_itemid.user();
-        host = host_itemid.host();
-        port = host_itemid.port();
-        assert(!user.empty());
-        assert(!host.empty());
-    }
-
-    /**
-     * Gets connection for given SFTP session parameters.
-     */
-    shared_ptr<sftp_provider> connection(
-        const wstring& host, const wstring& user, int port, HWND hwnd)
-    {
-        CPool pool;
-        return pool.GetSession(host, user, port, hwnd);
-    }
-}
-
-shared_ptr<sftp_provider> connection_from_pidl(const apidl_t& pidl, HWND hwnd)
-{
-    // Extract connection info from PIDL
-    wstring user, host, path;
-    int port;
-    params_from_pidl(pidl, user, host, port);
-
-    return connection(host, user, port, hwnd);
-}
-
-}} // namespace swish::remote_folder
+}} // namespace swish::connection
