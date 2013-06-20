@@ -29,8 +29,7 @@
 
 #include "swish/provider/Provider.hpp" // CProvider
 
-#include <comet/threading.h> // critical_section
-
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp> // call_once
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -41,12 +40,12 @@
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
-using comet::critical_section;
-using comet::auto_cs;
-
 using boost::call_once;
+using boost::mutex;
+using boost::once_flag;
 using boost::shared_ptr;
 
+using std::auto_ptr;
 using std::invalid_argument;
 using std::map;
 using std::wstring;
@@ -71,7 +70,8 @@ public:
 
     shared_ptr<sftp_provider> GetSession(const connection_spec& specification)
     {
-        auto_cs lock(m_cs);
+        mutex::scoped_lock lock(m_session_pool_guard);
+
         pool_mapping::iterator session = m_sessions.find(specification);
 
         if (session != m_sessions.end())
@@ -88,7 +88,8 @@ public:
 
     bool has_session(const connection_spec& specification) const
     {
-        auto_cs lock(m_cs);
+        mutex::scoped_lock lock(m_session_pool_guard);
+
         return m_sessions.find(specification) != m_sessions.end();
     }
 
@@ -101,16 +102,16 @@ private:
         m_instance.reset(new session_pool);
     }
 
-    static boost::once_flag m_initialise_once;
-    static std::auto_ptr<session_pool> m_instance;
+    static once_flag m_initialise_once;
+    static auto_ptr<session_pool> m_instance;
 
-    critical_section m_cs;
+    mutable mutex m_session_pool_guard;
     pool_mapping m_sessions;
 };
 
 
-boost::once_flag session_pool::m_initialise_once;
-std::auto_ptr<session_pool> session_pool::m_instance;
+once_flag session_pool::m_initialise_once;
+auto_ptr<session_pool> session_pool::m_instance;
 
 }
 
