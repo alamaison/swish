@@ -1,12 +1,11 @@
 /**
     @file
 
-    Pool of reusuable SFTP connections.
+    Specify a connection.
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,8 +24,8 @@
     @endif
 */
 
-#ifndef SWISH_CONNECTION_CONNECTION_HPP
-#define SWISH_CONNECTION_CONNECTION_HPP
+#ifndef SWISH_CONNECTION_CONNECTION_SPEC_HPP
+#define SWISH_CONNECTION_CONNECTION_SPEC_HPP
 #pragma once
 
 #include "swish/provider/sftp_provider.hpp" // sftp_provider
@@ -55,34 +54,9 @@ public:
         const std::wstring& host, const std::wstring& user, int port);
 
     /**
-     * Returns a running SFTP session based on this specification.
-     * 
-     * If an appropriate SFTP session already exists in the global pool,
-     * the connection is reused.  Otherwise a new one is created, and added
-     * to the pool.
+     * Returns a new SFTP session based on this specification.
      */
-    boost::shared_ptr<swish::provider::sftp_provider> pooled_session() const;
-
-    BOOST_SCOPED_ENUM_START(session_status)
-    {
-        running,
-        not_running
-    };
-    BOOST_SCOPED_ENUM_END;
-
-    /**
-     * The status of a connection with this specification.
-     *
-     * Indicates whether the session matches one already running or whether
-     * the session would need to to be created anew, should the caller decide to
-     * call pooled_session().
-     */
-    BOOST_SCOPED_ENUM(session_status) session_status() const;
-
-    /**
-     * Remove the session from the pool.
-     */
-    void remove_session();
+    boost::shared_ptr<swish::provider::sftp_provider> create_session() const;
 
     bool operator<(const connection_spec& other) const;
 
