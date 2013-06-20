@@ -31,32 +31,20 @@
 
 #include "swish/provider/sftp_provider.hpp" // sftp_provider
 
-#include <comet/threading.h> // critical_section
-
 #include <boost/shared_ptr.hpp>
 
 #include <string>
-#include <map>
-
 
 namespace swish {
 namespace connection {
 
-class CPool
-{
-public:
+/**
+ * Retrieves an SFTP session from the global pool and creates a new one if none
+ * exists already.
+ */
+boost::shared_ptr<swish::provider::sftp_provider> pooled_session(
+    const std::wstring& host, const std::wstring& user, int port);
 
-    boost::shared_ptr<swish::provider::sftp_provider> GetSession(
-        const std::wstring& host, const std::wstring& user, int port,
-        HWND hwnd);
-
-private:
-    static comet::critical_section m_cs;
-    static std::map<
-        std::wstring,
-        boost::shared_ptr<swish::provider::sftp_provider>
-    > m_connections;
-};
 
 /**
  * Interface for connection making logic.

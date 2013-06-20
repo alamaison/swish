@@ -176,8 +176,7 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = connection_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         // Create directory handler and get listing as PIDL enumeration
@@ -425,8 +424,7 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = connection_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         // Rename file
@@ -628,7 +626,7 @@ CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 {
     TRACE("Request: IExplorerCommandProvider");
     return remote_folder_command_provider(
-        hwnd, root_pidl(), bind(&connection_from_pidl, root_pidl(), hwnd),
+        hwnd, root_pidl(), bind(&connection_from_pidl, root_pidl()),
         bind(m_consumer_factory, hwnd)).get();
 }
 
@@ -787,8 +785,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = connection_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         return new swish::shell_folder::CSnitchingDataObject(
@@ -817,8 +814,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = connection_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         optional< window<wchar_t> > owner;
@@ -868,6 +864,6 @@ HRESULT CRemoteFolder::MenuCallback(
     HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     context_menu_callback callback(
-        bind(&connection_from_pidl, root_pidl(), _1), m_consumer_factory);
+        bind(&connection_from_pidl, root_pidl()), m_consumer_factory);
     return callback(hwnd, pdtobj, uMsg, wParam, lParam);
 }

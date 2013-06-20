@@ -32,20 +32,23 @@
 #include "swish/remotelimits.h" // Text field limits
 
 #include <comet/error.h> // com_error
+#include <comet/threading.h> // critical_section
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <cstring> // memset
+#include <map>
+#include <stdexcept> // invalid_argument
 
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
-using comet::com_error;
 using comet::critical_section;
 using comet::auto_cs;
 
 using boost::shared_ptr;
 
+using std::invalid_argument;
+using std::map;
 using std::wstring;
 
 
@@ -70,49 +73,49 @@ namespace {
 
 }
 
-critical_section CPool::m_cs;
-std::map<std::wstring, shared_ptr<sftp_provider> > CPool::m_connections;
-
-/**
- * Retrieves an SFTP session for a global pool or creates it if none exists.
- *
- * Pointers to the session objects are stored in the Running Object Table (ROT)
- * making them available to any client that needs one under the same 
- * Winstation (login).  They are identified by item monikers of the form 
- * "!username@hostname:port".
- *
- * If an existing session can't be found in the ROT (as will happen the first
- * a connection is made) this function creates a new (Provider) 
- * connection with the given parameters.  In the future this may be extended to
- * give a choice of the type of connection to make.
- *
- * @param hwnd  Isn't used but could be in future to correctly parent any
- *              elevation window.
- *
- * @returns pointer to the session (swish::provider::sftp_provider).
- */
-shared_ptr<sftp_provider> CPool::GetSession(
-    const wstring& host, const wstring& user, int port, HWND /*hwnd*/)
+class CPool
 {
-    if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-    if (host.empty()) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-    if (port > MAX_PORT) BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
+public:
 
-    auto_cs lock(m_cs);
+    shared_ptr<sftp_provider> GetSession(
+        const wstring& host, const wstring& user, int port)
+    {
+        if (host.empty())
+            BOOST_THROW_EXCEPTION(invalid_argument("Host name required"));
+        if (user.empty())
+            BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
 
-    // Try to get the session from the global pool
-    wstring display_name = provider_moniker_name(user, host, port);
 
-    std::map<std::wstring, shared_ptr<sftp_provider> >::iterator connection
-        = m_connections.find(display_name);
+        // Try to get the session from the global pool
+        wstring display_name = provider_moniker_name(user, host, port);
 
-    if (connection != m_connections.end())
-        return connection->second;
+        auto_cs lock(m_cs);
+        map<wstring, shared_ptr<sftp_provider>>::iterator session
+            = m_sessions.find(display_name);
 
-    shared_ptr<sftp_provider> provider(new CProvider(user, host, port));
+        if (session != m_sessions.end())
+            return session->second;
 
-    m_connections[display_name] = provider;
-    return provider;
+        shared_ptr<sftp_provider> provider(new CProvider(user, host, port));
+
+        m_sessions[display_name] = provider;
+        return provider;
+    }
+
+private:
+    static critical_section m_cs;
+    static map<wstring, shared_ptr<swish::provider::sftp_provider>>
+        m_sessions;
+};
+
+critical_section CPool::m_cs;
+std::map<std::wstring, shared_ptr<sftp_provider> > CPool::m_sessions;
+
+shared_ptr<sftp_provider> pooled_session(
+    const wstring& host, const wstring& user, int port)
+{
+    CPool session_pool;
+    return session_pool.GetSession(host, user, port);
 }
 
 }} // namespace swish::connection

@@ -27,13 +27,13 @@
 
 #include "pidl_connection.hpp"
 
-#include "swish/connection/connection.hpp" // CPool
+#include "swish/connection/connection.hpp" // pooled_session
 #include "swish/provider/sftp_provider.hpp" // sftp_provider
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
 
 #include <string>
 
-using swish::connection::CPool;
+using swish::connection::pooled_session;
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
 using swish::provider::sftp_provider;
@@ -65,25 +65,16 @@ namespace {
         assert(!host.empty());
     }
 
-    /**
-     * Gets connection for given SFTP session parameters.
-     */
-    shared_ptr<sftp_provider> connection(
-        const wstring& host, const wstring& user, int port, HWND hwnd)
-    {
-        CPool pool;
-        return pool.GetSession(host, user, port, hwnd);
-    }
 }
 
-shared_ptr<sftp_provider> connection_from_pidl(const apidl_t& pidl, HWND hwnd)
+shared_ptr<sftp_provider> connection_from_pidl(const apidl_t& pidl)
 {
     // Extract connection info from PIDL
     wstring user, host, path;
     int port;
     params_from_pidl(pidl, user, host, port);
 
-    return connection(host, user, port, hwnd);
+    return pooled_session(host, user, port);
 }
 
 }} // namespace swish::remote_folder

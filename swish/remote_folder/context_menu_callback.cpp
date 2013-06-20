@@ -138,7 +138,7 @@ namespace {
 }
 
 context_menu_callback::context_menu_callback(
-    function<shared_ptr<sftp_provider>(HWND)> provider_factory,
+    function<shared_ptr<sftp_provider>()> provider_factory,
     function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
     : m_provider_factory(provider_factory),
     m_consumer_factory(consumer_factory) {}
@@ -226,7 +226,7 @@ void context_menu_callback::verb(
 namespace {
 
     bool do_invoke_command(
-        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
+        function<shared_ptr<sftp_provider>()> provider_factory,
         function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
         HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
         const wstring& /*arguments*/, int window_mode)
@@ -248,7 +248,7 @@ namespace {
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
                 shared_ptr<sftp_provider> provider = connection_from_pidl(
-                    format.parent_folder(), hwnd_view);
+                    format.parent_folder());
                 CSftpDirectory directory(
                     format.parent_folder(), provider, consumer);
 

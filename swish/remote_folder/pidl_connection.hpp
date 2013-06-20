@@ -43,18 +43,10 @@ namespace remote_folder {
  * Creates an SFTP connection.
  *
  * The connection is created from the information stored in this
- * folder's PIDL, @a pidl, and the window handle to be used as the owner
- * window for any user interaction. This window handle can be NULL but (in order
- * to enforce good UI etiquette - we shouldn't attempt to interact with the user
- * if Explorer isn't expecting us to) any operation which requires user 
- * interaction should quietly fail.  
- *
- * @param hwndUserInteraction  A handle to the window which should be used
- *                             as the parent window for any user interaction.
- * @throws ATL exceptions on failure.
+ * folder's PIDL, @a pidl.
  */
 boost::shared_ptr<swish::provider::sftp_provider> connection_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
+    const winapi::shell::pidl::apidl_t& pidl);
 
 }} // namespace swish::remote_folder
 
