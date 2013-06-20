@@ -31,9 +31,11 @@
 
 #include <comet/threading.h> // critical_section
 
+#include <boost/thread/once.hpp> // call_once
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <map>
+#include <memory> // auto_ptr
 #include <stdexcept> // invalid_argument
 
 using swish::provider::CProvider;
@@ -42,6 +44,7 @@ using swish::provider::sftp_provider;
 using comet::critical_section;
 using comet::auto_cs;
 
+using boost::call_once;
 using boost::shared_ptr;
 
 using std::invalid_argument;
@@ -52,10 +55,19 @@ using std::wstring;
 namespace swish {
 namespace connection {
 
-class CPool
+namespace {
+
+class session_pool
 {
     typedef map<connection_spec, shared_ptr<sftp_provider>> pool_mapping;
+
 public:
+
+    static session_pool& get()
+    {
+        call_once(m_initialise_once, do_init);
+        return *m_instance;
+    }
 
     shared_ptr<sftp_provider> GetSession(const connection_spec& specification)
     {
@@ -81,14 +93,26 @@ public:
     }
 
 private:
-    static critical_section m_cs;
-    static pool_mapping m_sessions;
+
+    session_pool() {};
+
+    static void do_init()
+    {
+        m_instance.reset(new session_pool);
+    }
+
+    static boost::once_flag m_initialise_once;
+    static std::auto_ptr<session_pool> m_instance;
+
+    critical_section m_cs;
+    pool_mapping m_sessions;
 };
 
-critical_section CPool::m_cs;
-CPool::pool_mapping CPool::m_sessions;
 
+boost::once_flag session_pool::m_initialise_once;
+std::auto_ptr<session_pool> session_pool::m_instance;
 
+}
 
 connection_spec::connection_spec(
     const wstring& host, const wstring& user, int port)
@@ -102,13 +126,13 @@ connection_spec::connection_spec(
 
 shared_ptr<sftp_provider> connection_spec::pooled_session() const
 {
-    return CPool().GetSession(*this);
+    return session_pool::get().GetSession(*this);
 }
 
 BOOST_SCOPED_ENUM(connection_spec::session_status)
 connection_spec::session_status() const
 {
-   if(CPool().has_session(*this))
+    if(session_pool::get().has_session(*this))
        return session_status::running;
    else
        return session_status::not_running;
