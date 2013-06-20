@@ -111,11 +111,16 @@ private:
 critical_section CPool::m_cs;
 std::map<std::wstring, shared_ptr<sftp_provider> > CPool::m_sessions;
 
-shared_ptr<sftp_provider> pooled_session(
+
+
+connection_spec::connection_spec(
     const wstring& host, const wstring& user, int port)
+: m_host(host), m_user(user), m_port(port) {}
+
+shared_ptr<sftp_provider> connection_spec::pooled_session() const
 {
     CPool session_pool;
-    return session_pool.GetSession(host, user, port);
+    return session_pool.GetSession(m_host, m_user, m_port);
 }
 
 }} // namespace swish::connection

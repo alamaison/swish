@@ -38,13 +38,35 @@
 namespace swish {
 namespace connection {
 
-/**
- * Retrieves an SFTP session from the global pool and creates a new one if none
- * exists already.
- */
-boost::shared_ptr<swish::provider::sftp_provider> pooled_session(
-    const std::wstring& host, const std::wstring& user, int port);
 
+/**
+ * Represents specification for a connection to an SFTP server.
+ *
+ * Instances of this class are just recipes for connecting, they are *not*
+ * the running connections themselves.  Running connections are called
+ * sessions and can be created and queried via this class.
+ */
+class connection_spec
+{
+public:
+
+    connection_spec(
+        const std::wstring& host, const std::wstring& user, int port);
+
+    /**
+    * Returns a running SFTP session based on this specification.
+    * 
+    * If an appropriate SFTP session already exists in the global pool,
+    * the connection is reused.  Otherwise a new one is created, and added
+    * to the pool.
+    */
+    boost::shared_ptr<swish::provider::sftp_provider> pooled_session() const;
+
+private:
+    std::wstring m_host;
+    std::wstring m_user;
+    int m_port;
+};
 
 /**
  * Interface for connection making logic.

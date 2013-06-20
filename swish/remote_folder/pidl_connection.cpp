@@ -27,13 +27,13 @@
 
 #include "pidl_connection.hpp"
 
-#include "swish/connection/connection.hpp" // pooled_session
+#include "swish/connection/connection.hpp"
 #include "swish/provider/sftp_provider.hpp" // sftp_provider
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
 
 #include <string>
 
-using swish::connection::pooled_session;
+using swish::connection::connection_spec;
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
 using swish::provider::sftp_provider;
@@ -74,7 +74,7 @@ shared_ptr<sftp_provider> connection_from_pidl(const apidl_t& pidl)
     int port;
     params_from_pidl(pidl, user, host, port);
 
-    return pooled_session(host, user, port);
+    return connection_spec(host, user, port).pooled_session();
 }
 
 }} // namespace swish::remote_folder

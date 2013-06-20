@@ -48,7 +48,7 @@
 #include <vector>
 
 using swish::provider::sftp_provider;
-using swish::connection::pooled_session;
+using swish::connection::connection_spec;
 using swish::utils::Utf8StringToWideString;
 
 using test::OpenSshFixture;
@@ -77,9 +77,9 @@ namespace { // private
     public:
         shared_ptr<sftp_provider> GetSession()
         {
-            return pooled_session(
+            return connection_spec(
                 Utf8StringToWideString(GetHost()), 
-                Utf8StringToWideString(GetUser()), GetPort());
+                Utf8StringToWideString(GetUser()), GetPort()).pooled_session();
         }
 
         com_ptr<ISftpConsumer> Consumer()
