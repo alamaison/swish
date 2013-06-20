@@ -29,6 +29,8 @@
 
 #include "swish/provider/Provider.hpp" // CProvider
 
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp> // call_once
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -40,7 +42,9 @@
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
+using boost::bind;
 using boost::call_once;
+using boost::function;
 using boost::mutex;
 using boost::once_flag;
 using boost::shared_ptr;
@@ -68,22 +72,29 @@ public:
         return *m_instance;
     }
 
-    shared_ptr<sftp_provider> GetSession(const connection_spec& specification)
+    typedef function<shared_ptr<sftp_provider>(const connection_spec&)>
+        session_factory;
+
+    // Taking a factory means connection_spec doesn't have to expose its
+    // members.
+    shared_ptr<sftp_provider> GetSession(
+        const connection_spec& specification,
+        const session_factory& factory)
     {
         mutex::scoped_lock lock(m_session_pool_guard);
 
         pool_mapping::iterator session = m_sessions.find(specification);
 
         if (session != m_sessions.end())
+        {
             return session->second;
-
-        shared_ptr<sftp_provider> provider(
-            new CProvider(
-                specification.user(), specification.host(),
-                specification.port()));
-
-        m_sessions[specification] = provider;
-        return provider;
+        }
+        else
+        {
+            shared_ptr<sftp_provider> provider = factory(specification);
+            m_sessions[specification] = provider;
+            return provider;
+        }
     }
 
     bool has_session(const connection_spec& specification) const
@@ -116,7 +127,7 @@ auto_ptr<session_pool> session_pool::m_instance;
 }
 
 connection_spec::connection_spec(
-    const wstring& host, const wstring& user, int port)
+    const wstring& host, const wstring& user, const int port)
 : m_host(host), m_user(user), m_port(port)
 {
     if (host.empty())
@@ -125,9 +136,21 @@ connection_spec::connection_spec(
         BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
 }
 
+namespace {
+
+    shared_ptr<sftp_provider> do_new_session(
+        const wstring& host, const wstring& user, const int port)
+    {
+        // Note the switched order of user and host
+        return shared_ptr<sftp_provider>(new CProvider(user, host, port));
+    }
+
+}
+
 shared_ptr<sftp_provider> connection_spec::pooled_session() const
 {
-    return session_pool::get().GetSession(*this);
+    return session_pool::get().GetSession(
+        *this, bind(do_new_session, m_host, m_user, m_port));
 }
 
 BOOST_SCOPED_ENUM(connection_spec::session_status)

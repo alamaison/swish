@@ -81,10 +81,6 @@ public:
 
     bool operator<(const connection_spec& other) const;
 
-    std::wstring host() const { return m_host; }
-    std::wstring user() const { return m_user; }
-    int port() const { return m_port; }
-
 private:
     std::wstring m_host;
     std::wstring m_user;
