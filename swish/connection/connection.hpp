@@ -79,6 +79,12 @@ public:
      */
     BOOST_SCOPED_ENUM(session_status) session_status() const;
 
+    bool operator<(const connection_spec& other) const;
+
+    std::wstring host() const { return m_host; }
+    std::wstring user() const { return m_user; }
+    int port() const { return m_port; }
+
 private:
     std::wstring m_host;
     std::wstring m_user;
