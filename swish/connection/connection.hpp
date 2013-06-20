@@ -79,6 +79,11 @@ public:
      */
     BOOST_SCOPED_ENUM(session_status) session_status() const;
 
+    /**
+     * Remove the session from the pool.
+     */
+    void remove_session();
+
     bool operator<(const connection_spec& other) const;
 
 private:

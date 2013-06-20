@@ -104,6 +104,14 @@ public:
         return m_sessions.find(specification) != m_sessions.end();
     }
 
+    void remove(const connection_spec& specification)
+    {
+        mutex::scoped_lock lock(m_session_pool_guard);
+
+        m_sessions.erase(specification);
+    }
+
+
 private:
 
     session_pool() {};
@@ -160,6 +168,11 @@ connection_spec::session_status() const
        return session_status::running;
    else
        return session_status::not_running;
+}
+
+void connection_spec::remove_session()
+{
+    session_pool::get().remove(*this);
 }
 
 bool connection_spec::operator<(const connection_spec& other) const

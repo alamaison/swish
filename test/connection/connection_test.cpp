@@ -307,6 +307,27 @@ BOOST_AUTO_TEST_CASE( threaded )
     }
 }
 
+BOOST_AUTO_TEST_CASE( remove_session )
+{
+    connection_spec connection(get_connection());
+
+    shared_ptr<sftp_provider> provider = GetSession();
+
+    BOOST_CHECK_EQUAL(
+        connection.session_status(),
+        connection_spec::session_status::running);
+
+    connection.remove_session();
+
+    BOOST_CHECK_EQUAL(
+        connection.session_status(),
+        connection_spec::session_status::not_running);
+
+    // Even though we removed the session from the pool, existing
+    // references should still be alive
+    BOOST_CHECK(alive(provider));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
