@@ -29,6 +29,8 @@
 #include "swish/provider/Provider.hpp" // CProvider
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+#include <boost/tuple/tuple.hpp> // tie
+#include <boost/tuple/tuple_comparison.hpp> // <
 
 #include <stdexcept> // invalid_argument
 
@@ -36,6 +38,7 @@ using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
 using boost::shared_ptr;
+using boost::tie;
 
 using std::invalid_argument;
 using std::wstring;
@@ -61,14 +64,10 @@ shared_ptr<sftp_provider> connection_spec::create_session() const
 
 bool connection_spec::operator<(const connection_spec& other) const
 {
-    if (m_host < other.m_host)
-        return true;
-    else if (m_user < other.m_user)
-        return true;
-    else if (m_port < other.m_port)
-        return true;
-    else
-        return false;
+    // Reusing comparison from tuples - no point reinventing the wheel
+    // See: http://stackoverflow.com/q/6218812/67013
+    return tie(m_host, m_user, m_port) <
+        tie(other.m_host, other.m_user, other.m_port);
 }
 
 }} // namespace swish::connection

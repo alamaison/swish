@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE( less_host )
     BOOST_CHECK(!(s2 < s1));
 }
 
-BOOST_AUTO_TEST_CASE( less_user )
+BOOST_AUTO_TEST_CASE( equal_host_less_user )
 {
     connection_spec s1(L"A",L"a",12);
     connection_spec s2(L"A",L"b",12);
@@ -142,12 +142,28 @@ BOOST_AUTO_TEST_CASE( less_user )
     BOOST_CHECK(!(s2 < s1));
 }
 
-BOOST_AUTO_TEST_CASE( less_port )
+BOOST_AUTO_TEST_CASE( greater_host_less_user )
+{
+    connection_spec s1(L"B",L"a",12);
+    connection_spec s2(L"A",L"b",12);
+    BOOST_CHECK(!(s1 < s2));
+    BOOST_CHECK(s2 < s1);
+}
+
+BOOST_AUTO_TEST_CASE( equal_host_equal_user_less_port )
 {
     connection_spec s1(L"A",L"b",11);
     connection_spec s2(L"A",L"b",12);
     BOOST_CHECK(s1 < s2);
     BOOST_CHECK(!(s2 < s1));
+}
+
+BOOST_AUTO_TEST_CASE( equal_host_greater_user_less_port )
+{
+    connection_spec s1(L"A",L"c",11);
+    connection_spec s2(L"A",L"b",12);
+    BOOST_CHECK(!(s1 < s2));
+    BOOST_CHECK(s2 < s1);
 }
 
 BOOST_AUTO_TEST_CASE( use_as_map_key_same )
