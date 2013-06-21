@@ -330,6 +330,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\overlay_icon.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\properties.hpp"
 				>
 			</File>

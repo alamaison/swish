@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,7 @@
 #include "swish/host_folder/host_management.hpp"
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
                                            // url_from_host_itemid
+#include "swish/host_folder/overlay_icon.hpp"
 #include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/nse/default_context_menu_callback.hpp"
@@ -44,7 +45,7 @@
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/trace.hpp" // trace
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
 
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -85,6 +86,7 @@ using swish::host_folder::commands::host_folder_command_provider;
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::host_itemid_view;
 using swish::host_folder::host_management::LoadConnectionsFromRegistry;
+using swish::host_folder::overlay_icon;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::host_folder::url_from_host_itemid;
@@ -126,6 +128,13 @@ template<> struct impl::type_policy<PITEMID_CHILD>
     }
 
     static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }    
+};
+
+
+template<> struct comtype<::IShellIconOverlay>
+{
+    static const ::IID& uuid() throw() { return ::IID_IShellIconOverlay; }
+    typedef ::IUnknown base;
 };
 
 }
@@ -380,6 +389,50 @@ STDMETHODIMP CHostFolder::GetIconLocation(
     *pwFlags = GIL_DONTCACHE;
 
     return S_OK;
+}
+
+/*--------------------------------------------------------------------------*/
+/*                    Functions implementing IShellIconOverlay              */
+/*--------------------------------------------------------------------------*/
+
+
+STDMETHODIMP CHostFolder::GetOverlayIndex(PCUITEMID_CHILD item, int* index)
+{
+    try
+    {
+        overlay_icon overlay(item);
+
+        if (overlay.has_overlay())
+        {
+            *index = overlay.index();
+            return S_OK;
+        }
+        else
+        {
+            return S_FALSE;
+        }
+    }
+    WINAPI_COM_CATCH_INTERFACE(IShellIconOverlay)
+}
+
+STDMETHODIMP CHostFolder::GetOverlayIconIndex(
+    PCUITEMID_CHILD item, int* icon_index)
+{
+    try
+    {
+        overlay_icon overlay(item);
+
+        if (overlay.has_overlay())
+        {
+            *icon_index = overlay.icon_index();
+            return S_OK;
+        }
+        else
+        {
+            return S_FALSE;
+        }
+    }
+    WINAPI_COM_CATCH_INTERFACE(IShellIconOverlay)
 }
 
 /*--------------------------------------------------------------------------*/
