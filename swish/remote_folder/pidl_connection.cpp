@@ -69,14 +69,20 @@ namespace {
 
 }
 
-shared_ptr<sftp_provider> connection_from_pidl(const apidl_t& pidl)
+connection_spec connection_from_pidl(const apidl_t& pidl)
 {
     // Extract connection info from PIDL
     wstring user, host, path;
     int port;
     params_from_pidl(pidl, user, host, port);
 
-    return session_pool().pooled_session(connection_spec(host, user, port));
+    return connection_spec(host, user, port);
+}
+
+
+shared_ptr<sftp_provider> session_from_pidl(const apidl_t& pidl)
+{
+    return session_pool().pooled_session(connection_from_pidl(pidl));
 }
 
 }} // namespace swish::remote_folder

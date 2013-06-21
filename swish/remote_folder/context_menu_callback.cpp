@@ -247,7 +247,7 @@ namespace {
                 // Create SFTP Consumer for this HWNDs lifetime
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
-                shared_ptr<sftp_provider> provider = connection_from_pidl(
+                shared_ptr<sftp_provider> provider = session_from_pidl(
                     format.parent_folder());
                 CSftpDirectory directory(
                     format.parent_folder(), provider, consumer);

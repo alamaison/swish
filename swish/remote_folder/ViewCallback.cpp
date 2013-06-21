@@ -42,7 +42,7 @@
 using swish::frontend::CUserInteraction;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUIElement;
-using swish::remote_folder::connection_from_pidl;
+using swish::remote_folder::session_from_pidl;
 using swish::remote_folder::commands::remote_folder_task_pane_tasks;
 using swish::remote_folder::commands::remote_folder_task_pane_titles;
 
@@ -168,7 +168,7 @@ bool CViewCallback::on_get_webview_tasks(
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
         remote_folder_task_pane_tasks(
             m_hwnd_view, m_folder_pidl, ole_site(),
-            bind(connection_from_pidl, m_folder_pidl),
+            bind(session_from_pidl, m_folder_pidl),
             bind(&consumer, m_hwnd_view));
 
     tasks_out.pEnumExtraTasks = commands.first.detach();

@@ -154,8 +154,8 @@ bool CViewCallback::on_window_created(HWND hwnd_view)
 bool CViewCallback::on_get_notify(
     PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
 {
-    events = SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
-        SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
+    events = SHCNE_UPDATEDIR | SHCNE_UPDATEITEM | SHCNE_RENAMEITEM |
+        SHCNE_RENAMEFOLDER | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
     pidl_monitor = m_folder.get(); // Owned by us
     return true;
 }

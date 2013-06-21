@@ -350,6 +350,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\commands\CloseSession.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\CloseSession.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\commands\commands.cpp"
 				>
 			</File>

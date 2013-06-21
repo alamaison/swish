@@ -29,7 +29,8 @@
 #define SWISH_REMOTE_FOLDER_PIDL_CONNECTION_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider
+#include "swish/connection/connection_spec.hpp"
+#include "swish/provider/sftp_provider.hpp"
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
@@ -40,12 +41,18 @@ namespace swish {
 namespace remote_folder {
 
 /**
- * Creates an SFTP connection.
+ * Converts a host PIDL into a connection specification.
+ */
+swish::connection::connection_spec connection_from_pidl(
+    const winapi::shell::pidl::apidl_t& pidl);
+
+/**
+ * Creates an SFTP session.
  *
- * The connection is created from the information stored in this
+ * The session is created from the information stored in this
  * folder's PIDL, @a pidl.
  */
-boost::shared_ptr<swish::provider::sftp_provider> connection_from_pidl(
+boost::shared_ptr<swish::provider::sftp_provider> session_from_pidl(
     const winapi::shell::pidl::apidl_t& pidl);
 
 }} // namespace swish::remote_folder
