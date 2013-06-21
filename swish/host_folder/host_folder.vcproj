@@ -318,6 +318,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\extract_icon.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.hpp"
 				>
 			</File>

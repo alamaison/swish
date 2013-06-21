@@ -33,6 +33,7 @@
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
 #include "swish/host_folder/commands/commands.hpp" // host_folder_commands
+#include "swish/host_folder/extract_icon.hpp"
 #include "swish/host_folder/host_management.hpp"
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
                                            // url_from_host_itemid
@@ -47,6 +48,8 @@
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_INTERFACE
 #include <winapi/shell/shell.hpp> // strret_to_string
+#include <winapi/window/window.hpp>
+#include <winapi/window/window_handle.hpp>
 
 #include <comet/smart_enum.h> // make_smart_enumeration
 #include <comet/error.h> // com_error
@@ -55,6 +58,7 @@
 
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
+#include <boost/optional/optional.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -75,6 +79,7 @@ using comet::variant_t;
 
 using boost::locale::translate;
 using boost::make_shared;
+using boost::optional;
 using boost::shared_ptr;
 
 using std::vector;
@@ -84,6 +89,7 @@ using swish::frontend::CUserInteraction;
 using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
 using swish::host_folder::create_host_itemid;
+using swish::host_folder::extract_icon_co;
 using swish::host_folder::host_itemid_view;
 using swish::host_folder::host_management::LoadConnectionsFromRegistry;
 using swish::host_folder::overlay_icon;
@@ -99,6 +105,8 @@ using winapi::shell::pidl::pidl_t;
 using winapi::shell::property_key;
 using winapi::shell::strret_to_string;
 using winapi::shell::string_to_strret;
+using winapi::window::window;
+using winapi::window::window_handle;
 
 namespace comet {
 
@@ -114,6 +122,12 @@ template<> struct enumerated_type_of<IEnumIDList>
 template<> struct comtype<IQueryAssociations>
 {
     static const IID& uuid() { return IID_IQueryAssociations; }
+    typedef ::IUnknown base;
+};
+
+template<> struct comtype<::IExtractIconW>
+{
+    static const ::IID& uuid() throw() { return ::IID_IExtractIconW; }
     typedef ::IUnknown base;
 };
 
@@ -353,45 +367,6 @@ SHCOLUMNID CHostFolder::map_column_to_scid(UINT column_index)
 }
 
 /*--------------------------------------------------------------------------*/
-/*                    Functions implementing IExtractIcon                   */
-/*--------------------------------------------------------------------------*/
-
-/**
- * Extract an icon bitmap given the information passed.
- *
- * @implementing IExtractIconW
- *
- * We return S_FALSE to tell the shell to extract the icons itself.
- */
-STDMETHODIMP CHostFolder::Extract( LPCTSTR, UINT, HICON *, HICON *, UINT )
-{
-    ATLTRACE("CHostFolder::Extract called\n");
-    return S_FALSE;
-}
-
-/**
- * Retrieve the location of the appropriate icon.
- *
- * @implementing IExtractIconW
- *
- * We set all SFTP hosts to have the icon from shell32.dll.
- */
-STDMETHODIMP CHostFolder::GetIconLocation(
-    __in UINT uFlags, __out_ecount(cchMax) LPTSTR szIconFile, 
-    __in UINT cchMax, __out int *piIndex, __out UINT *pwFlags )
-{
-    ATLTRACE("CHostFolder::GetIconLocation called\n");
-    (void)uFlags; // type of use is ignored for host folder
-
-    // Set host to have the ICS host icon
-    StringCchCopy(szIconFile, cchMax, L"shell32.dll");
-    *piIndex = 17;
-    *pwFlags = GIL_DONTCACHE;
-
-    return S_OK;
-}
-
-/*--------------------------------------------------------------------------*/
 /*                    Functions implementing IShellIconOverlay              */
 /*--------------------------------------------------------------------------*/
 
@@ -519,16 +494,15 @@ CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
  * Create an icon extraction helper object for the selected item.
  *
  * @implementing CSwishFolder
- *
- * For host folders, the extraction object happens to be the folder
- * itself. We don't need to look at the PIDLs as all host items are the same.
  */
 CComPtr<IExtractIconW> CHostFolder::extract_icon_w(
-    HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/)
+    HWND hwnd_view, PCUITEMID_CHILD pidl)
 {
-    TRACE("Request: IExtractIconW");
+    optional<window<wchar_t>> owning_view;
+    if (hwnd_view)
+        owning_view = window<wchar_t>(window_handle::foster_handle(hwnd_view));
 
-    return this;
+    return new extract_icon_co(owning_view, pidl);
 }
 
 /**

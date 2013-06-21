@@ -40,14 +40,13 @@
 #include <vector>
 
 class ATL_NO_VTABLE CHostFolder :
-    public IExtractIconW, public IShellIconOverlay,
+    public IShellIconOverlay,
     public swish::shell_folder::folder::CSwishFolder<
         swish::host_folder::Column>
 {
 public:
 
     BEGIN_COM_MAP(CHostFolder)
-        COM_INTERFACE_ENTRY(IExtractIconW)
         COM_INTERFACE_ENTRY(IShellIconOverlay)
         COM_INTERFACE_ENTRY_CHAIN(CSwishFolder)
     END_COM_MAP()
@@ -100,12 +99,6 @@ public:
 
     // IShellFolder2 (via folder_error_adapter2)
     virtual SHCOLUMNID map_column_to_scid(UINT column_index);
-
-    // IExtractIconW
-    STDMETHOD(Extract)( LPCTSTR pszFile, UINT nIconIndex, HICON *phiconLarge, 
-                        HICON *phiconSmall, UINT nIconSize );
-    STDMETHOD(GetIconLocation)( UINT uFlags, LPTSTR szIconFile, UINT cchMax, 
-                                int *piIndex, UINT *pwFlags );
 
     // IShellIconOverlay
     STDMETHOD(GetOverlayIndex)(PCUITEMID_CHILD item, int* index);
