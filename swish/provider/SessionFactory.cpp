@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2012
+    Copyright (C) 2008, 2009, 2010, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -104,8 +104,7 @@ using std::string;
     PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
     ISftpConsumer *pConsumer) throw(...)
 {
-    auto_ptr<CSession> spSession( new CSession() );
-    spSession->Connect(pwszHost, uPort);
+    auto_ptr<CSession> spSession(new CSession(pwszHost, uPort));
 
     // Check the hostkey against our known hosts
     _VerifyHostKey(pwszHost, *spSession, pConsumer);

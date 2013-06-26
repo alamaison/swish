@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2010, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,20 +41,21 @@
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/thread/mutex.hpp>
 
+#include <string>
+
 typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
 typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
 
 class CSession
 {
 public:
-    CSession();
+
+    CSession::CSession(const std::wstring& host, unsigned int port);
     ~CSession();
     boost::mutex::scoped_lock aquire_lock();
     operator LIBSSH2_SESSION*() const;
     operator LIBSSH2_SFTP*() const;
 
-    void Connect(const wchar_t* pwszHost, unsigned int uPort) throw(...);
-    void Disconnect();
     void StartSftp() throw(...);
     bool IsDead();
 
@@ -65,7 +67,6 @@ private:
     boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
     boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
     boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
-    bool m_bConnected;             ///< Have we already connected to server?
 
     CSession(const CSession& session); // Intentionally not implemented
     CSession& operator=(const CSession& pidl); // Intentionally not impl
@@ -74,9 +75,6 @@ private:
     void _CloseSocketToHost() throw();
 
     void _CreateSession() throw(...);
-    void _DestroySession() throw();
-    void _ResetSession() throw(...);
 
     void _CreateSftpChannel() throw(...);
-    void _DestroySftpChannel() throw();
 };

@@ -62,18 +62,43 @@ using boost::system::system_error;
 using boost::system::error_code;
 
 using std::string;
+using std::wstring;
 
-CSession::CSession() : 
-    m_io(0), m_socket(m_io), m_bConnected(false)
+CSession::CSession(const wstring& host, unsigned int port) : 
+    m_io(0), m_socket(m_io)
 {
     _CreateSession();
     ATLASSUME(m_session);
+
+    // Connect to host over TCP/IP
+    _OpenSocketToHost(host.c_str(), port);
+
+    // Start up libssh2 and trade welcome banners, exchange keys,
+    // setup crypto, compression, and MAC layers
+    ATLASSERT(m_socket.native() != INVALID_SOCKET);
+    if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
+    {
+        char *szError;
+        int cchError;
+        libssh2_session_last_error(*this, &szError, &cchError, false);
+    
+        BOOST_THROW_EXCEPTION(std::exception(szError));
+        // Legal to fail here, e.g. server refuses banner/kex
+    }
+    
+    // Tell libssh2 we are blocking
+    libssh2_session_set_blocking(*this, 1);
 }
 
 CSession::~CSession()
 {
-    _DestroySftpChannel();
-    _DestroySession();
+    m_sftp_session.reset();
+    if (m_session)
+    {
+        libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
+    }
+    m_session.reset();
+    _CloseSocketToHost();
 }
 
 
@@ -120,45 +145,6 @@ bool CSession::IsDead()
     return rc != 0;
 }
 
-void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
-{
-    if (m_bConnected)
-        BOOST_THROW_EXCEPTION(std::logic_error("Already connected"));
-    
-    // Connect to host over TCP/IP
-    _OpenSocketToHost(pwszHost, uPort);
-
-    // Start up libssh2 and trade welcome banners, exchange keys,
-    // setup crypto, compression, and MAC layers
-    ATLASSERT(m_socket.native() != INVALID_SOCKET);
-    if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
-    {
-        char *szError;
-        int cchError;
-        libssh2_session_last_error(*this, &szError, &cchError, false);
-
-        _ResetSession();
-        _CloseSocketToHost();
-    
-        BOOST_THROW_EXCEPTION(std::exception(szError));
-        // Legal to fail here, e.g. server refuses banner/kex
-    }
-    
-    // Tell libssh2 we are blocking
-    libssh2_session_set_blocking(*this, 1);
-
-    m_bConnected = true;
-}
-
-void CSession::Disconnect()
-{
-    if (!m_bConnected)
-        return;
-
-    libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
-    m_bConnected = false;
-}
-
 void CSession::StartSftp() throw(...)
 {
     _CreateSftpChannel();
@@ -178,31 +164,6 @@ void CSession::_CreateSession() throw(...)
     m_session = shared_ptr<LIBSSH2_SESSION>(
         libssh2_session_init(), libssh2_session_free);
     ATLENSURE_THROW( m_session, E_FAIL );
-}
-
-/**
- * Free a LIBSSH2_SESSION instance.
- */
-void CSession::_DestroySession() throw()
-{
-    ATLASSUME(m_session);
-    if (m_session)
-    {
-        Disconnect();
-    }
-}
-
-/**
- * Destroy and recreate a LIBSSH2_SESSION instance.
- *
- * A session instance which has been used in a libssh2_session_startup call
- * cannot be reused safely.
- */
-void CSession::_ResetSession() throw(...)
-{
-    _DestroySession();
-    _DestroySftpChannel();
-    _CreateSession();
 }
 
 /**
@@ -228,14 +189,6 @@ void CSession::_CreateSftpChannel() throw(...)
     }
     
     m_sftp_session = shared_ptr<LIBSSH2_SFTP>(sftp, libssh2_sftp_shutdown);
-}
-
-/**
- * Shut down the SFTP channel.
- */
-void CSession::_DestroySftpChannel() throw()
-{
-    m_sftp_session.reset();
 }
 
 /**
