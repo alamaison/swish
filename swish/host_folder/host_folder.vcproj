@@ -256,6 +256,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\host_itemid_connection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.cpp"
 				>
 			</File>
@@ -319,6 +323,10 @@
 			</File>
 			<File
 				RelativePath=".\extract_icon.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\host_itemid_connection.hpp"
 				>
 			</File>
 			<File

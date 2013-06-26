@@ -1,7 +1,7 @@
 /**
     @file
 
-    Host folder overlay icons.
+    Relates host item IDs to SFTP connections.
 
     @if license
 
@@ -24,48 +24,23 @@
     @endif
 */
 
-#ifndef SWISH_HOST_FOLDER_OVERLAY_ICON_HPP
-#define SWISH_HOST_FOLDER_OVERLAY_ICON_HPP
+#ifndef SWISH_HOST_FOLDER_HOST_ITEM_CONNECTION_HPP
+#define SWISH_HOST_FOLDER_HOST_ITEM_CONNECTION_HPP
+#pragma once
 
 #include "swish/connection/connection_spec.hpp"
-#include "swish/connection/session_pool.hpp"
-#include "swish/host_folder/host_itemid_connection.hpp"
-                                                  // connection_from_host_itemid
-
-#include <winapi/shell/pidl.hpp> // cpidl_t
-
-#include <shlobj.h> // SHGetIconOverlayIndex
+#include "swish/provider/sftp_provider.hpp"
+#include "swish/host_folder/host_pidl.hpp" // host_itemid_view
 
 namespace swish {
 namespace host_folder {
 
-class overlay_icon
-{
-public:
-    overlay_icon(const winapi::shell::pidl::cpidl_t& item)
-        :
-    m_connection(connection_from_host_itemid(host_itemid_view(item)))
-    {}
+/**
+ * Converts a host item ID into a connection specification.
+ */
+swish::connection::connection_spec connection_from_host_itemid(
+    const host_itemid_view& host_itemid);
 
-    bool has_overlay() const
-    {
-        return swish::connection::session_pool().has_session(m_connection);
-    }
-
-    int index() const
-    {
-        return ::SHGetIconOverlayIndexW(NULL, IDO_SHGIOI_DEFAULT);
-    }
-
-    int icon_index() const
-    {
-        return INDEXTOOVERLAYMASK(index());
-    }
-
-private:
-    swish::connection::connection_spec m_connection;
-};
-
-}}
+}} // namespace swish::host_folder
 
 #endif
