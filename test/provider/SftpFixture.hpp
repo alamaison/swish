@@ -63,14 +63,14 @@ class SftpFixture :
 public:
 
     /**
-     * Return a new CSession instance connected to the fixture SSH server.
+     * Return a new running_session instance connected to the fixture SSH server.
      */
-    boost::shared_ptr<CSession> Session()
+    boost::shared_ptr<running_session> Session()
     {
         comet::com_ptr<test::CConsumerStub> consumer =
             new test::CConsumerStub(PrivateKeyPath(), PublicKeyPath());
 
-        return boost::shared_ptr<CSession>(CSessionFactory::CreateSftpSession(
+        return boost::shared_ptr<running_session>(CSessionFactory::CreateSftpSession(
             swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
             swish::utils::Utf8StringToWideString(GetUser()).c_str(),
             consumer.get()));

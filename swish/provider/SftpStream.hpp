@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "Session.hpp"
+#include "running_session.hpp"
 
 #include <boost/shared_ptr.hpp>
 
@@ -56,7 +56,7 @@ public:
     static const OpenFlags create = 0x04;
 
     CSftpStream(
-        boost::shared_ptr<CSession> session, const std::string& file,
+        boost::shared_ptr<running_session> session, const std::string& file,
         OpenFlags flags);
     ~CSftpStream();
 
@@ -138,7 +138,7 @@ private:
     ULONGLONG _Seek(__in LONGLONG nMove, __in DWORD dwOrigin) throw(...);
     STATSTG _Stat(__in bool bWantName) throw(...);
 
-    boost::shared_ptr<CSession> m_session;
+    boost::shared_ptr<running_session> m_session;
     boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
     std::string m_strFilename;
     std::string m_strDirectory;

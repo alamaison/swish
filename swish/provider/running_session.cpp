@@ -35,7 +35,7 @@
     @endif
 */
 
-#include "Session.hpp"
+#include "running_session.hpp"
 
 #include "swish/remotelimits.h"
 #include "swish/debug.hpp"        // Debug macros
@@ -64,7 +64,7 @@ using boost::system::error_code;
 using std::string;
 using std::wstring;
 
-CSession::CSession(const wstring& host, unsigned int port) : 
+running_session::running_session(const wstring& host, unsigned int port) : 
     m_io(0), m_socket(m_io)
 {
     _CreateSession();
@@ -90,7 +90,7 @@ CSession::CSession(const wstring& host, unsigned int port) :
     libssh2_session_set_blocking(*this, 1);
 }
 
-CSession::~CSession()
+running_session::~running_session()
 {
     m_sftp_session.reset();
     if (m_session)
@@ -102,18 +102,18 @@ CSession::~CSession()
 }
 
 
-mutex::scoped_lock CSession::aquire_lock()
+mutex::scoped_lock running_session::aquire_lock()
 {
     return mutex::scoped_lock(m_mutex);
 }
 
-CSession::operator LIBSSH2_SESSION*() const
+running_session::operator LIBSSH2_SESSION*() const
 {
     ATLASSUME(m_session);
     return m_session.get();
 }
 
-CSession::operator LIBSSH2_SFTP*() const
+running_session::operator LIBSSH2_SFTP*() const
 {
     ATLASSUME(m_sftp_session);
     return m_sftp_session.get();
@@ -131,7 +131,7 @@ CSession::operator LIBSSH2_SFTP*() const
  *
  * @see http://www.libssh2.org/mail/libssh2-devel-archive-2010-07/0050.shtml
  */
-bool CSession::IsDead()
+bool running_session::IsDead()
 {
     fd_set socket_set;
     FD_ZERO(&socket_set);
@@ -145,7 +145,7 @@ bool CSession::IsDead()
     return rc != 0;
 }
 
-void CSession::StartSftp() throw(...)
+void running_session::StartSftp() throw(...)
 {
     _CreateSftpChannel();
 }
@@ -158,7 +158,7 @@ void CSession::StartSftp() throw(...)
 /**
  * Allocate a blocking LIBSSH2_SESSION instance.
  */
-void CSession::_CreateSession() throw(...)
+void running_session::_CreateSession() throw(...)
 {
     // Create a session instance
     m_session = shared_ptr<LIBSSH2_SESSION>(
@@ -169,7 +169,7 @@ void CSession::_CreateSession() throw(...)
 /**
  * Start up an SFTP channel on this SSH session.
  */
-void CSession::_CreateSftpChannel() throw(...)
+void running_session::_CreateSftpChannel() throw(...)
 {
     ATLASSUME(m_sftp_session == NULL);
 
@@ -202,7 +202,7 @@ void CSession::_CreateSftpChannel() throw(...)
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c _CloseSocketToHost()
  */
-void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
+void running_session::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 {
     ATLASSERT(pwszHost[0] != '\0');
     ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
@@ -233,7 +233,7 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 /**
  * Closes the socket stored in @c m_socket and sets is to @c INVALID_SOCKET.
  */
-void CSession::_CloseSocketToHost() throw()
+void running_session::_CloseSocketToHost() throw()
 {
     m_socket.close();
 }

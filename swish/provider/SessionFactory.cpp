@@ -1,7 +1,7 @@
 /**
     @file
 
-    Factory producing connected, authenticated CSession objects.
+    Factory producing connected, authenticated running_session objects.
 
     @if license
 
@@ -84,15 +84,15 @@ using std::string;
 #pragma warning (disable: 4267) // ssize_t to unsigned int
 
 /**
- * Creates and authenticates a CSession object with the given parameters.
+ * Creates and authenticates a running_session object with the given parameters.
  *
- * @param pwszHost   Name of the remote host to connect the CSession object to.
+ * @param pwszHost   Name of the remote host to connect the running_session object to.
  * @param pwszUser   User to connect to remote host as.
  * @param uPort      Port on the remote host to connect to.
  * @param pConsumer  Pointer to an ISftpConsumer which will be used for any 
  *                   user-interaction such as requesting a password for
  *                   authentication.
- * @returns  An auto_ptr to a CSession which is connected to the given 
+ * @returns  An auto_ptr to a running_session which is connected to the given 
  *           host (subject to verification of the host's key), authenticated and 
  *           over which an SFTP channel has been started.
  *
@@ -100,11 +100,11 @@ using std::string;
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
-/* static */ auto_ptr<CSession> CSessionFactory::CreateSftpSession(
+/* static */ auto_ptr<running_session> CSessionFactory::CreateSftpSession(
     PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
     ISftpConsumer *pConsumer) throw(...)
 {
-    auto_ptr<CSession> spSession(new CSession(pwszHost, uPort));
+    auto_ptr<running_session> spSession(new running_session(pwszHost, uPort));
 
     // Check the hostkey against our known hosts
     _VerifyHostKey(pwszHost, *spSession, pConsumer);
@@ -123,7 +123,7 @@ const wpath known_hosts_path =
     home_directory<wpath>() / L".ssh" / L"known_hosts";
 
 void CSessionFactory::_VerifyHostKey(
-    PCWSTR pwszHost, CSession& session, ISftpConsumer *pConsumer)
+    PCWSTR pwszHost, running_session& session, ISftpConsumer *pConsumer)
 {
     ATLASSUME(pConsumer);
 
@@ -189,7 +189,7 @@ void CSessionFactory::_VerifyHostKey(
  * - E_FAIL otherwise
  */
 void CSessionFactory::_AuthenticateUser(
-    PCWSTR pwszUser, CSession& session, ISftpConsumer *pConsumer) throw(...)
+    PCWSTR pwszUser, running_session& session, ISftpConsumer *pConsumer) throw(...)
 {
     ATLASSUME(pwszUser[0] != '\0');
     string utf8_username = WideStringToUtf8String(pwszUser);
@@ -244,7 +244,7 @@ void CSessionFactory::_AuthenticateUser(
  * - E_FAIL otherwise
  */
 HRESULT CSessionFactory::_PasswordAuthentication(
-    const string& utf8_username, CSession& session, ISftpConsumer *pConsumer)
+    const string& utf8_username, running_session& session, ISftpConsumer *pConsumer)
 {
     HRESULT hr;
     bstr_t prompt = L"Please enter your password:";
@@ -281,7 +281,7 @@ HRESULT CSessionFactory::_PasswordAuthentication(
  * - E_FAIL otherwise
  */
 HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
-    const string& utf8_username, CSession& session, ISftpConsumer *pConsumer)
+    const string& utf8_username, running_session& session, ISftpConsumer *pConsumer)
 {
     // Create instance of keyboard-interactive authentication handler
     CKeyboardInteractive handler(pConsumer);
@@ -307,7 +307,7 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
 namespace {
 
     HRESULT pubkey_auth_the_nasty_old_way(
-        const string& utf8_username, CSession& session,
+        const string& utf8_username, running_session& session,
         ISftpConsumer *pConsumer)
     {
         ATLENSURE_RETURN_HR(pConsumer, E_POINTER);
@@ -344,7 +344,7 @@ namespace {
 }
 
 HRESULT CSessionFactory::_PublicKeyAuthentication(
-    const string& utf8_username, CSession& yukky_session,
+    const string& utf8_username, running_session& yukky_session,
     ISftpConsumer *pConsumer)
 {
     // This old way is only kept around to support the tests.  Its almost

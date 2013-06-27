@@ -46,12 +46,13 @@
 typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
 typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
 
-class CSession
+class running_session
 {
 public:
 
-    CSession::CSession(const std::wstring& host, unsigned int port);
-    ~CSession();
+    running_session::running_session(
+        const std::wstring& host, unsigned int port);
+    ~running_session();
     boost::mutex::scoped_lock aquire_lock();
     operator LIBSSH2_SESSION*() const;
     operator LIBSSH2_SFTP*() const;
@@ -68,8 +69,8 @@ private:
     boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
     boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
 
-    CSession(const CSession& session); // Intentionally not implemented
-    CSession& operator=(const CSession& pidl); // Intentionally not impl
+    running_session(const running_session& session); // Intentionally not implemented
+    running_session& operator=(const running_session& pidl); // Intentionally not impl
     
     void _OpenSocketToHost(const wchar_t* pszHost, unsigned int uPort);
     void _CloseSocketToHost() throw();

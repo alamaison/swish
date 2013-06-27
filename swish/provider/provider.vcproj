@@ -301,7 +301,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Session.cpp"
+				RelativePath=".\running_session.cpp"
 				>
 			</File>
 			<File
@@ -331,7 +331,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Session.hpp"
+				RelativePath=".\running_session.hpp"
 				>
 			</File>
 			<File

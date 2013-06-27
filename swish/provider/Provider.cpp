@@ -38,7 +38,7 @@
 #include "Provider.hpp"
 
 #include "KeyboardInteractive.hpp"
-#include "SessionFactory.hpp" // CSession
+#include "SessionFactory.hpp" // running_session
 #include "SftpStream.hpp"
 
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
@@ -141,7 +141,7 @@ public:
 private:
 
     boost::mutex m_session_creation_mutex;
-    boost::shared_ptr<CSession> m_session; ///< SSH/SFTP session
+    boost::shared_ptr<running_session> m_session; ///< SSH/SFTP session
 
     /** @name Fields used for lazy connection. */
     // @{
