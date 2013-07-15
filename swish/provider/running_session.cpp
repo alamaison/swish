@@ -35,7 +35,7 @@
     @endif
 */
 
-#include "Session.hpp"
+#include "running_session.hpp"
 
 #include "swish/remotelimits.h"
 #include "swish/debug.hpp"        // Debug macros
@@ -62,33 +62,58 @@ using boost::system::system_error;
 using boost::system::error_code;
 
 using std::string;
+using std::wstring;
 
-CSession::CSession() : 
-    m_io(0), m_socket(m_io), m_bConnected(false)
+running_session::running_session(const wstring& host, unsigned int port) : 
+    m_io(0), m_socket(m_io)
 {
     _CreateSession();
     ATLASSUME(m_session);
+
+    // Connect to host over TCP/IP
+    _OpenSocketToHost(host.c_str(), port);
+
+    // Start up libssh2 and trade welcome banners, exchange keys,
+    // setup crypto, compression, and MAC layers
+    ATLASSERT(m_socket.native() != INVALID_SOCKET);
+    if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
+    {
+        char *szError;
+        int cchError;
+        libssh2_session_last_error(*this, &szError, &cchError, false);
+    
+        BOOST_THROW_EXCEPTION(std::exception(szError));
+        // Legal to fail here, e.g. server refuses banner/kex
+    }
+    
+    // Tell libssh2 we are blocking
+    libssh2_session_set_blocking(*this, 1);
 }
 
-CSession::~CSession()
+running_session::~running_session()
 {
-    _DestroySftpChannel();
-    _DestroySession();
+    m_sftp_session.reset();
+    if (m_session)
+    {
+        libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
+    }
+    m_session.reset();
+    _CloseSocketToHost();
 }
 
 
-mutex::scoped_lock CSession::aquire_lock()
+mutex::scoped_lock running_session::aquire_lock()
 {
     return mutex::scoped_lock(m_mutex);
 }
 
-CSession::operator LIBSSH2_SESSION*() const
+running_session::operator LIBSSH2_SESSION*() const
 {
     ATLASSUME(m_session);
     return m_session.get();
 }
 
-CSession::operator LIBSSH2_SFTP*() const
+running_session::operator LIBSSH2_SFTP*() const
 {
     ATLASSUME(m_sftp_session);
     return m_sftp_session.get();
@@ -106,7 +131,7 @@ CSession::operator LIBSSH2_SFTP*() const
  *
  * @see http://www.libssh2.org/mail/libssh2-devel-archive-2010-07/0050.shtml
  */
-bool CSession::IsDead()
+bool running_session::IsDead()
 {
     fd_set socket_set;
     FD_ZERO(&socket_set);
@@ -120,46 +145,7 @@ bool CSession::IsDead()
     return rc != 0;
 }
 
-void CSession::Connect(PCWSTR pwszHost, unsigned int uPort) throw(...)
-{
-    if (m_bConnected)
-        BOOST_THROW_EXCEPTION(std::logic_error("Already connected"));
-    
-    // Connect to host over TCP/IP
-    _OpenSocketToHost(pwszHost, uPort);
-
-    // Start up libssh2 and trade welcome banners, exchange keys,
-    // setup crypto, compression, and MAC layers
-    ATLASSERT(m_socket.native() != INVALID_SOCKET);
-    if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
-    {
-        char *szError;
-        int cchError;
-        libssh2_session_last_error(*this, &szError, &cchError, false);
-
-        _ResetSession();
-        _CloseSocketToHost();
-    
-        BOOST_THROW_EXCEPTION(std::exception(szError));
-        // Legal to fail here, e.g. server refuses banner/kex
-    }
-    
-    // Tell libssh2 we are blocking
-    libssh2_session_set_blocking(*this, 1);
-
-    m_bConnected = true;
-}
-
-void CSession::Disconnect()
-{
-    if (!m_bConnected)
-        return;
-
-    libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
-    m_bConnected = false;
-}
-
-void CSession::StartSftp() throw(...)
+void running_session::StartSftp() throw(...)
 {
     _CreateSftpChannel();
 }
@@ -172,7 +158,7 @@ void CSession::StartSftp() throw(...)
 /**
  * Allocate a blocking LIBSSH2_SESSION instance.
  */
-void CSession::_CreateSession() throw(...)
+void running_session::_CreateSession() throw(...)
 {
     // Create a session instance
     m_session = shared_ptr<LIBSSH2_SESSION>(
@@ -181,34 +167,9 @@ void CSession::_CreateSession() throw(...)
 }
 
 /**
- * Free a LIBSSH2_SESSION instance.
- */
-void CSession::_DestroySession() throw()
-{
-    ATLASSUME(m_session);
-    if (m_session)
-    {
-        Disconnect();
-    }
-}
-
-/**
- * Destroy and recreate a LIBSSH2_SESSION instance.
- *
- * A session instance which has been used in a libssh2_session_startup call
- * cannot be reused safely.
- */
-void CSession::_ResetSession() throw(...)
-{
-    _DestroySession();
-    _DestroySftpChannel();
-    _CreateSession();
-}
-
-/**
  * Start up an SFTP channel on this SSH session.
  */
-void CSession::_CreateSftpChannel() throw(...)
+void running_session::_CreateSftpChannel() throw(...)
 {
     ATLASSUME(m_sftp_session == NULL);
 
@@ -231,14 +192,6 @@ void CSession::_CreateSftpChannel() throw(...)
 }
 
 /**
- * Shut down the SFTP channel.
- */
-void CSession::_DestroySftpChannel() throw()
-{
-    m_sftp_session.reset();
-}
-
-/**
  * Creates a socket and connects it to the host.
  *
  * The socket is stored as the member variable @c m_socket. The hostname 
@@ -249,7 +202,7 @@ void CSession::_DestroySftpChannel() throw()
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c _CloseSocketToHost()
  */
-void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
+void running_session::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 {
     ATLASSERT(pwszHost[0] != '\0');
     ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
@@ -280,7 +233,7 @@ void CSession::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
 /**
  * Closes the socket stored in @c m_socket and sets is to @c INVALID_SOCKET.
  */
-void CSession::_CloseSocketToHost() throw()
+void running_session::_CloseSocketToHost() throw()
 {
     m_socket.close();
 }

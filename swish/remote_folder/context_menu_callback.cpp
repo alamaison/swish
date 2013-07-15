@@ -29,7 +29,7 @@
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell_folder/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 
@@ -138,7 +138,7 @@ namespace {
 }
 
 context_menu_callback::context_menu_callback(
-    function<shared_ptr<sftp_provider>(HWND)> provider_factory,
+    function<shared_ptr<sftp_provider>()> provider_factory,
     function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
     : m_provider_factory(provider_factory),
     m_consumer_factory(consumer_factory) {}
@@ -226,7 +226,7 @@ void context_menu_callback::verb(
 namespace {
 
     bool do_invoke_command(
-        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
+        function<shared_ptr<sftp_provider>()> provider_factory,
         function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
         HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
         const wstring& /*arguments*/, int window_mode)
@@ -247,8 +247,8 @@ namespace {
                 // Create SFTP Consumer for this HWNDs lifetime
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
-                shared_ptr<sftp_provider> provider = connection_from_pidl(
-                    format.parent_folder(), hwnd_view);
+                shared_ptr<sftp_provider> provider = session_from_pidl(
+                    format.parent_folder());
                 CSftpDirectory directory(
                     format.parent_folder(), provider, consumer);
 

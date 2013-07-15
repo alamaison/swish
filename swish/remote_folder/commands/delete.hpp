@@ -46,7 +46,7 @@ class Delete
 public:
     Delete(
         boost::function<
-            boost::shared_ptr<swish::provider::sftp_provider>(HWND)
+            boost::shared_ptr<swish::provider::sftp_provider>()
         > provider_factory,
         boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
 
@@ -55,7 +55,7 @@ public:
 
 private:
     boost::function<
-        boost::shared_ptr<swish::provider::sftp_provider>(HWND)
+        boost::shared_ptr<swish::provider::sftp_provider>()
     > m_provider_factory;
     boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
 };

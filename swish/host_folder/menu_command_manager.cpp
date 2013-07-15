@@ -33,6 +33,7 @@
 
 #include "swish/frontend/commands/About.hpp"
 #include "swish/host_folder/commands/Add.hpp"
+#include "swish/host_folder/commands/CloseSession.hpp"
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
 
@@ -55,6 +56,7 @@
 
 using swish::frontend::commands::About;
 using swish::host_folder::commands::Add;
+using swish::host_folder::commands::CloseSession;
 using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
 using swish::nse::Command;
@@ -80,13 +82,6 @@ namespace swish {
 namespace host_folder {
 
 namespace {
-
-// Menu command ID offsets for Explorer menus
-const UINT MENUIDOFFSET_ADD = 1;
-const UINT MENUIDOFFSET_REMOVE = 2;
-const UINT MENUIDOFFSET_LAUNCH_AGENT = 3;
-const UINT MENUIDOFFSET_ABOUT = 4;
-const UINT MENUIDOFFSET_LAST = 5;
 
 typedef std::map<UINT, boost::shared_ptr<swish::nse::Command>>
     menu_id_command_map;
@@ -303,9 +298,11 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
 
     menu_id_command_map tools_menu_commands;
 
-    UINT offset = MENUIDOFFSET_ADD;
+    UINT offset = 0;
     tools_menu_commands[offset++] = make_shared<Add>(view_handle, m_folder);
     tools_menu_commands[offset++] = make_shared<Remove>(view_handle, m_folder);
+    tools_menu_commands[offset++] =
+        make_shared<CloseSession>(view_handle, m_folder);
     tools_menu_commands[offset++] =
         make_shared<LaunchAgent>(view_handle, m_folder);
 

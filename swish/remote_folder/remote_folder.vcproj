@@ -246,6 +246,10 @@
 			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
 			RelativePathToProject=".\swish\provider\provider.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{4795C72C-1ED4-4900-87F6-DB18602D7EF4}"
+			RelativePathToProject=".\swish\connection\connection.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -255,10 +259,6 @@
 			>
 			<File
 				RelativePath=".\columns.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\connection.cpp"
 				>
 			</File>
 			<File
@@ -342,6 +342,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\pidl_connection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\properties.cpp"
 				>
 			</File>
@@ -360,10 +364,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\connection.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\context_menu_callback.hpp"
 				>
 			</File>
@@ -373,6 +373,10 @@
 			</File>
 			<File
 				RelativePath=".\Mode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pidl_connection.hpp"
 				>
 			</File>
 			<File

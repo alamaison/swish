@@ -299,10 +299,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\connection_test.cpp"
-			>
-		</File>
-		<File
 			RelativePath="..\..\swish\pch.cpp"
 			>
 			<FileConfiguration

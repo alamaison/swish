@@ -1,7 +1,7 @@
 /**
     @file
 
-    Factory producing connected, authenticated CSession objects.
+    Factory producing connected, authenticated running_session objects.
 
     @if license
 
@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "Session.hpp"
+#include "running_session.hpp"
 
 #include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
@@ -48,27 +48,27 @@
 class CSessionFactory
 {
 public:
-    static std::auto_ptr<CSession> CreateSftpSession(
+    static std::auto_ptr<running_session> CreateSftpSession(
         const wchar_t* pwszHost, unsigned int uPort, const wchar_t* pwszUser,
         __in ISftpConsumer* pConsumer);
 
 private:
     static void _VerifyHostKey(
-        PCWSTR pwszHost, CSession& session, __in ISftpConsumer *pConsumer);
+        PCWSTR pwszHost, running_session& session, __in ISftpConsumer *pConsumer);
 
     static void _AuthenticateUser(
-        PCWSTR pwszUser, CSession& session, 
+        PCWSTR pwszUser, running_session& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _PasswordAuthentication(
-        const std::string& utf8_username, CSession& session, 
+        const std::string& utf8_username, running_session& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _KeyboardInteractiveAuthentication(
-        const std::string& utf8_username, CSession& session, 
+        const std::string& utf8_username, running_session& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _PublicKeyAuthentication(
-        const std::string& utf8_username, CSession& session, 
+        const std::string& utf8_username, running_session& session, 
         __in ISftpConsumer* pConsumer);
 };

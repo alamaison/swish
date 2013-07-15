@@ -1,11 +1,12 @@
 /**
     @file
 
-    Tests for the SFTP directory listing helper functions.
+    Tests for the pool of SFTP connections.
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,9 +25,8 @@
     @endif
 */
 
-#include "swish/atl.hpp"
-
-#include "swish/remote_folder/connection.hpp"  // Test subject
+#include "swish/connection/session_pool.hpp" // Test subject
+#include "swish/connection/connection_spec.hpp"
 #include "swish/utils.hpp"
 
 #include "test/common_boost/helpers.hpp"
@@ -34,39 +34,35 @@
 #include "test/common_boost/ConsumerStub.hpp"
 
 #include <comet/ptr.h>  // com_ptr
-#include <comet/bstr.h> // bstr_t
 #include <comet/util.h> // thread
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/foreach.hpp>  // BOOST_FOREACH
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 
 #include <algorithm>
 #include <exception>
-#include <string>
 #include <vector>
 
+
 using swish::provider::sftp_provider;
-using swish::remote_folder::CPool;
+using swish::connection::connection_spec;
+using swish::connection::session_pool;
 using swish::utils::Utf8StringToWideString;
 
-using test::OpenSshFixture;
 using test::CConsumerStub;
+using test::OpenSshFixture;
 
 using comet::com_ptr;
 using comet::bstr_t;
 using comet::thread;
 
-using boost::filesystem::path;
 using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 
 using std::exception;
-using std::string;
 using std::vector;
-using std::wstring;
 
 namespace { // private
 
@@ -76,13 +72,12 @@ namespace { // private
     class PoolFixture : public OpenSshFixture
     {
     public:
-        shared_ptr<sftp_provider> GetSession()
+
+        connection_spec get_connection()
         {
-            CPool pool;
-            return pool.GetSession(
-                Utf8StringToWideString(GetHost()).c_str(), 
-                Utf8StringToWideString(GetUser()).c_str(), GetPort(),
-                NULL);
+            return connection_spec(
+                Utf8StringToWideString(GetHost()), 
+                Utf8StringToWideString(GetUser()), GetPort());
         }
 
         com_ptr<ISftpConsumer> Consumer()
@@ -119,26 +114,59 @@ namespace { // private
 BOOST_FIXTURE_TEST_SUITE(pool_tests, PoolFixture)
 
 /**
- * Test a single call to GetSession().
+ * Test the situation where the specified connection is not already in the
+ * pool.
+ *
+ * Ensures a connection specification can create a session and that the
+ * pool reports session status correctly.
  */
-BOOST_AUTO_TEST_CASE( session )
+BOOST_AUTO_TEST_CASE( new_session )
 {
-    shared_ptr<sftp_provider> provider = GetSession();
+    connection_spec spec(get_connection());
+
+    BOOST_CHECK(!session_pool().has_session(spec));
+
+    shared_ptr<sftp_provider> provider = session_pool().pooled_session(spec);
+
+    BOOST_CHECK(session_pool().has_session(spec));
+
     BOOST_CHECK(alive(provider));
 }
 
 /**
- * Test that a second call to GetSession() returns the same instance.
+ * Test that creating a session does not affect the status of unrelated
+ * connections.
  */
-BOOST_AUTO_TEST_CASE( twice )
+BOOST_AUTO_TEST_CASE( unrelated_unaffected_by_creation )
 {
-    shared_ptr<sftp_provider> first_provider = GetSession();
-    BOOST_CHECK(alive(first_provider));
+    connection_spec unrelated_spec(L"Unrelated", L"Spec", 123);
 
-    shared_ptr<sftp_provider> second_provider = GetSession();
+    BOOST_CHECK(!session_pool().has_session(unrelated_spec));
+
+    shared_ptr<sftp_provider> provider =
+        session_pool().pooled_session(get_connection());
+
+    BOOST_CHECK(!session_pool().has_session(unrelated_spec));
+}
+
+/**
+ * Test that the pool reuses existing sessions.
+ */
+BOOST_AUTO_TEST_CASE( existing_session )
+{
+    connection_spec spec(get_connection());
+
+    shared_ptr<sftp_provider> first_provider =
+        session_pool().pooled_session(spec);
+
+    shared_ptr<sftp_provider> second_provider = 
+        session_pool().pooled_session(spec);
+
+    BOOST_CHECK(second_provider == first_provider);
+
     BOOST_CHECK(alive(second_provider));
 
-    BOOST_REQUIRE(second_provider == first_provider);
+    BOOST_CHECK(session_pool().has_session(spec));
 }
 
 const int THREAD_COUNT = 30;
@@ -155,15 +183,29 @@ private:
         try
         {
             {
-                shared_ptr<sftp_provider> first_provider = 
-                    m_fixture->GetSession();
+                connection_spec spec(m_fixture->get_connection());
+
+                // This first call may or may not return running depending on
+                // whether it is on the first thread scheduled, so we don't test
+                // its value, just that it succeeds.
+                session_pool().has_session(spec);
+
+                shared_ptr<sftp_provider> first_provider =
+                    session_pool().pooled_session(spec);
+
+                // However, by this point it *must* be running
+                BOOST_CHECK(session_pool().has_session(spec));
+
                 BOOST_CHECK(m_fixture->alive(first_provider));
 
                 shared_ptr<sftp_provider> second_provider = 
-                    m_fixture->GetSession();
+                    session_pool().pooled_session(spec);
+
+                BOOST_CHECK(session_pool().has_session(spec));
+
                 BOOST_CHECK(m_fixture->alive(second_provider));
 
-                BOOST_REQUIRE(second_provider == first_provider);
+                BOOST_CHECK(second_provider == first_provider);
             }
         }
         catch (const std::exception& e)
@@ -180,7 +222,7 @@ private:
 typedef use_session_thread<PoolFixture> test_thread;
 
 /**
- * Retrieve an prod a session from many threads.
+ * Retrieve and prod a session from many threads.
  */
 BOOST_AUTO_TEST_CASE( threaded )
 {
@@ -198,4 +240,20 @@ BOOST_AUTO_TEST_CASE( threaded )
     }
 }
 
+BOOST_AUTO_TEST_CASE( remove_session )
+{
+    connection_spec spec(get_connection());
+
+    shared_ptr<sftp_provider> provider = session_pool().pooled_session(spec);
+
+    session_pool().remove_session(spec);
+
+    BOOST_CHECK(!session_pool().has_session(spec));
+
+    // Even though we removed the session from the pool, existing
+    // references should still be alive
+    BOOST_CHECK(alive(provider));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+

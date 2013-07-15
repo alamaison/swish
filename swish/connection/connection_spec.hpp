@@ -1,12 +1,11 @@
 /**
     @file
 
-    Pool of reusuable SFTP connections.
+    Specify a connection.
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,58 +24,47 @@
     @endif
 */
 
-#ifndef SWISH_SHELL_FOLDER_POOL_HPP
-#define SWISH_SHELL_FOLDER_POOL_HPP
+#ifndef SWISH_CONNECTION_CONNECTION_SPEC_HPP
+#define SWISH_CONNECTION_CONNECTION_SPEC_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 
-#include <winapi/shell/pidl.hpp> // apidl_t
-
-#include <comet/threading.h> // critical_section
-
+#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
 #include <boost/shared_ptr.hpp>
 
 #include <string>
-#include <map>
-
 
 namespace swish {
-namespace remote_folder {
-
-class CPool
-{
-public:
-
-    boost::shared_ptr<swish::provider::sftp_provider> GetSession(
-        const std::wstring& host, const std::wstring& user, int port,
-        HWND hwnd);
-
-private:
-    static comet::critical_section m_cs;
-    static std::map<
-        std::wstring,
-        boost::shared_ptr<swish::provider::sftp_provider>
-    > m_connections;
-};
+namespace connection {
 
 
 /**
- * Creates an SFTP connection.
+ * Represents specification for a connection to an SFTP server.
  *
- * The connection is created from the information stored in this
- * folder's PIDL, @a pidl, and the window handle to be used as the owner
- * window for any user interaction. This window handle can be NULL but (in order
- * to enforce good UI etiquette - we shouldn't attempt to interact with the user
- * if Explorer isn't expecting us to) any operation which requires user 
- * interaction should quietly fail.  
- *
- * @param hwndUserInteraction  A handle to the window which should be used
- *                             as the parent window for any user interaction.
- * @throws ATL exceptions on failure.
+ * Instances of this class are just recipes for connecting, they are *not*
+ * the running connections themselves.  Running connections are called
+ * sessions and can be created and queried via this class.
  */
-boost::shared_ptr<swish::provider::sftp_provider> connection_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl, HWND hwnd);
+class connection_spec
+{
+public:
+
+    connection_spec(
+        const std::wstring& host, const std::wstring& user, int port);
+
+    /**
+     * Returns a new SFTP session based on this specification.
+     */
+    boost::shared_ptr<swish::provider::sftp_provider> create_session() const;
+
+    bool operator<(const connection_spec& other) const;
+
+private:
+    std::wstring m_host;
+    std::wstring m_user;
+    int m_port;
+};
 
 /**
  * Interface for connection making logic.

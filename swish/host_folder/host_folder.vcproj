@@ -256,6 +256,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\host_itemid_connection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.cpp"
 				>
 			</File>
@@ -318,6 +322,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\extract_icon.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\host_itemid_connection.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.hpp"
 				>
 			</File>
@@ -327,6 +339,10 @@
 			</File>
 			<File
 				RelativePath=".\menu_command_manager.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\overlay_icon.hpp"
 				>
 			</File>
 			<File
@@ -347,6 +363,14 @@
 			</File>
 			<File
 				RelativePath=".\commands\Add.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\CloseSession.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\CloseSession.hpp"
 				>
 			</File>
 			<File

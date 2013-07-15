@@ -38,7 +38,7 @@
 #include "swish/remote_folder/columns.hpp" // property_key_from_column_index
 #include "swish/remote_folder/commands/commands.hpp"
                                            // remote_folder_command_provider
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 #include "swish/remote_folder/properties.hpp" // property_from_pidl
@@ -70,7 +70,7 @@ using swish::drop_target::DropUI;
 using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::remote_folder::commands::remote_folder_command_provider;
-using swish::remote_folder::connection_from_pidl;
+using swish::remote_folder::session_from_pidl;
 using swish::remote_folder::context_menu_callback;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::CViewCallback;
@@ -176,8 +176,7 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = session_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         // Create directory handler and get listing as PIDL enumeration
@@ -425,8 +424,7 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = session_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         // Rename file
@@ -628,7 +626,7 @@ CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 {
     TRACE("Request: IExplorerCommandProvider");
     return remote_folder_command_provider(
-        hwnd, root_pidl(), bind(&connection_from_pidl, root_pidl(), hwnd),
+        hwnd, root_pidl(), bind(&session_from_pidl, root_pidl()),
         bind(m_consumer_factory, hwnd)).get();
 }
 
@@ -787,8 +785,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = session_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         return new swish::shell_folder::CSnitchingDataObject(
@@ -817,8 +814,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
     try
     {
-        shared_ptr<sftp_provider> provider =
-            connection_from_pidl(root_pidl(), hwnd);
+        shared_ptr<sftp_provider> provider = session_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
         optional< window<wchar_t> > owner;
@@ -868,6 +864,6 @@ HRESULT CRemoteFolder::MenuCallback(
     HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     context_menu_callback callback(
-        bind(&connection_from_pidl, root_pidl(), _1), m_consumer_factory);
+        bind(&session_from_pidl, root_pidl()), m_consumer_factory);
     return callback(hwnd, pdtobj, uMsg, wParam, lParam);
 }
