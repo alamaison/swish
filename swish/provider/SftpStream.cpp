@@ -137,14 +137,14 @@ CString GetSftpErrorMessage(ULONG uError)
  * In the case that the last SSH error is an SFTP error it returns the SFTP
  * error message in preference.
  */
-CString GetLastErrorMessage(const running_session& session)
+CString GetLastErrorMessage(running_session& session)
 {
     int nErr; PSTR pszErr; int cchErr;
 
-    nErr = libssh2_session_last_error(session.get_session(), &pszErr, &cchErr, false);
+    nErr = libssh2_session_last_error(session.get_raw_session(), &pszErr, &cchErr, false);
     if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
     {
-        ULONG uErr = libssh2_sftp_last_error(session.get_sftp_channel());
+        ULONG uErr = libssh2_sftp_last_error(session.get_raw_sftp_channel());
         return GetSftpErrorMessage(uErr);
     }
     else // A non-SFTP error occurred
@@ -219,13 +219,13 @@ HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
  */
 HRESULT last_storage_error(running_session& session)
 {
-    switch (libssh2_session_last_error(session.get_session(), NULL, NULL, false))
+    switch (libssh2_session_last_error(session.get_raw_session(), NULL, NULL, false))
     {
     case LIBSSH2_ERROR_NONE:
         return S_OK;
     case LIBSSH2_ERROR_SFTP_PROTOCOL:
         return sftp_error_to_storage_error(
-            libssh2_sftp_last_error(session.get_sftp_channel()));
+            libssh2_sftp_last_error(session.get_raw_sftp_channel()));
     case LIBSSH2_ERROR_ALLOC:
         return STG_E_INSUFFICIENTMEMORY;
     default:
@@ -267,7 +267,7 @@ CSftpStream::CSftpStream(
     mutex::scoped_lock lock = m_session->aquire_lock();
 
     m_handle = shared_ptr<LIBSSH2_SFTP_HANDLE>(
-        libssh2_sftp_open(m_session->get_sftp_channel(), file.c_str(), libssh2_flags, mode),
+        libssh2_sftp_open(m_session->get_raw_sftp_channel(), file.c_str(), libssh2_flags, mode),
         safe_libssh2_sftp_close_handle);
     if (!m_handle)
     {

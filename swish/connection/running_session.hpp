@@ -38,16 +38,16 @@
 #ifndef SWISH_CONNECTION_RUNNING_SESSION_HPP
 #define SWISH_CONNECTION_RUNNING_SESSION_HPP
 
+#include <ssh/session.hpp>
+#include <ssh/sftp.hpp>
+
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
 #include <boost/noncopyable.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/thread/mutex.hpp>
 
 #include <string>
-
-typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
-typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
-
 
 namespace swish {
 namespace connection {
@@ -60,33 +60,27 @@ public:
      * Connect to host server and start new SSH connection on given port.
      */
     running_session(const std::wstring& host, unsigned int port);
-    ~running_session();
 
     boost::mutex::scoped_lock aquire_lock();
 
-    void StartSftp() throw(...);
     bool is_dead();
 
-    LIBSSH2_SESSION* get_session() const { return m_session.get(); }
-    LIBSSH2_SFTP* get_sftp_channel() const { return m_sftp_session.get(); }
-    boost::shared_ptr<LIBSSH2_SESSION> get_session_shared() const
-    { return m_session; };
-    boost::shared_ptr<LIBSSH2_SFTP> get_sftp_channel_shared() const
-    { return m_sftp_session; };
+    void StartSftp();
+
+    LIBSSH2_SESSION* get_raw_session()
+    { return get_session().get().get(); }
+    LIBSSH2_SFTP* get_raw_sftp_channel()
+    { return get_sftp_channel().get().get(); }
+
+    ssh::session get_session() const;
+    ssh::sftp::sftp_channel get_sftp_channel() const;
 
 private:
     boost::mutex m_mutex;
     boost::asio::io_service m_io; ///< Boost IO system
     boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
-    boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
-    
-    void open_socket_to_host(const std::wstring& host, unsigned int port);
-    void _CloseSocketToHost() throw();
-
-    void _CreateSession() throw(...);
-
-    void _CreateSftpChannel() throw(...);
+    ssh::session m_session;
+    boost::optional<ssh::sftp::sftp_channel> m_sftp_channel;
 };
 
 }} // namespace swish::connection

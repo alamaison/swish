@@ -128,7 +128,7 @@ void CSessionFactory::_VerifyHostKey(
 {
     ATLASSUME(pConsumer);
 
-    ssh::session sess(session.get_session_shared());
+    ssh::session sess(session.get_session());
 
     bstr_t host = pwszHost;
     host_key key = sess.hostkey();
@@ -145,7 +145,8 @@ void CSessionFactory::_VerifyHostKey(
     create_directories(known_hosts_path.parent_path());
     ofstream(known_hosts_path, std::ios::app);
 
-    openssh_knownhost_collection hosts(session.get_session_shared(), known_hosts_path);
+    openssh_knownhost_collection hosts(
+        session.get_session().get(), known_hosts_path);
 
     find_result result = hosts.find(host.s_str(), key);
     if (result.mismatch())
@@ -197,7 +198,7 @@ void CSessionFactory::_AuthenticateUser(
 
     // Check which authentication methods are available
     char *szAuthList = libssh2_userauth_list(
-        session.get_session(), utf8_username.data(), utf8_username.size());
+        session.get_raw_session(), utf8_username.data(), utf8_username.size());
     if (!szAuthList || *szAuthList == '\0')
     {
         // If empty, server refused to let user connect
@@ -260,14 +261,14 @@ HRESULT CSessionFactory::_PasswordAuthentication(
         
         string utf8_password = WideStringToUtf8String(password.w_str());
         ret = libssh2_userauth_password_ex(
-            session.get_session(), utf8_username.data(), utf8_username.size(),
+            session.get_raw_session(), utf8_username.data(), utf8_username.size(),
             utf8_password.data(), utf8_password.size(),
             NULL);
         // TODO: handle password change callback here
     } while (ret != 0);
 
     ATLASSERT(SUCCEEDED(hr)); ATLASSERT(ret == 0);
-    ATLASSERT(libssh2_userauth_authenticated(session.get_session())); // Double-check
+    ATLASSERT(libssh2_userauth_authenticated(session.get_raw_session())); // Double-check
     return hr;
 }
 
@@ -292,16 +293,16 @@ HRESULT CSessionFactory::_KeyboardInteractiveAuthentication(
     // pointer from the session and use it to invoke the handler instance.
     // If the user cancels the operation, our callback should throw an
     // E_ABORT exception which we catch here.
-    *libssh2_session_abstract(session.get_session()) = &handler;
+    *libssh2_session_abstract(session.get_raw_session()) = &handler;
     int rc = libssh2_userauth_keyboard_interactive_ex(
-        session.get_session(), utf8_username.data(), utf8_username.size(),
+        session.get_raw_session(), utf8_username.data(), utf8_username.size(),
         &(CKeyboardInteractive::OnKeyboardInteractive));
     
     // Check for two possible types of failure
     if (FAILED(handler.GetErrorState()))
         return handler.GetErrorState();
 
-    ATLASSERT(rc || libssh2_userauth_authenticated(session.get_session())); // Double-check
+    ATLASSERT(rc || libssh2_userauth_authenticated(session.get_raw_session())); // Double-check
     return (rc == 0) ? S_OK : E_FAIL;
 }
 
@@ -331,12 +332,12 @@ namespace {
 
             // TODO: unlock public key using passphrase
             int rc = libssh2_userauth_publickey_fromfile_ex(
-                session.get_session(), utf8_username.data(), utf8_username.size(),
+                session.get_raw_session(), utf8_username.data(), utf8_username.size(),
                 publicKey.c_str(), privateKey.c_str(), "");
             if (rc)
                 return E_ABORT;
 
-            ATLASSERT(libssh2_userauth_authenticated(session.get_session())); // Double-check
+            ATLASSERT(libssh2_userauth_authenticated(session.get_raw_session())); // Double-check
         }
         WINAPI_COM_CATCH();
 
@@ -358,7 +359,7 @@ HRESULT CSessionFactory::_PublicKeyAuthentication(
 
     // OK, now lets do it the nice new way using agents.
 
-    ssh::session session(yukky_session.get_session_shared());
+    ssh::session session(yukky_session.get_session());
 
     try
     {

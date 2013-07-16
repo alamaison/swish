@@ -42,6 +42,9 @@
 #include "swish/port_conversion.hpp" // port_to_string
 #include "swish/utils.hpp" // WideStringToUtf8String
 
+#include <ssh/session.hpp>
+#include <ssh/sftp.hpp> // sftp_channel
+
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
@@ -54,8 +57,12 @@
 using swish::port_to_string;
 using swish::utils::WideStringToUtf8String;
 
-using boost::asio::ip::tcp;
+using ssh::session;
+using ssh::sftp::sftp_channel;
+
 using boost::asio::error::host_not_found;
+using boost::asio::io_service;
+using boost::asio::ip::tcp;
 using boost::mutex;
 using boost::shared_ptr;
 using boost::system::get_system_category;
@@ -69,42 +76,77 @@ using std::wstring;
 namespace swish {
 namespace connection {
 
+namespace {
+    
+    /**
+     * Connect a socket to the given port on the given host.
+     *
+     * @throws  A boost::system::system_error if there is a failure.
+     */
+    void connect_socket_to_host(
+        tcp::socket& socket, const wstring& host, unsigned int port,
+        io_service& io)
+    {
+        assert(!host.empty());
+        assert(host[0] != L'\0');
+
+        // Convert host address to a UTF-8 string
+        string host_name = WideStringToUtf8String(host);
+
+        tcp::resolver resolver(io);
+        typedef tcp::resolver::query Lookup;
+        Lookup query(host_name, port_to_string(port));
+
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+        tcp::resolver::iterator end;
+
+        error_code error = host_not_found;
+        while (error && endpoint_iterator != end)
+        {
+            socket.close();
+            socket.connect(*endpoint_iterator++, error);
+        }
+        if (error)
+            BOOST_THROW_EXCEPTION(system_error(error));
+
+        assert(socket.is_open());
+        assert(socket.available() == 0);
+    }
+
+    // We have to have this weird function because Boost.ASIO doesn't
+    // support Boost.Move rvalue-emulation.
+    //
+    // Ideally, connect_socket_to_host would return the connected sockets 
+    // so could be used in the running_session initialiser list below.  And
+    // the the initialiser for m_session would have a valid socket to use.
+    //
+    // But as we can't return the valid socket, we have to connect it *during*
+    // the m_session initialisation, *after* the m_socket initialisation. Yuk!
+    ssh::session session_on_socket(
+        tcp::socket& socket, const wstring& host, unsigned int port,
+        io_service& io, const string& disconnection_message)
+    {
+        connect_socket_to_host(socket, host, port, io);
+        return ssh::session(socket.native(), disconnection_message);
+    }
+}
+
 running_session::running_session(const wstring& host, unsigned int port) : 
-    m_io(0), m_socket(m_io)
+    m_io(0), m_socket(m_io),
+    m_session(
+        session_on_socket(m_socket, host, port, m_io, "Swish says goodbye."))
+{}
+
+
+session running_session::get_session() const
 {
-    _CreateSession();
-    ATLASSUME(m_session);
-
-    // Connect to host over TCP/IP
-    open_socket_to_host(host, port);
-
-    // Start up libssh2 and trade welcome banners, exchange keys,
-    // setup crypto, compression, and MAC layers
-    if (libssh2_session_startup(get_session(), static_cast<int>(m_socket.native())) != 0)
-    {
-        char *szError;
-        int cchError;
-        libssh2_session_last_error(get_session(), &szError, &cchError, false);
-    
-        BOOST_THROW_EXCEPTION(std::exception(szError));
-        // Legal to fail here, e.g. server refuses banner/kex
-    }
-    
-    // Tell libssh2 we are blocking
-    libssh2_session_set_blocking(get_session(), 1);
+    return m_session;
 }
 
-running_session::~running_session()
+sftp_channel running_session::get_sftp_channel() const
 {
-    m_sftp_session.reset();
-    if (m_session)
-    {
-        libssh2_session_disconnect(m_session.get(), "Swish says goodbye.");
-    }
-    m_session.reset();
-    _CloseSocketToHost();
+    return *m_sftp_channel;
 }
-
 
 mutex::scoped_lock running_session::aquire_lock()
 {
@@ -137,98 +179,8 @@ bool running_session::is_dead()
     return rc != 0;
 }
 
-void running_session::StartSftp() throw(...)
+void running_session::StartSftp()
 {
-    _CreateSftpChannel();
+    m_sftp_channel = sftp_channel(get_session());
 }
-
-
-/*----------------------------------------------------------------------------*
- * Private methods
- *----------------------------------------------------------------------------*/
-
-/**
- * Allocate a blocking LIBSSH2_SESSION instance.
- */
-void running_session::_CreateSession() throw(...)
-{
-    // Create a session instance
-    m_session = shared_ptr<LIBSSH2_SESSION>(
-        libssh2_session_init(), libssh2_session_free);
-    ATLENSURE_THROW( m_session, E_FAIL );
-}
-
-/**
- * Start up an SFTP channel on this SSH session.
- */
-void running_session::_CreateSftpChannel() throw(...)
-{
-    ATLASSUME(m_sftp_session == NULL);
-
-    if (libssh2_userauth_authenticated(get_session()) == 0)
-        AtlThrow(E_UNEXPECTED); // We must be authenticated first
-
-    LIBSSH2_SFTP* sftp = libssh2_sftp_init(get_session()); // Start up SFTP session
-    if (!sftp)
-    {
-#ifdef _DEBUG
-        char *szError;
-        int cchError;
-        int rc = libssh2_session_last_error(get_session(), &szError, &cchError, false);
-        ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
-#endif
-        AtlThrow(E_FAIL);
-    }
-    
-    m_sftp_session = shared_ptr<LIBSSH2_SFTP>(sftp, libssh2_sftp_shutdown);
-}
-
-/**
- * Creates a socket and connects it to the host.
- *
- * The socket is stored as the member variable @c m_socket. The hostname 
- * and port used are passed as parameters.
- *
- * @throws  A boost::system::system_error if there is a failure.
- *
- * @remarks The socket should be cleaned up when no longer needed using
- *          @c _CloseSocketToHost()
- */
-void running_session::open_socket_to_host(
-    const wstring& host, unsigned int port)
-{
-    assert(!host.empty());
-    assert(host[0] != L'\0');
-
-    // Convert host address to a UTF-8 string
-    string host_name = WideStringToUtf8String(host);
-
-    tcp::resolver resolver(m_io);
-    typedef tcp::resolver::query Lookup;
-    Lookup query(host_name, port_to_string(port));
-
-    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-    tcp::resolver::iterator end;
-
-    error_code error = host_not_found;
-    while (error && endpoint_iterator != end)
-    {
-        m_socket.close();
-        m_socket.connect(*endpoint_iterator++, error);
-    }
-    if (error)
-        BOOST_THROW_EXCEPTION(system_error(error));
-
-    assert(m_socket.is_open());
-    assert(m_socket.available() == 0);
-}
-
-/**
- * Closes the socket stored in @c m_socket and sets is to @c INVALID_SOCKET.
- */
-void running_session::_CloseSocketToHost() throw()
-{
-    m_socket.close();
-}
-
 }} // namespace swish::connection

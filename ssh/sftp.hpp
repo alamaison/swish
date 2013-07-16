@@ -386,15 +386,6 @@ public:
         m_session(session),
         m_sftp(detail::libssh2::sftp::init(session.get())) {}
 
-    /**
-     * Attach to an existing, open SFTP channel.
-     */
-    sftp_channel(
-        ::ssh::session session, boost::shared_ptr<LIBSSH2_SFTP> sftp)
-        :
-        m_session(session),
-        m_sftp(sftp) {}
-
     boost::shared_ptr<LIBSSH2_SFTP> get() { return m_sftp; }
     ssh::session session() { return m_session; }
 
