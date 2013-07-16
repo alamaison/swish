@@ -96,20 +96,29 @@ private:
     int m_error_code;
 };
 
-/**
- * Last error encountered by the session as an exception.
- */
-inline ssh_error last_error(boost::shared_ptr<LIBSSH2_SESSION> session)
-{
-    char* message_buf = NULL; // read-only reference
-    int message_len = 0; // len not including NULL-term
-    int err = libssh2_session_last_error(
-        session.get(), &message_buf, &message_len, false);
+namespace detail {
 
-    assert(err && "throwing success!");
+    /**
+     * Last error encountered by the session as an exception.
+     */
+    inline ssh_error last_error(LIBSSH2_SESSION* session)
+    {
+        char* message_buf = NULL; // read-only reference
+        int message_len = 0; // len not including NULL-term
+        int err = libssh2_session_last_error(
+            session, &message_buf, &message_len, false);
 
-    return ssh_error(message_buf, message_len, err);
-}
+        assert(err && "throwing success!");
+
+        return ssh_error(message_buf, message_len, err);
+    }
+
+    inline ssh_error last_error(boost::shared_ptr<LIBSSH2_SESSION> session)
+    {
+        return last_error(session.get());
+    }
+
+} // namespace detail
 
 } // namespace ssh
 

@@ -80,7 +80,7 @@ namespace detail {
         LIBSSH2_KNOWNHOSTS* hosts = libssh2_knownhost_init(session.get());
         if (!hosts)
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(session) <<
+                ssh::detail::last_error(session) <<
                 boost::errinfo_api_function("libssh2_knownhost_init"));
 
         return boost::shared_ptr<LIBSSH2_KNOWNHOSTS>(
@@ -110,7 +110,7 @@ namespace detail {
                 m_hosts.get(), entry.data(), entry.length(), TYPE);
             if (rc != 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::last_error(m_session) <<
+                    ssh::detail::last_error(m_session) <<
                     boost::errinfo_api_function("libssh2_knownhost_readline"));
         }
 
@@ -199,7 +199,7 @@ namespace detail {
         if (rc < 0)
         {
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(session) <<
+                ssh::detail::last_error(session) <<
                 boost::errinfo_api_function("libssh2_knownhost_get"));
         }
         
@@ -233,7 +233,7 @@ namespace detail {
             key.data(), key.length(), type, &host);
         if (rc)
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(session) <<
+                ssh::detail::last_error(session) <<
                 boost::errinfo_api_function("libssh2_knownhost_add"));
 
         return host;
@@ -310,7 +310,7 @@ public:
         assert(required_len == buf.size() - 1);
         if (rc != 0)
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(m_session) <<
+                ssh::detail::last_error(m_session) <<
                 boost::errinfo_api_function("libssh2_knownhost_writeline"));
 
         // Return line excluding '\n' and NULL-terminator
@@ -428,7 +428,7 @@ public:
         int rc = libssh2_knownhost_del(it.m_hosts.get(), it.m_pos);
         if (rc)
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(it.m_session) <<
+                ssh::detail::last_error(it.m_session) <<
                 boost::errinfo_api_function("libssh2_knownhost_del"));
 
         return next;
@@ -564,7 +564,7 @@ public:
 
         default:
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(m_session) <<
+                ssh::detail::last_error(m_session) <<
                 boost::errinfo_api_function("libssh2_knownhost_check"));
         }
     }

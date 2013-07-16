@@ -169,7 +169,7 @@ namespace detail {
         const char* path=NULL, size_t path_len=0U)
     {
         ::ssh::ssh_error error =
-            ::ssh::last_error(session);
+            ::ssh::detail::last_error(session);
 
         if (error.error_code() == LIBSSH2_ERROR_SFTP_PROTOCOL)
         {
@@ -213,7 +213,7 @@ namespace detail {
             LIBSSH2_SFTP* sftp = libssh2_sftp_init(session.get());
             if (!sftp)
                 BOOST_THROW_EXCEPTION(
-                    ssh::last_error(session) <<
+                    ssh::detail::last_error(session) <<
                     boost::errinfo_api_function("libssh2_sftp_init"));
 
             return boost::shared_ptr<LIBSSH2_SFTP>(

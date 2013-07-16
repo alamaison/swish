@@ -73,7 +73,7 @@ namespace {
             session.get(), &data, &data_len, input.data(), input.size());
         if (rc)
             BOOST_THROW_EXCEPTION(
-                ssh::last_error(session) <<
+                ssh::detail::last_error(session) <<
                 boost::errinfo_api_function("libssh2_base64_decode"));
 
         string out(data, data_len);

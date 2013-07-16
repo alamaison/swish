@@ -58,21 +58,6 @@
 namespace ssh {
 
 namespace detail {
-    
-    /**
-     * Last error encountered by the session as an exception.
-     */
-    inline ssh_error last_error(LIBSSH2_SESSION* session)
-    {
-        char* message_buf = NULL; // read-only reference
-        int message_len = 0; // len not including NULL-term
-        int err = libssh2_session_last_error(
-            session, &message_buf, &message_len, false);
-
-        assert(err && "throwing success!");
-
-        return ssh_error(message_buf, message_len, err);
-    }
 
     namespace libssh2 {
     namespace session {
@@ -99,8 +84,6 @@ namespace detail {
             int rc = libssh2_session_startup(session, socket);
             if (rc != 0)
             {
-                // using low level (raw pointer) version of last_error because
-                // the higher-level session object doesn't exist yet
                 BOOST_THROW_EXCEPTION(
                     last_error(session) <<
                     boost::errinfo_api_function("libssh2_session_startup"));
@@ -139,7 +122,7 @@ namespace detail {
                 passwd_change_cb);
             if (rc != 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::last_error(session) <<
+                    last_error(session) <<
                     boost::errinfo_api_function(
                         "libssh2_userauth_password_ex"));
         }
@@ -157,7 +140,7 @@ namespace detail {
                 private_key_path, passphrase);
             if (rc != 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::last_error(session) <<
+                    last_error(session) <<
                     boost::errinfo_api_function(
                         "libssh2_userauth_publickey_fromfile_ex"));
         }
