@@ -35,9 +35,11 @@
     @endif
 */
 
-#pragma once
+#ifndef SWISH_CONNECTION_RUNNING_SESSION_HPP
+#define SWISH_CONNECTION_RUNNING_SESSION_HPP
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/thread/mutex.hpp>
 
@@ -50,7 +52,7 @@ typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
 namespace swish {
 namespace connection {
 
-class running_session
+class running_session : private boost::noncopyable
 {
 public:
 
@@ -58,28 +60,28 @@ public:
      * Connect to host server and start new SSH connection on given port.
      */
     running_session(const std::wstring& host, unsigned int port);
-
     ~running_session();
+
     boost::mutex::scoped_lock aquire_lock();
-    operator LIBSSH2_SESSION*() const;
-    operator LIBSSH2_SFTP*() const;
 
     void StartSftp() throw(...);
-    bool IsDead();
+    bool is_dead();
 
-    boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
-    boost::shared_ptr<LIBSSH2_SFTP> sftp() { return m_sftp_session; }
+    LIBSSH2_SESSION* get_session() const { return m_session.get(); }
+    LIBSSH2_SFTP* get_sftp_channel() const { return m_sftp_session.get(); }
+    boost::shared_ptr<LIBSSH2_SESSION> get_session_shared() const
+    { return m_session; };
+    boost::shared_ptr<LIBSSH2_SFTP> get_sftp_channel_shared() const
+    { return m_sftp_session; };
+
 private:
     boost::mutex m_mutex;
     boost::asio::io_service m_io; ///< Boost IO system
     boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
     boost::shared_ptr<LIBSSH2_SESSION> m_session;   ///< SSH session
     boost::shared_ptr<LIBSSH2_SFTP> m_sftp_session;  ///< SFTP subsystem session
-
-    running_session(const running_session& session); // Intentionally not implemented
-    running_session& operator=(const running_session& pidl); // Intentionally not impl
     
-    void _OpenSocketToHost(const wchar_t* pszHost, unsigned int uPort);
+    void open_socket_to_host(const std::wstring& host, unsigned int port);
     void _CloseSocketToHost() throw();
 
     void _CreateSession() throw(...);
@@ -88,3 +90,5 @@ private:
 };
 
 }} // namespace swish::connection
+
+#endif

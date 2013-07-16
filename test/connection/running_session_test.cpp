@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( connect )
 {
     running_session session(
         Utf8StringToWideString(GetHost()), GetPort());
-    BOOST_CHECK(!session.IsDead());
+    BOOST_CHECK(!session.is_dead());
 }
 
 BOOST_AUTO_TEST_CASE( multiple_connections )

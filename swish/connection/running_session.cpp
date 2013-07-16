@@ -48,6 +48,7 @@
 #include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <cassert>
 #include <string>
 
 using swish::port_to_string;
@@ -75,23 +76,22 @@ running_session::running_session(const wstring& host, unsigned int port) :
     ATLASSUME(m_session);
 
     // Connect to host over TCP/IP
-    _OpenSocketToHost(host.c_str(), port);
+    open_socket_to_host(host, port);
 
     // Start up libssh2 and trade welcome banners, exchange keys,
     // setup crypto, compression, and MAC layers
-    ATLASSERT(m_socket.native() != INVALID_SOCKET);
-    if (libssh2_session_startup(*this, static_cast<int>(m_socket.native())) != 0)
+    if (libssh2_session_startup(get_session(), static_cast<int>(m_socket.native())) != 0)
     {
         char *szError;
         int cchError;
-        libssh2_session_last_error(*this, &szError, &cchError, false);
+        libssh2_session_last_error(get_session(), &szError, &cchError, false);
     
         BOOST_THROW_EXCEPTION(std::exception(szError));
         // Legal to fail here, e.g. server refuses banner/kex
     }
     
     // Tell libssh2 we are blocking
-    libssh2_session_set_blocking(*this, 1);
+    libssh2_session_set_blocking(get_session(), 1);
 }
 
 running_session::~running_session()
@@ -111,18 +111,6 @@ mutex::scoped_lock running_session::aquire_lock()
     return mutex::scoped_lock(m_mutex);
 }
 
-running_session::operator LIBSSH2_SESSION*() const
-{
-    ATLASSUME(m_session);
-    return m_session.get();
-}
-
-running_session::operator LIBSSH2_SFTP*() const
-{
-    ATLASSUME(m_sftp_session);
-    return m_sftp_session.get();
-}
-
 /**
  * Has the connection broken since we connected?
  *
@@ -135,7 +123,7 @@ running_session::operator LIBSSH2_SFTP*() const
  *
  * @see http://www.libssh2.org/mail/libssh2-devel-archive-2010-07/0050.shtml
  */
-bool running_session::IsDead()
+bool running_session::is_dead()
 {
     fd_set socket_set;
     FD_ZERO(&socket_set);
@@ -177,16 +165,16 @@ void running_session::_CreateSftpChannel() throw(...)
 {
     ATLASSUME(m_sftp_session == NULL);
 
-    if (libssh2_userauth_authenticated(*this) == 0)
+    if (libssh2_userauth_authenticated(get_session()) == 0)
         AtlThrow(E_UNEXPECTED); // We must be authenticated first
 
-    LIBSSH2_SFTP* sftp = libssh2_sftp_init(*this); // Start up SFTP session
+    LIBSSH2_SFTP* sftp = libssh2_sftp_init(get_session()); // Start up SFTP session
     if (!sftp)
     {
 #ifdef _DEBUG
         char *szError;
         int cchError;
-        int rc = libssh2_session_last_error(*this, &szError, &cchError, false);
+        int rc = libssh2_session_last_error(get_session(), &szError, &cchError, false);
         ATLTRACE("libssh2_sftp_init failed (%d): %s", rc, szError);
 #endif
         AtlThrow(E_FAIL);
@@ -206,17 +194,18 @@ void running_session::_CreateSftpChannel() throw(...)
  * @remarks The socket should be cleaned up when no longer needed using
  *          @c _CloseSocketToHost()
  */
-void running_session::_OpenSocketToHost(PCWSTR pwszHost, unsigned int uPort)
+void running_session::open_socket_to_host(
+    const wstring& host, unsigned int port)
 {
-    ATLASSERT(pwszHost[0] != '\0');
-    ATLASSERT(uPort >= MIN_PORT && uPort <= MAX_PORT);
+    assert(!host.empty());
+    assert(host[0] != L'\0');
 
     // Convert host address to a UTF-8 string
-    string host_name = WideStringToUtf8String(pwszHost);
+    string host_name = WideStringToUtf8String(host);
 
     tcp::resolver resolver(m_io);
     typedef tcp::resolver::query Lookup;
-    Lookup query(host_name, port_to_string(uPort));
+    Lookup query(host_name, port_to_string(port));
 
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
     tcp::resolver::iterator end;
