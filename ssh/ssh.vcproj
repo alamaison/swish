@@ -110,10 +110,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\exception.hpp"
-			>
-		</File>
-		<File
 			RelativePath=".\host_key.hpp"
 			>
 		</File>
@@ -127,6 +123,10 @@
 		</File>
 		<File
 			RelativePath=".\sftp.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ssh_error.hpp"
 			>
 		</File>
 	</Files>

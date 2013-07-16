@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ namespace {
             session.get(), &data, &data_len, input.data(), input.size());
         if (rc)
             BOOST_THROW_EXCEPTION(
-                ssh::exception::last_error(session) <<
+                ssh::last_error(session) <<
                 boost::errinfo_api_function("libssh2_base64_decode"));
 
         string out(data, data_len);

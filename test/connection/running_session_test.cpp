@@ -29,6 +29,7 @@
 
 #include "test/common_boost/fixtures.hpp" // OpenSshFixture
 
+#include <ssh/ssh_error.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -38,6 +39,8 @@ using test::OpenSshFixture;
 
 using swish::connection::running_session;
 using swish::utils::Utf8StringToWideString;
+
+using ssh::ssh_error;
 
 using boost::make_shared;
 using boost::shared_ptr;
@@ -68,7 +71,7 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
 
     for (int i = 0; i < 5; i++)
     {
-        BOOST_CHECK(!sessions.at(i)->IsDead());
+        BOOST_CHECK(!sessions.at(i)->is_dead());
     }
 }
 
@@ -79,7 +82,7 @@ BOOST_AUTO_TEST_CASE( start_sftp_too_early )
 {
     running_session session(
         Utf8StringToWideString(GetHost()), GetPort());
-    BOOST_CHECK_THROW(session.StartSftp(), comet::com_error);
+    BOOST_CHECK_THROW(session.StartSftp(), ssh_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

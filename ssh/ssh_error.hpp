@@ -1,11 +1,11 @@
 /**
     @file
 
-    Interface to known-host mechanism.
+    SSH exception.
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@
     @endif
 */
 
-#ifndef SSH_EXCEPTION_HPP
-#define SSH_EXCEPTION_HPP
+#ifndef SSH_SSH_ERROR_HPP
+#define SSH_SSH_ERROR_HPP
 #pragma once
 
 #include <boost/exception/exception.hpp> // boost::exception
@@ -47,7 +47,6 @@
 #include <libssh2.h>
 
 namespace ssh {
-namespace exception {
 
 /**
  * Exception type thrown when libssh2 returns an error.
@@ -112,6 +111,6 @@ inline ssh_error last_error(boost::shared_ptr<LIBSSH2_SESSION> session)
     return ssh_error(message_buf, message_len, err);
 }
 
-}} // namespace ssh::exception
+} // namespace ssh
 
 #endif

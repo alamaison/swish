@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@
 #define SSH_AGENT_HPP
 #pragma once
 
-#include "exception.hpp"
+#include <ssh/ssh_error.hpp>
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo_api_function
@@ -68,7 +68,7 @@ namespace detail {
                 ::libssh2_agent_free);
             if (!agent)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function("libssh2_agent_init"));
 
             return agent;
@@ -84,7 +84,7 @@ namespace detail {
             int rc = ::libssh2_agent_connect(agent.get());
             if (rc < 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function("libssh2_agent_connect"));
 
             // This second shared pointer to the same object only exists to
@@ -104,7 +104,7 @@ namespace detail {
             int rc = ::libssh2_agent_get_identity(agent.get(), out, previous);
             if (rc < 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function("libssh2_agent_get_identity"));
 
             return rc != 0;
@@ -120,7 +120,7 @@ namespace detail {
             int rc = ::libssh2_agent_list_identities(agent.get());
             if (rc < 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function(
                         "libssh2_agent_list_identities"));
         }
@@ -138,7 +138,7 @@ namespace detail {
                 agent.get(), user_name.c_str(), identity);
             if (rc < 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function("libssh2_agent_userauth"));
         }
 

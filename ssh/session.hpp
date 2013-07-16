@@ -38,9 +38,9 @@
 #define SSH_SESSION_HPP
 #pragma once
 
-#include "agent.hpp"
-#include "exception.hpp" // ssh_error
-#include "host_key.hpp" // host_key
+#include <ssh/agent.hpp>
+#include <ssh/ssh_error.hpp>
+#include <ssh/host_key.hpp>
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo_api_function
@@ -62,7 +62,7 @@ namespace detail {
     /**
      * Last error encountered by the session as an exception.
      */
-    inline exception::ssh_error last_error(LIBSSH2_SESSION* session)
+    inline ssh_error last_error(LIBSSH2_SESSION* session)
     {
         char* message_buf = NULL; // read-only reference
         int message_len = 0; // len not including NULL-term
@@ -71,7 +71,7 @@ namespace detail {
 
         assert(err && "throwing success!");
 
-        return exception::ssh_error(message_buf, message_len, err);
+        return ssh_error(message_buf, message_len, err);
     }
 
     namespace libssh2 {
@@ -139,7 +139,7 @@ namespace detail {
                 passwd_change_cb);
             if (rc != 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function(
                         "libssh2_userauth_password_ex"));
         }
@@ -157,7 +157,7 @@ namespace detail {
                 private_key_path, passphrase);
             if (rc != 0)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function(
                         "libssh2_userauth_publickey_fromfile_ex"));
         }

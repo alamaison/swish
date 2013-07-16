@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,8 +38,8 @@
 #define SSH_SFTP_HPP
 #pragma once
 
-#include "exception.hpp" // last_error, ssh_error
-#include "session.hpp" // session
+#include <ssh/ssh_error.hpp> // last_error, ssh_error
+#include <ssh/session.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
@@ -118,11 +118,11 @@ inline const char* sftp_part_of_error_message(unsigned long error)
 
 }
 
-class sftp_error : public ::ssh::exception::ssh_error
+class sftp_error : public ::ssh::ssh_error
 {
 public:
     sftp_error(
-        const ssh::exception::ssh_error& error, unsigned long sftp_error_code)
+        const ssh::ssh_error& error, unsigned long sftp_error_code)
         : ssh_error(error), m_sftp_error(sftp_error_code)
     {
         message() += detail::sftp_part_of_error_message(m_sftp_error);
@@ -168,8 +168,8 @@ namespace detail {
         const char* source_file, int source_line, const char* api_function,
         const char* path=NULL, size_t path_len=0U)
     {
-        ::ssh::exception::ssh_error error =
-            ::ssh::exception::last_error(session);
+        ::ssh::ssh_error error =
+            ::ssh::last_error(session);
 
         if (error.error_code() == LIBSSH2_ERROR_SFTP_PROTOCOL)
         {
@@ -213,7 +213,7 @@ namespace detail {
             LIBSSH2_SFTP* sftp = libssh2_sftp_init(session.get());
             if (!sftp)
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    ssh::last_error(session) <<
                     boost::errinfo_api_function("libssh2_sftp_init"));
 
             return boost::shared_ptr<LIBSSH2_SFTP>(
