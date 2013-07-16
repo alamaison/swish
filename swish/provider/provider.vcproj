@@ -301,10 +301,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\running_session.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SessionFactory.cpp"
 				>
 			</File>
@@ -328,10 +324,6 @@
 			</File>
 			<File
 				RelativePath=".\Provider.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\running_session.hpp"
 				>
 			</File>
 			<File

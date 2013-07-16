@@ -46,12 +46,19 @@
 typedef struct _LIBSSH2_SESSION LIBSSH2_SESSION; // Forwards-decls
 typedef struct _LIBSSH2_SFTP LIBSSH2_SFTP;
 
+
+namespace swish {
+namespace connection {
+
 class running_session
 {
 public:
 
-    running_session::running_session(
-        const std::wstring& host, unsigned int port);
+    /**
+     * Connect to host server and start new SSH connection on given port.
+     */
+    running_session(const std::wstring& host, unsigned int port);
+
     ~running_session();
     boost::mutex::scoped_lock aquire_lock();
     operator LIBSSH2_SESSION*() const;
@@ -79,3 +86,5 @@ private:
 
     void _CreateSftpChannel() throw(...);
 };
+
+}} // namespace swish::connection

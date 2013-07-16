@@ -62,6 +62,7 @@
 #include <exception>
 #include <string>
 
+using swish::connection::running_session;
 using swish::tracing::trace;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::home_directory;

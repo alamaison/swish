@@ -70,6 +70,7 @@
 #include <string>
 #include <vector> // to hold listing
 
+using swish::connection::running_session;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;

@@ -50,6 +50,8 @@
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
+using swish::connection::running_session;
+
 using ATL::CA2W;
 using ATL::CString;
 

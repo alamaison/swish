@@ -324,6 +324,10 @@
 			</FileConfiguration>
 		</File>
 		<File
+			RelativePath=".\running_session_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\session_pool_test.cpp"
 			>
 		</File>

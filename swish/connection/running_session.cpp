@@ -64,6 +64,10 @@ using boost::system::error_code;
 using std::string;
 using std::wstring;
 
+
+namespace swish {
+namespace connection {
+
 running_session::running_session(const wstring& host, unsigned int port) : 
     m_io(0), m_socket(m_io)
 {
@@ -237,3 +241,5 @@ void running_session::_CloseSocketToHost() throw()
 {
     m_socket.close();
 }
+
+}} // namespace swish::connection

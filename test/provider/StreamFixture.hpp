@@ -83,7 +83,7 @@ public:
     comet::com_ptr<IStream> GetStream(
         CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
     {
-        boost::shared_ptr<running_session> session(Session());
+        boost::shared_ptr<swish::connection::running_session> session(Session());
 
         return new CSftpStream(session, m_remote_path, flags);
     }

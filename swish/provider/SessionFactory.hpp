@@ -36,8 +36,7 @@
 
 #pragma once
 
-#include "running_session.hpp"
-
+#include "swish/connection/running_session.hpp"
 #include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
 #include <winerror.h>  // HRESULT
@@ -48,27 +47,31 @@
 class CSessionFactory
 {
 public:
-    static std::auto_ptr<running_session> CreateSftpSession(
+    static std::auto_ptr<swish::connection::running_session> CreateSftpSession(
         const wchar_t* pwszHost, unsigned int uPort, const wchar_t* pwszUser,
         __in ISftpConsumer* pConsumer);
 
 private:
     static void _VerifyHostKey(
-        PCWSTR pwszHost, running_session& session, __in ISftpConsumer *pConsumer);
+        PCWSTR pwszHost, swish::connection::running_session& session,
+        __in ISftpConsumer *pConsumer);
 
     static void _AuthenticateUser(
-        PCWSTR pwszUser, running_session& session, 
+        PCWSTR pwszUser, swish::connection::running_session& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _PasswordAuthentication(
-        const std::string& utf8_username, running_session& session, 
+        const std::string& utf8_username,
+        swish::connection::running_session& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _KeyboardInteractiveAuthentication(
-        const std::string& utf8_username, running_session& session, 
+        const std::string& utf8_username,
+        swish::connection::running_session& session, 
         __in ISftpConsumer* pConsumer);
 
     static HRESULT _PublicKeyAuthentication(
-        const std::string& utf8_username, running_session& session, 
+        const std::string& utf8_username,
+        swish::connection::running_session& session, 
         __in ISftpConsumer* pConsumer);
 };

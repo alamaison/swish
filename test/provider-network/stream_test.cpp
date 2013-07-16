@@ -51,6 +51,8 @@ using test::remote_test_config;
 using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
 
+using swish::connection::running_session;
+
 using comet::com_ptr;
 
 using boost::filesystem::wpath;
