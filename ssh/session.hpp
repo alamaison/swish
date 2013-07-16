@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,12 +39,14 @@
 #pragma once
 
 #include "agent.hpp"
-#include "exception.hpp" // last_error
+#include "exception.hpp" // ssh_error
 #include "host_key.hpp" // host_key
 
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo_api_function
+#include <boost/bind/bind.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -56,17 +58,32 @@
 namespace ssh {
 
 namespace detail {
+    
+    /**
+     * Last error encountered by the session as an exception.
+     */
+    inline exception::ssh_error last_error(LIBSSH2_SESSION* session)
+    {
+        char* message_buf = NULL; // read-only reference
+        int message_len = 0; // len not including NULL-term
+        int err = libssh2_session_last_error(
+            session, &message_buf, &message_len, false);
+
+        assert(err && "throwing success!");
+
+        return exception::ssh_error(message_buf, message_len, err);
+    }
+
     namespace libssh2 {
     namespace session {
 
         /**
          * Thin exception wrapper around libssh2_session_init.
          */
-        inline boost::shared_ptr<LIBSSH2_SESSION> init()
+        inline LIBSSH2_SESSION* init()
         {
-            boost::shared_ptr<LIBSSH2_SESSION> session(
-                libssh2_session_init_ex(NULL, NULL, NULL, NULL),
-                libssh2_session_free);
+            LIBSSH2_SESSION* session = libssh2_session_init_ex(
+                NULL, NULL, NULL, NULL);
             if (!session)
                 BOOST_THROW_EXCEPTION(
                     std::bad_alloc("Failed to allocate new ssh session"));
@@ -77,14 +94,32 @@ namespace detail {
         /**
          * Thin exception wrapper around libssh2_session_startup.
          */
-        inline void startup(
-            boost::shared_ptr<LIBSSH2_SESSION> session, int socket)
+        inline void startup(LIBSSH2_SESSION* session, int socket)
         {
-            int rc = libssh2_session_startup(session.get(), socket);
+            int rc = libssh2_session_startup(session, socket);
             if (rc != 0)
+            {
+                // using low level (raw pointer) version of last_error because
+                // the higher-level session object doesn't exist yet
                 BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
+                    last_error(session) <<
                     boost::errinfo_api_function("libssh2_session_startup"));
+            }
+        }
+
+        /**
+         * Thin exception wrapper around libssh2_session_disconnect.
+         */
+        inline void disconnect(
+            LIBSSH2_SESSION* session, const char* description)
+        {
+            int rc = libssh2_session_disconnect(session, description);
+            if (rc != 0)
+            {
+                BOOST_THROW_EXCEPTION(
+                    last_error(session) <<
+                    boost::errinfo_api_function("libssh2_session_disconnect"));
+            }
         }
 
     }
@@ -128,17 +163,99 @@ namespace detail {
         }
 
     }}
+
+    inline void disconnect_and_free(
+        LIBSSH2_SESSION* session, const std::string& disconnection_message)
+    {
+        try
+        {
+            libssh2::session::disconnect(
+                session, disconnection_message.c_str());
+        }
+        catch (const std::exception&)
+        {
+            // Ignore errors for two reasons:
+            //  - this is used as a shared_ptr deallocater so may not throw.
+            //  - even if there is a problem disconnecting the session,
+            //    we must still free it as everything else is going away
+
+            // TODO: introduce some way of logging them
+        }
+
+        libssh2_session_free(session);
+    }
+
+
+    inline boost::shared_ptr<LIBSSH2_SESSION> allocate_and_connect_session(
+        int socket, const std::string& disconnection_message)
+    {
+        // This function is unlike most of the others in that we do not
+        // immediately wrap the created resource (the LIBSSH2_SESSION*) in a
+        // shared_ptr.  We only ever want to deal in terms of sessions that have
+        // been allocated *and* connected so we wait until starting succeeds and
+        // then wrap it in a shared_ptr that disconnects before it frees.
+        //
+        // This means that we have to be careful of the lifetime of
+        // the unstarted session in the code below.  The session may fail
+        // to start but must still be freed.
+
+        LIBSSH2_SESSION* session = libssh2::session::init();
+
+        // Session is 'alive' from this point onwards.  All paths must
+        // eventually free it.
+
+        try
+        {
+            libssh2::session::startup(session, socket);
+        }
+        catch (...)
+        {
+            libssh2_session_free(session);
+            throw;
+        }
+
+        return boost::shared_ptr<LIBSSH2_SESSION>(
+            session,
+            boost::bind(disconnect_and_free, _1, disconnection_message));
+    }
+
 }
 
+/**
+ * An SSH session connected to a host.
+ */
+// The underlying session is both allocated and connected to the host by
+// allocate_and_connect_session.  This function also makes sure it will be
+// first disconnected before it is freed.  The implementation of `class session`
+// need to worry about these details, they are already taken care of.
 class session
 {
 public:
-    session(int socket) : m_session(detail::libssh2::session::init())
-    {
-        detail::libssh2::session::startup(m_session, socket);
-    }
-
-    session(boost::shared_ptr<LIBSSH2_SESSION> session) : m_session(session) {}
+    
+    /**
+     * Start a new SSH session with a host.
+     *
+     * The host is listening on the other end of the given socket.
+     *
+     * The constructor will throw an exception if it cannot connect to the host
+     * or negotiate an SSH session.  Therefore any instance of this class
+     * begins life successfully connected to the host.  Of course, the
+     * connection may break subsequently and the server is free to terminate
+     * the session at any time.
+     *
+     * @param socket
+     *     The socket through which to communicate with the listening server.
+     * @param disconnection_message
+     *     An optional message sent to the server when the session is
+     *     destroyed.
+     */
+    session(
+        int socket,
+        const std::string& disconnection_message=
+            "libssh2 C++ bindings session destructor") :
+    m_session(
+        detail::allocate_and_connect_session(socket, disconnection_message))
+    {}
 
     boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
 
