@@ -43,6 +43,8 @@
 #include <ssh/session.hpp>
 #include <ssh/sftp.hpp>
 
+#include <comet/ptr.h> // com_ptr
+
 #include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
@@ -102,7 +104,7 @@ public:
      */
     authenticated_session(
         const std::wstring& host, unsigned int port, const std::wstring& user,
-        ISftpConsumer* consumer);
+        comet::com_ptr<ISftpConsumer> consumer);
 
     /**
      * Move constructor.

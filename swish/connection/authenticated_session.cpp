@@ -73,8 +73,9 @@ using ssh::knownhost::openssh_knownhost_collection;
 using ssh::session;
 using ssh::sftp::sftp_channel;
 
-using comet::com_error;
 using comet::bstr_t;
+using comet::com_error;
+using comet::com_ptr;
 
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
@@ -95,9 +96,10 @@ const wpath known_hosts_path =
     home_directory<wpath>() / L".ssh" / L"known_hosts";
 
 void verify_host_key(
-    const wstring& host, running_session& session, ISftpConsumer *pConsumer)
+    const wstring& host, running_session& session,
+    com_ptr<ISftpConsumer> consumer)
 {
-    assert(pConsumer);
+    assert(consumer);
 
     ssh::session sess(session.get_session());
 
@@ -123,7 +125,7 @@ void verify_host_key(
     find_result result = hosts.find(utf8_host, key);
     if (result.mismatch())
     {
-        HRESULT hr = pConsumer->OnHostkeyMismatch(
+        HRESULT hr = consumer->OnHostkeyMismatch(
             bstr_t(host).in(), hostkey_hash.in(), hostkey_algorithm.in());
         if (hr == S_OK)
         {
@@ -138,7 +140,7 @@ void verify_host_key(
     }
     else if (result.not_found())
     {
-        HRESULT hr = pConsumer->OnHostkeyUnknown(
+        HRESULT hr = consumer->OnHostkeyUnknown(
             bstr_t(host).in(), hostkey_hash.in(), hostkey_algorithm.in());
         if (hr == S_OK)
         {
@@ -166,7 +168,7 @@ void verify_host_key(
  * - E_FAIL otherwise
  */
 HRESULT password_authentication(
-    const string& utf8_username, running_session& session, ISftpConsumer *pConsumer)
+    const string& utf8_username, running_session& session, com_ptr<ISftpConsumer> consumer)
 {
     HRESULT hr;
     bstr_t prompt = L"Please enter your password:";
@@ -175,7 +177,7 @@ HRESULT password_authentication(
     // Loop until successfully authenticated or request returns cancel
     int ret = -1; // default to failure
     do {
-        hr = pConsumer->OnPasswordRequest(prompt.in(), password.out());
+        hr = consumer->OnPasswordRequest(prompt.in(), password.out());
         if FAILED(hr)
             return hr;
         
@@ -204,10 +206,10 @@ HRESULT password_authentication(
  * - E_FAIL otherwise
  */
 HRESULT keyboard_interactive_authentication(
-    const string& utf8_username, running_session& session, ISftpConsumer *pConsumer)
+    const string& utf8_username, running_session& session, com_ptr<ISftpConsumer> consumer)
 {
     // Create instance of keyboard-interactive authentication handler
-    CKeyboardInteractive handler(pConsumer);
+    CKeyboardInteractive handler(consumer.in());
     
     // Pass pointer to handler in session abstract and begin authentication.
     // The static callback method (last parameter) will extract the 'this'
@@ -230,22 +232,20 @@ HRESULT keyboard_interactive_authentication(
 
 HRESULT pubkey_auth_the_nasty_old_way(
     const string& utf8_username, running_session& session,
-    ISftpConsumer *pConsumer)
+    com_ptr<ISftpConsumer> consumer)
 {
-    assert(pConsumer);
-    if (!pConsumer)
-        return E_POINTER;
+    assert(consumer);
 
     try
     {
         bstr_t private_key_path;
         HRESULT hr =
-            pConsumer->OnPrivateKeyFileRequest(private_key_path.out());
+            consumer->OnPrivateKeyFileRequest(private_key_path.out());
         if (FAILED(hr))
             return hr;
 
         bstr_t public_key_path;
-        hr = pConsumer->OnPublicKeyFileRequest(public_key_path.out());
+        hr = consumer->OnPublicKeyFileRequest(public_key_path.out());
         if (FAILED(hr))
             return hr;
 
@@ -268,13 +268,13 @@ HRESULT pubkey_auth_the_nasty_old_way(
 
 HRESULT public_key_authentication(
     const string& utf8_username, running_session& yukky_session,
-    ISftpConsumer *pConsumer)
+    com_ptr<ISftpConsumer> consumer)
 {
     // This old way is only kept around to support the tests.  Its almost
     // useless for anything else as we don't pass the 'consumer' enough
     // information to identify which key to use.
     HRESULT hr = pubkey_auth_the_nasty_old_way(
-        utf8_username, yukky_session, pConsumer);
+        utf8_username, yukky_session, consumer);
     if (SUCCEEDED(hr))
         return hr;
 
@@ -314,7 +314,7 @@ HRESULT public_key_authentication(
  * - E_FAIL otherwise
  */
 void authenticate_user(
-    const wstring& user, running_session& session, ISftpConsumer *pConsumer) throw(...)
+    const wstring& user, running_session& session, com_ptr<ISftpConsumer> consumer) throw(...)
 {
     assert(!user.empty());
     assert(user[0] != '\0');
@@ -334,12 +334,12 @@ void authenticate_user(
     HRESULT hr = E_FAIL;
     if (::strstr(szAuthList, "publickey"))
     {
-        hr = public_key_authentication(utf8_username, session, pConsumer);
+        hr = public_key_authentication(utf8_username, session, consumer);
     }
     if (FAILED(hr) && ::strstr(szAuthList, "keyboard-interactive"))
     {
         hr = keyboard_interactive_authentication(
-            utf8_username, session, pConsumer);
+            utf8_username, session, consumer);
         if (hr == E_ABORT)
             BOOST_THROW_EXCEPTION(
                 com_error(
@@ -348,7 +348,7 @@ void authenticate_user(
     }
     if (FAILED(hr) && ::strstr(szAuthList, "password"))
     {
-        hr = password_authentication(utf8_username, session, pConsumer);
+        hr = password_authentication(utf8_username, session, consumer);
     }
 
     if (FAILED(hr))
@@ -357,7 +357,7 @@ void authenticate_user(
 
 running_session create_and_authenticate(
     const wstring& host, unsigned int port, const wstring& user,
-    ISftpConsumer* consumer)
+    com_ptr<ISftpConsumer> consumer)
 {
     running_session session(host, port);
 
@@ -376,7 +376,7 @@ running_session create_and_authenticate(
 
 authenticated_session::authenticated_session(
     const wstring& host, unsigned int port, const wstring& user,
-    ISftpConsumer* consumer)
+    com_ptr<ISftpConsumer> consumer)
     :
 m_session(create_and_authenticate(host, port, user, consumer)),
 m_sftp_channel(m_session.get_session()) {}
