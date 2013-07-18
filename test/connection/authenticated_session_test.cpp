@@ -31,8 +31,10 @@
 #include "test/common_boost/fixtures.hpp" // OpenSshFixture
 
 #include <boost/make_shared.hpp>
+#include <boost/move/move.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <string>
 #include <vector>
 
 using test::CConsumerStub;
@@ -42,9 +44,11 @@ using swish::connection::authenticated_session;
 using swish::utils::Utf8StringToWideString;
 
 using boost::make_shared;
+using boost::move;
 using boost::shared_ptr;
 
 using std::vector;
+using std::wstring;
 
 BOOST_FIXTURE_TEST_SUITE( authenticated_session_tests, OpenSshFixture )
 
@@ -88,6 +92,42 @@ BOOST_AUTO_TEST_CASE( sftp_started )
         Utf8StringToWideString(GetUser()),
         new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
     session.get_sftp_channel();
+}
+
+namespace {
+
+    authenticated_session move_create(
+        const wstring& host, unsigned int port, const wstring& user,
+        ISftpConsumer* consumer)
+    {
+        authenticated_session session(host, port, user, consumer);
+        return move(session);
+    }
+}
+
+BOOST_AUTO_TEST_CASE( move_contruct )
+{
+    authenticated_session session = move_create(
+        Utf8StringToWideString(GetHost()), GetPort(),
+        Utf8StringToWideString(GetUser()),
+        new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
+    BOOST_CHECK(!session.is_dead());
+}
+
+BOOST_AUTO_TEST_CASE( move_assign )
+{
+    authenticated_session session1(
+        Utf8StringToWideString(GetHost()), GetPort(),
+        Utf8StringToWideString(GetUser()),
+        new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
+    authenticated_session session2(
+        Utf8StringToWideString(GetHost()), GetPort(),
+        Utf8StringToWideString(GetUser()),
+        new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
+
+    session1 = move(session2);
+
+    BOOST_CHECK(!session1.is_dead());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

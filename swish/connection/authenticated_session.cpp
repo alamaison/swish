@@ -50,6 +50,7 @@
 
 #include <boost/filesystem.hpp> // wpath
 #include <boost/filesystem/fstream.hpp> // ofstream
+#include <boost/move/move.hpp>
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -77,9 +78,9 @@ using comet::bstr_t;
 
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
+using boost::move;
 using boost::mutex;
 
-using std::auto_ptr;
 using std::exception;
 using std::string;
 using std::wstring;
@@ -354,21 +355,21 @@ void authenticate_user(
         BOOST_THROW_EXCEPTION(com_error(hr));
 }
 
-auto_ptr<running_session> create_and_authenticate(
+running_session create_and_authenticate(
     const wstring& host, unsigned int port, const wstring& user,
     ISftpConsumer* consumer)
 {
-    auto_ptr<running_session> session(new running_session(host, port));
+    running_session session(host, port);
 
-    verify_host_key(host, *session, consumer);
+    verify_host_key(host, session, consumer);
     // Legal to fail here, e.g. user refused to accept host key
 
-    authenticate_user(user, *session, consumer);
+    authenticate_user(user, session, consumer);
     // Legal to fail here, e.g. wrong password/key
 
-    assert(session->get_session().authenticated());
+    assert(session.get_session().authenticated());
 
-    return session;
+    return move(session);
 }
 
 }
@@ -378,16 +379,34 @@ authenticated_session::authenticated_session(
     ISftpConsumer* consumer)
     :
 m_session(create_and_authenticate(host, port, user, consumer)),
-m_sftp_channel(m_session->get_session()) {}
+m_sftp_channel(m_session.get_session()) {}
+
+authenticated_session::authenticated_session(
+    BOOST_RV_REF(authenticated_session) other)
+:
+m_session(move(other.m_session)), m_sftp_channel(move(other.m_sftp_channel)) {}
+
+authenticated_session& authenticated_session::operator=(
+    BOOST_RV_REF(authenticated_session) other)
+{
+    swap(authenticated_session(move(other)), *this);
+    return *this;
+}
+
+void swap(authenticated_session& lhs, authenticated_session& rhs)
+{
+    boost::swap(lhs.m_session, rhs.m_session);
+    std::swap(lhs.m_sftp_channel, rhs.m_sftp_channel);
+}
 
 session authenticated_session::get_session() const
 {
-    return m_session->get_session();
+    return m_session.get_session();
 }
 
 LIBSSH2_SESSION* authenticated_session::get_raw_session()
 {
-    return m_session->get_raw_session();
+    return m_session.get_raw_session();
 }
 
 sftp_channel authenticated_session::get_sftp_channel() const
@@ -397,12 +416,12 @@ sftp_channel authenticated_session::get_sftp_channel() const
 
 mutex::scoped_lock authenticated_session::aquire_lock()
 {
-    return m_session->aquire_lock();
+    return m_session.aquire_lock();
 }
 
 bool authenticated_session::is_dead()
 {
-   return m_session->is_dead();
+   return m_session.is_dead();
 }
 
 }} // namespace swish::connection

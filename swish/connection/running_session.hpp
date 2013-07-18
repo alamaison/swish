@@ -41,9 +41,12 @@
 #include <ssh/session.hpp>
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
+#define BOOST_THREAD_USES_MOVE
 #include <boost/thread/mutex.hpp>
 
+#include <memory> // auto_ptr
 #include <string>
 
 namespace swish {
@@ -59,8 +62,7 @@ namespace connection {
  */
 class running_session : private boost::noncopyable
 {
-    // Would like to use move-emulation here but can't because Boost.ASIO
-    // doesn't support it.
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(running_session)
 
 public:
 
@@ -68,6 +70,18 @@ public:
      * Connect to host server and start new SSH connection on given port.
      */
     running_session(const std::wstring& host, unsigned int port);
+
+    /**
+     * Move constructor.
+     */
+    running_session(BOOST_RV_REF(running_session) other);
+
+    /**
+     * Move assignment.
+     */
+    running_session& operator=(BOOST_RV_REF(running_session) other);
+
+    friend void swap(running_session& lhs, running_session& rhs);
 
     boost::mutex::scoped_lock aquire_lock();
 
@@ -89,10 +103,21 @@ public:
     LIBSSH2_SESSION* get_raw_session();
 
 private:
-    boost::mutex m_mutex;
-    boost::asio::io_service m_io; ///< Boost IO system
-    boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
+
+    // Must use auto_ptr for these members to make our class movable because
+    // Boost.ASIO doesn't support move emulation and Boost.Thread mutex doesn't until
+    // v1.50
+
+    std::auto_ptr<boost::mutex> m_mutex;
+
+    std::auto_ptr<boost::asio::io_service> m_io;
+    ///< Boost IO system
+
+    std::auto_ptr<boost::asio::ip::tcp::socket> m_socket;
+    ///< TCP/IP socket to remote host
+
     ssh::session m_session;
+    ///< libssh2 session
 };
 
 }} // namespace swish::connection

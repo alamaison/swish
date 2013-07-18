@@ -43,10 +43,10 @@
 #include <ssh/session.hpp>
 #include <ssh/sftp.hpp>
 
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include <memory> // auto_ptr
 #include <string>
 
 namespace swish {
@@ -64,6 +64,8 @@ namespace connection {
  */
 class authenticated_session : private boost::noncopyable
 {
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(authenticated_session)
+
 public:
 
     /*
@@ -102,6 +104,18 @@ public:
         const std::wstring& host, unsigned int port, const std::wstring& user,
         ISftpConsumer* consumer);
 
+    /**
+     * Move constructor.
+     */
+    authenticated_session(BOOST_RV_REF(authenticated_session) other);
+
+    /**
+     * Move assignment.
+     */
+    authenticated_session& operator=(BOOST_RV_REF(authenticated_session) other);
+
+    friend void swap(authenticated_session& lhs, authenticated_session& rhs);
+
     boost::mutex::scoped_lock aquire_lock();
 
     bool is_dead();
@@ -119,7 +133,7 @@ public:
     { return get_sftp_channel().get().get(); }
 
 private:
-    std::auto_ptr<running_session> m_session;
+    running_session m_session;
     ssh::sftp::sftp_channel m_sftp_channel;
 };
 

@@ -49,6 +49,7 @@
 #include <libssh2_sftp.h>
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
+#include <boost/move/move.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert>
@@ -63,6 +64,7 @@ using ssh::sftp::sftp_channel;
 using boost::asio::error::host_not_found;
 using boost::asio::io_service;
 using boost::asio::ip::tcp;
+using boost::move;
 using boost::mutex;
 using boost::shared_ptr;
 using boost::system::get_system_category;
@@ -131,12 +133,31 @@ namespace {
     }
 }
 
-running_session::running_session(const wstring& host, unsigned int port) : 
-    m_io(0), m_socket(m_io),
-    m_session(
-        session_on_socket(m_socket, host, port, m_io, "Swish says goodbye."))
+running_session::running_session(const wstring& host, unsigned int port)
+: 
+m_mutex(new mutex()), m_io(new io_service(0)), m_socket(new tcp::socket(*m_io)),
+m_session(
+     session_on_socket(*m_socket, host, port, *m_io, "Swish says goodbye."))
 {}
 
+running_session::running_session(BOOST_RV_REF(running_session) other)
+:
+m_mutex(move(other.m_mutex)), m_io(move(other.m_io)),
+m_socket(move(other.m_socket)), m_session(move(other.m_session)) {}
+
+running_session& running_session::operator=(BOOST_RV_REF(running_session) other)
+{
+    swap(running_session(move(other)), *this);
+    return *this;
+}
+
+void swap(running_session& lhs, running_session& rhs)
+{
+    std::swap(lhs.m_mutex, rhs.m_mutex);
+    std::swap(lhs.m_io, rhs.m_io);
+    std::swap(lhs.m_socket, rhs.m_socket);
+    std::swap(lhs.m_session, rhs.m_session);
+}
 
 session running_session::get_session() const
 {
@@ -150,14 +171,14 @@ LIBSSH2_SESSION* running_session::get_raw_session()
 
 mutex::scoped_lock running_session::aquire_lock()
 {
-    return mutex::scoped_lock(m_mutex);
+    return mutex::scoped_lock(*m_mutex);
 }
 
 bool running_session::is_dead()
 {
     fd_set socket_set;
     FD_ZERO(&socket_set);
-    FD_SET(m_socket.native(), &socket_set);
+    FD_SET(m_socket->native(), &socket_set);
     TIMEVAL tv = TIMEVAL();
 
     int rc = ::select(1, &socket_set, NULL, NULL, &tv);

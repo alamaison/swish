@@ -30,8 +30,11 @@
 #include "test/common_boost/fixtures.hpp" // OpenSshFixture
 
 #include <boost/make_shared.hpp>
+#include <boost/move/move.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <stdexcept> // runtime_error
+#include <string>
 #include <vector>
 
 using test::OpenSshFixture;
@@ -40,9 +43,12 @@ using swish::connection::running_session;
 using swish::utils::Utf8StringToWideString;
 
 using boost::make_shared;
+using boost::move;
 using boost::shared_ptr;
 
+using std::runtime_error;
 using std::vector;
+using std::wstring;
 
 BOOST_FIXTURE_TEST_SUITE( running_session_tests, OpenSshFixture )
 
@@ -54,6 +60,15 @@ BOOST_AUTO_TEST_CASE( connect )
     running_session session(
         Utf8StringToWideString(GetHost()), GetPort());
     BOOST_CHECK(!session.is_dead());
+}
+
+/**
+ * Test that connecting throws when it fails.
+ */
+BOOST_AUTO_TEST_CASE( connect_fail )
+{
+    BOOST_CHECK_THROW(
+        running_session(L"nonsense.invalid", 65535), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE( multiple_connections )
@@ -70,6 +85,34 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
     {
         BOOST_CHECK(!sessions.at(i)->is_dead());
     }
+}
+
+namespace {
+
+    running_session move_create(const wstring& host, unsigned int port)
+    {
+        running_session session(host, port);
+        return move(session);
+    }
+}
+
+BOOST_AUTO_TEST_CASE( move_contruct )
+{
+    running_session session = move_create(
+        Utf8StringToWideString(GetHost()), GetPort());
+    BOOST_CHECK(!session.is_dead());
+}
+
+BOOST_AUTO_TEST_CASE( move_assign )
+{
+    running_session session1(
+        Utf8StringToWideString(GetHost()), GetPort());
+    running_session session2(
+        Utf8StringToWideString(GetHost()), GetPort());
+
+    session1 = move(session2);
+
+    BOOST_CHECK(!session1.is_dead());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
