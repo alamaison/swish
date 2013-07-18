@@ -39,12 +39,9 @@
 #define SWISH_CONNECTION_RUNNING_SESSION_HPP
 
 #include <ssh/session.hpp>
-#include <ssh/sftp.hpp>
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
 #include <boost/noncopyable.hpp>
-#include <boost/optional/optional.hpp>
-#include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/thread/mutex.hpp>
 
 #include <string>
@@ -52,8 +49,19 @@
 namespace swish {
 namespace connection {
 
+/**
+ * An SSH session connected to a port on a server.
+ *
+ * The session may or may not be authenticated.
+ *
+ * The point of this class is to add host resolution and death detection
+ * to the existing libssh2 C++ binding session object.
+ */
 class running_session : private boost::noncopyable
 {
+    // Would like to use move-emulation here but can't because Boost.ASIO
+    // doesn't support it.
+
 public:
 
     /**
@@ -63,24 +71,28 @@ public:
 
     boost::mutex::scoped_lock aquire_lock();
 
+    /**
+     * Has the connection broken since we connected?
+     *
+     * This only gives the correct answer as long as we're not expecting data
+     * to arrive on the socket. select()ing a silent socket should return 0. 
+     * If it doesn't, it indicates that the connection is broken.
+     *
+     * XXX: we could double-check this by reading from the socket.  It would return
+     *      0 if the socket is closed.
+     *
+     * @see http://www.libssh2.org/mail/libssh2-devel-archive-2010-07/0050.shtml
+     */
     bool is_dead();
 
-    void StartSftp();
-
-    LIBSSH2_SESSION* get_raw_session()
-    { return get_session().get().get(); }
-    LIBSSH2_SFTP* get_raw_sftp_channel()
-    { return get_sftp_channel().get().get(); }
-
     ssh::session get_session() const;
-    ssh::sftp::sftp_channel get_sftp_channel() const;
+    LIBSSH2_SESSION* get_raw_session();
 
 private:
     boost::mutex m_mutex;
     boost::asio::io_service m_io; ///< Boost IO system
     boost::asio::ip::tcp::socket m_socket; ///< TCP/IP socket to remote host
     ssh::session m_session;
-    boost::optional<ssh::sftp::sftp_channel> m_sftp_channel;
 };
 
 }} // namespace swish::connection

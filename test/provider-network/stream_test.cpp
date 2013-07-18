@@ -51,7 +51,7 @@ using test::remote_test_config;
 using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
 
-using swish::connection::running_session;
+using swish::connection::authenticated_session;
 
 using comet::com_ptr;
 
@@ -76,19 +76,19 @@ public:
         m_consumer->set_password_behaviour(MockConsumer::CustomPassword);
         m_consumer->set_password(config.GetPassword());
 
-        m_session = shared_ptr<running_session>(CSessionFactory::CreateSftpSession(
+        m_session = shared_ptr<authenticated_session>(CSessionFactory::CreateSftpSession(
             config.GetHost().c_str(), config.GetPort(),
             config.GetUser().c_str(), m_consumer.get()));
     }
 
-    shared_ptr<running_session> session() const
+    shared_ptr<authenticated_session> session() const
     {
         return m_session;
     }
 
 private:
     com_ptr<MockConsumer> m_consumer;
-    shared_ptr<running_session> m_session;
+    shared_ptr<authenticated_session> m_session;
 };
 
 }
@@ -100,7 +100,7 @@ BOOST_FIXTURE_TEST_SUITE( remote_stream_tests, RemoteSftpFixture )
  */
 BOOST_AUTO_TEST_CASE( get )
 {
-    shared_ptr<running_session> session(session());
+    shared_ptr<authenticated_session> session(session());
 
     com_ptr<IStream> stream = new CSftpStream(
         session, "/var/log/syslog", CSftpStream::read);

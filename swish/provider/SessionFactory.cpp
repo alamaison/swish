@@ -1,7 +1,7 @@
 /**
     @file
 
-    Factory producing connected, authenticated running_session objects.
+    Factory producing connected, authenticated authenticated_session objects.
 
     @if license
 
@@ -62,6 +62,7 @@
 #include <exception>
 #include <string>
 
+using swish::connection::authenticated_session;
 using swish::connection::running_session;
 using swish::tracing::trace;
 using swish::utils::WideStringToUtf8String;
@@ -85,7 +86,7 @@ using std::string;
 #pragma warning (disable: 4267) // ssize_t to unsigned int
 
 /**
- * Creates and authenticates a running_session object with the given parameters.
+ * Creates and authenticates a authenticated_session object with the given parameters.
  *
  * @param pwszHost   Name of the remote host to connect the running_session object to.
  * @param pwszUser   User to connect to remote host as.
@@ -101,23 +102,21 @@ using std::string;
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
-/* static */ auto_ptr<running_session> CSessionFactory::CreateSftpSession(
+/* static */ auto_ptr<authenticated_session> CSessionFactory::CreateSftpSession(
     PCWSTR pwszHost, unsigned int uPort, PCWSTR pwszUser,
     ISftpConsumer *pConsumer) throw(...)
 {
-    auto_ptr<running_session> spSession(new running_session(pwszHost, uPort));
+    auto_ptr<running_session> session(new running_session(pwszHost, uPort));
 
     // Check the hostkey against our known hosts
-    _VerifyHostKey(pwszHost, *spSession, pConsumer);
+    _VerifyHostKey(pwszHost, *session, pConsumer);
     // Legal to fail here, e.g. user refused to accept host key
 
     // Authenticate the user with the remote server
-    _AuthenticateUser(pwszUser, *spSession, pConsumer);
+    _AuthenticateUser(pwszUser, *session, pConsumer);
     // Legal to fail here, e.g. wrong password/key
 
-    spSession->StartSftp();
-
-    return spSession;
+    return auto_ptr<authenticated_session>(new authenticated_session(session));
 }
 
 const wpath known_hosts_path =

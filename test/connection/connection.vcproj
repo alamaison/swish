@@ -284,6 +284,10 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\authenticated_session_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\connection_spec_test.cpp"
 			>
 		</File>

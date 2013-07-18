@@ -50,7 +50,7 @@
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
-using swish::connection::running_session;
+using swish::connection::authenticated_session;
 
 using ATL::CA2W;
 using ATL::CString;
@@ -137,7 +137,7 @@ CString GetSftpErrorMessage(ULONG uError)
  * In the case that the last SSH error is an SFTP error it returns the SFTP
  * error message in preference.
  */
-CString GetLastErrorMessage(running_session& session)
+CString GetLastErrorMessage(authenticated_session& session)
 {
     int nErr; PSTR pszErr; int cchErr;
 
@@ -217,7 +217,7 @@ HRESULT sftp_error_to_storage_error(unsigned long sftp_error)
 /**
  * Return last session SFTP error as a COM FACILITY_STORAGE error code.
  */
-HRESULT last_storage_error(running_session& session)
+HRESULT last_storage_error(authenticated_session& session)
 {
     switch (libssh2_session_last_error(session.get_raw_session(), NULL, NULL, false))
     {
@@ -248,7 +248,7 @@ int safe_libssh2_sftp_close_handle(LIBSSH2_SFTP_HANDLE* handle)
  * via the IStream interface.
  */
 CSftpStream::CSftpStream(
-    shared_ptr<running_session> session, const string& file, OpenFlags flags)
+    shared_ptr<authenticated_session> session, const string& file, OpenFlags flags)
     : m_session(session)
 {
     // Map between CSftpStream flags and libssh2 flags

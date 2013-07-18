@@ -38,7 +38,7 @@
 #include "Provider.hpp"
 
 #include "KeyboardInteractive.hpp"
-#include "SessionFactory.hpp" // running_session
+#include "SessionFactory.hpp" // authenticated_session
 #include "SftpStream.hpp"
 
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
@@ -70,7 +70,7 @@
 #include <string>
 #include <vector> // to hold listing
 
-using swish::connection::running_session;
+using swish::connection::authenticated_session;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
@@ -142,7 +142,7 @@ public:
 private:
 
     boost::mutex m_session_creation_mutex;
-    boost::shared_ptr<running_session> m_session; ///< SSH/SFTP session
+    boost::shared_ptr<authenticated_session> m_session; ///< SSH/SFTP session
 
     /** @name Fields used for lazy connection. */
     // @{

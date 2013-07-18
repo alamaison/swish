@@ -143,9 +143,9 @@ session running_session::get_session() const
     return m_session;
 }
 
-sftp_channel running_session::get_sftp_channel() const
+LIBSSH2_SESSION* running_session::get_raw_session()
 {
-    return *m_sftp_channel;
+    return get_session().get().get();
 }
 
 mutex::scoped_lock running_session::aquire_lock()
@@ -153,18 +153,6 @@ mutex::scoped_lock running_session::aquire_lock()
     return mutex::scoped_lock(m_mutex);
 }
 
-/**
- * Has the connection broken since we connected?
- *
- * This only gives the correct answer as long as we're not expecting data
- * to arrive on the socket. select()ing a silent socket should return 0. If it
- * doesn't, it indicates that the connection is broken.
- *
- * XXX: we could double-check this by reading from the socket.  It would return
- *      0 if the socket is closed.
- *
- * @see http://www.libssh2.org/mail/libssh2-devel-archive-2010-07/0050.shtml
- */
 bool running_session::is_dead()
 {
     fd_set socket_set;
@@ -179,8 +167,4 @@ bool running_session::is_dead()
     return rc != 0;
 }
 
-void running_session::StartSftp()
-{
-    m_sftp_channel = sftp_channel(get_session());
-}
 }} // namespace swish::connection

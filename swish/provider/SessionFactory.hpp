@@ -1,7 +1,7 @@
 /**
     @file
 
-    Factory producing connected, authenticated running_session objects.
+    Factory producing connected, authenticated authenticated_session objects.
 
     @if license
 
@@ -36,6 +36,7 @@
 
 #pragma once
 
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/connection/running_session.hpp"
 #include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
@@ -47,7 +48,7 @@
 class CSessionFactory
 {
 public:
-    static std::auto_ptr<swish::connection::running_session> CreateSftpSession(
+    static std::auto_ptr<swish::connection::authenticated_session> CreateSftpSession(
         const wchar_t* pwszHost, unsigned int uPort, const wchar_t* pwszUser,
         __in ISftpConsumer* pConsumer);
 

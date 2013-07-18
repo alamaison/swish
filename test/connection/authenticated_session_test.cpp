@@ -1,7 +1,7 @@
 /**
     @file
 
-    Tests for the running_session class.
+    Tests for the authenticated_session class.
 
     @if license
 
@@ -24,52 +24,72 @@
     @endif
 */
 
-#include "swish/connection/running_session.hpp" // Test subject
+#include "swish/connection/authenticated_session.hpp" // Test subject
+#include "swish/provider/SessionFactory.hpp"
 #include "swish/utils.hpp" // Utf8StringToWideString
 
+#include "test/common_boost/ConsumerStub.hpp"
 #include "test/common_boost/fixtures.hpp" // OpenSshFixture
 
-#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <vector>
 
+using test::CConsumerStub;
 using test::OpenSshFixture;
 
-using swish::connection::running_session;
+using swish::connection::authenticated_session;
 using swish::utils::Utf8StringToWideString;
 
-using boost::make_shared;
 using boost::shared_ptr;
 
 using std::vector;
 
-BOOST_FIXTURE_TEST_SUITE( running_session_tests, OpenSshFixture )
+BOOST_FIXTURE_TEST_SUITE( authenticated_session_tests, OpenSshFixture )
 
 /**
  * Test that connecting succeeds.
  */
 BOOST_AUTO_TEST_CASE( connect )
 {
-    running_session session(
-        Utf8StringToWideString(GetHost()), GetPort());
-    BOOST_CHECK(!session.is_dead());
+    shared_ptr<authenticated_session> session(
+        CSessionFactory::CreateSftpSession(
+            Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+            Utf8StringToWideString(GetUser()).c_str(),
+            new CConsumerStub(PrivateKeyPath(), PublicKeyPath())));
+    BOOST_CHECK(!session->is_dead());
 }
 
 BOOST_AUTO_TEST_CASE( multiple_connections )
 {
-    vector<shared_ptr<running_session>> sessions;
+    vector<shared_ptr<authenticated_session>> sessions;
     for (int i = 0; i < 5; i++)
     {
         sessions.push_back(
-            make_shared<running_session>(
-                Utf8StringToWideString(GetHost()), GetPort()));
+            shared_ptr<authenticated_session>(
+                CSessionFactory::CreateSftpSession(
+                    Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+                    Utf8StringToWideString(GetUser()).c_str(),
+                    new CConsumerStub(PrivateKeyPath(), PublicKeyPath()))));
     }
 
     for (int i = 0; i < 5; i++)
     {
         BOOST_CHECK(!sessions.at(i)->is_dead());
     }
+}
+
+/** 
+ * Test that getting SFTP channel succeeds
+ */
+BOOST_AUTO_TEST_CASE( sftp_started )
+{
+    shared_ptr<authenticated_session> session(
+        CSessionFactory::CreateSftpSession(
+            Utf8StringToWideString(GetHost()).c_str(), GetPort(),
+            Utf8StringToWideString(GetUser()).c_str(),
+            new CConsumerStub(PrivateKeyPath(), PublicKeyPath())));
+    session->get_sftp_channel();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
