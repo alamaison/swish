@@ -40,7 +40,7 @@
 
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 
-#include "swish/provider/SessionFactory.hpp"  // CSessionFactory
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
 #include <comet/ptr.h> // com_ptr

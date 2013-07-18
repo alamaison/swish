@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,14 +29,15 @@
 #include "test/common_boost/remote_test_config.hpp" // remote_test_config
 #include "test/common_boost/stream_utils.hpp" // verify_stream_read
 
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/provider/SftpStream.hpp"
-#include "swish/provider/SessionFactory.hpp" // CSessionFactory
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/test/unit_test.hpp>
 
@@ -57,6 +58,7 @@ using comet::com_ptr;
 
 using boost::filesystem::wpath;
 using boost::numeric_cast;
+using boost::make_shared;
 using boost::shared_ptr;
 
 using std::auto_ptr;
@@ -76,9 +78,9 @@ public:
         m_consumer->set_password_behaviour(MockConsumer::CustomPassword);
         m_consumer->set_password(config.GetPassword());
 
-        m_session = shared_ptr<authenticated_session>(CSessionFactory::CreateSftpSession(
-            config.GetHost().c_str(), config.GetPort(),
-            config.GetUser().c_str(), m_consumer.get()));
+        m_session = make_shared<authenticated_session>(
+            config.GetHost(), config.GetPort(), config.GetUser(),
+            m_consumer.get());
     }
 
     shared_ptr<authenticated_session> session() const

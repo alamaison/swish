@@ -37,10 +37,9 @@
 
 #include "Provider.hpp"
 
-#include "KeyboardInteractive.hpp"
-#include "SessionFactory.hpp" // authenticated_session
 #include "SftpStream.hpp"
 
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
@@ -270,8 +269,8 @@ void provider::_Connect(com_ptr<ISftpConsumer> consumer)
     lock_guard<mutex> lock(m_session_creation_mutex);
     if (!m_session || m_session->is_dead())
     {
-        m_session = CSessionFactory::CreateSftpSession(
-            m_host.c_str(), m_port, m_user.c_str(), consumer.get());
+        m_session = make_shared<authenticated_session>(
+            m_host, m_port, m_user, consumer.get());
     }
 }
 

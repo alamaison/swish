@@ -25,12 +25,12 @@
 */
 
 #include "swish/connection/authenticated_session.hpp" // Test subject
-#include "swish/provider/SessionFactory.hpp"
 #include "swish/utils.hpp" // Utf8StringToWideString
 
 #include "test/common_boost/ConsumerStub.hpp"
 #include "test/common_boost/fixtures.hpp" // OpenSshFixture
 
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <vector>
@@ -41,6 +41,7 @@ using test::OpenSshFixture;
 using swish::connection::authenticated_session;
 using swish::utils::Utf8StringToWideString;
 
+using boost::make_shared;
 using boost::shared_ptr;
 
 using std::vector;
@@ -52,12 +53,11 @@ BOOST_FIXTURE_TEST_SUITE( authenticated_session_tests, OpenSshFixture )
  */
 BOOST_AUTO_TEST_CASE( connect )
 {
-    shared_ptr<authenticated_session> session(
-        CSessionFactory::CreateSftpSession(
-            Utf8StringToWideString(GetHost()).c_str(), GetPort(),
-            Utf8StringToWideString(GetUser()).c_str(),
-            new CConsumerStub(PrivateKeyPath(), PublicKeyPath())));
-    BOOST_CHECK(!session->is_dead());
+    authenticated_session session(
+        Utf8StringToWideString(GetHost()), GetPort(),
+        Utf8StringToWideString(GetUser()),
+        new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
+    BOOST_CHECK(!session.is_dead());
 }
 
 BOOST_AUTO_TEST_CASE( multiple_connections )
@@ -66,11 +66,10 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
     for (int i = 0; i < 5; i++)
     {
         sessions.push_back(
-            shared_ptr<authenticated_session>(
-                CSessionFactory::CreateSftpSession(
-                    Utf8StringToWideString(GetHost()).c_str(), GetPort(),
-                    Utf8StringToWideString(GetUser()).c_str(),
-                    new CConsumerStub(PrivateKeyPath(), PublicKeyPath()))));
+            make_shared<authenticated_session>(
+                    Utf8StringToWideString(GetHost()), GetPort(),
+                    Utf8StringToWideString(GetUser()),
+                    new CConsumerStub(PrivateKeyPath(), PublicKeyPath())));
     }
 
     for (int i = 0; i < 5; i++)
@@ -84,12 +83,11 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
  */
 BOOST_AUTO_TEST_CASE( sftp_started )
 {
-    shared_ptr<authenticated_session> session(
-        CSessionFactory::CreateSftpSession(
-            Utf8StringToWideString(GetHost()).c_str(), GetPort(),
-            Utf8StringToWideString(GetUser()).c_str(),
-            new CConsumerStub(PrivateKeyPath(), PublicKeyPath())));
-    session->get_sftp_channel();
+    authenticated_session session(
+        Utf8StringToWideString(GetHost()), GetPort(),
+        Utf8StringToWideString(GetUser()),
+        new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
+    session.get_sftp_channel();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

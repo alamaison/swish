@@ -38,11 +38,11 @@
 #define SWISH_CONNECTION_AUTHENTICATED_SESSION_HPP
 
 #include "swish/connection/running_session.hpp"
+#include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
 #include <ssh/session.hpp>
 #include <ssh/sftp.hpp>
 
-#include <boost/asio/ip/tcp.hpp> // Boost sockets
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -81,14 +81,26 @@ public:
     }
     */
 
-    // Only called by the SessionFactory which passes us a running_session
-    // that it has authenticated.
-    // Eventually the factory logic should move to this constructor.
-    authenticated_session(std::auto_ptr<running_session> session)
-        : m_session(session), m_sftp_channel(m_session->get_session())
-    {
-        assert(m_session->get_session().authenticated());
-    }
+    /**
+     * Creates and authenticates an SSH session and start SFTP channel.
+     *
+     * @param host
+     *     Name of the remote host to connect the session to.
+     * @param port
+     *    Port on the remote host to connect to.
+     * @param user
+     *     User to authenticate as.
+     * @param consumer
+     *    Callback used for user-interaction needed to authenticate, such as
+     *    requesting a password.
+     *
+     * @throws com_error if any part of this process fails:
+     * - E_ABORT if user cancelled the operation (via ISftpConsumer)
+     * - E_FAIL otherwise
+     */
+    authenticated_session(
+        const std::wstring& host, unsigned int port, const std::wstring& user,
+        ISftpConsumer* consumer);
 
     boost::mutex::scoped_lock aquire_lock();
 

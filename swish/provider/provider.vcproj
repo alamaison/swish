@@ -301,10 +301,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SessionFactory.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SftpStream.cpp"
 				>
 			</File>
@@ -324,10 +320,6 @@
 			</File>
 			<File
 				RelativePath=".\Provider.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SessionFactory.hpp"
 				>
 			</File>
 			<File
