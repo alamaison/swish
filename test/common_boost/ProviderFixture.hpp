@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +27,7 @@
 
 #pragma once
 
-#include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
+#include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, ComFixture
 
 #include "swish/provider/Provider.hpp"
@@ -221,11 +222,13 @@ public:
     /**
      * Get a dummy consumer to use in calls to provider.
      */
-    comet::com_ptr<ISftpConsumer> ProviderFixtureT::Consumer()
+    comet::com_ptr<test::MockConsumer> ProviderFixtureT::Consumer()
     {
-        comet::com_ptr<test::CConsumerStub> consumer = 
-            new test::CConsumerStub(
-                m_policy.private_key(), m_policy.public_key());
+        comet::com_ptr<test::MockConsumer> consumer = 
+            new test::MockConsumer();
+        consumer->set_pubkey_behaviour(test::MockConsumer::CustomKeys);
+        consumer->set_key_files(
+            m_policy.private_key().string(), m_policy.public_key().string());
         return consumer;
     }
 

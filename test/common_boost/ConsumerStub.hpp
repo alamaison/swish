@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,6 +41,9 @@
 
 namespace test {
 
+/**
+ * Very simple consumer that just handles authentication via pub-key.
+*/
 class CConsumerStub : public comet::simple_object<ISftpConsumer>
 {
 public:

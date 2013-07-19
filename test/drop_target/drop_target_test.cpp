@@ -29,6 +29,7 @@
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
 #include "test/common_boost/data_object_utils.hpp"  // DataObjects on zip
+#include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
 #include <boost/filesystem.hpp>

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,12 +84,27 @@ public:
         ThrowResponse     ///< Throw exception if kb-interaction requested
     };
 
+    /**
+     * Possible behaviours of mock public-key file requests.
+     */
+    enum PublicKeyBehaviour {
+        EmptyKeys,    ///< Return an empty BSTR (not NULL, "")
+        CustomKeys,   ///< Return the strings set with SetKeys
+        WrongKeys,    ///< Return the wrong, but existing, key files
+        InvalidKeys,  ///< Return key files that don't exist
+        NullKeys,     ///< Return NULL and S_OK (catastrophic failure)
+        FailKeys,     ///< Return E_FAIL
+        AbortKeys,    ///< Return E_ABORT (simulate user cancelled)
+        ThrowKeys     ///< Throw exception if keys requested
+    };
+
     MockConsumer()
         :
           m_password_behaviour(FailPassword),
           m_password_attempt_count(0),
           m_password_attempt_count_max(1),
           m_keyboard_interative_behaviour(ThrowResponse),
+          m_pubkey_behaviour(ThrowKeys),
           m_ki_attempt_count(0),
           m_ki_attempt_count_max(1),
           m_confirm_overwrite_behaviour(PreventOverwrite),
@@ -121,12 +136,27 @@ public:
         m_ki_attempt_count_max = max;
     }
 
+    void set_key_files(
+        const std::string& private_key, const std::string& public_key)
+    {
+        m_private_key_file = private_key;
+        m_public_key_file = public_key;
+    }
+
+    void set_pubkey_behaviour(PublicKeyBehaviour behaviour)
+    {
+        m_pubkey_behaviour = behaviour;
+    }
+
     void set_confirm_overwrite_behaviour(ConfirmOverwriteBehaviour behaviour)
     {
         m_confirm_overwrite_behaviour = behaviour;
     }
 
-    bool confirmed_overwrite() const { return m_confirmed_overwrite; }
+    bool was_asked_to_confirm_overwrite() const
+    {
+        return m_confirmed_overwrite;
+    }
 
     // ISftpConsumer methods
     virtual boost::optional<std::wstring> prompt_for_password()
@@ -141,7 +171,6 @@ public:
             BOOST_THROW_EXCEPTION(
                 comet::com_error("Too many attempts", E_FAIL));
 
-        comet::bstr_t password;
         switch (m_password_behaviour)
         {
         case CustomPassword:
@@ -159,6 +188,7 @@ public:
         default:
             BOOST_FAIL(
                 "Unreachable: Unrecognised OnPasswordRequest() behaviour");
+            return boost::optional<std::wstring>();
         }
     }
 
@@ -233,14 +263,76 @@ public:
         return S_OK;
     }
 
-    HRESULT OnPrivateKeyFileRequest(BSTR * /*pbstrPrivateKeyFile*/)
+    HRESULT OnPrivateKeyFileRequest(BSTR* pbstrPrivateKeyFile)
     {
-        return E_NOTIMPL;
+        comet::bstr_t key_file;
+        switch (m_pubkey_behaviour)
+        {
+        case CustomKeys:
+            key_file = m_private_key_file;
+            break;
+        case WrongKeys:
+            key_file = m_public_key_file;
+            break;
+        case InvalidKeys:
+            key_file = "HumptyDumpty";
+            break;
+        case EmptyKeys:
+            // leave key_file empty
+            break;
+        case NullKeys:
+            *pbstrPrivateKeyFile = NULL;
+            return S_OK;
+        case FailKeys:
+            return E_FAIL;
+        case AbortKeys:
+            return E_ABORT;
+        case ThrowKeys:
+            BOOST_FAIL("Unexpected call to " __FUNCTION__);
+            return E_FAIL;
+        default:
+            BOOST_FAIL("Unreachable: Unrecognised "  __FUNCTION__ " behaviour");
+            return E_UNEXPECTED;
+        }
+
+        *pbstrPrivateKeyFile = key_file.detach();
+        return S_OK;
     }
 
-    HRESULT OnPublicKeyFileRequest(BSTR * /*pbstrPublicKeyFile*/)
+    HRESULT OnPublicKeyFileRequest(BSTR* pbstrPublicKeyFile)
     {
-        return E_NOTIMPL;
+        comet::bstr_t key_file;
+        switch (m_pubkey_behaviour)
+        {
+        case CustomKeys:
+            key_file = m_public_key_file;
+            break;
+        case WrongKeys:
+            key_file = m_private_key_file;
+            break;
+        case InvalidKeys:
+            key_file = "HumptyDumpty";
+                break;
+        case EmptyKeys:
+            // leave key_file empty
+            break;
+        case NullKeys:
+            *pbstrPublicKeyFile = NULL;
+            return S_OK;
+        case FailKeys:
+            return E_FAIL;
+        case AbortKeys:
+            return E_ABORT;
+        case ThrowKeys:
+            BOOST_FAIL("Unexpected call to " __FUNCTION__);
+            return E_FAIL;
+        default:
+            BOOST_FAIL("Unreachable: Unrecognised "  __FUNCTION__ " behaviour");
+            return E_UNEXPECTED;
+        }
+
+        *pbstrPublicKeyFile = key_file.detach();
+        return S_OK;
     }
 
     HRESULT OnConfirmOverwrite(
@@ -278,15 +370,18 @@ private:
     PasswordBehaviour m_password_behaviour;
     int m_password_attempt_count;
     int m_password_attempt_count_max;
+    std::wstring m_password;
 
     KeyboardInteractiveBehaviour m_keyboard_interative_behaviour;
     int m_ki_attempt_count;
     int m_ki_attempt_count_max;
 
+    PublicKeyBehaviour m_pubkey_behaviour;
+    std::string m_public_key_file;
+    std::string m_private_key_file;
+
     ConfirmOverwriteBehaviour m_confirm_overwrite_behaviour;
     bool m_confirmed_overwrite;
-
-    std::wstring m_password;
 };
 
 } // namespace test

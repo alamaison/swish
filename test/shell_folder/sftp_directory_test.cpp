@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_granted )
     cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
     BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), true);
-    BOOST_CHECK(consumer()->confirmed_overwrite());
+    BOOST_CHECK(consumer()->was_asked_to_confirm_overwrite());
 }
 
 namespace {
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_denied )
 
     BOOST_CHECK_EXCEPTION(
         directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
-    BOOST_CHECK(consumer()->confirmed_overwrite());
+    BOOST_CHECK(consumer()->was_asked_to_confirm_overwrite());
 }
 
 /**
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE( rename_provider_aborts )
 
     BOOST_CHECK_EXCEPTION(
         directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
-    BOOST_CHECK(!consumer()->confirmed_overwrite());
+    BOOST_CHECK(!consumer()->was_asked_to_confirm_overwrite());
 }
 
 /**
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE( rename_provider_fail )
 
     BOOST_CHECK_EXCEPTION(
         directory().Rename(pidl, L"renamed to"), com_error, is_com_fail);
-    BOOST_CHECK(!consumer()->confirmed_overwrite());
+    BOOST_CHECK(!consumer()->was_asked_to_confirm_overwrite());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
