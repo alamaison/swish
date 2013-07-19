@@ -409,10 +409,13 @@ VARIANT_BOOL provider::rename(
     if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
     {
         wstring error_out;
-        
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        ULONG sftp_last_error =
-            libssh2_sftp_last_error(m_session->get_raw_sftp_channel());
+         
+        ULONG sftp_last_error;
+        {
+            mutex::scoped_lock lock = m_session->aquire_lock();
+            sftp_last_error =
+                libssh2_sftp_last_error(m_session->get_raw_sftp_channel());
+        }
 
         hr = _RenameRetryWithOverwrite(
             consumer.get(), sftp_last_error, from, to, error_out);
