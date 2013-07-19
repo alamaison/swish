@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -52,17 +52,15 @@ public:
 
     virtual boost::optional<std::wstring> prompt_for_password();
 
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files();
+
     HRESULT OnKeyboardInteractiveRequest(
         __in BSTR bstrName, __in BSTR bstrInstruction,
         __in SAFEARRAY *psaPrompts,
         __in SAFEARRAY *psaShowResponses,
         __deref_out SAFEARRAY **ppsaResponses
-    );
-    HRESULT OnPrivateKeyFileRequest(
-        __out BSTR *pbstrPrivateKeyFile
-    );
-    HRESULT OnPublicKeyFileRequest(
-        __out BSTR *pbstrPublicKeyFile
     );
     HRESULT OnConfirmOverwrite(
         __in BSTR bstrOldFile,

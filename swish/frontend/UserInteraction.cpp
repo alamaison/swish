@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -63,13 +63,15 @@ using namespace winapi::gui;
 using comet::bstr_t;
 using comet::com_error;
 
+using boost::filesystem::path;
 using boost::locale::translate;
 using boost::optional;
 using boost::wformat;
 
-using std::wstringstream;
+using std::pair;
 using std::string;
 using std::wstring;
+using std::wstringstream;
 
 namespace swish {
 namespace frontend {
@@ -95,6 +97,15 @@ optional<wstring> CUserInteraction::prompt_for_password()
     }
 
     return optional<wstring>();
+}
+
+
+optional<pair<path, path>> CUserInteraction::key_files()
+{
+    // Swish doesn't use this way of pub-key auth - it uses Pageant via
+    // the agent interface.  This method is only implemented by unit
+    // test helpers.
+    return optional<pair<path, path>>();
 }
 
 HRESULT CUserInteraction::OnKeyboardInteractiveRequest(
@@ -147,30 +158,6 @@ HRESULT CUserInteraction::OnKeyboardInteractiveRequest(
     *ppsaResponses = saResponses.Detach();
 
     return S_OK;
-}
-
-/**
- * Return the path of the file containing the private key.
- */
-HRESULT CUserInteraction::OnPrivateKeyFileRequest(
-    BSTR *pbstrPrivateKeyFile)
-{
-    ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
-    *pbstrPrivateKeyFile = NULL;
-
-    return E_NOTIMPL;
-}
-
-/**
- * Return the path of the file containing the public key.
- */
-HRESULT CUserInteraction::OnPublicKeyFileRequest(
-    BSTR *pbstrPublicKeyFile)
-{
-    ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
-    *pbstrPublicKeyFile = NULL;
-
-    return E_NOTIMPL;
 }
 
 namespace {

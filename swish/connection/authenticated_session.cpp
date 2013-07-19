@@ -78,6 +78,7 @@ using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
 
+using boost::filesystem::path;
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::move;
@@ -85,6 +86,7 @@ using boost::mutex;
 using boost::optional;
 
 using std::exception;
+using std::pair;
 using std::string;
 using std::wstring;
 
@@ -234,66 +236,44 @@ HRESULT keyboard_interactive_authentication(
 }
 
 
-HRESULT pubkey_auth_the_nasty_old_way(
+bool public_key_file_based_authentication(
     const string& utf8_username, running_session& session,
     com_ptr<ISftpConsumer> consumer)
 {
     assert(consumer);
 
-    try
+    optional<pair<path, path>> key_files = consumer->key_files();
+    if (key_files)
     {
-        bstr_t private_key_path;
-        HRESULT hr =
-            consumer->OnPrivateKeyFileRequest(private_key_path.out());
-        if (FAILED(hr))
-            return hr;
-
-        bstr_t public_key_path;
-        hr = consumer->OnPublicKeyFileRequest(public_key_path.out());
-        if (FAILED(hr))
-            return hr;
-
-        string privateKey = WideStringToUtf8String(private_key_path.w_str());
-        string publicKey = WideStringToUtf8String(public_key_path.w_str());
-
         // TODO: unlock public key using passphrase
-        int rc = libssh2_userauth_publickey_fromfile_ex(
-            session.get_raw_session(), utf8_username.data(), utf8_username.size(),
-            publicKey.c_str(), privateKey.c_str(), "");
-        if (rc)
-            return E_ABORT;
+        session.get_session().authenticate_by_key_files(
+            utf8_username, key_files->second, key_files->first, "");
 
-        assert(libssh2_userauth_authenticated(session.get_raw_session())); // Double-check
+        assert(session.get_session().authenticated());
+
+        return true;
     }
-    WINAPI_COM_CATCH();
+    else
+    {
+        return false;
+    }
 
     return S_OK;
 }
 
-HRESULT public_key_authentication(
-    const string& utf8_username, running_session& yukky_session,
+bool public_key_agent_authentication(
+    const string& utf8_username, running_session& session,
     com_ptr<ISftpConsumer> consumer)
 {
-    // This old way is only kept around to support the tests.  Its almost
-    // useless for anything else as we don't pass the 'consumer' enough
-    // information to identify which key to use.
-    HRESULT hr = pubkey_auth_the_nasty_old_way(
-        utf8_username, yukky_session, consumer);
-    if (SUCCEEDED(hr))
-        return hr;
-
-    // OK, now lets do it the nice new way using agents.
-
-    ssh::session session(yukky_session.get_session());
-
     try
     {
-        BOOST_FOREACH(ssh::agent::identity key, session.agent_identities())
+        BOOST_FOREACH(
+            ssh::agent::identity key, session.get_session().agent_identities())
         {
             try
             {
                 key.authenticate(utf8_username);
-                return S_OK;
+                return true;
             }
             catch (const exception&)
             { /* Ignore and try the next */ }
@@ -303,7 +283,7 @@ HRESULT public_key_authentication(
     { /* No agent running probably.  Either way, give up. */ }
 
     // None of the agent identities worked.  Sob. Back to passwords then.
-    return E_ABORT;
+    return false;
 }
 
 /**
@@ -335,35 +315,56 @@ void authenticate_user(
     }
 
     // Try each supported authentication method in turn until one succeeds
-    HRESULT hr = E_FAIL;
     if (::strstr(szAuthList, "publickey"))
     {
-        hr = public_key_authentication(utf8_username, session, consumer);
-    }
-    if (FAILED(hr) && ::strstr(szAuthList, "keyboard-interactive"))
-    {
-        hr = keyboard_interactive_authentication(
-            utf8_username, session, consumer);
-        if (hr == E_ABORT)
-            BOOST_THROW_EXCEPTION(
-                com_error(
-                    "User aborted during keyboard-interactive authentication",
-                    E_ABORT));
-    }
-    if (FAILED(hr) && ::strstr(szAuthList, "password"))
-    {
-        if (!password_authentication(utf8_username, session, consumer))
+        // This old way is only kept around to support the tests.  Its almost
+        // useless for anything else as we don't pass the 'consumer' enough
+        // information to identify which key to use.
+        if (public_key_file_based_authentication(
+            utf8_username, session, consumer))
         {
-            BOOST_THROW_EXCEPTION(com_error(E_ABORT));
+            return;
         }
-        else
+
+        // OK, now lets try it the nice new way using agents.
+        if (public_key_agent_authentication(utf8_username, session, consumer))
         {
             return;
         }
     }
 
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error(hr));
+    if (::strstr(szAuthList, "keyboard-interactive"))
+    {
+        HRESULT hr = keyboard_interactive_authentication(
+            utf8_username, session, consumer);
+        if (SUCCEEDED(hr))
+        {
+            return;
+        }
+        else if (hr == E_ABORT)
+        {
+            BOOST_THROW_EXCEPTION(
+                com_error(
+                    "User aborted during keyboard-interactive authentication",
+                    E_ABORT));
+        }
+    }
+
+    if (::strstr(szAuthList, "password"))
+    {
+        if (password_authentication(utf8_username, session, consumer))
+        {
+            return;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                com_error("User aborted password authentication", E_ABORT));
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(
+        com_error("No authentication method succeeded", E_FAIL));
 }
 
 running_session create_and_authenticate(

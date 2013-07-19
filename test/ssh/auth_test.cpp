@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
     session s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), wrong_public_key_path(), private_key_path(), ""),
         ssh_error);
     BOOST_CHECK(!s.authenticated());
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
     session s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), public_key_path(), wrong_private_key_path(), ""),
         ssh_error);
     BOOST_CHECK(!s.authenticated());
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
     session s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), wrong_public_key_path(), wrong_private_key_path(), ""),
         ssh_error);
     BOOST_CHECK(!s.authenticated());
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
     session s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), private_key_path(), private_key_path(), ""), ssh_error);
     BOOST_CHECK(!s.authenticated());
 }
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
     session s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), public_key_path(), public_key_path(), ""), ssh_error);
     BOOST_CHECK(!s.authenticated());
 }
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE( pubkey )
     session s = test_session();
 
     BOOST_CHECK(!s.authenticated());
-    s.authenticate_by_key(user(), public_key_path(), private_key_path(), "");
+    s.authenticate_by_key_files(user(), public_key_path(), private_key_path(), "");
     BOOST_CHECK(s.authenticated());
 }
 

@@ -76,7 +76,7 @@ public:
     sftp_channel channel()
     {
         session s = test_session();
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), public_key_path(), private_key_path(), "");
         sftp_channel channel(s);
 

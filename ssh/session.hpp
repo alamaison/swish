@@ -291,7 +291,7 @@ public:
      * libssh2 does.  It should be possible to derive one from the other so
      * when libssh2 supports this the method will take one fewer argument.
      */
-    void authenticate_by_key(
+    void authenticate_by_key_files(
         const std::string& username, const boost::filesystem::path& public_key,
         const boost::filesystem::path& private_key,
         const std::string& passphrase)

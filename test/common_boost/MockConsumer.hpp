@@ -66,8 +66,8 @@ public:
         EmptyPassword,    ///< Return an empty string
         CustomPassword,   ///< Return the string set with SetPassword
         WrongPassword,    ///< Return a very unlikely sequence of characters
-        FailPassword,     ///< Throw exception if password requested
-        AbortPassword,    ///< Return E_ABORT (simulate user cancelled)
+        FailPassword,     ///< Throw E_FAIL exception if password requested
+        AbortPassword,    ///< Return unitialised optional indicating abort.
     };
 
     /**
@@ -92,10 +92,8 @@ public:
         CustomKeys,   ///< Return the strings set with SetKeys
         WrongKeys,    ///< Return the wrong, but existing, key files
         InvalidKeys,  ///< Return key files that don't exist
-        NullKeys,     ///< Return NULL and S_OK (catastrophic failure)
-        FailKeys,     ///< Return E_FAIL
-        AbortKeys,    ///< Return E_ABORT (simulate user cancelled)
-        ThrowKeys     ///< Throw exception if keys requested
+        FailKeys,     ///< Throw E_FAIL exceptionn if keys requested.
+        AbortKeys,    ///< Return unitialised optional indicating abort.
     };
 
     MockConsumer()
@@ -104,7 +102,7 @@ public:
           m_password_attempt_count(0),
           m_password_attempt_count_max(1),
           m_keyboard_interative_behaviour(ThrowResponse),
-          m_pubkey_behaviour(ThrowKeys),
+          m_pubkey_behaviour(FailKeys),
           m_ki_attempt_count(0),
           m_ki_attempt_count_max(1),
           m_confirm_overwrite_behaviour(PreventOverwrite),
@@ -192,6 +190,33 @@ public:
         }
     }
 
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files()
+    {
+        switch (m_pubkey_behaviour)
+        {
+        case CustomKeys:
+            return std::make_pair(m_private_key_file, m_public_key_file);
+        case WrongKeys:
+            return std::make_pair(m_public_key_file, m_private_key_file);
+        case InvalidKeys:
+            return std::make_pair("HumptyDumpty", "SatOnAWall");
+        case EmptyKeys:
+            return std::make_pair("", "");
+        case FailKeys:
+            BOOST_THROW_EXCEPTION(
+                comet::com_error("Mock fail behaviour", E_FAIL));
+        case AbortKeys:
+            return boost::optional<
+                std::pair<boost::filesystem::path, boost::filesystem::path>>();
+        default:
+            BOOST_FAIL("Unreachable: Unrecognised "  __FUNCTION__ " behaviour");
+            return boost::optional<
+                std::pair<boost::filesystem::path, boost::filesystem::path>>();
+        }
+    }
+
     HRESULT OnKeyboardInteractiveRequest(
         BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
         SAFEARRAY * prompts, SAFEARRAY * show_responses,
@@ -260,78 +285,6 @@ public:
         }
 
         *responses_out = responses.detach();
-        return S_OK;
-    }
-
-    HRESULT OnPrivateKeyFileRequest(BSTR* pbstrPrivateKeyFile)
-    {
-        comet::bstr_t key_file;
-        switch (m_pubkey_behaviour)
-        {
-        case CustomKeys:
-            key_file = m_private_key_file;
-            break;
-        case WrongKeys:
-            key_file = m_public_key_file;
-            break;
-        case InvalidKeys:
-            key_file = "HumptyDumpty";
-            break;
-        case EmptyKeys:
-            // leave key_file empty
-            break;
-        case NullKeys:
-            *pbstrPrivateKeyFile = NULL;
-            return S_OK;
-        case FailKeys:
-            return E_FAIL;
-        case AbortKeys:
-            return E_ABORT;
-        case ThrowKeys:
-            BOOST_FAIL("Unexpected call to " __FUNCTION__);
-            return E_FAIL;
-        default:
-            BOOST_FAIL("Unreachable: Unrecognised "  __FUNCTION__ " behaviour");
-            return E_UNEXPECTED;
-        }
-
-        *pbstrPrivateKeyFile = key_file.detach();
-        return S_OK;
-    }
-
-    HRESULT OnPublicKeyFileRequest(BSTR* pbstrPublicKeyFile)
-    {
-        comet::bstr_t key_file;
-        switch (m_pubkey_behaviour)
-        {
-        case CustomKeys:
-            key_file = m_public_key_file;
-            break;
-        case WrongKeys:
-            key_file = m_private_key_file;
-            break;
-        case InvalidKeys:
-            key_file = "HumptyDumpty";
-                break;
-        case EmptyKeys:
-            // leave key_file empty
-            break;
-        case NullKeys:
-            *pbstrPublicKeyFile = NULL;
-            return S_OK;
-        case FailKeys:
-            return E_FAIL;
-        case AbortKeys:
-            return E_ABORT;
-        case ThrowKeys:
-            BOOST_FAIL("Unexpected call to " __FUNCTION__);
-            return E_FAIL;
-        default:
-            BOOST_FAIL("Unreachable: Unrecognised "  __FUNCTION__ " behaviour");
-            return E_UNEXPECTED;
-        }
-
-        *pbstrPublicKeyFile = key_file.detach();
         return S_OK;
     }
 

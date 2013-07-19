@@ -55,10 +55,17 @@ public:
         : m_privateKey(privatekey), m_publicKey(publickey) {}
 
     // ISftpConsumer methods
-    
+
     virtual boost::optional<std::wstring> prompt_for_password()
     {
         return boost::optional<std::wstring>();
+    }
+
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files()
+    {
+        return std::make_pair(m_privateKey, m_publicKey);
     }
 
     HRESULT OnKeyboardInteractiveRequest(
@@ -68,46 +75,6 @@ public:
     {
         BOOST_ERROR("Unexpected call to "__FUNCTION__);
         return E_NOTIMPL;
-    }
-
-    /**
-     * Return the path of the file containing the private key.
-     *
-     * The path is set via SetKeyPaths().
-     */
-    HRESULT OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
-    {
-        ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
-        *pbstrPrivateKeyFile = NULL;
-
-        try
-        {
-            *pbstrPrivateKeyFile = comet::bstr_t::detach(
-                m_privateKey.file_string());
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
-    /**
-     * Return the path of the file containing the public key.
-     *
-     * The path is set via SetKeyPaths().
-     */
-    HRESULT OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
-    {
-        ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
-        *pbstrPublicKeyFile = NULL;
-
-        try
-        {
-            *pbstrPublicKeyFile = comet::bstr_t::detach(
-                m_publicKey.file_string());
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
     }
 
     HRESULT OnConfirmOverwrite(

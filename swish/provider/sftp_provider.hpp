@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,6 +40,7 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <string> // wstring
+#include <utility> // pair
 #include <vector>
 
 class ISftpConsumer : public IUnknown
@@ -49,10 +51,24 @@ public:
      * Get password from the user.
      *
      * @return
-     *     Uninitialised optional string if authentication should be 
-     *     aborted.  Initialised string containing password, otherwise.
+     *     Uninitialised optional if authentication should be aborted.
+     *     String containing password, otherwise.
      */
     virtual boost::optional<std::wstring> prompt_for_password() = 0;
+
+    /**
+     * Get files containing private and public keys for public-key
+     * authentication.
+     *
+     * @return
+     *     Uninitialised optional if public-key authentication should not be
+     *     performed using file-based keys.
+     *     Pair of paths: private-key file first, public-key file second.
+     * @return 
+     */
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files() = 0;
 
     virtual HRESULT OnKeyboardInteractiveRequest(
         BSTR bstrName,
@@ -60,12 +76,6 @@ public:
         SAFEARRAY* saPrompts,
         SAFEARRAY* saShowResponses,
         SAFEARRAY* *psaResponses
-    ) = 0;
-    virtual HRESULT OnPrivateKeyFileRequest(
-        BSTR *pbstrPrivateKeyFile
-    ) = 0;
-    virtual HRESULT OnPublicKeyFileRequest(
-        BSTR *pbstrPublicKeyFile
     ) = 0;
     virtual HRESULT OnConfirmOverwrite(
         BSTR bstrOldFile,
