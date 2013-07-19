@@ -111,8 +111,11 @@ namespace detail {
 
         /**
          * Thin exception wrapper around libssh2_userauth_password_ex.
+         *
+         * The incorrect password failure is not reported as an exception
+         * because it is expected.
          */
-        inline void password(
+        inline bool password(
             boost::shared_ptr<LIBSSH2_SESSION> session, const char* username,
             size_t username_len, const char* password, size_t password_len,
             LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)))
@@ -120,11 +123,18 @@ namespace detail {
             int rc = libssh2_userauth_password_ex(
                 session.get(), username, username_len, password, password_len,
                 passwd_change_cb);
-            if (rc != 0)
+
+            if (rc != 0 && rc != LIBSSH2_ERROR_AUTHENTICATION_FAILED)
+            {
                 BOOST_THROW_EXCEPTION(
                     last_error(session) <<
                     boost::errinfo_api_function(
                         "libssh2_userauth_password_ex"));
+            }
+            else
+            {
+                return rc == 0;
+            }
         }
 
         /**
@@ -258,12 +268,18 @@ public:
     /**
      * Simple password authentication.
      *
+     * @returns
+     *     `true` if authentication successful, `false` if not.
+     *
+     * @throws ssh_error
+     *     if unexpected failure while trying to authenticate.
+     *
      * @todo  Handle password change callback.
      */
-    void authenticate_by_password(
+    bool authenticate_by_password(
         const std::string& username, const std::string& password)
     {
-        detail::libssh2::userauth::password(
+        return detail::libssh2::userauth::password(
             m_session, username.data(), username.size(), password.data(),
             password.size(), NULL);
     }

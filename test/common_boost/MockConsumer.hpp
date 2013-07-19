@@ -31,10 +31,11 @@
 #include "swish/provider/sftp_provider.hpp"
 
 #include <comet/bstr.h> // bstr_t
-#include <comet/bstr.h> // bstr_t
+#include <comet/error.h> // com_error
 #include <comet/safearray.h>
 #include <comet/server.h> // simple_object
 
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/test/test_tools.hpp> // BOOST_ERROR
 
@@ -62,13 +63,11 @@ public:
      * Possible behaviours of mock password request handler OnPasswordRequest.
      */
     enum PasswordBehaviour {
-        EmptyPassword,    ///< Return an empty BSTR (not NULL, "")
+        EmptyPassword,    ///< Return an empty string
         CustomPassword,   ///< Return the string set with SetPassword
         WrongPassword,    ///< Return a very unlikely sequence of characters
-        NullPassword,     ///< Return NULL and S_OK (catastrophic failure)
-        FailPassword,     ///< Return E_FAIL
+        FailPassword,     ///< Throw exception if password requested
         AbortPassword,    ///< Return E_ABORT (simulate user cancelled)
-        ThrowPassword     ///< Throw exception if password requested
     };
 
     /**
@@ -87,7 +86,7 @@ public:
 
     MockConsumer()
         :
-          m_password_behaviour(ThrowPassword),
+          m_password_behaviour(FailPassword),
           m_password_attempt_count(0),
           m_password_attempt_count_max(1),
           m_keyboard_interative_behaviour(ThrowResponse),
@@ -130,52 +129,37 @@ public:
     bool confirmed_overwrite() const { return m_confirmed_overwrite; }
 
     // ISftpConsumer methods
-    HRESULT OnPasswordRequest(BSTR request, BSTR *password_out)
+    virtual boost::optional<std::wstring> prompt_for_password()
     {
         ++m_password_attempt_count;
-        *password_out = NULL;
-        if (m_password.empty())
-            return E_NOTIMPL;
-
-        BOOST_CHECK_GT(::SysStringLen(request), 0U);
         
         // Perform chosen test behaviour
         // The three password cases which should never succeed will try to send
         // their 'reply' up to m_nMaxPassword time to simulate a user repeatedly
         // trying the wrong password and then giving up. 
         if (m_password_attempt_count > m_password_attempt_count_max)
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(
+                comet::com_error("Too many attempts", E_FAIL));
 
         comet::bstr_t password;
         switch (m_password_behaviour)
         {
         case CustomPassword:
-            password = m_password;
-            break;
+            return m_password;
         case WrongPassword:
-            password = L"WrongPasswordXyayshdkhjhdk";
-            break;
+            return L"WrongPasswordXyayshdkhjhdk";
         case EmptyPassword:
             // leave password blank
-            break;
-        case NullPassword:
-            *password_out = NULL;
-            return S_OK;
+            return std::wstring();
         case FailPassword:
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(
+                comet::com_error("Mock fail behaviour", E_FAIL));
         case AbortPassword:
-            return E_ABORT;
-        case ThrowPassword:
-            BOOST_FAIL("Unexpected call to " __FUNCTION__);
-            return E_FAIL;
+            return boost::optional<std::wstring>();
         default:
             BOOST_FAIL(
                 "Unreachable: Unrecognised OnPasswordRequest() behaviour");
-            return E_UNEXPECTED;
         }
-
-        *password_out = password.detach();
-        return S_OK;
     }
 
     HRESULT OnKeyboardInteractiveRequest(

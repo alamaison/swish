@@ -49,9 +49,9 @@ public:
      * @{
      */
     // ISftpConsumer Methods
-    HRESULT OnPasswordRequest(
-        __in BSTR bstrRequest, __out BSTR *pbstrPassword
-    );
+
+    virtual boost::optional<std::wstring> prompt_for_password();
+
     HRESULT OnKeyboardInteractiveRequest(
         __in BSTR bstrName, __in BSTR bstrInstruction,
         __in SAFEARRAY *psaPrompts,

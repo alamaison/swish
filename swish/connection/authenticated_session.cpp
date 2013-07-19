@@ -51,6 +51,7 @@
 #include <boost/filesystem.hpp> // wpath
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/move/move.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -81,6 +82,7 @@ using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::move;
 using boost::mutex;
+using boost::optional;
 
 using std::exception;
 using std::string;
@@ -163,36 +165,38 @@ void verify_host_key(
  * asked for the password again.  This repeats until the user supplies a 
  * correct password or cancels the request.
  *
- * @throws com_error if authentication fails:
- * - E_ABORT if user cancelled the operation (via ISftpConsumer)
- * - E_FAIL otherwise
+ * @throws std::exception
+ *     if authentication fails for an unexpected reason, in other words,
+ *     not that the user called the authentication
+ *
+ * @returns
+ *     `true` if authentication was successful,
+ *     `false` if the user aborted early.
+ *     Not that unsuccessful is not a return value as the function keeps
+ *     re-prompting until successful or cancelled.
  */
-HRESULT password_authentication(
-    const string& utf8_username, running_session& session, com_ptr<ISftpConsumer> consumer)
+bool password_authentication(
+    const string& utf8_username, running_session& session,
+    com_ptr<ISftpConsumer> consumer)
 {
-    HRESULT hr;
-    bstr_t prompt = L"Please enter your password:";
-    bstr_t password;
-
-    // Loop until successfully authenticated or request returns cancel
-    int ret = -1; // default to failure
-    do {
-        hr = consumer->OnPasswordRequest(prompt.in(), password.out());
-        if FAILED(hr)
-            return hr;
+    // Loop until successfully authenticated or user cancels
+    for(;;)
+    {
+        optional<wstring> password = consumer->prompt_for_password();
+        if (!password)
+        {
+            return false;
+        }
         
-        string utf8_password = WideStringToUtf8String(password.w_str());
-        ret = libssh2_userauth_password_ex(
-            session.get_raw_session(), utf8_username.data(), utf8_username.size(),
-            utf8_password.data(), utf8_password.size(),
-            NULL);
-        // TODO: handle password change callback here
-    } while (ret != 0);
+        string utf8_password = WideStringToUtf8String(*password);
+        if (session.get_session().authenticate_by_password(
+            utf8_username, utf8_password))
+        {
+            return true;
+        }
 
-    assert(SUCCEEDED(hr));
-    assert(ret == 0);
-    assert(libssh2_userauth_authenticated(session.get_raw_session())); // Double-check
-    return hr;
+        // TODO: handle password change callback here
+    }
 }
 
 /**
@@ -348,7 +352,14 @@ void authenticate_user(
     }
     if (FAILED(hr) && ::strstr(szAuthList, "password"))
     {
-        hr = password_authentication(utf8_username, session, consumer);
+        if (!password_authentication(utf8_username, session, consumer))
+        {
+            BOOST_THROW_EXCEPTION(com_error(E_ABORT));
+        }
+        else
+        {
+            return;
+        }
     }
 
     if (FAILED(hr))

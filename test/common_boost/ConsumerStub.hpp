@@ -52,10 +52,10 @@ public:
         : m_privateKey(privatekey), m_publicKey(publickey) {}
 
     // ISftpConsumer methods
-    HRESULT OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
+    
+    virtual boost::optional<std::wstring> prompt_for_password()
     {
-        *pbstrPassword = NULL;
-        return E_NOTIMPL;
+        return boost::optional<std::wstring>();
     }
 
     HRESULT OnKeyboardInteractiveRequest(

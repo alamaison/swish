@@ -78,8 +78,7 @@ BOOST_AUTO_TEST_CASE( password_fail )
 {
     session s = test_session();
 
-    BOOST_CHECK_THROW(
-        s.authenticate_by_password(user(), "dummy password"), ssh_error);
+    BOOST_CHECK(!s.authenticate_by_password(user(), "dummy password"));
     BOOST_CHECK(!s.authenticated());
 }
 

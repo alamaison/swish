@@ -64,6 +64,7 @@ using comet::bstr_t;
 using comet::com_error;
 
 using boost::locale::translate;
+using boost::optional;
 using boost::wformat;
 
 using std::wstringstream;
@@ -78,30 +79,22 @@ CUserInteraction::CUserInteraction(HWND hwnd) : m_hwnd(hwnd) {}
 /**
  * Displays UI dialog to get password from user and returns it.
  *
- * @param [in]  bstrRequest    The prompt to display to the user.
- * @param [out] pbstrPassword  The reply from the user - the password.
- *
- * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
- *         forbidden and S_OK otherwise.
+ * If no window given, abort authentication.
  */
-HRESULT CUserInteraction::OnPasswordRequest(
-    BSTR bstrRequest, BSTR *pbstrPassword
-)
+optional<wstring> CUserInteraction::prompt_for_password()
 {
-    if (m_hwnd == NULL)
-        return E_FAIL;
-
-    try
+    if (m_hwnd)
     {
         wstring password;
-        if (!password_prompt(m_hwnd, bstrRequest, password))
-            BOOST_THROW_EXCEPTION(com_error(E_ABORT));
-
-        *pbstrPassword = bstr_t::detach(bstr_t(password));
+        if (password_prompt(
+                m_hwnd, translate("Prompt on password dialog", "Password:"),
+                password))
+        {
+            return password;
+        }
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
-        
-    return S_OK;
+
+    return optional<wstring>();
 }
 
 HRESULT CUserInteraction::OnKeyboardInteractiveRequest(

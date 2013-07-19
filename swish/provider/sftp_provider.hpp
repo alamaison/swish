@@ -32,6 +32,7 @@
 #include "swish/provider/sftp_provider_path.hpp"
 
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/optional/optional.hpp>
 //#include <boost/range/any_range.hpp> USE ONCE WE UPGRADE BOOST
 
 #include <comet/interface.h> // comtype
@@ -44,10 +45,15 @@ class ISftpConsumer : public IUnknown
 {
 public:
 
-    virtual HRESULT OnPasswordRequest(
-        BSTR bstrRequest,
-        BSTR *pbstrPassword
-    ) = 0;
+    /**
+     * Get password from the user.
+     *
+     * @return
+     *     Uninitialised optional string if authentication should be 
+     *     aborted.  Initialised string containing password, otherwise.
+     */
+    virtual boost::optional<std::wstring> prompt_for_password() = 0;
+
     virtual HRESULT OnKeyboardInteractiveRequest(
         BSTR bstrName,
         BSTR bstrInstruction,
