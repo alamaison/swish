@@ -54,7 +54,7 @@ namespace {
     public:
         PasswordForm(HWND hwnd_owner, const wstring& prompt)
             :
-            m_form(translate("Password"), 0, 0, 219, 49),
+            m_form(L"Swish", 0, 0, 219, 49),
             m_cancelled(true),
             m_password_box(edit(L"", 7, 18, 148, 14, edit::style::password))
         {
