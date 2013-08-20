@@ -42,6 +42,8 @@
 #include <ssh/ssh_error.hpp>
 #include <ssh/host_key.hpp>
 
+#include <boost/algorithm/string/classification.hpp> // is_any_of
+#include <boost/algorithm/string/split.hpp>
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/bind/bind.hpp>
@@ -52,6 +54,7 @@
 
 #include <exception> // bad_alloc
 #include <string>
+#include <vector>
 
 #include <libssh2.h>
 
@@ -259,6 +262,32 @@ public:
     {
         return ssh::host_key::host_key(m_session);
     }
+
+    /**
+     * Names of the methods the server claims are available for
+     * authentication.
+     *
+     * The server is allowed to lie.
+     */
+    std::vector<std::string> authentication_methods(
+        const std::string& username)
+    {
+        const char* method_list = ::libssh2_userauth_list(
+            m_session.get(), username.data(), username.size());
+
+        if (!method_list)
+        { 
+            BOOST_THROW_EXCEPTION(
+                detail::last_error(m_session) <<
+                boost::errinfo_api_function("libssh2_userauth_list"));
+        }
+
+        std::vector<std::string> methods;
+        boost::split(methods, method_list, boost::is_any_of(","));
+
+        return methods;
+    }
+
 
     bool authenticated() const
     {

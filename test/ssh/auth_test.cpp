@@ -42,6 +42,7 @@
 
 #include <exception>
 #include <string>
+#include <vector>
 
 using ssh::ssh_error;
 using ssh::session;
@@ -52,8 +53,19 @@ using test::ssh::session_fixture;
 
 using std::exception;
 using std::string;
+using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(auth_tests, session_fixture)
+
+BOOST_AUTO_TEST_CASE( available_auth_methods )
+{
+    session s = test_session();
+    
+    vector<string> methods = s.authentication_methods(user());
+    // 'publickey' is the only required method
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "publickey") != methods.end());
+}
 
 /**
  * New sessions must not be authenticated.

@@ -58,6 +58,7 @@
 #include <cassert>
 #include <exception>
 #include <string>
+#include <vector>
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
@@ -88,6 +89,7 @@ using boost::optional;
 using std::exception;
 using std::pair;
 using std::string;
+using std::vector;
 using std::wstring;
 
 
@@ -304,18 +306,17 @@ void authenticate_user(
     assert(user[0] != '\0');
     string utf8_username = WideStringToUtf8String(user);
 
-    // Check which authentication methods are available
-    char *szAuthList = libssh2_userauth_list(
-        session.get_raw_session(), utf8_username.data(), utf8_username.size());
-    if (!szAuthList || *szAuthList == '\0')
+    vector<string> methods =
+        session.get_session().authentication_methods(utf8_username);
+
+    if (methods.empty())
     {
-        // If empty, server refused to let user connect
         BOOST_THROW_EXCEPTION(
             std::exception("No supported authentication methods found"));
     }
 
     // Try each supported authentication method in turn until one succeeds
-    if (::strstr(szAuthList, "publickey"))
+    if (find(methods.begin(), methods.end(), "publickey") != methods.end())
     {
         // This old way is only kept around to support the tests.  Its almost
         // useless for anything else as we don't pass the 'consumer' enough
@@ -333,7 +334,7 @@ void authenticate_user(
         }
     }
 
-    if (::strstr(szAuthList, "keyboard-interactive"))
+    if (find(methods.begin(), methods.end(), "keyboard-interactive") != methods.end())
     {
         HRESULT hr = keyboard_interactive_authentication(
             utf8_username, session, consumer);
@@ -350,7 +351,7 @@ void authenticate_user(
         }
     }
 
-    if (::strstr(szAuthList, "password"))
+    if (find(methods.begin(), methods.end(), "password") != methods.end())
     {
         if (password_authentication(utf8_username, session, consumer))
         {
