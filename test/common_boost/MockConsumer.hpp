@@ -29,6 +29,7 @@
 #pragma once
 
 #include "swish/provider/sftp_provider.hpp"
+#include "swish/utils.hpp" // WideStringToUtf8String
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
@@ -78,10 +79,8 @@ public:
         EmptyResponse,    ///< Return an empty BSTR (not NULL, "")
         CustomResponse,   ///< Return the string set with SetPassword
         WrongResponse,    ///< Return a very unlikely sequence of characters
-        NullResponse,     ///< Return NULL and S_OK (catastrophic failure)
-        FailResponse,     ///< Return E_FAIL
+        FailResponse,     ///< Throw exception if kb-interaction requested
         AbortResponse,    ///< Return E_ABORT (simulate user cancelled)
-        ThrowResponse     ///< Throw exception if kb-interaction requested
     };
 
     /**
@@ -101,7 +100,7 @@ public:
           m_password_behaviour(FailPassword),
           m_password_attempt_count(0),
           m_password_attempt_count_max(1),
-          m_keyboard_interative_behaviour(ThrowResponse),
+          m_keyboard_interative_behaviour(FailResponse),
           m_pubkey_behaviour(FailKeys),
           m_ki_attempt_count(0),
           m_ki_attempt_count_max(1),
@@ -217,75 +216,58 @@ public:
         }
     }
 
-    HRESULT OnKeyboardInteractiveRequest(
-        BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
-        SAFEARRAY * prompts, SAFEARRAY * show_responses,
-        SAFEARRAY ** responses_out)
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& /*title*/, const std::string& /*instructions*/,
+        const std::vector<std::pair<std::string, bool>>& prompts)
     {
         ++m_ki_attempt_count;
 
-        comet::safearray_t<comet::bstr_t> prompts_array
-            = comet::safearray_t<comet::bstr_t>::create_const_reference(
-                prompts);
-        comet::safearray_t<comet::variant_bool_t> show_responses_array
-            = comet::safearray_t<comet::bstr_t>::create_const_reference(
-                show_responses);
-
-        BOOST_FOREACH(comet::bstr_t prompt, prompts_array)
+        typedef std::pair<std::string, bool> prompt_pair;
+        BOOST_FOREACH(const prompt_pair& prompt, prompts)
         {
-            BOOST_CHECK_GT(prompt.size(), 0U);
+            BOOST_CHECK_GT(prompt.first.size(), 0U);
         }
-
-        BOOST_CHECK_EQUAL(
-            prompts_array.lower_bound(), show_responses_array.lower_bound());
-        BOOST_CHECK_EQUAL(prompts_array.size(), show_responses_array.size());
 
         // Perform chosen test behaviour
         // The three response cases which should never succeed will try to send
-        // their 'reply' up to m_nMaxKbdAttempts time to simulate a user repeatedly
-        // trying the wrong password and then giving up.
+        // their 'reply' up to m_nMaxKbdAttempts time to simulate a user
+        // repeatedly trying the wrong password and then giving up.
         if (m_ki_attempt_count > m_ki_attempt_count_max)
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(std::exception("Too many kb-int attempts"));
 
-        comet::bstr_t response;
+        std::string response;
         switch (m_keyboard_interative_behaviour)
         {
         case CustomResponse:
-            response = m_password;
+            response = swish::utils::WideStringToUtf8String(m_password);
             break;
         case WrongResponse:
-            response = L"WrongPasswordXyayshdkhjhdk";
+            response = "WrongPasswordXyayshdkhjhdk";
             break;
         case EmptyResponse:
             // leave response empty
             break;
-        case NullResponse:
-            *responses_out = NULL;
-            return S_OK;
         case FailResponse:
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(std::exception("Mock fail behaviour"));
         case AbortResponse:
-            return E_ABORT;
-        case ThrowResponse:
-            BOOST_FAIL("Unexpected call to " __FUNCTION__);
-            return E_FAIL;
+            return boost::optional<std::vector<std::string>>();
         default:
             BOOST_FAIL("Unreachable: Unrecognised "
                 "OnKeyboardInteractiveRequest() behaviour");
-            return E_UNEXPECTED;
+            BOOST_THROW_EXCEPTION(
+                std::exception("Unrecognised mock behaviour"));
         }
 
-        // Create responses.  Return password BSTR as first response.  Any other 
+        std::vector<std::string> responses;
+        // Create responses.  Return password as first response.  Any other 
         // prompts are responded to with an empty string.
-        comet::safearray_t<comet::bstr_t> responses;
         responses.push_back(response);
-        while (responses.size() < prompts_array.size())
+        while (responses.size() < prompts.size())
         {
-            responses.push_back(comet::bstr_t());
+            responses.push_back("");
         }
 
-        *responses_out = responses.detach();
-        return S_OK;
+        return responses;
     }
 
     HRESULT OnConfirmOverwrite(

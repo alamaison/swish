@@ -36,7 +36,6 @@
 
 #include "authenticated_session.hpp"
 
-#include "swish/provider/KeyboardInteractive.hpp"
 #include "swish/utils.hpp" // WideStringToUtf8String
 
 #include <ssh/knownhost.hpp> // openssh_knownhost_collection
@@ -169,15 +168,15 @@ void verify_host_key(
  * asked for the password again.  This repeats until the user supplies a 
  * correct password or cancels the request.
  *
- * @throws std::exception
+ * @throws `std::exception`
  *     if authentication fails for an unexpected reason, in other words,
- *     not that the user called the authentication
+ *     a reason other than the user cancelling the authentication.
  *
  * @returns
  *     `true` if authentication was successful,
  *     `false` if the user aborted early.
- *     Not that unsuccessful is not a return value as the function keeps
- *     re-prompting until successful or cancelled.
+ * @note that unsuccessful is not a return value as the function keeps
+ *       re-prompting until successful or cancelled.
  */
 bool password_authentication(
     const string& utf8_username, running_session& session,
@@ -203,38 +202,93 @@ bool password_authentication(
     }
 }
 
+namespace {
+
+    class user_aborted_authentication : 
+        public virtual boost::exception, public std::runtime_error
+    {
+    public:
+        user_aborted_authentication() :
+          boost::exception(), std::runtime_error("User aborted authentication")
+          {}
+    };
+
+    /**
+     * Delegates challenge-response to a consumer.
+     */
+    class consumer_responder
+    {
+    public:
+
+        consumer_responder(com_ptr<ISftpConsumer> consumer)
+            : m_consumer(consumer) {}
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& title, const string& instructions,
+            const PromptRange& prompts)
+        {
+            optional<vector<string>> responses =
+                m_consumer->challenge_response(title, instructions, prompts);
+            if (responses)
+            {
+                return *responses;
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION(user_aborted_authentication());
+            }
+        }
+
+    private:
+        com_ptr<ISftpConsumer> m_consumer;
+    };
+}
+
 /**
  * Authenticates with remote host by challenge-response interaction.
  *
  * This uses the ISftpConsumer callback to challenge the user for various
  * pieces of information (usually just their password).
  *
- * @throws com_error if authentication fails:
- * - E_ABORT if user cancelled the operation (via ISftpConsumer)
- * - E_FAIL otherwise
+ * @returns
+ *     `true` if authentication successful, `false` if the `consumer` reports
+ *     that the user aborted authentication.
+ *
+ * @throws `ssh_error`
+ *     if unexpected SSH-related failure while trying to authenticate or if the
+ *     server positively rejects authentication without even calling the
+ *     `responder`.
+ * @throws `std::exception`
+ *     if authentication fails for an unexpected reason, in other words,
+ *     a reason other than the user cancelling the authentication.
+ *     If authentication fails because the `consumer` threw an exception,
+ *     that exception will be the one throw out of this method.
+ * @note that unsuccessful authentication is not a return value as the function
+ *     keeps re-prompting until successful or cancelled.
  */
-HRESULT keyboard_interactive_authentication(
+bool keyboard_interactive_authentication(
     const string& utf8_username, running_session& session, com_ptr<ISftpConsumer> consumer)
 {
-    // Create instance of keyboard-interactive authentication handler
-    CKeyboardInteractive handler(consumer.in());
-    
-    // Pass pointer to handler in session abstract and begin authentication.
-    // The static callback method (last parameter) will extract the 'this'
-    // pointer from the session and use it to invoke the handler instance.
-    // If the user cancels the operation, our callback should throw an
-    // E_ABORT exception which we catch here.
-    *libssh2_session_abstract(session.get_raw_session()) = &handler;
-    int rc = libssh2_userauth_keyboard_interactive_ex(
-        session.get_raw_session(), utf8_username.data(), utf8_username.size(),
-        &(CKeyboardInteractive::OnKeyboardInteractive));
-    
-    // Check for two possible types of failure
-    if (FAILED(handler.GetErrorState()))
-        return handler.GetErrorState();
+    // Loop until successfully authenticated or user cancels.
+    // Unlike simple password authentication, the user cancelling an interactive
+    // authentication isn't signalled by the return code because interactive
+    // authentications can't actually be aborted.  Instead we find out about
+    // an abortion when authentication fails and the responder threw an
+    // exception.  Therefore we catch our custom "user aborted" exception
+    // below and translate that into a boolean result here.
+    try
+    {
+        while (!session.get_session().authenticate_interactively(
+            utf8_username, consumer_responder(consumer))) {}
+    }
+    catch (const user_aborted_authentication& e)
+    {
+        return false;
+    }
 
-    assert(rc || libssh2_userauth_authenticated(session.get_raw_session())); // Double-check
-    return (rc == 0) ? S_OK : E_FAIL;
+    assert(session.get_session().authenticated()); // Double-check
+    return true;
 }
 
 
@@ -334,20 +388,19 @@ void authenticate_user(
         }
     }
 
-    if (find(methods.begin(), methods.end(), "keyboard-interactive") != methods.end())
+    if (find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end())
     {
-        HRESULT hr = keyboard_interactive_authentication(
-            utf8_username, session, consumer);
-        if (SUCCEEDED(hr))
+        if (keyboard_interactive_authentication(
+            utf8_username, session, consumer))
         {
             return;
         }
-        else if (hr == E_ABORT)
+        else
         {
             BOOST_THROW_EXCEPTION(
                 com_error(
-                    "User aborted during keyboard-interactive authentication",
-                    E_ABORT));
+                    "User aborted challenge-response authentication", E_ABORT));
         }
     }
 

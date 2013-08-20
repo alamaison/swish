@@ -56,12 +56,10 @@ public:
         std::pair<boost::filesystem::path, boost::filesystem::path>>
         key_files();
 
-    HRESULT OnKeyboardInteractiveRequest(
-        __in BSTR bstrName, __in BSTR bstrInstruction,
-        __in SAFEARRAY *psaPrompts,
-        __in SAFEARRAY *psaShowResponses,
-        __deref_out SAFEARRAY **ppsaResponses
-    );
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& title, const std::string& instructions,
+        const std::vector<std::pair<std::string, bool>>& prompts);
+
     HRESULT OnConfirmOverwrite(
         __in BSTR bstrOldFile,
         __in BSTR bstrNewFile

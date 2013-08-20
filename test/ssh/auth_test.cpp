@@ -38,11 +38,17 @@
 
 #include <ssh/session.hpp> // test subject
 
+#include <boost/concept_check.hpp> // BOOST_CONCEPT_ASSERT
+#include <boost/range/concepts.hpp> // RandomAccessRangeConcept
+#include <boost/range/size.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
 #include <string>
 #include <vector>
+
+using boost::RandomAccessRangeConcept;
+using boost::size;
 
 using ssh::ssh_error;
 using ssh::session;
@@ -79,6 +85,10 @@ BOOST_AUTO_TEST_CASE( intial_state )
     BOOST_CHECK(!s.authenticated());
 }
 
+// The next two test cases, password and kb-int are very limited.  We can't set
+// the password or kb-int responses that the Cygwin OpenSSH server is expecting
+// so we only test the failure case.  Would love to know a way round this!
+
 /**
  * Try password authentication.
  *
@@ -89,8 +99,140 @@ BOOST_AUTO_TEST_CASE( intial_state )
 BOOST_AUTO_TEST_CASE( password_fail )
 {
     session s = test_session();
+    
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "password") != methods.end());
 
     BOOST_CHECK(!s.authenticate_by_password(user(), "dummy password"));
+    BOOST_CHECK(!s.authenticated());
+}
+
+namespace {
+
+    /**
+     * Callback for interactive authentication that responds with nonsense to
+     * every request.
+     */
+    class nonsense_interactor
+    {
+    public:
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& /* request_name */, const string& /* instructions */,
+            PromptRange prompts)
+        {
+            BOOST_CONCEPT_ASSERT((RandomAccessRangeConcept<PromptRange>));
+            return vector<string>(size(prompts), "gobbleygook");
+        }
+    };
+    
+    /**
+     * Callback for interactive authentication that responds with too few
+     * responses.
+     */
+    class short_interactor
+    {
+    public:
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& /* request_name */, const string& /* instructions */,
+            PromptRange /*prompts*/)
+        {
+            BOOST_CONCEPT_ASSERT((RandomAccessRangeConcept<PromptRange>));
+            return vector<string>();
+        }
+    };
+
+    class bob_exception {};
+    
+    /**
+     * Callback for interactive authentication that responds with too few
+     * responses.
+     */
+    class exception_interactor
+    {
+    public:
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& /* request_name */, const string& /* instructions */,
+            PromptRange /*prompts*/)
+        {
+            // Use custom exception so we can identify that the correct
+            // exception is bubbled up in the test
+            throw bob_exception();
+        }
+    };
+}
+
+/**
+ * Try keyboard-interactive authentication but give the wrong responses.
+ *
+ * This will fail as we can't get Cygwin OpenSSH to use kb-int
+ * authentication.  The server will say it is supported when it isn't.
+ *
+ * @todo  Find a way to test the case with the fixture server.
+ */
+BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(kb_int_fail_wrong, 1)
+BOOST_AUTO_TEST_CASE( kbint_fail_wrong )
+{
+    session s = test_session();
+
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end());
+
+    BOOST_CHECK(!s.authenticate_interactively(user(), nonsense_interactor()));
+    BOOST_CHECK(!s.authenticated());
+}
+
+/**
+ * Try keyboard-interactive authentication but return no responses.
+ *
+ * This will fail as we can't get Cygwin OpenSSH to use kb-int
+ * authentication.  The server will say it is supported when it isn't.
+ *
+ * @todo  Find a way to test the case with the fixture server.
+ */
+BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(kb_int_fail_short, 1)
+BOOST_AUTO_TEST_CASE( kbint_fail_short )
+{
+    session s = test_session();
+
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end());
+
+    BOOST_CHECK(!s.authenticate_interactively(user(), short_interactor()));
+    BOOST_CHECK(!s.authenticated());
+}
+
+/**
+ * Try keyboard-interactive authentication but return no responses.
+ *
+ * This will fail as we can't get Cygwin OpenSSH to use kb-int
+ * authentication.  The server will say it is supported when it isn't.
+ *
+ * @todo  Find a way to test the case with the fixture server.
+ */
+BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(kb_int_fail_exception, 1)
+BOOST_AUTO_TEST_CASE( kbint_fail_exception )
+{
+    session s = test_session();
+
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end());
+
+    BOOST_CHECK_THROW(
+        !s.authenticate_interactively(user(), exception_interactor()),
+        bob_exception);
     BOOST_CHECK(!s.authenticated());
 }
 

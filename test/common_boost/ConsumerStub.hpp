@@ -32,8 +32,9 @@
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/server.h> // simple_object
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
 
@@ -68,13 +69,12 @@ public:
         return std::make_pair(m_privateKey, m_publicKey);
     }
 
-    HRESULT OnKeyboardInteractiveRequest(
-        BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
-        SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
-        SAFEARRAY ** /*ppsaResponses*/)
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& /*title*/, const std::string& /*instructions*/,
+        const std::vector<std::pair<std::string, bool>>& /*prompts*/)
     {
         BOOST_ERROR("Unexpected call to "__FUNCTION__);
-        return E_NOTIMPL;
+        BOOST_THROW_EXCEPTION(std::exception("Not implemented"));
     }
 
     HRESULT OnConfirmOverwrite(

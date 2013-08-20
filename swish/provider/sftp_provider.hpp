@@ -64,19 +64,22 @@ public:
      *     Uninitialised optional if public-key authentication should not be
      *     performed using file-based keys.
      *     Pair of paths: private-key file first, public-key file second.
-     * @return 
      */
     virtual boost::optional<
         std::pair<boost::filesystem::path, boost::filesystem::path>>
         key_files() = 0;
 
-    virtual HRESULT OnKeyboardInteractiveRequest(
-        BSTR bstrName,
-        BSTR bstrInstruction,
-        SAFEARRAY* saPrompts,
-        SAFEARRAY* saShowResponses,
-        SAFEARRAY* *psaResponses
-    ) = 0;
+    /**
+     * Perform a challenge-response interaction with the user.
+     *
+     * @return
+     *     Uninitialised optional if authentication should be aborted.
+     *     As many responses as there were prompts, otherwise.
+     */
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& title, const std::string& instructions,
+        const std::vector<std::pair<std::string, bool>>& prompts) = 0;
+
     virtual HRESULT OnConfirmOverwrite(
         BSTR bstrOldFile,
         BSTR bstrNewFile

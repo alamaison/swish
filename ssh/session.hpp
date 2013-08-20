@@ -44,16 +44,23 @@
 
 #include <boost/algorithm/string/classification.hpp> // is_any_of
 #include <boost/algorithm/string/split.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/info.hpp> // errinfo_api_function
-#include <boost/bind/bind.hpp>
+#include <boost/exception_ptr.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
+#include <boost/optional/optional.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm_ext/for_each.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <exception> // bad_alloc
 #include <string>
+#include <utility> // pair, make_pair
 #include <vector>
 
 #include <libssh2.h>
@@ -215,6 +222,237 @@ namespace detail {
             boost::bind(disconnect_and_free, _1, disconnection_message));
     }
 
+    inline std::pair<std::string, bool> convert_prompt(
+        const LIBSSH2_USERAUTH_KBDINT_PROMPT& prompt)
+    {
+        return std::make_pair(
+            std::string(prompt.text, prompt.length), prompt.echo);
+    }
+
+    inline void convert_response(
+        LIBSSH2_USERAUTH_KBDINT_RESPONSE& raw_response,
+        const std::string& response)
+    {
+        // XXX: Should use session MALLOC here
+        raw_response.text =
+            static_cast<char*>(
+                malloc(response.length() * sizeof(std::string::value_type)));
+        // XXX: what happens if we encounter an exception after this point?
+        raw_response.length = response.length();
+
+        response.copy(raw_response.text, raw_response.length);
+    }
+
+
+    /**
+     * Glue between libssh2's ideas of a responder and this c++ wrapper's
+     * responder.
+     *
+     * It's not safe to throw exceptions through libssh2 C code, so we have to
+     * catch them in the static callback (dethunker), and somehow communicate
+     * them back to the C++ code which can safely rethrow them.
+     *
+     * The only available channel of communication is the challenge-responder
+     * in the abstract but the user provides that so we don't want them to have
+     * to provide anything special.  This class adds the 'something special'
+     * by wrapping the challenge-responder and stashing anything needed to
+     * interpret the result.
+     */
+    template<typename ChallengeResponder>
+    class challenge_response_translator
+    {
+    public:
+        challenge_response_translator(const ChallengeResponder& resp)
+            : m_responder(resp), m_called(false) {}
+
+        /**
+         * Perform the challenge-response authentication translating between the
+         * interfaces as we go.
+         */
+        bool do_challenge_response(
+            boost::shared_ptr<LIBSSH2_SESSION> session,
+            const std::string username)
+        {
+            int rc = ::libssh2_userauth_keyboard_interactive_ex(
+                session.get(), username.data(), username.size(),
+                &dethunker<ChallengeResponder>);
+
+            return translate_status(session, rc);
+        }
+
+        void operator()(
+            const char* name, int name_len, const char* instruction,
+            int instruction_len, int num_prompts, 
+            const LIBSSH2_USERAUTH_KBDINT_PROMPT* raw_prompts,
+            LIBSSH2_USERAUTH_KBDINT_RESPONSE* raw_responses) throw()
+        {
+            m_called = true;
+
+            try
+            {
+                call_inner_responder(
+                    name, name_len, instruction, instruction_len, num_prompts,
+                    raw_prompts, raw_responses);
+            }
+            catch (...)
+            {
+                m_exception = boost::current_exception();
+            }
+        }
+
+    private:
+
+        /**
+         * Merge any errors reported by libssh2 with any exception throw in
+         * the responder.
+         *
+         * Merging the two is non-trivial.  There are at least 9 scenarios
+         * that can arise:
+         * (1) Authentication was successful:
+         *    a) and the responder executed completely
+         *    b) despite the responder throwing an exception. Possible because
+         *       the exception just causes outstanding responses to be sent to
+         *       the server blank, and the server may be satisfied with these
+         *       blank responses.  There is no way to abort authentication via
+         *       the callback.
+         *       TODO: maybe modify libssh2 to allow aborting from the callback.
+         *    c) without needing to call the responder.  Scary.
+         * (2) Authentication positively rejected:
+         *    a) even though the responder executed completely. E.g. the user
+         *       gave the wrong response.
+         *    b) because the responder threw an exception and the server
+         *       rejected the (possibly partially-complete) responses.
+         *    c) without needing to call the responder, e.g. kb-interactive not
+         *       set up properly on the server (yes, this does actually happen,
+         *       we tested it - e.g the cygwin server).
+         * (3) Some other failure occurred:
+         *    a) even though the responder executed completely.
+         *    b) the responder threw an exception but the failure is unrelated
+         *       (because it's not possible to abort, it must be unrelated).
+         *    c) before needing to call the responder.
+         */
+        bool translate_status(
+            boost::shared_ptr<LIBSSH2_SESSION> session, int rc)
+        {
+            switch (rc)
+            {
+            case 0:
+                // Situation (1) above.  Merge all three situations and just
+                // report the successful authentication.  Any exception thrown in the
+                // responder is ignored.
+                //
+                // XXX: There is a tricky use-case here. If a user cancels a
+                //      challenge-response prompt and that causes an exception,
+                //      the caller has no way to tell that the user cancelled if the
+                //      authentication nevertheless succeeded.  Arguably, that is
+                //      the correct behaviour as it is more important to know the
+                //      authentication state of the session than the user's
+                //      response.  An even better solution would be if we could
+                //      abort authentication from the callback but that may not be
+                //      possible.  RFC 4256 Section 3.4 says that sending the wrong
+                //      number of responses back must always result in failure, so
+                //      responding with zero replies might work ... unless the server
+                //      sent zero prompts.
+                return true;
+
+            case LIBSSH2_ERROR_AUTHENTICATION_FAILED:
+                // Situation (2) above. 
+                // a) is a non-error failure.  In other words, the kind of
+                // failure that wouldn't be reported to the user with an error
+                // dialog. The most likely response to this result is to attempt
+                // authentication again.  It wouldn't be appropriate to report 
+                // these failures as exceptions so, instead, we return false.
+                //
+                // b) and c) are both errors so we need to throw exceptions.
+                // We can only tell c) and c) apart by whether the responder
+                // was called so we have to wrap the given responder to record
+                // that information. For b) the most relevant exception is the
+                // one thrown by the wrapped responder which is also by this class.
+                // We just rethrow that, rather than making a new exception 
+                // with code LIBSSH2_ERROR_AUTHENTICATION_FAILED.
+
+                if (!m_called)
+                {
+                    // c)
+                    assert(!m_exception);
+
+                    BOOST_THROW_EXCEPTION(
+                        last_error(session) <<
+                        boost::errinfo_api_function(
+                            "libssh2_userauth_keyboard_interactive_ex"));
+                }
+                else if (m_exception)
+                {
+                    // b)
+                    boost::rethrow_exception(*m_exception);
+                }
+                else
+                {
+                    // a)
+                    assert(m_called);
+                    return false;
+                }
+
+            default:
+                // Situation (3) above
+                BOOST_THROW_EXCEPTION(
+                    last_error(session) <<
+                    boost::errinfo_api_function(
+                        "libssh2_userauth_keyboard_interactive_ex"));
+            }
+
+            // If the user cancels the operation, our callback should throw an
+            // E_ABORT exception which we catch here.
+        }
+
+        /**
+         * Unpacks the stashed responder.
+         */
+        template<typename ChallengeResponder>
+        static void dethunker(
+            const char* name, int name_len, const char* instruction,
+            int instruction_len, int num_prompts, 
+            const LIBSSH2_USERAUTH_KBDINT_PROMPT* raw_prompts,
+            LIBSSH2_USERAUTH_KBDINT_RESPONSE* raw_responses, void **abstract)
+        throw()
+        {
+            challenge_response_translator<ChallengeResponder>& responder =
+                *static_cast<challenge_response_translator<ChallengeResponder>*>(*abstract);
+
+            responder(
+                name, name_len, instruction, instruction_len, num_prompts,
+                raw_prompts, raw_responses);
+        }
+
+        /**
+         * Do the two-way interface translation.
+         */
+        void call_inner_responder(
+            const char* name, int name_len, const char* instruction,
+            int instruction_len, int num_prompts, 
+            const LIBSSH2_USERAUTH_KBDINT_PROMPT* raw_prompts,
+            LIBSSH2_USERAUTH_KBDINT_RESPONSE* raw_responses)
+        {
+            std::vector<std::pair<std::string, bool>> prompts;
+            boost::push_back(prompts,
+                boost::iterator_range<const LIBSSH2_USERAUTH_KBDINT_PROMPT*>(
+                raw_prompts, raw_prompts + num_prompts)
+                |
+                boost::adaptors::transformed(convert_prompt));
+
+            boost::range::for_each(
+                boost::iterator_range<LIBSSH2_USERAUTH_KBDINT_RESPONSE*>(
+                raw_responses, raw_responses + num_prompts),
+                m_responder(
+                    std::string(name, name_len),
+                    std::string(instruction, instruction_len), prompts),
+                convert_response);
+        }
+
+        ChallengeResponder m_responder;
+        bool m_called;
+        boost::optional<boost::exception_ptr> m_exception;
+    };
 }
 
 /**
@@ -296,6 +534,11 @@ public:
 
     /**
      * Simple password authentication.
+     * 
+     * @param username
+     *     UTF-8 string identifying the user to authenticate as.
+     * @param password
+     *     Password as a UTF-8 string.
      *
      * @returns
      *     `true` if authentication successful, `false` if not.
@@ -311,6 +554,79 @@ public:
         return detail::libssh2::userauth::password(
             m_session, username.data(), username.size(), password.data(),
             password.size(), NULL);
+    }
+
+    /**
+     * Challenge-response authentication.
+     *
+     * This is also known as keyboard-interactive authentication.  The server
+     * challenges the user by requesting one or more pieces of information. 
+     * Once the user has responded, the server may request more information 
+     * any number of time until it is either satisfied and authenticates the
+     * user or refuses to do so.
+     *
+     * @param username
+     *     UTF-8 string identifying the user to authenticate as.
+     * @param responder
+     *     Callback to receive the challenges from the server and provide the
+     *     corresponding responses.
+     *     The callback must be a model of the `ChallengeResponder` concept.
+     *     That means it must be callable with a three arguments:
+     *      - a string giving the challenge title,
+     *      - a string giving the challenge instructions, and
+     *      - a range of zero or more prompts, each a pair whose first member
+     *        is the prompt text and whose second member is a boolean indicating
+     *        whether the response should be obscured like a password or made
+     *        visible.
+     *     The call must return a range of responses as strings, one for every
+     *     prompt in the same order as the prompts.
+     *
+     * @returns
+     *     `true` if authentication successful, `false` if the server positively
+     *      rejected the responses produced by the `responder` callback.
+     *
+     * @throws ssh_error
+     *     if unexpected failure while trying to authenticate or if the server
+     *     positively rejects authentication without even calling the
+     *     `responder`.
+     * @throws user-defined-exception
+     *     if authentication fails because the `responder` threw an exception,
+     *     the exception is throw out of this method.
+     */
+    //
+    // We tried to use Boost.Concept here to verify the ChallengeResponder but
+    // gave up.  We struggled to do anything useful without BOOST_TYPEOF (which
+    // crashed MSVC) and it's not clear what the benefit of the concept would
+    // have been in any case.  It didn't make the requirements of the
+    // responder any more clear than reading the implementation of this
+    // function and I doubt the error messages were any better.
+    // Nevertheless, this might be worth having another go at in the future.
+    //
+    template<typename ChallengeResponder>
+    bool authenticate_interactively(
+        const std::string& username, ChallengeResponder responder)
+    {
+        // The libssh2 C API, of course, takes the callback as a plain-old
+        // static function.  The caller, however, may have passed us a callable
+        // object and we need to be able to call that instead.
+        //
+        // As is typical of good C APIs, libssh2 gives us a way to sneak a
+        // pointer to the callback object (or whatever it might be) through
+        // the static callback function via an 'abstract' parameter.
+        //
+        // We set the abstract via the session.  The static callback function
+        // receives that and converts it back to the callable object, which
+        // can then be called in the C++ way.
+        //
+        // As an extra twist in the story, we don't pass the responder directly
+        // in the abstract.  Instead we pass a version wrapped so that it can
+        // store exceptions encountered, which we rethrow afterwards.
+
+        detail::challenge_response_translator<ChallengeResponder>
+            wrapped_responder(responder);
+        *::libssh2_session_abstract(m_session.get()) = &wrapped_responder;
+
+        return wrapped_responder.do_challenge_response(m_session, username);
     }
 
     /**
@@ -341,6 +657,7 @@ public:
     }
 
 private:
+
     boost::shared_ptr<LIBSSH2_SESSION> m_session;
 };
 

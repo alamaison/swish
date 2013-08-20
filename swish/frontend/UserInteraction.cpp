@@ -27,7 +27,6 @@
 
 #include "UserInteraction.hpp"
 
-#include "swish/atl.hpp"  // Common ATL setup
 #include "swish/debug.hpp"
 #include "swish/forms/password.hpp" // password_prompt
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
@@ -37,30 +36,21 @@
 #include <winapi/gui/task_dialog.hpp> // task_dialog
 #include <winapi/gui/message_box.hpp> // message_box
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
 
 #include <boost/bind.hpp> // bind
 #include <boost/format.hpp> // format
 #include <boost/locale.hpp> // translate
 
-#include <atlsafe.h> // CComSafeArray
-#include <atlcore.h> // _AtlBaseModule
-
 #include <cassert> // assert
 #include <sstream> // wstringstream
 #include <string>
-
-using ATL::CComBSTR;
-using ATL::CString;
-using ATL::CComSafeArray;
 
 using swish::forms::password_prompt;
 using swish::frontend::best_taskdialog;
 
 using namespace winapi::gui;
 
-using comet::bstr_t;
 using comet::com_error;
 
 using boost::filesystem::path;
@@ -70,6 +60,7 @@ using boost::wformat;
 
 using std::pair;
 using std::string;
+using std::vector;
 using std::wstring;
 using std::wstringstream;
 
@@ -108,56 +99,19 @@ optional<pair<path, path>> CUserInteraction::key_files()
     return optional<pair<path, path>>();
 }
 
-HRESULT CUserInteraction::OnKeyboardInteractiveRequest(
-    BSTR bstrName, BSTR bstrInstruction, SAFEARRAY *psaPrompts, 
-    SAFEARRAY *psaShowResponses, SAFEARRAY **ppsaResponses
-)
+optional<vector<string>> CUserInteraction::challenge_response(
+    const string& title, const string& instructions,
+    const vector<pair<string, bool>>& prompts)
 {
-    if (m_hwnd == NULL)
-        return E_FAIL;
-
-    CComSafeArray<BSTR> saPrompts(psaPrompts);
-    CComSafeArray<VARIANT_BOOL> saShowPrompts(psaShowResponses);
-
-    // Prompt array and echo mask array should correspond
-    ATLASSERT(saPrompts.GetLowerBound() == saShowPrompts.GetLowerBound());
-    ATLASSERT(saPrompts.GetUpperBound() == saShowPrompts.GetUpperBound());
-
-    PromptList vecPrompts;
-    EchoList vecEcho;
-    for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
-    {
-        vecPrompts.push_back(CString(saPrompts[i]));
-        vecEcho.push_back((saShowPrompts[i] == VARIANT_TRUE) ? true : false);
-    }
+    if (!m_hwnd)
+        BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
     // Show dialogue and fetch responses when user clicks OK
-    CKbdInteractiveDialog dlg(bstrName, bstrInstruction, vecPrompts, vecEcho);
+    CKbdInteractiveDialog dlg(title, instructions, prompts);
     if (dlg.DoModal(m_hwnd) == IDCANCEL)
-        return E_ABORT;
-    ResponseList vecResponses = dlg.GetResponses();
+        return optional<vector<string>>();
 
-    // Create response array. Indices must correspond to prompts array!
-    CComSafeArray<BSTR> saResponses(
-        saPrompts.GetCount(), saPrompts.GetLowerBound());
-    ATLASSERT(vecResponses.size() == saPrompts.GetCount());
-    ATLASSERT(saPrompts.GetLowerBound() == saResponses.GetLowerBound());
-    ATLASSERT(saPrompts.GetUpperBound() == saResponses.GetUpperBound());
-
-    // SAFEARRAY may start at any index but vector will always start at 0.
-    // We need to keep an offset value to map between them
-    int nIndexOffset = saPrompts.GetLowerBound();
-
-    // Fill responses SAFEARRAY
-    for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
-    {
-        ATLVERIFY(SUCCEEDED( saResponses.SetAt(
-            i, CComBSTR(vecResponses[i-nIndexOffset]).Detach(), false) ));
-    }
-
-    *ppsaResponses = saResponses.Detach();
-
-    return S_OK;
+    return dlg.GetResponses();
 }
 
 namespace {
