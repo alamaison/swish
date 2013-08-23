@@ -363,7 +363,7 @@ void authenticate_user(
     vector<string> methods =
         session.get_session().authentication_methods(utf8_username);
 
-    if (methods.empty())
+    if (methods.empty() && !session.get_session().authenticated())
     {
         BOOST_THROW_EXCEPTION(
             std::exception("No supported authentication methods found"));

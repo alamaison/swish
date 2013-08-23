@@ -506,6 +506,11 @@ public:
      * authentication.
      *
      * The server is allowed to lie.
+     *
+     * An empty list does not necessarily mean no methods are available. It
+     * might mean that authentication has already succeeded or that no
+     * authentication was needed.  Calling this method has the side effect
+     * of authenticating the session in the latter case.
      */
     std::vector<std::string> authentication_methods(
         const std::string& username)
@@ -514,10 +519,24 @@ public:
             m_session.get(), username.data(), username.size());
 
         if (!method_list)
-        { 
-            BOOST_THROW_EXCEPTION(
-                detail::last_error(m_session) <<
-                boost::errinfo_api_function("libssh2_userauth_list"));
+        {
+            // Because the userauth list is fetched by trying to authenticate
+            // with method "none", a NULL return might mean that no
+            // authentication was needed. The error code disambiguates this
+            // from a true error.
+
+            ssh_error error = detail::last_error(m_session);
+            if (error.error_code() == LIBSSH2_ERROR_NONE)
+            {
+                assert(authenticated());
+                return std::vector<std::string>();
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION(
+                    error <<
+                    boost::errinfo_api_function("libssh2_userauth_list"));
+            }
         }
 
         std::vector<std::string> methods;
