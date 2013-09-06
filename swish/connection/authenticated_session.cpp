@@ -312,7 +312,7 @@ BOOST_SCOPED_ENUM(authentication_result) keyboard_interactive_authentication(
             throw;
         }
     }
-    catch (const user_aborted_authentication& e)
+    catch (const user_aborted_authentication&)
     {
         // Unlike simple password authentication, the user cancelling an
         // interactive authentication isn't signalled by the return code
