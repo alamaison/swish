@@ -440,12 +440,21 @@ namespace detail {
                 |
                 boost::adaptors::transformed(convert_prompt));
 
+            // Either the name or the instruction may be a NULL pointer as they
+            // are optional fields
+            std::string name_string = 
+                name ?
+                    std::string(name, name_len) :
+                    std::string();
+            std::string instruction_string = 
+                instruction ?
+                    std::string(instruction, instruction_len) :
+                    std::string();
+
             boost::range::for_each(
                 boost::iterator_range<LIBSSH2_USERAUTH_KBDINT_RESPONSE*>(
                 raw_responses, raw_responses + num_prompts),
-                m_responder(
-                    std::string(name, name_len),
-                    std::string(instruction, instruction_len), prompts),
+                m_responder(name_string, instruction_string, prompts),
                 convert_response);
         }
 
@@ -591,8 +600,8 @@ public:
      *     corresponding responses.
      *     The callback must be a model of the `ChallengeResponder` concept.
      *     That means it must be callable with a three arguments:
-     *      - a string giving the challenge title,
-     *      - a string giving the challenge instructions, and
+     *      - a string giving the challenge title (may be empty),
+     *      - a string giving the challenge instructions (may be empty), and
      *      - a range of zero or more prompts, each a pair whose first member
      *        is the prompt text and whose second member is a boolean indicating
      *        whether the response should be obscured like a password or made
