@@ -49,6 +49,8 @@
 
 #include <boost/filesystem.hpp> // wpath
 #include <boost/filesystem/fstream.hpp> // ofstream
+#include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/function.hpp>
 #include <boost/move/move.hpp>
 #include <boost/optional/optional.hpp>
 
@@ -83,6 +85,7 @@ using comet::com_ptr;
 using boost::filesystem::path;
 using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
+using boost::function;
 using boost::move;
 using boost::mutex;
 using boost::optional;
@@ -184,12 +187,12 @@ BOOST_SCOPED_ENUM_END
  *     a reason other than the user cancelling the authentication.
  *
  * @returns
- *     `true` if authentication was successful,
- *     `false` if the user aborted early.
+ *     `authenticated` if authentication was successful,
+ *     `aborted` if the user aborted early.
  * @note that unsuccessful is not a return value as the function keeps
  *       re-prompting until successful or cancelled.
  */
-bool password_authentication(
+BOOST_SCOPED_ENUM(authentication_result) password_authentication(
     const string& utf8_username, running_session& session,
     com_ptr<ISftpConsumer> consumer)
 {
@@ -199,14 +202,14 @@ bool password_authentication(
         optional<wstring> password = consumer->prompt_for_password();
         if (!password)
         {
-            return false;
+            return authentication_result::aborted;
         }
         
         string utf8_password = WideStringToUtf8String(*password);
         if (session.get_session().authenticate_by_password(
             utf8_username, utf8_password))
         {
-            return true;
+            return authentication_result::authenticated;
         }
 
         // TODO: handle password change callback here
@@ -326,7 +329,7 @@ BOOST_SCOPED_ENUM(authentication_result) keyboard_interactive_authentication(
 }
 
 
-bool public_key_file_based_authentication(
+BOOST_SCOPED_ENUM(authentication_result) public_key_file_based_authentication(
     const string& utf8_username, running_session& session,
     com_ptr<ISftpConsumer> consumer)
 {
@@ -341,17 +344,15 @@ bool public_key_file_based_authentication(
 
         assert(session.get_session().authenticated());
 
-        return true;
+        return authentication_result::authenticated;
     }
     else
     {
-        return false;
+        return authentication_result::try_remaining_methods;
     }
-
-    return S_OK;
 }
 
-bool public_key_agent_authentication(
+BOOST_SCOPED_ENUM(authentication_result) public_key_agent_authentication(
     const string& utf8_username, running_session& session,
     com_ptr<ISftpConsumer> consumer)
 {
@@ -363,7 +364,7 @@ bool public_key_agent_authentication(
             try
             {
                 key.authenticate(utf8_username);
-                return true;
+                return authentication_result::authenticated;
             }
             catch (const exception&)
             { /* Ignore and try the next */ }
@@ -373,7 +374,7 @@ bool public_key_agent_authentication(
     { /* No agent running probably.  Either way, give up. */ }
 
     // None of the agent identities worked.  Sob. Back to passwords then.
-    return false;
+    return authentication_result::try_remaining_methods;
 }
 
 /**
@@ -388,73 +389,77 @@ bool public_key_agent_authentication(
  * - E_FAIL otherwise
  */
 void authenticate_user(
-    const wstring& user, running_session& session, com_ptr<ISftpConsumer> consumer) throw(...)
+    const wstring& user, running_session& session,
+    com_ptr<ISftpConsumer> consumer)
 {
     assert(!user.empty());
     assert(user[0] != '\0');
     string utf8_username = WideStringToUtf8String(user);
 
-    vector<string> methods =
+    vector<string> method_names =
         session.get_session().authentication_methods(utf8_username);
 
-    if (methods.empty() && !session.get_session().authenticated())
+    // This test must come _after_ fetching the methods as that is what may
+    // prompt the premature authentication
+    if (session.get_session().authenticated())
+    {
+        // Golly.  What a silly server.
+        return;
+    }
+    else if (method_names.empty())
     {
         BOOST_THROW_EXCEPTION(
             std::exception("No supported authentication methods found"));
     }
 
-    // Try each supported authentication method in turn until one succeeds
-    if (find(methods.begin(), methods.end(), "publickey") != methods.end())
+    typedef function<
+        BOOST_SCOPED_ENUM(authentication_result)(
+            const string&, running_session&, com_ptr<ISftpConsumer>)>
+        method;
+
+    vector<method> authentication_methods;
+
+    // The order of adding the methods is important; some are preferred over
+    // others.  Added in descending order of preference.
+    if (find(method_names.begin(), method_names.end(), "publickey") != method_names.end())
     {
         // This old way is only kept around to support the tests.  Its almost
         // useless for anything else as we don't pass the 'consumer' enough
         // information to identify which key to use.
-        if (public_key_file_based_authentication(
-            utf8_username, session, consumer))
-        {
-            return;
-        }
+        authentication_methods.push_back(public_key_file_based_authentication);
 
-        // OK, now lets try it the nice new way using agents.
-        if (public_key_agent_authentication(utf8_username, session, consumer))
-        {
-            return;
-        }
+        // And now the nice new way using agents.
+        authentication_methods.push_back(public_key_agent_authentication);
     }
 
-    if (find(methods.begin(), methods.end(), "keyboard-interactive")
-        != methods.end())
+    if (find(method_names.begin(), method_names.end(), "keyboard-interactive")
+        != method_names.end())
     {
-        switch (keyboard_interactive_authentication(
-            utf8_username, session, consumer))
+        authentication_methods.push_back(keyboard_interactive_authentication);
+    }
+
+    if (find(method_names.begin(), method_names.end(), "password") != method_names.end())
+    {
+        authentication_methods.push_back(password_authentication);
+    }
+
+    BOOST_FOREACH(method& auth_attempt, authentication_methods)
+    {
+        switch (auth_attempt(utf8_username, session, consumer))
         {
         case authentication_result::authenticated:
             return;
 
         case authentication_result::aborted:
             BOOST_THROW_EXCEPTION(
-                com_error(
-                    "User aborted challenge-response authentication", E_ABORT));
+                com_error("User aborted authentication", E_ABORT));
+
         case authentication_result::try_remaining_methods:
-            break;
+            continue;
 
         default:
             BOOST_THROW_EXCEPTION(
                 logic_error("Unrecognised authentication result"));
-        }
-
-    }
-
-    if (find(methods.begin(), methods.end(), "password") != methods.end())
-    {
-        if (password_authentication(utf8_username, session, consumer))
-        {
-            return;
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(
-                com_error("User aborted password authentication", E_ABORT));
         }
     }
 
