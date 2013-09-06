@@ -106,6 +106,15 @@ optional<vector<string>> CUserInteraction::challenge_response(
     if (!m_hwnd)
         BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
+    // We don't show the dialog if there is nothing to tell the user.
+    // Kb-int authentication usually seems to end with such an empty
+    // interaction for some reason.
+    if (title.empty() && instructions.empty() && prompts.empty())
+    {
+        // Not optional<vector<string>> because that means abort.
+        return vector<string>();
+    }
+
     // Show dialogue and fetch responses when user clicks OK
     CKbdInteractiveDialog dlg(title, instructions, prompts);
     if (dlg.DoModal(m_hwnd) == IDCANCEL)
