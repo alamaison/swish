@@ -56,6 +56,7 @@
 
 #include <cassert>
 #include <exception>
+#include <stdexcept> // logic_error
 #include <string>
 #include <vector>
 
@@ -73,6 +74,7 @@ using ssh::knownhost::find_result;
 using ssh::knownhost::openssh_knownhost_collection;
 using ssh::session;
 using ssh::sftp::sftp_channel;
+using ssh::ssh_error;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -86,6 +88,7 @@ using boost::mutex;
 using boost::optional;
 
 using std::exception;
+using std::logic_error;
 using std::pair;
 using std::string;
 using std::vector;
@@ -159,6 +162,14 @@ void verify_host_key(
                 com_error("User aborted on unknown host key", E_ABORT));
     }
 }
+
+BOOST_SCOPED_ENUM_START(authentication_result)
+{
+    authenticated,
+    aborted,
+    try_remaining_methods
+};
+BOOST_SCOPED_ENUM_END
 
 /**
  * Authenticates with remote host by asking the user to supply a password.
@@ -252,13 +263,14 @@ namespace {
  * pieces of information (usually just their password).
  *
  * @returns
- *     `true` if authentication successful, `false` if the `consumer` reports
- *     that the user aborted authentication.
+ *     `authenticated` if authentication successful,
+ *     `aborted` if the `consumer` reports that the user aborted authentication,
+ *     `try_remaining_methods` is authentication failed in a way that makes
+ *     sense to not give up completely: i.e. if the server positively rejects
+ *     authentication without even calling the responder.
  *
  * @throws `ssh_error`
- *     if unexpected SSH-related failure while trying to authenticate or if the
- *     server positively rejects authentication without even calling the
- *     `responder`.
+ *     if unexpected SSH-related failure while trying to authenticate or 
  * @throws `std::exception`
  *     if authentication fails for an unexpected reason, in other words,
  *     a reason other than the user cancelling the authentication.
@@ -267,28 +279,50 @@ namespace {
  * @note that unsuccessful authentication is not a return value as the function
  *     keeps re-prompting until successful or cancelled.
  */
-bool keyboard_interactive_authentication(
-    const string& utf8_username, running_session& session, com_ptr<ISftpConsumer> consumer)
+BOOST_SCOPED_ENUM(authentication_result) keyboard_interactive_authentication(
+    const string& utf8_username, running_session& session,
+    com_ptr<ISftpConsumer> consumer)
 {
     // Loop until successfully authenticated or user cancels.
-    // Unlike simple password authentication, the user cancelling an interactive
-    // authentication isn't signalled by the return code because interactive
-    // authentications can't actually be aborted.  Instead we find out about
-    // an abortion when authentication fails and the responder threw an
-    // exception.  Therefore we catch our custom "user aborted" exception
-    // below and translate that into a boolean result here.
     try
     {
         while (!session.get_session().authenticate_interactively(
             utf8_username, consumer_responder(consumer))) {}
     }
+    catch (const ssh_error& e)
+    {
+        if (e.error_code() == LIBSSH2_ERROR_AUTHENTICATION_FAILED)
+        {
+            // Authentication was positively rejected by the server but not
+            // because of anything our responder did (which would have simply
+            // caused the while loop to end above).  This is most likely the
+            // server lying about supporting kb-int authentication.
+            // Cygwin OpenSSH does this.
+            //
+            // Although an error, we choose to silently ignore this one and
+            // move on to try other authentication methods.
+
+            return authentication_result::try_remaining_methods;
+        }
+        else
+        {
+            throw;
+        }
+    }
     catch (const user_aborted_authentication& e)
     {
-        return false;
+        // Unlike simple password authentication, the user cancelling an
+        // interactive authentication isn't signalled by the return code
+        // because interactive authentications can't actually be aborted.
+        // Instead we find out about an abortion when authentication fails and
+        // the responder threw an exception.  Therefore we catch our custom
+        // "user aborted" exception here and translate that into the boolean
+        // result.
+        return authentication_result::aborted;
     }
 
     assert(session.get_session().authenticated()); // Double-check
-    return true;
+    return authentication_result::authenticated;
 }
 
 
@@ -391,17 +425,24 @@ void authenticate_user(
     if (find(methods.begin(), methods.end(), "keyboard-interactive")
         != methods.end())
     {
-        if (keyboard_interactive_authentication(
+        switch (keyboard_interactive_authentication(
             utf8_username, session, consumer))
         {
+        case authentication_result::authenticated:
             return;
-        }
-        else
-        {
+
+        case authentication_result::aborted:
             BOOST_THROW_EXCEPTION(
                 com_error(
                     "User aborted challenge-response authentication", E_ABORT));
+        case authentication_result::try_remaining_methods:
+            break;
+
+        default:
+            BOOST_THROW_EXCEPTION(
+                logic_error("Unrecognised authentication result"));
         }
+
     }
 
     if (find(methods.begin(), methods.end(), "password") != methods.end())
