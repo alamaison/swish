@@ -364,12 +364,12 @@ namespace detail {
                 // these failures as exceptions so, instead, we return false.
                 //
                 // b) and c) are both errors so we need to throw exceptions.
-                // We can only tell c) and c) apart by whether the responder
+                // We can only tell c) and a) apart by whether the responder
                 // was called so we have to wrap the given responder to record
                 // that information. For b) the most relevant exception is the
-                // one thrown by the wrapped responder which is also by this class.
-                // We just rethrow that, rather than making a new exception 
-                // with code LIBSSH2_ERROR_AUTHENTICATION_FAILED.
+                // one thrown by the wrapped responder which is also by this
+                // class. We just rethrow that, rather than making a new
+                // exception with code LIBSSH2_ERROR_AUTHENTICATION_FAILED.
 
                 if (!m_called)
                 {
