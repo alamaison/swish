@@ -121,21 +121,7 @@ public:
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
 
-    /**
-     * @name Deletion methods
-     * We use two methods rather than one for safety.  This makes it explicit 
-     * what the intended consequence was. It's possible for a user to ask
-     * for a file to be deleted but, meanwhile, it has been changed to a 
-     * directory by someone else.  We do not want to delete the directory 
-     * without the user knowing.
-     */
-    // @{
-
-    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    // @}
+    virtual void remove_all(ISftpConsumer* consumer, BSTR path) = 0;
 
     /**
      * @name Creation methods

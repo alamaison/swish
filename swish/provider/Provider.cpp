@@ -80,6 +80,7 @@ using comet::com_ptr;
 using comet::datetime_t;
 using comet::stl_enumeration;
 
+using boost::filesystem::path;
 using boost::filesystem::wpath;
 using boost::lock_guard;
 using boost::make_filter_iterator;
@@ -123,9 +124,7 @@ public:
         com_ptr<ISftpConsumer> consumer, const wpath& from_path,
         const wpath& to_path);
 
-    void delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
-
-    void delete_directory(com_ptr<ISftpConsumer> consumer, const wpath& path);
+    void remove_all(com_ptr<ISftpConsumer> consumer, const wpath& path);
 
     void create_new_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
 
@@ -167,13 +166,6 @@ private:
     HRESULT _RenameNonAtomicOverwrite(
         const string& from, const string& to,
         wstring& error_out);
-
-    HRESULT _Delete(
-        __in_z const char *szPath, wstring& error_out);
-    HRESULT _DeleteDirectory(
-        __in_z const char *szPath, wstring& error_out);
-    HRESULT _DeleteRecursive(
-        __in_z const char *szPath, wstring& error_out);
 };
 
 CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
@@ -204,11 +196,8 @@ VARIANT_BOOL CProvider::rename(
     ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
 { return m_provider->rename(consumer, from_path, to_path); }
 
-void CProvider::delete_file(ISftpConsumer* consumer, BSTR path)
-{ m_provider->delete_file(consumer, path); }
-
-void CProvider::delete_directory(ISftpConsumer* consumer, BSTR path)
-{ m_provider->delete_directory(consumer, path); }
+void CProvider::remove_all(ISftpConsumer* consumer, BSTR path)
+{ m_provider->remove_all(consumer, path); }
 
 void CProvider::create_new_file(ISftpConsumer* consumer, BSTR path)
 { m_provider->create_new_file(consumer, path); }
@@ -602,11 +591,16 @@ HRESULT provider::_RenameNonAtomicOverwrite(
         }
         if (!rc)
         {
-            // Delete temporary
-            wstring error_out; // unused
-            HRESULT hr = _DeleteRecursive(temporary.c_str(), error_out);
-            assert(SUCCEEDED(hr));
-            (void)hr; // The rename succeeded even if this fails
+            try
+            {
+                // Delete temporary
+                mutex::scoped_lock lock = m_session->aquire_lock();
+                ssh::sftp::remove_all(
+                    m_session->get_sftp_channel(), path(temporary));
+            }
+            catch (const exception&)
+            { /* The rename succeeded even if this fails */ }
+
             return S_OK;
         }
 
@@ -627,150 +621,18 @@ HRESULT provider::_RenameNonAtomicOverwrite(
     return E_FAIL;
 }
 
-void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
+void provider::remove_all(
+    com_ptr<ISftpConsumer> consumer, const wpath& target)
 {
-    if (path.empty())
+    if (target.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
+    path utf8_path = WideStringToUtf8String(target.string());
+
     _Connect(consumer);
-
-    // Delete file
-    wstring error_out;
-    string utf8_path = WideStringToUtf8String(path.string());
-    HRESULT hr = _Delete(utf8_path.c_str(), error_out);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
-}
-
-HRESULT provider::_Delete( const char *szPath, wstring& error_out )
-{
-    // Lock must not be released until after we get the error message
-    // or we might get a message produced on another thread
 
     mutex::scoped_lock lock = m_session->aquire_lock();
-    if (libssh2_sftp_unlink(m_session->get_raw_sftp_channel(), szPath) == 0)
-        return S_OK;
- 
-    // Delete failed
-    error_out = _GetLastErrorMessage();
-    return E_FAIL;
-}
-
-void provider::delete_directory(
-    com_ptr<ISftpConsumer> consumer, const wpath& path)
-{
-    if (path.empty())
-        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-
-    string utf8_path = WideStringToUtf8String(path.string());
-
-    _Connect(consumer);
-
-    // Delete directory recursively
-    wstring error_out;
-    HRESULT hr = _DeleteDirectory(utf8_path.c_str(), error_out);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
-}
-
-HRESULT provider::_DeleteDirectory(const char* szPath, wstring& error_out)
-{
-    HRESULT hr;
-
-    // Open directory
-    LIBSSH2_SFTP_HANDLE *pSftpHandle;
-    
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        pSftpHandle = libssh2_sftp_opendir(m_session->get_raw_sftp_channel(), szPath);
-    
-        // Lock must not be released until after we get the error message
-        // or we might get a message produced on another thread
-        if (!pSftpHandle)
-        {
-            error_out = _GetLastErrorMessage();
-            return E_FAIL;
-        }
-    }
-
-    // Delete content of directory
-
-    // BUG: If deletion fails in this loop the user gets the wrong error
-    // message because the real error is ignored and the user only get
-    // to see the one caused by trying to delete the non-empty top directory
-    do {
-        // Read filename and attributes. Returns length of filename.
-        char szFilename[MAX_FILENAME_LENZ];
-        LIBSSH2_SFTP_ATTRIBUTES attrs;
-        ::ZeroMemory(&attrs, sizeof(attrs));
-
-        int rc;
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_readdir(
-                pSftpHandle, szFilename, sizeof(szFilename), &attrs);
-        }
-        if (rc <= 0)
-            break;
-
-        assert(szFilename[0]); // TODO: can files have no filename?
-        if (szFilename[0] == '.' && !szFilename[1])
-            continue; // Skip .
-        if (szFilename[0] == '.' && szFilename[1] == '.' && !szFilename[2])
-            continue; // Skip ..
-
-        string strSubPath(szPath);
-        strSubPath += "/";
-        strSubPath += szFilename;
-        hr = _DeleteRecursive(strSubPath.c_str(), error_out);
-        if (FAILED(hr))
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_close_handle(pSftpHandle);
-            assert(rc == 0);
-            return hr;
-        }
-    } while (true);
-
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        int rc = libssh2_sftp_close_handle(pSftpHandle);
-        assert(rc == 0); (void)rc;
-    }
-
-    // Delete directory itself
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        if (libssh2_sftp_rmdir(m_session->get_raw_sftp_channel(), szPath) == 0)
-            return S_OK;
-
-        // Delete failed
-        error_out = _GetLastErrorMessage();
-    }
-
-    return E_FAIL;
-}
-
-HRESULT provider::_DeleteRecursive(
-    const char *szPath, wstring& error_out)
-{
-    LIBSSH2_SFTP_ATTRIBUTES attrs;
-    ::ZeroMemory(&attrs, sizeof attrs);
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        if (libssh2_sftp_lstat(m_session->get_raw_sftp_channel(), szPath, &attrs) != 0)
-        {
-            error_out = _GetLastErrorMessage();
-            return E_FAIL;
-        }
-    }
-
-    assert( // Permissions field is valid
-        attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS);
-    if (attrs.permissions & LIBSSH2_SFTP_S_IFDIR)
-        return _DeleteDirectory(szPath, error_out);
-    else
-        return _Delete(szPath, error_out);
+    ssh::sftp::remove_all(m_session->get_sftp_channel(), utf8_path);
 }
 
 void provider::create_new_file(

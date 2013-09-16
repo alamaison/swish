@@ -578,10 +578,7 @@ public:
         }
     }
 
-    virtual void delete_file(ISftpConsumer* /*consumer*/, BSTR /*path*/)
-    {};
-
-    virtual void delete_directory(ISftpConsumer* /*consumer*/, BSTR /*path*/)
+    virtual void remove_all(ISftpConsumer* /*consumer*/, BSTR /*path*/)
     {};
 
     virtual void create_new_file(ISftpConsumer* /*consumer*/, BSTR /*path*/)

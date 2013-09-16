@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2012
+    Copyright (C) 2008, 2009, 2010, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -65,9 +65,7 @@ public:
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
 
-    virtual void delete_file(ISftpConsumer* consumer, BSTR path);
-
-    virtual void delete_directory(ISftpConsumer* consumer, BSTR path);
+    virtual void remove_all(ISftpConsumer* consumer, BSTR path);
 
     virtual void create_new_file(ISftpConsumer* consumer, BSTR path);
 
