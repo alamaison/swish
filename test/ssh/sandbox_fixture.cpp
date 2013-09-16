@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -108,6 +108,19 @@ path sandbox_fixture::new_file_in_sandbox()
     BOOST_CHECK(is_regular_file(p));
     BOOST_CHECK(p.is_complete());
     return p;
+}
+
+path sandbox_fixture::new_directory_in_sandbox()
+{
+    // This is a bit of a hack but it's simple and works: create a new file,
+    // delete it, reuse the filename to make a folder.  It's not worth
+    // investigating the proper way to get a new random directory name.
+
+    path file = new_file_in_sandbox();
+    remove(file);
+    create_directory(file);
+    BOOST_CHECK(is_directory(file));
+    return file;
 }
 
 }} // namespace test::ssh

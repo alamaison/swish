@@ -40,6 +40,8 @@
 #include <ssh/sftp.hpp> // test subject
 
 #include <boost/bind.hpp> // bind
+#include <boost/cstdint.hpp> // uintmax_t
+#include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/test/unit_test.hpp>
 
@@ -55,7 +57,9 @@ using ssh::sftp::sftp_file;
 using ssh::sftp::directory_iterator;
 
 using boost::bind;
+using boost::filesystem::ofstream;
 using boost::filesystem::path;
+using boost::uintmax_t;
 
 using test::ssh::sandbox_fixture;
 using test::ssh::session_fixture;
@@ -320,6 +324,116 @@ BOOST_AUTO_TEST_CASE( default_directory )
 {
     path resolved_target = canonical_path(channel(), "");
     BOOST_CHECK(!resolved_target.empty());
+}
+
+BOOST_AUTO_TEST_CASE( remove_nothing )
+{
+    path target = "gibberish";
+
+    bool already_existed = remove(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK(!already_existed);
+}
+
+BOOST_AUTO_TEST_CASE( remove_file )
+{
+    path target = new_file_in_sandbox();
+
+    bool already_existed = remove(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK(already_existed);
+}
+
+BOOST_AUTO_TEST_CASE( remove_empty_dir )
+{
+    path target = new_directory_in_sandbox();
+
+    bool already_existed = remove(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK(already_existed);
+}
+
+BOOST_AUTO_TEST_CASE( remove_non_empty_dir )
+{
+    path target = new_directory_in_sandbox();
+    create_directory(target / "bob");
+
+    BOOST_CHECK_THROW(remove(channel(), to_remote_path(target)), sftp_error);
+}
+
+BOOST_AUTO_TEST_CASE( remove_link )
+{
+    path target = new_file_in_sandbox();
+    path link = sandbox() / "link";
+    create_symlink(link, target);
+
+    bool already_existed = remove(channel(), to_remote_path(link));
+
+    BOOST_CHECK(!exists(link));
+    BOOST_CHECK(exists(target)); // should only delete the link
+    BOOST_CHECK(already_existed);
+}
+
+BOOST_AUTO_TEST_CASE( remove_nothing_recursive )
+{
+    path target = "gibberish";
+
+    uintmax_t count = remove_all(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK_EQUAL(count, 0U);
+}
+
+BOOST_AUTO_TEST_CASE( remove_file_recursive )
+{
+    path target = new_file_in_sandbox();
+
+    uintmax_t count = remove_all(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK_EQUAL(count, 1U);
+}
+
+BOOST_AUTO_TEST_CASE( remove_empty_dir_recursive )
+{
+    path target = new_directory_in_sandbox();
+
+    uintmax_t count = remove_all(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK_EQUAL(count, 1U);
+}
+
+BOOST_AUTO_TEST_CASE( remove_non_empty_dir_recursive )
+{
+    path target = new_directory_in_sandbox();
+    create_directory(target / "bob");
+    ofstream(target / "bob" / "sally");
+    ofstream(target / "alice"); // Either side of bob alphabetically
+    ofstream(target / "jim");
+
+    uintmax_t count = remove_all(channel(), to_remote_path(target));
+
+    BOOST_CHECK(!exists(target));
+    BOOST_CHECK_EQUAL(count, 5U);
+}
+
+BOOST_AUTO_TEST_CASE( remove_link_recursive )
+{
+    path target = new_directory_in_sandbox();
+    create_directory(target / "bob");
+    path link = sandbox() / "link";
+    create_symlink(link, target);
+
+    uintmax_t count = remove_all(channel(), to_remote_path(link));
+
+    BOOST_CHECK(!exists(link));
+    BOOST_CHECK(exists(target)); // should only delete the link
+    BOOST_CHECK(exists(target / "bob")); // should only delete the link
+    BOOST_CHECK_EQUAL(count, 1U);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

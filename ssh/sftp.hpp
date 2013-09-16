@@ -41,7 +41,7 @@
 #include <ssh/ssh_error.hpp> // last_error, ssh_error
 #include <ssh/session.hpp>
 
-#include <boost/cstdint.hpp> // uint64_t
+#include <boost/cstdint.hpp> // uint64_t, uintmax_t
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
@@ -371,6 +371,33 @@ namespace detail {
                     session, sftp, "libssh2_sftp_stat_ex", path, path_len);
         }
 
+        /**
+         * Thin exception wrapper around libssh2_sftp_unlink_ex.
+         */
+        inline void unlink_ex(
+            boost::shared_ptr<LIBSSH2_SESSION> session,
+            boost::shared_ptr<LIBSSH2_SFTP> sftp,
+            const char* path, unsigned int path_len)
+        {
+            int rc = libssh2_sftp_unlink_ex(sftp.get(), path, path_len);
+            if (rc < 0)
+                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+                    session, sftp, "libssh2_sftp_unlink_ex", path, path_len);
+        }
+
+        /**
+         * Thin exception wrapper around libssh2_sftp_rmdir_ex.
+         */
+        inline void rmdir_ex(
+            boost::shared_ptr<LIBSSH2_SESSION> session,
+            boost::shared_ptr<LIBSSH2_SFTP> sftp,
+            const char* path, unsigned int path_len)
+        {
+            int rc = libssh2_sftp_rmdir_ex(sftp.get(), path, path_len);
+            if (rc < 0)
+                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+                    session, sftp, "libssh2_sftp_rmdir_ex", path, path_len);
+        }
     }}
 }
 
@@ -765,6 +792,250 @@ private:
     LIBSSH2_SFTP_ATTRIBUTES m_attributes;
     // @}
 };
+
+namespace detail {
+
+    inline bool do_remove(
+        sftp_channel channel, const boost::filesystem::path& target,
+        bool is_directory)
+    {
+        std::string target_string = target.string();
+
+        try
+        {
+            if (is_directory)
+            {
+                detail::libssh2::sftp::rmdir_ex(
+                    channel.session().get(), channel.get(),
+                    target_string.data(), target_string.size());
+            }
+            else
+            {
+                detail::libssh2::sftp::unlink_ex(
+                    channel.session().get(), channel.get(),
+                    target_string.data(), target_string.size());
+            }
+        }    
+        catch (const sftp_error& e)
+        {
+            // Process errors by catching the exception, rather than
+            // intercepting the error code directly, so as not to
+            // duplicate the sftp_error processing logic.
+
+            if (e.sftp_error_code() == LIBSSH2_FX_NO_SUCH_FILE)
+            {
+                // Mirror the Boost.Filesystem API which doesn't treat this
+                // as an error.
+                return false;
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return true;
+    }
+
+    inline bool remove_one_file(
+        sftp_channel channel, const boost::filesystem::path& file)
+    {
+        return do_remove(channel, file, false);
+    }
+
+    inline bool remove_empty_directory(
+        sftp_channel channel, const boost::filesystem::path& file)
+    {
+        return do_remove(channel, file, true);
+    }
+
+    inline boost::uintmax_t remove_directory(
+        sftp_channel channel, const boost::filesystem::path& root)
+    {
+        boost::uintmax_t count = 0U;
+
+        for (directory_iterator directory(channel, root);
+            directory != directory_iterator(); ++directory)
+        {
+            const sftp_file& file = *directory;
+
+            if (file.name() == "." || file.name() == "..")
+            {
+                continue;
+            }
+
+            if (file.attributes().type() == file_attributes::directory)
+            {
+                count += detail::remove_directory(channel, file.path());
+            }
+            else
+            {
+                if (detail::remove_one_file(channel, file.path()))
+                {
+                    ++count;
+                }
+                else
+                {
+                    // Something else deleted the file before we could
+                }
+            }
+        }
+
+        if (remove_empty_directory(channel, root))
+        {
+            ++count;
+        }
+        else
+        {
+            // Something else deleted the directory before we could or it
+            // never existed in the first place
+        }
+
+        return count;
+    }
+
+    BOOST_SCOPED_ENUM_START(path_status)
+    {
+        non_existent,
+        non_directory,
+        directory
+    };
+    BOOST_SCOPED_ENUM_END;
+
+    inline BOOST_SCOPED_ENUM(path_status) check_status(
+        sftp_channel channel, const boost::filesystem::path& path)
+    {
+        try
+        {
+            file_attributes attrs = attributes(channel, path, false);
+
+            if (attrs.type() == file_attributes::directory)
+            {
+                return path_status::directory;
+            }
+            else
+            {
+                return path_status::non_directory;
+            }
+        }
+        catch (const sftp_error& e)
+        {
+            // Process errors by catching the exception, rather than
+            // intercepting the error code directly, so as not to
+            // duplicate the sftp_error processing logic.
+
+            if (e.sftp_error_code() == LIBSSH2_FX_NO_SUCH_FILE)
+            {
+                // Mirror the Boost.Filesystem API which doesn't treat
+                // this as an error.
+                return path_status::non_existent;
+            }
+            else
+            {
+                throw;
+            }
+        }
+    }
+
+}
+
+/**
+ * Remove a file.
+ *
+ * Removes `target` on the filesystem available via `channel`.  If `target` is
+ * a symlink, only removes the link, not what the link resolves to.  If
+ * `target` is a directory, removes it only if the directory is empty.
+ *
+ * @returns `true` if the file was removed and `false` if the file did not
+ *          exist in the first place.
+ * @throws `sftp_error` if `target` is a non-empty directory.
+ *
+ *
+ * If the calling code already knows whether `target` is a directory, this
+ * function adds the overhead of a single extra stat call to the server above
+ * what would be possible using plain SFTP unlink/rmdir.  This trip is needed
+ * to find out that information and allows us to mirror the
+ * POSIX/Boost.Filesystem remove functions that do not differentiate
+ * directories.
+ */
+inline bool remove(sftp_channel channel, const boost::filesystem::path& target)
+{
+    // Unlike the POSIX/Boost.Filesystem API we are following, the SFTP
+    // protocol mirrors the C API where directories can only be removed
+    // using the special RMDIR command.
+    //
+    // We tried to avoid an extra round trip to the server (to stat the
+    // file) by blindly trying the common case of non-directories and
+    // ignoring the first SFTP error.  The theory was that any real
+    // error should also occur on the second (rmdir) attempt.
+    // But that's not true because the second error might be complaining
+    // that we're trying the wrong kind of delete while the first error
+    // is the actual problem (permissions, for example).  Saving the first
+    // error, and overwriting the second error with it, doesn't solve the
+    // problem either as it could be the second error that gives the real
+    // problem with the first error being wrong-kind-of-delete.  Basically
+    // we can't know which error is 'real'.  If we did, we'd know the
+    // filetype already!
+
+    switch (detail::check_status(channel, target))
+    {
+    case detail::path_status::non_existent:
+        return false;
+
+    case detail::path_status::directory:
+        return detail::remove_empty_directory(channel, target);
+
+    case detail::path_status::non_directory:
+        // This includes 'unknown' file type.  What's the alternative?
+        return detail::remove_one_file(channel, target);
+
+    default:
+        assert(false);
+        BOOST_THROW_EXCEPTION(std::logic_error("Unknown path status"));
+        return 0U;
+    }
+}
+
+/**
+ * Remove a file and anything below it in the hierarchy.
+ *
+ * Removes `target` on the filesystem available via `channel`.  If `target` is
+ * a symlink, only removes the link, not what the link resolves to.  If
+ * `target` is a directory, removes it and all its contents.
+ *
+ * @returns the number of files removed.
+ *
+ * If the calling code already knows whether `target` is a directory, this
+ * function adds the overhead of a single extra stat call to the server above
+ * what would be possible using plain SFTP unlink/rmdir.  This trip is needed
+ * to find out that information and allows us to mirror the
+ * POSIX/Boost.Filesystem remove functions that do not differentiate
+ * directories.
+ *
+ * All files below the target must be statted (indirectly via directory listing)
+ * by any implementation so this function adds no overhead for those.
+ */
+inline boost::uintmax_t remove_all(
+    sftp_channel channel, const boost::filesystem::path& target)
+{
+    switch (detail::check_status(channel, target))
+    {
+    case detail::path_status::non_existent:
+        return 0U;
+
+    case detail::path_status::directory:
+        return detail::remove_directory(channel, target);
+
+    case detail::path_status::non_directory:
+        // This includes 'unknown' file type.  What's the alternative?
+        return detail::remove_one_file(channel, target);
+
+    default:
+        assert(false);
+        BOOST_THROW_EXCEPTION(std::logic_error("Unknown path status"));
+        return 0U;
+    }
+}
 
 #undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
 #undef SSH_THROW_LAST_SFTP_ERROR

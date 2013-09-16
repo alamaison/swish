@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ public:
 
     boost::filesystem::path sandbox();
     boost::filesystem::path new_file_in_sandbox();
+    boost::filesystem::path new_directory_in_sandbox();
 
 private:
     boost::filesystem::path m_sandbox;
