@@ -56,6 +56,8 @@ public:
 
     boost::filesystem::path sandbox();
     boost::filesystem::path new_file_in_sandbox();
+    boost::filesystem::path sandbox_fixture::new_file_in_sandbox(
+        const std::string& name);
     boost::filesystem::path new_directory_in_sandbox();
 
 private:

@@ -94,7 +94,9 @@ using ssh::sftp::attributes;
 using ssh::sftp::canonical_path;
 using ssh::sftp::directory_iterator;
 using ssh::sftp::file_attributes;
+using ssh::sftp::overwrite_behaviour;
 using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_error;
 using ssh::sftp::sftp_file;
 
 using std::exception;
@@ -155,17 +157,6 @@ private:
     wstring _GetLastErrorMessage();
     wstring _GetSftpErrorMessage( ULONG uError );
 
-    HRESULT _RenameSimple(const string& from, const string& to);
-    HRESULT _RenameRetryWithOverwrite(
-        __in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
-        const string& from, const string& to,
-        wstring& error_out);
-    HRESULT _RenameAtomicOverwrite(
-        const string& from, const string& to,
-        wstring& error_out);
-    HRESULT _RenameNonAtomicOverwrite(
-        const string& from, const string& to,
-        wstring& error_out);
 };
 
 CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
@@ -326,6 +317,189 @@ com_ptr<IStream> provider::get_file(
     return new CSftpStream(m_session, path, flags);
 }
 
+namespace {
+    
+/**
+ * Rename file or directory and overwrite any obstruction non-atomically.
+ *
+ * This involves renaming the obstruction at the target to a temporary file, 
+ * renaming the source file to the target and then deleting the renamed 
+ * obstruction.  As this is not an atomic operation it is possible to fail 
+ * between any of these stages and is not a prefect solution.  It may, for 
+ * instance, leave the temporary file behind.
+ *
+ * @param from
+ *     Absolute path of the file or directory to be renamed.
+ * @param to
+ *     Absolute path to rename `from` to.
+ *
+ * @throws  ssh_error if the operation fails.
+ */
+void rename_non_atomic_overwrite(
+    authenticated_session& session, const string& from, const string& to)
+{
+    string temporary = to + ".swish_rename_temp";
+
+    {
+        mutex::scoped_lock lock = session.aquire_lock();
+        rename(
+            session.get_sftp_channel(), to, temporary,
+            overwrite_behaviour::prevent_overwrite);
+    }
+
+    try
+    {
+        mutex::scoped_lock lock = session.aquire_lock();
+        rename(
+            session.get_sftp_channel(), from, to,
+            overwrite_behaviour::prevent_overwrite);
+    }
+    catch (const exception&)
+    {
+        // Rename failed, rename our temporary back to its old name
+        try
+        {
+            mutex::scoped_lock lock = session.aquire_lock();
+            rename(
+                session.get_sftp_channel(), from, to,
+                overwrite_behaviour::prevent_overwrite);
+        }
+        catch (const exception&) { /* Suppress to avoid nested exception */ }
+
+        throw;
+    }
+   
+    // We ignore any failure to clean up the temporary backup as the rename
+    // has succeeded, whether or not cleanup fails.
+    //
+    // XXX: We could inform the user of this here.  Might make UI
+    // separation messy though.
+    try
+    {
+        mutex::scoped_lock lock = session.aquire_lock();
+        ssh::sftp::remove_all(session.get_sftp_channel(), temporary);
+    }
+    catch (const exception&) {}
+}
+
+
+/**
+ * Retry renaming after seeking permission to overwrite the obstruction at
+ * the target.
+ *
+ * If this fails the file or directory really can't be renamed and the error
+ * message from libssh2 is returned in @a error_out.
+ *
+ * @param pConsumer
+ *     Callback for user confirmation.
+ *
+ * @param previous_error
+ *     Error code of the previous rename attempt in order to determine if an
+ *     overwrite has any chance of being successful.
+ *
+ * @param from
+ *     Absolute path of the file or directory to be renamed.
+ *
+ * @param to
+ *     Absolute path to rename @a from to.
+ *
+ * @returns `true` if the the rename operation succeeds as a result of
+ *           retrying it,
+ *          `false` if the the rename operation needed user permission for
+ *           something and the user chose to abort the renaming.
+ *
+ * @throws `previous_error` if the situation is not caused by an obstruction
+ *         at the target.  Retrying renaming is not going to help here.
+ *
+ * @bug  The strings aren't converted from UTF-8 to UTF-16 before displaying
+ *       to the user.  Any unicode filenames will produce gibberish in the
+ *       confirmation dialogues.
+ */
+bool rename_retry_with_overwrite(
+    authenticated_session& session, ISftpConsumer *pConsumer,
+    const sftp_error& previous_error, const string& from, const string& to)
+{
+    if (previous_error.sftp_error_code() == LIBSSH2_FX_FILE_ALREADY_EXISTS)
+    {
+        HRESULT hr = pConsumer->OnConfirmOverwrite(
+            bstr_t(from).in(), bstr_t(to).in());
+        if (FAILED(hr))
+            return false;
+
+        // Attempt rename again this time allowing it to atomically overwrite
+        // any obstruction.
+        // This will only work on a server supporting SFTP version 5 or above.
+
+        try
+        {
+            mutex::scoped_lock lock = session.aquire_lock();
+            rename(
+                session.get_sftp_channel(), from, to,
+                overwrite_behaviour::atomic_overwrite);
+            return true;
+        }
+        catch (const sftp_error& e)
+        {
+            if (e.sftp_error_code() == LIBSSH2_FX_OP_UNSUPPORTED)
+            {
+                rename_non_atomic_overwrite(session, from, to);
+                return true;
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+    }
+    else if (previous_error.sftp_error_code() == LIBSSH2_FX_FAILURE)
+    {
+        // The failure is an unspecified one. This isn't the end of the world. 
+        // SFTP servers < v5 (i.e. most of them) return this error code if the
+        // file already exists as they don't explicitly support overwriting.
+        // We need to stat() the file to find out if this is the case and if 
+        // the user confirms the overwrite we will have to explicitly delete
+        // the target file first (via a temporary) and then repeat the rename.
+        //
+        // NOTE: this is not a perfect solution due to the possibility
+        // for race conditions.
+
+        mutex::scoped_lock lock = session.aquire_lock();
+
+        if (exists(session.get_sftp_channel(), to))
+        {
+            lock.unlock();
+
+            HRESULT hr = pConsumer->OnConfirmOverwrite(
+                bstr_t(from).in(), bstr_t(to).in());
+            if (FAILED(hr))
+                return false;
+
+            rename_non_atomic_overwrite(session, from, to);
+            return true;
+        }
+        else
+        {
+            // Rethrow the last exception because it wasn't caused by an
+            // obstruction.
+            //
+            // RACE CONDITION: It might have been caused by an obstruction
+            // which was then cleared by the time we did the existence check
+            // above.  The result it just that we would fail when we could
+            // have succeeded.  Such an edge case that it doesn't mattter.
+            throw previous_error;
+        }
+    }
+    else
+    {
+        // Rethrow the last exception because we can't recover from it by
+        // retrying the rename operation another way
+        throw previous_error;
+    }
+}
+
+}
+
 /**
  * Renames a file or directory.
  *
@@ -382,243 +556,28 @@ VARIANT_BOOL provider::rename(
 
     _Connect(consumer);
 
-    HRESULT hr = _RenameSimple(from, to);
-    if (SUCCEEDED(hr)) // Rename was successful without overwrite
+    try
+    {
+        mutex::scoped_lock lock = m_session->aquire_lock();
+        ssh::sftp::rename(
+            m_session->get_sftp_channel(), from, to,
+            overwrite_behaviour::prevent_overwrite);
+        
+        // Rename was successful without overwrite
         return VARIANT_FALSE;
-
-    // Rename failed - this is OK, it might be an overwrite - check
-    bstr_t message;
-    int nErr; PSTR pszErr; int cchErr;
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        nErr = libssh2_session_last_error(
-            m_session->get_raw_session(), &pszErr, &cchErr, false);
     }
-
-    if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
+    catch (const sftp_error& e)
     {
-        wstring error_out;
-         
-        ULONG sftp_last_error;
+        if (rename_retry_with_overwrite(
+            *m_session, consumer.get(), e, from, to))
         {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            sftp_last_error =
-                libssh2_sftp_last_error(m_session->get_raw_sftp_channel());
-        }
-
-        hr = _RenameRetryWithOverwrite(
-            consumer.get(), sftp_last_error, from, to, error_out);
-        if (SUCCEEDED(hr))
             return VARIANT_TRUE;
-        else if (hr == E_ABORT) // User denied overwrite
-            BOOST_THROW_EXCEPTION(com_error(hr));
+        }
         else
-            message = error_out;
-    }
-    else // A non-SFTP error occurred
-        message = pszErr;
-
-    // Report remaining errors
-    BOOST_THROW_EXCEPTION(com_error(message, E_FAIL));
-}
-
-/**
- * Renames a file or directory but prevents overwriting any existing item.
- *
- * @returns Success or failure of the operation.
- *    @retval S_OK   if the file or directory was successfully renamed
- *    @retval E_FAIL if there already is a file or directory at the target path
- *
- * @param from  Absolute path of the file or directory to be renamed.
- * @param to    Absolute path to rename @a from to.
- */
-HRESULT provider::_RenameSimple(const string& from, const string& to)
-{
-    mutex::scoped_lock lock = m_session->aquire_lock();
-    int rc = libssh2_sftp_rename_ex(
-        m_session->get_raw_sftp_channel(), from.data(), from.size(), to.data(), to.size(),
-        LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
-
-    return (!rc) ? S_OK : E_FAIL;
-}
-
-/**
- * Retry renaming file or directory if possible, after seeking permission to 
- * overwrite the obstruction at the target.
- *
- * If this fails the file or directory really can't be renamed and the error
- * message from libssh2 is returned in @a error_out.
- *
- * @param [in]  uPreviousError Error code of the previous rename attempt in
- *                             order to determine if an overwrite has any chance
- *                             of being successful.
- *
- * @param [in]  from           Absolute path of the file or directory to 
- *                             be renamed.
- *
- * @param [in]  to             Absolute path to rename @a from to.
- *
- * @param [out] error_out       Error message if the operation fails.
- *
- * @bug  The strings aren't converted from UTF-8 to UTF-16 before displaying
- *       to the user.  Any unicode filenames will produce gibberish in the
- *       confirmation dialogues.
- */
-HRESULT provider::_RenameRetryWithOverwrite(
-    ISftpConsumer *pConsumer,
-    ULONG uPreviousError, const string& from, const string& to, 
-    wstring& error_out)
-{
-    HRESULT hr;
-
-    if (uPreviousError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
-    {
-        hr = pConsumer->OnConfirmOverwrite(bstr_t(from).in(), bstr_t(to).in());
-        if (FAILED(hr))
-            return E_ABORT; // User disallowed overwrite
-
-        // Attempt rename again this time allowing overwrite
-        return _RenameAtomicOverwrite(from, to, error_out);
-    }
-    else if (uPreviousError == LIBSSH2_FX_FAILURE)
-    {
-        // The failure is an unspecified one. This isn't the end of the world. 
-        // SFTP servers < v5 (i.e. most of them) return this error code if the
-        // file already exists as they don't explicitly support overwriting.
-        // We need to stat() the file to find out if this is the case and if 
-        // the user confirms the overwrite we will have to explicitly delete
-        // the target file first (via a temporary) and then repeat the rename.
-        //
-        // NOTE: this is not a perfect solution due to the possibility
-        // for race conditions.
-        LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
-        ::ZeroMemory(&attrsTarget, sizeof attrsTarget);
-        
-        int rc;
         {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_stat(
-                m_session->get_raw_sftp_channel(), to.c_str(), &attrsTarget);
-        }
-        if (!rc)
-        {
-            // File already exists
-            hr = pConsumer->OnConfirmOverwrite(
-                bstr_t(from).in(), bstr_t(to).in());
-            if (FAILED(hr))
-                return E_ABORT; // User disallowed overwrite
-
-            return _RenameNonAtomicOverwrite(from, to, error_out);
+            BOOST_THROW_EXCEPTION(com_error(E_ABORT));
         }
     }
-        
-    // File does not already exist, another error caused rename failure
-    error_out = _GetSftpErrorMessage(uPreviousError);
-    return E_FAIL;
-}
-
-/**
- * Rename file or directory and atomically overwrite any obstruction.
- *
- * @remarks
- * This will only work on a server supporting SFTP version 5 or above.
- *
- * @param [in]  from      Absolute path of the file or directory to be renamed.
- * @param [in]  to        Absolute path to rename @a from to.
- * @param [out] error_out  Error message if the operation fails.
- */
-HRESULT provider::_RenameAtomicOverwrite(
-    const string& from, const string& to, wstring& error_out)
-{
-    // Lock must not be released until after we get the error message
-    // or we might get a message produced on another thread
-
-    mutex::scoped_lock lock = m_session->aquire_lock();
-
-    int rc = libssh2_sftp_rename_ex(
-        m_session->get_raw_sftp_channel(), from.data(), from.size(), to.data(), to.size(), 
-        LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
-        LIBSSH2_SFTP_RENAME_NATIVE);
-
-    if (!rc)
-        return S_OK;
-    else
-    {
-        char *pszMessage; int cchMessage;
-        libssh2_session_last_error(
-            m_session->get_raw_session(), &pszMessage, &cchMessage, false);
-        
-        error_out = Utf8StringToWideString(pszMessage);
-        return E_FAIL;
-    }
-}
-
-
-/**
- * Rename file or directory and overwrite any obstruction non-atomically.
- *
- * This involves renaming the obstruction at the target to a temporary file, 
- * renaming the source file to the target and then deleting the renamed 
- * obstruction.  As this is not an atomic operation it is possible to fail 
- * between any of these stages and is not a prefect solution.  It may, for 
- * instance, leave the temporary file behind.
- *
- * @param [in]  from      Absolute path of the file or directory to be renamed.
- * @param [in]  to        Absolute path to rename @a from to.
- * @param [out] error_out  Error message if the operation fails.
- */
-HRESULT provider::_RenameNonAtomicOverwrite(
-    const string& from, const string& to, wstring& error_out)
-{
-    // First, rename existing file to temporary
-    string temporary(to);
-    temporary += ".swish_rename_temp";
-    int rc;
-    
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        rc = libssh2_sftp_rename(
-            m_session->get_raw_sftp_channel(), to.c_str(), temporary.c_str());
-    }
-
-    if (!rc)
-    {
-        // Rename our subject
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_rename(
-                m_session->get_raw_sftp_channel(), from.c_str(), to.c_str());
-        }
-        if (!rc)
-        {
-            try
-            {
-                // Delete temporary
-                mutex::scoped_lock lock = m_session->aquire_lock();
-                ssh::sftp::remove_all(
-                    m_session->get_sftp_channel(), path(temporary));
-            }
-            catch (const exception&)
-            { /* The rename succeeded even if this fails */ }
-
-            return S_OK;
-        }
-
-        // Rename failed, rename our temporary back to its old name
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_rename(
-                m_session->get_raw_sftp_channel(), from.c_str(), to.c_str());
-        }
-        assert(!rc);
-
-        error_out = _T("Cannot overwrite \"");
-        error_out += Utf8StringToWideString(from + "\" with \"" + to);
-        error_out += _T("\": Please specify a different name or delete \"");
-        error_out += Utf8StringToWideString(to + "\" first.");
-    }
-
-    return E_FAIL;
 }
 
 void provider::remove_all(

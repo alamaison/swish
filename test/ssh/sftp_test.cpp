@@ -48,13 +48,14 @@
 #include <algorithm> // find
 #include <string>
 
-using ssh::ssh_error;
 using ssh::session;
+using ssh::ssh_error;
 using ssh::sftp::file_attributes;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_error;
 using ssh::sftp::sftp_file;
 using ssh::sftp::directory_iterator;
+using ssh::sftp::overwrite_behaviour;
 
 using boost::bind;
 using boost::filesystem::ofstream;
@@ -434,6 +435,77 @@ BOOST_AUTO_TEST_CASE( remove_link_recursive )
     BOOST_CHECK(exists(target)); // should only delete the link
     BOOST_CHECK(exists(target / "bob")); // should only delete the link
     BOOST_CHECK_EQUAL(count, 1U);
+}
+
+BOOST_AUTO_TEST_CASE( rename_file )
+{
+    path test_file = new_file_in_sandbox();
+    path target = sandbox() / "target";
+
+    rename(
+        channel(), to_remote_path(test_file), to_remote_path(target),
+        overwrite_behaviour::prevent_overwrite);
+    BOOST_CHECK(!exists(test_file));
+    BOOST_CHECK(exists(target));
+}
+
+BOOST_AUTO_TEST_CASE( rename_file_obstacle_no_overwrite )
+{
+    path test_file = new_file_in_sandbox();
+
+    path target = new_file_in_sandbox("target");
+    
+    BOOST_CHECK_THROW(
+        rename(
+            channel(), to_remote_path(test_file), to_remote_path(target),
+            overwrite_behaviour::prevent_overwrite), sftp_error);
+    BOOST_CHECK(exists(test_file));
+    BOOST_CHECK(exists(target));
+}
+
+BOOST_AUTO_TEST_CASE( rename_file_obstacle_allow_overwrite )
+{
+    path test_file = new_file_in_sandbox();
+
+    path target = new_file_in_sandbox("target");
+
+    // Using OpenSSH server which only supports SFTP 3 (no overwrite) so
+    // failure expected
+    BOOST_CHECK_THROW(
+        rename(
+            channel(), to_remote_path(test_file), to_remote_path(target),
+            overwrite_behaviour::allow_overwrite), sftp_error);
+    BOOST_CHECK(exists(test_file));
+    BOOST_CHECK(exists(target));
+}
+
+BOOST_AUTO_TEST_CASE( rename_file_obstacle_atomic_overwrite )
+{
+    path test_file = new_file_in_sandbox();
+
+    path target = new_file_in_sandbox("target");
+
+    // Using OpenSSH server which only supports SFTP 3 (no overwrite) so
+    // failure expected
+    BOOST_CHECK_THROW(
+        rename(
+        channel(), to_remote_path(test_file), to_remote_path(target),
+        overwrite_behaviour::atomic_overwrite), sftp_error);
+    BOOST_CHECK(exists(test_file));
+    BOOST_CHECK(exists(target));
+}
+
+BOOST_AUTO_TEST_CASE( exists_true )
+{
+    path test_file = new_file_in_sandbox();
+
+    BOOST_CHECK(exists(channel(), to_remote_path(test_file)));
+}
+
+BOOST_AUTO_TEST_CASE( exists_false )
+{
+    path test_file = sandbox() / "I do not exist";
+    BOOST_CHECK(!exists(channel(), to_remote_path(test_file)));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -53,6 +53,7 @@
 #include <algorithm> // min
 #include <cassert> // assert
 #include <exception> // bad_alloc
+#include <stdexcept> // invalid_argument
 #include <string>
 #include <vector>
 
@@ -398,6 +399,25 @@ namespace detail {
                 SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
                     session, sftp, "libssh2_sftp_rmdir_ex", path, path_len);
         }
+
+        /**
+         * Thin exception wrapper around libssh2_sftp_rename_ex
+         */
+        inline void rename(
+            boost::shared_ptr<LIBSSH2_SESSION> session,
+            boost::shared_ptr<LIBSSH2_SFTP> sftp, const char* source,
+            unsigned int source_len, const char* destination,
+            unsigned int destination_len, long flags)
+        {
+            int rc = libssh2_sftp_rename_ex(
+                sftp.get(), source, source_len, destination, destination_len,
+                flags);
+            if (rc)
+                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+                    session, sftp, "libssh2_sftp_rename_ex", source,
+                    source_len);
+        }
+
     }}
 }
 
@@ -582,6 +602,9 @@ private:
  *
  * If @a follow_links is @c true, the file that is queried is the target of
  * any chain of links.  Otherwise, it is the link itself.
+ *
+ * @todo Split into `status` and `symlink_status` to mirror Boost.Filesystem
+ *       API.
  */
 inline file_attributes attributes(
     sftp_channel channel, const boost::filesystem::path& file,
@@ -595,6 +618,31 @@ inline file_attributes attributes(
         (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT, &attributes);
 
     return file_attributes(attributes);
+}
+
+/**
+ * Does a file exist at the given path.
+ */
+inline bool exists(
+    sftp_channel channel, const boost::filesystem::path& file)
+{
+    try
+    {
+        attributes(channel, file, false);
+    }
+    catch (const sftp_error& e)
+    {
+        if (e.sftp_error_code() == LIBSSH2_FX_NO_SUCH_FILE)
+        {
+            return false;
+        }
+        else
+        {
+            throw;
+        }
+    }
+
+    return true;
 }
 
 class sftp_file
@@ -682,6 +730,108 @@ inline void create_symlink(
     detail::libssh2::sftp::symlink(
         channel.session().get(), channel.get(), link_string.data(),
         link_string.size(), target_string.data(), target_string.size());
+}
+
+BOOST_SCOPED_ENUM_START(overwrite_behaviour)
+{
+    /**
+     * Do not overwrite an existing file at the destination.
+     * 
+     * If the file exists function will throw an exception.
+     */
+    prevent_overwrite,
+
+    /**
+     * Overwrite any existing file at the destination.
+     *
+     * The SFTP server may not support overwriting files, in which case this
+     * acts like `prevent_overwrite`.
+     */
+    allow_overwrite,
+
+    /**
+     * Overwrite any existing file using *only* atomic methods.  If atomic methods
+     * are not available on the server, the overwrite will not be performed by
+     * other methods and the function will throw an exception.
+     *
+     * The SFTP server may not support overwriting files, in which case this
+     * acts like `prevent_overwrite`.
+     */
+    atomic_overwrite
+};
+BOOST_SCOPED_ENUM_END
+
+/**
+ * Change one path to a file with another.
+ *
+ * After this function completes, `source` is no longer a path to the
+ * file that it referenced before calling the function, and `destination` is a
+ * new path to that file.
+ *
+ * @param channel
+ *     SFTP connection.
+ * @param source
+ *     Path to the file on the remote filesystem. File must already exist.
+ * @param destination
+ *     Path to which the file will be moved.  File may already exist.  If it 
+ *     does exist and `allow_overwrite` is `false`, the function will throw
+ *     an exception.
+ * @param overwrite_hint
+ *     Optional hint suggesting preferred overwrite behaviour if `destination`
+ *     is already a path to a file before this function is called.  Only
+ *     `prevent_overwrite` is guaranteed to be obeyed.  All other flags are
+ *     suggestions that the server is free to disregard (most SFTP servers 
+ *     disregard these flags).  If it does so and `destination` is already a
+ *     path to a file, this function will throw an unspecified `sftp_error`.
+ *
+ * @throws `sftp_error` if `destination` is already a path to a file before
+ *         this function is called and either `prevent_overwrite` is
+ *         specified as `overwrite_hint` or the server did not support the
+ *         given hint.
+ *
+ * `atomic_overwrite` is the default value of `overwrite_hint` to give the
+ * closest alignment to POSIX/Boost.Filesystem `rename`.  However, as explained
+ * above, the server is free to refuse to overwrite in the presence of an
+ * existing `destination`.  Therefore the APIs do not align completely.
+ *
+ * @todo Not currently supporting the NATIVE flag as it's not at all clear what
+ *       it does.
+ */
+inline void rename(
+    sftp_channel channel, const boost::filesystem::path& source,
+    const boost::filesystem::path& destination,
+    BOOST_SCOPED_ENUM(overwrite_behaviour) overwrite_hint
+        =overwrite_behaviour::atomic_overwrite)
+{
+    std::string source_string = source.string();
+    std::string destination_string = destination.string();
+
+    int flags;
+    switch (overwrite_hint)
+    {
+    case overwrite_behaviour::prevent_overwrite:
+        flags = 0;
+        break;
+
+    case overwrite_behaviour::allow_overwrite:
+        flags = LIBSSH2_SFTP_RENAME_OVERWRITE;
+        break;
+
+    case overwrite_behaviour::atomic_overwrite:
+        // The spec says OVERWRITE is implied by ATOMIC but specifying both
+        // to be on the safe side
+        flags = LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("Unrecognised overwrite behaviour"));
+    }
+
+    detail::libssh2::sftp::rename(
+        channel.session().get(), channel.get(), source_string.data(),
+        source_string.size(), destination_string.data(),
+        destination_string.size(), flags);
 }
 
 /**

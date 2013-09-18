@@ -37,6 +37,7 @@
 #include "sandbox_fixture.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp> // BOOST_REQUIRE etc.
 
@@ -46,6 +47,7 @@
 
 using boost::system::system_error;
 using boost::system::get_system_category;
+using boost::filesystem::ofstream;
 using boost::filesystem::path;
 using boost::shared_ptr;
 
@@ -107,6 +109,16 @@ path sandbox_fixture::new_file_in_sandbox()
     BOOST_CHECK(exists(p));
     BOOST_CHECK(is_regular_file(p));
     BOOST_CHECK(p.is_complete());
+    return p;
+}
+
+
+path sandbox_fixture::new_file_in_sandbox(const string& name)
+{
+    path p = sandbox() / name;
+    BOOST_REQUIRE(!exists(p));
+    ofstream file(p);
+    BOOST_CHECK(exists(p));
     return p;
 }
 
