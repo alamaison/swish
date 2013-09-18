@@ -67,8 +67,6 @@ public:
 
     virtual void remove_all(ISftpConsumer* consumer, BSTR path);
 
-    virtual void create_new_file(ISftpConsumer* consumer, BSTR path);
-
     virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
 
     virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);

@@ -123,19 +123,7 @@ public:
 
     virtual void remove_all(ISftpConsumer* consumer, BSTR path) = 0;
 
-    /**
-     * @name Creation methods
-     * These are the dual of the deletion methods.  `create_new_file`
-     * is mainly for the test-suite.  It just creates an empty file at the
-     * given path (roughly equivalent to Unix `touch`).
-     */
-    // @{
-
-    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
-
     virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    // @}
 
     /**
      * Return the canonical path of the given non-canonical path.

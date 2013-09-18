@@ -128,8 +128,6 @@ public:
 
     void remove_all(com_ptr<ISftpConsumer> consumer, const wpath& path);
 
-    void create_new_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
-
     void create_new_directory(
         com_ptr<ISftpConsumer> consumer, const wpath& path);
 
@@ -189,9 +187,6 @@ VARIANT_BOOL CProvider::rename(
 
 void CProvider::remove_all(ISftpConsumer* consumer, BSTR path)
 { m_provider->remove_all(consumer, path); }
-
-void CProvider::create_new_file(ISftpConsumer* consumer, BSTR path)
-{ m_provider->create_new_file(consumer, path); }
 
 void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
 { m_provider->create_new_directory(consumer, path); }
@@ -592,27 +587,6 @@ void provider::remove_all(
 
     mutex::scoped_lock lock = m_session->aquire_lock();
     ssh::sftp::remove_all(m_session->get_sftp_channel(), utf8_path);
-}
-
-void provider::create_new_file(
-    com_ptr<ISftpConsumer> consumer, const wpath& path)
-{
-    if (path.empty())
-        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-
-    string utf8_path = WideStringToUtf8String(path.string());
-
-    _Connect(consumer);
-    
-    mutex::scoped_lock lock = m_session->aquire_lock();
-
-    LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
-        m_session->get_raw_sftp_channel(), utf8_path.c_str(), LIBSSH2_FXF_CREAT, 0644);
-    if (pHandle == NULL)
-        BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
-
-    int rc = libssh2_sftp_close_handle(pHandle);
-    assert(rc == 0); (void)rc;
 }
 
 void provider::create_new_directory(
