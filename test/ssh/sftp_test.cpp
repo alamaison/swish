@@ -508,4 +508,34 @@ BOOST_AUTO_TEST_CASE( exists_false )
     BOOST_CHECK(!exists(channel(), to_remote_path(test_file)));
 }
 
+BOOST_AUTO_TEST_CASE( new_directory )
+{
+    path target = new_directory_in_sandbox();
+    remove(target);
+
+    BOOST_CHECK(create_directory(channel(), to_remote_path(target)));
+    BOOST_CHECK(exists(target));
+    BOOST_CHECK(is_directory(target));
+}
+
+BOOST_AUTO_TEST_CASE( new_directory_already_there )
+{
+    path target = new_directory_in_sandbox();
+
+    BOOST_CHECK(!create_directory(channel(), to_remote_path(target)));
+    BOOST_CHECK(exists(target));
+    BOOST_CHECK(is_directory(target));
+}
+
+BOOST_AUTO_TEST_CASE( new_directory_already_there_wrong_type )
+{
+    path target = new_file_in_sandbox();
+
+    BOOST_CHECK_THROW(
+        create_directory(channel(), to_remote_path(target)),
+        sftp_error);
+    BOOST_CHECK(exists(target));
+    BOOST_CHECK(!is_directory(target));
+}
+
 BOOST_AUTO_TEST_SUITE_END();

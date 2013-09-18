@@ -387,6 +387,20 @@ namespace detail {
         }
 
         /**
+         * Thin exception wrapper around libssh2_sftp_mkdir_ex.
+         */
+        inline void mkdir_ex(
+            boost::shared_ptr<LIBSSH2_SESSION> session,
+            boost::shared_ptr<LIBSSH2_SFTP> sftp,
+            const char* path, unsigned int path_len, long mode)
+        {
+            int rc = libssh2_sftp_mkdir_ex(sftp.get(), path, path_len, mode);
+            if (rc < 0)
+                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+                    session, sftp, "libssh2_sftp_mkdir_ex", path, path_len);
+        }
+
+        /**
          * Thin exception wrapper around libssh2_sftp_rmdir_ex.
          */
         inline void rmdir_ex(
@@ -1184,6 +1198,58 @@ inline boost::uintmax_t remove_all(
         assert(false);
         BOOST_THROW_EXCEPTION(std::logic_error("Unknown path status"));
         return 0U;
+    }
+}
+
+/**
+ * Make a directory accessible from the given path.
+ *
+ * @returns `true` if a new directory was created at `new_directory`
+ *          `false` if a directory already existed on that path.
+ *
+ * This function mirrors Boost.Filesystem `create_directory` except that
+ * directories are created with 0755 permissions instead of 0777.  0755 is
+ * more secure and the recommended permissions for directories on web server
+ * so seems more appropriate.  It's not clear why Boost.Filesystem chooses
+ * 0777 instead.
+ */
+inline bool create_directory(
+    sftp_channel channel, const boost::filesystem::path& new_directory)
+{
+    std::string new_directory_string = new_directory.string();
+
+    try
+    {
+        detail::libssh2::sftp::mkdir_ex(
+            channel.session().get(), channel.get(), new_directory_string.data(),
+            new_directory_string.size(),
+            LIBSSH2_SFTP_S_IRWXU |
+            LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IXGRP |
+            LIBSSH2_SFTP_S_IROTH | LIBSSH2_SFTP_S_IXOTH);
+
+        return true;
+    }
+    catch (const sftp_error&)
+    {
+        // Might just be because it already exists.  Let's check that and if
+        // ignore if that's the case.
+        // Doing this test after avoids an extra trip to the server in the
+        // common case.
+
+        switch (detail::check_status(channel, new_directory))
+        {
+        case detail::path_status::non_directory:
+        case detail::path_status::non_existent:
+            throw;
+
+        case detail::path_status::directory:
+            return false;
+
+        default:
+            assert(false);
+            BOOST_THROW_EXCEPTION(std::logic_error("Unknown path status"));
+            return false;
+        }
     }
 }
 

@@ -152,9 +152,6 @@ private:
     void _Connect(com_ptr<ISftpConsumer> consumer);
     void _Disconnect();
 
-    wstring _GetLastErrorMessage();
-    wstring _GetSftpErrorMessage( ULONG uError );
-
 };
 
 CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
@@ -602,9 +599,7 @@ void provider::create_new_directory(
     _Connect(consumer);
 
     mutex::scoped_lock lock = m_session->aquire_lock();
-    if (libssh2_sftp_mkdir(
-        m_session->get_raw_sftp_channel(), utf8_path.c_str(), 0755) != 0)
-        BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
+    ssh::sftp::create_directory(m_session->get_sftp_channel(), utf8_path);
 }
 
 BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
@@ -644,85 +639,6 @@ sftp_filesystem_item provider::stat(
 
     return libssh2_sftp_filesystem_item::create_from_libssh2_attributes(
         utf8_path, stat_result);
-}
-
-/**
- * Retrieves a string description of the last error reported by libssh2.
- *
- * In the case that the last SSH error is an SFTP error it returns the SFTP
- * error message in preference.
- */
-wstring provider::_GetLastErrorMessage()
-{
-    int nErr; PSTR pszErr; int cchErr;
-
-    nErr = libssh2_session_last_error(
-        m_session->get_raw_session(), &pszErr, &cchErr, false);
-    if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
-    {
-        ULONG uErr = libssh2_sftp_last_error(m_session->get_raw_sftp_channel());
-        return _GetSftpErrorMessage(uErr);
-    }
-    else // A non-SFTP error occurred
-        return Utf8StringToWideString(pszErr);
-}
-
-/**
- * Maps between libssh2 SFTP error codes and an appropriate error string.
- *
- * @param uError  SFTP error code as returned by libssh2_sftp_last_error().
- */
-wstring provider::_GetSftpErrorMessage(ULONG uError)
-{
-    switch (uError)
-    {
-    case LIBSSH2_FX_OK:
-        return _T("Successful");
-    case LIBSSH2_FX_EOF:
-        return _T("File ended unexpectedly");
-    case LIBSSH2_FX_NO_SUCH_FILE:
-        return _T("Required file or folder does not exist");
-    case LIBSSH2_FX_PERMISSION_DENIED:
-        return _T("Permission denied");
-    case LIBSSH2_FX_FAILURE:
-        return _T("Unknown failure");
-    case LIBSSH2_FX_BAD_MESSAGE:
-        return _T("Server returned an invalid message");
-    case LIBSSH2_FX_NO_CONNECTION:
-        return _T("No connection");
-    case LIBSSH2_FX_CONNECTION_LOST:
-        return _T("Connection lost");
-    case LIBSSH2_FX_OP_UNSUPPORTED:
-        return _T("Server does not support this operation");
-    case LIBSSH2_FX_INVALID_HANDLE:
-        return _T("Invalid handle");
-    case LIBSSH2_FX_NO_SUCH_PATH:
-        return _T("The path does not exist");
-    case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-        return _T("A file or folder of that name already exists");
-    case LIBSSH2_FX_WRITE_PROTECT:
-        return _T("This file or folder has been write-protected");
-    case LIBSSH2_FX_NO_MEDIA:
-        return _T("No media was found");
-    case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
-        return _T("There is no space left on the server's filesystem");
-    case LIBSSH2_FX_QUOTA_EXCEEDED:
-        return _T("You have exceeded your disk quota on the server");
-    case LIBSSH2_FX_UNKNOWN_PRINCIPLE:
-        return _T("Unknown principle");
-    case LIBSSH2_FX_LOCK_CONFlICT:
-        return _T("Lock conflict");
-    case LIBSSH2_FX_DIR_NOT_EMPTY:
-        return _T("The folder is not empty");
-    case LIBSSH2_FX_NOT_A_DIRECTORY:
-        return _T("This file is not a folder");
-    case LIBSSH2_FX_INVALID_FILENAME:
-        return _T("The filename is not valid on the server's filesystem");
-    case LIBSSH2_FX_LINK_LOOP:
-        return _T("Operation would cause a link loop which is not permitted");
-    default:
-        return _T("Unexpected error code returned by server");
-    }
 }
 
 }} // namespace swish::provider
