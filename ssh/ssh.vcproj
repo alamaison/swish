@@ -129,6 +129,10 @@
 			RelativePath=".\ssh_error.hpp"
 			>
 		</File>
+		<File
+			RelativePath=".\stream.hpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
