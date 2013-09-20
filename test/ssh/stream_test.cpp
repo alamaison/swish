@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <vector>
 
 using ssh::session;
 using ssh::sftp::openmode;
@@ -55,6 +56,7 @@ using test::ssh::sandbox_fixture;
 using test::ssh::session_fixture;
 
 using std::string;
+using std::vector;
 
 namespace {
 
@@ -90,6 +92,27 @@ BOOST_FIXTURE_TEST_SUITE(stream_tests, stream_fixture)
 
 BOOST_FIXTURE_TEST_SUITE(istream_tests, stream_fixture)
 
+BOOST_AUTO_TEST_CASE( input_stream_multiple_streams )
+{
+    path target1 = new_file_in_sandbox();
+    path target2 = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream s1(chan, to_remote_path(target1));
+    ssh::sftp::ifstream s2(chan, to_remote_path(target2));
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_multiple_streams_to_same_file )
+{
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream s1(chan, to_remote_path(target));
+    ssh::sftp::ifstream s2(chan, to_remote_path(target));
+}
+
 BOOST_AUTO_TEST_CASE( input_stream_readable )
 {
     path target = new_file_in_sandbox("gobbledy gook");
@@ -104,6 +127,48 @@ BOOST_AUTO_TEST_CASE( input_stream_readable )
     BOOST_CHECK_EQUAL(bob, "gook");
     BOOST_CHECK(!(s >> bob));
     BOOST_CHECK(s.eof());
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
+{
+    string expected_data("gobbledy gook\0after-null\x12\11", 26);
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
+
+    string bob;
+
+    vector<char> buffer(expected_data.size());
+    BOOST_CHECK(remote_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(),
+        expected_data.begin(), expected_data.end());
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_stream_op )
+{
+    string expected_data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
+
+    string bob;
+
+    BOOST_CHECK(remote_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
+
+    BOOST_CHECK(remote_stream >> bob);
+    const char* gn = "gook\0after-null\x12\x11";
+    BOOST_CHECK_EQUAL_COLLECTIONS(bob.begin(), bob.end(), gn, gn+17);
+    BOOST_CHECK(!(remote_stream >> bob));
+    BOOST_CHECK(remote_stream.eof());
 }
 
 BOOST_AUTO_TEST_CASE( input_stream_does_not_create_by_default )
@@ -180,6 +245,27 @@ BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_FIXTURE_TEST_SUITE(ofstream_tests, stream_fixture)
 
+BOOST_AUTO_TEST_CASE( output_stream_multiple_streams )
+{
+    path target1 = new_file_in_sandbox();
+    path target2 = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream s1(chan, to_remote_path(target1));
+    ssh::sftp::ofstream s2(chan, to_remote_path(target2));
+}
+
+BOOST_AUTO_TEST_CASE( output_stream_multiple_streams_to_same_file )
+{
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream s1(chan, to_remote_path(target));
+    ssh::sftp::ofstream s2(chan, to_remote_path(target));
+}
+
 BOOST_AUTO_TEST_CASE( output_stream_writeable )
 {
     path target = new_file_in_sandbox();
@@ -203,6 +289,59 @@ BOOST_AUTO_TEST_CASE( output_stream_writeable )
     BOOST_CHECK(!(local_stream >> bob));
     BOOST_CHECK(local_stream.eof());
 }
+
+BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data )
+{
+    string data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data_stream_op )
+{
+    string data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream << data);
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
 
 BOOST_AUTO_TEST_CASE( output_stream_creates_by_default )
 {
