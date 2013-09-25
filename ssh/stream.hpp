@@ -351,11 +351,11 @@ namespace detail {
 
 }
 
-class ifstream_device : public boost::iostreams::source
+class sftp_input_device : public boost::iostreams::source
 {
 public:
 
-    ifstream_device(
+    sftp_input_device(
         sftp_channel channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode=openmode::in)
         :
@@ -393,13 +393,13 @@ private:
  * By default opened as if `openmode::in` is the only flag specified. File
  * always opened in binary mode.  SFTP does not have a text mode.
  */
-typedef boost::iostreams::stream<ifstream_device> ifstream;
+typedef boost::iostreams::stream<sftp_input_device> ifstream;
 
-class ofstream_device : public boost::iostreams::sink
+class sftp_output_device : public boost::iostreams::sink
 {
 public:
 
-    ofstream_device(
+    sftp_output_device(
         sftp_channel channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode=openmode::out)
         :
@@ -437,7 +437,7 @@ private:
  * By default opened as if `openmode::out` is the only flag specified. File
  * always opened in binary mode.  SFTP does not have a text mode.
  */
-typedef boost::iostreams::stream<ofstream_device> ofstream;
+typedef boost::iostreams::stream<sftp_output_device> ofstream;
 
 #undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
 #undef SSH_THROW_LAST_SFTP_ERROR
