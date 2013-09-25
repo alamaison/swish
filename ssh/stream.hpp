@@ -322,7 +322,8 @@ namespace detail {
         return detail::libssh2::sftp::open(
             channel.session().get(), channel.get(), path_string.data(),
             path_string.size(), openmode_to_libssh2_flags(opening_mode),
-            LIBSSH2_SFTP_S_IRWXU | LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
+            LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
+            LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
             LIBSSH2_SFTP_OPENFILE);
     }
 
