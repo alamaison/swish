@@ -45,8 +45,8 @@
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
-#include <boost/iostreams/concepts.hpp> // source, sink
-#include <boost/iostreams/categories.hpp> // seekable
+#include <boost/iostreams/categories.hpp>
+                               // seekable, input_seekable, output_seekable
 #include <boost/iostreams/stream.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION, throw_exception
 
@@ -398,7 +398,8 @@ namespace detail {
 
 }
 
-class sftp_input_device : public boost::iostreams::source
+class sftp_input_device :
+    public boost::iostreams::device<boost::iostreams::input_seekable>
 {
 public:
 
@@ -424,6 +425,12 @@ public:
         }
     }
 
+    boost::iostreams::stream_offset seek(
+        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    {
+        return detail::seek(m_channel, m_handle, m_open_path, off, way);
+    }
+
 private:
     sftp_channel m_channel;
     boost::filesystem::path m_open_path;
@@ -442,7 +449,8 @@ private:
  */
 typedef boost::iostreams::stream<sftp_input_device> ifstream;
 
-class sftp_output_device : public boost::iostreams::sink
+class sftp_output_device :
+    public boost::iostreams::device<boost::iostreams::output_seekable>
 {
 public:
 
@@ -466,6 +474,12 @@ public:
             e << boost::errinfo_file_name(m_open_path.string());
             throw;
         }
+    }
+
+    boost::iostreams::stream_offset seek(
+        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    {
+        return detail::seek(m_channel, m_handle, m_open_path, off, way);
     }
 
 private:
