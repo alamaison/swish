@@ -46,11 +46,12 @@
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iostreams/concepts.hpp> // source, sink
+#include <boost/iostreams/categories.hpp> // seekable
 #include <boost/iostreams/stream.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION, throw_exception
 
 #include <cassert> // assert
-#include <stdexcept> // invalid_argument
+#include <stdexcept> // invalid_argument, logic_error
 #include <string>
 
 #include <libssh2_sftp.h>
@@ -217,16 +218,6 @@ namespace detail {
             return count;
         }
 
-        /**
-         * Thin exception wrapper around libssh2_sftp_seek64.
-         */
-        inline void seek64(
-            boost::shared_ptr<LIBSSH2_SFTP_HANDLE> file_handle,
-            libssh2_uint64_t offset)
-        {
-            libssh2_sftp_seek64(file_handle.get(), offset);
-        }
-
     }}
 
     inline long openmode_to_libssh2_flags(openmode::value opening_mode)
@@ -349,6 +340,62 @@ namespace detail {
             static_cast<openmode::value>(opening_mode | openmode::out));
     }
 
+    inline boost::iostreams::stream_offset seek(
+        sftp_channel channel, boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
+        const boost::filesystem::path& open_path,
+        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    {
+        boost::iostreams::stream_offset new_position = 0;
+
+        switch (way)
+        {
+        case std::ios_base::beg:
+            new_position = off;
+            break;
+
+        case std::ios_base::cur:
+            {
+                // FIXME: possible to get integer overflow on addition?
+                new_position = libssh2_sftp_tell64(handle.get()) + off;
+                break;
+            }
+
+        case std::ios_base::end: // MUST ACCESS SERVER
+            {
+                LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
+
+                int rc = libssh2_sftp_fstat_ex(
+                    handle.get(), &attributes, LIBSSH2_SFTP_STAT);
+                if (rc != 0)
+                {
+                    std::string open_path_string = open_path.string();
+                    SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+                        channel.session().get(), channel.get(),
+                        "libssh2_sftp_fstat_ex", open_path_string.data(),
+                        open_path_string.length());
+                }
+
+                new_position = attributes.filesize + off;
+                break;
+            }
+
+        default:
+            BOOST_THROW_EXCEPTION(
+                std::invalid_argument("Unknown seek direction"));
+        }
+
+        if (new_position < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Cannot seek before start of file"));
+        }
+
+
+        libssh2_sftp_seek64(handle.get(), new_position);
+
+        return new_position;
+    }
+
 }
 
 class sftp_input_device : public boost::iostreams::source
@@ -438,6 +485,70 @@ private:
  * always opened in binary mode.  SFTP does not have a text mode.
  */
 typedef boost::iostreams::stream<sftp_output_device> ofstream;
+
+
+class sftp_io_device :
+    public boost::iostreams::device<boost::iostreams::seekable>
+{
+public:
+
+    sftp_io_device(
+        sftp_channel channel, const boost::filesystem::path& open_path, 
+        openmode::value opening_mode=openmode::in | openmode::out)
+        :
+    m_channel(channel), m_open_path(open_path),
+    m_handle(detail::open_file(m_channel, m_open_path, opening_mode))
+    {}
+
+    std::streamsize read(char* s, std::streamsize n)
+    {
+        try
+        {
+            return detail::libssh2::sftp::read(
+                m_channel.session().get(), m_channel.get(), m_handle, s, n);
+        }
+        catch (boost::exception& e)
+        {
+            e << boost::errinfo_file_name(m_open_path.string());
+            throw;
+        }
+    }
+
+    std::streamsize write(const char* s, std::streamsize n)
+    {
+        try
+        {
+            return detail::libssh2::sftp::write(
+                m_channel.session().get(), m_channel.get(), m_handle, s, n);
+        }
+        catch (boost::exception& e)
+        {
+            e << boost::errinfo_file_name(m_open_path.string());
+            throw;
+        }
+    }
+
+    boost::iostreams::stream_offset seek(
+        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    {
+        return detail::seek(m_channel, m_handle, m_open_path, off, way);
+    }
+
+private:
+    sftp_channel m_channel;
+    boost::filesystem::path m_open_path;
+    boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
+};
+
+/**
+ * Input/output file stream.
+ *
+ * By default opened as if `openmode::in` and `openmode::out` are both
+ * specified.
+ *
+ * File always opened in binary mode.  SFTP does not have a text mode.
+ */
+typedef boost::iostreams::stream<sftp_io_device> fstream;
 
 #undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
 #undef SSH_THROW_LAST_SFTP_ERROR

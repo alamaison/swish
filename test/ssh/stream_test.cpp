@@ -55,6 +55,7 @@ using boost::filesystem::path;
 using test::ssh::sandbox_fixture;
 using test::ssh::session_fixture;
 
+using std::runtime_error;
 using std::string;
 using std::vector;
 
@@ -692,6 +693,325 @@ BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_appends )
     BOOST_CHECK(!(local_stream >> bob));
     BOOST_CHECK(local_stream.eof());
 }
+
+BOOST_AUTO_TEST_SUITE_END();
+
+
+BOOST_FIXTURE_TEST_SUITE(fstream_tests, stream_fixture)
+
+BOOST_AUTO_TEST_CASE( io_stream_multiple_streams )
+{
+    path target1 = new_file_in_sandbox();
+    path target2 = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream s1(chan, to_remote_path(target1));
+    ssh::sftp::fstream s2(chan, to_remote_path(target2));
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_multiple_streams_to_same_file )
+{
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream s1(chan, to_remote_path(target));
+    ssh::sftp::fstream s2(chan, to_remote_path(target));
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_readable )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+
+    string bob;
+
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "gook");
+    BOOST_CHECK(!(s >> bob));
+    BOOST_CHECK(s.eof());
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data )
+{
+    string expected_data("gobbledy gook\0after-null\x12\11", 26);
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
+
+    string bob;
+
+    vector<char> buffer(expected_data.size());
+    BOOST_CHECK(remote_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(),
+        expected_data.begin(), expected_data.end());
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data_stream_op )
+{
+    string expected_data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
+
+    string bob;
+
+    BOOST_CHECK(remote_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
+
+    BOOST_CHECK(remote_stream >> bob);
+    const char* gn = "gook\0after-null\x12\x11";
+    BOOST_CHECK_EQUAL_COLLECTIONS(bob.begin(), bob.end(), gn, gn+17);
+    BOOST_CHECK(!(remote_stream >> bob));
+    BOOST_CHECK(remote_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_writeable )
+{
+    path target = new_file_in_sandbox();
+
+    {
+        ssh::sftp::fstream remote_stream(channel(), to_remote_path(target));
+
+        remote_stream << "gobbledy gook";
+    }
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
+
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "gook");
+
+    BOOST_CHECK(!(local_stream >> bob));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_write_binary_data )
+{
+    string data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_write_binary_data_stream_op )
+{
+    string data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream << data);
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_input_absolute )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekg(1, std::ios_base::beg);
+
+    string bob;
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "obbledy");
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_input_relative )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekg(1, std::ios_base::cur);
+    s.seekg(1, std::ios_base::cur);
+
+    string bob;
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "bbledy");
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_input_end )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekg(-3, std::ios_base::end);
+
+    string bob;
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "ook");
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_absolute )
+{
+    path target = new_file_in_sandbox();
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.exceptions(
+        std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
+    s.seekg(1, std::ios_base::beg);
+
+    string bob;
+    BOOST_CHECK_THROW(s >> bob, runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_relative )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.exceptions(
+        std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
+    s.seekg(9, std::ios_base::cur);
+    s.seekg(4, std::ios_base::cur);
+
+    string bob;
+    BOOST_CHECK_THROW(s >> bob, runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_output_absolute )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekp(1, std::ios_base::beg);
+
+    BOOST_CHECK(s << "r");
+
+    s.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "grbbledy");
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_output_relative )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekp(1, std::ios_base::cur);
+    s.seekp(1, std::ios_base::cur);
+
+    BOOST_CHECK(s << "r");
+
+    s.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "gorbledy");
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_output_end )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekp(-3, std::ios_base::end);
+
+    BOOST_CHECK(s << "r");
+
+    s.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "grok");
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_seek_interleaved )
+{
+    path target = new_file_in_sandbox("gobbledy gook");
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    s.seekp(1, std::ios_base::beg);
+
+    BOOST_CHECK(s << "r");
+
+    s.seekg(2, std::ios_base::cur);
+
+    string bob;
+
+    BOOST_CHECK(s >> bob);
+    // not "bbledy" because read and write head are combined
+    BOOST_CHECK_EQUAL(bob, "ledy");
+
+    s.seekp(-4, std::ios_base::end);
+
+    BOOST_CHECK(s << "ahh");
+
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "k");
+
+    s.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "grbbledy");
+    BOOST_CHECK(local_stream >> bob);
+    BOOST_CHECK_EQUAL(bob, "ahhk");
+}
+
 
 BOOST_AUTO_TEST_SUITE_END();
 
