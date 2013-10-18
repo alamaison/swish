@@ -141,35 +141,35 @@ struct openmode
     };
 };
 
-openmode::value operator|(openmode::value l, openmode::value r)
+inline openmode::value operator|(openmode::value l, openmode::value r)
 {
     return static_cast<openmode::value>(
         static_cast<int>(l) | static_cast<int>(r));
 }
 
-openmode::value operator&(openmode::value l, openmode::value r)
+inline openmode::value operator&(openmode::value l, openmode::value r)
 {
     return static_cast<openmode::value>(
         static_cast<int>(l) & static_cast<int>(r));
 }
 
-openmode::value operator^(openmode::value l, openmode::value r)
+inline openmode::value operator^(openmode::value l, openmode::value r)
 {
     return static_cast<openmode::value>(
         static_cast<int>(l) ^ static_cast<int>(r));
 }
 
-openmode::value& operator|=(openmode::value& l, openmode::value r)
+inline openmode::value& operator|=(openmode::value& l, openmode::value r)
 {
     return l = l | r;
 }
 
-openmode::value& operator&=(openmode::value& l, openmode::value r)
+inline openmode::value& operator&=(openmode::value& l, openmode::value r)
 {
     return l = l & r;
 }
 
-openmode::value& operator^=(openmode::value& l, openmode::value r)
+inline openmode::value& operator^=(openmode::value& l, openmode::value r)
 {
     return l = l ^ r;
 }
@@ -229,7 +229,7 @@ namespace detail {
 
     }}
 
-    long openmode_to_libssh2_flags(openmode::value opening_mode)
+    inline long openmode_to_libssh2_flags(openmode::value opening_mode)
     {
         long flags = 0;
 
@@ -312,7 +312,7 @@ namespace detail {
         return flags;
     }
 
-    boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_file(
+    inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_file(
         sftp_channel channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
     {
@@ -327,7 +327,7 @@ namespace detail {
             LIBSSH2_SFTP_OPENFILE);
     }
 
-    boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_input_file(
+    inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_input_file(
         sftp_channel channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
     {
@@ -337,7 +337,7 @@ namespace detail {
         return open_file(channel, open_path, opening_mode | openmode::in);
     }
 
-    boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_output_file(
+    inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_output_file(
         sftp_channel channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
     {
