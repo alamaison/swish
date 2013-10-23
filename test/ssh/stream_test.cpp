@@ -87,6 +87,19 @@ public:
     }
 };
 
+string large_data()
+{
+    string data;
+    for (int i = 0; i < 0x40000; ++i)
+    {
+        data.push_back('a');
+        data.push_back('\0');
+        data.push_back(-1);
+    }
+
+    return data;
+}
+
 }
 
 BOOST_FIXTURE_TEST_SUITE(stream_tests, stream_fixture)
@@ -133,6 +146,27 @@ BOOST_AUTO_TEST_CASE( input_stream_readable )
 BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
 {
     string expected_data("gobbledy gook\0after-null\x12\11", 26);
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
+
+    string bob;
+
+    vector<char> buffer(expected_data.size());
+    BOOST_CHECK(remote_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(),
+        expected_data.begin(), expected_data.end());
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_multiple_buffers )
+{
+    // large enough to span multiple buffers
+    string expected_data(large_data());
 
     path target = new_file_in_sandbox(expected_data);
 
@@ -358,6 +392,33 @@ BOOST_AUTO_TEST_CASE( output_stream_writeable )
 BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data )
 {
     string data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data_multiple_buffers )
+{
+    // large enough to span multiple buffers
+    string data(large_data());
 
     path target = new_file_in_sandbox();
 
