@@ -98,7 +98,7 @@ namespace { // private
          */
         com_ptr<IStream> GetReadStream()
         {
-            return GetStream(CSftpStream::read);
+            return GetStream(std::ios_base::in);
         }
 
         /**

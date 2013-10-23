@@ -37,8 +37,6 @@
 
 #include "Provider.hpp"
 
-#include "SftpStream.hpp"
-
 #include "swish/connection/authenticated_session.hpp"
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
@@ -48,12 +46,14 @@
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
+#include <comet/enum.h> // stl_enumeration
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
-#include <comet/enum.h> // stl_enumeration
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
+#include <comet/stream.h> // adapt_stream_pointer
 
 #include <ssh/sftp.hpp> // directory_iterator
+#include <ssh/stream.hpp> // ofstream, ifstream
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
@@ -74,6 +74,7 @@ using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
 
+using comet::adapt_stream_pointer;
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
@@ -94,6 +95,8 @@ using ssh::sftp::attributes;
 using ssh::sftp::canonical_path;
 using ssh::sftp::directory_iterator;
 using ssh::sftp::file_attributes;
+using ssh::sftp::ifstream;
+using ssh::sftp::ofstream;
 using ssh::sftp::overwrite_behaviour;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_error;
@@ -301,12 +304,20 @@ com_ptr<IStream> provider::get_file(
 
     _Connect(consumer);
 
-    CSftpStream::OpenFlags flags = CSftpStream::read;
-    if (writeable)
-        flags |= CSftpStream::write | CSftpStream::create;
-
     string path = WideStringToUtf8String(file_path);
-    return new CSftpStream(m_session, path, flags);
+
+    sftp_channel channel = m_session->get_sftp_channel();
+
+    if (writeable)
+    {
+        return adapt_stream_pointer(
+            make_shared<ofstream>(channel, path), wpath(file_path).filename());
+    }
+    else
+    {
+        return adapt_stream_pointer(
+            make_shared<ifstream>(channel, path), wpath(file_path).filename());
+    }
 }
 
 namespace {
