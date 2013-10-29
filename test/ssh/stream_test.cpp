@@ -45,6 +45,9 @@
 #include <string>
 #include <vector>
 
+#include <sys/stat.h>
+#include <io.h> // chmod
+
 using ssh::session;
 using ssh::sftp::openmode;
 using ssh::sftp::sftp_channel;
@@ -98,6 +101,33 @@ string large_data()
     }
 
     return data;
+}
+
+void make_file_read_only(const path& target)
+{
+    // Boost.Filesystem 2 has no permissions functions so using POSIX
+    // instead.  When using BF v3 we could change to this:
+    //
+    // permissions(
+    //     target, remove_perms | owner_read | others_read | group_read);
+
+    struct stat attributes;
+    if (stat(target.string().c_str(), &attributes))
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::system::system_error(
+            errno, boost::system::system_category()));
+    }
+
+#pragma warning(push)
+#pragma warning(disable:4996)
+    if (chmod(target.string().c_str(), attributes.st_mode & ~S_IWRITE))
+#pragma warning(pop)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::system::system_error(
+            errno, boost::system::system_category()));
+    }
 }
 
 }
@@ -216,6 +246,14 @@ BOOST_AUTO_TEST_CASE( input_stream_does_not_create_by_default )
     BOOST_CHECK(!exists(target));
 }
 
+BOOST_AUTO_TEST_CASE( input_stream_opens_read_only_by_default )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    ssh::sftp::ifstream(channel(), to_remote_path(target));
+}
+
 BOOST_AUTO_TEST_CASE( input_stream_in_flag_does_not_create )
 {
     path target = new_file_in_sandbox();
@@ -227,9 +265,17 @@ BOOST_AUTO_TEST_CASE( input_stream_in_flag_does_not_create )
     BOOST_CHECK(!exists(target));
 }
 
+BOOST_AUTO_TEST_CASE( input_stream_in_flag_opens_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    ssh::sftp::ifstream(channel(), to_remote_path(target), openmode::in);
+}
+
 BOOST_AUTO_TEST_CASE( input_stream_out_flag_does_not_create )
 {
-    // Because ifstream forces in as well as out an in supresses creation
+    // Because ifstream forces in as well as out an in suppresses creation
 
     path target = new_file_in_sandbox();
     remove(target);
@@ -238,6 +284,16 @@ BOOST_AUTO_TEST_CASE( input_stream_out_flag_does_not_create )
         ssh::sftp::ifstream(
         channel(), to_remote_path(target), openmode::out), sftp_error);
     BOOST_CHECK(!exists(target));
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_out_flag_fails_to_open_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::ifstream(channel(), to_remote_path(target), openmode::out),
+        sftp_error);
 }
 
 BOOST_AUTO_TEST_CASE( input_stream_out_trunc_flag_creates )
@@ -819,6 +875,47 @@ BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_appends )
     BOOST_CHECK(local_stream.eof());
 }
 
+BOOST_AUTO_TEST_CASE( output_stream_fails_to_open_read_only_by_default )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::ofstream(channel(), to_remote_path(target)), sftp_error);
+}
+
+BOOST_AUTO_TEST_CASE( output_stream_out_flag_fails_to_open_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::ofstream(channel(), to_remote_path(target), openmode::out),
+        sftp_error);
+}
+
+BOOST_AUTO_TEST_CASE( output_stream_in_out_flag_fails_to_open_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::ofstream(
+            channel(), to_remote_path(target),  openmode::in | openmode::out),
+        sftp_error);
+}
+
+// Because output streams force out flag, they can't open read-only files
+BOOST_AUTO_TEST_CASE( output_stream_in_flag_fails_to_open_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::ofstream(
+            channel(), to_remote_path(target),  openmode::in), sftp_error);
+}
+
 // By default ostreams overwrite the file so seeking will cause subsequent
 // output to write after the file end.  The skipped bytes should be filled
 // with NUL
@@ -1009,6 +1106,44 @@ BOOST_AUTO_TEST_CASE( io_stream_multiple_streams_to_same_file )
     ssh::sftp::fstream s2(chan, to_remote_path(target));
 }
 
+BOOST_AUTO_TEST_CASE( io_stream_fails_to_open_read_only_by_default )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::fstream(channel(), to_remote_path(target)), sftp_error);
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_out_flag_fails_to_open_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::fstream(channel(), to_remote_path(target), openmode::out),
+        sftp_error);
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_in_out_flag_fails_to_open_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::fstream(
+        channel(), to_remote_path(target),  openmode::in | openmode::out),
+        sftp_error);
+}
+
+BOOST_AUTO_TEST_CASE( io_stream_in_flag_opens_read_only )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    ssh::sftp::fstream(channel(), to_remote_path(target),  openmode::in);
+}
+
 BOOST_AUTO_TEST_CASE( io_stream_readable )
 {
     path target = new_file_in_sandbox("gobbledy gook");
@@ -1089,6 +1224,19 @@ BOOST_AUTO_TEST_CASE( io_stream_writeable )
 
     BOOST_CHECK(!(local_stream >> bob));
     BOOST_CHECK(local_stream.eof());
+}
+
+// An IO stream may be able to open a read-only file when given the in flag,
+// but it should still fail to write to it
+BOOST_AUTO_TEST_CASE( io_stream_read_only_write_fails )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    ssh::sftp::fstream s(channel(), to_remote_path(target),  openmode::in);
+
+    BOOST_CHECK(s << "gobbledy gook");
+    BOOST_CHECK(!s.flush()); // Failure happens on the flush
 }
 
 BOOST_AUTO_TEST_CASE( io_stream_write_binary_data )
