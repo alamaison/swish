@@ -181,6 +181,45 @@ inline openmode::value& operator^=(openmode::value& l, openmode::value r)
 
 namespace detail {
 
+    inline openmode::value translate_flags(std::ios_base::openmode std_mode)
+    {
+        openmode::value our_mode = openmode::value();
+
+        if (std_mode & std::ios_base::in)
+        {
+            our_mode |= openmode::in;
+        }
+
+        if (std_mode & std::ios_base::out)
+        {
+            our_mode |= openmode::out;
+        }
+
+        if (std_mode & std::ios_base::ate)
+        {
+            // TODO: support it. Should be simple, all we have to do it seek!
+            BOOST_THROW_EXCEPTION(
+                std::invalid_argument("ate flag not yet supported"));
+        }
+
+        if (std_mode & std::ios_base::app)
+        {
+            our_mode |= openmode::app;
+        }
+
+        if (std_mode & std::ios_base::trunc)
+        {
+            our_mode |= openmode::trunc;
+        }
+
+        if (std_mode & std::ios_base::binary)
+        {
+            ; // do nothing. our streams are always binary
+        }
+
+        return our_mode;
+    }
+
     namespace libssh2 {
     namespace sftp {
 
@@ -411,6 +450,16 @@ public:
     m_handle(detail::open_input_file(m_channel, m_open_path, opening_mode))
     {}
 
+    sftp_input_device(
+        sftp_channel channel, const boost::filesystem::path& open_path, 
+        std::ios_base::openmode opening_mode)
+        :
+    m_channel(channel), m_open_path(open_path),
+    m_handle(
+        detail::open_input_file(
+            m_channel, m_open_path, detail::translate_flags(opening_mode)))
+    {}
+
     std::streamsize read(char* s, std::streamsize n)
     {
         try
@@ -460,6 +509,16 @@ public:
         :
     m_channel(channel), m_open_path(open_path),
     m_handle(detail::open_output_file(m_channel, m_open_path, opening_mode))
+    {}
+
+    sftp_output_device(
+        sftp_channel channel, const boost::filesystem::path& open_path, 
+        std::ios_base::openmode opening_mode)
+        :
+    m_channel(channel), m_open_path(open_path),
+    m_handle(
+        detail::open_output_file(
+            m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize write(const char* s, std::streamsize n)
@@ -512,6 +571,16 @@ public:
         :
     m_channel(channel), m_open_path(open_path),
     m_handle(detail::open_file(m_channel, m_open_path, opening_mode))
+    {}
+
+    sftp_io_device(
+        sftp_channel channel, const boost::filesystem::path& open_path, 
+        std::ios_base::openmode opening_mode)
+        :
+    m_channel(channel), m_open_path(open_path),
+    m_handle(
+        detail::open_file(
+            m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize read(char* s, std::streamsize n)

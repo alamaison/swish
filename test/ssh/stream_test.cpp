@@ -265,6 +265,17 @@ BOOST_AUTO_TEST_CASE( input_stream_in_flag_does_not_create )
     BOOST_CHECK(!exists(target));
 }
 
+BOOST_AUTO_TEST_CASE( input_stream_std_in_flag_does_not_create )
+{
+    path target = new_file_in_sandbox();
+    remove(target);
+
+    BOOST_CHECK_THROW(
+        ssh::sftp::ifstream(
+        channel(), to_remote_path(target), std::ios_base::in), sftp_error);
+    BOOST_CHECK(!exists(target));
+}
+
 BOOST_AUTO_TEST_CASE( input_stream_in_flag_opens_read_only )
 {
     path target = new_file_in_sandbox();
@@ -304,6 +315,17 @@ BOOST_AUTO_TEST_CASE( input_stream_out_trunc_flag_creates )
     ssh::sftp::ifstream remote_stream(
         channel(), to_remote_path(target),
         openmode::out | openmode::trunc);
+    BOOST_CHECK(exists(target));
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_std_out_trunc_flag_creates )
+{
+    path target = new_file_in_sandbox();
+    remove(target);
+
+    ssh::sftp::ifstream remote_stream(
+        channel(), to_remote_path(target),
+        std::ios_base::out | std::ios_base::trunc);
     BOOST_CHECK(exists(target));
 }
 
