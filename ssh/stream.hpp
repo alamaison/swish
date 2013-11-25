@@ -435,6 +435,76 @@ namespace detail {
         return new_position;
     }
 
+    inline std::streamsize read(
+        sftp_channel channel, boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
+        const boost::filesystem::path& open_path,
+        char* buffer, std::streamsize buffer_size)
+    {
+        try
+        {
+            // This method is only allowed to return a read count less than
+            // the requested read amount if the end-of-file has been reached.
+            // In other words, non-blocking short reads are not allowed (see
+            // http://bit.ly/1ixEagu and http://bit.ly/1ejYm2T).
+            // Therefore we loop until all the given buffer has been filled
+            // or we reach EOF.
+
+            ssize_t count = 0;
+            do
+            {
+                ssize_t rc = detail::libssh2::sftp::read(
+                    channel.session().get(), channel.get(), handle,
+                    buffer + count, buffer_size - count);
+                if (rc == 0)
+                    break; // EOF
+
+                count += rc;
+            }
+            while (count < buffer_size);
+
+            return count;
+        }
+        catch (boost::exception& e)
+        {
+            e << boost::errinfo_file_name(open_path.string());
+            throw;
+        }
+    }
+
+    inline std::streamsize write(
+        sftp_channel channel, boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
+        const boost::filesystem::path& open_path,
+        const char* data, std::streamsize data_size)
+    {
+        try
+        {
+            // Despite it's signature, this method is not allowed to return a
+            // written count less than the given write amount.  The signature
+            // is the way it is so that Boost.IOStreams devices can support
+            // non-blocking behaviour in the future, but we use our devices
+            // to implement STL streams which don't support non-blocking
+            // devices (see http://bit.ly/1ixEagu and http://bit.ly/1ejYm2T).
+            // Therefore we loop until all data is written.
+
+            ssize_t count = 0;
+            do
+            {
+                count += detail::libssh2::sftp::write(
+                    channel.session().get(), channel.get(), handle,
+                    data + count, data_size - count);
+            }
+            while (count < data_size);
+
+            assert(count == data_size);
+
+            return count;
+        }
+        catch (boost::exception& e)
+        {
+            e << boost::errinfo_file_name(open_path.string());
+            throw;
+        }
+    }
 }
 
 class sftp_input_device :
@@ -460,18 +530,10 @@ public:
             m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
 
-    std::streamsize read(char* s, std::streamsize n)
+    std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
-        try
-        {
-            return detail::libssh2::sftp::read(
-                m_channel.session().get(), m_channel.get(), m_handle, s, n);
-        }
-        catch (boost::exception& e)
-        {
-            e << boost::errinfo_file_name(m_open_path.string());
-            throw;
-        }
+        return detail::read(
+            m_channel, m_handle, m_open_path, buffer, buffer_size);
     }
 
     boost::iostreams::stream_offset seek(
@@ -521,18 +583,9 @@ public:
             m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
 
-    std::streamsize write(const char* s, std::streamsize n)
+    std::streamsize write(const char* data, std::streamsize data_size)
     {
-        try
-        {
-            return detail::libssh2::sftp::write(
-                m_channel.session().get(), m_channel.get(), m_handle, s, n);
-        }
-        catch (boost::exception& e)
-        {
-            e << boost::errinfo_file_name(m_open_path.string());
-            throw;
-        }
+        return detail::write(m_channel, m_handle, m_open_path, data, data_size);
     }
 
     boost::iostreams::stream_offset seek(
@@ -583,32 +636,15 @@ public:
             m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
 
-    std::streamsize read(char* s, std::streamsize n)
+    std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
-        try
-        {
-            return detail::libssh2::sftp::read(
-                m_channel.session().get(), m_channel.get(), m_handle, s, n);
-        }
-        catch (boost::exception& e)
-        {
-            e << boost::errinfo_file_name(m_open_path.string());
-            throw;
-        }
+        return detail::read(
+            m_channel, m_handle, m_open_path, buffer, buffer_size);
     }
 
-    std::streamsize write(const char* s, std::streamsize n)
+    std::streamsize write(const char* data, std::streamsize data_size)
     {
-        try
-        {
-            return detail::libssh2::sftp::write(
-                m_channel.session().get(), m_channel.get(), m_handle, s, n);
-        }
-        catch (boost::exception& e)
-        {
-            e << boost::errinfo_file_name(m_open_path.string());
-            throw;
-        }
+        return detail::write(m_channel, m_handle, m_open_path, data, data_size);
     }
 
     boost::iostreams::stream_offset seek(
