@@ -96,6 +96,19 @@ string large_data()
     for (int i = 0; i < 0x40000; ++i)
     {
         data.push_back('a');
+        data.push_back('m');
+        data.push_back('z');
+    }
+
+    return data;
+}
+
+string large_binary_data()
+{
+    string data;
+    for (int i = 0; i < 0x40000; ++i)
+    {
+        data.push_back('a');
         data.push_back('\0');
         data.push_back(-1);
     }
@@ -173,6 +186,50 @@ BOOST_AUTO_TEST_CASE( input_stream_readable )
     BOOST_CHECK(s.eof());
 }
 
+BOOST_AUTO_TEST_CASE( input_stream_readable_multiple_buffers )
+{
+    // large enough to span multiple buffers
+    string expected_data(large_data());
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
+
+    string bob;
+
+    vector<char> buffer(expected_data.size());
+    BOOST_CHECK(remote_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(),
+        expected_data.begin(), expected_data.end());
+}
+
+// Test with Boost.IOStreams buffer disabled.
+// Should call directly to libssh2
+BOOST_AUTO_TEST_CASE( input_stream_readable_no_buffer )
+{
+    string expected_data("gobbeldy gook");
+
+    path target = new_file_in_sandbox(expected_data);
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ifstream remote_stream(
+        chan, to_remote_path(target), openmode::in, 0);
+
+    string bob;
+
+    vector<char> buffer(expected_data.size());
+    BOOST_CHECK(remote_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(),
+        expected_data.begin(), expected_data.end());
+}
+
 BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
 {
     string expected_data("gobbledy gook\0after-null\x12\11", 26);
@@ -196,7 +253,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
 BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_multiple_buffers )
 {
     // large enough to span multiple buffers
-    string expected_data(large_data());
+    string expected_data(large_binary_data());
 
     path target = new_file_in_sandbox(expected_data);
 
@@ -467,33 +524,7 @@ BOOST_AUTO_TEST_CASE( output_stream_writeable )
     BOOST_CHECK(local_stream.eof());
 }
 
-BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data )
-{
-    string data("gobbledy gook\0after-null\x12\x11", 26);
-
-    path target = new_file_in_sandbox();
-
-    sftp_channel chan = channel();
-
-    ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
-    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
-    remote_stream.flush();
-
-    boost::filesystem::ifstream local_stream(target);
-
-    string bob;
-
-    vector<char> buffer(data.size());
-    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
-
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        buffer.begin(), buffer.end(), data.begin(), data.end());
-
-    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
-    BOOST_CHECK(local_stream.eof());
-}
-
-BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data_multiple_buffers )
+BOOST_AUTO_TEST_CASE( output_stream_write_multiple_buffers )
 {
     // large enough to span multiple buffers
     string data(large_data());
@@ -520,7 +551,88 @@ BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data_multiple_buffers )
     BOOST_CHECK(local_stream.eof());
 }
 
-BOOST_AUTO_TEST_CASE( ouput_stream_write_binary_data_stream_op )
+// Test with Boost.IOStreams buffer disabled.
+// Should call directly to libssh2
+BOOST_AUTO_TEST_CASE( output_stream_write_no_buffer )
+{
+    string data("gobbeldy gook");
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream remote_stream(
+        chan, to_remote_path(target), openmode::out, 0);
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( output_stream_write_binary_data )
+{
+    string data("gobbledy gook\0after-null\x12\x11", 26);
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( output_stream_write_binary_data_multiple_buffers )
+{
+    // large enough to span multiple buffers
+    string data(large_binary_data());
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+BOOST_AUTO_TEST_CASE( output_stream_write_binary_data_stream_op )
 {
     string data("gobbledy gook\0after-null\x12\x11", 26);
 
@@ -1248,6 +1360,61 @@ BOOST_AUTO_TEST_CASE( io_stream_writeable )
     BOOST_CHECK(local_stream.eof());
 }
 
+BOOST_AUTO_TEST_CASE( io_stream_write_multiple_buffers )
+{
+    // large enough to span multiple buffers
+    string data(large_data());
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+    remote_stream.flush();
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
+// Test with Boost.IOStreams buffer disabled.
+// Should call directly to libssh2
+BOOST_AUTO_TEST_CASE( io_stream_write_no_buffer )
+{
+    string data("gobbeldy gook");
+
+    path target = new_file_in_sandbox();
+
+    sftp_channel chan = channel();
+
+    ssh::sftp::fstream remote_stream(
+        chan, to_remote_path(target), openmode::in | openmode::out, 0);
+    BOOST_CHECK(remote_stream.write(data.data(), data.size()));
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    vector<char> buffer(data.size());
+    BOOST_CHECK(local_stream.read(&buffer[0], buffer.size()));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        buffer.begin(), buffer.end(), data.begin(), data.end());
+
+    BOOST_CHECK(!local_stream.read(&buffer[0], buffer.size()));
+    BOOST_CHECK(local_stream.eof());
+}
+
 // An IO stream may be able to open a read-only file when given the in flag,
 // but it should still fail to write to it
 BOOST_AUTO_TEST_CASE( io_stream_read_only_write_fails )
@@ -1259,6 +1426,37 @@ BOOST_AUTO_TEST_CASE( io_stream_read_only_write_fails )
 
     BOOST_CHECK(s << "gobbledy gook");
     BOOST_CHECK(!s.flush()); // Failure happens on the flush
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    BOOST_CHECK(!(local_stream >> bob));
+    BOOST_CHECK_EQUAL(bob, string());
+    BOOST_CHECK(local_stream.eof());
+}
+
+// Flush is not called explicitly so failure will happen in destructor
+BOOST_AUTO_TEST_CASE( io_stream_read_only_write_fails_no_flush )
+{
+    path target = new_file_in_sandbox();
+    make_file_read_only(target);
+
+    {
+        ssh::sftp::fstream s(channel(), to_remote_path(target),  openmode::in);
+
+        BOOST_CHECK(s << "gobbledy gook");
+
+        // No explicit flush
+    }
+
+    boost::filesystem::ifstream local_stream(target);
+
+    string bob;
+
+    BOOST_CHECK(!(local_stream >> bob));
+    BOOST_CHECK_EQUAL(bob, string());
+    BOOST_CHECK(local_stream.eof());
 }
 
 BOOST_AUTO_TEST_CASE( io_stream_write_binary_data )

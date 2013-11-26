@@ -505,10 +505,87 @@ namespace detail {
             throw;
         }
     }
+    const std::streamsize DEFAULT_BUFFER_SIZE = 1024 * 32;
+
+    struct input_device_category :
+        boost::iostreams::input_seekable,
+        boost::iostreams::optimally_buffered_tag {};
+
+    struct output_device_category :
+        boost::iostreams::output_seekable,
+        boost::iostreams::optimally_buffered_tag {};
+
+    struct io_device_category :
+        boost::iostreams::seekable,
+        boost::iostreams::optimally_buffered_tag {};
+
+    /**
+     * Allows setting buffer size on boost::iostreams::stream based streams.
+     *
+     * `boost::iostreams::stream` only forwards three constructor arguments
+     * so this class is necessary to pass up the buffer size argument to the
+     * device.
+     */
+    template<typename Device>
+    class sftp_stream : public boost::iostreams::stream<Device>
+    {
+    public:
+
+        // Using separate constructors rather than default arguments so they
+        // pick up the defaults from the devices
+
+        sftp_stream(
+            sftp_channel channel, const boost::filesystem::path& open_path)
+        {
+            open(Device(channel, open_path));
+        }
+
+        sftp_stream(
+            sftp_channel channel, const boost::filesystem::path& open_path, 
+            openmode::value opening_mode)
+        {
+            open(Device(channel, open_path, opening_mode));
+        }
+
+        sftp_stream(
+            sftp_channel channel, const boost::filesystem::path& open_path, 
+            openmode::value opening_mode, std::streamsize buffer_size)
+        {
+            open(Device(channel, open_path, opening_mode), buffer_size);
+        }
+
+        sftp_stream(
+            sftp_channel channel, const boost::filesystem::path& open_path, 
+            std::ios_base::openmode opening_mode)
+        {
+            open(Device(channel, open_path, opening_mode));
+        }
+
+        sftp_stream(
+            sftp_channel channel, const boost::filesystem::path& open_path, 
+            std::ios_base::openmode opening_mode, std::streamsize buffer_size)
+        {
+            open(Device(channel, open_path, opening_mode), buffer_size);
+        }
+
+        // We pass the device to `open` rather than creating and passing it to
+        // the stream it in the initialiser list because of a subtle
+        // consequence of ios_base being a virtual base class (via
+        // virtual basic_ios) and ios_base::init having to be called before
+        // ios_base destructor.
+        //
+        // If we initialise boost::iostreams::stream in the list but 
+        // sftp_io_device constructor throws an exception, we get an access
+        // violation because ios_base is already constructed (virtual bases
+        // constructed first irrespective of hierarchy) but the stream
+        // class constructor, which calls ios_base::init, is not yet called.  The
+        // exception prevents the stream class constructor being called
+        // but causes ios_base to be destroyed.
+    };
 }
 
 class sftp_input_device :
-    public boost::iostreams::device<boost::iostreams::input_seekable>
+    public boost::iostreams::device<detail::input_device_category>
 {
 public:
 
@@ -530,6 +607,11 @@ public:
             m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
 
+    std::streamsize optimal_buffer_size() const
+    {
+        return detail::DEFAULT_BUFFER_SIZE;
+    }
+
     std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
         return detail::read(
@@ -546,7 +628,6 @@ private:
     sftp_channel m_channel;
     boost::filesystem::path m_open_path;
     boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
-
 };
 
 /**
@@ -558,10 +639,10 @@ private:
  * By default opened as if `openmode::in` is the only flag specified. File
  * always opened in binary mode.  SFTP does not have a text mode.
  */
-typedef boost::iostreams::stream<sftp_input_device> ifstream;
+typedef detail::sftp_stream<sftp_input_device> ifstream;
 
 class sftp_output_device :
-    public boost::iostreams::device<boost::iostreams::output_seekable>
+    public boost::iostreams::device<detail::output_device_category>
 {
 public:
 
@@ -582,6 +663,11 @@ public:
         detail::open_output_file(
             m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
+
+    std::streamsize optimal_buffer_size() const
+    {
+        return detail::DEFAULT_BUFFER_SIZE;
+    }
 
     std::streamsize write(const char* data, std::streamsize data_size)
     {
@@ -610,11 +696,11 @@ private:
  * By default opened as if `openmode::out` is the only flag specified. File
  * always opened in binary mode.  SFTP does not have a text mode.
  */
-typedef boost::iostreams::stream<sftp_output_device> ofstream;
+typedef detail::sftp_stream<sftp_output_device> ofstream;
 
 
 class sftp_io_device :
-    public boost::iostreams::device<boost::iostreams::seekable>
+    public boost::iostreams::device<detail::io_device_category>
 {
 public:
 
@@ -635,6 +721,11 @@ public:
         detail::open_file(
             m_channel, m_open_path, detail::translate_flags(opening_mode)))
     {}
+
+    std::streamsize optimal_buffer_size() const
+    {
+        return detail::DEFAULT_BUFFER_SIZE;
+    }
 
     std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
@@ -667,7 +758,7 @@ private:
  *
  * File always opened in binary mode.  SFTP does not have a text mode.
  */
-typedef boost::iostreams::stream<sftp_io_device> fstream;
+typedef detail::sftp_stream<sftp_io_device> fstream;
 
 #undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
 #undef SSH_THROW_LAST_SFTP_ERROR
