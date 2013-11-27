@@ -114,7 +114,8 @@ BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
     // Choose mock behaviours to force only simple password authentication
     com_ptr<MockConsumer> consumer = new MockConsumer();
     consumer->set_password_behaviour(MockConsumer::CustomPassword);
-    consumer->set_keyboard_interactive_behaviour(MockConsumer::FailResponse);
+    consumer->set_keyboard_interactive_behaviour(MockConsumer::AbortResponse);
+    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
 
     remote_test_config config;
     consumer->set_password(config.GetPassword());
@@ -140,6 +141,7 @@ BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
     // Choose mock behaviours to force only kbd-interactive authentication
     com_ptr<MockConsumer> consumer = new MockConsumer();
     consumer->set_password_behaviour(MockConsumer::FailPassword);
+    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
     consumer->set_keyboard_interactive_behaviour(MockConsumer::CustomResponse);
 
     remote_test_config config;
@@ -159,6 +161,7 @@ BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
 {
     // Choose mock behaviours to simulate a user cancelling authentication
     com_ptr<MockConsumer> consumer = new MockConsumer();
+    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
     consumer->set_password_behaviour(MockConsumer::AbortPassword);
     consumer->set_keyboard_interactive_behaviour(
         MockConsumer::AbortResponse);
