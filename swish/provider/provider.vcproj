@@ -296,10 +296,6 @@
 				RelativePath=".\Provider.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\SftpStream.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -324,10 +320,6 @@
 			</File>
 			<File
 				RelativePath=".\sftp_provider_path.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpStream.hpp"
 				>
 			</File>
 		</Filter>
