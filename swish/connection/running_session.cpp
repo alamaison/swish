@@ -164,11 +164,6 @@ session running_session::get_session() const
     return m_session;
 }
 
-LIBSSH2_SESSION* running_session::get_raw_session()
-{
-    return get_session().get().get();
-}
-
 mutex::scoped_lock running_session::aquire_lock()
 {
     return mutex::scoped_lock(*m_mutex);

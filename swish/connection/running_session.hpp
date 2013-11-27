@@ -100,7 +100,6 @@ public:
     bool is_dead();
 
     ssh::session get_session() const;
-    LIBSSH2_SESSION* get_raw_session();
 
 private:
 
