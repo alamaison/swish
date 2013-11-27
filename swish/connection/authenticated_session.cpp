@@ -516,11 +516,6 @@ session authenticated_session::get_session() const
     return m_session.get_session();
 }
 
-LIBSSH2_SESSION* authenticated_session::get_raw_session()
-{
-    return m_session.get_raw_session();
-}
-
 sftp_channel authenticated_session::get_sftp_channel() const
 {
     return m_sftp_channel;

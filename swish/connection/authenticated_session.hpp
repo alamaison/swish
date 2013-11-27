@@ -128,11 +128,8 @@ public:
     // sftp code which handles this internally.  Therefore we will be able
     // to remove these accessors from the public interface.
     ssh::session get_session() const;
-    LIBSSH2_SESSION* get_raw_session();
 
     ssh::sftp::sftp_channel get_sftp_channel() const;
-    LIBSSH2_SFTP* get_raw_sftp_channel()
-    { return get_sftp_channel().get().get(); }
 
 private:
     running_session m_session;
