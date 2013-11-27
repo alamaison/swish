@@ -60,7 +60,7 @@ public:
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        bool writeable);
+        std::ios_base::openmode open_mode);
 
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path);

@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -303,6 +303,22 @@ CSftpDirectory CSftpDirectory::GetSubdirectory(const cpidl_t& directory)
     return CSftpDirectory(sub_directory, m_provider, m_consumer);
 }
 
+namespace {
+
+    std::ios_base::openmode writeable_to_openmode(bool writeable)
+    {
+        if (writeable)
+        {
+            return std::ios_base::out;
+        }
+        else
+        {
+            return std::ios_base::in;
+        }
+    }
+
+}
+
 /**
  * Get IStream interface to the remote file specified by the given PIDL.
  *
@@ -319,7 +335,8 @@ com_ptr<IStream> CSftpDirectory::GetFile(const cpidl_t& file, bool writeable)
     wstring file_path =
         (m_directory / remote_itemid_view(file).filename()).string();
 
-    return m_provider->get_file(m_consumer, file_path, writeable);
+    return m_provider->get_file(
+        m_consumer, file_path, writeable_to_openmode(writeable));
 }
 
 /**
@@ -338,7 +355,8 @@ com_ptr<IStream> CSftpDirectory::GetFileByPath(
     const wpath& file, bool writeable)
 {
     return m_provider->get_file(
-        m_consumer, (m_directory / file).string(), writeable);
+        m_consumer, (m_directory / file).string(),
+        writeable_to_openmode(writeable));
 }
 
 bool CSftpDirectory::exists(const cpidl_t& file)
@@ -348,7 +366,8 @@ bool CSftpDirectory::exists(const cpidl_t& file)
 
     try
     {
-        m_provider->get_file(m_consumer, file_path, false);
+        // std::ios_base::in makes it fail if file doesn't exist
+        m_provider->get_file(m_consumer, file_path, std::ios_base::in);
     }
     catch (const exception&)
     {

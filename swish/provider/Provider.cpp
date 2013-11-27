@@ -95,6 +95,7 @@ using ssh::sftp::attributes;
 using ssh::sftp::canonical_path;
 using ssh::sftp::directory_iterator;
 using ssh::sftp::file_attributes;
+using ssh::sftp::fstream;
 using ssh::sftp::ifstream;
 using ssh::sftp::ofstream;
 using ssh::sftp::overwrite_behaviour;
@@ -123,7 +124,7 @@ public:
 
     virtual comet::com_ptr<IStream> get_file(
         comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        bool writeable);
+        std::ios_base::openmode open_mode);
 
     VARIANT_BOOL rename(
         com_ptr<ISftpConsumer> consumer, const wpath& from_path,
@@ -178,8 +179,8 @@ directory_listing CProvider::listing(
 
 comet::com_ptr<IStream> CProvider::get_file(
     comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-    bool writeable)
-{ return m_provider->get_file(consumer, file_path, writeable); }
+    std::ios_base::openmode open_mode)
+{ return m_provider->get_file(consumer, file_path, open_mode); }
 
 VARIANT_BOOL CProvider::rename(
     ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
@@ -297,7 +298,8 @@ directory_listing provider::listing(
 }
 
 com_ptr<IStream> provider::get_file(
-    com_ptr<ISftpConsumer> consumer, wstring file_path, bool writeable)
+    com_ptr<ISftpConsumer> consumer, wstring file_path,
+    std::ios_base::openmode mode)
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
@@ -308,15 +310,28 @@ com_ptr<IStream> provider::get_file(
 
     sftp_channel channel = m_session->get_sftp_channel();
 
-    if (writeable)
+    if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<ofstream>(channel, path), wpath(file_path).filename());
+            make_shared<fstream>(channel, path, mode),
+            wpath(file_path).filename());
+    }
+    else if (mode & std::ios_base::out)
+    {
+        return adapt_stream_pointer(
+            make_shared<ofstream>(channel, path, mode),
+            wpath(file_path).filename());
+    }
+    else if (mode & std::ios_base::in)
+    {
+        return adapt_stream_pointer(
+            make_shared<ifstream>(channel, path, mode),
+            wpath(file_path).filename());
     }
     else
     {
-        return adapt_stream_pointer(
-            make_shared<ifstream>(channel, path), wpath(file_path).filename());
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("Stream but be input, output or both"));
     }
 }
 
