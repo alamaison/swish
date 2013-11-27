@@ -188,15 +188,22 @@ namespace detail {
         libssh2_session_free(session);
     }
 
+    inline boost::shared_ptr<LIBSSH2_SESSION> allocate_session()
+    {
+        return boost::shared_ptr<LIBSSH2_SESSION>(
+            libssh2::session::init(), libssh2_session_free);
+    }
 
     inline boost::shared_ptr<LIBSSH2_SESSION> allocate_and_connect_session(
         int socket, const std::string& disconnection_message)
     {
         // This function is unlike most of the others in that we do not
         // immediately wrap the created resource (the LIBSSH2_SESSION*) in a
-        // shared_ptr.  We only ever want to deal in terms of sessions that have
-        // been allocated *and* connected so we wait until starting succeeds and
-        // then wrap it in a shared_ptr that disconnects before it frees.
+        // shared_ptr.  (Other than the known-host code which uses
+        // `allocate_session` above) we only ever want to deal in terms of
+        // sessions that have been allocated *and* connected, so we wait
+        // until starting succeeds and then wrap it in a shared_ptr that
+        // disconnects before it frees.
         //
         // This means that we have to be careful of the lifetime of
         // the unstarted session in the code below.  The session may fail

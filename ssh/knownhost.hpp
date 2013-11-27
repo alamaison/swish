@@ -38,6 +38,7 @@
 #define SSH_KNOWNHOST_HPP
 #pragma once
 
+#include <ssh/session.hpp> // allocate_session
 #include <ssh/ssh_error.hpp> // last_error
 #include <ssh/host_key.hpp>
 
@@ -519,9 +520,14 @@ namespace detail {
 class knownhost_collection
 {
 public:
-    explicit knownhost_collection(boost::shared_ptr<LIBSSH2_SESSION> session)
-        : m_session(session), m_hosts(detail::init(session))
+    explicit knownhost_collection()
+        : m_session(::ssh::detail::allocate_session()),
+          m_hosts(detail::init(m_session))
     {
+        // We construct a new session here, rather than taking one as an
+        // argument, because it is only used for memory allocation.  It
+        // doesn't need to be connected to anything so it's an unnecessary
+        // burden on the caller to expect them to provide one.
     }
 
     knownhost_iterator begin() const
@@ -659,7 +665,8 @@ protected:
         typedef std::iterator_traits<InputIt>::value_type value_t;
 
         std::for_each(
-            begin, end, detail::read_entry<TYPE, value_t>(m_session, m_hosts));
+            begin, end,
+            detail::read_entry<TYPE, value_t>(m_session, m_hosts));
     }
 
     /**
@@ -682,6 +689,7 @@ protected:
     }
 
 private:
+
     boost::shared_ptr<LIBSSH2_SESSION> m_session;
     boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
 };
@@ -731,18 +739,13 @@ public:
 
     /** Initialise collection from a range of OpenSSH known_hosts lines. */
     template<typename InputIt>
-    openssh_knownhost_collection(
-        boost::shared_ptr<LIBSSH2_SESSION> session, InputIt begin, InputIt end)
-        : knownhost_collection(session)
+    openssh_knownhost_collection(InputIt begin, InputIt end)
     {
         load_entries<LIBSSH2_KNOWNHOST_FILE_OPENSSH>(begin, end);
     }
 
     /** Initialise collection from an OpenSSH known_hosts file. */
-    openssh_knownhost_collection(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
-        const boost::filesystem::path& filename)
-        : knownhost_collection(session)
+    openssh_knownhost_collection(const boost::filesystem::path& filename)
     {
         boost::filesystem::ifstream file(filename);
         if (!file)
@@ -762,10 +765,7 @@ public:
      *
      * @TODO  Make errinfo work with wide paths.
      */
-    openssh_knownhost_collection(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
-        const boost::filesystem::wpath& filename)
-        : knownhost_collection(session)
+    openssh_knownhost_collection(const boost::filesystem::wpath& filename)
     {
         boost::filesystem::ifstream file(filename);
         if (!file)

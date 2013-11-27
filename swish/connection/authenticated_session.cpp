@@ -130,8 +130,7 @@ void verify_host_key(
     create_directories(known_hosts_path.parent_path());
     ofstream(known_hosts_path, std::ios::app);
 
-    openssh_knownhost_collection hosts(
-        session.get_session().get(), known_hosts_path);
+    openssh_knownhost_collection hosts(known_hosts_path);
 
     find_result result = hosts.find(utf8_host, key);
     if (result.mismatch())

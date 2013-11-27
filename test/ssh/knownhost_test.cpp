@@ -118,19 +118,6 @@ const vector<const test_datum> test_data = list_of
 
 const string FAIL_HOST = "i-dontexist-in-the-host-file.example.com";
 
-namespace {
-
-    shared_ptr<LIBSSH2_SESSION> new_session()
-    {
-        shared_ptr<LIBSSH2_SESSION> ptr(
-            libssh2_session_init_ex(NULL, NULL, NULL, NULL),
-            libssh2_session_free);
-        BOOST_REQUIRE(ptr);
-        return ptr;
-    }
-
-}
-
 BOOST_AUTO_TEST_SUITE(knownhost_tests)
 
 /**
@@ -138,23 +125,7 @@ BOOST_AUTO_TEST_SUITE(knownhost_tests)
  */
 BOOST_AUTO_TEST_CASE( create )
 {
-    knownhost_collection kh(new_session());
-}
-
-namespace {
-    void make_from_null_session()
-    {
-        shared_ptr<LIBSSH2_SESSION> null_ptr;
-        knownhost_collection kh(null_ptr);
-    }
-}
-
-/**
- * Create with a NULL session - should throw.
- */
-BOOST_AUTO_TEST_CASE( bad_create )
-{
-    BOOST_REQUIRE_THROW(make_from_null_session(), std::invalid_argument);
+    knownhost_collection kh;
 }
 
 BOOST_AUTO_TEST_SUITE(openssh_knownhost_tests)
@@ -164,7 +135,7 @@ BOOST_AUTO_TEST_SUITE(openssh_knownhost_tests)
  */
 BOOST_AUTO_TEST_CASE( init_from_file )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
 }
 
 /**
@@ -172,7 +143,7 @@ BOOST_AUTO_TEST_CASE( init_from_file )
  */
 BOOST_AUTO_TEST_CASE( init_from_hashed_file )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts_hashed");
+    openssh_knownhost_collection kh("test_known_hosts_hashed");
 }
 
 /**
@@ -183,8 +154,7 @@ BOOST_AUTO_TEST_CASE( init_fail )
     path bad_path = "i-dont-exist";
     BOOST_REQUIRE(!exists(bad_path));
     BOOST_CHECK_THROW(
-        openssh_knownhost_collection(new_session(), bad_path),
-        std::runtime_error);
+        (openssh_knownhost_collection(bad_path)), std::runtime_error);
     BOOST_CHECK(!exists(bad_path));
 }
 
@@ -198,8 +168,7 @@ BOOST_AUTO_TEST_CASE( init_fail )
  */
 BOOST_AUTO_TEST_CASE( roundtrip )
 {
-    shared_ptr<LIBSSH2_SESSION> session = new_session();
-    openssh_knownhost_collection kh(session, "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
 
     vector<string> lines;
     kh.save(kh.begin(), kh.end(), back_inserter(lines));
@@ -314,7 +283,7 @@ BOOST_AUTO_TEST_CASE( iterate_entries )
     knownhost_iterator it;
     knownhost_iterator end;
     {
-        openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+        openssh_knownhost_collection kh("test_known_hosts");
         it = kh.begin();
         end = kh.end();
     }
@@ -340,8 +309,7 @@ BOOST_AUTO_TEST_CASE( iterate_hashed_entries )
     knownhost_iterator it;
     knownhost_iterator end;
     {
-        openssh_knownhost_collection kh(
-            new_session(), "test_known_hosts_hashed");
+        openssh_knownhost_collection kh("test_known_hosts_hashed");
         it = kh.begin();
         end = kh.end();
     }
@@ -365,7 +333,7 @@ BOOST_AUTO_TEST_CASE( iterate_hashed_entries )
  */
 BOOST_AUTO_TEST_CASE( iterator_independence )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
 
     knownhost_iterator it1 = kh.begin();
 
@@ -400,7 +368,7 @@ namespace {
      */
     knownhost get_host_but_destroy_collection_and_iterator()
     {
-        openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+        openssh_knownhost_collection kh("test_known_hosts");
 
         return *(kh.begin());
     }
@@ -422,7 +390,7 @@ BOOST_AUTO_TEST_CASE( knownhost_lifetime )
 void do_find_match_test(
     const boost::filesystem::path& file, bool is_hashed)
 {
-    openssh_knownhost_collection kh(new_session(), file);
+    openssh_knownhost_collection kh(file);
 
     // Find each datum twice, once by IP once by name
     BOOST_FOREACH(const test_datum& datum, test_data)
@@ -471,7 +439,7 @@ BOOST_AUTO_TEST_CASE( find_match_hashed )
 void do_find_mismatch_test(
     const boost::filesystem::path& file, bool is_hashed)
 {
-    openssh_knownhost_collection kh(new_session(), file);
+    openssh_knownhost_collection kh(file);
 
     // Find each datum twice, once by IP once by name
     BOOST_FOREACH(const test_datum& datum, test_data)
@@ -522,7 +490,7 @@ BOOST_AUTO_TEST_CASE( find_mismatch_hashed )
  */
 BOOST_AUTO_TEST_CASE( find_fail )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
     find_result result = kh.find(FAIL_HOST, KEY_A, true);
 
     BOOST_CHECK(!result.match());
@@ -537,7 +505,7 @@ BOOST_AUTO_TEST_CASE( find_fail )
  */
 BOOST_AUTO_TEST_CASE( find_fail_hashed )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts_hashed");
+    openssh_knownhost_collection kh("test_known_hosts_hashed");
     find_result result = kh.find(FAIL_HOST, KEY_A, true);
 
     BOOST_CHECK(!result.match());
@@ -591,7 +559,7 @@ void do_erase_test_loop(const boost::filesystem::path& file, bool is_hashed)
 {
     BOOST_FOREACH(const test_datum& datum, test_data)
     {
-        openssh_knownhost_collection kh(new_session(), file);
+        openssh_knownhost_collection kh(file);
 
         do_erase_test(kh, datum, is_hashed);
     }
@@ -632,7 +600,7 @@ BOOST_AUTO_TEST_CASE( erase_hashed )
  */
 BOOST_AUTO_TEST_CASE( erase_all )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
 
     BOOST_FOREACH(const test_datum& datum, test_data)
     {
@@ -647,7 +615,7 @@ BOOST_AUTO_TEST_CASE( erase_all )
  */
 BOOST_AUTO_TEST_CASE( erase_last )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
     find_result result = kh.find(test_data[2].name, test_data[2].key, true);
 
     BOOST_REQUIRE(result.host() != kh.end());
@@ -664,7 +632,7 @@ BOOST_AUTO_TEST_CASE( erase_last )
  */
 BOOST_AUTO_TEST_CASE( add )
 {
-    openssh_knownhost_collection kh(new_session(), "test_known_hosts");
+    openssh_knownhost_collection kh("test_known_hosts");
 
     kh.add("new.example.com", KEY_B, ssh::host_key::ssh_dss, true);
 
@@ -725,8 +693,7 @@ BOOST_AUTO_TEST_CASE( load_save )
         ("host2 ssh-rsa AAAAB3NzaC1yc2EAA==")
         ("host1 ssh-rsa AAAAB3NzaC1yc2EAA==");
 
-    openssh_knownhost_collection kh(
-        new_session(), lines.begin(), lines.end());
+    openssh_knownhost_collection kh(lines.begin(), lines.end());
 
     vector<string> output;
     kh.save(kh.begin(), kh.end(), back_inserter(output));
