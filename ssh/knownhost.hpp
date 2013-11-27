@@ -392,23 +392,6 @@ public:
      * Create an iterator to the end of the collection.
      */
     knownhost_iterator() : m_pos(NULL) {}
-    
-    /**
-     * Create an iterator to the beginning of the collection.
-     */
-    knownhost_iterator(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
-        boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts)
-        : m_session(session), m_hosts(hosts),
-          m_pos(detail::next_host(m_session, m_hosts, NULL)) {}
-
-    /**
-     * Create an iterator to a point in the collection indicated by pos.
-     */
-    knownhost_iterator(
-        boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts, libssh2_knownhost* pos)
-        : m_hosts(hosts), m_pos(pos) {}
-
 
     /**
      * Remove a host at the given iterator position from the collection.
@@ -436,6 +419,30 @@ public:
     }
 
 private:
+
+    // knownhost_collection is the  factories for non-end knownhost_iterators,
+    // so is declared a friend of knownhost_iterator so that it may call the
+    // private constructors
+    
+    friend class knownhost_collection;
+
+    /**
+     * Create an iterator to the beginning of the collection.
+     */
+    knownhost_iterator(
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts)
+        : m_session(session), m_hosts(hosts),
+          m_pos(detail::next_host(m_session, m_hosts, NULL)) {}
+
+    /**
+     * Create an iterator to a point in the collection indicated by pos.
+     */
+    knownhost_iterator(
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts, libssh2_knownhost* pos)
+        : m_session(session), m_hosts(hosts), m_pos(pos) {}
+
     friend class boost::iterator_core_access;
 
     void increment()
@@ -559,11 +566,11 @@ public:
         {
         case LIBSSH2_KNOWNHOST_CHECK_MATCH:
             return find_result(
-                knownhost_iterator(m_hosts, match), end(), true);
+                knownhost_iterator(m_session, m_hosts, match), end(), true);
 
         case LIBSSH2_KNOWNHOST_CHECK_MISMATCH:
             return find_result(
-                knownhost_iterator(m_hosts, match), end(), false);
+                knownhost_iterator(m_session, m_hosts, match), end(), false);
             
         case LIBSSH2_KNOWNHOST_CHECK_NOTFOUND:
             return find_result(end(), end(), false);
