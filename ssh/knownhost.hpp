@@ -37,6 +37,7 @@
 #ifndef SSH_KNOWNHOST_HPP
 #define SSH_KNOWNHOST_HPP
 
+#include <ssh/detail/libssh2/knownhost.hpp> // ssh::detail::libssh2::knownhost
 #include <ssh/session.hpp> // allocate_session
 #include <ssh/ssh_error.hpp> // last_error
 #include <ssh/host_key.hpp>
@@ -73,18 +74,9 @@ namespace detail {
     inline boost::shared_ptr<LIBSSH2_KNOWNHOSTS> init(
         boost::shared_ptr<LIBSSH2_SESSION> session)
     {
-        if (!session)
-            BOOST_THROW_EXCEPTION(
-                std::invalid_argument("NULL session pointer"));
-
-        LIBSSH2_KNOWNHOSTS* hosts = libssh2_knownhost_init(session.get());
-        if (!hosts)
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(session) <<
-                boost::errinfo_api_function("libssh2_knownhost_init"));
-
         return boost::shared_ptr<LIBSSH2_KNOWNHOSTS>(
-            hosts, libssh2_knownhost_free);
+            ::ssh::detail::libssh2::knownhost::init(session.get()),
+            libssh2_knownhost_free);
     }
 
     /**
@@ -106,12 +98,9 @@ namespace detail {
          */
         void operator()(const T& entry)
         {
-            int rc = libssh2_knownhost_readline(
-                m_hosts.get(), entry.data(), entry.length(), TYPE);
-            if (rc != 0)
-                BOOST_THROW_EXCEPTION(
-                    ssh::detail::last_error(m_session) <<
-                    boost::errinfo_api_function("libssh2_knownhost_readline"));
+            ::ssh::detail::libssh2::knownhost::readline(
+                m_session.get(), m_hosts.get(), entry.data(), entry.length(),
+                TYPE);
         }
 
     private:
@@ -185,7 +174,7 @@ namespace detail {
     };
 
     /**
-     * Thin exception wrapper around libssh2_knownhost_get.
+     * Fetch next host.
      *
      * @returns NULL if finished.
      */
@@ -195,14 +184,12 @@ namespace detail {
         libssh2_knownhost* current_position)
     {
         libssh2_knownhost* host = NULL;
-        int rc = libssh2_knownhost_get(hosts.get(), &host, current_position);
-        if (rc < 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(session) <<
-                boost::errinfo_api_function("libssh2_knownhost_get"));
-        }
+
+        int rc = ::ssh::detail::libssh2::knownhost::get(
+            session.get(), hosts.get(), &host, current_position);
         
+        assert(rc == 0 || rc == 1);
+
         if (rc == 1) // finished
         {
             assert(host == NULL);
@@ -213,7 +200,7 @@ namespace detail {
     }
 
     /**
-     * Thin exception wrapper around libssh2_knownhost_add.
+     * Create new host entry in collection of hosts.
      */
     inline libssh2_knownhost* add(
         boost::shared_ptr<LIBSSH2_SESSION> session,
@@ -227,14 +214,11 @@ namespace detail {
             type |= LIBSSH2_KNOWNHOST_KEYENC_RAW;
 
         libssh2_knownhost* host = NULL;
-        int rc = libssh2_knownhost_add(
-            hosts.get(), host_or_ip.c_str(),
+
+        ::ssh::detail::libssh2::knownhost::add(
+            session.get(), hosts.get(), host_or_ip.c_str(),
             (salt.empty()) ? NULL : salt.c_str(),
             key.data(), key.length(), type, &host);
-        if (rc)
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(session) <<
-                boost::errinfo_api_function("libssh2_knownhost_add"));
 
         return host;
     }
@@ -408,11 +392,8 @@ public:
         next++;
 
         // this call invalidates the given iterator
-        int rc = libssh2_knownhost_del(it.m_hosts.get(), it.m_pos);
-        if (rc)
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(it.m_session) <<
-                boost::errinfo_api_function("libssh2_knownhost_del"));
+        ::ssh::detail::libssh2::knownhost::del(
+            it.m_session.get(), it.m_hosts.get(), it.m_pos);
 
         return next;
     }
@@ -552,14 +533,15 @@ public:
     {
         int type = LIBSSH2_KNOWNHOST_TYPE_PLAIN;
         if (base64_key)
-            type |=    LIBSSH2_KNOWNHOST_KEYENC_BASE64;
+            type |= LIBSSH2_KNOWNHOST_KEYENC_BASE64;
         else
             type |= LIBSSH2_KNOWNHOST_KEYENC_RAW;
 
         libssh2_knownhost* match = NULL;
-        int rc = libssh2_knownhost_check(
-            m_hosts.get(), host.c_str(), key.data(), key.length(), type,
-            &match);
+
+        int rc = ::ssh::detail::libssh2::knownhost::check(
+            m_session.get(), m_hosts.get(), host.c_str(), key.data(),
+            key.length(), type, &match);
 
         switch (rc)
         {
@@ -575,9 +557,8 @@ public:
             return find_result(end(), end(), false);
 
         default:
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(m_session) <<
-                boost::errinfo_api_function("libssh2_knownhost_check"));
+            assert(false);
+            BOOST_THROW_EXCEPTION(std::logic_error("Unexpected return code"));
         }
     }
     
