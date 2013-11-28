@@ -126,6 +126,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sftp_error.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\ssh_error.hpp"
 			>
 		</File>

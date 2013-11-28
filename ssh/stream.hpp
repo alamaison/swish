@@ -37,17 +37,15 @@
 #ifndef SSH_STREAM_HPP
 #define SSH_STREAM_HPP
 
-#include <ssh/ssh_error.hpp> // last_error, ssh_error
+#include <ssh/sftp_error.hpp> // throw_last_error
 #include <ssh/session.hpp>
 #include <ssh/sftp.hpp>
 
-#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
-#include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iostreams/categories.hpp>
                                // seekable, input_seekable, output_seekable
 #include <boost/iostreams/stream.hpp>
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION, throw_exception
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 #include <stdexcept> // invalid_argument, logic_error
