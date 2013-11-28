@@ -112,6 +112,10 @@
 				Name="libssh2"
 				>
 				<File
+					RelativePath=".\detail\libssh2\agent.hpp"
+					>
+				</File>
+				<File
 					RelativePath=".\detail\libssh2\sftp.hpp"
 					>
 				</File>
