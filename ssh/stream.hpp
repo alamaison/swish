@@ -36,7 +36,6 @@
 
 #ifndef SSH_STREAM_HPP
 #define SSH_STREAM_HPP
-#pragma once
 
 #include <ssh/ssh_error.hpp> // last_error, ssh_error
 #include <ssh/session.hpp>

@@ -36,7 +36,6 @@
 
 #ifndef SSH_SSH_ERROR_HPP
 #define SSH_SSH_ERROR_HPP
-#pragma once
 
 #include <boost/exception/exception.hpp> // boost::exception
 #include <boost/shared_ptr.hpp> // shared_ptr

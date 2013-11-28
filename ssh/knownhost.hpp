@@ -36,7 +36,6 @@
 
 #ifndef SSH_KNOWNHOST_HPP
 #define SSH_KNOWNHOST_HPP
-#pragma once
 
 #include <ssh/session.hpp> // allocate_session
 #include <ssh/ssh_error.hpp> // last_error

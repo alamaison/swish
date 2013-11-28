@@ -36,7 +36,6 @@
 
 #ifndef SSH_AGENT_HPP
 #define SSH_AGENT_HPP
-#pragma once
 
 #include <ssh/ssh_error.hpp> // last_error
 

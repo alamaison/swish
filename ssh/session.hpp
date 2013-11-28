@@ -36,7 +36,6 @@
 
 #ifndef SSH_SESSION_HPP
 #define SSH_SESSION_HPP
-#pragma once
 
 #include <ssh/agent.hpp>
 #include <ssh/ssh_error.hpp>
