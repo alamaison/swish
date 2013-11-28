@@ -123,6 +123,10 @@
 					RelativePath=".\detail\libssh2\sftp.hpp"
 					>
 				</File>
+				<File
+					RelativePath=".\detail\libssh2\userauth.hpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<File

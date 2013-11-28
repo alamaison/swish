@@ -39,6 +39,7 @@
 
 #include <ssh/agent.hpp>
 #include <ssh/detail/libssh2/session.hpp> // ssh::detail::libssh2::session
+#include <ssh/detail/libssh2/userauth.hpp> // ssh::detail::libssh2::userauth
 #include <ssh/host_key.hpp>
 #include <ssh/ssh_error.hpp>
 
@@ -73,57 +74,6 @@ namespace ssh {
     }
 
 namespace detail {
-
-    namespace libssh2 {
-    namespace userauth {
-
-        /**
-         * Thin exception wrapper around libssh2_userauth_password_ex.
-         *
-         * The incorrect password failure is not reported as an exception
-         * because it is expected.
-         */
-        inline bool password(
-            boost::shared_ptr<LIBSSH2_SESSION> session, const char* username,
-            size_t username_len, const char* password, size_t password_len,
-            LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)))
-        {
-            int rc = libssh2_userauth_password_ex(
-                session.get(), username, username_len, password, password_len,
-                passwd_change_cb);
-
-            if (rc != 0 && rc != LIBSSH2_ERROR_AUTHENTICATION_FAILED)
-            {
-                BOOST_THROW_EXCEPTION(
-                    last_error(session) <<
-                    boost::errinfo_api_function(
-                        "libssh2_userauth_password_ex"));
-            }
-            else
-            {
-                return rc == 0;
-            }
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_userauth_publickey_fromfile_ex.
-         */
-        inline void public_key_from_file(
-            boost::shared_ptr<LIBSSH2_SESSION> session, const char* username,
-            size_t username_len, const char* public_key_path,
-            const char* private_key_path, const char* passphrase)
-        {
-            int rc = libssh2_userauth_publickey_fromfile_ex(
-                session.get(), username, username_len, public_key_path,
-                private_key_path, passphrase);
-            if (rc != 0)
-                BOOST_THROW_EXCEPTION(
-                    last_error(session) <<
-                    boost::errinfo_api_function(
-                        "libssh2_userauth_publickey_fromfile_ex"));
-        }
-
-    }}
 
     inline void disconnect_and_free(
         LIBSSH2_SESSION* session, const std::string& disconnection_message)
@@ -543,8 +493,8 @@ public:
         const std::string& username, const std::string& password)
     {
         return detail::libssh2::userauth::password(
-            m_session, username.data(), username.size(), password.data(),
-            password.size(), NULL);
+            m_session.get(), username.data(), username.size(), password.data(),
+            password.size(), NULL) == 0;
     }
 
     /**
@@ -633,7 +583,7 @@ public:
         const std::string& passphrase)
     {
         detail::libssh2::userauth::public_key_from_file(
-            m_session, username.data(), username.size(),
+            m_session.get(), username.data(), username.size(),
             public_key.external_file_string().c_str(),
             private_key.external_file_string().c_str(), passphrase.c_str());
     }
