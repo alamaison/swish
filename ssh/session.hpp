@@ -67,6 +67,12 @@
 
 namespace ssh {
 
+    namespace sftp {
+
+        class sftp_channel;
+
+    }
+
 namespace detail {
 
     namespace libssh2 {
@@ -507,8 +513,6 @@ public:
         detail::allocate_and_connect_session(socket, disconnection_message))
     {}
 
-    boost::shared_ptr<LIBSSH2_SESSION> get() { return m_session; }
-
     /**
      * Hostkey sent by the server to identify itself.
      */
@@ -691,7 +695,26 @@ public:
         return agent::agent_identities(m_session);
     }
 
+    /// @cond INTERNAL
+    /**
+     * Defines the single class permitted to access the private session
+     * pointer.
+     * See http://stackoverflow.com/q/3217390/67013.
+     */
+    class access_attorney
+    {
+    private:
+        friend class ssh::sftp::sftp_channel;
+
+        static boost::shared_ptr<LIBSSH2_SESSION> get_pointer(session& session)
+        {
+            return session.m_session;
+        }
+    };
+    /// @endcond
+
 private:
+    friend class access_attorney;
 
     boost::shared_ptr<LIBSSH2_SESSION> m_session;
 };

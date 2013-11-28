@@ -350,7 +350,7 @@ namespace detail {
 
         // Open with 644 permissions - good for non-directory files
         return detail::libssh2::sftp::open(
-            channel.session().get(), channel.get(), path_string.data(),
+            channel.session(), channel.get(), path_string.data(),
             path_string.size(), openmode_to_libssh2_flags(opening_mode),
             LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
             LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
@@ -409,7 +409,7 @@ namespace detail {
                 {
                     std::string open_path_string = open_path.string();
                     SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                        channel.session().get(), channel.get(),
+                        channel.session(), channel.get(),
                         "libssh2_sftp_fstat_ex", open_path_string.data(),
                         open_path_string.length());
                 }
@@ -453,7 +453,7 @@ namespace detail {
             do
             {
                 ssize_t rc = detail::libssh2::sftp::read(
-                    channel.session().get(), channel.get(), handle,
+                    channel.session(), channel.get(), handle,
                     buffer + count, buffer_size - count);
                 if (rc == 0)
                     break; // EOF
@@ -490,7 +490,7 @@ namespace detail {
             do
             {
                 count += detail::libssh2::sftp::write(
-                    channel.session().get(), channel.get(), handle,
+                    channel.session(), channel.get(), handle,
                     data + count, data_size - count);
             }
             while (count < data_size);

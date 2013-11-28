@@ -64,9 +64,11 @@ BOOST_FIXTURE_TEST_SUITE(host_key_tests, session_fixture)
 
 namespace {
 
-    string base64_decode(
-        boost::shared_ptr<LIBSSH2_SESSION> session, const string& input)
+    string base64_decode(const string& input)
     {
+        boost::shared_ptr<LIBSSH2_SESSION> session =
+            ssh::detail::allocate_session();
+
         char* data;
         unsigned int data_len;
         int rc = libssh2_base64_decode(
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE( hostkey )
     session s = test_session();
     host_key key = s.hostkey();
 
-    string expected = base64_decode(s.get(), EXPECTED_HOSTKEY);
+    string expected = base64_decode(EXPECTED_HOSTKEY);
     BOOST_CHECK_EQUAL(key.key(), expected);
     BOOST_CHECK_EQUAL(key.algorithm(), ssh::host_key::ssh_rsa);
     BOOST_CHECK_EQUAL(key.algorithm_name(), "ssh-rsa");

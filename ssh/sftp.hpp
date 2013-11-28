@@ -444,14 +444,14 @@ public:
      */
     explicit sftp_channel(::ssh::session session)
         :
-        m_session(session),
-        m_sftp(detail::libssh2::sftp::init(session.get())) {}
+    m_session(::ssh::session::access_attorney::get_pointer(session)),
+    m_sftp(detail::libssh2::sftp::init(m_session)) {}
 
     boost::shared_ptr<LIBSSH2_SFTP> get() { return m_sftp; }
-    ssh::session session() { return m_session; }
+    boost::shared_ptr<LIBSSH2_SESSION> session() { return m_session; }
 
 private:
-    ssh::session m_session;
+    boost::shared_ptr<LIBSSH2_SESSION> m_session;
     boost::shared_ptr<LIBSSH2_SFTP> m_sftp;
 };
 
@@ -627,7 +627,7 @@ inline file_attributes attributes(
     std::string file_path = file.string();
     LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
     detail::libssh2::sftp::stat(
-        channel.session().get(), channel.get(), file_path.data(),
+        channel.session(), channel.get(), file_path.data(),
         file_path.size(),
         (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT, &attributes);
 
@@ -696,7 +696,7 @@ inline boost::filesystem::path resolve_link_target(
 {
     std::string link_string = link.string();
     return detail::libssh2::sftp::readlink(
-        channel.session().get(), channel.get(), link_string.data(),
+        channel.session(), channel.get(), link_string.data(),
         link_string.size());
 }
 
@@ -711,7 +711,7 @@ inline boost::filesystem::path canonical_path(
 {
     std::string link_string = link.string();
     return detail::libssh2::sftp::realpath(
-        channel.session().get(), channel.get(), link_string.data(),
+        channel.session(), channel.get(), link_string.data(),
         link_string.size());
 }
 
@@ -742,7 +742,7 @@ inline void create_symlink(
     std::string target_string = target.string();
 
     detail::libssh2::sftp::symlink(
-        channel.session().get(), channel.get(), link_string.data(),
+        channel.session(), channel.get(), link_string.data(),
         link_string.size(), target_string.data(), target_string.size());
 }
 
@@ -843,7 +843,7 @@ inline void rename(
     }
 
     detail::libssh2::sftp::rename(
-        channel.session().get(), channel.get(), source_string.data(),
+        channel.session(), channel.get(), source_string.data(),
         source_string.size(), destination_string.data(),
         destination_string.size(), flags);
 }
@@ -863,7 +863,7 @@ public:
     directory_iterator(
         sftp_channel channel, const boost::filesystem::path& path)
         :
-        m_session(channel.session().get()),
+        m_session(channel.session()),
         m_channel(channel.get()),
         m_directory(path),
         m_handle(detail::open_directory(m_session, m_channel, path)),
@@ -970,13 +970,13 @@ namespace detail {
             if (is_directory)
             {
                 detail::libssh2::sftp::rmdir_ex(
-                    channel.session().get(), channel.get(),
+                    channel.session(), channel.get(),
                     target_string.data(), target_string.size());
             }
             else
             {
                 detail::libssh2::sftp::unlink_ex(
-                    channel.session().get(), channel.get(),
+                    channel.session(), channel.get(),
                     target_string.data(), target_string.size());
             }
         }    
@@ -1221,7 +1221,7 @@ inline bool create_directory(
     try
     {
         detail::libssh2::sftp::mkdir_ex(
-            channel.session().get(), channel.get(), new_directory_string.data(),
+            channel.session(), channel.get(), new_directory_string.data(),
             new_directory_string.size(),
             LIBSSH2_SFTP_S_IRWXU |
             LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IXGRP |
