@@ -37,6 +37,7 @@
 #ifndef SSH_STREAM_HPP
 #define SSH_STREAM_HPP
 
+#include <ssh/detail/libssh2/sftp.hpp>
 #include <ssh/sftp_error.hpp> // throw_last_error
 #include <ssh/session.hpp>
 #include <ssh/sftp.hpp>
@@ -217,45 +218,6 @@ namespace detail {
         return our_mode;
     }
 
-    namespace libssh2 {
-    namespace sftp {
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_read.
-         */
-        inline ssize_t read(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            boost::shared_ptr<LIBSSH2_SFTP_HANDLE> file_handle,
-            char* buffer, size_t buffer_len)
-        {
-            ssize_t count = libssh2_sftp_read(
-                file_handle.get(), buffer, buffer_len);
-            if (count < 0)
-                SSH_THROW_LAST_SFTP_ERROR(session, sftp, "libssh2_sftp_read");
-
-            return count;
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_read.
-         */
-        inline ssize_t write(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            boost::shared_ptr<LIBSSH2_SFTP_HANDLE> file_handle,
-            const char* buffer, size_t buffer_len)
-        {
-            ssize_t count = libssh2_sftp_write(
-                file_handle.get(), buffer, buffer_len);
-            if (count < 0)
-                SSH_THROW_LAST_SFTP_ERROR(session, sftp, "libssh2_sftp_write");
-
-            return count;
-        }
-
-    }}
-
     inline long openmode_to_libssh2_flags(openmode::value opening_mode)
     {
         long flags = 0;
@@ -346,12 +308,14 @@ namespace detail {
         std::string path_string = open_path.string();
 
         // Open with 644 permissions - good for non-directory files
-        return detail::libssh2::sftp::open(
-            channel.session(), channel.get(), path_string.data(),
-            path_string.size(), openmode_to_libssh2_flags(opening_mode),
-            LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
-            LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
-            LIBSSH2_SFTP_OPENFILE);
+        return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
+            ::ssh::detail::libssh2::sftp::open(
+                channel.session().get(), channel.get().get(), path_string.data(),
+                path_string.size(), openmode_to_libssh2_flags(opening_mode),
+                LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
+                LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
+                LIBSSH2_SFTP_OPENFILE),
+            ::libssh2_sftp_close_handle);
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_input_file(
@@ -406,7 +370,7 @@ namespace detail {
                 {
                     std::string open_path_string = open_path.string();
                     SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                        channel.session(), channel.get(),
+                        channel.session().get(), channel.get().get(),
                         "libssh2_sftp_fstat_ex", open_path_string.data(),
                         open_path_string.length());
                 }
@@ -449,9 +413,9 @@ namespace detail {
             ssize_t count = 0;
             do
             {
-                ssize_t rc = detail::libssh2::sftp::read(
-                    channel.session(), channel.get(), handle,
-                    buffer + count, buffer_size - count);
+                ssize_t rc = ::ssh::detail::libssh2::sftp::read(
+                    channel.session().get(), channel.get().get(),
+                    handle.get(), buffer + count, buffer_size - count);
                 if (rc == 0)
                     break; // EOF
 
@@ -486,8 +450,8 @@ namespace detail {
             ssize_t count = 0;
             do
             {
-                count += detail::libssh2::sftp::write(
-                    channel.session(), channel.get(), handle,
+                count += ::ssh::detail::libssh2::sftp::write(
+                    channel.session().get(), channel.get().get(), handle.get(),
                     data + count, data_size - count);
             }
             while (count < data_size);

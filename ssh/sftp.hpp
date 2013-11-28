@@ -37,6 +37,7 @@
 #ifndef SSH_SFTP_HPP
 #define SSH_SFTP_HPP
 
+#include <ssh/detail/libssh2/sftp.hpp>
 #include <ssh/ssh_error.hpp> // last_error
 #include <ssh/sftp_error.hpp> // sftp_error, throw_last_error
 #include <ssh/session.hpp>
@@ -74,237 +75,59 @@ namespace sftp {
 
 namespace detail {
 
-    namespace libssh2 {
-    namespace sftp {
+    /**
+     * Common parts of readlink and realpath.
+     */
+    inline boost::filesystem::path symlink_resolve(
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        const char* path, unsigned int path_len, int resolve_action)
+    {
+        // yuk! hardcoded buffer sizes. unfortunately, libssh2 doesn't
+        // give us a choice so we allocate massive buffers here and then
+        // take measures later to reduce the footprint
 
-        /**
-         * Thin exception wrapper around libssh2_sftp_init.
-         */
-        inline boost::shared_ptr<LIBSSH2_SFTP> init(
-            boost::shared_ptr<LIBSSH2_SESSION> session)
-        {
-            LIBSSH2_SFTP* sftp = libssh2_sftp_init(session.get());
-            if (!sftp)
-                BOOST_THROW_EXCEPTION(
-                    ssh::detail::last_error(session) <<
-                    boost::errinfo_api_function("libssh2_sftp_init"));
+        std::vector<char> target_path_buffer(1024, '\0');
 
-            return boost::shared_ptr<LIBSSH2_SFTP>(
-                sftp, libssh2_sftp_shutdown);
-        }
+        int len = ::ssh::detail::libssh2::sftp::symlink_ex(
+            session.get(), sftp.get(), path, path_len,
+            &target_path_buffer[0], target_path_buffer.size(),
+            resolve_action);
 
-        /**
-         * Thin exception wrapper around libssh2_sftp_open_ex
-         */
-        inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp, const char* filename,
-            unsigned int filename_len, unsigned long flags, long mode,
-            int open_type)
-        {
-            LIBSSH2_SFTP_HANDLE* handle = libssh2_sftp_open_ex(
-                sftp.get(), filename, filename_len, flags, mode, open_type);
-            if (!handle)
-                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                    session, sftp, "libssh2_sftp_open_ex", filename,
-                    filename_len);
+        return boost::filesystem::path(
+            &target_path_buffer[0], &target_path_buffer[0] + len);
+    }
 
-            return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
-                handle, libssh2_sftp_close_handle);
-        }
+    /**
+     * Thin exception wrapper around libssh2_sftp_realpath.
+     *
+     * Uses the raw libssh2_sftp_symlink_ex function so we aren't forced
+     * to use strlen.
+     */
+    inline boost::filesystem::path realpath(
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        const char* path, unsigned int path_len)
+    {
+        return detail::symlink_resolve(
+            session, sftp, path, path_len, LIBSSH2_SFTP_REALPATH);
+    }
 
-        /**
-         * Thin exception wrapper around libssh2_sftp_symlink_ex.
-         *
-         * Slightly odd treatment of the return value because it's overloaded.
-         * Callers of this function never need to check it for success but do
-         * need to check if for buffer validity in the @c LIBSSH2_SFTP_READLINK
-         * and @c LIBSSH2_SFTP_REALPATH cases.
-         */
-        inline int symlink_ex(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len,
-            char* target, unsigned int target_len, int resolve_action)
-        {
-            int rc = libssh2_sftp_symlink_ex(
-                sftp.get(), path, path_len, target, target_len,
-                resolve_action);
-            switch (resolve_action)
-            {
-            case LIBSSH2_SFTP_READLINK:
-            case LIBSSH2_SFTP_REALPATH:
-                if (rc < 0)
-                    SSH_THROW_LAST_SFTP_ERROR(
-                        session, sftp, "libssh2_sftp_symlink_ex");
-                break;
+    /**
+     * Thin exception wrapper around libssh2_sftp_readlink.
+     *
+     * Uses the raw libssh2_sftp_symlink_ex function so we aren't forced
+     * to use strlen.
+     */
+    inline boost::filesystem::path readlink(
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        const char* path, unsigned int path_len)
+    {
+        return detail::symlink_resolve(
+            session, sftp, path, path_len, LIBSSH2_SFTP_READLINK);
+    }
 
-            case LIBSSH2_SFTP_SYMLINK:
-            default:
-                if (rc != 0)
-                {
-                    assert(rc < 0);
-                    SSH_THROW_LAST_SFTP_ERROR(
-                        session, sftp, "libssh2_sftp_symlink_ex");
-                }
-
-                break;
-            }
-
-            return rc;
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_symlink.
-         *
-         * Uses the raw libssh2_sftp_symlink_ex function so we aren't forced
-         * to use strlen.
-         */
-        inline void symlink(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len,
-            const char* target, unsigned int target_len)
-        {
-            symlink_ex(
-                session, sftp, path, path_len,
-                const_cast<char*>(target), target_len,
-                LIBSSH2_SFTP_SYMLINK);
-        }
-
-        namespace detail {
-
-            /**
-             * Common parts of readlink and realpath.
-             */
-            inline boost::filesystem::path symlink_resolve(
-                boost::shared_ptr<LIBSSH2_SESSION> session,
-                boost::shared_ptr<LIBSSH2_SFTP> sftp,
-                const char* path, unsigned int path_len, int resolve_action)
-            {
-                // yuk! hardcoded buffer sizes. unfortunately, libssh2 doesn't
-                // give us a choice so we allocate massive buffers here and then
-                // take measures later to reduce the footprint
-
-                std::vector<char> target_path_buffer(1024, '\0');
-
-                int len = symlink_ex(session, sftp, path, path_len,
-                    &target_path_buffer[0], target_path_buffer.size(),
-                    resolve_action);
-
-                return boost::filesystem::path(
-                    &target_path_buffer[0], &target_path_buffer[0] + len);
-            }
-
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_realpath.
-         *
-         * Uses the raw libssh2_sftp_symlink_ex function so we aren't forced
-         * to use strlen.
-         */
-        inline boost::filesystem::path realpath(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len)
-        {
-            return detail::symlink_resolve(
-                session, sftp, path, path_len, LIBSSH2_SFTP_REALPATH);
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_readlink.
-         *
-         * Uses the raw libssh2_sftp_symlink_ex function so we aren't forced
-         * to use strlen.
-         */
-        inline boost::filesystem::path readlink(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len)
-        {
-            return detail::symlink_resolve(
-                session, sftp, path, path_len, LIBSSH2_SFTP_READLINK);
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_stat_ex.
-         */
-        inline void stat(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len, int stat_type,
-            LIBSSH2_SFTP_ATTRIBUTES* attributes)
-        {
-            int rc = libssh2_sftp_stat_ex(
-                sftp.get(), path, path_len, stat_type, attributes);
-            if (rc < 0)
-                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                    session, sftp, "libssh2_sftp_stat_ex", path, path_len);
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_unlink_ex.
-         */
-        inline void unlink_ex(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len)
-        {
-            int rc = libssh2_sftp_unlink_ex(sftp.get(), path, path_len);
-            if (rc < 0)
-                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                    session, sftp, "libssh2_sftp_unlink_ex", path, path_len);
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_mkdir_ex.
-         */
-        inline void mkdir_ex(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len, long mode)
-        {
-            int rc = libssh2_sftp_mkdir_ex(sftp.get(), path, path_len, mode);
-            if (rc < 0)
-                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                    session, sftp, "libssh2_sftp_mkdir_ex", path, path_len);
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_rmdir_ex.
-         */
-        inline void rmdir_ex(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp,
-            const char* path, unsigned int path_len)
-        {
-            int rc = libssh2_sftp_rmdir_ex(sftp.get(), path, path_len);
-            if (rc < 0)
-                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                    session, sftp, "libssh2_sftp_rmdir_ex", path, path_len);
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_sftp_rename_ex
-         */
-        inline void rename(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            boost::shared_ptr<LIBSSH2_SFTP> sftp, const char* source,
-            unsigned int source_len, const char* destination,
-            unsigned int destination_len, long flags)
-        {
-            int rc = libssh2_sftp_rename_ex(
-                sftp.get(), source, source_len, destination, destination_len,
-                flags);
-            if (rc)
-                SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                    session, sftp, "libssh2_sftp_rename_ex", source,
-                    source_len);
-        }
-
-    }}
 }
 
 class sftp_channel
@@ -317,7 +140,10 @@ public:
     explicit sftp_channel(::ssh::session session)
         :
     m_session(::ssh::session::access_attorney::get_pointer(session)),
-    m_sftp(detail::libssh2::sftp::init(m_session)) {}
+    m_sftp(
+        boost::shared_ptr<LIBSSH2_SFTP>(
+            ::ssh::detail::libssh2::sftp::init(m_session.get()),
+            ::libssh2_sftp_shutdown)) {}
 
     boost::shared_ptr<LIBSSH2_SFTP> get() { return m_sftp; }
     boost::shared_ptr<LIBSSH2_SESSION> session() { return m_session; }
@@ -336,9 +162,11 @@ namespace detail {
     {
         std::string path_string = path.string();
 
-        return detail::libssh2::sftp::open(
-            session, channel, path_string.data(), path_string.size(),
-            0, 0, LIBSSH2_SFTP_OPENDIR);
+        return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
+            ::ssh::detail::libssh2::sftp::open(
+                session.get(), channel.get(), path_string.data(),
+                path_string.size(), 0, 0, LIBSSH2_SFTP_OPENDIR),
+            ::libssh2_sftp_close_handle);
     }
 }
 
@@ -498,8 +326,8 @@ inline file_attributes attributes(
 {
     std::string file_path = file.string();
     LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
-    detail::libssh2::sftp::stat(
-        channel.session(), channel.get(), file_path.data(),
+    ::ssh::detail::libssh2::sftp::stat(
+        channel.session().get(), channel.get().get(), file_path.data(),
         file_path.size(),
         (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT, &attributes);
 
@@ -567,7 +395,7 @@ inline boost::filesystem::path resolve_link_target(
     sftp_channel channel, const boost::filesystem::path& link)
 {
     std::string link_string = link.string();
-    return detail::libssh2::sftp::readlink(
+    return detail::readlink(
         channel.session(), channel.get(), link_string.data(),
         link_string.size());
 }
@@ -582,7 +410,7 @@ inline boost::filesystem::path canonical_path(
     sftp_channel channel, const boost::filesystem::path& link)
 {
     std::string link_string = link.string();
-    return detail::libssh2::sftp::realpath(
+    return detail::realpath(
         channel.session(), channel.get(), link_string.data(),
         link_string.size());
 }
@@ -613,8 +441,8 @@ inline void create_symlink(
     std::string link_string = link.string();
     std::string target_string = target.string();
 
-    detail::libssh2::sftp::symlink(
-        channel.session(), channel.get(), link_string.data(),
+    ::ssh::detail::libssh2::sftp::symlink(
+        channel.session().get(), channel.get().get(), link_string.data(),
         link_string.size(), target_string.data(), target_string.size());
 }
 
@@ -714,8 +542,8 @@ inline void rename(
             std::invalid_argument("Unrecognised overwrite behaviour"));
     }
 
-    detail::libssh2::sftp::rename(
-        channel.session(), channel.get(), source_string.data(),
+    ::ssh::detail::libssh2::sftp::rename(
+        channel.session().get(), channel.get().get(), source_string.data(),
         source_string.size(), destination_string.data(),
         destination_string.size(), flags);
 }
@@ -782,7 +610,7 @@ private:
             m_handle.reset();
         else if (rc < 0)
             SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                m_session, m_channel, "libssh2_sftp_readdir_ex",
+                m_session.get(), m_channel.get(), "libssh2_sftp_readdir_ex",
                 m_directory.string().data(), m_directory.string().size());
         else
         {
@@ -841,14 +669,14 @@ namespace detail {
         {
             if (is_directory)
             {
-                detail::libssh2::sftp::rmdir_ex(
-                    channel.session(), channel.get(),
+                ::ssh::detail::libssh2::sftp::rmdir_ex(
+                    channel.session().get(), channel.get().get(),
                     target_string.data(), target_string.size());
             }
             else
             {
-                detail::libssh2::sftp::unlink_ex(
-                    channel.session(), channel.get(),
+                ::ssh::detail::libssh2::sftp::unlink_ex(
+                    channel.session().get(), channel.get().get(),
                     target_string.data(), target_string.size());
             }
         }    
@@ -1092,8 +920,9 @@ inline bool create_directory(
 
     try
     {
-        detail::libssh2::sftp::mkdir_ex(
-            channel.session(), channel.get(), new_directory_string.data(),
+        ::ssh::detail::libssh2::sftp::mkdir_ex(
+            channel.session().get(), channel.get().get(),
+            new_directory_string.data(),
             new_directory_string.size(),
             LIBSSH2_SFTP_S_IRWXU |
             LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IXGRP |

@@ -153,8 +153,7 @@ namespace detail {
      * SFTP error.  This function checks and throws the appropriate object.
      */
     inline void throw_last_error(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
-        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp,
         const char* current_function, const char* source_file,
         int source_line, const char* api_function,
         const char* path=NULL, size_t path_len=0U)
@@ -164,7 +163,7 @@ namespace detail {
         if (error.error_code() == LIBSSH2_ERROR_SFTP_PROTOCOL)
         {
             sftp_error derived_error = 
-                sftp_error(error, ::libssh2_sftp_last_error(sftp.get()));
+                sftp_error(error, ::libssh2_sftp_last_error(sftp));
             throw_error(
                 derived_error, current_function, source_file, source_line,
                 api_function, path, path_len);

@@ -105,6 +105,18 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="detail"
+			>
+			<Filter
+				Name="libssh2"
+				>
+				<File
+					RelativePath=".\detail\libssh2\sftp.hpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 		<File
 			RelativePath=".\agent.hpp"
 			>
