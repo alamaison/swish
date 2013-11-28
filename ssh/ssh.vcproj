@@ -116,6 +116,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\detail\libssh2\libssh2.hpp"
+					>
+				</File>
+				<File
 					RelativePath=".\detail\libssh2\session.hpp"
 					>
 				</File>

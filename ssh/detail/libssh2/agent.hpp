@@ -46,6 +46,9 @@
 
 #include <libssh2.h> // LIBSSH2_SESSION, LIBSSH2_AGENT, libssh2_agent_*
 
+// See ssh/detail/libssh2/libssh2.hpp for rules governing functions in this
+// namespace
+
 namespace ssh {
 namespace detail {
 namespace libssh2 {

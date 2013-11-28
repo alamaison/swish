@@ -59,6 +59,10 @@
         session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
         api_function, path, path_len)
 
+
+// See ssh/detail/libssh2/libssh2.hpp for rules governing functions in this
+// namespace
+
 namespace ssh {
 namespace detail {
 namespace libssh2 {
