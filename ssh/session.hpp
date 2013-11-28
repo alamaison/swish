@@ -38,8 +38,9 @@
 #define SSH_SESSION_HPP
 
 #include <ssh/agent.hpp>
-#include <ssh/ssh_error.hpp>
+#include <ssh/detail/libssh2/session.hpp> // ssh::detail::libssh2::session
 #include <ssh/host_key.hpp>
+#include <ssh/ssh_error.hpp>
 
 #include <boost/algorithm/string/classification.hpp> // is_any_of
 #include <boost/algorithm/string/split.hpp>
@@ -57,7 +58,6 @@
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <exception> // bad_alloc
 #include <string>
 #include <utility> // pair, make_pair
 #include <vector>
@@ -75,53 +75,6 @@ namespace ssh {
 namespace detail {
 
     namespace libssh2 {
-    namespace session {
-
-        /**
-         * Thin exception wrapper around libssh2_session_init.
-         */
-        inline LIBSSH2_SESSION* init()
-        {
-            LIBSSH2_SESSION* session = libssh2_session_init_ex(
-                NULL, NULL, NULL, NULL);
-            if (!session)
-                BOOST_THROW_EXCEPTION(
-                    std::bad_alloc("Failed to allocate new ssh session"));
-
-            return session;
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_session_startup.
-         */
-        inline void startup(LIBSSH2_SESSION* session, int socket)
-        {
-            int rc = libssh2_session_startup(session, socket);
-            if (rc != 0)
-            {
-                BOOST_THROW_EXCEPTION(
-                    last_error(session) <<
-                    boost::errinfo_api_function("libssh2_session_startup"));
-            }
-        }
-
-        /**
-         * Thin exception wrapper around libssh2_session_disconnect.
-         */
-        inline void disconnect(
-            LIBSSH2_SESSION* session, const char* description)
-        {
-            int rc = libssh2_session_disconnect(session, description);
-            if (rc != 0)
-            {
-                BOOST_THROW_EXCEPTION(
-                    last_error(session) <<
-                    boost::errinfo_api_function("libssh2_session_disconnect"));
-            }
-        }
-
-    }
-
     namespace userauth {
 
         /**
