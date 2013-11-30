@@ -51,130 +51,146 @@
 namespace ssh {
 namespace sftp {
 
+inline boost::system::error_category& sftp_error_category();
+
 namespace detail {
 
-    inline const char* sftp_part_of_error_message(unsigned long error)
+// Cutting LIBSSH2_ prefix off because the FX codes correspond to codes in
+// the spec, not just in the library
+
+#define SSH_CASE_SFTP_RETURN_STRINGISED(x) case LIBSSH2_ ## x: return #x;
+
+    inline std::string sftp_error_code_to_string(unsigned long code)
     {
-        switch (error)
+        switch (code)
         {
-        case LIBSSH2_FX_OK:
-            return ": FX_OK";
-        case LIBSSH2_FX_EOF:
-            return ": FX_EOF";
-        case LIBSSH2_FX_NO_SUCH_FILE:
-            return ": FX_NO_SUCH_FILE";
-        case LIBSSH2_FX_PERMISSION_DENIED:
-            return ": FX_PERMISSION_DENIED";
-        case LIBSSH2_FX_FAILURE:
-            return ": FX_FAILURE";
-        case LIBSSH2_FX_BAD_MESSAGE:
-            return ": FX_BAD_MESSAGE";
-        case LIBSSH2_FX_NO_CONNECTION:
-            return ": FX_NO_CONNECTION";
-        case LIBSSH2_FX_CONNECTION_LOST:
-            return ": FX_CONNECTION_LOST";
-        case LIBSSH2_FX_OP_UNSUPPORTED:
-            return ": FX_OP_UNSUPPORTED";
-        case LIBSSH2_FX_INVALID_HANDLE:
-            return ": FX_INVALID_HANDLE";
-        case LIBSSH2_FX_NO_SUCH_PATH:
-            return ": FX_NO_SUCH_PATH";
-        case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-            return ": FX_FILE_ALREADY_EXISTS";
-        case LIBSSH2_FX_WRITE_PROTECT:
-            return ": FX_WRITE_PROTECT";
-        case LIBSSH2_FX_NO_MEDIA:
-            return ": FX_NO_MEDIA";
-        case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
-            return ": FX_NO_SPACE_ON_FILESYSTEM";
-        case LIBSSH2_FX_QUOTA_EXCEEDED:
-            return ": FX_QUOTA_EXCEEDED";
-        case LIBSSH2_FX_UNKNOWN_PRINCIPAL:
-            return ": FX_UNKNOWN_PRINCIPAL";
-        case LIBSSH2_FX_LOCK_CONFLICT:
-            return ": FX_LOCK_CONFLICT";
-        case LIBSSH2_FX_DIR_NOT_EMPTY:
-            return ": FX_DIR_NOT_EMPTY";
-        case LIBSSH2_FX_NOT_A_DIRECTORY:
-            return ": FX_NOT_A_DIRECTORY";
-        case LIBSSH2_FX_INVALID_FILENAME:
-            return ": FX_INVALID_FILENAME";
-        case LIBSSH2_FX_LINK_LOOP:
-            return ": FX_LINK_LOOP";
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_OK);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_EOF);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_NO_SUCH_FILE);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_PERMISSION_DENIED);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_FAILURE);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_BAD_MESSAGE);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_NO_CONNECTION);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_CONNECTION_LOST);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_OP_UNSUPPORTED);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_INVALID_HANDLE);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_NO_SUCH_PATH);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_FILE_ALREADY_EXISTS);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_WRITE_PROTECT);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_NO_MEDIA);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_NO_SPACE_ON_FILESYSTEM);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_QUOTA_EXCEEDED);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_UNKNOWN_PRINCIPAL);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_LOCK_CONFLICT);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_DIR_NOT_EMPTY);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_NOT_A_DIRECTORY);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_INVALID_FILENAME);
+        SSH_CASE_SFTP_RETURN_STRINGISED(FX_LINK_LOOP);
         default:
-            return "Unrecognised SFTP error value";
+            assert(!"Unknown code");
+            return boost::lexical_cast<std::string>(code);
         }
     }
+
+#undef SSH_CASE_SFTP_RETURN_STRINGISED
+
+    class _sftp_error_category : public boost::system::error_category
+    {
+        typedef boost::system::error_category super;
+    public:
+        virtual const char* name() const
+        {
+            return "sftp";
+        }
+
+        virtual std::string message(int code) const
+        {
+            return sftp_error_code_to_string(code);
+        }
+
+        virtual boost::system::error_condition default_error_condition(
+            int code) const
+        {
+            switch (code)
+            {
+            case LIBSSH2_FX_NO_SUCH_FILE:
+                return boost::system::errc::no_such_file_or_directory;
+
+            case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+                return boost::system::errc::file_exists;
+
+            case LIBSSH2_FX_OP_UNSUPPORTED:
+                return boost::system::errc::operation_not_supported;
+            default:
+                return this->super::default_error_condition(code);
+            }
+        }
+
+        virtual bool equivalent(
+            int code, const boost::system::error_condition& condition) const
+        {
+            // Any match with the code's default condition is equivalent. The
+            // switch below only needs to match _extra_ conditions that are
+            // also equivalent
+
+            if (condition == default_error_condition(code))
+            {
+                return true;
+            }
+
+            switch (code)
+            {
+            case LIBSSH2_FX_OP_UNSUPPORTED:
+                return condition == boost::system::errc::not_supported;
+            default:
+                return condition == default_error_condition(code);
+            }
+        }
+
+    private:
+        _sftp_error_category() {}
+
+        friend boost::system::error_category& ssh::sftp::sftp_error_category();
+    };
 
 }
 
-class sftp_error : public ::ssh::ssh_error
+inline boost::system::error_category& sftp_error_category()
 {
-public:
-    sftp_error(
-        const ssh::ssh_error& error, unsigned long sftp_error_code)
-        : ssh_error(error), m_sftp_error(sftp_error_code)
-    {
-        message() += detail::sftp_part_of_error_message(m_sftp_error);
-    }
-
-    unsigned long sftp_error_code() const
-    {
-        return m_sftp_error;
-    }
-    
-private:
-    unsigned long m_sftp_error;
-};
+    // C++ standard says this instance is shared across all translation units
+    // http://stackoverflow.com/a/1389403/67013
+    static detail::_sftp_error_category instance;
+    return instance;
+}
 
 namespace detail {
 
-    template<typename T>
-    inline void throw_error(
-        T& error, const char* current_function, const char* source_file,
-        int source_line, const char* api_function,
-        const char* path, size_t path_len)
-    {
-        error <<
-            boost::errinfo_api_function(api_function) <<
-            boost::throw_function(current_function) <<
-            boost::throw_file(source_file) <<
-            boost::throw_line(source_line);
-        if (path && path_len > 0)
-            error << boost::errinfo_file_name(std::string(path, path_len));
-
-        boost::throw_exception(error);
-    }
-
     /**
-     * Throw whatever the most appropriate type of exception is.
-     *
-     * libssh2_sftp_* functions can return either a standard SSH error or a
-     * SFTP error.  This function checks and throws the appropriate object.
+     * Last error encountered by the SFTP channel as an `error_code` and
+     * optional error description message.
      */
-    inline void throw_last_error(
+    inline boost::system::error_code last_sftp_error_code(
         LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp,
-        const char* current_function, const char* source_file,
-        int source_line, const char* api_function,
-        const char* path=NULL, size_t path_len=0U)
+        boost::optional<std::string&> e_msg=boost::optional<std::string&>())
     {
-        ::ssh::ssh_error error = ::ssh::detail::last_error(session);
+        // Failing libssh2_sftp_* functions can set an SSH error defined
+        // by the library or an SFTP error defined in the SFTP standard,
+        // in which case the SSH error will be LIBSSH2_ERROR_SFTP_PROTOCOL.
+        // This function checks which case it is and packages the error
+        // with the corresponding category.
 
-        if (error.error_code() == LIBSSH2_ERROR_SFTP_PROTOCOL)
+        boost::system::error_code error = ::ssh::detail::last_error_code(
+            session, e_msg);
+
+        if (error.value() == LIBSSH2_ERROR_SFTP_PROTOCOL)
         {
-            sftp_error derived_error = 
-                sftp_error(error, ::libssh2_sftp_last_error(sftp));
-            throw_error(
-                derived_error, current_function, source_file, source_line,
-                api_function, path, path_len);
+            error = boost::system::error_code(
+                ::libssh2_sftp_last_error(sftp), sftp_error_category());
         }
-        else
-        {
-            throw_error(
-                error, current_function, source_file, source_line, api_function,
-                path, path_len);
-        }
+
+        return error;
     }
+
 }
 
 }} // namespace ssh::sftp

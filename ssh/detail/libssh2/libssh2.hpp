@@ -49,8 +49,17 @@ namespace detail {
  * - The signature, including the return type, exactly matches the
  *   signature of the wrapped function, with three exceptions:
  *
- *   + it may take a session parameter that is not in the original in
- *     order to retrieve the last error from the session.
+ *   + it may include the following additonal parameters that are not
+ *     in the original signature:
+ *      - an `error_code` reference, to receive the details of any
+ *        error.
+ *      - an optional string reference, to receive the debug message
+ *        for an error.
+ *      - a session parameter in order to retrieve the last error
+ *        from the session.
+ *      - in the nested `sftp` namespace only, an SFTP channel
+ *        parameter in order to retrieve the last SFTP error
+ *        received from the server.
  *   + if the range of return values is reduced (see below) such that
  *     the remaining values simply indicate success, the return type
  *     may be changed to `void`.

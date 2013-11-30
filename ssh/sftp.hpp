@@ -38,8 +38,6 @@
 #define SSH_SFTP_HPP
 
 #include <ssh/detail/libssh2/sftp.hpp>
-#include <ssh/ssh_error.hpp> // last_error
-#include <ssh/sftp_error.hpp> // sftp_error, throw_last_error
 #include <ssh/session.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t, uintmax_t
@@ -48,6 +46,8 @@
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
 #include <boost/optional/optional.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/system/error_code.hpp> // errc
+#include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <algorithm> // min
@@ -61,17 +61,6 @@
 
 namespace ssh {
 namespace sftp {
-
-#define SSH_THROW_LAST_SFTP_ERROR(session, sftp_session, api_function) \
-    ::ssh::sftp::detail::throw_last_error( \
-        session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
-        api_function)
-
-#define SSH_THROW_LAST_SFTP_ERROR_WITH_PATH( \
-    session, sftp_session, api_function, path, path_len) \
-    ::ssh::sftp::detail::throw_last_error( \
-        session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
-        api_function, path, path_len)
 
 namespace detail {
 
@@ -337,16 +326,15 @@ inline file_attributes attributes(
 /**
  * Does a file exist at the given path.
  */
-inline bool exists(
-    sftp_channel channel, const boost::filesystem::path& file)
+inline bool exists(sftp_channel channel, const boost::filesystem::path& file)
 {
     try
     {
         attributes(channel, file, false);
     }
-    catch (const sftp_error& e)
+    catch (const boost::system::system_error& e)
     {
-        if (e.sftp_error_code() == LIBSSH2_FX_NO_SUCH_FILE)
+        if (e.code() == boost::system::errc::no_such_file_or_directory)
         {
             return false;
         }
@@ -496,11 +484,12 @@ BOOST_SCOPED_ENUM_END
  *     `prevent_overwrite` is guaranteed to be obeyed.  All other flags are
  *     suggestions that the server is free to disregard (most SFTP servers 
  *     disregard these flags).  If it does so and `destination` is already a
- *     path to a file, this function will throw an unspecified `sftp_error`.
+ *     path to a file, this function will throw an unspecified 
+ *     `boost::system::system_error`.
  *
- * @throws `sftp_error` if `destination` is already a path to a file before
- *         this function is called and either `prevent_overwrite` is
- *         specified as `overwrite_hint` or the server did not support the
+ * @throws `boost::system::system_error` if `destination` is already a path to
+ *         a file before this function is called and either `prevent_overwrite`
+ *         is specified as `overwrite_hint` or the server did not support the
  *         given hint.
  *
  * `atomic_overwrite` is the default value of `overwrite_hint` to give the
@@ -602,18 +591,19 @@ private:
         std::vector<char> longentry_buffer(1024, '\0');
         LIBSSH2_SFTP_ATTRIBUTES attrs = LIBSSH2_SFTP_ATTRIBUTES();
 
-        int rc = libssh2_sftp_readdir_ex(
-            m_handle.get(), &filename_buffer[0], filename_buffer.size(),
-            &longentry_buffer[0], longentry_buffer.size(), &attrs);
+        int rc = ::ssh::detail::libssh2::sftp::readdir_ex(
+            m_session.get(), m_channel.get(), m_handle.get(),
+            &filename_buffer[0], filename_buffer.size(), &longentry_buffer[0],
+            longentry_buffer.size(), &attrs);
 
         if (rc == 0) // end of files
+        {
             m_handle.reset();
-        else if (rc < 0)
-            SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
-                m_session.get(), m_channel.get(), "libssh2_sftp_readdir_ex",
-                m_directory.string().data(), m_directory.string().size());
+        }
         else
         {
+            assert(rc > 0);
+
             // copy attributes to member one we know we're overwriting the
             // last-retrieved file's properties
             m_attributes = attrs;
@@ -679,14 +669,10 @@ namespace detail {
                     channel.session().get(), channel.get().get(),
                     target_string.data(), target_string.size());
             }
-        }    
-        catch (const sftp_error& e)
+        }
+        catch (const boost::system::system_error& e)
         {
-            // Process errors by catching the exception, rather than
-            // intercepting the error code directly, so as not to
-            // duplicate the sftp_error processing logic.
-
-            if (e.sftp_error_code() == LIBSSH2_FX_NO_SUCH_FILE)
+            if (e.code() == boost::system::errc::no_such_file_or_directory)
             {
                 // Mirror the Boost.Filesystem API which doesn't treat this
                 // as an error.
@@ -782,13 +768,13 @@ namespace detail {
                 return path_status::non_directory;
             }
         }
-        catch (const sftp_error& e)
+        catch (const boost::system::system_error& e)
         {
             // Process errors by catching the exception, rather than
             // intercepting the error code directly, so as not to
-            // duplicate the sftp_error processing logic.
+            // duplicate the exception info processing.
 
-            if (e.sftp_error_code() == LIBSSH2_FX_NO_SUCH_FILE)
+            if (e.code() == boost::system::errc::no_such_file_or_directory)
             {
                 // Mirror the Boost.Filesystem API which doesn't treat
                 // this as an error.
@@ -812,7 +798,7 @@ namespace detail {
  *
  * @returns `true` if the file was removed and `false` if the file did not
  *          exist in the first place.
- * @throws `sftp_error` if `target` is a non-empty directory.
+ * @throws `boost::system::system_error` if `target` is a non-empty directory.
  *
  *
  * If the calling code already knows whether `target` is a directory, this
@@ -930,12 +916,16 @@ inline bool create_directory(
 
         return true;
     }
-    catch (const sftp_error&)
+    catch (const boost::system::system_error&)
     {
         // Might just be because it already exists.  Let's check that and if
         // ignore if that's the case.
         // Doing this test after avoids an extra trip to the server in the
         // common case.
+
+        // We don't test the exception's error code because OpenSSH just
+        // returns FX_FAILURE which could have many causes.  The only way
+        // to be sure the directory is already there is to check explicitly.
 
         switch (detail::check_status(channel, new_directory))
         {
@@ -953,9 +943,6 @@ inline bool create_directory(
         }
     }
 }
-
-#undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
-#undef SSH_THROW_LAST_SFTP_ERROR
 
 }} // namespace ssh::sftp
 

@@ -61,6 +61,7 @@
 #include <boost/thread/locks.hpp> // lock_guard
 #include <boost/thread/mutex.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+#include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp> // system_error, system_category
 
 #include <cassert> // assert
@@ -88,6 +89,8 @@ using boost::make_filter_iterator;
 using boost::make_shared;
 using boost::mutex;
 using boost::shared_ptr;
+namespace errc = boost::system::errc;
+using boost::system::error_code;
 using boost::system::system_category;
 using boost::system::system_error;
 
@@ -100,7 +103,6 @@ using ssh::sftp::ifstream;
 using ssh::sftp::ofstream;
 using ssh::sftp::overwrite_behaviour;
 using ssh::sftp::sftp_channel;
-using ssh::sftp::sftp_error;
 using ssh::sftp::sftp_file;
 
 using std::exception;
@@ -435,9 +437,12 @@ void rename_non_atomic_overwrite(
  */
 bool rename_retry_with_overwrite(
     authenticated_session& session, ISftpConsumer *pConsumer,
-    const sftp_error& previous_error, const string& from, const string& to)
+    const system_error& previous_error, const string& from, const string& to)
 {
-    if (previous_error.sftp_error_code() == LIBSSH2_FX_FILE_ALREADY_EXISTS)
+    assert(
+        previous_error.code() && "Previous attempt succeeded; why retry?");
+
+    if (previous_error.code() == errc::file_exists)
     {
         HRESULT hr = pConsumer->OnConfirmOverwrite(
             bstr_t(from).in(), bstr_t(to).in());
@@ -456,9 +461,9 @@ bool rename_retry_with_overwrite(
                 overwrite_behaviour::atomic_overwrite);
             return true;
         }
-        catch (const sftp_error& e)
+        catch (const system_error& e)
         {
-            if (e.sftp_error_code() == LIBSSH2_FX_OP_UNSUPPORTED)
+            if (e.code() == errc::operation_not_supported)
             {
                 rename_non_atomic_overwrite(session, from, to);
                 return true;
@@ -470,7 +475,7 @@ bool rename_retry_with_overwrite(
         }
 
     }
-    else if (previous_error.sftp_error_code() == LIBSSH2_FX_FAILURE)
+    else
     {
         // The failure is an unspecified one. This isn't the end of the world. 
         // SFTP servers < v5 (i.e. most of them) return this error code if the
@@ -481,6 +486,11 @@ bool rename_retry_with_overwrite(
         //
         // NOTE: this is not a perfect solution due to the possibility
         // for race conditions.
+
+        // We used to test for FX_FAILURE here, because that's what OpenSSH 
+        // returns, but changed it because the v3 standard (v5 handled above)
+        // doesn't promise any particular error code so we might as well
+        // treat them all this way.
 
         mutex::scoped_lock lock = session.aquire_lock();
 
@@ -504,15 +514,9 @@ bool rename_retry_with_overwrite(
             // RACE CONDITION: It might have been caused by an obstruction
             // which was then cleared by the time we did the existence check
             // above.  The result it just that we would fail when we could
-            // have succeeded.  Such an edge case that it doesn't mattter.
+            // have succeeded.  Such an edge case that it doesn't matter.
             throw previous_error;
         }
-    }
-    else
-    {
-        // Rethrow the last exception because we can't recover from it by
-        // retrying the rename operation another way
-        throw previous_error;
     }
 }
 
@@ -584,7 +588,7 @@ VARIANT_BOOL provider::rename(
         // Rename was successful without overwrite
         return VARIANT_FALSE;
     }
-    catch (const sftp_error& e)
+    catch (const system_error& e)
     {
         if (rename_retry_with_overwrite(
             *m_session, consumer.get(), e, from, to))

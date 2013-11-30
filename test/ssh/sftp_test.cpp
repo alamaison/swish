@@ -43,6 +43,7 @@
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm> // find
@@ -52,7 +53,6 @@ using ssh::session;
 using ssh::ssh_error;
 using ssh::sftp::file_attributes;
 using ssh::sftp::sftp_channel;
-using ssh::sftp::sftp_error;
 using ssh::sftp::sftp_file;
 using ssh::sftp::directory_iterator;
 using ssh::sftp::overwrite_behaviour;
@@ -60,6 +60,7 @@ using ssh::sftp::overwrite_behaviour;
 using boost::bind;
 using boost::filesystem::ofstream;
 using boost::filesystem::path;
+using boost::system::system_error;
 using boost::uintmax_t;
 
 using test::ssh::sandbox_fixture;
@@ -112,6 +113,14 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(sftp_tests, sftp_fixture)
 
+BOOST_AUTO_TEST_CASE( channel_creation_fail_exception )
+{
+    session s = test_session();
+
+    // Session not authenticated so SFTP not possible
+    BOOST_CHECK_THROW((sftp_channel(s)), system_error);
+}
+
 /**
  * List an empty directory.
  *
@@ -131,7 +140,7 @@ BOOST_AUTO_TEST_CASE( empty_dir )
 BOOST_AUTO_TEST_CASE( missing_dir )
 {
     sftp_channel c = channel();
-    BOOST_CHECK_THROW(directory_iterator(c, "/i/dont/exist"), ssh_error);
+    BOOST_CHECK_THROW(directory_iterator(c, "/i/dont/exist"), system_error);
 }
 
 /**
@@ -318,7 +327,7 @@ BOOST_AUTO_TEST_CASE( attributes_broken_link )
     BOOST_CHECK_EQUAL(attrs.type(), file_attributes::symbolic_link);
 
     BOOST_CHECK_THROW(
-        attributes(channel(), to_remote_path(link), true), sftp_error);
+        attributes(channel(), to_remote_path(link), true), system_error);
 }
 
 BOOST_AUTO_TEST_CASE( default_directory )
@@ -362,7 +371,7 @@ BOOST_AUTO_TEST_CASE( remove_non_empty_dir )
     path target = new_directory_in_sandbox();
     create_directory(target / "bob");
 
-    BOOST_CHECK_THROW(remove(channel(), to_remote_path(target)), sftp_error);
+    BOOST_CHECK_THROW(remove(channel(), to_remote_path(target)), system_error);
 }
 
 BOOST_AUTO_TEST_CASE( remove_link )
@@ -458,7 +467,7 @@ BOOST_AUTO_TEST_CASE( rename_file_obstacle_no_overwrite )
     BOOST_CHECK_THROW(
         rename(
             channel(), to_remote_path(test_file), to_remote_path(target),
-            overwrite_behaviour::prevent_overwrite), sftp_error);
+            overwrite_behaviour::prevent_overwrite), system_error);
     BOOST_CHECK(exists(test_file));
     BOOST_CHECK(exists(target));
 }
@@ -474,7 +483,7 @@ BOOST_AUTO_TEST_CASE( rename_file_obstacle_allow_overwrite )
     BOOST_CHECK_THROW(
         rename(
             channel(), to_remote_path(test_file), to_remote_path(target),
-            overwrite_behaviour::allow_overwrite), sftp_error);
+            overwrite_behaviour::allow_overwrite), system_error);
     BOOST_CHECK(exists(test_file));
     BOOST_CHECK(exists(target));
 }
@@ -490,7 +499,7 @@ BOOST_AUTO_TEST_CASE( rename_file_obstacle_atomic_overwrite )
     BOOST_CHECK_THROW(
         rename(
         channel(), to_remote_path(test_file), to_remote_path(target),
-        overwrite_behaviour::atomic_overwrite), sftp_error);
+        overwrite_behaviour::atomic_overwrite), system_error);
     BOOST_CHECK(exists(test_file));
     BOOST_CHECK(exists(target));
 }
@@ -533,7 +542,7 @@ BOOST_AUTO_TEST_CASE( new_directory_already_there_wrong_type )
 
     BOOST_CHECK_THROW(
         create_directory(channel(), to_remote_path(target)),
-        sftp_error);
+        system_error);
     BOOST_CHECK(exists(target));
     BOOST_CHECK(!is_directory(target));
 }

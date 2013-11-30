@@ -38,7 +38,6 @@
 #define SSH_STREAM_HPP
 
 #include <ssh/detail/libssh2/sftp.hpp>
-#include <ssh/sftp_error.hpp> // throw_last_error
 #include <ssh/session.hpp>
 #include <ssh/sftp.hpp>
 
@@ -56,17 +55,6 @@
 
 namespace ssh {
 namespace sftp {
-
-#define SSH_THROW_LAST_SFTP_ERROR(session, sftp_session, api_function) \
-    ::ssh::sftp::detail::throw_last_error( \
-        session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
-        api_function)
-
-#define SSH_THROW_LAST_SFTP_ERROR_WITH_PATH( \
-    session, sftp_session, api_function, path, path_len) \
-    ::ssh::sftp::detail::throw_last_error( \
-        session,sftp_session,BOOST_CURRENT_FUNCTION,__FILE__,__LINE__, \
-        api_function, path, path_len)
 
 /**
  * Flags defining how to open a file.
@@ -364,15 +352,16 @@ namespace detail {
             {
                 LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
 
-                int rc = libssh2_sftp_fstat_ex(
-                    handle.get(), &attributes, LIBSSH2_SFTP_STAT);
-                if (rc != 0)
+                try
                 {
-                    std::string open_path_string = open_path.string();
-                    SSH_THROW_LAST_SFTP_ERROR_WITH_PATH(
+                    ::ssh::detail::libssh2::sftp::fstat(
                         channel.session().get(), channel.get().get(),
-                        "libssh2_sftp_fstat_ex", open_path_string.data(),
-                        open_path_string.length());
+                        handle.get(), &attributes, LIBSSH2_SFTP_STAT);
+                }
+                catch (boost::exception& e)
+                {
+                    e << boost::errinfo_file_name(open_path.file_string());
+                    throw;
                 }
 
                 new_position = attributes.filesize + off;
@@ -720,9 +709,6 @@ private:
  * File always opened in binary mode.  SFTP does not have a text mode.
  */
 typedef detail::sftp_stream<sftp_io_device> fstream;
-
-#undef SSH_THROW_LAST_SFTP_ERROR_WITH_PATH
-#undef SSH_THROW_LAST_SFTP_ERROR
 
 }} // namespace ssh::sftp
 

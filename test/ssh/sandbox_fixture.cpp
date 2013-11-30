@@ -68,7 +68,6 @@ namespace { // private
     {
         shared_ptr<char> name(
             _tempnam(NULL, SANDBOX_NAME.c_str()), free);
-        BOOST_REQUIRE(name);
         
         return path(name.get());
     }
