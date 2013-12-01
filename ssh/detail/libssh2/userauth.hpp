@@ -37,9 +37,11 @@
 #ifndef SSH_DETAIL_LIBSSH2_USERAUTH_HPP
 #define SSH_DETAIL_LIBSSH2_USERAUTH_HPP
 
-#include <ssh/ssh_error.hpp> // last_error
+#include <ssh/ssh_error.hpp> // last_error_code, SSH_DETAIL_THROW_API_ERROR_CODE
 
 #include <boost/exception/info.hpp> // errinfo_api_function
+#include <boost/optional/optional.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <libssh2.h> // LIBSSH2_SESSION, libssh2_userauth_*
@@ -54,29 +56,44 @@ namespace libssh2 {
 namespace userauth {
 
 /**
- * Thin exception wrapper around libssh2_userauth_password_ex.
- *
- * The incorrect password failure is not reported as an exception
- * because it is expected.
+ * Error-fetching wrapper around libssh2_userauth_password_ex.
  */
-inline int password(
+inline void password(
     LIBSSH2_SESSION* session, const char* username,
     size_t username_len, const char* password, size_t password_len,
-    LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)))
+    LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)),
+    boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
 {
     int rc = ::libssh2_userauth_password_ex(
         session, username, username_len, password, password_len,
         passwd_change_cb);
 
-    if (rc != 0 && rc != LIBSSH2_ERROR_AUTHENTICATION_FAILED)
+    if (rc != 0)
     {
-        BOOST_THROW_EXCEPTION(
-            last_error(session) <<
-            boost::errinfo_api_function("libssh2_userauth_password_ex"));
+        ec = ssh::detail::last_error_code(session, e_msg);
     }
-    else
+}
+
+/**
+ * Exception wrapper around libssh2_userauth_password_ex.
+ */
+inline void password(
+    LIBSSH2_SESSION* session, const char* username,
+    size_t username_len, const char* password_string, size_t password_len,
+    LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)))
+{
+    boost::system::error_code ec;
+    std::string message;
+    
+    password(
+        session, username, username_len, password_string, password_len,
+        passwd_change_cb, ec, message);
+
+    if (ec)
     {
-        return rc;
+        SSH_DETAIL_THROW_API_ERROR_CODE(
+            ec, message, "libssh2_userauth_password_ex");
     }
 }
 

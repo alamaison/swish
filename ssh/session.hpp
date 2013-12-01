@@ -57,6 +57,8 @@
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/system/error_code.hpp> // error_code, errc
+#include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
@@ -484,7 +486,7 @@ public:
      * @returns
      *     `true` if authentication successful, `false` if not.
      *
-     * @throws ssh_error
+     * @throws `boost::system::system_error`
      *     if unexpected failure while trying to authenticate.
      *
      * @todo  Handle password change callback.
@@ -492,9 +494,27 @@ public:
     bool authenticate_by_password(
         const std::string& username, const std::string& password)
     {
-        return detail::libssh2::userauth::password(
+        boost::system::error_code ec;
+        std::string message;
+
+        detail::libssh2::userauth::password(
             m_session.get(), username.data(), username.size(), password.data(),
-            password.size(), NULL) == 0;
+            password.size(), NULL, ec, message);
+
+        if (!ec)
+        {
+            return true;
+        }
+        else if (ec == boost::system::errc::permission_denied)
+        {
+            // The incorrect password failure is not reported as an exception
+            // because it is not exceptional.
+            return false;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(boost::system::system_error(ec, message));
+        }
     }
 
     /**

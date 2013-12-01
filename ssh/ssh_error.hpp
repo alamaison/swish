@@ -120,6 +120,8 @@ namespace detail {
 
     class _ssh_error_category : public boost::system::error_category
     {
+        typedef boost::system::error_category super;
+
     public:
         const char* name() const
         {
@@ -129,6 +131,19 @@ namespace detail {
         std::string message(int code) const
         {
             return ssh_error_code_to_string(code);
+        }
+
+        virtual boost::system::error_condition default_error_condition(
+            int code) const
+        {
+            switch (code)
+            {
+            case LIBSSH2_ERROR_AUTHENTICATION_FAILED:
+                return boost::system::errc::permission_denied;
+
+            default:
+                return this->super::default_error_condition(code);
+            }
         }
 
     private:
