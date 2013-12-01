@@ -56,6 +56,50 @@ namespace libssh2 {
 namespace userauth {
 
 /**
+ * Error-fetching wrapper around libssh2_userauth_list.
+ *
+ * May return NULL if authentication succeeded with 'none' method.  In this
+ * case 'ec == false'.
+ */
+inline const char* list(
+    LIBSSH2_SESSION *session, const char *username, unsigned int username_len,
+    boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+{
+    const char* method_list = ::libssh2_userauth_list(
+        session, username, username_len);
+
+    if (!method_list)
+    {
+        ec = ssh::detail::last_error_code(session, e_msg);
+    }
+
+    return method_list;
+}
+
+/**
+ * Exception wrapper around libssh2_userauth_list.
+ *
+ * Returns NULL if authentication succeeded with 'none' method.
+ */
+inline const char* list(
+    LIBSSH2_SESSION *session, const char *username, unsigned int username_len)
+{
+    boost::system::error_code ec;
+    std::string message;
+
+    const char* method_list = list(
+        session, username, username_len, ec, message);
+
+    if (ec)
+    {
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message, "libssh2_userauth_list");
+    }
+
+    return method_list;
+}
+
+/**
  * Error-fetching wrapper around libssh2_userauth_password_ex.
  */
 inline void password(

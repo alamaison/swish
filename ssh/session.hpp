@@ -439,8 +439,11 @@ public:
     std::vector<std::string> authentication_methods(
         const std::string& username)
     {
-        const char* method_list = ::libssh2_userauth_list(
-            m_session.get(), username.data(), username.size());
+        boost::system::error_code ec;
+        std::string message;
+
+        const char* method_list = detail::libssh2::userauth::list(
+            m_session.get(), username.data(), username.size(), ec, message);
 
         if (!method_list)
         {
@@ -449,24 +452,23 @@ public:
             // authentication was needed. The error code disambiguates this
             // from a true error.
 
-            ssh_error error = detail::last_error(m_session);
-            if (error.error_code() == LIBSSH2_ERROR_NONE)
+            if (!ec)
             {
                 assert(authenticated());
                 return std::vector<std::string>();
             }
             else
             {
-                BOOST_THROW_EXCEPTION(
-                    error <<
-                    boost::errinfo_api_function("libssh2_userauth_list"));
+                BOOST_THROW_EXCEPTION(boost::system::system_error(ec, message));
             }
         }
+        else
+        {
+            std::vector<std::string> methods;
+            boost::split(methods, method_list, boost::is_any_of(","));
 
-        std::vector<std::string> methods;
-        boost::split(methods, method_list, boost::is_any_of(","));
-
-        return methods;
+            return methods;
+        }
     }
 
 
