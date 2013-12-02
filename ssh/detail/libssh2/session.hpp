@@ -37,9 +37,8 @@
 #ifndef SSH_DETAIL_LIBSSH2_SESSION_HPP
 #define SSH_DETAIL_LIBSSH2_SESSION_HPP
 
-#include <ssh/ssh_error.hpp> // last_error
+#include <ssh/ssh_error.hpp> // last_error_code, SSH_DETAIL_THROW_API_ERROR_CODE
 
-#include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <exception> // bad_alloc
@@ -69,31 +68,67 @@ inline LIBSSH2_SESSION* init()
 }
 
 /**
- * Thin exception wrapper around libssh2_session_startup.
+ * Error-fetching wrapper around libssh2_session_startup.
  */
-inline void startup(LIBSSH2_SESSION* session, int socket)
+inline void startup(
+LIBSSH2_SESSION* session, int socket, boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
 {
-    int rc = libssh2_session_startup(session, socket);
+    int rc = ::libssh2_session_startup(session, socket);
+
     if (rc != 0)
     {
-        BOOST_THROW_EXCEPTION(
-            last_error(session) <<
-            boost::errinfo_api_function("libssh2_session_startup"));
+        ec = ssh::detail::last_error_code(session, e_msg);
     }
 }
 
 /**
- * Thin exception wrapper around libssh2_session_disconnect.
+ * Exception wrapper around libssh2_session_startup.
+ */
+inline void startup(LIBSSH2_SESSION* session, int socket)
+{
+    boost::system::error_code ec;
+    std::string message;
+
+    startup(session, socket, ec, message);
+
+    if (ec)
+    {
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message, "libssh2_session_startup");
+    }
+}
+
+/**
+ * Error-fetching wrapper around libssh2_session_disconnect.
+ */
+inline void disconnect(
+    LIBSSH2_SESSION* session, const char* description,
+    boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+{
+    int rc = ::libssh2_session_disconnect(session, description);
+
+    if (rc != 0)
+    {
+        ec = ssh::detail::last_error_code(session, e_msg);
+    }
+}
+
+/**
+ * Exception wrapper around libssh2_session_disconnect.
  */
 inline void disconnect(
     LIBSSH2_SESSION* session, const char* description)
 {
-    int rc = libssh2_session_disconnect(session, description);
-    if (rc != 0)
+    boost::system::error_code ec;
+    std::string message;
+
+    disconnect(session, description, ec, message);
+
+    if (ec)
     {
-        BOOST_THROW_EXCEPTION(
-            last_error(session) <<
-            boost::errinfo_api_function("libssh2_session_disconnect"));
+        SSH_DETAIL_THROW_API_ERROR_CODE(
+            ec, message, "libssh2_session_disconnect");
     }
 }
 
