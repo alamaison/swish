@@ -64,7 +64,7 @@ public:
     void authenticate(const std::string& user_name)
     {
         ::ssh::detail::libssh2::agent::userauth(
-            m_agent.get(), m_session.get(), user_name, m_identity);
+            m_agent.get(), m_session.get(), user_name.c_str(), m_identity);
     }
         
 private:

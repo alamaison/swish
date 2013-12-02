@@ -142,21 +142,45 @@ inline void password(
 }
 
 /**
- * Thin exception wrapper around libssh2_userauth_publickey_fromfile_ex.
+ * Error-fetching wrapper around libssh2_userauth_publickey_fromfile_ex.
+ */
+inline void public_key_from_file(
+    LIBSSH2_SESSION* session, const char* username,
+    size_t username_len, const char* public_key_path,
+    const char* private_key_path, const char* passphrase,
+    boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+{
+    int rc = libssh2_userauth_publickey_fromfile_ex(
+        session, username, username_len, public_key_path, private_key_path,
+        passphrase);
+
+    if (rc != 0)
+    {
+        ec = ssh::detail::last_error_code(session, e_msg);
+    }
+}
+
+/**
+ * Exception wrapper around libssh2_userauth_publickey_fromfile_ex.
  */
 inline void public_key_from_file(
     LIBSSH2_SESSION* session, const char* username,
     size_t username_len, const char* public_key_path,
     const char* private_key_path, const char* passphrase)
 {
-    int rc = libssh2_userauth_publickey_fromfile_ex(
+    boost::system::error_code ec;
+    std::string message;
+
+    public_key_from_file(
         session, username, username_len, public_key_path, private_key_path,
-        passphrase);
-    if (rc != 0)
-        BOOST_THROW_EXCEPTION(
-            last_error(session) <<
-            boost::errinfo_api_function(
-                "libssh2_userauth_publickey_fromfile_ex"));
+        passphrase, ec, message);
+
+    if (ec)
+    {
+        SSH_DETAIL_THROW_API_ERROR_CODE(
+            ec, message, "libssh2_userauth_publickey_fromfile_ex");
+    }
 }
 
 }}}} // namespace ssh::detail::libssh2::userauth

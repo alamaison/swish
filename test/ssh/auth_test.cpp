@@ -41,6 +41,7 @@
 #include <boost/concept_check.hpp> // BOOST_CONCEPT_ASSERT
 #include <boost/range/concepts.hpp> // RandomAccessRangeConcept
 #include <boost/range/size.hpp>
+#include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
@@ -49,8 +50,8 @@
 
 using boost::RandomAccessRangeConcept;
 using boost::size;
+using boost::system::system_error;
 
-using ssh::ssh_error;
 using ssh::session;
 using ssh::agent::agent_identities;
 using ssh::agent::identity;
@@ -252,7 +253,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
             user(), wrong_public_key_path(), private_key_path(), ""),
-        ssh_error);
+        system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -266,7 +267,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
             user(), public_key_path(), wrong_private_key_path(), ""),
-        ssh_error);
+        system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -281,7 +282,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
             user(), wrong_public_key_path(), wrong_private_key_path(), ""),
-        ssh_error);
+        system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -294,7 +295,7 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
-            user(), private_key_path(), private_key_path(), ""), ssh_error);
+            user(), private_key_path(), private_key_path(), ""), system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -307,7 +308,7 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
-            user(), public_key_path(), public_key_path(), ""), ssh_error);
+            user(), public_key_path(), public_key_path(), ""), system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -344,12 +345,12 @@ BOOST_AUTO_TEST_CASE( agent )
                 BOOST_CHECK(s.authenticated());
                 return;
             }
-            catch(const exception&) {}
+            catch(const system_error&) {}
 
             BOOST_CHECK(!s.authenticated());
         }
     }
-    catch (exception&) { /* agent not running - failure ok */ }
+    catch (system_error&) { /* agent not running - failure ok */ }
 }
 
 /**
@@ -373,7 +374,7 @@ BOOST_AUTO_TEST_CASE( agent_copy )
         {
         }
     }
-    catch (exception&) { /* agent not running - failure ok */ }
+    catch (system_error&) { /* agent not running - failure ok */ }
 }
 
 /**
@@ -397,7 +398,7 @@ BOOST_AUTO_TEST_CASE( agent_idempotence )
         {
         }
     } 
-    catch (exception&) { /* agent not running - failure ok */ }
+    catch (system_error&) { /* agent not running - failure ok */ }
 }
 
 BOOST_AUTO_TEST_SUITE_END();
