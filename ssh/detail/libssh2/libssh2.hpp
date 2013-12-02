@@ -46,39 +46,29 @@ namespace detail {
  * This wrapper functions in this namespace adhere to the following
  * restrictions:
  *
- * - The signature, including the return type, exactly matches the
- *   signature of the wrapped function, with three exceptions:
- *
- *   + it may include the following additonal parameters that are not
- *     in the original signature:
- *      - an `error_code` reference, to receive the details of any
- *        error.
- *      - an optional string reference, to receive the debug message
- *        for an error.
- *      - a session parameter in order to retrieve the last error
- *        from the session.
- *      - in the nested `sftp` namespace only, an SFTP channel
- *        parameter in order to retrieve the last SFTP error
- *        received from the server.
- *   + if the range of return values is reduced (see below) such that
- *     the remaining values simply indicate success, the return type
- *     may be changed to `void`.
- *   + if the range of return values is reduced (see below) such that
- *     the remaining values simply indicate success, an out-param may
- *     be changed to be returned directly.
- *
  * - The behaviour is identical to that of the wrapped function except
  *   that the range of possible return values (via return or
  *   out-parameter) may be reduced by substituting them for
- *   exceptions.
+ *   exceptions.  Additionally, an error code and message out-parameter
+ *   may be set to have a value.
  *
- * - As a consequence of the previous restriction, any resources that
+ * - The signature, including the return type, exactly matches the
+ *   signature of the wrapped function, with three exceptions:
+ *
+ *   + it may include additional parameters (such as a session pointer)
+ *     that are not in the original signature in order to fetch or return
+ *     error details.
+ *   + if the range of return values is reduced (see above) such that
+ *     the remaining values simply indicate success, the return type
+ *     may be changed to `void`.
+ *
+ * - As a consequence of the previous restrictions, any resources that
  *   need freeing when returned by the wrapped function, also need
  *   freeing after calling the wrapped version.
  *
  * - No references to the arguments are stored once the wrapper
  *   terminates, whether that termination is by return or by
- *   exception.  In particular, the exception object thrown contains
+ *   exception.  In particular, the exceptions thrown contain
  *   no shared data.
  *
  * - It is permitted to call these functions from within code that is
@@ -95,7 +85,7 @@ namespace detail {
  *
  * The main reason for keeping these wrappers here is to make sure any
  * locking we introduce in the future for thread-safety spans both the
- * function call and the code to retieve any error.  This is necessary
+ * function call and the code to retrieve any error.  This is necessary
  * as otherwise the exception thrown may be from an error caused by
  * another thread's call to a function with the same session (only the
  * details of one error are stored per session).
