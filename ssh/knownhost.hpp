@@ -39,16 +39,15 @@
 
 #include <ssh/detail/libssh2/knownhost.hpp> // ssh::detail::libssh2::knownhost
 #include <ssh/session.hpp> // allocate_session
-#include <ssh/ssh_error.hpp> // last_error
 #include <ssh/host_key.hpp>
 
-#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo
 #include <boost/filesystem.hpp> // path
 #include <boost/filesystem/fstream.hpp> // path-enabled fstream
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
 #include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/system/error_code.hpp> // errc
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #undef min
@@ -282,20 +281,22 @@ public:
     {
         // get minimum required buffer size (doesn't include null-term)
         size_t required_len = 0;
-        int rc = libssh2_knownhost_writeline(
-            m_hosts.get(), m_pos, NULL, 0, &required_len, type); 
-        assert(rc == LIBSSH2_ERROR_BUFFER_TOO_SMALL);
+        boost::system::error_code ec;
+
+        ::ssh::detail::libssh2::knownhost::writeline(
+            m_session.get(), m_hosts.get(), m_pos, NULL, 0, &required_len,
+            type, ec); 
+
+        assert(ec == boost::system::errc::no_buffer_space);
         required_len++; // returned val doesn't include NULL-terminator
 
-        // now repeat but with a properly allocated buffer
+        // now repeat but with a properly allocated buffer and no ec so
+        // errors cause exception
         std::vector<char> buf(required_len);
-        rc = libssh2_knownhost_writeline(
-            m_hosts.get(), m_pos, &buf[0], buf.size(), &required_len, type);
+        ::ssh::detail::libssh2::knownhost::writeline(
+            m_session.get(), m_hosts.get(), m_pos, &buf[0], buf.size(),
+            &required_len, type);
         assert(required_len == buf.size() - 1);
-        if (rc != 0)
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(m_session) <<
-                boost::errinfo_api_function("libssh2_knownhost_writeline"));
 
         // Return line excluding '\n' and NULL-terminator
         return std::string(

@@ -141,6 +141,9 @@ namespace detail {
             case LIBSSH2_ERROR_AUTHENTICATION_FAILED:
                 return boost::system::errc::permission_denied;
 
+            case LIBSSH2_ERROR_BUFFER_TOO_SMALL:
+                return boost::system::errc::no_buffer_space;
+
             default:
                 return this->super::default_error_condition(code);
             }

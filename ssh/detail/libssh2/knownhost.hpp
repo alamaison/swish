@@ -123,6 +123,46 @@ inline void readline(
 }
 
 /**
+ * Error-fetching wrapper around libssh2_knownhost_writeline.
+ */
+inline void writeline(
+    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+    libssh2_knownhost* host, char* buffer, size_t buffer_length,
+    size_t* written_length_out, int type, boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+{
+    int rc = ::libssh2_knownhost_writeline(
+        hosts, host, buffer, buffer_length, written_length_out, type);
+
+    if (rc < 0)
+    {
+        ec = ssh::detail::last_error_code(session, e_msg);
+    }
+}
+
+/**
+ * Exception wrapper around libssh2_knownhost_writeline.
+ */
+inline void writeline(
+    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+    libssh2_knownhost* host, char* buffer, size_t buffer_length,
+    size_t* written_length_out, int type)
+{
+    boost::system::error_code ec;
+    std::string message;
+
+    writeline(
+        session, hosts, host, buffer, buffer_length, written_length_out, type,
+        ec, message);
+
+    if (ec)
+    {
+        SSH_DETAIL_THROW_API_ERROR_CODE(
+            ec, message, "libssh2_knownhost_writeline");
+    }
+}
+
+/**
  * Error-fetching wrapper around libssh2_knownhost_get.
  *
  * @returns 1 if finished.  The return code has no meaning if `ec == false`.
