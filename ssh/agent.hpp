@@ -38,7 +38,6 @@
 #define SSH_AGENT_HPP
 
 #include <ssh/detail/libssh2/agent.hpp> // ssh::detail::libssh2::agent
-#include <ssh/ssh_error.hpp> // last_error
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/shared_ptr.hpp>
@@ -124,7 +123,7 @@ private:
                     "Can't increment past the end of a collection"));
 
         bool no_more_identities = ::ssh::detail::libssh2::agent::get_identity(
-            m_agent.get(), m_session.get(), &m_pos, m_pos);
+            m_agent.get(), m_session.get(), &m_pos, m_pos) == 1;
 
         if (no_more_identities)
         {

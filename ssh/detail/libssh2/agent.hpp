@@ -122,6 +122,9 @@ inline void connect(LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session)
 
 /**
  * Error-fetching wrapper around libssh2_agent_get_identity.
+ *
+ * Returns 1 when reached end of keys.  Return value has no meaning when
+ * `ec == false`
  */
 inline int get_identity(
     LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
@@ -140,6 +143,8 @@ inline int get_identity(
 
 /**
  * Exception wrapper around libssh2_agent_get_identity.
+ *
+ * Returns 1 when reached end of keys.
  */
 inline int get_identity(
     LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
