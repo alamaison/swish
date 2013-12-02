@@ -41,13 +41,10 @@
 #include <ssh/detail/libssh2/session.hpp> // ssh::detail::libssh2::session
 #include <ssh/detail/libssh2/userauth.hpp> // ssh::detail::libssh2::userauth
 #include <ssh/host_key.hpp>
-#include <ssh/ssh_error.hpp>
 
 #include <boost/algorithm/string/classification.hpp> // is_any_of
 #include <boost/algorithm/string/split.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
-#include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/exception_ptr.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
@@ -190,11 +187,14 @@ namespace detail {
             boost::shared_ptr<LIBSSH2_SESSION> session,
             const std::string username)
         {
-            int rc = ::libssh2_userauth_keyboard_interactive_ex(
+            boost::system::error_code ec;
+            std::string message;
+
+            ::ssh::detail::libssh2::userauth::keyboard_interactive_ex(
                 session.get(), username.data(), username.size(),
                 &dethunker<ChallengeResponder>);
 
-            return translate_status(session, rc);
+            return translate_status(session, ec, message);
         }
 
         void operator()(
@@ -249,11 +249,11 @@ namespace detail {
          *    c) before needing to call the responder.
          */
         bool translate_status(
-            boost::shared_ptr<LIBSSH2_SESSION> session, int rc)
+            boost::shared_ptr<LIBSSH2_SESSION> session,
+            const boost::system::error_code& ec, const std::string& message)
         {
-            switch (rc)
+            if (!ec)
             {
-            case 0:
                 // Situation (1) above.  Merge all three situations and just
                 // report the successful authentication.  Any exception thrown in the
                 // responder is ignored.
@@ -271,8 +271,9 @@ namespace detail {
                 //      responding with zero replies might work ... unless the server
                 //      sent zero prompts.
                 return true;
-
-            case LIBSSH2_ERROR_AUTHENTICATION_FAILED:
+            }
+            else if (ec == boost::system::errc::permission_denied)
+            {
                 // Situation (2) above. 
                 // a) is a non-error failure.  In other words, the kind of
                 // failure that wouldn't be reported to the user with an error
@@ -285,8 +286,7 @@ namespace detail {
                 // was called so we have to wrap the given responder to record
                 // that information. For b) the most relevant exception is the
                 // one thrown by the wrapped responder which is also by this
-                // class. We just rethrow that, rather than making a new
-                // exception with code LIBSSH2_ERROR_AUTHENTICATION_FAILED.
+                // class.
 
                 if (!m_called)
                 {
@@ -294,9 +294,7 @@ namespace detail {
                     assert(!m_exception);
 
                     BOOST_THROW_EXCEPTION(
-                        last_error(session) <<
-                        boost::errinfo_api_function(
-                            "libssh2_userauth_keyboard_interactive_ex"));
+                        boost::system::system_error(ec, message));
                 }
                 else if (m_exception)
                 {
@@ -309,13 +307,11 @@ namespace detail {
                     assert(m_called);
                     return false;
                 }
-
-            default:
+            }
+            else
+            {
                 // Situation (3) above
-                BOOST_THROW_EXCEPTION(
-                    last_error(session) <<
-                    boost::errinfo_api_function(
-                        "libssh2_userauth_keyboard_interactive_ex"));
+                BOOST_THROW_EXCEPTION(boost::system::system_error(ec, message));
             }
 
             // If the user cancels the operation, our callback should throw an
@@ -548,7 +544,7 @@ public:
      *     `true` if authentication successful, `false` if the server positively
      *      rejected the responses produced by the `responder` callback.
      *
-     * @throws ssh_error
+     * @throws `boost::system::system_error`
      *     if unexpected failure while trying to authenticate or if the server
      *     positively rejects authentication without even calling the
      *     `responder`.

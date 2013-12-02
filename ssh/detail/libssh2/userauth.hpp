@@ -142,6 +142,44 @@ inline void password(
 }
 
 /**
+ * Error-fetching wrapper around libssh2_userauth_keyboard_interactive_ex.
+ */
+inline void keyboard_interactive_ex(
+    LIBSSH2_SESSION* session, const char* username, unsigned int username_len,
+    LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC((*response_callback)),
+    boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+{
+    int rc = ::libssh2_userauth_keyboard_interactive_ex(
+        session, username, username_len, response_callback);
+
+    if (rc != 0)
+    {
+        ec = ssh::detail::last_error_code(session, e_msg);
+    }
+}
+
+/**
+ * Exception wrapper around libssh2_userauth_keyboard_interactive_ex.
+ */
+inline void keyboard_interactive_ex(
+    LIBSSH2_SESSION* session, const char* username, unsigned int username_len,
+    LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC((*response_callback)))
+{
+    boost::system::error_code ec;
+    std::string message;
+
+    keyboard_interactive_ex(
+        session, username, username_len, response_callback, ec, message);
+
+    if (ec)
+    {
+        SSH_DETAIL_THROW_API_ERROR_CODE(
+            ec, message, "libssh2_userauth_keyboard_interactive_ex");
+    }
+}
+
+/**
  * Error-fetching wrapper around libssh2_userauth_publickey_fromfile_ex.
  */
 inline void public_key_from_file(

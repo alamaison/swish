@@ -53,6 +53,8 @@
 #include <boost/function.hpp>
 #include <boost/move/move.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/system/error_code.hpp> // errc
+#include <boost/system/system_error.hpp>
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -76,7 +78,6 @@ using ssh::knownhost::find_result;
 using ssh::knownhost::openssh_knownhost_collection;
 using ssh::session;
 using ssh::sftp::sftp_channel;
-using ssh::ssh_error;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -89,6 +90,8 @@ using boost::function;
 using boost::move;
 using boost::mutex;
 using boost::optional;
+namespace errc = boost::system::errc;
+using boost::system::system_error;
 
 using std::exception;
 using std::logic_error;
@@ -271,7 +274,7 @@ namespace {
  *     sense to not give up completely: i.e. if the server positively rejects
  *     authentication without even calling the responder.
  *
- * @throws `ssh_error`
+ * @throws `boost::system::system_error`
  *     if unexpected SSH-related failure while trying to authenticate or 
  * @throws `std::exception`
  *     if authentication fails for an unexpected reason, in other words,
@@ -291,9 +294,9 @@ BOOST_SCOPED_ENUM(authentication_result) keyboard_interactive_authentication(
         while (!session.get_session().authenticate_interactively(
             utf8_username, consumer_responder(consumer))) {}
     }
-    catch (const ssh_error& e)
+    catch (const system_error& e)
     {
-        if (e.error_code() == LIBSSH2_ERROR_AUTHENTICATION_FAILED)
+        if (e.code() == errc::permission_denied)
         {
             // Authentication was positively rejected by the server but not
             // because of anything our responder did (which would have simply
