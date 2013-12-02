@@ -1,7 +1,7 @@
 /**
     @file
 
-    SFTP exceptions.
+    SFTP error reporting.
 
     @if license
 
@@ -37,7 +37,7 @@
 #ifndef SSH_SFTP_ERROR_HPP
 #define SSH_SFTP_ERROR_HPP
 
-#include <ssh/ssh_error.hpp> // last_error, ssh_error
+#include <ssh/ssh_error.hpp> // last_error_code
 
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo_api_function

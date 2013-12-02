@@ -39,6 +39,8 @@
 #include <ssh/host_key.hpp> // test subject
 #include <ssh/session.hpp> // session
 
+#include <boost/system/error_code.hpp>
+#include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -49,6 +51,9 @@ using ssh::host_key::host_key;
 using ssh::session;
 
 using test::ssh::session_fixture;
+
+using boost::system::error_code;
+using boost::system::system_error;
 
 using std::string;
 
@@ -74,9 +79,13 @@ namespace {
         int rc = libssh2_base64_decode(
             session.get(), &data, &data_len, input.data(), input.size());
         if (rc)
-            BOOST_THROW_EXCEPTION(
-                ssh::detail::last_error(session) <<
-                boost::errinfo_api_function("libssh2_base64_decode"));
+        {
+            string message;
+            error_code ec = ssh::detail::last_error_code(
+                session.get(), message);
+
+            BOOST_THROW_EXCEPTION(system_error(ec, message));
+        }
 
         string out(data, data_len);
         free(data);

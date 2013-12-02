@@ -50,7 +50,6 @@
 #include <string>
 
 using ssh::session;
-using ssh::ssh_error;
 using ssh::sftp::file_attributes;
 using ssh::sftp::sftp_channel;
 using ssh::sftp::sftp_file;

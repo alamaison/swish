@@ -1,7 +1,7 @@
 /**
     @file
 
-    SSH exception.
+    SSH error reporting.
 
     @if license
 
@@ -37,21 +37,19 @@
 #ifndef SSH_SSH_ERROR_HPP
 #define SSH_SSH_ERROR_HPP
 
-#include <boost/exception/exception.hpp> // boost::exception, enable_error_info
+#include <boost/exception/exception.hpp> // enable_error_info
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
 #include <boost/exception/info.hpp> // errinfo_api_function
-#include <boost/throw_exception.hpp> // throw_exception
+#include <boost/throw_exception.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
-#include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 
-#include <exception> // std::exception
 #include <cassert> // assert
 #include <string>
 
-#include <libssh2.h>
+#include <libssh2.h> // libssh2_session_last_error, libssh2_session_last_errno
 
 namespace ssh {
 
@@ -165,54 +163,6 @@ inline boost::system::error_category& ssh_error_category()
     return instance;
 }
 
-/**
- * Exception type thrown when libssh2 returns an error.
- */
-class ssh_error :
-    public virtual boost::exception, public virtual std::exception
-{
-public:
-
-    ssh_error(const char* message, int error_code)
-        : boost::exception(), std::exception(),
-          m_message(message), m_error_code(error_code)
-    {
-    }
-
-    ssh_error(const char* message, int len, int error_code)
-        : boost::exception(), std::exception(message, len),
-          m_message(message, len), m_error_code(error_code)
-    {
-    }
-
-    virtual const char* what() const
-    {
-        try
-        {
-            return m_message.c_str();
-        }
-        catch (std::exception&)
-        {
-            return "Unknown SSH error";
-        }
-    }
-
-    int error_code() const
-    {
-        return m_error_code;
-    }
-
-protected:
-    std::string& message()
-    {
-        return m_message;
-    }
-
-private:
-    std::string m_message;
-    int m_error_code;
-};
-
 namespace detail {
 
     /**
@@ -276,26 +226,6 @@ namespace detail {
             boost::enable_error_info(boost::system::system_error(ec, message)),
             current_function, source_file, source_line, api_function, path,
             path_len);
-    }
-
-    /**
-     * Last error encountered by the session as an exception.
-     */
-    inline ssh_error last_error(LIBSSH2_SESSION* session)
-    {
-        char* message_buf = NULL; // read-only reference
-        int message_len = 0; // len not including NULL-term
-        int err = libssh2_session_last_error(
-            session, &message_buf, &message_len, false);
-
-        assert(err && "throwing success!");
-
-        return ssh_error(message_buf, message_len, err);
-    }
-
-    inline ssh_error last_error(boost::shared_ptr<LIBSSH2_SESSION> session)
-    {
-        return last_error(session.get());
     }
 
 } // namespace detail
