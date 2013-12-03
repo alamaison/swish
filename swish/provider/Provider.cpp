@@ -52,7 +52,7 @@
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
 #include <comet/stream.h> // adapt_stream_pointer
 
-#include <ssh/sftp.hpp> // directory_iterator
+#include <ssh/filesystem.hpp> // directory_iterator
 #include <ssh/stream.hpp> // ofstream, ifstream
 
 #include <boost/filesystem/path.hpp> // wpath
@@ -94,14 +94,14 @@ using boost::system::error_code;
 using boost::system::system_category;
 using boost::system::system_error;
 
-using ssh::sftp::directory_iterator;
-using ssh::sftp::file_attributes;
-using ssh::sftp::fstream;
-using ssh::sftp::ifstream;
-using ssh::sftp::ofstream;
-using ssh::sftp::overwrite_behaviour;
-using ssh::sftp::sftp_filesystem;
-using ssh::sftp::sftp_file;
+using ssh::filesystem::directory_iterator;
+using ssh::filesystem::file_attributes;
+using ssh::filesystem::fstream;
+using ssh::filesystem::ifstream;
+using ssh::filesystem::ofstream;
+using ssh::filesystem::overwrite_behaviour;
+using ssh::filesystem::sftp_filesystem;
+using ssh::filesystem::sftp_file;
 
 using std::exception;
 using std::invalid_argument;

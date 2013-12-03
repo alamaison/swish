@@ -142,6 +142,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\filesystem.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\host_key.hpp"
 			>
 		</File>
@@ -151,10 +155,6 @@
 		</File>
 		<File
 			RelativePath=".\session.hpp"
-			>
-		</File>
-		<File
-			RelativePath=".\sftp.hpp"
 			>
 		</File>
 		<File

@@ -41,7 +41,7 @@
 #include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
 #include <ssh/session.hpp>
-#include <ssh/sftp.hpp>
+#include <ssh/filesystem.hpp>
 
 #include <comet/ptr.h> // com_ptr
 
@@ -129,11 +129,11 @@ public:
     // to remove these accessors from the public interface.
     ssh::session get_session() const;
 
-    ssh::sftp::sftp_filesystem get_sftp_filesystem() const;
+    ssh::filesystem::sftp_filesystem get_sftp_filesystem() const;
 
 private:
     running_session m_session;
-    ssh::sftp::sftp_filesystem m_filesystem;
+    ssh::filesystem::sftp_filesystem m_filesystem;
 };
 
 }} // namespace swish::connection

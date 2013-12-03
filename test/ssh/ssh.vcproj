@@ -300,6 +300,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\filesystem_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_key_test.cpp"
 				>
 			</File>
@@ -353,10 +357,6 @@
 			</File>
 			<File
 				RelativePath=".\sandbox_fixture.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\sftp_test.cpp"
 				>
 			</File>
 			<File

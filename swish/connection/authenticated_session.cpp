@@ -40,7 +40,7 @@
 
 #include <ssh/knownhost.hpp> // openssh_knownhost_collection
 #include <ssh/session.hpp>
-#include <ssh/sftp.hpp> // sftp_filesystem
+#include <ssh/filesystem.hpp> // sftp_filesystem
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
@@ -77,7 +77,7 @@ using ssh::host_key::host_key;
 using ssh::knownhost::find_result;
 using ssh::knownhost::openssh_knownhost_collection;
 using ssh::session;
-using ssh::sftp::sftp_filesystem;
+using ssh::filesystem::sftp_filesystem;
 
 using comet::bstr_t;
 using comet::com_error;

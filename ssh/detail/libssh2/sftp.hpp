@@ -101,7 +101,7 @@ inline LIBSSH2_SFTP_HANDLE* open(
         sftp, filename, filename_len, flags, mode, open_type);
     if (!handle)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 
     return handle;
@@ -157,7 +157,7 @@ inline int symlink_ex(
     case LIBSSH2_SFTP_REALPATH:
         if (rc < 0)
         {
-            ec = ::ssh::sftp::detail::last_sftp_error_code(
+            ec = ::ssh::filesystem::detail::last_sftp_error_code(
                 session, sftp, e_msg);
         }
         break;
@@ -167,7 +167,7 @@ inline int symlink_ex(
         if (rc != 0)
         {
             assert(rc < 0);
-            ec = ::ssh::sftp::detail::last_sftp_error_code(
+            ec = ::ssh::filesystem::detail::last_sftp_error_code(
                 session, sftp, e_msg);
         }
 
@@ -253,7 +253,7 @@ inline void stat(
         sftp, path, path_len, stat_type, attributes);
     if (rc < 0)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 }
 
@@ -290,7 +290,7 @@ inline void fstat(
     int rc = ::libssh2_sftp_fstat_ex(handle, attributes, fstat_type);
     if (rc != 0)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 }
 
@@ -325,7 +325,7 @@ inline void unlink_ex(
     int rc = ::libssh2_sftp_unlink_ex(sftp, path, path_len);
     if (rc < 0)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 }
 
@@ -360,7 +360,7 @@ inline void mkdir_ex(
     int rc = ::libssh2_sftp_mkdir_ex(sftp, path, path_len, mode);
     if (rc < 0)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 }
 
@@ -395,7 +395,7 @@ inline void rmdir_ex(
     int rc = ::libssh2_sftp_rmdir_ex(sftp, path, path_len);
     if (rc < 0)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 }
 
@@ -432,7 +432,7 @@ inline void rename(
         sftp, source, source_len, destination, destination_len, flags);
     if (rc)
     {
-        ec = ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 }
 
@@ -470,7 +470,7 @@ inline ssize_t read(
     ssize_t count = ::libssh2_sftp_read(file_handle, buffer, buffer_len);
     if (count < 0)
     {
-        ec = ::ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ::ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 
     return count;
@@ -509,7 +509,7 @@ inline ssize_t write(
     ssize_t count = ::libssh2_sftp_write(file_handle, data, data_len);
     if (count < 0)
     {
-        ec = ::ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ::ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 
     return count;
@@ -551,7 +551,7 @@ inline int readdir_ex(
         
     if (rc < 0)
     {
-        ec = ::ssh::sftp::detail::last_sftp_error_code(session, sftp, e_msg);
+        ec = ::ssh::filesystem::detail::last_sftp_error_code(session, sftp, e_msg);
     }
 
     return rc;
@@ -581,6 +581,6 @@ inline int readdir_ex(
     return rc;
 }
 
-}}}} // namespace ssh::detail::libssh2::sftp
+}}}} // namespace ssh::detail::libssh2::filesystem
 
 #endif

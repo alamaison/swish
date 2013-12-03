@@ -93,7 +93,7 @@ public:
         // SftpDirectory.  This can happen when SftpDirectory is merged with
         // the provider project
         return comet::adapt_stream_pointer(
-            boost::make_shared<ssh::sftp::fstream>(
+            boost::make_shared<ssh::filesystem::fstream>(
                 session->get_sftp_filesystem(), m_remote_path, flags),
                 boost::filesystem::path(m_remote_path).filename());
     }

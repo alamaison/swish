@@ -39,7 +39,7 @@
 
 #include <ssh/detail/libssh2/sftp.hpp>
 #include <ssh/session.hpp>
-#include <ssh/sftp.hpp>
+#include <ssh/filesystem.hpp>
 
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iostreams/categories.hpp>
@@ -54,7 +54,7 @@
 #include <libssh2_sftp.h>
 
 namespace ssh {
-namespace sftp {
+namespace filesystem {
 
 /**
  * Flags defining how to open a file.
@@ -743,6 +743,6 @@ private:
  */
 typedef detail::sftp_stream<sftp_io_device> fstream;
 
-}} // namespace ssh::sftp
+}} // namespace ssh::filesystem
 
 #endif

@@ -37,7 +37,7 @@
 #include "sandbox_fixture.hpp" // sandbox_fixture
 #include "session_fixture.hpp" // session_fixture
 
-#include <ssh/sftp.hpp> // test subject
+#include <ssh/filesystem.hpp> // test subject
 
 #include <boost/bind.hpp> // bind
 #include <boost/cstdint.hpp> // uintmax_t
@@ -50,11 +50,11 @@
 #include <string>
 
 using ssh::session;
-using ssh::sftp::file_attributes;
-using ssh::sftp::sftp_filesystem;
-using ssh::sftp::sftp_file;
-using ssh::sftp::directory_iterator;
-using ssh::sftp::overwrite_behaviour;
+using ssh::filesystem::file_attributes;
+using ssh::filesystem::sftp_filesystem;
+using ssh::filesystem::sftp_file;
+using ssh::filesystem::directory_iterator;
+using ssh::filesystem::overwrite_behaviour;
 
 using boost::bind;
 using boost::filesystem::ofstream;

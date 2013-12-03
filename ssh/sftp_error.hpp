@@ -49,7 +49,7 @@
           // LIBSSH2_FX_*, LIBSSH2_ERROR_SFTP_PROTOCOL, libssh2_sftp_last_error
 
 namespace ssh {
-namespace sftp {
+namespace filesystem {
 
 inline boost::system::error_category& sftp_error_category();
 
@@ -150,7 +150,7 @@ namespace detail {
     private:
         _sftp_error_category() {}
 
-        friend boost::system::error_category& ssh::sftp::sftp_error_category();
+        friend boost::system::error_category& ssh::filesystem::sftp_error_category();
     };
 
 }
@@ -193,6 +193,6 @@ namespace detail {
 
 }
 
-}} // namespace ssh::sftp
+}} // namespace ssh::filesystem
 
 #endif
