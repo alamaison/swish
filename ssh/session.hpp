@@ -68,7 +68,7 @@ namespace ssh {
 
     namespace sftp {
 
-        class sftp_channel;
+        class sftp_filesystem;
 
     }
 
@@ -624,7 +624,7 @@ public:
     class access_attorney
     {
     private:
-        friend class ssh::sftp::sftp_channel;
+        friend class ssh::sftp::sftp_filesystem;
 
         static boost::shared_ptr<LIBSSH2_SESSION> get_pointer(session& session)
         {

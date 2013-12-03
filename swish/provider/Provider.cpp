@@ -100,7 +100,7 @@ using ssh::sftp::fstream;
 using ssh::sftp::ifstream;
 using ssh::sftp::ofstream;
 using ssh::sftp::overwrite_behaviour;
-using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_filesystem;
 using ssh::sftp::sftp_file;
 
 using std::exception;
@@ -281,7 +281,7 @@ directory_listing provider::listing(
 
     mutex::scoped_lock lock = m_session->aquire_lock();
 
-    sftp_channel channel = m_session->get_sftp_channel();
+    sftp_filesystem channel = m_session->get_sftp_filesystem();
 
     string path = WideStringToUtf8String(directory.string());
 
@@ -308,7 +308,7 @@ com_ptr<IStream> provider::get_file(
 
     string path = WideStringToUtf8String(file_path);
 
-    sftp_channel channel = m_session->get_sftp_channel();
+    sftp_filesystem channel = m_session->get_sftp_filesystem();
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
@@ -360,14 +360,14 @@ void rename_non_atomic_overwrite(
 
     {
         mutex::scoped_lock lock = session.aquire_lock();
-        session.get_sftp_channel().rename(
+        session.get_sftp_filesystem().rename(
             to, temporary, overwrite_behaviour::prevent_overwrite);
     }
 
     try
     {
         mutex::scoped_lock lock = session.aquire_lock();
-        session.get_sftp_channel().rename(
+        session.get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
     }
     catch (const exception&)
@@ -376,7 +376,7 @@ void rename_non_atomic_overwrite(
         try
         {
             mutex::scoped_lock lock = session.aquire_lock();
-            session.get_sftp_channel().rename(
+            session.get_sftp_filesystem().rename(
                 from, to,  overwrite_behaviour::prevent_overwrite);
         }
         catch (const exception&) { /* Suppress to avoid nested exception */ }
@@ -392,7 +392,7 @@ void rename_non_atomic_overwrite(
     try
     {
         mutex::scoped_lock lock = session.aquire_lock();
-        session.get_sftp_channel().remove_all(temporary);
+        session.get_sftp_filesystem().remove_all(temporary);
     }
     catch (const exception&) {}
 }
@@ -451,7 +451,7 @@ bool rename_retry_with_overwrite(
         try
         {
             mutex::scoped_lock lock = session.aquire_lock();
-            session.get_sftp_channel().rename(
+            session.get_sftp_filesystem().rename(
                 from, to, overwrite_behaviour::atomic_overwrite);
             return true;
         }
@@ -488,7 +488,7 @@ bool rename_retry_with_overwrite(
 
         mutex::scoped_lock lock = session.aquire_lock();
 
-        if (exists(session.get_sftp_channel(), to))
+        if (exists(session.get_sftp_filesystem(), to))
         {
             lock.unlock();
 
@@ -575,7 +575,7 @@ VARIANT_BOOL provider::rename(
     try
     {
         mutex::scoped_lock lock = m_session->aquire_lock();
-        m_session->get_sftp_channel().rename(
+        m_session->get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
         
         // Rename was successful without overwrite
@@ -606,7 +606,7 @@ void provider::remove_all(
     _Connect(consumer);
 
     mutex::scoped_lock lock = m_session->aquire_lock();
-    m_session->get_sftp_channel().remove_all(utf8_path);
+    m_session->get_sftp_filesystem().remove_all(utf8_path);
 }
 
 void provider::create_new_directory(
@@ -622,7 +622,7 @@ void provider::create_new_directory(
     _Connect(consumer);
 
     mutex::scoped_lock lock = m_session->aquire_lock();
-    m_session->get_sftp_channel().create_directory(utf8_path);
+    m_session->get_sftp_filesystem().create_directory(utf8_path);
 }
 
 BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
@@ -632,7 +632,7 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
     _Connect(consumer);
 
     mutex::scoped_lock lock = m_session->aquire_lock();
-    sftp_channel channel = m_session->get_sftp_channel();
+    sftp_filesystem channel = m_session->get_sftp_filesystem();
     bstr_t target =
         Utf8StringToWideString(channel.canonical_path(utf8_path).string());
 
@@ -655,7 +655,7 @@ sftp_filesystem_item provider::stat(
     
     mutex::scoped_lock lock = m_session->aquire_lock();
 
-    sftp_channel channel = m_session->get_sftp_channel();
+    sftp_filesystem channel = m_session->get_sftp_filesystem();
 
     file_attributes stat_result = channel.attributes(
         utf8_path, follow_links != FALSE);

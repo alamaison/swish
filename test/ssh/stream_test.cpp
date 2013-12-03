@@ -51,7 +51,7 @@
 
 using ssh::session;
 using ssh::sftp::openmode;
-using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_filesystem;
 
 using boost::filesystem::path;
 using boost::system::system_error;
@@ -68,14 +68,14 @@ namespace {
 class stream_fixture : public session_fixture, public sandbox_fixture
 {
 public:
-    sftp_channel channel()
+    sftp_filesystem filesystem()
     {
         session s = test_session();
         s.authenticate_by_key_files(
             user(), public_key_path(), private_key_path(), "");
-        sftp_channel channel(s);
+        sftp_filesystem sftp(s);
 
-        return channel;
+        return sftp;
     }
 
     using sandbox_fixture::new_file_in_sandbox;
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE( input_stream_multiple_streams )
     path target1 = new_file_in_sandbox();
     path target2 = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream s1(chan, to_remote_path(target1));
     ssh::sftp::ifstream s2(chan, to_remote_path(target2));
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE( input_stream_multiple_streams_to_same_file )
 {
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream s1(chan, to_remote_path(target));
     ssh::sftp::ifstream s2(chan, to_remote_path(target));
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ifstream s(channel(), to_remote_path(target));
+    ssh::sftp::ifstream s(filesystem(), to_remote_path(target));
 
     string bob;
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_multiple_buffers )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_no_buffer )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream remote_stream(
         chan, to_remote_path(target), openmode::in, 0);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_multiple_buffers )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_stream_op )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE( input_stream_does_not_create_by_default )
     remove(target);
 
     BOOST_CHECK_THROW(
-        ssh::sftp::ifstream(channel(), to_remote_path(target)), system_error);
+        ssh::sftp::ifstream(filesystem(), to_remote_path(target)), system_error);
     BOOST_CHECK(!exists(target));
 }
 
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE( input_stream_opens_read_only_by_default )
     path target = new_file_in_sandbox();
     make_file_read_only(target);
 
-    ssh::sftp::ifstream(channel(), to_remote_path(target));
+    ssh::sftp::ifstream(filesystem(), to_remote_path(target));
 }
 
 BOOST_AUTO_TEST_CASE( input_stream_in_flag_does_not_create )
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE( input_stream_in_flag_does_not_create )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ifstream(
-            channel(), to_remote_path(target), openmode::in), system_error);
+            filesystem(), to_remote_path(target), openmode::in), system_error);
     BOOST_CHECK(!exists(target));
 }
 
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE( input_stream_std_in_flag_does_not_create )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ifstream(
-        channel(), to_remote_path(target), std::ios_base::in), system_error);
+        filesystem(), to_remote_path(target), std::ios_base::in), system_error);
     BOOST_CHECK(!exists(target));
 }
 
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE( input_stream_in_flag_opens_read_only )
     path target = new_file_in_sandbox();
     make_file_read_only(target);
 
-    ssh::sftp::ifstream(channel(), to_remote_path(target), openmode::in);
+    ssh::sftp::ifstream(filesystem(), to_remote_path(target), openmode::in);
 }
 
 BOOST_AUTO_TEST_CASE( input_stream_out_flag_does_not_create )
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE( input_stream_out_flag_does_not_create )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ifstream(
-        channel(), to_remote_path(target), openmode::out), system_error);
+        filesystem(), to_remote_path(target), openmode::out), system_error);
     BOOST_CHECK(!exists(target));
 }
 
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE( input_stream_out_flag_fails_to_open_read_only )
     make_file_read_only(target);
 
     BOOST_CHECK_THROW(
-        ssh::sftp::ifstream(channel(), to_remote_path(target), openmode::out),
+        ssh::sftp::ifstream(filesystem(), to_remote_path(target), openmode::out),
         system_error);
 }
 
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE( input_stream_out_trunc_flag_creates )
     remove(target);
 
     ssh::sftp::ifstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         openmode::out | openmode::trunc);
     BOOST_CHECK(exists(target));
 }
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE( input_stream_std_out_trunc_flag_creates )
     remove(target);
 
     ssh::sftp::ifstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         std::ios_base::out | std::ios_base::trunc);
     BOOST_CHECK(exists(target));
 }
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE( input_stream_out_trunc_nocreate_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ifstream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::trunc | openmode::nocreate),
         system_error);
     BOOST_CHECK(!exists(target));
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE( input_stream_out_trunc_noreplace_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ifstream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::trunc | openmode::noreplace),
         system_error);
     BOOST_CHECK(exists(target));
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_absolute )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ifstream s(channel(), to_remote_path(target));
+    ssh::sftp::ifstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::beg);
 
     string bob;
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_relative )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ifstream s(channel(), to_remote_path(target));
+    ssh::sftp::ifstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::cur);
     s.seekg(1, std::ios_base::cur);
 
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_end )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ifstream s(channel(), to_remote_path(target));
+    ssh::sftp::ifstream s(filesystem(), to_remote_path(target));
     s.seekg(-3, std::ios_base::end);
 
     string bob;
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_too_far_absolute )
 {
     path target = new_file_in_sandbox();
 
-    ssh::sftp::ifstream s(channel(), to_remote_path(target));
+    ssh::sftp::ifstream s(filesystem(), to_remote_path(target));
     s.exceptions(
         std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
     s.seekg(1, std::ios_base::beg);
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_too_far_relative )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ifstream s(channel(), to_remote_path(target));
+    ssh::sftp::ifstream s(filesystem(), to_remote_path(target));
     s.exceptions(
         std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
     s.seekg(9, std::ios_base::cur);
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE( output_stream_multiple_streams )
     path target1 = new_file_in_sandbox();
     path target2 = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream s1(chan, to_remote_path(target1));
     ssh::sftp::ofstream s2(chan, to_remote_path(target2));
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE( output_stream_multiple_streams_to_same_file )
 {
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream s1(chan, to_remote_path(target));
     ssh::sftp::ofstream s2(chan, to_remote_path(target));
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE( output_stream_writeable )
     path target = new_file_in_sandbox();
 
     {
-        ssh::sftp::ofstream remote_stream(channel(), to_remote_path(target));
+        ssh::sftp::ofstream remote_stream(filesystem(), to_remote_path(target));
 
         remote_stream << "gobbledy gook";
     }
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_multiple_buffers )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_no_buffer )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream remote_stream(
         chan, to_remote_path(target), openmode::out, 0);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_binary_data )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_binary_data_multiple_buffers )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_binary_data_stream_op )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream << data);
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE( output_stream_creates_by_default )
     path target = new_file_in_sandbox();
     remove(target);
 
-    ssh::sftp::ofstream remote_stream(channel(), to_remote_path(target));
+    ssh::sftp::ofstream remote_stream(filesystem(), to_remote_path(target));
     BOOST_CHECK(exists(target));
 }
 
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE( output_stream_nocreate_flag )
     path target = new_file_in_sandbox();
 
     ssh::sftp::ofstream(
-        channel(), to_remote_path(target), openmode::nocreate);
+        filesystem(), to_remote_path(target), openmode::nocreate);
     BOOST_CHECK(exists(target));
 }
 
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE( output_stream_nocreate_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target), openmode::nocreate),
+            filesystem(), to_remote_path(target), openmode::nocreate),
         system_error);
     BOOST_CHECK(!exists(target));
 }
@@ -696,7 +696,7 @@ BOOST_AUTO_TEST_CASE( output_stream_noreplace_flag )
     remove(target);
 
     ssh::sftp::ofstream(
-        channel(), to_remote_path(target), openmode::noreplace);
+        filesystem(), to_remote_path(target), openmode::noreplace);
     BOOST_CHECK(exists(target));
 }
 
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE( output_stream_noreplace_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target), openmode::noreplace),
+            filesystem(), to_remote_path(target), openmode::noreplace),
         system_error);
     BOOST_CHECK(exists(target));
 }
@@ -717,7 +717,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_flag_creates )
     remove(target);
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target), openmode::out);
+        filesystem(), to_remote_path(target), openmode::out);
     BOOST_CHECK(exists(target));
 }
 
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_flag_truncates )
 
     {
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target), openmode::out);
+            filesystem(), to_remote_path(target), openmode::out);
         BOOST_CHECK(exists(target));
 
         BOOST_CHECK(remote_stream << "abcdef");
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_nocreate_flag )
     path target = new_file_in_sandbox();
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target), openmode::out | openmode::nocreate);
+        filesystem(), to_remote_path(target), openmode::out | openmode::nocreate);
 
     BOOST_CHECK(remote_stream << "abcdef");
 }
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_nocreate_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::nocreate),
         system_error);
     BOOST_CHECK(!exists(target));
@@ -773,7 +773,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_noreplace_flag )
     remove(target);
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target), openmode::out | openmode::noreplace);
+        filesystem(), to_remote_path(target), openmode::out | openmode::noreplace);
 
     BOOST_CHECK(exists(target));
     BOOST_CHECK(remote_stream << "abcdef");
@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_noreplace_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::noreplace),
         system_error);
     BOOST_CHECK(exists(target));
@@ -800,7 +800,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_flag_does_not_create )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target), openmode::in),
+            filesystem(), to_remote_path(target), openmode::in),
         system_error);
     BOOST_CHECK(!exists(target));
 }
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_does_not_create )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::in | openmode::out), system_error);
 
     BOOST_CHECK(!exists(target));
@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_flag_updates )
 
     {
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::in | openmode::out);
         BOOST_CHECK(exists(target));
 
@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_flag_creates )
     remove(target);
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         openmode::out | openmode::trunc);
     BOOST_CHECK(exists(target));
 }
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_nocreate_flag )
     path target = new_file_in_sandbox();
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         openmode::out | openmode::trunc | openmode::nocreate);
     BOOST_CHECK(exists(target));
 }
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_nocreate_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::trunc | openmode::nocreate),
         system_error);
     BOOST_CHECK(!exists(target));
@@ -889,7 +889,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_noreplace_flag )
     remove(target);
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         openmode::out | openmode::trunc | openmode::noreplace);
     BOOST_CHECK(exists(target));
 }
@@ -900,7 +900,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_noreplace_flag_fails )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::trunc | openmode::noreplace),
         system_error);
     BOOST_CHECK(exists(target));
@@ -912,7 +912,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_flag_truncates )
 
     {
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::trunc);
 
         BOOST_CHECK(remote_stream << "abcdef");
@@ -935,7 +935,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_trunc_flag_creates )
     remove(target);
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         openmode::in | openmode::out | openmode::trunc);
     BOOST_CHECK(exists(target));
 }
@@ -946,7 +946,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_trunc_flag_truncates )
 
     {
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::in | openmode::out | openmode::trunc);
 
         BOOST_CHECK(remote_stream << "abcdef");
@@ -969,7 +969,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_creates )
     remove(target);
 
     ssh::sftp::ofstream remote_stream(
-        channel(), to_remote_path(target),
+        filesystem(), to_remote_path(target),
         openmode::out | openmode::app);
     BOOST_CHECK(exists(target));
 }
@@ -980,7 +980,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_appends )
 
     {
         ssh::sftp::ofstream remote_stream(
-            channel(), to_remote_path(target),
+            filesystem(), to_remote_path(target),
             openmode::out | openmode::app);
 
         BOOST_CHECK(remote_stream << "abcdef");
@@ -1016,7 +1016,7 @@ BOOST_AUTO_TEST_CASE( output_stream_fails_to_open_read_only_by_default )
     make_file_read_only(target);
 
     BOOST_CHECK_THROW(
-        ssh::sftp::ofstream(channel(), to_remote_path(target)), system_error);
+        ssh::sftp::ofstream(filesystem(), to_remote_path(target)), system_error);
 }
 
 BOOST_AUTO_TEST_CASE( output_stream_out_flag_fails_to_open_read_only )
@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_flag_fails_to_open_read_only )
     make_file_read_only(target);
 
     BOOST_CHECK_THROW(
-        ssh::sftp::ofstream(channel(), to_remote_path(target), openmode::out),
+        ssh::sftp::ofstream(filesystem(), to_remote_path(target), openmode::out),
         system_error);
 }
 
@@ -1036,7 +1036,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_flag_fails_to_open_read_only )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target),  openmode::in | openmode::out),
+            filesystem(), to_remote_path(target),  openmode::in | openmode::out),
         system_error);
 }
 
@@ -1048,7 +1048,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_flag_fails_to_open_read_only )
 
     BOOST_CHECK_THROW(
         ssh::sftp::ofstream(
-            channel(), to_remote_path(target),  openmode::in), system_error);
+            filesystem(), to_remote_path(target),  openmode::in), system_error);
 }
 
 // By default ostreams overwrite the file so seeking will cause subsequent
@@ -1058,7 +1058,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_absolute_overshoot )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target));
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(2, std::ios_base::beg);
 
     BOOST_CHECK(s << "r");
@@ -1081,7 +1081,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_absolute )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target), openmode::in);
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target), openmode::in);
     s.seekp(1, std::ios_base::beg);
 
     BOOST_CHECK(s << "r");
@@ -1103,7 +1103,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_relative_overshoot )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target));
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::cur);
     s.seekp(1, std::ios_base::cur);
 
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_relative )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target), openmode::in);
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target), openmode::in);
     s.seekp(1, std::ios_base::cur);
     s.seekp(1, std::ios_base::cur);
 
@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_end )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target));
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(0, std::ios_base::end);
 
     BOOST_CHECK(s << "r");
@@ -1175,7 +1175,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_end_overshoot )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target));
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(3, std::ios_base::end);
 
     BOOST_CHECK(s << "r");
@@ -1198,7 +1198,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_before_end )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::ofstream s(channel(), to_remote_path(target), openmode::in);
+    ssh::sftp::ofstream s(filesystem(), to_remote_path(target), openmode::in);
     s.seekp(-3, std::ios_base::end);
 
     BOOST_CHECK(s << "r");
@@ -1225,7 +1225,7 @@ BOOST_AUTO_TEST_CASE( io_stream_multiple_streams )
     path target1 = new_file_in_sandbox();
     path target2 = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream s1(chan, to_remote_path(target1));
     ssh::sftp::fstream s2(chan, to_remote_path(target2));
@@ -1235,7 +1235,7 @@ BOOST_AUTO_TEST_CASE( io_stream_multiple_streams_to_same_file )
 {
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream s1(chan, to_remote_path(target));
     ssh::sftp::fstream s2(chan, to_remote_path(target));
@@ -1247,7 +1247,7 @@ BOOST_AUTO_TEST_CASE( io_stream_fails_to_open_read_only_by_default )
     make_file_read_only(target);
 
     BOOST_CHECK_THROW(
-        ssh::sftp::fstream(channel(), to_remote_path(target)), system_error);
+        ssh::sftp::fstream(filesystem(), to_remote_path(target)), system_error);
 }
 
 BOOST_AUTO_TEST_CASE( io_stream_out_flag_fails_to_open_read_only )
@@ -1256,7 +1256,7 @@ BOOST_AUTO_TEST_CASE( io_stream_out_flag_fails_to_open_read_only )
     make_file_read_only(target);
 
     BOOST_CHECK_THROW(
-        ssh::sftp::fstream(channel(), to_remote_path(target), openmode::out),
+        ssh::sftp::fstream(filesystem(), to_remote_path(target), openmode::out),
         system_error);
 }
 
@@ -1267,7 +1267,7 @@ BOOST_AUTO_TEST_CASE( io_stream_in_out_flag_fails_to_open_read_only )
 
     BOOST_CHECK_THROW(
         ssh::sftp::fstream(
-        channel(), to_remote_path(target),  openmode::in | openmode::out),
+        filesystem(), to_remote_path(target),  openmode::in | openmode::out),
         system_error);
 }
 
@@ -1276,14 +1276,14 @@ BOOST_AUTO_TEST_CASE( io_stream_in_flag_opens_read_only )
     path target = new_file_in_sandbox();
     make_file_read_only(target);
 
-    ssh::sftp::fstream(channel(), to_remote_path(target),  openmode::in);
+    ssh::sftp::fstream(filesystem(), to_remote_path(target),  openmode::in);
 }
 
 BOOST_AUTO_TEST_CASE( io_stream_readable )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
 
     string bob;
 
@@ -1301,7 +1301,7 @@ BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
 
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data_stream_op )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
 
@@ -1342,7 +1342,7 @@ BOOST_AUTO_TEST_CASE( io_stream_writeable )
     path target = new_file_in_sandbox();
 
     {
-        ssh::sftp::fstream remote_stream(channel(), to_remote_path(target));
+        ssh::sftp::fstream remote_stream(filesystem(), to_remote_path(target));
 
         remote_stream << "gobbledy gook";
     }
@@ -1368,7 +1368,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_multiple_buffers )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -1396,7 +1396,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_no_buffer )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream remote_stream(
         chan, to_remote_path(target), openmode::in | openmode::out, 0);
@@ -1423,7 +1423,7 @@ BOOST_AUTO_TEST_CASE( io_stream_read_only_write_fails )
     path target = new_file_in_sandbox();
     make_file_read_only(target);
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target),  openmode::in);
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target),  openmode::in);
 
     BOOST_CHECK(s << "gobbledy gook");
     BOOST_CHECK(!s.flush()); // Failure happens on the flush
@@ -1444,7 +1444,7 @@ BOOST_AUTO_TEST_CASE( io_stream_read_only_write_fails_no_flush )
     make_file_read_only(target);
 
     {
-        ssh::sftp::fstream s(channel(), to_remote_path(target),  openmode::in);
+        ssh::sftp::fstream s(filesystem(), to_remote_path(target),  openmode::in);
 
         BOOST_CHECK(s << "gobbledy gook");
 
@@ -1466,7 +1466,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_binary_data )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -1492,7 +1492,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_binary_data_stream_op )
 
     path target = new_file_in_sandbox();
 
-    sftp_channel chan = channel();
+    sftp_filesystem chan = filesystem();
 
     ssh::sftp::fstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream << data);
@@ -1516,7 +1516,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_absolute )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::beg);
 
     string bob;
@@ -1528,7 +1528,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_relative )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::cur);
     s.seekg(1, std::ios_base::cur);
 
@@ -1541,7 +1541,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_end )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekg(-3, std::ios_base::end);
 
     string bob;
@@ -1553,7 +1553,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_absolute )
 {
     path target = new_file_in_sandbox();
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.exceptions(
         std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
     s.seekg(1, std::ios_base::beg);
@@ -1566,7 +1566,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_relative )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.exceptions(
         std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
     s.seekg(9, std::ios_base::cur);
@@ -1580,7 +1580,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_output_absolute )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::beg);
 
     BOOST_CHECK(s << "r");
@@ -1599,7 +1599,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_output_relative )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::cur);
     s.seekp(1, std::ios_base::cur);
 
@@ -1619,7 +1619,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_output_end )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekp(-3, std::ios_base::end);
 
     BOOST_CHECK(s << "r");
@@ -1640,7 +1640,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_interleaved )
 {
     path target = new_file_in_sandbox("gobbledy gook");
 
-    ssh::sftp::fstream s(channel(), to_remote_path(target));
+    ssh::sftp::fstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::beg);
 
     BOOST_CHECK(s << "r");

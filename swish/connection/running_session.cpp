@@ -43,7 +43,7 @@
 #include "swish/utils.hpp" // WideStringToUtf8String
 
 #include <ssh/session.hpp>
-#include <ssh/sftp.hpp> // sftp_channel
+#include <ssh/sftp.hpp> // sftp_filesystem
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
@@ -59,7 +59,7 @@ using swish::port_to_string;
 using swish::utils::WideStringToUtf8String;
 
 using ssh::session;
-using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_filesystem;
 
 using boost::asio::error::host_not_found;
 using boost::asio::io_service;

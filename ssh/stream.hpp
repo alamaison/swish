@@ -497,34 +497,34 @@ namespace detail {
         // pick up the defaults from the devices
 
         sftp_stream(
-            sftp_channel channel, const boost::filesystem::path& open_path)
+            sftp_filesystem channel, const boost::filesystem::path& open_path)
         {
             open(Device(channel, open_path));
         }
 
         sftp_stream(
-            sftp_channel channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem channel, const boost::filesystem::path& open_path, 
             openmode::value opening_mode)
         {
             open(Device(channel, open_path, opening_mode));
         }
 
         sftp_stream(
-            sftp_channel channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem channel, const boost::filesystem::path& open_path, 
             openmode::value opening_mode, std::streamsize buffer_size)
         {
             open(Device(channel, open_path, opening_mode), buffer_size);
         }
 
         sftp_stream(
-            sftp_channel channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem channel, const boost::filesystem::path& open_path, 
             std::ios_base::openmode opening_mode)
         {
             open(Device(channel, open_path, opening_mode));
         }
 
         sftp_stream(
-            sftp_channel channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem channel, const boost::filesystem::path& open_path, 
             std::ios_base::openmode opening_mode, std::streamsize buffer_size)
         {
             open(Device(channel, open_path, opening_mode), buffer_size);
@@ -552,7 +552,7 @@ class sftp_input_device :
 public:
 
     sftp_input_device(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode=openmode::in)
         :
     m_channel(channel), m_open_path(open_path),
@@ -562,7 +562,7 @@ public:
     {}
 
     sftp_input_device(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem channel, const boost::filesystem::path& open_path, 
         std::ios_base::openmode opening_mode)
         :
     m_channel(channel), m_open_path(open_path),
@@ -593,7 +593,7 @@ public:
     }
 
 private:
-    sftp_channel m_channel;
+    sftp_filesystem m_channel;
     boost::filesystem::path m_open_path;
     boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
 };
@@ -615,7 +615,7 @@ class sftp_output_device :
 public:
 
     sftp_output_device(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode=openmode::out)
         :
     m_channel(channel), m_open_path(open_path),
@@ -625,7 +625,7 @@ public:
     {}
 
     sftp_output_device(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem channel, const boost::filesystem::path& open_path, 
         std::ios_base::openmode opening_mode)
         :
     m_channel(channel), m_open_path(open_path),
@@ -656,7 +656,7 @@ public:
     }
 
 private:
-    sftp_channel m_channel;
+    sftp_filesystem m_channel;
     boost::filesystem::path m_open_path;
     boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
 };
@@ -680,7 +680,7 @@ class sftp_io_device :
 public:
 
     sftp_io_device(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem channel, const boost::filesystem::path& open_path, 
         openmode::value opening_mode=openmode::in | openmode::out)
         :
     m_channel(channel), m_open_path(open_path),
@@ -690,7 +690,7 @@ public:
     {}
 
     sftp_io_device(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem channel, const boost::filesystem::path& open_path, 
         std::ios_base::openmode opening_mode)
         :
     m_channel(channel), m_open_path(open_path),
@@ -728,7 +728,7 @@ public:
     }
 
 private:
-    sftp_channel m_channel;
+    sftp_filesystem m_channel;
     boost::filesystem::path m_open_path;
     boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
 };

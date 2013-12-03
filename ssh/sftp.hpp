@@ -188,7 +188,7 @@ public:
 
 private:
     friend class sftp_file;
-    friend class sftp_channel; // to construct in attributes method
+    friend class sftp_filesystem; // to construct in attributes method
 
     explicit file_attributes(const LIBSSH2_SFTP_ATTRIBUTES& raw_attributes) :
        m_attributes(raw_attributes) {}
@@ -233,7 +233,7 @@ private:
     file_attributes m_attributes;
 };
 
-class sftp_channel;
+class sftp_filesystem;
 
 namespace detail {
 
@@ -272,7 +272,7 @@ public:
     // that is
     directory_iterator() {}
 
-    // directory_iterator is not implemented in terms of the sftp_channel
+    // directory_iterator is not implemented in terms of the sftp_filesystem
     // public interface.  It uses the the channel's internals, so the channel
     // should control it.  Therefore the only way to create it is
     // via the channel class, which has special access to the private
@@ -288,7 +288,7 @@ public:
     class factory_attorney
     {
     private:
-        friend class sftp_channel;
+        friend class sftp_filesystem;
 
         directory_iterator operator()(
             boost::shared_ptr<LIBSSH2_SESSION> session,
@@ -413,7 +413,7 @@ namespace detail {
 
 
     inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_channel channel, const boost::filesystem::path& path);
+        sftp_filesystem filesystem, const boost::filesystem::path& path);
 
 }
 
@@ -450,14 +450,17 @@ class sftp_input_device;
 class sftp_output_device;
 class sftp_io_device;
 
-class sftp_channel
+/**
+ * Access to Filesystem remote server via an SSH/SFTP connection.
+ */
+class sftp_filesystem
 {
 public:
 
     /**
-     * Open a new SFTP channel in an SSH session.
+     * Create connection to remote filesystem over SSH `session`.
      */
-    explicit sftp_channel(::ssh::session session)
+    explicit sftp_filesystem(::ssh::session session)
         :
     m_session(::ssh::session::access_attorney::get_pointer(session)),
     m_sftp(
@@ -554,8 +557,6 @@ public:
      * file that it referenced before calling the function, and `destination`
      * is a new path to that file.
      *
-     * @param channel
-     *     SFTP connection.
      * @param source
      *     Path to the file on the remote filesystem. File must already exist.
      * @param destination
@@ -626,7 +627,7 @@ public:
     /**
      * Remove a file.
      *
-     * Removes `target` on the filesystem available via this channel.  If 
+     * Removes `target` on the filesystem available via this object.  If 
      * `target` is a symlink, only removes the link, not what the link
      * resolves to.  If `target` is a directory, removes it only if the
      * directory is empty.
@@ -684,9 +685,10 @@ public:
     /**
      * Remove a file and anything below it in the hierarchy.
      *
-     * Removes `target` on the filesystem available via `channel`.  If `target` is
-     * a symlink, only removes the link, not what the link resolves to.  If
-     * `target` is a directory, removes it and all its contents.
+     * Removes `target` on the filesystem available via this object.  If 
+     * `target` is a symlink, only removes the link, not what the link
+     * resolves to.  If `target` is a directory, removes it and all its
+     * contents.
      *
      * @returns the number of files removed.
      *
@@ -860,11 +862,11 @@ private:
 namespace detail {
 
     inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_channel channel, const boost::filesystem::path& path)
+        sftp_filesystem filesystem, const boost::filesystem::path& path)
     {
         try
         {
-            file_attributes attrs = channel.attributes(path, false);
+            file_attributes attrs = filesystem.attributes(path, false);
 
             if (attrs.type() == file_attributes::directory)
             {
@@ -899,11 +901,12 @@ namespace detail {
 /**
  * Does a file exist at the given path.
  */
-inline bool exists(sftp_channel channel, const boost::filesystem::path& file)
+inline bool exists(
+    sftp_filesystem filesystem, const boost::filesystem::path& file)
 {
     try
     {
-        channel.attributes(file, false);
+        filesystem.attributes(file, false);
     }
     catch (const boost::system::system_error& e)
     {
@@ -921,19 +924,19 @@ inline bool exists(sftp_channel channel, const boost::filesystem::path& file)
 }
 
 inline boost::filesystem::path resolve_link_target(
-    sftp_channel channel, const sftp_file& link)
+    sftp_filesystem filesystem, const sftp_file& link)
 {
-    return channel.resolve_link_target(link.path());
+    return filesystem.resolve_link_target(link.path());
 }
 
 inline boost::filesystem::path canonical_path(
-    sftp_channel channel, const sftp_file& link)
+    sftp_filesystem filesystem, const sftp_file& link)
 {
-    return channel.canonical_path(link.path());
+    return filesystem.canonical_path(link.path());
 }
 
-// Needs directory_iterator implementation so outside sftp_channel class body
-inline boost::uintmax_t sftp_channel::remove_directory(
+// Needs directory_iterator implementation so outside sftp_filesystem class body
+inline boost::uintmax_t sftp_filesystem::remove_directory(
     const boost::filesystem::path& root)
 {
     boost::uintmax_t count = 0U;

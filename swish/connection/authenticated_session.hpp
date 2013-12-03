@@ -129,11 +129,11 @@ public:
     // to remove these accessors from the public interface.
     ssh::session get_session() const;
 
-    ssh::sftp::sftp_channel get_sftp_channel() const;
+    ssh::sftp::sftp_filesystem get_sftp_filesystem() const;
 
 private:
     running_session m_session;
-    ssh::sftp::sftp_channel m_sftp_channel;
+    ssh::sftp::sftp_filesystem m_filesystem;
 };
 
 }} // namespace swish::connection

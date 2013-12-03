@@ -40,7 +40,7 @@
 
 #include <ssh/knownhost.hpp> // openssh_knownhost_collection
 #include <ssh/session.hpp>
-#include <ssh/sftp.hpp> // sftp_channel
+#include <ssh/sftp.hpp> // sftp_filesystem
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
@@ -77,7 +77,7 @@ using ssh::host_key::host_key;
 using ssh::knownhost::find_result;
 using ssh::knownhost::openssh_knownhost_collection;
 using ssh::session;
-using ssh::sftp::sftp_channel;
+using ssh::sftp::sftp_filesystem;
 
 using comet::bstr_t;
 using comet::com_error;
@@ -493,12 +493,12 @@ authenticated_session::authenticated_session(
     com_ptr<ISftpConsumer> consumer)
     :
 m_session(create_and_authenticate(host, port, user, consumer)),
-m_sftp_channel(m_session.get_session()) {}
+m_filesystem(m_session.get_session()) {}
 
 authenticated_session::authenticated_session(
     BOOST_RV_REF(authenticated_session) other)
 :
-m_session(move(other.m_session)), m_sftp_channel(move(other.m_sftp_channel)) {}
+m_session(move(other.m_session)), m_filesystem(move(other.m_filesystem)) {}
 
 authenticated_session& authenticated_session::operator=(
     BOOST_RV_REF(authenticated_session) other)
@@ -510,7 +510,7 @@ authenticated_session& authenticated_session::operator=(
 void swap(authenticated_session& lhs, authenticated_session& rhs)
 {
     boost::swap(lhs.m_session, rhs.m_session);
-    std::swap(lhs.m_sftp_channel, rhs.m_sftp_channel);
+    std::swap(lhs.m_filesystem, rhs.m_filesystem);
 }
 
 session authenticated_session::get_session() const
@@ -518,9 +518,9 @@ session authenticated_session::get_session() const
     return m_session.get_session();
 }
 
-sftp_channel authenticated_session::get_sftp_channel() const
+sftp_filesystem authenticated_session::get_sftp_filesystem() const
 {
-    return m_sftp_channel;
+    return m_filesystem;
 }
 
 mutex::scoped_lock authenticated_session::aquire_lock()

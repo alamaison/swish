@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( sftp_started )
         Utf8StringToWideString(GetHost()), GetPort(),
         Utf8StringToWideString(GetUser()),
         new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
-    session.get_sftp_channel();
+    session.get_sftp_filesystem();
 }
 
 namespace {

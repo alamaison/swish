@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ public:
         // the provider project
         return comet::adapt_stream_pointer(
             boost::make_shared<ssh::sftp::fstream>(
-                session->get_sftp_channel(), m_remote_path, flags),
+                session->get_sftp_filesystem(), m_remote_path, flags),
                 boost::filesystem::path(m_remote_path).filename());
     }
 };
