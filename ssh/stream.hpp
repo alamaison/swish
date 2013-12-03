@@ -290,7 +290,9 @@ namespace detail {
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_file(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
     {
         std::string path_string = open_path.string();
@@ -298,7 +300,7 @@ namespace detail {
         // Open with 644 permissions - good for non-directory files
         return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
             ::ssh::detail::libssh2::sftp::open(
-                channel.session().get(), channel.get().get(), path_string.data(),
+                session.get(), sftp.get(), path_string.data(),
                 path_string.size(), openmode_to_libssh2_flags(opening_mode),
                 LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
                 LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
@@ -307,29 +309,35 @@ namespace detail {
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_input_file(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
     {
         // For input streams open files for input even if not given in open
         // flags.  Matches standard library ifstream.
 
-        return open_file(channel, open_path, opening_mode | openmode::in);
+        return open_file(session, sftp, open_path, opening_mode | openmode::in);
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_output_file(
-        sftp_channel channel, const boost::filesystem::path& open_path, 
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
     {
         // For output streams open files for output even if not given in open
         // flags.  Matches standard library ofstream.
 
         return open_file(
-            channel, open_path,
+            session, sftp, open_path,
             static_cast<openmode::value>(opening_mode | openmode::out));
     }
 
     inline boost::iostreams::stream_offset seek(
-        sftp_channel channel, boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
         const boost::filesystem::path& open_path,
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
@@ -355,7 +363,7 @@ namespace detail {
                 try
                 {
                     ::ssh::detail::libssh2::sftp::fstat(
-                        channel.session().get(), channel.get().get(),
+                        session.get(), sftp.get(),
                         handle.get(), &attributes, LIBSSH2_SFTP_STAT);
                 }
                 catch (boost::exception& e)
@@ -386,7 +394,9 @@ namespace detail {
     }
 
     inline std::streamsize read(
-        sftp_channel channel, boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
         const boost::filesystem::path& open_path,
         char* buffer, std::streamsize buffer_size)
     {
@@ -403,7 +413,7 @@ namespace detail {
             do
             {
                 ssize_t rc = ::ssh::detail::libssh2::sftp::read(
-                    channel.session().get(), channel.get().get(),
+                    session.get(), sftp.get(),
                     handle.get(), buffer + count, buffer_size - count);
                 if (rc == 0)
                     break; // EOF
@@ -422,7 +432,9 @@ namespace detail {
     }
 
     inline std::streamsize write(
-        sftp_channel channel, boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
+        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<LIBSSH2_SFTP> sftp,
+        boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
         const boost::filesystem::path& open_path,
         const char* data, std::streamsize data_size)
     {
@@ -440,7 +452,7 @@ namespace detail {
             do
             {
                 count += ::ssh::detail::libssh2::sftp::write(
-                    channel.session().get(), channel.get().get(), handle.get(),
+                    session.get(), sftp.get(), handle.get(),
                     data + count, data_size - count);
             }
             while (count < data_size);
@@ -544,7 +556,9 @@ public:
         openmode::value opening_mode=openmode::in)
         :
     m_channel(channel), m_open_path(open_path),
-    m_handle(detail::open_input_file(m_channel, m_open_path, opening_mode))
+    m_handle(
+        detail::open_input_file(
+            m_channel.m_session, m_channel.m_sftp, m_open_path, opening_mode))
     {}
 
     sftp_input_device(
@@ -554,7 +568,8 @@ public:
     m_channel(channel), m_open_path(open_path),
     m_handle(
         detail::open_input_file(
-            m_channel, m_open_path, detail::translate_flags(opening_mode)))
+            m_channel.m_session, m_channel.m_sftp, m_open_path,
+            detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize optimal_buffer_size() const
@@ -565,13 +580,16 @@ public:
     std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
         return detail::read(
-            m_channel, m_handle, m_open_path, buffer, buffer_size);
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path,
+            buffer, buffer_size);
     }
 
     boost::iostreams::stream_offset seek(
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
-        return detail::seek(m_channel, m_handle, m_open_path, off, way);
+        return detail::seek(
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path, off,
+            way);
     }
 
 private:
@@ -601,7 +619,9 @@ public:
         openmode::value opening_mode=openmode::out)
         :
     m_channel(channel), m_open_path(open_path),
-    m_handle(detail::open_output_file(m_channel, m_open_path, opening_mode))
+    m_handle(
+        detail::open_output_file(
+            m_channel.m_session, m_channel.m_sftp, m_open_path, opening_mode))
     {}
 
     sftp_output_device(
@@ -611,7 +631,8 @@ public:
     m_channel(channel), m_open_path(open_path),
     m_handle(
         detail::open_output_file(
-            m_channel, m_open_path, detail::translate_flags(opening_mode)))
+            m_channel.m_session, m_channel.m_sftp, m_open_path,
+            detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize optimal_buffer_size() const
@@ -621,13 +642,17 @@ public:
 
     std::streamsize write(const char* data, std::streamsize data_size)
     {
-        return detail::write(m_channel, m_handle, m_open_path, data, data_size);
+        return detail::write(
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path,
+            data, data_size);
     }
 
     boost::iostreams::stream_offset seek(
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
-        return detail::seek(m_channel, m_handle, m_open_path, off, way);
+        return detail::seek(
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path,
+            off, way);
     }
 
 private:
@@ -659,7 +684,9 @@ public:
         openmode::value opening_mode=openmode::in | openmode::out)
         :
     m_channel(channel), m_open_path(open_path),
-    m_handle(detail::open_file(m_channel, m_open_path, opening_mode))
+    m_handle(
+        detail::open_file(
+            m_channel.m_session, m_channel.m_sftp, m_open_path, opening_mode))
     {}
 
     sftp_io_device(
@@ -669,7 +696,8 @@ public:
     m_channel(channel), m_open_path(open_path),
     m_handle(
         detail::open_file(
-            m_channel, m_open_path, detail::translate_flags(opening_mode)))
+            m_channel.m_session, m_channel.m_sftp, m_open_path,
+            detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize optimal_buffer_size() const
@@ -680,18 +708,23 @@ public:
     std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
         return detail::read(
-            m_channel, m_handle, m_open_path, buffer, buffer_size);
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path,
+            buffer, buffer_size);
     }
 
     std::streamsize write(const char* data, std::streamsize data_size)
     {
-        return detail::write(m_channel, m_handle, m_open_path, data, data_size);
+        return detail::write(
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path,
+            data, data_size);
     }
 
     boost::iostreams::stream_offset seek(
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
-        return detail::seek(m_channel, m_handle, m_open_path, off, way);
+        return detail::seek(
+            m_channel.m_session, m_channel.m_sftp, m_handle, m_open_path,
+            off, way);
     }
 
 private:

@@ -80,7 +80,16 @@ inline std::string port_to_string(long port)
 class session_fixture : public openssh_fixture
 {
 public:
-    session_fixture() : m_io(0), m_socket(m_io) {}
+    session_fixture() :
+      m_io(0), m_socket(m_io),
+      m_session(::ssh::session(open_socket(host(), port()).native())) {}
+
+    ::ssh::session test_session()
+    {
+        return m_session;
+    }
+
+private:
 
     boost::asio::ip::tcp::socket& open_socket(
         const std::string host_name, int port)
@@ -106,15 +115,9 @@ public:
         return m_socket;
     }
 
-    ::ssh::session test_session()
-    {
-        boost::asio::ip::tcp::socket& sock = open_socket(host(), port());
-        return ::ssh::session(sock.native());
-    }
-
-private:
     boost::asio::io_service m_io; ///< Boost IO system
     boost::asio::ip::tcp::socket m_socket;
+    ::ssh::session m_session;
 };
 
 }} // namespace test::ssh
