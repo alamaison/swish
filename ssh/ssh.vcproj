@@ -108,6 +108,10 @@
 		<Filter
 			Name="detail"
 			>
+			<File
+				RelativePath=".\detail\session_state.hpp"
+				>
+			</File>
 			<Filter
 				Name="libssh2"
 				>

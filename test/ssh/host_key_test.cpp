@@ -36,9 +36,12 @@
 
 #include "session_fixture.hpp" // session_fixture
 
+#include <ssh/detail/session_state.hpp>
 #include <ssh/host_key.hpp> // test subject
 #include <ssh/session.hpp> // session
 
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
@@ -47,11 +50,14 @@
 
 #include <libssh2.h>
 
+using ssh::detail::session_state;
 using ssh::host_key;
 using ssh::session;
 
 using test::ssh::session_fixture;
 
+using boost::make_shared;
+using boost::shared_ptr;
 using boost::system::error_code;
 using boost::system::system_error;
 
@@ -71,18 +77,18 @@ namespace {
 
     string base64_decode(const string& input)
     {
-        boost::shared_ptr<LIBSSH2_SESSION> session =
-            ssh::detail::allocate_session();
+        shared_ptr<session_state> session = make_shared<session_state>();
 
         char* data;
         unsigned int data_len;
         int rc = libssh2_base64_decode(
-            session.get(), &data, &data_len, input.data(), input.size());
+            session->session_ptr(), &data, &data_len, input.data(),
+            input.size());
         if (rc)
         {
             string message;
             error_code ec = ssh::detail::last_error_code(
-                session.get(), message);
+                session->session_ptr(), message);
 
             BOOST_THROW_EXCEPTION(system_error(ec, message));
         }

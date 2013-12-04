@@ -44,7 +44,6 @@
 
 #include <boost/algorithm/string/classification.hpp> // is_any_of
 #include <boost/algorithm/string/split.hpp>
-#include <boost/bind/bind.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
@@ -53,7 +52,7 @@
 #include <boost/range/algorithm_ext/for_each.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp> // error_code, errc
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -73,68 +72,6 @@ namespace ssh {
     }
 
 namespace detail {
-
-    inline void disconnect_and_free(
-        LIBSSH2_SESSION* session, const std::string& disconnection_message)
-    {
-        try
-        {
-            libssh2::session::disconnect(
-                session, disconnection_message.c_str());
-        }
-        catch (const std::exception&)
-        {
-            // Ignore errors for two reasons:
-            //  - this is used as a shared_ptr deallocater so may not throw.
-            //  - even if there is a problem disconnecting the session,
-            //    we must still free it as everything else is going away
-
-            // TODO: introduce some way of logging them
-        }
-
-        libssh2_session_free(session);
-    }
-
-    inline boost::shared_ptr<LIBSSH2_SESSION> allocate_session()
-    {
-        return boost::shared_ptr<LIBSSH2_SESSION>(
-            libssh2::session::init(), libssh2_session_free);
-    }
-
-    inline boost::shared_ptr<LIBSSH2_SESSION> allocate_and_connect_session(
-        int socket, const std::string& disconnection_message)
-    {
-        // This function is unlike most of the others in that we do not
-        // immediately wrap the created resource (the LIBSSH2_SESSION*) in a
-        // shared_ptr.  (Other than the known-host code which uses
-        // `allocate_session` above) we only ever want to deal in terms of
-        // sessions that have been allocated *and* connected, so we wait
-        // until starting succeeds and then wrap it in a shared_ptr that
-        // disconnects before it frees.
-        //
-        // This means that we have to be careful of the lifetime of
-        // the unstarted session in the code below.  The session may fail
-        // to start but must still be freed.
-
-        LIBSSH2_SESSION* session = libssh2::session::init();
-
-        // Session is 'alive' from this point onwards.  All paths must
-        // eventually free it.
-
-        try
-        {
-            libssh2::session::startup(session, socket);
-        }
-        catch (...)
-        {
-            libssh2_session_free(session);
-            throw;
-        }
-
-        return boost::shared_ptr<LIBSSH2_SESSION>(
-            session,
-            boost::bind(disconnect_and_free, _1, disconnection_message));
-    }
 
     inline std::pair<std::string, bool> convert_prompt(
         const LIBSSH2_USERAUTH_KBDINT_PROMPT& prompt)
@@ -184,14 +121,14 @@ namespace detail {
          * interfaces as we go.
          */
         bool do_challenge_response(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
+            boost::shared_ptr<session_state> session,
             const std::string username)
         {
             boost::system::error_code ec;
             std::string message;
 
             ::ssh::detail::libssh2::userauth::keyboard_interactive_ex(
-                session.get(), username.data(), username.size(),
+                session->session_ptr(), username.data(), username.size(),
                 &dethunker<ChallengeResponder>, ec, message);
 
             return translate_status(ec, message);
@@ -409,7 +346,8 @@ public:
         const std::string& disconnection_message=
             "libssh2 C++ bindings session destructor") :
     m_session(
-        detail::allocate_and_connect_session(socket, disconnection_message))
+        boost::make_shared<detail::session_state>(
+            socket, disconnection_message))
     {}
 
     /**
@@ -438,7 +376,8 @@ public:
         std::string message;
 
         const char* method_list = detail::libssh2::userauth::list(
-            m_session.get(), username.data(), username.size(), ec, message);
+            m_session->session_ptr(), username.data(), username.size(),
+            ec, message);
 
         if (!method_list)
         {
@@ -469,7 +408,7 @@ public:
 
     bool authenticated() const
     {
-        return libssh2_userauth_authenticated(m_session.get()) != 0;
+        return libssh2_userauth_authenticated(m_session->session_ptr()) != 0;
     }
 
     /**
@@ -495,8 +434,8 @@ public:
         std::string message;
 
         detail::libssh2::userauth::password(
-            m_session.get(), username.data(), username.size(), password.data(),
-            password.size(), NULL, ec, message);
+            m_session->session_ptr(), username.data(), username.size(),
+            password.data(), password.size(), NULL, ec, message);
 
         if (!ec)
         {
@@ -582,7 +521,8 @@ public:
 
         detail::challenge_response_translator<ChallengeResponder>
             wrapped_responder(responder);
-        *::libssh2_session_abstract(m_session.get()) = &wrapped_responder;
+        *::libssh2_session_abstract(m_session->session_ptr()) =
+            &wrapped_responder;
 
         return wrapped_responder.do_challenge_response(m_session, username);
     }
@@ -600,7 +540,7 @@ public:
         const std::string& passphrase)
     {
         detail::libssh2::userauth::public_key_from_file(
-            m_session.get(), username.data(), username.size(),
+            m_session->session_ptr(), username.data(), username.size(),
             public_key.external_file_string().c_str(),
             private_key.external_file_string().c_str(), passphrase.c_str());
     }
@@ -625,7 +565,8 @@ public:
     private:
         friend class ssh::filesystem::sftp_filesystem;
 
-        static boost::shared_ptr<LIBSSH2_SESSION> get_pointer(session& session)
+        static boost::shared_ptr<detail::session_state> get_session_state(
+            session& session)
         {
             return session.m_session;
         }
@@ -635,7 +576,7 @@ public:
 private:
     friend class access_attorney;
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
 };
 
 } // namespace ssh

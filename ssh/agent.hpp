@@ -37,6 +37,7 @@
 #ifndef SSH_AGENT_HPP
 #define SSH_AGENT_HPP
 
+#include <ssh/detail/session_state.hpp>
 #include <ssh/detail/libssh2/agent.hpp> // ssh::detail::libssh2::agent
 
 #include <boost/iterator/iterator_facade.hpp>
@@ -54,7 +55,7 @@ class identity
 public:
 
     identity(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<detail::session_state> session,
         boost::shared_ptr<LIBSSH2_AGENT> agent,
         libssh2_agent_publickey* identity) :
     m_session(session), m_agent(agent), m_identity(identity) {}
@@ -62,12 +63,13 @@ public:
     void authenticate(const std::string& user_name)
     {
         ::ssh::detail::libssh2::agent::userauth(
-            m_agent.get(), m_session.get(), user_name.c_str(), m_identity);
+            m_agent.get(), m_session->session_ptr(), user_name.c_str(),
+            m_identity);
     }
         
 private:
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
     boost::shared_ptr<LIBSSH2_AGENT> m_agent;
     libssh2_agent_publickey* m_identity;
 };
@@ -90,7 +92,7 @@ class identity_iterator_base :
 public:
 
     identity_iterator_base(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<session_state> session,
         boost::shared_ptr<LIBSSH2_AGENT> agent) :
     m_session(session), m_agent(agent), m_pos(NULL)
     {
@@ -122,7 +124,7 @@ private:
                     "Can't increment past the end of a collection"));
 
         bool no_more_identities = ::ssh::detail::libssh2::agent::get_identity(
-            m_agent.get(), m_session.get(), &m_pos, m_pos) == 1;
+            m_agent.get(), m_session->session_ptr(), &m_pos, m_pos) == 1;
 
         if (no_more_identities)
         {
@@ -146,15 +148,15 @@ private:
         return identity(m_session, m_agent, m_pos);
     }
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<session_state> m_session;
     boost::shared_ptr<LIBSSH2_AGENT> m_agent;
     libssh2_agent_publickey* m_pos;
 };
 
 inline boost::shared_ptr<LIBSSH2_AGENT> do_connect(
-    LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session)
+    LIBSSH2_AGENT* agent, boost::shared_ptr<session_state> session)
 {
-    ::ssh::detail::libssh2::agent::connect(agent, session);
+    ::ssh::detail::libssh2::agent::connect(agent, session->session_ptr());
 
     return boost::shared_ptr<LIBSSH2_AGENT>(
         agent, ::libssh2_agent_disconnect);
@@ -175,22 +177,23 @@ public:
     typedef detail::identity_iterator_base<identity> iterator;
     typedef detail::identity_iterator_base<const identity> const_iterator;
 
-    explicit agent_identities(boost::shared_ptr<LIBSSH2_SESSION> session)
+    explicit agent_identities(boost::shared_ptr<detail::session_state> session)
         : m_session(session),
           m_agent(
               boost::shared_ptr<LIBSSH2_AGENT>(
-                  ::ssh::detail::libssh2::agent::init(session.get()),
+                  ::ssh::detail::libssh2::agent::init(m_session->session_ptr()),
                   ::libssh2_agent_free)),
           // This second shared pointer to the same object only exists to
           // manage the lifetime of the connection
-          m_agent_connection(detail::do_connect(m_agent.get(), m_session.get()))
+          m_agent_connection(
+              detail::do_connect(m_agent.get(), m_session))
     {
         // We pull the identities out here (AND ONLY HERE) so that all copies
         // of the agent, iterators and identity objects refer to valid data.
         // If we called this when creating the iterator it would wipe out all
         // other iterators.
         ::ssh::detail::libssh2::agent::list_identities(
-            m_agent.get(), m_session.get());
+            m_agent.get(), m_session->session_ptr());
     }
 
     iterator begin() const
@@ -205,7 +208,7 @@ public:
 
 private:
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
     boost::shared_ptr<LIBSSH2_AGENT> m_agent;
     // This must remain after m_agent so it is destroyed first as it points to
     // the same agent struct.  It only exists to ensure the connection is shared

@@ -37,6 +37,7 @@
 #ifndef SSH_STREAM_HPP
 #define SSH_STREAM_HPP
 
+#include <ssh/detail/session_state.hpp>
 #include <ssh/detail/libssh2/sftp.hpp>
 #include <ssh/session.hpp>
 #include <ssh/filesystem.hpp>
@@ -290,7 +291,7 @@ namespace detail {
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_file(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<::ssh::detail::session_state> session,
         boost::shared_ptr<LIBSSH2_SFTP> sftp,
         const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
@@ -300,7 +301,7 @@ namespace detail {
         // Open with 644 permissions - good for non-directory files
         return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
             ::ssh::detail::libssh2::sftp::open(
-                session.get(), sftp.get(), path_string.data(),
+                session->session_ptr(), sftp.get(), path_string.data(),
                 path_string.size(), openmode_to_libssh2_flags(opening_mode),
                 LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
                 LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
@@ -309,7 +310,7 @@ namespace detail {
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_input_file(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<::ssh::detail::session_state> session,
         boost::shared_ptr<LIBSSH2_SFTP> sftp,
         const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
@@ -321,7 +322,7 @@ namespace detail {
     }
 
     inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_output_file(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<::ssh::detail::session_state> session,
         boost::shared_ptr<LIBSSH2_SFTP> sftp,
         const boost::filesystem::path& open_path, 
         openmode::value opening_mode)
@@ -335,7 +336,7 @@ namespace detail {
     }
 
     inline boost::iostreams::stream_offset seek(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<::ssh::detail::session_state> session,
         boost::shared_ptr<LIBSSH2_SFTP> sftp,
         boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
         const boost::filesystem::path& open_path,
@@ -363,7 +364,7 @@ namespace detail {
                 try
                 {
                     ::ssh::detail::libssh2::sftp::fstat(
-                        session.get(), sftp.get(),
+                        session->session_ptr(), sftp.get(),
                         handle.get(), &attributes, LIBSSH2_SFTP_STAT);
                 }
                 catch (boost::exception& e)
@@ -394,7 +395,7 @@ namespace detail {
     }
 
     inline std::streamsize read(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<::ssh::detail::session_state> session,
         boost::shared_ptr<LIBSSH2_SFTP> sftp,
         boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
         const boost::filesystem::path& open_path,
@@ -413,7 +414,7 @@ namespace detail {
             do
             {
                 ssize_t rc = ::ssh::detail::libssh2::sftp::read(
-                    session.get(), sftp.get(),
+                    session->session_ptr(), sftp.get(),
                     handle.get(), buffer + count, buffer_size - count);
                 if (rc == 0)
                     break; // EOF
@@ -432,7 +433,7 @@ namespace detail {
     }
 
     inline std::streamsize write(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<::ssh::detail::session_state> session,
         boost::shared_ptr<LIBSSH2_SFTP> sftp,
         boost::shared_ptr<LIBSSH2_SFTP_HANDLE> handle,
         const boost::filesystem::path& open_path,
@@ -452,7 +453,7 @@ namespace detail {
             do
             {
                 count += ::ssh::detail::libssh2::sftp::write(
-                    session.get(), sftp.get(), handle.get(),
+                    session->session_ptr(), sftp.get(), handle.get(),
                     data + count, data_size - count);
             }
             while (count < data_size);

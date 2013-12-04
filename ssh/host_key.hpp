@@ -37,6 +37,8 @@
 #ifndef SSH_HOST_KEY_HPP
 #define SSH_HOST_KEY_HPP
 
+#include <ssh/detail/session_state.hpp>
+
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -52,73 +54,70 @@
 namespace ssh {
 
 namespace detail {
-    namespace libssh2 {
-    namespace session {
 
-        /**
-         * Thin wrapper around libssh2_session_hostkey.
-         */
-        inline std::pair<std::string, int> hostkey(
-            boost::shared_ptr<LIBSSH2_SESSION> session)
-        {
-            size_t len = 0;
-            int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
-            const char* key = libssh2_session_hostkey(
-                session.get(), &len, &type);
+    /**
+     * Thin wrapper around libssh2_session_hostkey.
+     */
+    inline std::pair<std::string, int> hostkey(
+        boost::shared_ptr<session_state> session)
+    {
+        size_t len = 0;
+        int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
+        const char* key = libssh2_session_hostkey(
+            session->session_ptr(), &len, &type);
 
-            if (key)
-                return std::make_pair(std::string(key, len), type);
-            else
-                return std::make_pair(std::string(), type);
-        }
+        if (key)
+            return std::make_pair(std::string(key, len), type);
+        else
+            return std::make_pair(std::string(), type);
+    }
 
-        /**
-         * Thin wrapper around libssh2_hostkey_hash.
-         *
-         * @param T          Type of collection to return.  Sensible examples
-         *                   include std::string or std::vector<unsigned char>.
-         * @param session    libssh2 session pointer
-         * @param hash_type  Hash method being requested.
-         */
-        template<typename T>
-        inline T hostkey_hash(
-            boost::shared_ptr<LIBSSH2_SESSION> session, int hash_type)
-        {
-            const T::value_type* hash_bytes = 
-                reinterpret_cast<const T::value_type*>(
-                    libssh2_hostkey_hash(session.get(), hash_type));
+    /**
+     * Thin wrapper around libssh2_hostkey_hash.
+     *
+     * @param T          Type of collection to return.  Sensible examples
+     *                   include std::string or std::vector<unsigned char>.
+     * @param session    libssh2 session pointer
+     * @param hash_type  Hash method being requested.
+     */
+    template<typename T>
+    inline T hostkey_hash(
+        boost::shared_ptr<session_state> session, int hash_type)
+    {
+        const T::value_type* hash_bytes = 
+            reinterpret_cast<const T::value_type*>(
+                libssh2_hostkey_hash(session->session_ptr(), hash_type));
 
-            size_t len = 0;
-            if (hash_type == LIBSSH2_HOSTKEY_HASH_MD5)
-                len = 16;
-            else if (hash_type == LIBSSH2_HOSTKEY_HASH_SHA1)
-                len = 20;
-            else
-                BOOST_THROW_EXCEPTION(
-                    std::invalid_argument("Unknown hash type"));
+        size_t len = 0;
+        if (hash_type == LIBSSH2_HOSTKEY_HASH_MD5)
+            len = 16;
+        else if (hash_type == LIBSSH2_HOSTKEY_HASH_SHA1)
+            len = 20;
+        else
+            BOOST_THROW_EXCEPTION(
+                std::invalid_argument("Unknown hash type"));
 
-            if (hash_bytes)
-                return T(hash_bytes, hash_bytes + len);
-            else
-                return T();
-        }
+        if (hash_bytes)
+            return T(hash_bytes, hash_bytes + len);
+        else
+            return T();
+    }
 
-        /**
-         * Thin wrapper around libssh2_session_methods.
-         */
-        inline std::string method(
-            boost::shared_ptr<LIBSSH2_SESSION> session, int method_type)
-        {
-            const char* key_type = libssh2_session_methods(
-                session.get(), method_type);
-            
-            if (key_type)
-                return std::string(key_type);
-            else
-                return std::string();
-        }
+    /**
+     * Thin wrapper around libssh2_session_methods.
+     */
+    inline std::string method(
+        boost::shared_ptr<session_state> session, int method_type)
+    {
+        const char* key_type = libssh2_session_methods(
+            session->session_ptr(), method_type);
+        
+        if (key_type)
+            return std::string(key_type);
+        else
+            return std::string();
+    }
 
-    }}
 }
 
 /**
@@ -164,9 +163,8 @@ namespace detail {
 class host_key
 {
 public:
-    explicit host_key(boost::shared_ptr<LIBSSH2_SESSION> session)
-        : m_session(session),
-          m_key(detail::libssh2::session::hostkey(session)) {}
+    explicit host_key(boost::shared_ptr<detail::session_state> session)
+        : m_session(session), m_key(detail::hostkey(m_session)) {}
 
     /**
      * Host-key either raw or base-64 encoded.
@@ -196,8 +194,7 @@ public:
      */
     std::string algorithm_name() const
     {
-        return detail::libssh2::session::method(
-            m_session, LIBSSH2_METHOD_HOSTKEY);
+        return detail::method(m_session, LIBSSH2_METHOD_HOSTKEY);
     }
 
     /**
@@ -209,8 +206,7 @@ public:
      */
     std::vector<unsigned char> md5_hash() const
     {
-        return detail::libssh2::session::hostkey_hash<
-            std::vector<unsigned char> >(
+        return detail::hostkey_hash<std::vector<unsigned char>>(
             m_session, LIBSSH2_HOSTKEY_HASH_MD5);
     }
 
@@ -223,13 +219,12 @@ public:
      */
     std::vector<unsigned char> sha1_hash() const
     {
-        return detail::libssh2::session::hostkey_hash<
-            std::vector<unsigned char> >(
+        return detail::hostkey_hash<std::vector<unsigned char>>(
             m_session, LIBSSH2_HOSTKEY_HASH_SHA1);
     }
 
 private:
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
     std::pair<std::string, int> m_key;
 };
 

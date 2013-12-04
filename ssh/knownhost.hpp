@@ -38,7 +38,7 @@
 #define SSH_KNOWNHOST_HPP
 
 #include <ssh/detail/libssh2/knownhost.hpp> // ssh::detail::libssh2::knownhost
-#include <ssh/session.hpp> // allocate_session
+#include <ssh/detail/session_state.hpp>
 #include <ssh/host_key.hpp>
 
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
@@ -46,6 +46,7 @@
 #include <boost/filesystem.hpp> // path
 #include <boost/filesystem/fstream.hpp> // path-enabled fstream
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/system/error_code.hpp> // errc
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -67,17 +68,6 @@ class knownhost;
 namespace detail {
 
     /**
-     * Create a new libssh2 knownhost collection.
-     */
-    inline boost::shared_ptr<LIBSSH2_KNOWNHOSTS> init(
-        boost::shared_ptr<LIBSSH2_SESSION> session)
-    {
-        return boost::shared_ptr<LIBSSH2_KNOWNHOSTS>(
-            ::ssh::detail::libssh2::knownhost::init(session.get()),
-            libssh2_knownhost_free);
-    }
-
-    /**
      * Entry-reading functor.
      */
     template<int TYPE, typename T>
@@ -85,7 +75,7 @@ namespace detail {
     {
     public:
         read_entry(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
+            boost::shared_ptr<session_state> session,
             boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts)
             : m_session(session), m_hosts(hosts)
         {
@@ -97,12 +87,12 @@ namespace detail {
         void operator()(const T& entry)
         {
             ::ssh::detail::libssh2::knownhost::readline(
-                m_session.get(), m_hosts.get(), entry.data(), entry.length(),
-                TYPE);
+                m_session->session_ptr(), m_hosts.get(), entry.data(),
+                entry.length(), TYPE);
         }
 
     private:
-        boost::shared_ptr<LIBSSH2_SESSION> m_session;
+        boost::shared_ptr<session_state> m_session;
         boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
     };
 
@@ -114,8 +104,9 @@ namespace detail {
         : public std::unary_function<const knownhost&, std::string>
     {
     public:
-        write_entry(boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts)
-            : m_hosts(hosts)
+        write_entry(
+            boost::shared_ptr<session_state> /*session*/,
+            boost::shared_ptr<LIBSSH2_KNOWNHOSTS> /*hosts*/)
         {
         }
 
@@ -123,7 +114,7 @@ namespace detail {
          * Write entry from collection to string.
          *
          * The return type must be able to create a writable char buffer of a
-         * certain size by a call to its contructor like this:
+         * certain size by a call to its constructor like this:
          * T(size, default_val).  This is the case for both string and
          * vector<char>.
          */
@@ -131,9 +122,6 @@ namespace detail {
         {
             return host.to_string(TYPE);
         }
-
-    private:
-        boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
     };
 
     /**
@@ -177,14 +165,14 @@ namespace detail {
      * @returns NULL if finished.
      */
     inline libssh2_knownhost* next_host(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<session_state> session,
         boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts,
         libssh2_knownhost* current_position)
     {
         libssh2_knownhost* host = NULL;
 
         int rc = ::ssh::detail::libssh2::knownhost::get(
-            session.get(), hosts.get(), &host, current_position);
+            session->session_ptr(), hosts.get(), &host, current_position);
         
         assert(rc == 0 || rc == 1);
 
@@ -201,20 +189,20 @@ namespace detail {
      * Create new host entry in collection of hosts.
      */
     inline libssh2_knownhost* add(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<session_state> session,
         boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts,
         const std::string& host_or_ip, const std::string& salt,
         const std::string& key, int type, bool base64_key)
     {
         if (base64_key)
-            type |=    LIBSSH2_KNOWNHOST_KEYENC_BASE64;
+            type |= LIBSSH2_KNOWNHOST_KEYENC_BASE64;
         else
             type |= LIBSSH2_KNOWNHOST_KEYENC_RAW;
 
         libssh2_knownhost* host = NULL;
 
         ::ssh::detail::libssh2::knownhost::add(
-            session.get(), hosts.get(), host_or_ip.c_str(),
+            session->session_ptr(), hosts.get(), host_or_ip.c_str(),
             (salt.empty()) ? NULL : salt.c_str(),
             key.data(), key.length(), type, &host);
 
@@ -239,7 +227,7 @@ private:
     friend class knownhost_iterator;
     
     knownhost(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<detail::session_state> session,
         boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts,
         libssh2_knownhost* pos)
         : m_session(session), m_hosts(hosts), m_pos(pos) {}
@@ -283,8 +271,8 @@ public:
         boost::system::error_code ec;
 
         ::ssh::detail::libssh2::knownhost::writeline(
-            m_session.get(), m_hosts.get(), m_pos, NULL, 0, &required_len,
-            type, ec); 
+            m_session->session_ptr(), m_hosts.get(), m_pos, NULL, 0,
+            &required_len, type, ec); 
 
         assert(ec == boost::system::errc::no_buffer_space);
         required_len++; // returned val doesn't include NULL-terminator
@@ -293,7 +281,7 @@ public:
         // errors cause exception
         std::vector<char> buf(required_len);
         ::ssh::detail::libssh2::knownhost::writeline(
-            m_session.get(), m_hosts.get(), m_pos, &buf[0], buf.size(),
+            m_session->session_ptr(), m_hosts.get(), m_pos, &buf[0], buf.size(),
             &required_len, type);
         assert(required_len == buf.size() - 1);
 
@@ -358,7 +346,7 @@ public:
 
 private:
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
     boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
     libssh2_knownhost* m_pos;
 };
@@ -393,7 +381,7 @@ public:
 
         // this call invalidates the given iterator
         ::ssh::detail::libssh2::knownhost::del(
-            it.m_session.get(), it.m_hosts.get(), it.m_pos);
+            it.m_session->session_ptr(), it.m_hosts.get(), it.m_pos);
 
         return next;
     }
@@ -410,7 +398,7 @@ private:
      * Create an iterator to the beginning of the collection.
      */
     knownhost_iterator(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<detail::session_state> session,
         boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts)
         : m_session(session), m_hosts(hosts),
           m_pos(detail::next_host(m_session, m_hosts, NULL)) {}
@@ -419,7 +407,7 @@ private:
      * Create an iterator to a point in the collection indicated by pos.
      */
     knownhost_iterator(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
+        boost::shared_ptr<detail::session_state> session,
         boost::shared_ptr<LIBSSH2_KNOWNHOSTS> hosts, libssh2_knownhost* pos)
         : m_session(session), m_hosts(hosts), m_pos(pos) {}
 
@@ -447,7 +435,7 @@ private:
         return knownhost(m_session, m_hosts, m_pos);
     }
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
     boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
     libssh2_knownhost* m_pos;
 };
@@ -501,6 +489,18 @@ namespace detail {
     }
 }
 
+namespace detail {
+
+    inline boost::shared_ptr<LIBSSH2_KNOWNHOSTS> init(
+        boost::shared_ptr<session_state> session)
+    {
+        return boost::shared_ptr<LIBSSH2_KNOWNHOSTS>(
+            ::ssh::detail::libssh2::knownhost::init(session->session_ptr()),
+            libssh2_knownhost_free);
+    }
+
+}
+
 /**
  * Collection of known-host entries.
  */
@@ -508,7 +508,7 @@ class knownhost_collection
 {
 public:
     explicit knownhost_collection()
-        : m_session(::ssh::detail::allocate_session()),
+        : m_session(boost::make_shared<detail::session_state>()),
           m_hosts(detail::init(m_session))
     {
         // We construct a new session here, rather than taking one as an
@@ -540,7 +540,7 @@ public:
         libssh2_knownhost* match = NULL;
 
         int rc = ::ssh::detail::libssh2::knownhost::check(
-            m_session.get(), m_hosts.get(), host.c_str(), key.data(),
+            m_session->session_ptr(), m_hosts.get(), host.c_str(), key.data(),
             key.length(), type, &match);
 
         switch (rc)
@@ -671,12 +671,12 @@ protected:
         OutputIt output) const
     {
         return std::transform(
-            begin, end, output, detail::write_entry<TYPE>(m_hosts));
+            begin, end, output, detail::write_entry<TYPE>(m_session, m_hosts));
     }
 
 private:
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
+    boost::shared_ptr<detail::session_state> m_session;
     boost::shared_ptr<LIBSSH2_KNOWNHOSTS> m_hosts;
 };
 
