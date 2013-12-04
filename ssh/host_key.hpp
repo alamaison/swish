@@ -50,7 +50,6 @@
 #include <libssh2.h>
 
 namespace ssh {
-namespace host_key {
 
 namespace detail {
     namespace libssh2 {
@@ -125,12 +124,15 @@ namespace detail {
 /**
  * Possible types of host-key algorithm.
  */
-enum hostkey_type
+struct hostkey_type
 {
-    unknown,
-    rsa1,
-    ssh_rsa,
-    ssh_dss
+    enum enum_t
+    {
+        unknown,
+        rsa1,
+        ssh_rsa,
+        ssh_dss
+    };
 };
 
 namespace detail {
@@ -139,16 +141,16 @@ namespace detail {
      * Convert the returned key-type from libssh2_session_hostkey into a 
      * value from the hostkey_type enum.
      */
-    inline hostkey_type type_to_hostkey_type(int type)
+    inline hostkey_type::enum_t type_to_hostkey_type(int type)
     {
         switch (type)
         {
         case LIBSSH2_HOSTKEY_TYPE_RSA:
-            return ssh_rsa;
+            return hostkey_type::ssh_rsa;
         case LIBSSH2_HOSTKEY_TYPE_DSS:
-            return ssh_dss;
+            return hostkey_type::ssh_dss;
         default:
-            return unknown;
+            return hostkey_type::unknown;
         }
     }
 }
@@ -184,7 +186,7 @@ public:
     /**
      * Type of the key algorithm e.g., ssh-dss.
      */
-    hostkey_type algorithm() const
+    hostkey_type::enum_t algorithm() const
     {
         return detail::type_to_hostkey_type(m_key.second);
     }
@@ -263,6 +265,6 @@ std::string hexify(
     return hex_hash.str();
 }
 
-}} // namespace ssh::host_key
+} // namespace ssh
 
 #endif

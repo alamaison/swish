@@ -72,10 +72,10 @@ using swish::connection::running_session;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::home_directory;
 
-using ssh::host_key::hexify;
-using ssh::host_key::host_key;
-using ssh::knownhost::find_result;
-using ssh::knownhost::openssh_knownhost_collection;
+using ssh::hexify;
+using ssh::host_key;
+using ssh::knownhost_search_result;
+using ssh::openssh_knownhost_collection;
 using ssh::session;
 using ssh::filesystem::sftp_filesystem;
 
@@ -135,7 +135,7 @@ void verify_host_key(
 
     openssh_knownhost_collection hosts(known_hosts_path);
 
-    find_result result = hosts.find(utf8_host, key);
+    knownhost_search_result result = hosts.find(utf8_host, key);
     if (result.mismatch())
     {
         HRESULT hr = consumer->OnHostkeyMismatch(
@@ -361,7 +361,7 @@ BOOST_SCOPED_ENUM(authentication_result) public_key_agent_authentication(
     try
     {
         BOOST_FOREACH(
-            ssh::agent::identity key, session.get_session().agent_identities())
+            ssh::identity key, session.get_session().agent_identities())
         {
             try
             {

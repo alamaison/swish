@@ -47,7 +47,7 @@
 
 #include <libssh2.h>
 
-using ssh::host_key::host_key;
+using ssh::host_key;
 using ssh::session;
 
 using test::ssh::session_fixture;
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE( hostkey )
 
     string expected = base64_decode(EXPECTED_HOSTKEY);
     BOOST_CHECK_EQUAL(key.key(), expected);
-    BOOST_CHECK_EQUAL(key.algorithm(), ssh::host_key::ssh_rsa);
+    BOOST_CHECK_EQUAL(key.algorithm(), ssh::hostkey_type::ssh_rsa);
     BOOST_CHECK_EQUAL(key.algorithm_name(), "ssh-rsa");
     BOOST_CHECK(!key.is_base64());
 }
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( hostkey_md5 )
 {
     host_key key = test_session().hostkey();
 
-    string hex_hash(ssh::host_key::hexify(key.md5_hash(), " ", true));
+    string hex_hash(ssh::hexify(key.md5_hash(), " ", true));
 
     BOOST_CHECK_EQUAL(
         hex_hash, "0C 0E D1 A5 BB 10 27 5F 76 92 4C E1 87 CE 5C 5E");

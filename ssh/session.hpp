@@ -415,9 +415,9 @@ public:
     /**
      * Hostkey sent by the server to identify itself.
      */
-    ssh::host_key::host_key hostkey() const
+    ssh::host_key hostkey() const
     {
-        return ssh::host_key::host_key(m_session);
+        return ssh::host_key(m_session);
     }
 
     /**
@@ -609,9 +609,9 @@ public:
      * Connect to any agent running on the system and return object to
      * authenticate using its identities.
      */
-    agent::agent_identities agent_identities()
+    ::ssh::agent_identities agent_identities()
     {
-        return agent::agent_identities(m_session);
+        return ::ssh::agent_identities(m_session);
     }
 
     /// @cond INTERNAL

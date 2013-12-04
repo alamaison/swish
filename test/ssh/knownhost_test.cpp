@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,11 +46,11 @@
 
 #include <libssh2.h>
 
-using ssh::knownhost::find_result;
-using ssh::knownhost::knownhost_collection;
-using ssh::knownhost::knownhost;
-using ssh::knownhost::knownhost_iterator;
-using ssh::knownhost::openssh_knownhost_collection;
+using ssh::knownhost_search_result;
+using ssh::knownhost_collection;
+using ssh::knownhost;
+using ssh::knownhost_iterator;
+using ssh::openssh_knownhost_collection;
 
 using boost::assign::list_of;
 using boost::filesystem::path;
@@ -176,8 +176,8 @@ BOOST_AUTO_TEST_CASE( roundtrip )
     ifstream file("test_known_hosts_out");
     BOOST_REQUIRE_EQUAL_COLLECTIONS(
         lines.begin(), lines.end(), 
-        std::istream_iterator<ssh::knownhost::detail::line>(file),
-        std::istream_iterator<ssh::knownhost::detail::line>());
+        std::istream_iterator<ssh::detail::line>(file),
+        std::istream_iterator<ssh::detail::line>());
 }
 
 namespace {
@@ -395,7 +395,7 @@ void do_find_match_test(
     // Find each datum twice, once by IP once by name
     BOOST_FOREACH(const test_datum& datum, test_data)
     {
-        find_result result = kh.find(datum.name, datum.key, true);
+        knownhost_search_result result = kh.find(datum.name, datum.key, true);
         
         BOOST_CHECK(result.match());
         BOOST_CHECK(!result.mismatch());
@@ -444,7 +444,7 @@ void do_find_mismatch_test(
     // Find each datum twice, once by IP once by name
     BOOST_FOREACH(const test_datum& datum, test_data)
     {
-        find_result result = kh.find(datum.name, datum.fail_key, true);
+        knownhost_search_result result = kh.find(datum.name, datum.fail_key, true);
         
         BOOST_CHECK(!result.match());
         BOOST_CHECK(result.mismatch());
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE( find_mismatch_hashed )
 BOOST_AUTO_TEST_CASE( find_fail )
 {
     openssh_knownhost_collection kh("test_known_hosts");
-    find_result result = kh.find(FAIL_HOST, KEY_A, true);
+    knownhost_search_result result = kh.find(FAIL_HOST, KEY_A, true);
 
     BOOST_CHECK(!result.match());
     BOOST_CHECK(!result.mismatch());
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE( find_fail )
 BOOST_AUTO_TEST_CASE( find_fail_hashed )
 {
     openssh_knownhost_collection kh("test_known_hosts_hashed");
-    find_result result = kh.find(FAIL_HOST, KEY_A, true);
+    knownhost_search_result result = kh.find(FAIL_HOST, KEY_A, true);
 
     BOOST_CHECK(!result.match());
     BOOST_CHECK(!result.mismatch());
@@ -522,7 +522,7 @@ void do_erase_test(
     std::string expected_name = (is_hashed) ? "" : datum.name;
 
     // find target entry by IP address
-    find_result ip_result = kh.find(datum.ip, datum.key, true);
+    knownhost_search_result ip_result = kh.find(datum.ip, datum.key, true);
     BOOST_CHECK_EQUAL(ip_result.host()->name(), expected_ip);
     BOOST_CHECK_EQUAL(ip_result.host()->key(), datum.key);
 
@@ -536,7 +536,7 @@ void do_erase_test(
 
     // searching for this host entry should also work and give an
     // equal iterator
-    find_result host_result = kh.find(datum.name, datum.key, true);
+    knownhost_search_result host_result = kh.find(datum.name, datum.key, true);
     BOOST_CHECK(host_result.match());
     BOOST_CHECK_EQUAL(host_result.host()->name(), expected_name);
     BOOST_CHECK_EQUAL(host_result.host()->key(), datum.key);
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE( erase_all )
 BOOST_AUTO_TEST_CASE( erase_last )
 {
     openssh_knownhost_collection kh("test_known_hosts");
-    find_result result = kh.find(test_data[2].name, test_data[2].key, true);
+    knownhost_search_result result = kh.find(test_data[2].name, test_data[2].key, true);
 
     BOOST_REQUIRE(result.host() != kh.end());
 
@@ -634,9 +634,9 @@ BOOST_AUTO_TEST_CASE( add )
 {
     openssh_knownhost_collection kh("test_known_hosts");
 
-    kh.add("new.example.com", KEY_B, ssh::host_key::ssh_dss, true);
+    kh.add("new.example.com", KEY_B, ssh::hostkey_type::ssh_dss, true);
 
-    find_result result = kh.find("new.example.com", KEY_B, true);
+    knownhost_search_result result = kh.find("new.example.com", KEY_B, true);
 
     BOOST_CHECK(result.match());
     BOOST_REQUIRE(result.host() != kh.end());

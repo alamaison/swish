@@ -48,7 +48,6 @@
 #include <libssh2.h> // LIBSSH2_AGENT, libssh2_agent_*
 
 namespace ssh {
-namespace agent {
 
 class identity
 {
@@ -214,6 +213,6 @@ private:
     boost::shared_ptr<LIBSSH2_AGENT> m_agent_connection;
 };
 
-}} // namespace ssh::agent
+} // namespace ssh
 
 #endif

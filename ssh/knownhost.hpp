@@ -61,7 +61,6 @@
 #include <libssh2.h>
 
 namespace ssh {
-namespace knownhost {
 
 class knownhost;
 
@@ -456,10 +455,10 @@ private:
 /**
  * Result returned by knownhost_collection::find().
  */
-class find_result
+class knownhost_search_result
 {
 public:
-    find_result(
+    knownhost_search_result(
         const knownhost_iterator& it, const knownhost_iterator& end,
         bool match)
         : m_host(it), m_end(end), m_match(match)
@@ -484,17 +483,17 @@ namespace detail {
      * Convert a value from the hostkey_type enum into an integer suitable
      * for use by libssh2_knownhost_add.
      */
-    inline int hostkey_type_to_add_type(ssh::host_key::hostkey_type type)
+    inline int hostkey_type_to_add_type(ssh::hostkey_type::enum_t type)
     {
         switch (type)
         {
-        case ssh::host_key::rsa1:
+        case ssh::hostkey_type::rsa1:
             return LIBSSH2_KNOWNHOST_KEY_RSA1;
-        case ssh::host_key::ssh_rsa:
+        case ssh::hostkey_type::ssh_rsa:
             return LIBSSH2_KNOWNHOST_KEY_SSHRSA;
-        case ssh::host_key::ssh_dss:
+        case ssh::hostkey_type::ssh_dss:
             return LIBSSH2_KNOWNHOST_KEY_SSHDSS;
-        case ssh::host_key::unknown:
+        case ssh::hostkey_type::unknown:
         default:
             BOOST_THROW_EXCEPTION(
                 std::invalid_argument("Unrecognised key algorithm"));
@@ -528,7 +527,7 @@ public:
         return knownhost_iterator();
     }
 
-    find_result find(
+    knownhost_search_result find(
         const std::string& host, const std::string& key, bool base64_key)
     const
     {
@@ -547,15 +546,15 @@ public:
         switch (rc)
         {
         case LIBSSH2_KNOWNHOST_CHECK_MATCH:
-            return find_result(
+            return knownhost_search_result(
                 knownhost_iterator(m_session, m_hosts, match), end(), true);
 
         case LIBSSH2_KNOWNHOST_CHECK_MISMATCH:
-            return find_result(
+            return knownhost_search_result(
                 knownhost_iterator(m_session, m_hosts, match), end(), false);
             
         case LIBSSH2_KNOWNHOST_CHECK_NOTFOUND:
-            return find_result(end(), end(), false);
+            return knownhost_search_result(end(), end(), false);
 
         default:
             assert(false);
@@ -563,16 +562,15 @@ public:
         }
     }
     
-    find_result find(
-        const std::string& host, const ssh::host_key::host_key& key)
+    knownhost_search_result find(
+        const std::string& host, const ssh::host_key& key)
     {
         return find(host, key.key(), key.is_base64());
     }
 
     knownhost add(
-        const std::string& host_or_ip,
-        const std::string& key,    ssh::host_key::hostkey_type algorithm,
-        bool base64_key)
+        const std::string& host_or_ip, const std::string& key,
+        ssh::hostkey_type::enum_t algorithm, bool base64_key)
     {
         int type = LIBSSH2_KNOWNHOST_TYPE_PLAIN |
             detail::hostkey_type_to_add_type(algorithm);
@@ -585,14 +583,14 @@ public:
     }
 
     knownhost add(
-        const std::string& host_or_ip, const ssh::host_key::host_key& key)
+        const std::string& host_or_ip, const ssh::host_key& key)
     {
         return add(host_or_ip, key.key(), key.algorithm(), key.is_base64());
     }
 
     knownhost add_hashed(
         const std::string& host_or_ip, const std::string& salt,
-        const std::string& key, ssh::host_key::hostkey_type algorithm,
+        const std::string& key, ssh::hostkey_type::enum_t algorithm,
         bool base64_key)
     {
         int type = LIBSSH2_KNOWNHOST_TYPE_SHA1 |
@@ -606,7 +604,7 @@ public:
 
     knownhost add_hashed(
         const std::string& host_or_ip, const std::string& salt,
-        const ssh::host_key::host_key& key)
+        const ssh::host_key& key)
     {
         return add_hashed(
             host_or_ip, salt, key.key(), key.algorithm(), key.is_base64());
@@ -614,7 +612,7 @@ public:
 
     knownhost add_custom(
         const std::string& host_or_ip,
-        const std::string& key, ssh::host_key::hostkey_type algorithm,
+        const std::string& key, ssh::hostkey_type::enum_t algorithm,
         bool base64_key)
     {
         int type = LIBSSH2_KNOWNHOST_TYPE_CUSTOM |
@@ -628,7 +626,7 @@ public:
     }
 
     knownhost add_custom(
-        const std::string& host_or_ip, const ssh::host_key::host_key& key)
+        const std::string& host_or_ip, const ssh::host_key& key)
     {
         return add_custom(
             host_or_ip, key.key(), key.algorithm(), key.is_base64());
@@ -684,14 +682,14 @@ private:
 
 knownhost add(
     knownhost_collection& hosts, const std::string& host_or_ip,
-    const ssh::host_key::host_key& key)
+    const ssh::host_key& key)
 {
     return hosts.add(host_or_ip, key.key(), key.algorithm(), key.is_base64());
 }
 
 knownhost add_hashed(
     knownhost_collection& hosts, const std::string& host_or_ip,
-    const std::string& salt, const ssh::host_key::host_key& key)
+    const std::string& salt, const ssh::host_key& key)
 {
     return hosts.add_hashed(
         host_or_ip, salt, key.key(), key.algorithm(), key.is_base64());
@@ -699,7 +697,7 @@ knownhost add_hashed(
 
 knownhost add_custom(
     knownhost_collection& hosts, const std::string& host_or_ip,
-    const ssh::host_key::host_key& key)
+    const ssh::host_key& key)
 {
     return hosts.add_custom(
         host_or_ip, key.key(), key.algorithm(), key.is_base64());
@@ -707,7 +705,7 @@ knownhost add_custom(
 
 knownhost update(
     knownhost_collection& hosts, const std::string& host_or_ip,
-    const ssh::host_key::host_key& key, const find_result& entry)
+    const ssh::host_key& key, const knownhost_search_result& entry)
 {
     erase(entry.host());
     return add(hosts, host_or_ip, key);
@@ -818,6 +816,6 @@ public:
     }
 };
 
-}} // namespace ssh::knownhost
+} // namespace ssh
 
 #endif

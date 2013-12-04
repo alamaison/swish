@@ -53,8 +53,8 @@ using boost::size;
 using boost::system::system_error;
 
 using ssh::session;
-using ssh::agent::agent_identities;
-using ssh::agent::identity;
+using ssh::agent_identities;
+using ssh::identity;
 
 using test::ssh::session_fixture;
 
