@@ -192,9 +192,9 @@ namespace detail {
 
             ::ssh::detail::libssh2::userauth::keyboard_interactive_ex(
                 session.get(), username.data(), username.size(),
-                &dethunker<ChallengeResponder>);
+                &dethunker<ChallengeResponder>, ec, message);
 
-            return translate_status(session, ec, message);
+            return translate_status(ec, message);
         }
 
         void operator()(
@@ -249,7 +249,6 @@ namespace detail {
          *    c) before needing to call the responder.
          */
         bool translate_status(
-            boost::shared_ptr<LIBSSH2_SESSION> session,
             const boost::system::error_code& ec, const std::string& message)
         {
             if (!ec)
