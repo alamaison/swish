@@ -46,6 +46,7 @@
 #include <boost/optional/optional.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <exception> // bad_alloc
@@ -72,6 +73,8 @@ class session_state : private boost::noncopyable
     BOOST_MOVABLE_BUT_NOT_COPYABLE(session_state)
 
 public:
+
+    typedef boost::mutex::scoped_lock scoped_lock;
 
     /**
      * Creates a session that is not (and never will be) connected to a host.
@@ -127,12 +130,20 @@ public:
         ::libssh2_session_free(m_session);
     }
 
+    scoped_lock aquire_lock()
+    {
+        return scoped_lock(m_mutex);
+    }
+
     LIBSSH2_SESSION* session_ptr()
     {
         return m_session;
     }
 
 private:
+
+    boost::mutex m_mutex;
+    ///< coordinates multiple-threads use of non-thread-safe session
 
     LIBSSH2_SESSION* m_session;
 

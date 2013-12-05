@@ -298,6 +298,9 @@ namespace detail {
     {
         std::string path_string = open_path.string();
 
+        ::ssh::detail::session_state::scoped_lock lock =
+            session->aquire_lock();
+
         // Open with 644 permissions - good for non-directory files
         return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
             ::ssh::detail::libssh2::sftp::open(
@@ -363,6 +366,9 @@ namespace detail {
 
                 try
                 {
+                    ::ssh::detail::session_state::scoped_lock lock =
+                        session->aquire_lock();
+
                     ::ssh::detail::libssh2::sftp::fstat(
                         session->session_ptr(), sftp.get(),
                         handle.get(), &attributes, LIBSSH2_SFTP_STAT);
@@ -413,6 +419,9 @@ namespace detail {
             ssize_t count = 0;
             do
             {
+                ::ssh::detail::session_state::scoped_lock lock =
+                    session->aquire_lock();
+
                 ssize_t rc = ::ssh::detail::libssh2::sftp::read(
                     session->session_ptr(), sftp.get(),
                     handle.get(), buffer + count, buffer_size - count);
@@ -452,6 +461,10 @@ namespace detail {
             ssize_t count = 0;
             do
             {
+
+                ::ssh::detail::session_state::scoped_lock lock =
+                    session->aquire_lock();
+
                 count += ::ssh::detail::libssh2::sftp::write(
                     session->session_ptr(), sftp.get(), handle.get(),
                     data + count, data_size - count);

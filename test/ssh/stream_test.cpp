@@ -42,6 +42,8 @@
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/future.hpp> // packaged_task
+#include <boost/thread/thread.hpp>
 
 #include <string>
 #include <vector>
@@ -54,7 +56,9 @@ using ssh::filesystem::openmode;
 using ssh::filesystem::sftp_filesystem;
 
 using boost::filesystem::path;
+using boost::packaged_task;
 using boost::system::system_error;
+using boost::thread;
 
 using test::ssh::sandbox_fixture;
 using test::ssh::session_fixture;
@@ -146,7 +150,7 @@ void make_file_read_only(const path& target)
 
 }
 
-BOOST_FIXTURE_TEST_SUITE(stream_tests, stream_fixture)
+BOOST_AUTO_TEST_SUITE(stream_tests)
 
 BOOST_FIXTURE_TEST_SUITE(istream_tests, stream_fixture)
 
@@ -1670,6 +1674,41 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_interleaved )
     BOOST_CHECK_EQUAL(bob, "ahhk");
 }
 
+
+BOOST_AUTO_TEST_SUITE_END();
+
+BOOST_FIXTURE_TEST_SUITE(threading_tests, stream_fixture)
+
+namespace {
+
+    string get_first_token(ssh::filesystem::ifstream& stream)
+    {
+        string r;
+        stream >> r;
+        return r;
+    }
+
+}
+
+BOOST_AUTO_TEST_CASE( stream_read_on_different_threads )
+{
+    path target1 = new_file_in_sandbox("humpty dumpty sat");
+    path target2 = new_file_in_sandbox("on the wall");
+
+    sftp_filesystem chan = filesystem();
+
+    ssh::filesystem::ifstream s1(chan, to_remote_path(target1));
+    ssh::filesystem::ifstream s2(chan, to_remote_path(target2));
+
+    packaged_task<string> p1(boost::bind(get_first_token, boost::ref(s1)));
+    packaged_task<string> p2(boost::bind(get_first_token, boost::ref(s2)));
+
+    thread(boost::ref(p1)).detach();
+    thread(boost::ref(p2)).detach();
+
+    BOOST_CHECK_EQUAL(p1.get_future().get(), "humpty");
+    BOOST_CHECK_EQUAL(p2.get_future().get(), "on");
+}
 
 BOOST_AUTO_TEST_SUITE_END();
 

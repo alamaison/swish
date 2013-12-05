@@ -127,7 +127,11 @@ namespace detail {
             boost::system::error_code ec;
             std::string message;
 
-            ::ssh::detail::libssh2::userauth::keyboard_interactive_ex(
+            // IMPORTANT: No need to lock here.  The session is locked by the
+            // caller to encompass setting the abstract so that the abstract
+            // isn't inadvertently overwritten.
+
+            libssh2::userauth::keyboard_interactive_ex(
                 session->session_ptr(), username.data(), username.size(),
                 &dethunker<ChallengeResponder>, ec, message);
 
@@ -375,6 +379,11 @@ public:
         boost::system::error_code ec;
         std::string message;
 
+        // Locking until we copy out the method string owned by the session.
+        // We don't want another thread inadvertently causing it to be
+        // overwritten While we're reading it.
+        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
         const char* method_list = detail::libssh2::userauth::list(
             m_session->session_ptr(), username.data(), username.size(),
             ec, message);
@@ -408,7 +417,9 @@ public:
 
     bool authenticated() const
     {
-        return libssh2_userauth_authenticated(m_session->session_ptr()) != 0;
+        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
+        return ::libssh2_userauth_authenticated(m_session->session_ptr()) != 0;
     }
 
     /**
@@ -433,9 +444,13 @@ public:
         boost::system::error_code ec;
         std::string message;
 
-        detail::libssh2::userauth::password(
-            m_session->session_ptr(), username.data(), username.size(),
-            password.data(), password.size(), NULL, ec, message);
+        {
+            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
+            detail::libssh2::userauth::password(
+                m_session->session_ptr(), username.data(), username.size(),
+                password.data(), password.size(), NULL, ec, message);
+        }
 
         if (!ec)
         {
@@ -489,6 +504,10 @@ public:
      * @throws user-defined-exception
      *     if authentication fails because the `responder` threw an exception,
      *     the exception is throw out of this method.
+     *
+     * @warning  The responder __must not__ call any code that uses the same
+     *           SSH session currently being authenticated.  Doing so results
+     *           in undefined behaviour (likely deadlock).
      */
     //
     // We tried to use Boost.Concept here to verify the ChallengeResponder but
@@ -521,6 +540,12 @@ public:
 
         detail::challenge_response_translator<ChallengeResponder>
             wrapped_responder(responder);
+
+        // IMPORTANT: Locked from this point onwards until returning to the
+        // caller so that abstract is not overwritten by another thread
+        // before we pull the responder out of it later
+        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
         *::libssh2_session_abstract(m_session->session_ptr()) =
             &wrapped_responder;
 
@@ -539,6 +564,8 @@ public:
         const boost::filesystem::path& private_key,
         const std::string& passphrase)
     {
+        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
         detail::libssh2::userauth::public_key_from_file(
             m_session->session_ptr(), username.data(), username.size(),
             public_key.external_file_string().c_str(),

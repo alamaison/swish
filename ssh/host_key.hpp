@@ -61,6 +61,14 @@ namespace detail {
     inline std::pair<std::string, int> hostkey(
         boost::shared_ptr<session_state> session)
     {
+        // Session owns the string.
+        // Lock until we finish copying the key string from the session.  I 
+        // don't know if other calls to the session are currently able to
+        // change it, but they might one day.
+        // Locking it for the duration makes it thread-safe either way.
+
+        detail::session_state::scoped_lock lock = session->aquire_lock();
+
         size_t len = 0;
         int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
         const char* key = libssh2_session_hostkey(
@@ -84,6 +92,14 @@ namespace detail {
     inline T hostkey_hash(
         boost::shared_ptr<session_state> session, int hash_type)
     {
+        // Session owns the data.
+        // Lock until we finish copying the key hash bytes from the session.  I 
+        // don't know if other calls to the session are currently able to
+        // change it, but they might one day.
+        // Locking it for the duration makes it thread-safe either way.
+
+        detail::session_state::scoped_lock lock = session->aquire_lock();
+
         const T::value_type* hash_bytes = 
             reinterpret_cast<const T::value_type*>(
                 libssh2_hostkey_hash(session->session_ptr(), hash_type));
@@ -109,6 +125,14 @@ namespace detail {
     inline std::string method(
         boost::shared_ptr<session_state> session, int method_type)
     {
+        // Session owns the string.
+        // Lock until we finish copying the string from the session.  I 
+        // don't know if other calls to the session are currently able to
+        // change it, but they might one day.
+        // Locking it for the duration makes it thread-safe either way.
+
+        detail::session_state::scoped_lock lock = session->aquire_lock();
+
         const char* key_type = libssh2_session_methods(
             session->session_ptr(), method_type);
         

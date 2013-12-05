@@ -244,6 +244,8 @@ namespace detail {
     {
         std::string path_string = path.string();
 
+        ::ssh::detail::session_state::scoped_lock lock = session->aquire_lock();
+
         return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
             ::ssh::detail::libssh2::sftp::open(
                 session->session_ptr(), channel.get(), path_string.data(),
@@ -344,6 +346,9 @@ private:
         std::vector<char> filename_buffer(1024, '\0');
         std::vector<char> longentry_buffer(1024, '\0');
         LIBSSH2_SFTP_ATTRIBUTES attrs = LIBSSH2_SFTP_ATTRIBUTES();
+
+        ::ssh::detail::session_state::scoped_lock lock =
+            m_session->aquire_lock();
 
         int rc = ::ssh::detail::libssh2::sftp::readdir_ex(
             m_session->session_ptr(), m_channel.get(), m_handle.get(),
@@ -450,6 +455,19 @@ class sftp_input_device;
 class sftp_output_device;
 class sftp_io_device;
 
+namespace detail {
+
+    inline boost::shared_ptr<LIBSSH2_SFTP> init(
+        boost::shared_ptr<::ssh::detail::session_state> session)
+    {
+        ::ssh::detail::session_state::scoped_lock lock = session->aquire_lock();
+
+        return boost::shared_ptr<LIBSSH2_SFTP>(
+            ::ssh::detail::libssh2::sftp::init(session->session_ptr()),
+            ::libssh2_sftp_shutdown);
+    }
+}
+
 /**
  * Access to Filesystem remote server via an SSH/SFTP connection.
  */
@@ -463,10 +481,7 @@ public:
     explicit sftp_filesystem(::ssh::session session)
         :
     m_session(::ssh::session::access_attorney::get_session_state(session)),
-    m_sftp(
-        boost::shared_ptr<LIBSSH2_SFTP>(
-            ::ssh::detail::libssh2::sftp::init(m_session->session_ptr()),
-            ::libssh2_sftp_shutdown)) {}
+    m_sftp(detail::init(m_session)) {}
 
     /**
      * Create an iterator over the contents of the given directory.
@@ -499,6 +514,10 @@ public:
     {
         std::string file_path = file.string();
         LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
+
+        ::ssh::detail::session_state::scoped_lock lock =
+            m_session->aquire_lock();
+
         ::ssh::detail::libssh2::sftp::stat(
             m_session->session_ptr(), m_sftp.get(), file_path.data(),
             file_path.size(),
@@ -544,6 +563,9 @@ public:
     {
         std::string link_string = link.string();
         std::string target_string = target.string();
+
+        ::ssh::detail::session_state::scoped_lock lock =
+            m_session->aquire_lock();
 
         ::ssh::detail::libssh2::sftp::symlink(
             m_session->session_ptr(), m_sftp.get(), link_string.data(),
@@ -617,6 +639,9 @@ public:
             BOOST_THROW_EXCEPTION(
                 std::invalid_argument("Unrecognised overwrite behaviour"));
         }
+
+        ::ssh::detail::session_state::scoped_lock lock =
+            m_session->aquire_lock();
 
         ::ssh::detail::libssh2::sftp::rename(
             m_session->session_ptr(), m_sftp.get(), source_string.data(),
@@ -741,6 +766,9 @@ public:
 
         try
         {
+            ::ssh::detail::session_state::scoped_lock lock =
+                m_session->aquire_lock();
+
             ::ssh::detail::libssh2::sftp::mkdir_ex(
                 m_session->session_ptr(), m_sftp.get(),
                 new_directory_string.data(),
@@ -804,6 +832,9 @@ private:
 
         try
         {
+            ::ssh::detail::session_state::scoped_lock lock =
+                m_session->aquire_lock();
+
             if (is_directory)
             {
                 ::ssh::detail::libssh2::sftp::rmdir_ex(
@@ -845,6 +876,9 @@ private:
         // take measures later to reduce the footprint
 
         std::vector<char> target_path_buffer(1024, '\0');
+
+        ::ssh::detail::session_state::scoped_lock lock =
+            m_session->aquire_lock();
 
         int len = ::ssh::detail::libssh2::sftp::symlink_ex(
             m_session->session_ptr(), m_sftp.get(), path, path_len,

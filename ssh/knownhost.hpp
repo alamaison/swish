@@ -86,7 +86,9 @@ namespace detail {
          */
         void operator()(const T& entry)
         {
-            ::ssh::detail::libssh2::knownhost::readline(
+            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
+            detail::libssh2::knownhost::readline(
                 m_session->session_ptr(), m_hosts.get(), entry.data(),
                 entry.length(), TYPE);
         }
@@ -171,6 +173,8 @@ namespace detail {
     {
         libssh2_knownhost* host = NULL;
 
+        detail::session_state::scoped_lock lock = session->aquire_lock();
+
         int rc = ::ssh::detail::libssh2::knownhost::get(
             session->session_ptr(), hosts.get(), &host, current_position);
         
@@ -201,7 +205,9 @@ namespace detail {
 
         libssh2_knownhost* host = NULL;
 
-        ::ssh::detail::libssh2::knownhost::add(
+        detail::session_state::scoped_lock lock = session->aquire_lock();
+
+        detail::libssh2::knownhost::add(
             session->session_ptr(), hosts.get(), host_or_ip.c_str(),
             (salt.empty()) ? NULL : salt.c_str(),
             key.data(), key.length(), type, &host);
@@ -270,9 +276,13 @@ public:
         size_t required_len = 0;
         boost::system::error_code ec;
 
-        ::ssh::detail::libssh2::knownhost::writeline(
-            m_session->session_ptr(), m_hosts.get(), m_pos, NULL, 0,
-            &required_len, type, ec); 
+        {
+            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
+            detail::libssh2::knownhost::writeline(
+                m_session->session_ptr(), m_hosts.get(), m_pos, NULL, 0,
+                &required_len, type, ec);
+        }
 
         assert(ec == boost::system::errc::no_buffer_space);
         required_len++; // returned val doesn't include NULL-terminator
@@ -280,9 +290,15 @@ public:
         // now repeat but with a properly allocated buffer and no ec so
         // errors cause exception
         std::vector<char> buf(required_len);
-        ::ssh::detail::libssh2::knownhost::writeline(
-            m_session->session_ptr(), m_hosts.get(), m_pos, &buf[0], buf.size(),
-            &required_len, type);
+
+        {
+            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
+            ::ssh::detail::libssh2::knownhost::writeline(
+                m_session->session_ptr(), m_hosts.get(), m_pos, &buf[0],
+                buf.size(), &required_len, type);
+        }
+
         assert(required_len == buf.size() - 1);
 
         // Return line excluding '\n' and NULL-terminator
@@ -379,8 +395,10 @@ public:
         knownhost_iterator next = it;
         next++;
 
+        detail::session_state::scoped_lock lock = it.m_session->aquire_lock();
+
         // this call invalidates the given iterator
-        ::ssh::detail::libssh2::knownhost::del(
+        detail::libssh2::knownhost::del(
             it.m_session->session_ptr(), it.m_hosts.get(), it.m_pos);
 
         return next;
@@ -494,8 +512,10 @@ namespace detail {
     inline boost::shared_ptr<LIBSSH2_KNOWNHOSTS> init(
         boost::shared_ptr<session_state> session)
     {
+        detail::session_state::scoped_lock lock = session->aquire_lock();
+
         return boost::shared_ptr<LIBSSH2_KNOWNHOSTS>(
-            ::ssh::detail::libssh2::knownhost::init(session->session_ptr()),
+            libssh2::knownhost::init(session->session_ptr()),
             libssh2_knownhost_free);
     }
 
@@ -539,9 +559,15 @@ public:
 
         libssh2_knownhost* match = NULL;
 
-        int rc = ::ssh::detail::libssh2::knownhost::check(
-            m_session->session_ptr(), m_hosts.get(), host.c_str(), key.data(),
-            key.length(), type, &match);
+        int rc;
+        
+        {
+            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+
+            rc = detail::libssh2::knownhost::check(
+                m_session->session_ptr(), m_hosts.get(), host.c_str(),
+                key.data(), key.length(), type, &match);
+        }
 
         switch (rc)
         {
