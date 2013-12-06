@@ -188,7 +188,18 @@ class host_key
 {
 public:
     explicit host_key(boost::shared_ptr<detail::session_state> session)
-        : m_session(session), m_key(detail::hostkey(m_session)) {}
+        :
+    // We pull everything out of the session here and store it to avoid
+    // instances of this class depending on the lifetime of the session
+    m_key(detail::hostkey(session)),
+    m_algorithm_name(detail::method(session, LIBSSH2_METHOD_HOSTKEY)),
+    m_md5_hash(
+        detail::hostkey_hash<std::vector<unsigned char>>(
+            session, LIBSSH2_HOSTKEY_HASH_MD5)),
+    m_sha1_hash(
+        detail::hostkey_hash<std::vector<unsigned char>>(
+            session, LIBSSH2_HOSTKEY_HASH_SHA1))
+    {}
 
     /**
      * Host-key either raw or base-64 encoded.
@@ -218,7 +229,7 @@ public:
      */
     std::string algorithm_name() const
     {
-        return detail::method(m_session, LIBSSH2_METHOD_HOSTKEY);
+        return m_algorithm_name;
     }
 
     /**
@@ -230,8 +241,7 @@ public:
      */
     std::vector<unsigned char> md5_hash() const
     {
-        return detail::hostkey_hash<std::vector<unsigned char>>(
-            m_session, LIBSSH2_HOSTKEY_HASH_MD5);
+        return m_md5_hash;
     }
 
     /**
@@ -243,13 +253,14 @@ public:
      */
     std::vector<unsigned char> sha1_hash() const
     {
-        return detail::hostkey_hash<std::vector<unsigned char>>(
-            m_session, LIBSSH2_HOSTKEY_HASH_SHA1);
+        return m_sha1_hash;
     }
 
 private:
-    boost::shared_ptr<detail::session_state> m_session;
     std::pair<std::string, int> m_key;
+    std::string m_algorithm_name;
+    std::vector<unsigned char> m_md5_hash;
+    std::vector<unsigned char> m_sha1_hash;
 };
 
 /**
