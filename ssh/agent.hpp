@@ -37,10 +37,12 @@
 #ifndef SSH_AGENT_HPP
 #define SSH_AGENT_HPP
 
+#include <ssh/detail/agent_state.hpp>
 #include <ssh/detail/session_state.hpp>
 #include <ssh/detail/libssh2/agent.hpp> // ssh::detail::libssh2::agent
 
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -55,24 +57,22 @@ class identity
 public:
 
     identity(
-        boost::shared_ptr<detail::session_state> session,
-        boost::shared_ptr<LIBSSH2_AGENT> agent,
+        boost::shared_ptr<detail::agent_state> agent,
         libssh2_agent_publickey* identity) :
-    m_session(session), m_agent(agent), m_identity(identity) {}
+    m_agent(agent), m_identity(identity) {}
 
     void authenticate(const std::string& user_name)
     {
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::agent_state::scoped_lock lock = m_agent->aquire_lock();
 
         detail::libssh2::agent::userauth(
-            m_agent.get(), m_session->session_ptr(), user_name.c_str(),
+            m_agent->agent_ptr(), m_agent->session_ptr(), user_name.c_str(),
             m_identity);
     }
         
 private:
 
-    boost::shared_ptr<detail::session_state> m_session;
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent;
+    boost::shared_ptr<detail::agent_state> m_agent;
     libssh2_agent_publickey* m_identity;
 };
 
@@ -93,10 +93,8 @@ class identity_iterator_base :
 
 public:
 
-    identity_iterator_base(
-        boost::shared_ptr<session_state> session,
-        boost::shared_ptr<LIBSSH2_AGENT> agent) :
-    m_session(session), m_agent(agent), m_pos(NULL)
+    identity_iterator_base(boost::shared_ptr<agent_state> agent)
+        : m_agent(agent), m_pos(NULL)
     {
         increment();
     }
@@ -113,8 +111,7 @@ public:
      */
     template<typename OtherValue>
     identity_iterator_base(const identity_iterator_base<OtherValue>& other)
-        : m_session(other.m_session), m_agent(other.m_agent),
-        m_pos(other.m_pos) {}
+        : m_agent(other.m_agent), m_pos(other.m_pos) {}
 
 private:
 
@@ -125,10 +122,10 @@ private:
                 std::logic_error(
                     "Can't increment past the end of a collection"));
 
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::agent_state::scoped_lock lock = m_agent->aquire_lock();
 
         bool no_more_identities = detail::libssh2::agent::get_identity(
-            m_agent.get(), m_session->session_ptr(), &m_pos, m_pos) == 1;
+            m_agent->agent_ptr(), m_agent->session_ptr(), &m_pos, m_pos) == 1;
 
         if (no_more_identities)
         {
@@ -149,34 +146,12 @@ private:
             BOOST_THROW_EXCEPTION(
                 std::logic_error("Can't dereference the end of a collection"));
 
-        return identity(m_session, m_agent, m_pos);
+        return identity(m_agent, m_pos);
     }
 
-    boost::shared_ptr<session_state> m_session;
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent;
+    boost::shared_ptr<agent_state> m_agent;
     libssh2_agent_publickey* m_pos;
 };
-
-inline boost::shared_ptr<LIBSSH2_AGENT> do_init(
-    boost::shared_ptr<session_state> session)
-{
-    detail::session_state::scoped_lock lock = session->aquire_lock();
-
-    LIBSSH2_AGENT* agent = detail::libssh2::agent::init(session->session_ptr());
-
-    return boost::shared_ptr<LIBSSH2_AGENT>(agent, ::libssh2_agent_free);
-}
-
-inline boost::shared_ptr<LIBSSH2_AGENT> do_connect(
-    LIBSSH2_AGENT* agent, boost::shared_ptr<session_state> session)
-{
-    detail::session_state::scoped_lock lock = session->aquire_lock();
-
-    detail::libssh2::agent::connect(agent, session->session_ptr());
-
-    return boost::shared_ptr<LIBSSH2_AGENT>(
-        agent, ::libssh2_agent_disconnect);
-}
 
 }
 
@@ -194,26 +169,22 @@ public:
     typedef detail::identity_iterator_base<const identity> const_iterator;
 
     explicit agent_identities(boost::shared_ptr<detail::session_state> session)
-        : m_session(session), m_agent(detail::do_init(m_session)),
-          // This second shared pointer to the same object only exists to
-          // manage the lifetime of the connection
-          m_agent_connection(
-              detail::do_connect(m_agent.get(), m_session))
+        : m_agent(boost::make_shared<detail::agent_state>(session))
     {
         // We pull the identities out here (AND ONLY HERE) so that all copies
         // of the agent, iterators and identity objects refer to valid data.
         // If we called this when creating the iterator it would wipe out all
         // other iterators.
 
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::agent_state::scoped_lock lock = m_agent->aquire_lock();
 
         ::ssh::detail::libssh2::agent::list_identities(
-            m_agent.get(), m_session->session_ptr());
+            m_agent->agent_ptr(), m_agent->session_ptr());
     }
 
     iterator begin() const
     {
-        return iterator(m_session, m_agent);
+        return iterator(m_agent);
     }
 
     iterator end() const
@@ -223,12 +194,7 @@ public:
 
 private:
 
-    boost::shared_ptr<detail::session_state> m_session;
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent;
-    // This must remain after m_agent so it is destroyed first as it points to
-    // the same agent struct.  It only exists to ensure the connection is shared
-    // between copies of this instance in the same way as the agent itself.
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent_connection;
+    boost::shared_ptr<detail::agent_state> m_agent;
 };
 
 } // namespace ssh

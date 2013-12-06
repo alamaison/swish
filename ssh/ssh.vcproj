@@ -109,6 +109,10 @@
 			Name="detail"
 			>
 			<File
+				RelativePath=".\detail\agent_state.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\detail\file_handle_state.hpp"
 				>
 			</File>
