@@ -43,8 +43,6 @@
 #include <boost/asio/ip/tcp.hpp> // Boost sockets
 #include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
-#define BOOST_THREAD_USES_MOVE
-#include <boost/thread/mutex.hpp>
 
 #include <memory> // auto_ptr
 #include <string>
@@ -83,8 +81,6 @@ public:
 
     friend void swap(running_session& lhs, running_session& rhs);
 
-    boost::mutex::scoped_lock aquire_lock();
-
     /**
      * Has the connection broken since we connected?
      *
@@ -104,10 +100,7 @@ public:
 private:
 
     // Must use auto_ptr for these members to make our class movable because
-    // Boost.ASIO doesn't support move emulation and Boost.Thread mutex doesn't until
-    // v1.50
-
-    std::auto_ptr<boost::mutex> m_mutex;
+    // Boost.ASIO doesn't support move emulation
 
     std::auto_ptr<boost::asio::io_service> m_io;
     ///< Boost IO system

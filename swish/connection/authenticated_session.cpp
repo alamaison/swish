@@ -523,11 +523,6 @@ sftp_filesystem authenticated_session::get_sftp_filesystem() const
     return m_filesystem;
 }
 
-mutex::scoped_lock authenticated_session::aquire_lock()
-{
-    return m_session.aquire_lock();
-}
-
 bool authenticated_session::is_dead()
 {
    return m_session.is_dead();

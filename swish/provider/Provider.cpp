@@ -279,8 +279,6 @@ directory_listing provider::listing(
 
     _Connect(consumer);
 
-    mutex::scoped_lock lock = m_session->aquire_lock();
-
     sftp_filesystem channel = m_session->get_sftp_filesystem();
 
     string path = WideStringToUtf8String(directory.string());
@@ -358,15 +356,11 @@ void rename_non_atomic_overwrite(
 {
     string temporary = to + ".swish_rename_temp";
 
-    {
-        mutex::scoped_lock lock = session.aquire_lock();
-        session.get_sftp_filesystem().rename(
-            to, temporary, overwrite_behaviour::prevent_overwrite);
-    }
+    session.get_sftp_filesystem().rename(
+        to, temporary, overwrite_behaviour::prevent_overwrite);
 
     try
     {
-        mutex::scoped_lock lock = session.aquire_lock();
         session.get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
     }
@@ -375,7 +369,6 @@ void rename_non_atomic_overwrite(
         // Rename failed, rename our temporary back to its old name
         try
         {
-            mutex::scoped_lock lock = session.aquire_lock();
             session.get_sftp_filesystem().rename(
                 from, to,  overwrite_behaviour::prevent_overwrite);
         }
@@ -391,7 +384,6 @@ void rename_non_atomic_overwrite(
     // separation messy though.
     try
     {
-        mutex::scoped_lock lock = session.aquire_lock();
         session.get_sftp_filesystem().remove_all(temporary);
     }
     catch (const exception&) {}
@@ -450,7 +442,6 @@ bool rename_retry_with_overwrite(
 
         try
         {
-            mutex::scoped_lock lock = session.aquire_lock();
             session.get_sftp_filesystem().rename(
                 from, to, overwrite_behaviour::atomic_overwrite);
             return true;
@@ -486,12 +477,8 @@ bool rename_retry_with_overwrite(
         // doesn't promise any particular error code so we might as well
         // treat them all this way.
 
-        mutex::scoped_lock lock = session.aquire_lock();
-
         if (exists(session.get_sftp_filesystem(), to))
         {
-            lock.unlock();
-
             HRESULT hr = pConsumer->OnConfirmOverwrite(
                 bstr_t(from).in(), bstr_t(to).in());
             if (FAILED(hr))
@@ -574,7 +561,6 @@ VARIANT_BOOL provider::rename(
 
     try
     {
-        mutex::scoped_lock lock = m_session->aquire_lock();
         m_session->get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
         
@@ -605,7 +591,6 @@ void provider::remove_all(
 
     _Connect(consumer);
 
-    mutex::scoped_lock lock = m_session->aquire_lock();
     m_session->get_sftp_filesystem().remove_all(utf8_path);
 }
 
@@ -621,7 +606,6 @@ void provider::create_new_directory(
 
     _Connect(consumer);
 
-    mutex::scoped_lock lock = m_session->aquire_lock();
     m_session->get_sftp_filesystem().create_directory(utf8_path);
 }
 
@@ -631,7 +615,6 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
 
     _Connect(consumer);
 
-    mutex::scoped_lock lock = m_session->aquire_lock();
     sftp_filesystem channel = m_session->get_sftp_filesystem();
     bstr_t target =
         Utf8StringToWideString(channel.canonical_path(utf8_path).string());
@@ -652,8 +635,6 @@ sftp_filesystem_item provider::stat(
     string utf8_path = WideStringToUtf8String(path.string());
 
     _Connect(consumer);
-    
-    mutex::scoped_lock lock = m_session->aquire_lock();
 
     sftp_filesystem channel = m_session->get_sftp_filesystem();
 

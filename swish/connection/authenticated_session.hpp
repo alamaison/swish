@@ -118,8 +118,6 @@ public:
 
     friend void swap(authenticated_session& lhs, authenticated_session& rhs);
 
-    boost::mutex::scoped_lock aquire_lock();
-
     bool is_dead();
 
     // This class really represents an SFTP channel rather than an
