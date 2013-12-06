@@ -39,6 +39,7 @@
 
 #include <ssh/stream.hpp> // test subject
 
+#include <boost/bind/bind.hpp>
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
@@ -55,6 +56,7 @@ using ssh::session;
 using ssh::filesystem::openmode;
 using ssh::filesystem::sftp_filesystem;
 
+using boost::bind;
 using boost::filesystem::path;
 using boost::packaged_task;
 using boost::system::system_error;
@@ -72,14 +74,13 @@ namespace {
 class stream_fixture : public session_fixture, public sandbox_fixture
 {
 public:
+
+    stream_fixture() : m_filesystem(auth_and_open_sftp())
+    {}
+
     sftp_filesystem filesystem()
     {
-        session s = test_session();
-        s.authenticate_by_key_files(
-            user(), public_key_path(), private_key_path(), "");
-        sftp_filesystem sftp(s);
-
-        return sftp;
+        return m_filesystem;
     }
 
     using sandbox_fixture::new_file_in_sandbox;
@@ -93,6 +94,19 @@ public:
 
         return p;
     }
+
+private:
+
+    sftp_filesystem auth_and_open_sftp()
+    {
+        session s = test_session();
+        s.authenticate_by_key_files(
+            user(), public_key_path(), private_key_path(), "");
+
+        return sftp_filesystem(s);
+    }
+
+    sftp_filesystem m_filesystem;
 };
 
 string large_data()
@@ -1708,6 +1722,33 @@ BOOST_AUTO_TEST_CASE( stream_read_on_different_threads )
 
     BOOST_CHECK_EQUAL(p1.get_future().get(), "humpty");
     BOOST_CHECK_EQUAL(p2.get_future().get(), "on");
+}
+
+// There was a bug in our session locking that meant we locked the session
+// when opening a file but didn't when closing it (because it happened in
+// the shared_ptr destructor).  This test case triggers that bug by opening
+// a file (locks and unlocks session), starting to read from a second file
+// (locks) session and then closing the first file.  This will cause all
+// sorts of bad behaviour of the closure doesn't lock the session so we can
+// detect it if it regresses.
+BOOST_AUTO_TEST_CASE( parallel_file_closing )
+{
+    string data = large_data();
+
+    path read_me = new_file_in_sandbox(data);
+    path test_me = new_file_in_sandbox();
+
+    ssh::filesystem::ifstream stream1(filesystem(), to_remote_path(read_me));
+    ssh::filesystem::ifstream stream2(filesystem(), to_remote_path(test_me));
+
+    // Using a long-running stream read operation to make sure the session
+    // is still locked when we try to close the other file
+    packaged_task<string> ps(bind(get_first_token, boost::ref(stream1)));
+    thread(boost::ref(ps)).detach();
+
+    thread(bind(&ssh::filesystem::ifstream::close, &stream2)).detach();
+
+    BOOST_CHECK_EQUAL(ps.get_future().get(), data);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

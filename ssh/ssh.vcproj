@@ -109,7 +109,15 @@
 			Name="detail"
 			>
 			<File
+				RelativePath=".\detail\file_handle_state.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\detail\session_state.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\sftp_channel_state.hpp"
 				>
 			</File>
 			<Filter

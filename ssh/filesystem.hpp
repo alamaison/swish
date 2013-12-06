@@ -37,6 +37,8 @@
 #ifndef SSH_SFTP_HPP
 #define SSH_SFTP_HPP
 
+#include <ssh/detail/file_handle_state.hpp>
+#include <ssh/detail/sftp_channel_state.hpp>
 #include <ssh/detail/libssh2/sftp.hpp>
 #include <ssh/session.hpp>
 
@@ -45,7 +47,8 @@
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
 #include <boost/optional/optional.hpp>
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp> // errc
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -237,20 +240,15 @@ class sftp_filesystem;
 
 namespace detail {
 
-    inline boost::shared_ptr<LIBSSH2_SFTP_HANDLE> open_directory(
-        boost::shared_ptr<::ssh::detail::session_state> session,
-        boost::shared_ptr<LIBSSH2_SFTP> channel,
+    inline boost::shared_ptr<::ssh::detail::file_handle_state> open_directory(
+        boost::shared_ptr<::ssh::detail::sftp_channel_state> channel,
         const boost::filesystem::path& path)
     {
         std::string path_string = path.string();
 
-        ::ssh::detail::session_state::scoped_lock lock = session->aquire_lock();
-
-        return boost::shared_ptr<LIBSSH2_SFTP_HANDLE>(
-            ::ssh::detail::libssh2::sftp::open(
-                session->session_ptr(), channel.get(), path_string.data(),
-                path_string.size(), 0, 0, LIBSSH2_SFTP_OPENDIR),
-            ::libssh2_sftp_close_handle);
+        return boost::make_shared<::ssh::detail::file_handle_state>(
+            channel, path_string.data(), path_string.size(), 0, 0,
+            LIBSSH2_SFTP_OPENDIR);
     }
 
 }
@@ -293,11 +291,10 @@ public:
         friend class sftp_filesystem;
 
         directory_iterator operator()(
-            boost::shared_ptr<::ssh::detail::session_state> session,
-            boost::shared_ptr<LIBSSH2_SFTP> channel,
+            boost::shared_ptr<::ssh::detail::sftp_channel_state> channel,
             const boost::filesystem::path& path)
         {
-            return directory_iterator(session, channel, path);
+            return directory_iterator(channel, path);
         }
 
         directory_iterator operator()()
@@ -310,14 +307,11 @@ public:
 private:
 
     directory_iterator(
-        boost::shared_ptr<::ssh::detail::session_state> session,
-        boost::shared_ptr<LIBSSH2_SFTP> sftp_channel,
+        boost::shared_ptr<::ssh::detail::sftp_channel_state> sftp_channel,
         const boost::filesystem::path& path)
         :
-        m_session(session),
-        m_channel(sftp_channel),
         m_directory(path),
-        m_handle(detail::open_directory(m_session, m_channel, path)),
+        m_handle(detail::open_directory(sftp_channel, path)),
         m_attributes(LIBSSH2_SFTP_ATTRIBUTES())
     {
         next_file();
@@ -347,13 +341,20 @@ private:
         std::vector<char> longentry_buffer(1024, '\0');
         LIBSSH2_SFTP_ATTRIBUTES attrs = LIBSSH2_SFTP_ATTRIBUTES();
 
-        ::ssh::detail::session_state::scoped_lock lock =
-            m_session->aquire_lock();
+        int rc;
+        {
+            ::ssh::detail::file_handle_state::scoped_lock lock =
+                m_handle->aquire_lock();
 
-        int rc = ::ssh::detail::libssh2::sftp::readdir_ex(
-            m_session->session_ptr(), m_channel.get(), m_handle.get(),
-            &filename_buffer[0], filename_buffer.size(), &longentry_buffer[0],
-            longentry_buffer.size(), &attrs);
+            rc = ::ssh::detail::libssh2::sftp::readdir_ex(
+                m_handle->session_ptr(), m_handle->sftp_ptr(),
+                m_handle->file_handle(), &filename_buffer[0],
+                filename_buffer.size(), &longentry_buffer[0],
+                longentry_buffer.size(), &attrs);
+
+            // IMPORTANT: must unlock before possible handle reset below
+            // which would lock the session again to close the file handle
+        }
 
         if (rc == 0) // end of files
         {
@@ -393,10 +394,8 @@ private:
         return sftp_file(m_directory / m_file_name, m_long_entry, m_attributes);
     }
 
-    boost::shared_ptr<::ssh::detail::session_state> m_session;
-    boost::shared_ptr<LIBSSH2_SFTP> m_channel;
+    boost::shared_ptr<::ssh::detail::file_handle_state> m_handle;
     boost::filesystem::path m_directory;
-    boost::shared_ptr<LIBSSH2_SFTP_HANDLE> m_handle;
 
     /// @name Properties of last successfully listed file.
     // @{
@@ -455,19 +454,6 @@ class sftp_input_device;
 class sftp_output_device;
 class sftp_io_device;
 
-namespace detail {
-
-    inline boost::shared_ptr<LIBSSH2_SFTP> init(
-        boost::shared_ptr<::ssh::detail::session_state> session)
-    {
-        ::ssh::detail::session_state::scoped_lock lock = session->aquire_lock();
-
-        return boost::shared_ptr<LIBSSH2_SFTP>(
-            ::ssh::detail::libssh2::sftp::init(session->session_ptr()),
-            ::libssh2_sftp_shutdown);
-    }
-}
-
 /**
  * Access to Filesystem remote server via an SSH/SFTP connection.
  */
@@ -480,8 +466,9 @@ public:
      */
     explicit sftp_filesystem(::ssh::session session)
         :
-    m_session(::ssh::session::access_attorney::get_session_state(session)),
-    m_sftp(detail::init(m_session)) {}
+    m_sftp(
+        boost::make_shared<::ssh::detail::sftp_channel_state>(
+            ::ssh::session::access_attorney::get_session_state(session))) {}
 
     /**
      * Create an iterator over the contents of the given directory.
@@ -489,7 +476,7 @@ public:
     directory_iterator directory_iterator(const boost::filesystem::path& path)
     {
         return ssh::filesystem::directory_iterator::factory_attorney()(
-            m_session, m_sftp, path);
+            m_sftp, path);
     }
 
     /**
@@ -515,14 +502,16 @@ public:
         std::string file_path = file.string();
         LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
 
-        ::ssh::detail::session_state::scoped_lock lock =
-            m_session->aquire_lock();
+        {
+            ::ssh::detail::sftp_channel_state::scoped_lock lock =
+                m_sftp->aquire_lock();
 
-        ::ssh::detail::libssh2::sftp::stat(
-            m_session->session_ptr(), m_sftp.get(), file_path.data(),
-            file_path.size(),
-            (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
-            &attributes);
+            ::ssh::detail::libssh2::sftp::stat(
+                m_sftp->session_ptr(), m_sftp->sftp_ptr(), file_path.data(),
+                file_path.size(),
+                (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
+                &attributes);
+        }
 
         return file_attributes(attributes);
     }
@@ -564,11 +553,11 @@ public:
         std::string link_string = link.string();
         std::string target_string = target.string();
 
-        ::ssh::detail::session_state::scoped_lock lock =
-            m_session->aquire_lock();
+        ::ssh::detail::sftp_channel_state::scoped_lock lock =
+            m_sftp->aquire_lock();
 
         ::ssh::detail::libssh2::sftp::symlink(
-            m_session->session_ptr(), m_sftp.get(), link_string.data(),
+            m_sftp->session_ptr(), m_sftp->sftp_ptr(), link_string.data(),
             link_string.size(), target_string.data(), target_string.size());
     }
 
@@ -640,11 +629,11 @@ public:
                 std::invalid_argument("Unrecognised overwrite behaviour"));
         }
 
-        ::ssh::detail::session_state::scoped_lock lock =
-            m_session->aquire_lock();
+        ::ssh::detail::sftp_channel_state::scoped_lock lock =
+            m_sftp->aquire_lock();
 
         ::ssh::detail::libssh2::sftp::rename(
-            m_session->session_ptr(), m_sftp.get(), source_string.data(),
+            m_sftp->session_ptr(), m_sftp->sftp_ptr(), source_string.data(),
             source_string.size(), destination_string.data(),
             destination_string.size(), flags);
     }
@@ -766,11 +755,11 @@ public:
 
         try
         {
-            ::ssh::detail::session_state::scoped_lock lock =
-                m_session->aquire_lock();
+            ::ssh::detail::sftp_channel_state::scoped_lock lock =
+                m_sftp->aquire_lock();
 
             ::ssh::detail::libssh2::sftp::mkdir_ex(
-                m_session->session_ptr(), m_sftp.get(),
+                m_sftp->session_ptr(), m_sftp->sftp_ptr(),
                 new_directory_string.data(),
                 new_directory_string.size(),
                 LIBSSH2_SFTP_S_IRWXU |
@@ -832,19 +821,19 @@ private:
 
         try
         {
-            ::ssh::detail::session_state::scoped_lock lock =
-                m_session->aquire_lock();
+            ::ssh::detail::sftp_channel_state::scoped_lock lock =
+                m_sftp->aquire_lock();
 
             if (is_directory)
             {
                 ::ssh::detail::libssh2::sftp::rmdir_ex(
-                    m_session->session_ptr(), m_sftp.get(),
+                    m_sftp->session_ptr(), m_sftp->sftp_ptr(),
                     target_string.data(), target_string.size());
             }
             else
             {
                 ::ssh::detail::libssh2::sftp::unlink_ex(
-                    m_session->session_ptr(), m_sftp.get(),
+                    m_sftp->session_ptr(), m_sftp->sftp_ptr(),
                     target_string.data(), target_string.size());
             }
         }
@@ -877,11 +866,11 @@ private:
 
         std::vector<char> target_path_buffer(1024, '\0');
 
-        ::ssh::detail::session_state::scoped_lock lock =
-            m_session->aquire_lock();
+        ::ssh::detail::sftp_channel_state::scoped_lock lock =
+            m_sftp->aquire_lock();
 
         int len = ::ssh::detail::libssh2::sftp::symlink_ex(
-            m_session->session_ptr(), m_sftp.get(), path, path_len,
+            m_sftp->session_ptr(), m_sftp->sftp_ptr(), path, path_len,
             &target_path_buffer[0], target_path_buffer.size(),
             resolve_action);
 
@@ -889,8 +878,7 @@ private:
             &target_path_buffer[0], &target_path_buffer[0] + len);
     }
 
-    boost::shared_ptr<::ssh::detail::session_state> m_session;
-    boost::shared_ptr<LIBSSH2_SFTP> m_sftp;
+    boost::shared_ptr<::ssh::detail::sftp_channel_state> m_sftp;
 };
 
 namespace detail {

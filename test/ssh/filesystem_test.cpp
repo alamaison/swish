@@ -45,6 +45,8 @@
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/future.hpp>
+#include <boost/thread/thread.hpp>
 
 #include <algorithm> // find
 #include <string>
@@ -59,7 +61,9 @@ using ssh::filesystem::overwrite_behaviour;
 using boost::bind;
 using boost::filesystem::ofstream;
 using boost::filesystem::path;
+using boost::packaged_task;
 using boost::system::system_error;
+using boost::thread;
 using boost::uintmax_t;
 
 using test::ssh::sandbox_fixture;
