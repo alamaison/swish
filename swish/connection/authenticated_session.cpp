@@ -493,7 +493,7 @@ authenticated_session::authenticated_session(
     com_ptr<ISftpConsumer> consumer)
     :
 m_session(create_and_authenticate(host, port, user, consumer)),
-m_filesystem(m_session.get_session()) {}
+m_filesystem(m_session.get_session().connect_to_filesystem()) {}
 
 authenticated_session::authenticated_session(
     BOOST_RV_REF(authenticated_session) other)

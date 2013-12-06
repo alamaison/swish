@@ -40,7 +40,6 @@
 #include <ssh/detail/file_handle_state.hpp>
 #include <ssh/detail/sftp_channel_state.hpp>
 #include <ssh/detail/libssh2/sftp.hpp>
-#include <ssh/session.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t, uintmax_t
 #include <boost/exception/info.hpp> // errinfo_api_function
@@ -63,6 +62,11 @@
 #include <libssh2_sftp.h>
 
 namespace ssh {
+
+// Forward declared so sftp_filesystem can declare session a friend.  This
+// file doesn't depend on session in any other way
+class session;
+
 namespace filesystem {
 
 class file_attributes
@@ -462,15 +466,6 @@ class sftp_filesystem
 public:
 
     /**
-     * Create connection to remote filesystem over SSH `session`.
-     */
-    explicit sftp_filesystem(::ssh::session session)
-        :
-    m_sftp(
-        boost::make_shared<::ssh::detail::sftp_channel_state>(
-            ::ssh::session::access_attorney::get_session_state(session))) {}
-
-    /**
      * Create an iterator over the contents of the given directory.
      */
     directory_iterator directory_iterator(const boost::filesystem::path& path)
@@ -796,7 +791,34 @@ public:
         }
     }
 
+    /// @cond INTERNAL
+    /**
+     * Defines the single permitted factory of `sftp_filesystem` instances.
+     * This class calls the private constructor on behalf of the factory.
+     * See http://stackoverflow.com/q/3217390/67013.
+     */
+    class factory_attorney
+    {
+    private:
+        friend class ssh::session;
+
+        sftp_filesystem operator()(
+            boost::shared_ptr<::ssh::detail::session_state> session_state)
+        {
+            return sftp_filesystem(session_state);
+        }
+    };
+    /// @endcond
+
 private:
+
+    friend class factory_attorney;
+
+    explicit sftp_filesystem(
+        boost::shared_ptr<::ssh::detail::session_state> session_state)
+        :
+    m_sftp(boost::make_shared<::ssh::detail::sftp_channel_state>(session_state))
+    {}
 
     friend class sftp_input_device;
     friend class sftp_output_device;

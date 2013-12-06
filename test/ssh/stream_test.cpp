@@ -103,7 +103,7 @@ private:
         s.authenticate_by_key_files(
             user(), public_key_path(), private_key_path(), "");
 
-        return sftp_filesystem(s);
+        return s.connect_to_filesystem();
     }
 
     sftp_filesystem m_filesystem;

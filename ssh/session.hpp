@@ -41,6 +41,7 @@
 #include <ssh/detail/libssh2/session.hpp> // ssh::detail::libssh2::session
 #include <ssh/detail/libssh2/userauth.hpp> // ssh::detail::libssh2::userauth
 #include <ssh/host_key.hpp>
+#include <ssh/filesystem.hpp> // sftp_filesystem
 
 #include <boost/algorithm/string/classification.hpp> // is_any_of
 #include <boost/algorithm/string/split.hpp>
@@ -581,27 +582,15 @@ public:
         return ::ssh::agent_identities(m_session);
     }
 
-    /// @cond INTERNAL
     /**
-     * Defines the single class permitted to access the private session
-     * pointer.
-     * See http://stackoverflow.com/q/3217390/67013.
+     * Create a new connection to the remote filesystem over this SSH session.
      */
-    class access_attorney
+    filesystem::sftp_filesystem connect_to_filesystem()
     {
-    private:
-        friend class ssh::filesystem::sftp_filesystem;
-
-        static boost::shared_ptr<detail::session_state> get_session_state(
-            session& session)
-        {
-            return session.m_session;
-        }
-    };
-    /// @endcond
+        return filesystem::sftp_filesystem::factory_attorney()(m_session);
+    }
 
 private:
-    friend class access_attorney;
 
     boost::shared_ptr<detail::session_state> m_session;
 };

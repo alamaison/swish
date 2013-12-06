@@ -117,9 +117,7 @@ private:
         session s = test_session();
         s.authenticate_by_key_files(
             user(), public_key_path(), private_key_path(), "");
-        sftp_filesystem filesystem(s);
-
-        return filesystem;
+        return s.connect_to_filesystem();
     }
 
     sftp_filesystem m_filesystem;
@@ -135,7 +133,7 @@ BOOST_FIXTURE_TEST_CASE( channel_creation_fail_exception, session_fixture )
     session s = test_session();
 
     // Session not authenticated so SFTP not possible
-    BOOST_CHECK_THROW((sftp_filesystem(s)), system_error);
+    BOOST_CHECK_THROW(s.connect_to_filesystem(), system_error);
 }
 
 // Tests assume an authenticated session and established SFTP filesystem
