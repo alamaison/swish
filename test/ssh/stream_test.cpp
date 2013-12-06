@@ -109,10 +109,13 @@ private:
     sftp_filesystem m_filesystem;
 };
 
+// the large data must fill more than one stream buffer (currently set to
+// 32768 (see DEFAULT_BUFFER_SIZE)
+
 string large_data()
 {
     string data;
-    for (int i = 0; i < 0x40000; ++i)
+    for (int i = 0; i < 32000; ++i)
     {
         data.push_back('a');
         data.push_back('m');
@@ -125,7 +128,7 @@ string large_data()
 string large_binary_data()
 {
     string data;
-    for (int i = 0; i < 0x40000; ++i)
+    for (int i = 0; i < 32000; ++i)
     {
         data.push_back('a');
         data.push_back('\0');
