@@ -58,8 +58,7 @@ namespace detail {
     /**
      * Thin wrapper around libssh2_session_hostkey.
      */
-    inline std::pair<std::string, int> hostkey(
-        boost::shared_ptr<session_state> session)
+    inline std::pair<std::string, int> hostkey(session_state& session)
     {
         // Session owns the string.
         // Lock until we finish copying the key string from the session.  I 
@@ -67,12 +66,12 @@ namespace detail {
         // change it, but they might one day.
         // Locking it for the duration makes it thread-safe either way.
 
-        detail::session_state::scoped_lock lock = session->aquire_lock();
+        detail::session_state::scoped_lock lock = session.aquire_lock();
 
         size_t len = 0;
         int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
         const char* key = libssh2_session_hostkey(
-            session->session_ptr(), &len, &type);
+            session.session_ptr(), &len, &type);
 
         if (key)
             return std::make_pair(std::string(key, len), type);
@@ -89,8 +88,7 @@ namespace detail {
      * @param hash_type  Hash method being requested.
      */
     template<typename T>
-    inline T hostkey_hash(
-        boost::shared_ptr<session_state> session, int hash_type)
+    inline T hostkey_hash(session_state& session, int hash_type)
     {
         // Session owns the data.
         // Lock until we finish copying the key hash bytes from the session.  I 
@@ -98,11 +96,11 @@ namespace detail {
         // change it, but they might one day.
         // Locking it for the duration makes it thread-safe either way.
 
-        detail::session_state::scoped_lock lock = session->aquire_lock();
+        detail::session_state::scoped_lock lock = session.aquire_lock();
 
         const T::value_type* hash_bytes = 
             reinterpret_cast<const T::value_type*>(
-                libssh2_hostkey_hash(session->session_ptr(), hash_type));
+                ::libssh2_hostkey_hash(session.session_ptr(), hash_type));
 
         size_t len = 0;
         if (hash_type == LIBSSH2_HOSTKEY_HASH_MD5)
@@ -122,8 +120,7 @@ namespace detail {
     /**
      * Thin wrapper around libssh2_session_methods.
      */
-    inline std::string method(
-        boost::shared_ptr<session_state> session, int method_type)
+    inline std::string method(session_state& session, int method_type)
     {
         // Session owns the string.
         // Lock until we finish copying the string from the session.  I 
@@ -131,10 +128,10 @@ namespace detail {
         // change it, but they might one day.
         // Locking it for the duration makes it thread-safe either way.
 
-        detail::session_state::scoped_lock lock = session->aquire_lock();
+        detail::session_state::scoped_lock lock = session.aquire_lock();
 
         const char* key_type = libssh2_session_methods(
-            session->session_ptr(), method_type);
+            session.session_ptr(), method_type);
         
         if (key_type)
             return std::string(key_type);
@@ -187,7 +184,7 @@ namespace detail {
 class host_key
 {
 public:
-    explicit host_key(boost::shared_ptr<detail::session_state> session)
+    explicit host_key(detail::session_state& session)
         :
     // We pull everything out of the session here and store it to avoid
     // instances of this class depending on the lifetime of the session

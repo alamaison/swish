@@ -51,14 +51,14 @@ namespace ssh {
 namespace detail {
 
 inline LIBSSH2_SFTP_HANDLE* do_open(
-    boost::shared_ptr<sftp_channel_state> sftp,
+    sftp_channel_state& sftp,
     const char* filename, unsigned int filename_len, unsigned long flags,
     long mode, int open_type)
 {
-    session_state::scoped_lock lock = sftp->aquire_lock();
+    session_state::scoped_lock lock = sftp.aquire_lock();
 
     return libssh2::sftp::open(
-        sftp->session_ptr(), sftp->sftp_ptr(), filename, filename_len, flags,
+        sftp.session_ptr(), sftp.sftp_ptr(), filename, filename_len, flags,
         mode, open_type);
 }
 
@@ -86,7 +86,7 @@ public:
         :
     m_sftp(sftp),
     m_handle(
-        do_open(m_sftp, filename, filename_len, flags, mode, open_type)) {}
+        do_open(*m_sftp, filename, filename_len, flags, mode, open_type)) {}
 
     file_handle_state(BOOST_RV_REF(file_handle_state) other)
         : m_sftp(boost::move(other.m_sftp)),

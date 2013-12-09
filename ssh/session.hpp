@@ -122,7 +122,7 @@ namespace detail {
          * interfaces as we go.
          */
         bool do_challenge_response(
-            boost::shared_ptr<session_state> session,
+            LIBSSH2_SESSION* session,
             const std::string username)
         {
             boost::system::error_code ec;
@@ -133,7 +133,7 @@ namespace detail {
             // isn't inadvertently overwritten.
 
             libssh2::userauth::keyboard_interactive_ex(
-                session->session_ptr(), username.data(), username.size(),
+                session, username.data(), username.size(),
                 &dethunker<ChallengeResponder>, ec, message);
 
             return translate_status(ec, message);
@@ -360,7 +360,7 @@ public:
      */
     ssh::host_key hostkey() const
     {
-        return ssh::host_key(m_session);
+        return ssh::host_key(*m_session);
     }
 
     /**
@@ -550,7 +550,8 @@ public:
         *::libssh2_session_abstract(m_session->session_ptr()) =
             &wrapped_responder;
 
-        return wrapped_responder.do_challenge_response(m_session, username);
+        return wrapped_responder.do_challenge_response(
+            m_session->session_ptr(), username);
     }
 
     /**

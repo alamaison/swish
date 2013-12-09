@@ -333,7 +333,7 @@ namespace detail {
     }
 
     inline boost::iostreams::stream_offset seek(
-        boost::shared_ptr<::ssh::detail::file_handle_state> handle,
+        ::ssh::detail::file_handle_state& handle,
         const boost::filesystem::path& open_path,
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
@@ -348,7 +348,7 @@ namespace detail {
         case std::ios_base::cur:
             {
                 // FIXME: possible to get integer overflow on addition?
-                new_position = libssh2_sftp_tell64(handle->file_handle()) + off;
+                new_position = libssh2_sftp_tell64(handle.file_handle()) + off;
                 break;
             }
 
@@ -359,11 +359,11 @@ namespace detail {
                 try
                 {
                     ::ssh::detail::file_handle_state::scoped_lock lock =
-                        handle->aquire_lock();
+                        handle.aquire_lock();
 
                     ::ssh::detail::libssh2::sftp::fstat(
-                        handle->session_ptr(), handle->sftp_ptr(),
-                        handle->file_handle(), &attributes, LIBSSH2_SFTP_STAT);
+                        handle.session_ptr(), handle.sftp_ptr(),
+                        handle.file_handle(), &attributes, LIBSSH2_SFTP_STAT);
                 }
                 catch (boost::exception& e)
                 {
@@ -387,13 +387,13 @@ namespace detail {
         }
 
 
-        libssh2_sftp_seek64(handle->file_handle(), new_position);
+        libssh2_sftp_seek64(handle.file_handle(), new_position);
 
         return new_position;
     }
 
     inline std::streamsize read(
-        boost::shared_ptr<::ssh::detail::file_handle_state> handle,
+        ::ssh::detail::file_handle_state& handle,
         const boost::filesystem::path& open_path,
         char* buffer, std::streamsize buffer_size)
     {
@@ -410,11 +410,11 @@ namespace detail {
             do
             {
                 ::ssh::detail::file_handle_state::scoped_lock lock =
-                    handle->aquire_lock();
+                    handle.aquire_lock();
 
                 ssize_t rc = ::ssh::detail::libssh2::sftp::read(
-                    handle->session_ptr(), handle->sftp_ptr(),
-                    handle->file_handle(), buffer + count, buffer_size - count);
+                    handle.session_ptr(), handle.sftp_ptr(),
+                    handle.file_handle(), buffer + count, buffer_size - count);
                 if (rc == 0)
                     break; // EOF
 
@@ -432,7 +432,7 @@ namespace detail {
     }
 
     inline std::streamsize write(
-        boost::shared_ptr<::ssh::detail::file_handle_state> handle,
+        ::ssh::detail::file_handle_state& handle,
         const boost::filesystem::path& open_path,
         const char* data, std::streamsize data_size)
     {
@@ -450,11 +450,11 @@ namespace detail {
             do
             {
                 ::ssh::detail::file_handle_state::scoped_lock lock =
-                    handle->aquire_lock();
+                    handle.aquire_lock();
 
                 count += ::ssh::detail::libssh2::sftp::write(
-                    handle->session_ptr(), handle->sftp_ptr(),
-                    handle->file_handle(), data + count, data_size - count);
+                    handle.session_ptr(), handle.sftp_ptr(),
+                    handle.file_handle(), data + count, data_size - count);
             }
             while (count < data_size);
 
@@ -580,13 +580,13 @@ public:
 
     std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
-        return detail::read(m_handle, m_open_path, buffer, buffer_size);
+        return detail::read(*m_handle, m_open_path, buffer, buffer_size);
     }
 
     boost::iostreams::stream_offset seek(
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
-        return detail::seek(m_handle, m_open_path, off, way);
+        return detail::seek(*m_handle, m_open_path, off, way);
     }
 
 private:
@@ -636,13 +636,13 @@ public:
 
     std::streamsize write(const char* data, std::streamsize data_size)
     {
-        return detail::write(m_handle, m_open_path, data, data_size);
+        return detail::write(*m_handle, m_open_path, data, data_size);
     }
 
     boost::iostreams::stream_offset seek(
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
-        return detail::seek(m_handle, m_open_path, off, way);
+        return detail::seek(*m_handle, m_open_path, off, way);
     }
 
 private:
@@ -693,18 +693,18 @@ public:
 
     std::streamsize read(char* buffer, std::streamsize buffer_size)
     {
-        return detail::read(m_handle, m_open_path, buffer, buffer_size);
+        return detail::read(*m_handle, m_open_path, buffer, buffer_size);
     }
 
     std::streamsize write(const char* data, std::streamsize data_size)
     {
-        return detail::write(m_handle, m_open_path, data, data_size);
+        return detail::write(*m_handle, m_open_path, data, data_size);
     }
 
     boost::iostreams::stream_offset seek(
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
-        return detail::seek(m_handle, m_open_path, off, way);
+        return detail::seek(*m_handle, m_open_path, off, way);
     }
 
 private:

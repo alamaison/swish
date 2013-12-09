@@ -48,11 +48,11 @@
 namespace ssh {
 namespace detail {
 
-inline LIBSSH2_SFTP* do_sftp_init(boost::shared_ptr<session_state> session)
+inline LIBSSH2_SFTP* do_sftp_init(session_state& session)
 {
-    session_state::scoped_lock lock = session->aquire_lock();
+    session_state::scoped_lock lock = session.aquire_lock();
 
-    return libssh2::sftp::init(session->session_ptr());
+    return libssh2::sftp::init(session.session_ptr());
 }
 
 /**
@@ -74,7 +74,7 @@ public:
      * when it goes out of scope.
      */
     sftp_channel_state(boost::shared_ptr<session_state> session)
-        : m_session(session), m_sftp(do_sftp_init(m_session)) {}
+        : m_session(session), m_sftp(do_sftp_init(*m_session)) {}
 
     sftp_channel_state(BOOST_RV_REF(sftp_channel_state) other)
         : m_session(boost::move(other.m_session)),
