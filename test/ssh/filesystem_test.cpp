@@ -43,7 +43,9 @@
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/move/move.hpp>
 #include <boost/system/system_error.hpp>
+#include <boost/test/predicate_result.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/thread.hpp>
@@ -61,8 +63,10 @@ using ssh::filesystem::overwrite_behaviour;
 using boost::bind;
 using boost::filesystem::ofstream;
 using boost::filesystem::path;
+using boost::move;
 using boost::packaged_task;
 using boost::system::system_error;
+using boost::test_tools::predicate_result;
 using boost::thread;
 using boost::uintmax_t;
 
@@ -126,9 +130,9 @@ private:
 }
 
 
-BOOST_AUTO_TEST_SUITE(sftp_tests)
+BOOST_AUTO_TEST_SUITE(filesystem_tests)
 
-BOOST_FIXTURE_TEST_CASE( channel_creation_fail_exception, session_fixture )
+BOOST_FIXTURE_TEST_CASE( construct_fail, session_fixture )
 {
     session s = test_session();
 
@@ -139,6 +143,38 @@ BOOST_FIXTURE_TEST_CASE( channel_creation_fail_exception, session_fixture )
 // Tests assume an authenticated session and established SFTP filesystem
 BOOST_FIXTURE_TEST_SUITE(channel_running_tests, sftp_fixture)
 
+namespace {
+
+    predicate_result directory_is_empty(sftp_filesystem& fs, const path& p)
+    {
+        predicate_result result(true);
+
+        directory_iterator it = fs.directory_iterator(p);
+
+        size_t entry_count = 0;
+        while (it != fs.directory_iterator())
+        {
+            if (it->name() != "." && it->name() != "..")
+            {
+                ++entry_count;
+            }
+
+            ++it;
+        }
+
+        if (entry_count != 0)
+        {
+            result = false;
+
+            result.message() << "Directory is not empty; contains "
+                << entry_count << " entries";
+        }
+
+        return result;
+    }
+
+}
+
 /**
  * List an empty directory.
  *
@@ -148,10 +184,7 @@ BOOST_AUTO_TEST_CASE( empty_dir )
 {
     sftp_filesystem c = filesystem();
 
-    directory_iterator it = c.directory_iterator(to_remote_path(sandbox()));
-    it++;
-    it++;
-    BOOST_CHECK(it == c.directory_iterator());
+    BOOST_CHECK(directory_is_empty(c, to_remote_path(sandbox())));
 }
 
 /**
@@ -163,11 +196,43 @@ BOOST_AUTO_TEST_CASE( missing_dir )
     BOOST_CHECK_THROW(c.directory_iterator("/i/dont/exist"), system_error);
 }
 
-/**
- * List an empty directory.
- *
- * Will contain . and ..
- */
+BOOST_AUTO_TEST_CASE( swap_filesystems )
+{
+    sftp_filesystem fs1 = filesystem();
+    sftp_filesystem fs2 = test_session().connect_to_filesystem();
+
+    boost::swap(fs1, fs2);
+
+    BOOST_CHECK(directory_is_empty(fs1, to_remote_path(sandbox())));
+    BOOST_CHECK(directory_is_empty(fs2, to_remote_path(sandbox())));
+}
+
+BOOST_AUTO_TEST_CASE( use_move_constructed_filesystem )
+{
+    sftp_filesystem c = filesystem();
+    sftp_filesystem d(move(c));
+
+    BOOST_CHECK(directory_is_empty(d, to_remote_path(sandbox())));
+}
+
+BOOST_AUTO_TEST_CASE( use_move_assigned_filesystem )
+{
+    sftp_filesystem c = filesystem();
+    sftp_filesystem d(test_session().connect_to_filesystem());
+
+    d = move(c);
+
+    BOOST_CHECK(directory_is_empty(d, to_remote_path(sandbox())));
+}
+
+BOOST_AUTO_TEST_CASE( use_move_self_assigned_filesystem )
+{
+    sftp_filesystem c = filesystem();
+    c = move(c);
+
+    BOOST_CHECK(directory_is_empty(c, to_remote_path(sandbox())));
+}
+
 BOOST_AUTO_TEST_CASE( dir_with_one_file )
 {
     path test_file = new_file_in_sandbox();
@@ -193,6 +258,79 @@ BOOST_AUTO_TEST_CASE( dir_with_one_file )
     it++;
 
     BOOST_CHECK(it == filesystem().directory_iterator());
+}
+
+BOOST_AUTO_TEST_CASE( dir_with_multiple_files )
+{
+    path test_file1 = new_file_in_sandbox();
+    path test_file2 = new_file_in_sandbox();
+
+    directory_iterator it =
+        filesystem().directory_iterator(to_remote_path(sandbox()));
+
+    sftp_file file = *it;
+    BOOST_CHECK_EQUAL(file.name(), ".");
+    BOOST_CHECK_EQUAL(it->name(), ".");
+    BOOST_CHECK_GT(it->long_entry().size(), 0U);
+
+    it++;
+
+    BOOST_CHECK_EQUAL((*it).name(), "..");
+    file = *it;
+    BOOST_CHECK_EQUAL(file.name(), "..");
+
+    it++;
+
+    BOOST_CHECK(
+        it->name() == test_file1.filename() ||
+        it->name() == test_file2.filename());
+    it++;
+
+    BOOST_CHECK(
+        it->name() == test_file1.filename() ||
+        it->name() == test_file2.filename());
+
+    it++;
+
+    BOOST_CHECK(it == filesystem().directory_iterator());
+}
+
+BOOST_AUTO_TEST_CASE( move_construct_iterator )
+{
+    path test_file1 = new_file_in_sandbox();
+    path test_file2 = new_file_in_sandbox();
+
+    directory_iterator it =
+        filesystem().directory_iterator(to_remote_path(sandbox()));
+
+    sftp_file file = *it;
+    BOOST_CHECK_EQUAL(file.name(), ".");
+    BOOST_CHECK_EQUAL(it->name(), ".");
+    BOOST_CHECK_GT(it->long_entry().size(), 0U);
+
+    it++;
+
+    BOOST_CHECK_EQUAL((*it).name(), "..");
+    file = *it;
+    BOOST_CHECK_EQUAL(file.name(), "..");
+
+    it++;
+
+    BOOST_CHECK(
+        it->name() == test_file1.filename() ||
+        it->name() == test_file2.filename());
+
+    directory_iterator itm(move(it));
+
+    itm++;
+
+    BOOST_CHECK(
+        itm->name() == test_file1.filename() ||
+        itm->name() == test_file2.filename());
+
+    itm++;
+
+    BOOST_CHECK(itm == filesystem().directory_iterator());
 }
 
 /**

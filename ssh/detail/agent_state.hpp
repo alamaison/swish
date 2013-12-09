@@ -93,10 +93,15 @@ public:
     agent_state(BOOST_RV_REF(agent_state) other)
         : m_session(boost::move(other.m_session)),
           m_agent(boost::move(other.m_agent))
-    {}
+    {
+        other.m_agent = NULL;
+    }
 
     ~agent_state() throw()
     {
+        if (!m_agent)
+            return; // moved
+
         session_state::scoped_lock lock = m_session->aquire_lock();
 
         ::libssh2_agent_disconnect(m_agent);        

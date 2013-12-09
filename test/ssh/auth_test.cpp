@@ -39,16 +39,19 @@
 #include <ssh/session.hpp> // test subject
 
 #include <boost/concept_check.hpp> // BOOST_CONCEPT_ASSERT
+#include <boost/move/move.hpp>
 #include <boost/range/concepts.hpp> // RandomAccessRangeConcept
 #include <boost/range/size.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
 using boost::RandomAccessRangeConcept;
+using boost::move;
 using boost::size;
 using boost::system::system_error;
 
@@ -58,6 +61,7 @@ using ssh::identity;
 
 using test::ssh::session_fixture;
 
+using std::auto_ptr;
 using std::exception;
 using std::string;
 using std::vector;
@@ -325,6 +329,39 @@ BOOST_AUTO_TEST_CASE( pubkey )
 }
 
 /**
+ * Authentication carries across to move-constructed session.
+ */
+BOOST_AUTO_TEST_CASE( move_construct_after_auth )
+{
+    session s = test_session();
+
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    session t(move(s));
+    BOOST_CHECK(t.authenticated());
+}
+
+/**
+ * Authentication carries across to move-assigned session.
+ */
+BOOST_AUTO_TEST_CASE( move_assign_after_auth )
+{
+    session s = test_session();
+
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    auto_ptr<boost::asio::ip::tcp::socket> socket(connect_additional_socket());
+
+    session t(socket->native());
+
+    BOOST_CHECK(!t.authenticated());
+    t = move(s);
+    BOOST_CHECK(t.authenticated());
+}
+
+/**
  * Request connection to agent.  Allowed to fail but not catastrophically.
  */
 BOOST_AUTO_TEST_CASE( agent )
@@ -398,6 +435,72 @@ BOOST_AUTO_TEST_CASE( agent_idempotence )
         {
         }
     } 
+    catch (system_error&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent move-construct behaviour.
+ */
+BOOST_AUTO_TEST_CASE( agent_move_construct )
+{
+    session s = test_session();
+
+    BOOST_CHECK(!s.authenticated());
+
+    try
+    {
+        agent_identities identities = s.agent_identities();
+        agent_identities identities2(move(identities));
+
+        BOOST_FOREACH(identity i, identities2)
+        {
+        }
+    }
+    catch (system_error&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent move-assign behaviour.
+ */
+BOOST_AUTO_TEST_CASE( agent_move_assign )
+{
+    session s = test_session();
+
+    BOOST_CHECK(!s.authenticated());
+
+    try
+    {
+        agent_identities identities = s.agent_identities();
+        agent_identities identities2 = s.agent_identities();
+
+        identities2 = move(identities);
+
+        BOOST_FOREACH(identity i, identities2)
+        {
+        }
+    }
+    catch (system_error&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent move-self-assign behaviour.
+ */
+BOOST_AUTO_TEST_CASE( agent_move_self_assign )
+{
+    session s = test_session();
+
+    BOOST_CHECK(!s.authenticated());
+
+    try
+    {
+        agent_identities identities = s.agent_identities();
+
+        identities = move(identities);
+
+        BOOST_FOREACH(identity i, identities)
+        {
+        }
+    }
     catch (system_error&) { /* agent not running - failure ok */ }
 }
 

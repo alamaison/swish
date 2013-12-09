@@ -79,8 +79,6 @@ public:
      */
     running_session& operator=(BOOST_RV_REF(running_session) other);
 
-    friend void swap(running_session& lhs, running_session& rhs);
-
     /**
      * Has the connection broken since we connected?
      *
@@ -96,6 +94,8 @@ public:
     bool is_dead();
 
     ssh::session get_session() const;
+
+    friend void swap(running_session& lhs, running_session& rhs);
 
 private:
 

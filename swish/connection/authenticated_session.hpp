@@ -116,8 +116,6 @@ public:
      */
     authenticated_session& operator=(BOOST_RV_REF(authenticated_session) other);
 
-    friend void swap(authenticated_session& lhs, authenticated_session& rhs);
-
     bool is_dead();
 
     // This class really represents an SFTP channel rather than an
@@ -128,6 +126,8 @@ public:
     ssh::session get_session() const;
 
     ssh::filesystem::sftp_filesystem get_sftp_filesystem() const;
+
+    friend void swap(authenticated_session& lhs, authenticated_session& rhs);
 
 private:
     running_session m_session;

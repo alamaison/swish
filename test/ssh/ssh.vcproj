@@ -360,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\session_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stream_test.cpp"
 				>
 			</File>

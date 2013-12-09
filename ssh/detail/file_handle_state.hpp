@@ -91,10 +91,15 @@ public:
     file_handle_state(BOOST_RV_REF(file_handle_state) other)
         : m_sftp(boost::move(other.m_sftp)),
           m_handle(boost::move(other.m_handle))
-    {}
+    {
+        other.m_handle = NULL;
+    }
 
     ~file_handle_state() throw()
     {
+        if (!m_handle)
+            return; // moved
+
         sftp_channel_state::scoped_lock lock = m_sftp->aquire_lock();
 
         ::libssh2_sftp_close_handle(m_handle);

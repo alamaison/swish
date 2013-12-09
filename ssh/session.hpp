@@ -48,6 +48,7 @@
 #include <boost/exception_ptr.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/optional/optional.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
@@ -356,6 +357,22 @@ public:
     {}
 
     /**
+     * Move constructor.
+     */
+    session(BOOST_RV_REF(session) other)
+        : m_session(boost::move(other.m_session))
+    {}
+
+    /**
+     * Move-assignment.
+     */
+    session& operator=(BOOST_RV_REF(session) other)
+    {
+        m_session = boost::move(other.m_session);
+        return *this;
+    }
+
+    /**
      * Hostkey sent by the server to identify itself.
      */
     ssh::host_key hostkey() const
@@ -595,6 +612,14 @@ private:
 
     boost::shared_ptr<detail::session_state> m_session;
 };
+
+// C++11 swap has this implementation but we also support C++03
+inline void swap(session& lhs, session& rhs)
+{
+    session tmp(boost::move(lhs));
+    lhs = boost::move(rhs);
+    rhs = boost::move(tmp);
+}
 
 } // namespace ssh
 

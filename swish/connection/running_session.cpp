@@ -150,13 +150,6 @@ running_session& running_session::operator=(BOOST_RV_REF(running_session) other)
     return *this;
 }
 
-void swap(running_session& lhs, running_session& rhs)
-{
-    std::swap(lhs.m_io, rhs.m_io);
-    std::swap(lhs.m_socket, rhs.m_socket);
-    std::swap(lhs.m_session, rhs.m_session);
-}
-
 session running_session::get_session() const
 {
     return m_session;
@@ -174,6 +167,13 @@ bool running_session::is_dead()
         BOOST_THROW_EXCEPTION(
             system_error(::WSAGetLastError(), get_system_category()));
     return rc != 0;
+}
+
+void swap(running_session& lhs, running_session& rhs)
+{
+    boost::swap(lhs.m_io, rhs.m_io);
+    boost::swap(lhs.m_socket, rhs.m_socket);
+    boost::swap(lhs.m_session, rhs.m_session);
 }
 
 }} // namespace swish::connection

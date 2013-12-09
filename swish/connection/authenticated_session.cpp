@@ -507,12 +507,6 @@ authenticated_session& authenticated_session::operator=(
     return *this;
 }
 
-void swap(authenticated_session& lhs, authenticated_session& rhs)
-{
-    boost::swap(lhs.m_session, rhs.m_session);
-    std::swap(lhs.m_filesystem, rhs.m_filesystem);
-}
-
 session authenticated_session::get_session() const
 {
     return m_session.get_session();
@@ -526,6 +520,12 @@ sftp_filesystem authenticated_session::get_sftp_filesystem() const
 bool authenticated_session::is_dead()
 {
    return m_session.is_dead();
+}
+
+void swap(authenticated_session& lhs, authenticated_session& rhs)
+{
+    boost::swap(lhs.m_session, rhs.m_session);
+    boost::swap(lhs.m_filesystem, rhs.m_filesystem);
 }
 
 }} // namespace swish::connection

@@ -76,16 +76,34 @@ public:
     sftp_channel_state(boost::shared_ptr<session_state> session)
         : m_session(session), m_sftp(do_sftp_init(*m_session)) {}
 
+    /**
+     * Move constructor.
+     */
     sftp_channel_state(BOOST_RV_REF(sftp_channel_state) other)
         : m_session(boost::move(other.m_session)),
           m_sftp(boost::move(other.m_sftp))
-    {}
+    {
+        other.m_sftp = NULL;
+    }
+
+    /**
+     * Move-assignment.
+     */
+    sftp_channel_state& operator=(BOOST_RV_REF(sftp_channel_state) other)
+    {
+        destroy();
+
+        m_session = boost::move(other.m_session);
+
+        m_sftp = boost::move(other.m_sftp);
+        other.m_sftp = NULL;
+
+        return *this;
+    }
 
     ~sftp_channel_state() throw()
     {
-        session_state::scoped_lock lock = m_session->aquire_lock();
-
-        ::libssh2_sftp_shutdown(m_sftp);
+        destroy();
     }
 
     scoped_lock aquire_lock()
@@ -104,6 +122,16 @@ public:
     }
 
 private:
+
+    void destroy()
+    {
+        if (!m_sftp)
+            return; // moved
+
+        session_state::scoped_lock lock = m_session->aquire_lock();
+
+        ::libssh2_sftp_shutdown(m_sftp);
+    }
 
     boost::shared_ptr<session_state> m_session;
     LIBSSH2_SFTP* m_sftp;

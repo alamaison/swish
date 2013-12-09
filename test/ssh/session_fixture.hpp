@@ -72,6 +72,29 @@ inline std::string port_to_string(long port)
     return stream.str();
 }
 
+inline void open_socket(
+    boost::asio::io_service& io, boost::asio::ip::tcp::socket& socket,
+    const std::string host_name, int port)
+{
+    using boost::asio::ip::tcp;
+
+    tcp::resolver resolver(io);
+    typedef tcp::resolver::query Lookup;
+    Lookup query(host_name, detail::port_to_string(port));
+
+    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    tcp::resolver::iterator end;
+
+    boost::system::error_code error = boost::asio::error::host_not_found;
+    while (error && endpoint_iterator != end)
+    {
+        socket.close();
+        socket.connect(*endpoint_iterator++, error);
+    }
+    if (error)
+        BOOST_THROW_EXCEPTION(boost::system::system_error(error));
+}
+
 }
 
 /**
@@ -89,28 +112,22 @@ public:
         return m_session;
     }
 
+    std::auto_ptr<boost::asio::ip::tcp::socket> connect_additional_socket()
+    {
+        std::auto_ptr<boost::asio::ip::tcp::socket> socket(
+            new boost::asio::ip::tcp::socket(m_io));
+
+        detail::open_socket(m_io, *socket, host(), port());
+
+        return socket;
+    }
+
 private:
 
     boost::asio::ip::tcp::socket& open_socket(
         const std::string host_name, int port)
     {
-        using boost::asio::ip::tcp;
-
-        tcp::resolver resolver(m_io);
-        typedef tcp::resolver::query Lookup;
-        Lookup query(host_name, detail::port_to_string(port));
-
-        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-        tcp::resolver::iterator end;
-
-        boost::system::error_code error = boost::asio::error::host_not_found;
-        while (error && endpoint_iterator != end)
-        {
-            m_socket.close();
-            m_socket.connect(*endpoint_iterator++, error);
-        }
-        if (error)
-            BOOST_THROW_EXCEPTION(boost::system::system_error(error));
+        detail::open_socket(m_io, m_socket, host_name, port);
 
         return m_socket;
     }

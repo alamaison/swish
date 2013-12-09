@@ -47,6 +47,7 @@
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
 #include <boost/optional/optional.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp> // errc
 #include <boost/system/system_error.hpp>
@@ -464,6 +465,22 @@ class sftp_io_device;
 class sftp_filesystem
 {
 public:
+
+    /**
+     * Move constructor.
+     */
+    sftp_filesystem(BOOST_RV_REF(sftp_filesystem) other)
+        : m_sftp(boost::move(other.m_sftp))
+    {}
+
+    /**
+     * Move-assignment.
+     */
+    sftp_filesystem& operator=(BOOST_RV_REF(sftp_filesystem) other)
+    {
+        m_sftp = boost::move(other.m_sftp);
+        return *this;
+    }
 
     /**
      * Create an iterator over the contents of the given directory.
@@ -902,6 +919,15 @@ private:
 
     boost::shared_ptr<::ssh::detail::sftp_channel_state> m_sftp;
 };
+
+// Only needed for C++03 support with Boost move-emulation because C++11
+// std::swap does this type of swap already
+inline void swap(sftp_filesystem& lhs, sftp_filesystem& rhs)
+{
+    sftp_filesystem tmp(boost::move(lhs));
+    lhs = boost::move(rhs);
+    rhs = boost::move(tmp);
+}
 
 namespace detail {
 
