@@ -223,14 +223,6 @@ public:
     const boost::filesystem::path& path() const { return m_file; }
     const std::string& long_entry() const { return m_long_entry; }
 
-    /**
-     * @todo Get rid of this ASAP!
-     */
-    const LIBSSH2_SFTP_ATTRIBUTES& raw_attributes() const
-    {
-        return m_attributes.m_attributes;
-    }
-
     const file_attributes& attributes() const
     {
         return m_attributes;
