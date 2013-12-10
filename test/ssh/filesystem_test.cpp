@@ -73,6 +73,7 @@ using boost::uintmax_t;
 using test::ssh::sandbox_fixture;
 using test::ssh::session_fixture;
 
+using std::auto_ptr;
 using std::find;
 using std::string;
 
@@ -245,6 +246,25 @@ BOOST_FIXTURE_TEST_CASE(
     sftp_filesystem fs2(move(fs));
 
     BOOST_CHECK(directory_is_empty(fs2, to_remote_path(sandbox())));
+}
+
+BOOST_FIXTURE_TEST_CASE(
+    swap_session_with_live_filesystem_connection, session_fixture )
+{
+    // Both sockets must outlive both session objects
+    auto_ptr<boost::asio::ip::tcp::socket> socket1(connect_additional_socket());
+    auto_ptr<boost::asio::ip::tcp::socket> socket2(connect_additional_socket());
+
+    session s(socket1->native());
+    session t(socket2->native());
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+    t.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    sftp_filesystem fs = s.connect_to_filesystem();
+
+    boost::swap(t, s);
 }
 
 // Tests assume an authenticated session and established SFTP filesystem
