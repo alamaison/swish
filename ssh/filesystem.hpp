@@ -504,7 +504,7 @@ public:
     directory_iterator directory_iterator(const boost::filesystem::path& path)
     {
         return ssh::filesystem::directory_iterator::factory_attorney()(
-            m_sftp, path);
+            sftp_ref(), path);
     }
 
     /**
@@ -532,11 +532,11 @@ public:
 
         {
             ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                m_sftp.aquire_lock();
+                sftp_ref().aquire_lock();
 
             ::ssh::detail::libssh2::sftp::stat(
-                m_sftp.session_ptr(), m_sftp.sftp_ptr(), file_path.data(),
-                file_path.size(),
+                sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
+                file_path.data(), file_path.size(),
                 (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
                 &attributes);
         }
@@ -582,10 +582,10 @@ public:
         std::string target_string = target.string();
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            m_sftp.aquire_lock();
+            sftp_ref().aquire_lock();
 
         ::ssh::detail::libssh2::sftp::symlink(
-            m_sftp.session_ptr(), m_sftp.sftp_ptr(), link_string.data(),
+            sftp_ref().session_ptr(), sftp_ref().sftp_ptr(), link_string.data(),
             link_string.size(), target_string.data(), target_string.size());
     }
 
@@ -658,12 +658,12 @@ public:
         }
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            m_sftp.aquire_lock();
+            sftp_ref().aquire_lock();
 
         ::ssh::detail::libssh2::sftp::rename(
-            m_sftp.session_ptr(), m_sftp.sftp_ptr(), source_string.data(),
-            source_string.size(), destination_string.data(),
-            destination_string.size(), flags);
+            sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
+            source_string.data(), source_string.size(),
+            destination_string.data(), destination_string.size(), flags);
     }
 
     /**
@@ -784,10 +784,10 @@ public:
         try
         {
             ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                m_sftp.aquire_lock();
+                sftp_ref().aquire_lock();
 
             ::ssh::detail::libssh2::sftp::mkdir_ex(
-                m_sftp.session_ptr(), m_sftp.sftp_ptr(),
+                sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
                 new_directory_string.data(),
                 new_directory_string.size(),
                 LIBSSH2_SFTP_S_IRWXU |
@@ -847,7 +847,7 @@ private:
     friend class factory_attorney;
 
     explicit sftp_filesystem(::ssh::detail::session_state& session_state)
-        : m_sftp(::ssh::detail::sftp_channel_state(session_state))
+        : m_sftp(new ::ssh::detail::sftp_channel_state(session_state))
     {}
 
     friend class sftp_input_device;
@@ -874,18 +874,18 @@ private:
         try
         {
             ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                m_sftp.aquire_lock();
+                sftp_ref().aquire_lock();
 
             if (is_directory)
             {
                 ::ssh::detail::libssh2::sftp::rmdir_ex(
-                    m_sftp.session_ptr(), m_sftp.sftp_ptr(),
+                    sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
                     target_string.data(), target_string.size());
             }
             else
             {
                 ::ssh::detail::libssh2::sftp::unlink_ex(
-                    m_sftp.session_ptr(), m_sftp.sftp_ptr(),
+                    sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
                     target_string.data(), target_string.size());
             }
         }
@@ -919,10 +919,10 @@ private:
         std::vector<char> target_path_buffer(1024, '\0');
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            m_sftp.aquire_lock();
+            sftp_ref().aquire_lock();
 
         int len = ::ssh::detail::libssh2::sftp::symlink_ex(
-            m_sftp.session_ptr(), m_sftp.sftp_ptr(), path, path_len,
+            sftp_ref().session_ptr(), sftp_ref().sftp_ptr(), path, path_len,
             &target_path_buffer[0], target_path_buffer.size(),
             resolve_action);
 
@@ -930,7 +930,22 @@ private:
             &target_path_buffer[0], &target_path_buffer[0] + len);
     }
 
-    ::ssh::detail::sftp_channel_state m_sftp;
+    ::ssh::detail::sftp_channel_state& sftp_ref()
+    {
+        return *m_sftp;
+    }
+
+    // Using an auto_ptr (eventually unique_ptr) so that the other objects
+    // that reference this state continue to reference a valid object even if
+    // this sftp_filesystem object is moved.  The moved filesystem will only
+    // move the pointer but the state will remain at the same address.
+    // Using a value member meant that moving the filesystem, relocated the
+    // channel state but the other objects don't get made aware of that.
+    // Result: crash.
+    // The other objects using this state include directory iterators and
+    // file streams.
+    // See http://stackoverflow.com/a/20493410/67013.
+    std::auto_ptr<::ssh::detail::sftp_channel_state> m_sftp;
 };
 
 // Only needed for C++03 support with Boost move-emulation because C++11

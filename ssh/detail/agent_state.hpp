@@ -40,9 +40,7 @@
 #include <ssh/detail/libssh2/agent.hpp>
 #include <ssh/detail/session_state.hpp>
 
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
-#include <boost/ref.hpp> // reference_wrapper
 
 #include <libssh2.h> // LIBSSH2_AGENT
 
@@ -64,7 +62,14 @@ inline LIBSSH2_AGENT* do_agent_init(session_state& session)
  */
 class agent_state : private boost::noncopyable
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(agent_state)
+    //
+    // Intentionally not movable to prevent the public classes that own
+    // this object moving it when they are themselves moved.  This object
+    // is referenced by other classes that don't own it so the owning classes
+    // need to leave it where it is when they move so as not to invalidate
+    // the other references.  Making this non-copyable, non-movable enforces
+    // that.
+    // 
 
 public:
 
@@ -92,18 +97,8 @@ public:
         }
     }
 
-    agent_state(BOOST_RV_REF(agent_state) other)
-        : m_session(boost::move(other.m_session)),
-          m_agent(boost::move(other.m_agent))
-    {
-        other.m_agent = NULL;
-    }
-
     ~agent_state() throw()
     {
-        if (!m_agent)
-            return; // moved
-
         session_state::scoped_lock lock = session_ref().aquire_lock();
 
         ::libssh2_agent_disconnect(m_agent);        
@@ -132,8 +127,7 @@ private:
         return m_session;
     }
 
-    // Using reference wrapper so we can move-assign
-    boost::reference_wrapper<session_state> m_session;
+    session_state& m_session;
     LIBSSH2_AGENT* m_agent;
 };
 

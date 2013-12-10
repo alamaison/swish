@@ -561,7 +561,7 @@ public:
     m_open_path(open_path),
     m_handle(
         detail::open_input_file(
-            channel.m_sftp, m_open_path, opening_mode))
+            channel.sftp_ref(), m_open_path, opening_mode))
     {}
 
     sftp_input_device(
@@ -571,7 +571,7 @@ public:
      m_open_path(open_path),
      m_handle(
          detail::open_input_file(
-             channel.m_sftp, m_open_path,
+             channel.sftp_ref(), m_open_path,
              detail::translate_flags(opening_mode)))
     {}
 
@@ -618,7 +618,7 @@ public:
         :
     m_open_path(open_path),
     m_handle(
-        detail::open_output_file(channel.m_sftp, m_open_path, opening_mode))
+        detail::open_output_file(channel.sftp_ref(), m_open_path, opening_mode))
     {}
 
     sftp_output_device(
@@ -628,7 +628,8 @@ public:
     m_open_path(open_path),
     m_handle(
         detail::open_output_file(
-            channel.m_sftp, m_open_path, detail::translate_flags(opening_mode)))
+            channel.sftp_ref(), m_open_path,
+            detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize optimal_buffer_size() const
@@ -675,7 +676,7 @@ public:
         openmode::value opening_mode=openmode::in | openmode::out)
         :
     m_open_path(open_path),
-    m_handle(detail::open_file(channel.m_sftp, m_open_path, opening_mode))
+    m_handle(detail::open_file(channel.sftp_ref(), m_open_path, opening_mode))
     {}
 
     sftp_io_device(
@@ -685,7 +686,8 @@ public:
     m_open_path(open_path),
     m_handle(
         detail::open_file(
-            channel.m_sftp, m_open_path, detail::translate_flags(opening_mode)))
+            channel.sftp_ref(), m_open_path,
+            detail::translate_flags(opening_mode)))
     {}
 
     std::streamsize optimal_buffer_size() const

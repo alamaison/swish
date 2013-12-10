@@ -40,9 +40,7 @@
 #include <ssh/detail/libssh2/sftp.hpp> // open
 #include <ssh/detail/sftp_channel_state.hpp>
 
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
-#include <boost/ref.hpp> // reference_wrapper
 
 #include <string>
 
@@ -70,7 +68,14 @@ inline LIBSSH2_SFTP_HANDLE* do_open(
  */
 class file_handle_state : private boost::noncopyable
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(file_handle_state)
+    //
+    // Intentionally not movable to prevent the public classes that own
+    // this object moving it when they are themselves moved.  This object
+    // is referenced by other classes that don't own it so the owning classes
+    // need to leave it where it is when they move so as not to invalidate
+    // the other references.  Making this non-copyable, non-movable enforces
+    // that.
+    // 
 
 public:
 
@@ -89,18 +94,8 @@ public:
     m_handle(
         do_open(sftp_ref(), filename, filename_len, flags, mode, open_type)) {}
 
-    file_handle_state(BOOST_RV_REF(file_handle_state) other)
-        : m_sftp(boost::move(other.m_sftp)),
-          m_handle(boost::move(other.m_handle))
-    {
-        other.m_handle = NULL;
-    }
-
     ~file_handle_state() throw()
     {
-        if (!m_handle)
-            return; // moved
-
         sftp_channel_state::scoped_lock lock = sftp_ref().aquire_lock();
 
         ::libssh2_sftp_close_handle(m_handle);
@@ -133,8 +128,7 @@ private:
         return m_sftp;
     }
 
-    // Using reference wrapper so we can move-assign
-    boost::reference_wrapper<sftp_channel_state> m_sftp;
+    sftp_channel_state& m_sftp;
     LIBSSH2_SFTP_HANDLE* m_handle;
 };
 

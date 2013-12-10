@@ -39,9 +39,6 @@
 
 #include <ssh/detail/libssh2/session.hpp> // init
 
-#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
-#include <boost/exception/info.hpp> // errinfo_api_function
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/system/error_code.hpp>
@@ -49,11 +46,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <exception> // bad_alloc
-#include <memory> // auto_ptr
 #include <string>
 
-#include <libssh2.h>
+#include <libssh2.h> // LIBSSH2_SESSION
 
 namespace ssh {
 namespace detail {
@@ -71,7 +66,14 @@ namespace detail {
  */
 class session_state : private boost::noncopyable
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(session_state)
+    //
+    // Intentionally not movable to prevent the public classes that own
+    // this object moving it when they are themselves moved.  This object
+    // is referenced by other classes that don't own it so the owning classes
+    // need to leave it where it is when they move so as not to invalidate
+    // the other references.  Making this non-copyable, non-movable enforces
+    // that.
+    // 
 
 public:
 
@@ -80,16 +82,13 @@ public:
     /**
      * Creates a session that is not (and never will be) connected to a host.
      */
-    session_state()
-        : m_mutex(std::auto_ptr<boost::mutex>(new boost::mutex)),
-          m_session(::ssh::detail::libssh2::session::init()) {}
+    session_state() : m_session(::ssh::detail::libssh2::session::init()) {}
 
     /**
      * Creates a session connected to a host over the given socket.
      */
     session_state(int socket, const std::string& disconnection_message)
-        : m_mutex(std::auto_ptr<boost::mutex>(new boost::mutex)),
-          m_session(libssh2::session::init())
+        : m_session(libssh2::session::init())
     {
         // Session is 'alive' from this point onwards.  All paths must
         // eventually free it.
@@ -115,50 +114,8 @@ public:
         }
     }
 
-    session_state(BOOST_RV_REF(session_state) other)
-        : m_mutex(boost::move(other.m_mutex)),
-          m_session(boost::move(other.m_session)),
-          m_disconnection_message(boost::move(other.m_disconnection_message))
-    {
-        other.m_session = NULL;
-    }
-
-    session_state& operator=(BOOST_RV_REF(session_state) other)
-    {
-        destroy();
-
-        m_mutex = boost::move(other.m_mutex);
-
-        m_session = boost::move(other.m_session);
-        other.m_session = NULL;
-        
-        m_disconnection_message = boost::move(other.m_disconnection_message);
-
-        return *this;
-    }
-
     ~session_state() throw()
     {
-        destroy();
-    }
-
-    scoped_lock aquire_lock()
-    {
-        return scoped_lock(*m_mutex);
-    }
-
-    LIBSSH2_SESSION* session_ptr()
-    {
-        return m_session;
-    }
-
-private:
-
-    void destroy() throw()
-    {
-        if (!m_session)
-            return; // moved
-
         // Ignoring any errors because there's nothing we can do about them
 
         if (m_disconnection_message)
@@ -171,9 +128,20 @@ private:
         ::libssh2_session_free(m_session);
     }
 
-    mutable std::auto_ptr<boost::mutex> m_mutex;
+    scoped_lock aquire_lock()
+    {
+        return scoped_lock(m_mutex);
+    }
+
+    LIBSSH2_SESSION* session_ptr()
+    {
+        return m_session;
+    }
+
+private:
+
+    mutable boost::mutex m_mutex;
     ///< Coordinates multiple-threads using of non-thread-safe LIBSSH2_SESSION.
-    ///< Using auto_ptr because Boost.Thread doesn't support move until 1.50.
 
     LIBSSH2_SESSION* m_session;
 

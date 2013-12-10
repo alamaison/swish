@@ -642,6 +642,9 @@ private:
     // Using a value member meant that moving the session, relocated the
     // session state but the other objects don't get made aware of that.
     // Result: crash.
+    // The other objects using this state include filesystem connections
+    // (and transitively directory iterators and file streams) and
+    // agent identity collections.
     // See http://stackoverflow.com/a/20493410/67013.
     std::auto_ptr<detail::session_state> m_session;
 };

@@ -40,9 +40,7 @@
 #include <ssh/detail/libssh2/sftp.hpp> // init
 #include <ssh/detail/session_state.hpp>
 
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
-#include <boost/ref.hpp> // reference_wrapper
 
 #include <libssh2_sftp.h> // LIBSSH2_SFTP
 
@@ -64,8 +62,14 @@ inline LIBSSH2_SFTP* do_sftp_init(session_state& session)
  */
 class sftp_channel_state : private boost::noncopyable
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(sftp_channel_state)
-
+    //
+    // Intentionally not movable to prevent the public classes that own
+    // this object moving it when they are themselves moved.  This object
+    // is referenced by other classes that don't own it so the owning classes
+    // need to leave it where it is when they move so as not to invalidate
+    // the other references.  Making this non-copyable, non-movable enforces
+    // that.
+    // 
 public:
 
     typedef session_state::scoped_lock scoped_lock;
@@ -77,34 +81,11 @@ public:
     sftp_channel_state(session_state& session)
         : m_session(session), m_sftp(do_sftp_init(session_ref())) {}
 
-    /**
-     * Move constructor.
-     */
-    sftp_channel_state(BOOST_RV_REF(sftp_channel_state) other)
-        : m_session(boost::move(other.m_session)),
-          m_sftp(boost::move(other.m_sftp))
-    {
-        other.m_sftp = NULL;
-    }
-
-    /**
-     * Move-assignment.
-     */
-    sftp_channel_state& operator=(BOOST_RV_REF(sftp_channel_state) other)
-    {
-        destroy();
-
-        m_session = boost::move(other.m_session);
-
-        m_sftp = boost::move(other.m_sftp);
-        other.m_sftp = NULL;
-
-        return *this;
-    }
-
     ~sftp_channel_state() throw()
     {
-        destroy();
+        session_state::scoped_lock lock = session_ref().aquire_lock();
+
+        ::libssh2_sftp_shutdown(m_sftp);
     }
 
     scoped_lock aquire_lock()
@@ -124,23 +105,12 @@ public:
 
 private:
 
-    void destroy()
-    {
-        if (!m_sftp)
-            return; // moved
-
-        session_state::scoped_lock lock = session_ref().aquire_lock();
-
-        ::libssh2_sftp_shutdown(m_sftp);
-    }
-
     session_state& session_ref()
     {
         return m_session;
     }
 
-    // Using reference wrapper so we can move-assign
-    boost::reference_wrapper<session_state> m_session;
+    session_state& m_session;
     LIBSSH2_SFTP* m_sftp;
 };
 
