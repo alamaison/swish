@@ -93,7 +93,7 @@ public:
      */
     bool is_dead();
 
-    ssh::session get_session() const;
+    ssh::session& get_session();
 
     friend void swap(running_session& lhs, running_session& rhs);
 

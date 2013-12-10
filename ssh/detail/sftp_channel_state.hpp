@@ -40,8 +40,9 @@
 #include <ssh/detail/libssh2/sftp.hpp> // init
 #include <ssh/detail/session_state.hpp>
 
-#include <boost/move/move.hpp> // BOOST_RV_REF
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
+#include <boost/ref.hpp> // reference_wrapper
 
 #include <libssh2_sftp.h> // LIBSSH2_SFTP
 
@@ -73,8 +74,8 @@ public:
      * Creates SFTP channel that closes itself in a thread-safe manner
      * when it goes out of scope.
      */
-    sftp_channel_state(boost::shared_ptr<session_state> session)
-        : m_session(session), m_sftp(do_sftp_init(*m_session)) {}
+    sftp_channel_state(session_state& session)
+        : m_session(session), m_sftp(do_sftp_init(session_ref())) {}
 
     /**
      * Move constructor.
@@ -108,12 +109,12 @@ public:
 
     scoped_lock aquire_lock()
     {
-        return m_session->aquire_lock();
+        return session_ref().aquire_lock();
     }
 
     LIBSSH2_SESSION* session_ptr()
     {
-        return m_session->session_ptr();
+        return session_ref().session_ptr();
     }
 
     LIBSSH2_SFTP* sftp_ptr()
@@ -128,12 +129,18 @@ private:
         if (!m_sftp)
             return; // moved
 
-        session_state::scoped_lock lock = m_session->aquire_lock();
+        session_state::scoped_lock lock = session_ref().aquire_lock();
 
         ::libssh2_sftp_shutdown(m_sftp);
     }
 
-    boost::shared_ptr<session_state> m_session;
+    session_state& session_ref()
+    {
+        return m_session;
+    }
+
+    // Using reference wrapper so we can move-assign
+    boost::reference_wrapper<session_state> m_session;
     LIBSSH2_SFTP* m_sftp;
 };
 

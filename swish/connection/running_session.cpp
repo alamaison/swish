@@ -150,7 +150,7 @@ running_session& running_session::operator=(BOOST_RV_REF(running_session) other)
     return *this;
 }
 
-session running_session::get_session() const
+session& running_session::get_session()
 {
     return m_session;
 }

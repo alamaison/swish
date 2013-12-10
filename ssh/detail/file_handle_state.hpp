@@ -40,8 +40,9 @@
 #include <ssh/detail/libssh2/sftp.hpp> // open
 #include <ssh/detail/sftp_channel_state.hpp>
 
-#include <boost/move/move.hpp> // BOOST_RV_REF
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
+#include <boost/ref.hpp> // reference_wrapper
 
 #include <string>
 
@@ -80,13 +81,13 @@ public:
      * when it goes out of scope.
      */
     file_handle_state(
-        boost::shared_ptr<sftp_channel_state> sftp,
+        sftp_channel_state& sftp,
         const char* filename, unsigned int filename_len, unsigned long flags,
         long mode, int open_type)
         :
     m_sftp(sftp),
     m_handle(
-        do_open(*m_sftp, filename, filename_len, flags, mode, open_type)) {}
+        do_open(sftp_ref(), filename, filename_len, flags, mode, open_type)) {}
 
     file_handle_state(BOOST_RV_REF(file_handle_state) other)
         : m_sftp(boost::move(other.m_sftp)),
@@ -100,24 +101,24 @@ public:
         if (!m_handle)
             return; // moved
 
-        sftp_channel_state::scoped_lock lock = m_sftp->aquire_lock();
+        sftp_channel_state::scoped_lock lock = sftp_ref().aquire_lock();
 
         ::libssh2_sftp_close_handle(m_handle);
     }
 
     scoped_lock aquire_lock()
     {
-        return m_sftp->aquire_lock();
+        return sftp_ref().aquire_lock();
     }
 
     LIBSSH2_SESSION* session_ptr()
     {
-        return m_sftp->session_ptr();
+        return sftp_ref().session_ptr();
     }
 
     LIBSSH2_SFTP* sftp_ptr()
     {
-        return m_sftp->sftp_ptr();
+        return sftp_ref().sftp_ptr();
     }
 
     LIBSSH2_SFTP_HANDLE* file_handle()
@@ -127,7 +128,13 @@ public:
 
 private:
 
-    boost::shared_ptr<sftp_channel_state> m_sftp;
+    sftp_channel_state& sftp_ref()
+    {
+        return m_sftp;
+    }
+
+    // Using reference wrapper so we can move-assign
+    boost::reference_wrapper<sftp_channel_state> m_sftp;
     LIBSSH2_SFTP_HANDLE* m_handle;
 };
 

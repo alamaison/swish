@@ -48,6 +48,7 @@
 #include <boost/optional/optional.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp> // errc
 #include <boost/system/system_error.hpp>
@@ -246,13 +247,14 @@ class sftp_filesystem;
 namespace detail {
 
     inline boost::shared_ptr<::ssh::detail::file_handle_state> open_directory(
-        boost::shared_ptr<::ssh::detail::sftp_channel_state> channel,
+        ::ssh::detail::sftp_channel_state& channel,
         const boost::filesystem::path& path)
     {
         std::string path_string = path.string();
 
         return boost::make_shared<::ssh::detail::file_handle_state>(
-            channel, path_string.data(), path_string.size(), 0, 0,
+            boost::ref(channel), // http://stackoverflow.com/a/1374266/67013
+            path_string.data(), path_string.size(), 0, 0,
             LIBSSH2_SFTP_OPENDIR);
     }
 
@@ -296,7 +298,7 @@ public:
         friend class sftp_filesystem;
 
         directory_iterator operator()(
-            boost::shared_ptr<::ssh::detail::sftp_channel_state> channel,
+            ::ssh::detail::sftp_channel_state& channel,
             const boost::filesystem::path& path)
         {
             return directory_iterator(channel, path);
@@ -312,7 +314,7 @@ public:
 private:
 
     directory_iterator(
-        boost::shared_ptr<::ssh::detail::sftp_channel_state> sftp_channel,
+        ::ssh::detail::sftp_channel_state& sftp_channel,
         const boost::filesystem::path& path)
         :
         m_directory(path),
@@ -399,6 +401,8 @@ private:
         return sftp_file(m_directory / m_file_name, m_long_entry, m_attributes);
     }
 
+    // The file handle is shared between all copies of the iterator because
+    // iterators must be copyable
     boost::shared_ptr<::ssh::detail::file_handle_state> m_handle;
     boost::filesystem::path m_directory;
 
@@ -422,7 +426,7 @@ namespace detail {
 
 
     inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_filesystem filesystem, const boost::filesystem::path& path);
+        sftp_filesystem& filesystem, const boost::filesystem::path& path);
 
 }
 
@@ -460,10 +464,15 @@ class sftp_output_device;
 class sftp_io_device;
 
 /**
- * Access to Filesystem remote server via an SSH/SFTP connection.
+ * Connection to the filesystem on a remote server via an SSH/SFTP connection.
+ *
+ * Filesystem connections are non-copyable.  The connection is closed when the
+ * object is destroyed.
  */
-class sftp_filesystem
+class sftp_filesystem : private boost::noncopyable
 {
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(sftp_filesystem)
+
 public:
 
     /**
@@ -484,6 +493,13 @@ public:
 
     /**
      * Create an iterator over the contents of the given directory.
+     *
+     * The iterator is copyable but all copies are linked so that incrementing
+     * one will increment all the copies.
+     *
+     * The `sftp_filesystem` (and, transitively, the `session`) must outlive
+     * all non-end copies of the iterator.  It is the caller's responsibility
+     * to ensure this.
      */
     directory_iterator directory_iterator(const boost::filesystem::path& path)
     {
@@ -516,10 +532,10 @@ public:
 
         {
             ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                m_sftp->aquire_lock();
+                m_sftp.aquire_lock();
 
             ::ssh::detail::libssh2::sftp::stat(
-                m_sftp->session_ptr(), m_sftp->sftp_ptr(), file_path.data(),
+                m_sftp.session_ptr(), m_sftp.sftp_ptr(), file_path.data(),
                 file_path.size(),
                 (follow_links) ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
                 &attributes);
@@ -566,10 +582,10 @@ public:
         std::string target_string = target.string();
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            m_sftp->aquire_lock();
+            m_sftp.aquire_lock();
 
         ::ssh::detail::libssh2::sftp::symlink(
-            m_sftp->session_ptr(), m_sftp->sftp_ptr(), link_string.data(),
+            m_sftp.session_ptr(), m_sftp.sftp_ptr(), link_string.data(),
             link_string.size(), target_string.data(), target_string.size());
     }
 
@@ -642,10 +658,10 @@ public:
         }
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            m_sftp->aquire_lock();
+            m_sftp.aquire_lock();
 
         ::ssh::detail::libssh2::sftp::rename(
-            m_sftp->session_ptr(), m_sftp->sftp_ptr(), source_string.data(),
+            m_sftp.session_ptr(), m_sftp.sftp_ptr(), source_string.data(),
             source_string.size(), destination_string.data(),
             destination_string.size(), flags);
     }
@@ -768,10 +784,10 @@ public:
         try
         {
             ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                m_sftp->aquire_lock();
+                m_sftp.aquire_lock();
 
             ::ssh::detail::libssh2::sftp::mkdir_ex(
-                m_sftp->session_ptr(), m_sftp->sftp_ptr(),
+                m_sftp.session_ptr(), m_sftp.sftp_ptr(),
                 new_directory_string.data(),
                 new_directory_string.size(),
                 LIBSSH2_SFTP_S_IRWXU |
@@ -819,8 +835,7 @@ public:
     private:
         friend class ssh::session;
 
-        sftp_filesystem operator()(
-            boost::shared_ptr<::ssh::detail::session_state> session_state)
+        sftp_filesystem operator()(::ssh::detail::session_state& session_state)
         {
             return sftp_filesystem(session_state);
         }
@@ -831,10 +846,8 @@ private:
 
     friend class factory_attorney;
 
-    explicit sftp_filesystem(
-        boost::shared_ptr<::ssh::detail::session_state> session_state)
-        :
-    m_sftp(boost::make_shared<::ssh::detail::sftp_channel_state>(session_state))
+    explicit sftp_filesystem(::ssh::detail::session_state& session_state)
+        : m_sftp(::ssh::detail::sftp_channel_state(session_state))
     {}
 
     friend class sftp_input_device;
@@ -861,18 +874,18 @@ private:
         try
         {
             ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                m_sftp->aquire_lock();
+                m_sftp.aquire_lock();
 
             if (is_directory)
             {
                 ::ssh::detail::libssh2::sftp::rmdir_ex(
-                    m_sftp->session_ptr(), m_sftp->sftp_ptr(),
+                    m_sftp.session_ptr(), m_sftp.sftp_ptr(),
                     target_string.data(), target_string.size());
             }
             else
             {
                 ::ssh::detail::libssh2::sftp::unlink_ex(
-                    m_sftp->session_ptr(), m_sftp->sftp_ptr(),
+                    m_sftp.session_ptr(), m_sftp.sftp_ptr(),
                     target_string.data(), target_string.size());
             }
         }
@@ -906,10 +919,10 @@ private:
         std::vector<char> target_path_buffer(1024, '\0');
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            m_sftp->aquire_lock();
+            m_sftp.aquire_lock();
 
         int len = ::ssh::detail::libssh2::sftp::symlink_ex(
-            m_sftp->session_ptr(), m_sftp->sftp_ptr(), path, path_len,
+            m_sftp.session_ptr(), m_sftp.sftp_ptr(), path, path_len,
             &target_path_buffer[0], target_path_buffer.size(),
             resolve_action);
 
@@ -917,7 +930,7 @@ private:
             &target_path_buffer[0], &target_path_buffer[0] + len);
     }
 
-    boost::shared_ptr<::ssh::detail::sftp_channel_state> m_sftp;
+    ::ssh::detail::sftp_channel_state m_sftp;
 };
 
 // Only needed for C++03 support with Boost move-emulation because C++11
@@ -932,7 +945,7 @@ inline void swap(sftp_filesystem& lhs, sftp_filesystem& rhs)
 namespace detail {
 
     inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_filesystem filesystem, const boost::filesystem::path& path)
+        sftp_filesystem& filesystem, const boost::filesystem::path& path)
     {
         try
         {
@@ -972,7 +985,7 @@ namespace detail {
  * Does a file exist at the given path.
  */
 inline bool exists(
-    sftp_filesystem filesystem, const boost::filesystem::path& file)
+    sftp_filesystem& filesystem, const boost::filesystem::path& file)
 {
     try
     {
@@ -994,13 +1007,13 @@ inline bool exists(
 }
 
 inline boost::filesystem::path resolve_link_target(
-    sftp_filesystem filesystem, const sftp_file& link)
+    sftp_filesystem& filesystem, const sftp_file& link)
 {
     return filesystem.resolve_link_target(link.path());
 }
 
 inline boost::filesystem::path canonical_path(
-    sftp_filesystem filesystem, const sftp_file& link)
+    sftp_filesystem& filesystem, const sftp_file& link)
 {
     return filesystem.canonical_path(link.path());
 }

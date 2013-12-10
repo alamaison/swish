@@ -49,6 +49,7 @@
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
+#include <boost/noncopyable.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
@@ -59,6 +60,7 @@
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <memory> // auto_ptr
 #include <string>
 #include <utility> // pair, make_pair
 #include <vector>
@@ -321,13 +323,25 @@ namespace detail {
 
 /**
  * An SSH session connected to a host.
+ *
+ * Sessions are non-copyable.   If copy semantics are required, use
+ * a `shared_ptr<ssh::session>`.
+ *
+ * The session is disconnected from the server when the object is destroyed.
+ *
+ * Rationale
+ * ---------
+ * It is important that clients are able to guarantee that a session has been
+ * disconnected at a particular point.  Because the underlying SSH session
+ * cannot be meaningfully duplicated, making this class copyable would only
+ * be possible by sharing the underlying SSH session between the copies.
+ * This would mean that the session would only be disconnected when the last
+ * copy is destroyed, which is harder to control.
  */
-// The underlying session is both allocated and connected to the host by
-// allocate_and_connect_session.  This function also makes sure it will be
-// first disconnected before it is freed.  The implementation of `class session`
-// need to worry about these details, they are already taken care of.
-class session
+class session : private boost::noncopyable
 {
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(session)
+
 public:
     
     /**
@@ -351,9 +365,7 @@ public:
         int socket,
         const std::string& disconnection_message=
             "libssh2 C++ bindings session destructor") :
-    m_session(
-        boost::make_shared<detail::session_state>(
-            socket, disconnection_message))
+    m_session(new detail::session_state(socket, disconnection_message))
     {}
 
     /**
@@ -375,9 +387,9 @@ public:
     /**
      * Hostkey sent by the server to identify itself.
      */
-    ssh::host_key hostkey() const
+    ssh::host_key hostkey()
     {
-        return ssh::host_key(*m_session);
+        return ssh::host_key(session_ref());
     }
 
     /**
@@ -400,10 +412,10 @@ public:
         // Locking until we copy out the method string owned by the session.
         // We don't want another thread inadvertently causing it to be
         // overwritten While we're reading it.
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
 
         const char* method_list = detail::libssh2::userauth::list(
-            m_session->session_ptr(), username.data(), username.size(),
+            session_ref().session_ptr(), username.data(), username.size(),
             ec, message);
 
         if (!method_list)
@@ -433,11 +445,12 @@ public:
     }
 
 
-    bool authenticated() const
+    bool authenticated()
     {
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
 
-        return ::libssh2_userauth_authenticated(m_session->session_ptr()) != 0;
+        return ::libssh2_userauth_authenticated(
+            session_ref().session_ptr()) != 0;
     }
 
     /**
@@ -463,10 +476,11 @@ public:
         std::string message;
 
         {
-            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+            detail::session_state::scoped_lock lock =
+                session_ref().aquire_lock();
 
             detail::libssh2::userauth::password(
-                m_session->session_ptr(), username.data(), username.size(),
+                session_ref().session_ptr(), username.data(), username.size(),
                 password.data(), password.size(), NULL, ec, message);
         }
 
@@ -562,13 +576,13 @@ public:
         // IMPORTANT: Locked from this point onwards until returning to the
         // caller so that abstract is not overwritten by another thread
         // before we pull the responder out of it later
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
 
-        *::libssh2_session_abstract(m_session->session_ptr()) =
+        *::libssh2_session_abstract(session_ref().session_ptr()) =
             &wrapped_responder;
 
         return wrapped_responder.do_challenge_response(
-            m_session->session_ptr(), username);
+            session_ref().session_ptr(), username);
     }
 
     /**
@@ -583,10 +597,10 @@ public:
         const boost::filesystem::path& private_key,
         const std::string& passphrase)
     {
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
 
         detail::libssh2::userauth::public_key_from_file(
-            m_session->session_ptr(), username.data(), username.size(),
+            session_ref().session_ptr(), username.data(), username.size(),
             public_key.external_file_string().c_str(),
             private_key.external_file_string().c_str(), passphrase.c_str());
     }
@@ -597,20 +611,39 @@ public:
      */
     ::ssh::agent_identities agent_identities()
     {
-        return ::ssh::agent_identities(m_session);
+        return ::ssh::agent_identities(session_ref());
     }
 
     /**
      * Create a new connection to the remote filesystem over this SSH session.
+     *
+     * @warning It is the caller's responsibility to ensure the filesystem is
+     *          connection is shut down before the session is disconnected.
+     *          In other words, that the last moved-to destination of the
+     *          session outlives the last moved-to destination of the
+     *          filesystem.  If neither is moved, this is naturally the case.
      */
     filesystem::sftp_filesystem connect_to_filesystem()
     {
-        return filesystem::sftp_filesystem::factory_attorney()(m_session);
+        return filesystem::sftp_filesystem::factory_attorney()(session_ref());
     }
 
 private:
 
-    boost::shared_ptr<detail::session_state> m_session;
+    detail::session_state& session_ref()
+    {
+        return *m_session;
+    }
+
+    // Using an auto_ptr (eventually unique_ptr) so that the other objects
+    // that reference this state continue to reference a valid object even if
+    // this session object is moved.  The moved session will only move the
+    // pointer but the state will remain at the same address.
+    // Using a value member meant that moving the session, relocated the
+    // session state but the other objects don't get made aware of that.
+    // Result: crash.
+    // See http://stackoverflow.com/a/20493410/67013.
+    std::auto_ptr<detail::session_state> m_session;
 };
 
 // C++11 swap has this implementation but we also support C++03

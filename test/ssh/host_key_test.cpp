@@ -104,7 +104,7 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( hostkey )
 {
-    session s = test_session();
+    session& s = test_session();
     host_key key = s.hostkey();
 
     string expected = base64_decode(EXPECTED_HOSTKEY);

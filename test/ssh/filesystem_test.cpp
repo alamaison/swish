@@ -89,7 +89,7 @@ public:
 
     sftp_fixture() : m_filesystem(authenticate_and_create_sftp()) {}
 
-    sftp_filesystem filesystem()
+    sftp_filesystem& filesystem()
     {
         return m_filesystem;
     }
@@ -118,7 +118,7 @@ private:
 
     sftp_filesystem authenticate_and_create_sftp()
     {
-        session s = test_session();
+        session& s = test_session();
         s.authenticate_by_key_files(
             user(), public_key_path(), private_key_path(), "");
         return s.connect_to_filesystem();
@@ -127,6 +127,34 @@ private:
     sftp_filesystem m_filesystem;
 };
 
+predicate_result directory_is_empty(sftp_filesystem& fs, const path& p)
+{
+    predicate_result result(true);
+
+    directory_iterator it = fs.directory_iterator(p);
+
+    size_t entry_count = 0;
+    while (it != fs.directory_iterator())
+    {
+        if (it->name() != "." && it->name() != "..")
+        {
+            ++entry_count;
+        }
+
+        ++it;
+    }
+
+    if (entry_count != 0)
+    {
+        result = false;
+
+        result.message() << "Directory is not empty; contains "
+            << entry_count << " entries";
+    }
+
+    return result;
+}
+
 }
 
 
@@ -134,46 +162,93 @@ BOOST_AUTO_TEST_SUITE(filesystem_tests)
 
 BOOST_FIXTURE_TEST_CASE( construct_fail, session_fixture )
 {
-    session s = test_session();
+    session& s = test_session();
 
     // Session not authenticated so SFTP not possible
     BOOST_CHECK_THROW(s.connect_to_filesystem(), system_error);
 }
 
-// Tests assume an authenticated session and established SFTP filesystem
-BOOST_FIXTURE_TEST_SUITE(channel_running_tests, sftp_fixture)
+// This tests the very basic requirements of any sensible relationship between
+// a filesystem and a session.  It must be possible to create a filesystem
+// before moving the session.  That's it.
+//
+// In particular, we destroy the filesystem before moving the object because
+// we don't want to test an added requirement that the filesystem's lifetime
+// can extend beyond the session's move.  Whatever else we might decide the
+// semantics of the session-filesystem relationship should be now or in the
+// future, this tests must pass.  Anything else would mean moving depends on
+// what you've used the session for in the past, which would just be broken.
+// 
+// In other words, even the most careful caller would run into trouble
+// if this test failed.
+BOOST_FIXTURE_TEST_CASE(
+    move_session_after_connecting_filesystem, session_fixture )
+{
+    session& s = test_session();
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    {
+        sftp_filesystem(s.connect_to_filesystem());
+    }
+
+    session(move(s));
+}
+
+// This builds slightly on the previous test by checking that the filesystem
+// can be destroyed _after_ the session is moved.  It still isn't a test that
+// the filesystem is usable afterwards (though we probably want that
+// property too), just that the object is valid (can be destroyed).
+//
+// In an earlier version, the filesystem destructor tried to use the moved
+// session causing a crash.  It's very hard sometimes to ensure the filesystem
+// is destroyed before the exact (non-moved) session it came from, so its
+// important we allow destruction to happen after moving the session (but
+// before moved-to session is destroyed).
+BOOST_FIXTURE_TEST_CASE(
+    move_session_with_live_filesystem_connection, session_fixture )
+{
+    session& s = test_session();
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    sftp_filesystem fs = s.connect_to_filesystem();
+    session s2(move(s));
+
+    // The rules are that the last session must outlive the last FS so moving
+    // FS to inner scope ensures this
+    sftp_filesystem(move(fs));
+}
 
 namespace {
 
-    predicate_result directory_is_empty(sftp_filesystem& fs, const path& p)
-    {
-        predicate_result result(true);
-
-        directory_iterator it = fs.directory_iterator(p);
-
-        size_t entry_count = 0;
-        while (it != fs.directory_iterator())
-        {
-            if (it->name() != "." && it->name() != "..")
-            {
-                ++entry_count;
-            }
-
-            ++it;
-        }
-
-        if (entry_count != 0)
-        {
-            result = false;
-
-            result.message() << "Directory is not empty; contains "
-                << entry_count << " entries";
-        }
-
-        return result;
-    }
+    class basic_sftp_fixture : public session_fixture, public sandbox_fixture
+    {};
 
 }
+
+// This is the third part of the session-movement tests. It strengthens the
+// requirements a bit more to ensure the filesystem is not just valid for
+// destruction but also still functions as a filesystem connection.
+BOOST_FIXTURE_TEST_CASE(
+    moving_session_leaves_working_filesystem, basic_sftp_fixture )
+{
+    session& s = test_session();
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    sftp_filesystem fs = s.connect_to_filesystem();
+    session s2(move(s));
+
+    // The rules are that the last session must outlive the last FS so moving
+    // FS to inner scope ensures this
+    sftp_filesystem fs2(move(fs));
+
+    BOOST_CHECK(directory_is_empty(fs2, to_remote_path(sandbox())));
+}
+
+// Tests assume an authenticated session and established SFTP filesystem
+BOOST_FIXTURE_TEST_SUITE(channel_running_tests, sftp_fixture)
 
 /**
  * List an empty directory.
@@ -182,7 +257,7 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( empty_dir )
 {
-    sftp_filesystem c = filesystem();
+    sftp_filesystem& c = filesystem();
 
     BOOST_CHECK(directory_is_empty(c, to_remote_path(sandbox())));
 }
@@ -192,13 +267,13 @@ BOOST_AUTO_TEST_CASE( empty_dir )
  */
 BOOST_AUTO_TEST_CASE( missing_dir )
 {
-    sftp_filesystem c = filesystem();
+    sftp_filesystem& c = filesystem();
     BOOST_CHECK_THROW(c.directory_iterator("/i/dont/exist"), system_error);
 }
 
 BOOST_AUTO_TEST_CASE( swap_filesystems )
 {
-    sftp_filesystem fs1 = filesystem();
+    sftp_filesystem& fs1 = filesystem();
     sftp_filesystem fs2 = test_session().connect_to_filesystem();
 
     boost::swap(fs1, fs2);
@@ -207,30 +282,22 @@ BOOST_AUTO_TEST_CASE( swap_filesystems )
     BOOST_CHECK(directory_is_empty(fs2, to_remote_path(sandbox())));
 }
 
-BOOST_AUTO_TEST_CASE( use_move_constructed_filesystem )
+BOOST_AUTO_TEST_CASE( move_construct )
 {
-    sftp_filesystem c = filesystem();
+    sftp_filesystem& c = filesystem();
     sftp_filesystem d(move(c));
 
     BOOST_CHECK(directory_is_empty(d, to_remote_path(sandbox())));
 }
 
-BOOST_AUTO_TEST_CASE( use_move_assigned_filesystem )
+BOOST_AUTO_TEST_CASE( move_assign )
 {
-    sftp_filesystem c = filesystem();
+    sftp_filesystem& c = filesystem();
     sftp_filesystem d(test_session().connect_to_filesystem());
 
     d = move(c);
 
     BOOST_CHECK(directory_is_empty(d, to_remote_path(sandbox())));
-}
-
-BOOST_AUTO_TEST_CASE( use_move_self_assigned_filesystem )
-{
-    sftp_filesystem c = filesystem();
-    c = move(c);
-
-    BOOST_CHECK(directory_is_empty(c, to_remote_path(sandbox())));
 }
 
 BOOST_AUTO_TEST_CASE( dir_with_one_file )

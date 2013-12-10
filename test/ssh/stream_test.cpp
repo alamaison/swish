@@ -78,7 +78,7 @@ public:
     stream_fixture() : m_filesystem(auth_and_open_sftp())
     {}
 
-    sftp_filesystem filesystem()
+    sftp_filesystem& filesystem()
     {
         return m_filesystem;
     }
@@ -99,7 +99,7 @@ private:
 
     sftp_filesystem auth_and_open_sftp()
     {
-        session s = test_session();
+        session& s = test_session();
         s.authenticate_by_key_files(
             user(), public_key_path(), private_key_path(), "");
 
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE( input_stream_multiple_streams )
     path target1 = new_file_in_sandbox();
     path target2 = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream s1(chan, to_remote_path(target1));
     ssh::filesystem::ifstream s2(chan, to_remote_path(target2));
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE( input_stream_multiple_streams_to_same_file )
 {
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream s1(chan, to_remote_path(target));
     ssh::filesystem::ifstream s2(chan, to_remote_path(target));
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_multiple_buffers )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_no_buffer )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream remote_stream(
         chan, to_remote_path(target), openmode::in, 0);
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_multiple_buffers )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_stream_op )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream remote_stream(chan, to_remote_path(target));
 
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE( output_stream_multiple_streams )
     path target1 = new_file_in_sandbox();
     path target2 = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream s1(chan, to_remote_path(target1));
     ssh::filesystem::ofstream s2(chan, to_remote_path(target2));
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE( output_stream_multiple_streams_to_same_file )
 {
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream s1(chan, to_remote_path(target));
     ssh::filesystem::ofstream s2(chan, to_remote_path(target));
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_multiple_buffers )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_no_buffer )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream remote_stream(
         chan, to_remote_path(target), openmode::out, 0);
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_binary_data )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_binary_data_multiple_buffers )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -660,7 +660,7 @@ BOOST_AUTO_TEST_CASE( output_stream_write_binary_data_stream_op )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ofstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream << data);
@@ -1246,7 +1246,7 @@ BOOST_AUTO_TEST_CASE( io_stream_multiple_streams )
     path target1 = new_file_in_sandbox();
     path target2 = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream s1(chan, to_remote_path(target1));
     ssh::filesystem::fstream s2(chan, to_remote_path(target2));
@@ -1256,7 +1256,7 @@ BOOST_AUTO_TEST_CASE( io_stream_multiple_streams_to_same_file )
 {
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream s1(chan, to_remote_path(target));
     ssh::filesystem::fstream s2(chan, to_remote_path(target));
@@ -1322,7 +1322,7 @@ BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream remote_stream(chan, to_remote_path(target));
 
@@ -1342,7 +1342,7 @@ BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data_stream_op )
 
     path target = new_file_in_sandbox(expected_data);
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream remote_stream(chan, to_remote_path(target));
 
@@ -1389,7 +1389,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_multiple_buffers )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -1417,7 +1417,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_no_buffer )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream remote_stream(
         chan, to_remote_path(target), openmode::in | openmode::out, 0);
@@ -1487,7 +1487,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_binary_data )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream.write(data.data(), data.size()));
@@ -1513,7 +1513,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_binary_data_stream_op )
 
     path target = new_file_in_sandbox();
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::fstream remote_stream(chan, to_remote_path(target));
     BOOST_CHECK(remote_stream << data);
@@ -1712,7 +1712,7 @@ BOOST_AUTO_TEST_CASE( stream_read_on_different_threads )
     path target1 = new_file_in_sandbox("humpty dumpty sat");
     path target2 = new_file_in_sandbox("on the wall");
 
-    sftp_filesystem chan = filesystem();
+    sftp_filesystem& chan = filesystem();
 
     ssh::filesystem::ifstream s1(chan, to_remote_path(target1));
     ssh::filesystem::ifstream s2(chan, to_remote_path(target2));

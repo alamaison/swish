@@ -70,7 +70,7 @@ BOOST_FIXTURE_TEST_SUITE(auth_tests, session_fixture)
 
 BOOST_AUTO_TEST_CASE( available_auth_methods )
 {
-    session s = test_session();
+    session& s = test_session();
     
     vector<string> methods = s.authentication_methods(user());
     // 'publickey' is the only required method
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE( available_auth_methods )
  */
 BOOST_AUTO_TEST_CASE( intial_state )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE( intial_state )
  */
 BOOST_AUTO_TEST_CASE( password_fail )
 {
-    session s = test_session();
+    session& s = test_session();
     
     vector<string> methods = s.authentication_methods(user());
     BOOST_REQUIRE(
@@ -183,7 +183,7 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( kbint_fail_wrong )
 {
-    session s = test_session();
+    session& s = test_session();
 
     vector<string> methods = s.authentication_methods(user());
     BOOST_REQUIRE(
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE( kbint_fail_wrong )
  */
 BOOST_AUTO_TEST_CASE( kbint_fail_short )
 {
-    session s = test_session();
+    session& s = test_session();
 
     vector<string> methods = s.authentication_methods(user());
     BOOST_REQUIRE(
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE( kbint_fail_short )
  */
 BOOST_AUTO_TEST_CASE( kbint_fail_exception )
 {
-    session s = test_session();
+    session& s = test_session();
 
     vector<string> methods = s.authentication_methods(user());
     BOOST_REQUIRE(
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE( kbint_fail_exception )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
  */
 BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
  */
 BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
         s.authenticate_by_key_files(
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
  */
 BOOST_AUTO_TEST_CASE( pubkey )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
     s.authenticate_by_key_files(user(), public_key_path(), private_key_path(), "");
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE( pubkey )
  */
 BOOST_AUTO_TEST_CASE( move_construct_after_auth )
 {
-    session s = test_session();
+    session& s = test_session();
 
     s.authenticate_by_key_files(
         user(), public_key_path(), private_key_path(), "");
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE( move_construct_after_auth )
  */
 BOOST_AUTO_TEST_CASE( move_assign_after_auth )
 {
-    session s = test_session();
+    session& s = test_session();
 
     s.authenticate_by_key_files(
         user(), public_key_path(), private_key_path(), "");
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE( move_assign_after_auth )
  */
 BOOST_AUTO_TEST_CASE( agent )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE( agent )
  */
 BOOST_AUTO_TEST_CASE( agent_copy )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE( agent_copy )
  */
 BOOST_AUTO_TEST_CASE( agent_idempotence )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE( agent_idempotence )
  */
 BOOST_AUTO_TEST_CASE( agent_move_construct )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE( agent_move_construct )
  */
 BOOST_AUTO_TEST_CASE( agent_move_assign )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -476,28 +476,6 @@ BOOST_AUTO_TEST_CASE( agent_move_assign )
         identities2 = move(identities);
 
         BOOST_FOREACH(identity i, identities2)
-        {
-        }
-    }
-    catch (system_error&) { /* agent not running - failure ok */ }
-}
-
-/**
- * Agent move-self-assign behaviour.
- */
-BOOST_AUTO_TEST_CASE( agent_move_self_assign )
-{
-    session s = test_session();
-
-    BOOST_CHECK(!s.authenticated());
-
-    try
-    {
-        agent_identities identities = s.agent_identities();
-
-        identities = move(identities);
-
-        BOOST_FOREACH(identity i, identities)
         {
         }
     }

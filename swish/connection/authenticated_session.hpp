@@ -123,9 +123,9 @@ public:
     // below to report errors and this will be replaced by the wrapper
     // sftp code which handles this internally.  Therefore we will be able
     // to remove these accessors from the public interface.
-    ssh::session get_session() const;
+    ssh::session& get_session();
 
-    ssh::filesystem::sftp_filesystem get_sftp_filesystem() const;
+    ssh::filesystem::sftp_filesystem& get_sftp_filesystem();
 
     friend void swap(authenticated_session& lhs, authenticated_session& rhs);
 

@@ -168,8 +168,11 @@ public:
     typedef detail::identity_iterator_base<identity> iterator;
     typedef detail::identity_iterator_base<const identity> const_iterator;
 
-    explicit agent_identities(boost::shared_ptr<detail::session_state> session)
-        : m_agent(boost::make_shared<detail::agent_state>(session))
+    explicit agent_identities(detail::session_state& session)
+        :
+    m_agent(
+        boost::make_shared<detail::agent_state>(boost::ref(session)))
+        // http://stackoverflow.com/a/1374266/67013
     {
         // We pull the identities out here (AND ONLY HERE) so that all copies
         // of the agent, iterators and identity objects refer to valid data.

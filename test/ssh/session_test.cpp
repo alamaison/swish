@@ -112,14 +112,4 @@ BOOST_AUTO_TEST_CASE( move_assign )
     s2 = move(s1);
 }
 
-BOOST_AUTO_TEST_CASE( move_self_assign )
-{
-    io_service io;
-    tcp::socket socket(io);
-    open_socket(io, socket, host(), port());
-    session s(socket.native());
-
-    s = move(s);
-}
-
 BOOST_AUTO_TEST_SUITE_END();

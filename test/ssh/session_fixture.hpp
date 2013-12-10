@@ -107,7 +107,7 @@ public:
       m_io(0), m_socket(m_io),
       m_session(::ssh::session(open_socket(host(), port()).native())) {}
 
-    ::ssh::session test_session()
+    ::ssh::session& test_session()
     {
         return m_session;
     }

@@ -279,7 +279,7 @@ directory_listing provider::listing(
 
     _Connect(consumer);
 
-    sftp_filesystem channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session->get_sftp_filesystem();
 
     string path = WideStringToUtf8String(directory.string());
 
@@ -306,24 +306,24 @@ com_ptr<IStream> provider::get_file(
 
     string path = WideStringToUtf8String(file_path);
 
-    sftp_filesystem channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session->get_sftp_filesystem();
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<fstream>(channel, path, mode),
+            make_shared<fstream>(boost::ref(channel), path, mode),
             wpath(file_path).filename());
     }
     else if (mode & std::ios_base::out)
     {
         return adapt_stream_pointer(
-            make_shared<ofstream>(channel, path, mode),
+            make_shared<ofstream>(boost::ref(channel), path, mode),
             wpath(file_path).filename());
     }
     else if (mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<ifstream>(channel, path, mode),
+            make_shared<ifstream>(boost::ref(channel), path, mode),
             wpath(file_path).filename());
     }
     else
@@ -615,7 +615,7 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
 
     _Connect(consumer);
 
-    sftp_filesystem channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session->get_sftp_filesystem();
     bstr_t target =
         Utf8StringToWideString(channel.canonical_path(utf8_path).string());
 
@@ -636,7 +636,7 @@ sftp_filesystem_item provider::stat(
 
     _Connect(consumer);
 
-    sftp_filesystem channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session->get_sftp_filesystem();
 
     file_attributes stat_result = channel.attributes(
         utf8_path, follow_links != FALSE);

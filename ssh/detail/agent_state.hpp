@@ -40,8 +40,9 @@
 #include <ssh/detail/libssh2/agent.hpp>
 #include <ssh/detail/session_state.hpp>
 
-#include <boost/move/move.hpp> // BOOST_RV_REF
+#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
+#include <boost/ref.hpp> // reference_wrapper
 
 #include <libssh2.h> // LIBSSH2_AGENT
 
@@ -73,14 +74,15 @@ public:
      * Creates agent collection that closes itself in a thread-safe manner
      * when it goes out of scope.
      */
-    agent_state(boost::shared_ptr<session_state> session)
-        : m_session(session), m_agent(do_agent_init(*m_session))
+    agent_state(session_state& session)
+        : m_session(session), m_agent(do_agent_init(session_ref()))
     {
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
 
         try
         {
-            detail::libssh2::agent::connect(m_agent, m_session->session_ptr());
+            detail::libssh2::agent::connect(
+                m_agent, session_ref().session_ptr());
         }
         catch (...)
         {
@@ -102,7 +104,7 @@ public:
         if (!m_agent)
             return; // moved
 
-        session_state::scoped_lock lock = m_session->aquire_lock();
+        session_state::scoped_lock lock = session_ref().aquire_lock();
 
         ::libssh2_agent_disconnect(m_agent);        
         ::libssh2_agent_free(m_agent);
@@ -110,12 +112,12 @@ public:
 
     scoped_lock aquire_lock()
     {
-        return m_session->aquire_lock();
+        return session_ref().aquire_lock();
     }
 
     LIBSSH2_SESSION* session_ptr()
     {
-        return m_session->session_ptr();
+        return session_ref().session_ptr();
     }
 
     LIBSSH2_AGENT* agent_ptr()
@@ -125,7 +127,13 @@ public:
 
 private:
 
-    boost::shared_ptr<session_state> m_session;
+    session_state& session_ref()
+    {
+        return m_session;
+    }
+
+    // Using reference wrapper so we can move-assign
+    boost::reference_wrapper<session_state> m_session;
     LIBSSH2_AGENT* m_agent;
 };
 

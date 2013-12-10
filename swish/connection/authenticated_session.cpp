@@ -115,7 +115,7 @@ void verify_host_key(
 {
     assert(consumer);
 
-    ssh::session sess(session.get_session());
+    ssh::session& sess(session.get_session());
 
     string utf8_host = WideStringToUtf8String(host);
 
@@ -507,12 +507,12 @@ authenticated_session& authenticated_session::operator=(
     return *this;
 }
 
-session authenticated_session::get_session() const
+session& authenticated_session::get_session()
 {
     return m_session.get_session();
 }
 
-sftp_filesystem authenticated_session::get_sftp_filesystem() const
+sftp_filesystem& authenticated_session::get_sftp_filesystem()
 {
     return m_filesystem;
 }
