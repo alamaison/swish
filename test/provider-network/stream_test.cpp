@@ -29,6 +29,7 @@
 #include "test/common_boost/remote_test_config.hpp" // remote_test_config
 #include "test/common_boost/stream_utils.hpp" // verify_stream_read
 
+#include "swish/connection/connection_spec.hpp"
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/provider/Provider.hpp" // CProvider
 
@@ -51,6 +52,7 @@ using test::remote_test_config;
 using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
 
+using swish::connection::connection_spec;
 using swish::provider::sftp_provider;
 using swish::provider::CProvider;
 
@@ -83,7 +85,8 @@ public:
         m_consumer->set_password(config.GetPassword());
 
         m_provider = make_shared<CProvider>(
-            config.GetUser(), config.GetHost(), config.GetPort());
+            connection_spec(
+                config.GetHost(), config.GetUser(), config.GetPort()));
     }
 
     shared_ptr<sftp_provider> provider() const

@@ -234,10 +234,6 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{CFC0C998-B275-48AB-AAD3-C99272154656}"
-			RelativePathToProject=".\swish\provider\provider.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{057B464F-AFD9-47AA-B2C2-D6F88A9EF27E}"
 			RelativePathToProject=".\thirdparty\libssh2.vcproj"
 		/>

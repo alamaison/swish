@@ -30,6 +30,7 @@
 #include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, ComFixture
 
+#include "swish/connection/connection_spec.hpp"
 #include "swish/provider/Provider.hpp"
 #include "swish/utils.hpp" // Utf8StringToWideString
 
@@ -52,9 +53,10 @@ namespace detail {
         const std::string& host, const std::string& user, int port)
     {
         return boost::make_shared<swish::provider::CProvider>(
-            swish::utils::Utf8StringToWideString(user),
-            swish::utils::Utf8StringToWideString(host),
-            port);
+            swish::connection::connection_spec(
+                swish::utils::Utf8StringToWideString(host),
+                swish::utils::Utf8StringToWideString(user),
+                port));
     }
 
     /**

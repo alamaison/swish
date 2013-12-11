@@ -39,6 +39,7 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
+#include "swish/connection/connection_spec.hpp"
 #include "swish/provider/sftp_provider.hpp"
 
 #include <boost/shared_ptr.hpp> // shared_ptr
@@ -52,7 +53,7 @@ class CProvider : public sftp_provider
 {
 public:
 
-    CProvider(const std::wstring& user, const std::wstring& host, UINT port);
+    CProvider(const swish::connection::connection_spec& specification);
 
     virtual directory_listing listing(
         comet::com_ptr<ISftpConsumer> consumer,

@@ -35,6 +35,8 @@
 
 using swish::provider::sftp_provider;
 
+using comet::com_ptr;
+
 using boost::call_once;
 using boost::mutex;
 using boost::once_flag;
@@ -54,7 +56,7 @@ namespace {
  */
 class session_pool_impl
 {
-    typedef map<connection_spec, shared_ptr<sftp_provider>> pool_mapping;
+    typedef map<connection_spec, shared_ptr<authenticated_session>> pool_mapping;
 
 public:
 
@@ -64,8 +66,8 @@ public:
         return *m_instance;
     }
 
-    shared_ptr<sftp_provider> pooled_session(
-        const connection_spec& specification)
+    shared_ptr<authenticated_session> pooled_session(
+        const connection_spec& specification, com_ptr<ISftpConsumer> consumer)
     {
         mutex::scoped_lock lock(m_session_pool_guard);
 
@@ -77,7 +79,8 @@ public:
         }
         else
         {
-            shared_ptr<sftp_provider> provider = specification.create_session();
+            shared_ptr<authenticated_session> provider =
+                specification.create_session(consumer);
             m_sessions[specification] = provider;
             return provider;
         }
@@ -121,10 +124,10 @@ auto_ptr<session_pool_impl> session_pool_impl::m_instance;
 }
 
 
-shared_ptr<sftp_provider> session_pool::pooled_session(
-    const connection_spec& specification)
+shared_ptr<authenticated_session> session_pool::pooled_session(
+    const connection_spec& specification, com_ptr<ISftpConsumer> consumer)
 {
-    return session_pool_impl::get().pooled_session(specification);
+    return session_pool_impl::get().pooled_session(specification, consumer);
 }
 
 bool session_pool::has_session(const connection_spec& specification) const

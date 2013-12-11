@@ -29,6 +29,7 @@
 #include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/remote_test_config.hpp"
 
+#include "swish/connection/connection_spec.hpp"
 #include "swish/provider/Provider.hpp"
 
 #include <comet/ptr.h> // com_ptr
@@ -43,6 +44,7 @@
 using test::MockConsumer;
 using test::remote_test_config;
 
+using swish::connection::connection_spec;
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
@@ -60,10 +62,10 @@ namespace {
     shared_ptr<sftp_provider> create_provider()
     {
         remote_test_config config;
-        wstring user = config.GetUser();
-        wstring host = config.GetHost();
 
-        return make_shared<CProvider>(user, host, config.GetPort());
+        return make_shared<CProvider>(
+            connection_spec(
+                config.GetHost(), config.GetUser(), config.GetPort()));
     }
 
     /**

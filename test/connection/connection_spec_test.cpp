@@ -25,6 +25,7 @@
 */
 
 #include "swish/connection/connection_spec.hpp"  // Test subject
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/utils.hpp"
 
 #include "test/common_boost/helpers.hpp"
@@ -39,7 +40,7 @@
 #include <exception>
 #include <map>
 
-using swish::provider::sftp_provider;
+using swish::connection::authenticated_session;
 using swish::connection::connection_spec;
 using swish::utils::Utf8StringToWideString;
 
@@ -75,13 +76,13 @@ namespace {
         }
 
         /**
-         * Check that the given provider responds sensibly to a request.
+         * Check that the given session responds sensibly to a request.
          */
-        predicate_result alive(shared_ptr<sftp_provider> provider)
+        predicate_result alive(shared_ptr<authenticated_session> session)
         {
             try
             {
-                provider->listing(Consumer(), L"/");
+                session->get_sftp_filesystem().directory_iterator("/");
 
                 predicate_result res(true);
                 res.message() << "Provider seems to be alive";
@@ -104,8 +105,9 @@ BOOST_FIXTURE_TEST_SUITE(
 
 BOOST_AUTO_TEST_CASE( create )
 {
-    shared_ptr<sftp_provider> provider = get_connection().create_session();
-    BOOST_CHECK(alive(provider));
+    shared_ptr<authenticated_session> session =
+        get_connection().create_session(Consumer());
+    BOOST_CHECK(alive(session));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

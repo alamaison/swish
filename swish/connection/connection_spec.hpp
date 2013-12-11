@@ -28,9 +28,10 @@
 #define SWISH_CONNECTION_CONNECTION_SPEC_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider
+#include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
-#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
+#include <comet/ptr.h> // com_ptr
+
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -38,6 +39,11 @@
 namespace swish {
 namespace connection {
 
+// Forward-declaring this here, rather than including the header, prevents
+// test/remote_folder/remote_commands_test.cpp from crashing the compiler by
+// letting that file not include the ssh_error.hpp file that uses lexical_cast
+// and through there.  I don't know why.  Just go with it.
+class authenticated_session;
 
 /**
  * Represents specification for a connection to an SFTP server.
@@ -55,8 +61,13 @@ public:
 
     /**
      * Returns a new SFTP session based on this specification.
+     *
+     * The returned session is authenticated ready for use.  Any
+     * interaction needed to authenticate is performed via the `consumer`
+     * callback.
      */
-    boost::shared_ptr<swish::provider::sftp_provider> create_session() const;
+    boost::shared_ptr<authenticated_session> create_session(
+        comet::com_ptr<ISftpConsumer> consumer) const;
 
     bool operator<(const connection_spec& other) const;
 

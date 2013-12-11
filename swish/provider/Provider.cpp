@@ -38,6 +38,7 @@
 #include "Provider.hpp"
 
 #include "swish/connection/authenticated_session.hpp"
+#include "swish/connection/session_pool.hpp"
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
@@ -71,6 +72,8 @@
 #include <vector> // to hold listing
 
 using swish::connection::authenticated_session;
+using swish::connection::connection_spec;
+using swish::connection::session_pool;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
@@ -116,8 +119,7 @@ class provider
 {
 public:
 
-    provider(const wstring& user, const wstring& host, int port);
-    ~provider() throw();
+    provider(const connection_spec& specification);
 
     virtual directory_listing listing(
         com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory);
@@ -143,31 +145,17 @@ public:
 
 private:
 
+    connection_spec m_specification; ///< Data used for lazy connection
     boost::mutex m_session_creation_mutex;
     boost::shared_ptr<authenticated_session> m_session; ///< SSH/SFTP session
 
-    /** @name Fields used for lazy connection. */
-    // @{
-    wstring m_user;
-    wstring m_host;
-    UINT m_port;
-    // @}
-
     void _Connect(com_ptr<ISftpConsumer> consumer);
-    void _Disconnect();
 
 };
 
-CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
+CProvider::CProvider(const connection_spec& specification)
 {
-    if (user.empty())
-        BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
-    if (host.empty())
-        BOOST_THROW_EXCEPTION(invalid_argument("Host name required"));
-    if (port < MIN_PORT || port > MAX_PORT)
-        BOOST_THROW_EXCEPTION(invalid_argument("Not a valid port number"));
-
-    m_provider = make_shared<provider>(user, host, port);
+    m_provider = make_shared<provider>(specification);
 }
 
 
@@ -205,30 +193,9 @@ sftp_filesystem_item CProvider::stat(
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(const wstring& user, const wstring& host, int port)
-    : m_user(user), m_host(host), m_port(port)
-{
-    assert(!m_user.empty());
-    assert(!m_host.empty());
-    assert(m_port >= MIN_PORT);
-    assert(m_port <= MAX_PORT);
-}
-
-/**
- * Free libssh2.
- */
-provider::~provider() throw()
-{
-    try
-    {
-        _Disconnect(); // Destroy session before shutting down Winsock
-    }
-    catch (const std::exception& e)
-    {
-        trace("EXCEPTION THROWN IN DESTRUCTOR: %s") % e.what();
-        assert(!"EXCEPTION THROWN IN DESTRUCTOR");
-    }
-}
+provider::provider(const connection_spec& specification)
+    : m_specification(specification)
+{}
 
 /**
  * Sets up the SFTP session, prompting user for input if necessary.
@@ -245,15 +212,8 @@ void provider::_Connect(com_ptr<ISftpConsumer> consumer)
     lock_guard<mutex> lock(m_session_creation_mutex);
     if (!m_session || m_session->is_dead())
     {
-        m_session = make_shared<authenticated_session>(
-            m_host, m_port, m_user, consumer.get());
+        m_session = session_pool().pooled_session(m_specification, consumer);
     }
-}
-
-void provider::_Disconnect()
-{
-    lock_guard<mutex> lock(m_session_creation_mutex);
-    m_session.reset();
 }
 
 namespace {
