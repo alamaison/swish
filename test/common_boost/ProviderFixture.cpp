@@ -25,37 +25,50 @@
     @endif
 */
 
-#pragma once
+#include "ProviderFixture.hpp"
 
 #include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, OpenSshFixture
 
+#include "swish/connection/connection_spec.hpp"
 #include "swish/provider/Provider.hpp"
+#include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/filesystem/path.hpp> // path
+#include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp>
 
 #include <string>
 
+using swish::provider::sftp_provider;
+
+using comet::com_ptr;
+
+using boost::shared_ptr;
+
 namespace test {
 
-class ProviderFixture :
-    public test::SandboxFixture, public test::OpenSshFixture
+shared_ptr<sftp_provider> ProviderFixture::Provider(
+    comet::com_ptr<ISftpConsumer> consumer)
 {
-public:
+    return boost::make_shared<swish::provider::CProvider>(
+        swish::connection::connection_spec(
+            swish::utils::Utf8StringToWideString(GetHost()),
+            swish::utils::Utf8StringToWideString(GetUser()),
+            GetPort()), consumer);
+}
 
-    /**
-     * Get a CProvider instance connected to the fixture SSH server.
-     */
-    boost::shared_ptr<swish::provider::sftp_provider> Provider(
-        comet::com_ptr<ISftpConsumer> consumer);
-
-    /**
-     * Get a dummy consumer to use in calls to provider.
-     */
-    comet::com_ptr<test::MockConsumer> Consumer();
-};
+/**
+ * Get a dummy consumer to use in calls to provider.
+ */
+com_ptr<test::MockConsumer> ProviderFixture::Consumer()
+{
+    com_ptr<test::MockConsumer> consumer = new test::MockConsumer();
+    consumer->set_pubkey_behaviour(test::MockConsumer::CustomKeys);
+    consumer->set_key_files(
+        PrivateKeyPath().string(), PublicKeyPath().string());
+    return consumer;
+}
 
 } // namespace test
