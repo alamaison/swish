@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -149,8 +149,7 @@ namespace {
         void operator()(
             const Operation& operation, size_t operation_index,
             size_t total_operations,
-            shared_ptr<sftp_provider> provider,
-            com_ptr<ISftpConsumer> consumer)
+            shared_ptr<sftp_provider> provider)
         {
             progress().line_path(1, operation.title());
             progress().line_path(2, operation.description());
@@ -160,7 +159,7 @@ namespace {
 
             check_if_user_cancelled();
 
-            operation(micro_updater, provider, consumer);
+            operation(micro_updater, provider);
 
             // We update here as well, fixing the progress to a file 
             // boundary, as we don't completely trust the intra-file
@@ -207,15 +206,14 @@ namespace {
 }
 
 void SequentialPlan::execute_plan(
-    DropActionCallback& callback, shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer) const
+    DropActionCallback& callback, shared_ptr<sftp_provider> provider) const
 {
     OperationExecutor executor(callback);
 
     for (unsigned int i = 0; i < m_copy_list.size(); ++i)
     {
         const Operation& operation = m_copy_list.at(i);
-        executor(operation, i, m_copy_list.size(), provider, consumer);
+        executor(operation, i, m_copy_list.size(), provider);
     }
 }
 

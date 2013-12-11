@@ -121,10 +121,9 @@ template<> struct impl::type_policy<PITEMID_CHILD>
  *                        start at or before a HostItemId.
  */
 CSftpDirectory::CSftpDirectory(
-    const apidl_t& directory_pidl,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+    const apidl_t& directory_pidl, shared_ptr<sftp_provider> provider)
 : 
-m_provider(provider), m_consumer(consumer), m_directory_pidl(directory_pidl),
+m_provider(provider), m_directory_pidl(directory_pidl),
 m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
 namespace {
@@ -298,7 +297,7 @@ CSftpDirectory CSftpDirectory::GetSubdirectory(const cpidl_t& directory)
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     apidl_t sub_directory = m_directory_pidl + directory;
-    return CSftpDirectory(sub_directory, m_provider, m_consumer);
+    return CSftpDirectory(sub_directory, m_provider);
 }
 
 namespace {
@@ -374,14 +373,15 @@ bool CSftpDirectory::exists(const cpidl_t& file)
 }
 
 bool CSftpDirectory::Rename(
-    const cpidl_t& old_file, const wstring& new_filename)
+    const cpidl_t& old_file, const wstring& new_filename,
+    com_ptr<ISftpConsumer> consumer)
 {
     bstr_t old_file_path =
         (m_directory / remote_itemid_view(old_file).filename()).string();
     bstr_t new_file_path = (m_directory / new_filename).string();
 
     return m_provider->rename(
-        m_consumer.in(), old_file_path.in(), new_file_path.in())
+        consumer.in(), old_file_path.in(), new_file_path.in())
         == VARIANT_TRUE;
 }
 

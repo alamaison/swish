@@ -107,10 +107,10 @@ namespace {
      */
     void copy_stream_to_remote_destination(
         com_ptr<IStream> local_stream, shared_ptr<sftp_provider> provider,
-        com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
+        const resolved_destination& target,
         OperationCallback& callback)
     {
-        CSftpDirectory sftp_directory(target.directory(), provider, consumer);
+        CSftpDirectory sftp_directory(target.directory(), provider);
 
         cpidl_t file = create_remote_itemid(
             target.filename(), false, false, L"", L"", 0, 0, 0, 0,
@@ -251,15 +251,14 @@ std::wstring CopyFileOperation::description() const
 }
 
 void CopyFileOperation::operator()(
-    OperationCallback& callback,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
+    OperationCallback& callback, shared_ptr<sftp_provider> provider) const
 {
     com_ptr<IStream> stream = stream_from_pidl(m_source.pidl());
 
     resolved_destination resolved_target(m_destination.resolve_destination());
 
     copy_stream_to_remote_destination(
-        stream, provider, consumer, resolved_target, callback);
+        stream, provider, resolved_target, callback);
 }
 
 Operation* CopyFileOperation::do_clone() const

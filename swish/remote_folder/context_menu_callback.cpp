@@ -252,8 +252,7 @@ namespace {
                 shared_ptr<sftp_provider> provider = provider_from_pidl(
                     format.parent_folder(), consumer);
 
-                CSftpDirectory directory(
-                    format.parent_folder(), provider, consumer);
+                CSftpDirectory directory(format.parent_folder(), provider);
 
                 apidl_t target = directory.ResolveLink(
                     pidl_cast<cpidl_t>(format.relative_file(0)));

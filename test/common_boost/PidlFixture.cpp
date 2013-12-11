@@ -91,7 +91,7 @@ apidl_t PidlFixture::sandbox_pidl()
 
 vector<cpidl_t> PidlFixture::pidls_in_sandbox()
 {
-    CSftpDirectory dir(sandbox_pidl(), Provider(), Consumer());
+    CSftpDirectory dir(sandbox_pidl(), Provider());
     com_ptr<IEnumIDList> pidl_enum = dir.GetEnum(
         SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN);
 
@@ -113,7 +113,7 @@ com_ptr<IDataObject> PidlFixture::data_object_from_sandbox()
 
     com_ptr<IDataObject> data_object = new CSftpDataObject(
         numeric_cast<UINT>(array.size()), array.as_array(),
-        sandbox_pidl().get(), Provider(), Consumer());
+        sandbox_pidl().get(), Provider());
     BOOST_REQUIRE(data_object);
     return data_object;
 }

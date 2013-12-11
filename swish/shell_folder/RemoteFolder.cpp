@@ -182,7 +182,7 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
             provider_from_pidl(root_pidl(), consumer);
 
         // Create directory handler and get listing as PIDL enumeration
-        CSftpDirectory directory(root_pidl(), provider, consumer);
+        CSftpDirectory directory(root_pidl(), provider);
         return directory.GetEnum(flags).detach();
     }
     catch (...)
@@ -431,8 +431,8 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
             provider_from_pidl(root_pidl(), consumer);
 
         // Rename file
-        CSftpDirectory directory(root_pidl(), provider, consumer);
-        bool fOverwritten = directory.Rename(pidl, name);
+        CSftpDirectory directory(root_pidl(), provider);
+        bool fOverwritten = directory.Rename(pidl, name, consumer);
 
         // Create new PIDL from old one with new filename
         remote_itemid_view itemid(pidl);
@@ -794,7 +794,7 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
         return new swish::shell_folder::CSnitchingDataObject(
             new CSftpDataObject(
-                cpidl, apidl, root_pidl().get(), provider, consumer));
+                cpidl, apidl, root_pidl().get(), provider));
     }
     catch (...)
     {
@@ -846,7 +846,7 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
         // drop target is in use.  Nevertheless, this seems to work so it's
         // what we're doing for now.
         return new CDropTarget(
-            provider, consumer, root_pidl(), make_shared<DropUI>(owner));
+            provider, root_pidl(), make_shared<DropUI>(owner));
     }
     catch (...)
     {

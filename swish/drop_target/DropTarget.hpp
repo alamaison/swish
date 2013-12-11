@@ -29,7 +29,7 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 #include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
 #include "swish/drop_target/Progress.hpp" // Progress
 
@@ -66,7 +66,6 @@ public:
      */
     CDropTarget(
         boost::shared_ptr<swish::provider::sftp_provider> provider,
-        comet::com_ptr<ISftpConsumer> consumer,
         const winapi::shell::pidl::apidl_t& remote_directory,
         boost::shared_ptr<DropActionCallback> callback);
 
@@ -97,7 +96,6 @@ public:
 private:
 
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
-    comet::com_ptr<ISftpConsumer> m_consumer;
 
     winapi::shell::pidl::apidl_t m_remote_directory;
     comet::com_ptr<IDataObject> m_data_object;
@@ -107,7 +105,6 @@ private:
 void copy_data_to_provider(
     comet::com_ptr<IDataObject> data_object,
     boost::shared_ptr<swish::provider::sftp_provider> provider,
-    comet::com_ptr<ISftpConsumer> consumer,
     const winapi::shell::pidl::apidl_t& remote_directory,
     boost::shared_ptr<DropActionCallback> callback);
 

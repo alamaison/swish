@@ -210,8 +210,7 @@ const
         }
 
         CSftpDirectory directory(
-            m_folder_pidl, m_provider_factory(m_consumer_factory()),
-            m_consumer_factory());
+            m_folder_pidl, m_provider_factory(m_consumer_factory()));
 
         // The default New Folder name may already exist in the folder. If it
         // does, we append a number to it to make it unique

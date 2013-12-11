@@ -84,7 +84,7 @@ namespace {
         shared_ptr<sftp_provider> provider = provider_factory(consumer);
 
         // Create instance of our directory handler class
-        CSftpDirectory directory(parent_folder, provider, consumer);
+        CSftpDirectory directory(parent_folder, provider);
 
         // Delete each item and notify shell
         vector<cpidl_t>::const_iterator it = death_row.begin();

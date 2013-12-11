@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,14 +77,14 @@ wstring CreateDirectoryOperation::description() const
 
 void CreateDirectoryOperation::operator()(
     OperationCallback& callback,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
+    shared_ptr<sftp_provider> provider) const
 {
     callback.update_progress(0, 1);
 
     resolved_destination resolved_target(m_destination.resolve_destination());
 
     CSftpDirectory sftp_directory(
-        resolved_target.directory(), provider, consumer);
+        resolved_target.directory(), provider);
     sftp_directory.CreateDirectory(resolved_target.filename());
 
     callback.update_progress(1, 1);
