@@ -86,7 +86,8 @@ public:
 
         m_provider = make_shared<CProvider>(
             connection_spec(
-                config.GetHost(), config.GetUser(), config.GetPort()));
+                config.GetHost(), config.GetUser(), config.GetPort()),
+            m_consumer);
     }
 
     shared_ptr<sftp_provider> provider() const

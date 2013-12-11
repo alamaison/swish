@@ -169,14 +169,15 @@ namespace {
 
 NewFolder::NewFolder(
     const apidl_t& folder_pidl,
-    const function<shared_ptr<sftp_provider>()>& provider,
-    const function<com_ptr<ISftpConsumer>()>& consumer) :
+    const provider_factory& provider,
+    const consumer_factory& consumer) :
     Command(
         translate("New &folder"), NEW_FOLDER_COMMAND_ID,
         translate("Create a new, empty folder in the folder you have open."),
         L"shell32.dll,-258", L"",
         translate("Make a new folder")),
-    m_folder_pidl(folder_pidl), m_provider(provider), m_consumer(consumer) {}
+    m_folder_pidl(folder_pidl), m_provider_factory(provider),
+    m_consumer_factory(consumer) {}
 
 BOOST_SCOPED_ENUM(Command::state) NewFolder::state(
     const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
@@ -208,13 +209,16 @@ const
             trace("WARNING: couldn't get current IShellView or HWND");
         }
 
-        CSftpDirectory directory(m_folder_pidl, m_provider(), m_consumer());
+        CSftpDirectory directory(
+            m_folder_pidl, m_provider_factory(m_consumer_factory()),
+            m_consumer_factory());
 
         // The default New Folder name may already exist in the folder. If it
         // does, we append a number to it to make it unique
         wstring initial_name = translate("Initial name", "New folder");
         initial_name = prefix_if_necessary(
-            initial_name, m_provider(), m_consumer(),
+            initial_name, m_provider_factory(m_consumer_factory()),
+            m_consumer_factory(),
             absolute_path_from_swish_pidl(m_folder_pidl));
 
         cpidl_t pidl = directory.CreateDirectory(initial_name);

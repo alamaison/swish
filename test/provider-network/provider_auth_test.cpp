@@ -32,10 +32,12 @@
 #include "swish/connection/connection_spec.hpp"
 #include "swish/provider/Provider.hpp"
 
+#include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
@@ -48,10 +50,12 @@ using swish::connection::connection_spec;
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
+using comet::com_error;
 using comet::com_ptr;
 
 using boost::make_shared;
 using boost::shared_ptr;
+using boost::system::system_error;
 using boost::test_tools::predicate_result;
 
 using std::exception;
@@ -59,13 +63,14 @@ using std::wstring;
 
 namespace {
     
-    shared_ptr<sftp_provider> create_provider()
+    shared_ptr<sftp_provider> create_provider(com_ptr<ISftpConsumer> consumer)
     {
         remote_test_config config;
 
         return make_shared<CProvider>(
             connection_spec(
-                config.GetHost(), config.GetUser(), config.GetPort()));
+                config.GetHost(), config.GetUser(), config.GetPort()),
+            consumer);
     }
 
     /**
@@ -101,6 +106,11 @@ namespace {
     {
         return alive(provider, new MockConsumer());
     }
+
+    bool is_e_abort(com_error e)
+    {
+        return e.hr() == E_ABORT;
+    }
 }
 
 // These tests use the host defined in the TEST_HOST_NAME, TEST_HOST_PORT,
@@ -122,20 +132,11 @@ BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    shared_ptr<sftp_provider> provider = create_provider();
+    // Fails if keyboard-int supported on the server as that gets preference
+    // and replies with user-aborted
+    shared_ptr<sftp_provider> provider = create_provider(consumer);
 
     BOOST_CHECK(alive(provider, consumer));
-}
-
-BOOST_AUTO_TEST_CASE( WrongPassword )
-{
-    com_ptr<MockConsumer> consumer = new MockConsumer();
-
-    consumer->set_password_behaviour(MockConsumer::WrongPassword);
-
-    shared_ptr<sftp_provider> provider = create_provider();
-
-    BOOST_CHECK(!alive(provider, consumer));
 }
 
 BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
@@ -149,11 +150,35 @@ BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    shared_ptr<sftp_provider> provider = create_provider();
-
     // This may fail if the server (which we can't control) doesn't allow
     // ki-auth
+    shared_ptr<sftp_provider> provider = create_provider(consumer);
     BOOST_CHECK(alive(provider, consumer));
+}
+
+BOOST_AUTO_TEST_CASE( WrongPasswordOrResponse )
+{
+    com_ptr<MockConsumer> consumer = new MockConsumer();
+
+    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
+    // We don't know which of password or kb-int (or both) is set up on the
+    // server so we have to prime both to return the wrong password else
+    // we may get E_ABORT for the kb-interactive response
+    consumer->set_keyboard_interactive_behaviour(MockConsumer::WrongResponse);
+    consumer->set_password_behaviour(MockConsumer::WrongPassword);
+
+    BOOST_CHECK_THROW(create_provider(consumer), system_error);
+}
+
+BOOST_AUTO_TEST_CASE( UserAborted )
+{
+    com_ptr<MockConsumer> consumer = new MockConsumer();
+
+    consumer->set_keyboard_interactive_behaviour(MockConsumer::AbortResponse);
+    consumer->set_password_behaviour(MockConsumer::AbortPassword);
+    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
+
+    BOOST_CHECK_EXCEPTION(create_provider(consumer), com_error, is_e_abort);
 }
 
 /**
@@ -168,10 +193,7 @@ BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
     consumer->set_keyboard_interactive_behaviour(
         MockConsumer::AbortResponse);
 
-    shared_ptr<sftp_provider> provider = create_provider();
-
-    // Try to fetch a listing enumerator - it should fail
-    BOOST_CHECK(!alive(provider, consumer));
+    BOOST_CHECK_EXCEPTION(create_provider(consumer), com_error, is_e_abort);
 
     // Change mock behaviours so that authentication succeeds
     consumer->set_password_max_attempts(2);
@@ -181,6 +203,7 @@ BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
     remote_test_config config;
     consumer->set_password(config.GetPassword());
 
+    shared_ptr<sftp_provider> provider = create_provider(consumer);
     BOOST_CHECK(alive(provider, consumer));
 }
 

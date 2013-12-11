@@ -119,7 +119,9 @@ class provider
 {
 public:
 
-    provider(const connection_spec& specification);
+    provider(
+        const connection_spec& specification,
+        com_ptr<ISftpConsumer> consumer);
 
     virtual directory_listing listing(
         com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory);
@@ -153,9 +155,10 @@ private:
 
 };
 
-CProvider::CProvider(const connection_spec& specification)
+CProvider::CProvider(const connection_spec& specification,
+                     com_ptr<ISftpConsumer> consumer)
 {
-    m_provider = make_shared<provider>(specification);
+    m_provider = make_shared<provider>(specification, consumer);
 }
 
 
@@ -193,9 +196,12 @@ sftp_filesystem_item CProvider::stat(
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(const connection_spec& specification)
+provider::provider(
+    const connection_spec& specification, com_ptr<ISftpConsumer> consumer)
     : m_specification(specification)
-{}
+{
+    _Connect(consumer);
+}
 
 /**
  * Sets up the SFTP session, prompting user for input if necessary.

@@ -44,14 +44,19 @@ namespace swish {
 namespace remote_folder {
 namespace commands {
 
+typedef boost::function<
+    boost::shared_ptr<swish::provider::sftp_provider>(
+        comet::com_ptr<ISftpConsumer>)> provider_factory;
+
+typedef boost::function<comet::com_ptr<ISftpConsumer>()> consumer_factory;
+
 class NewFolder : public swish::nse::Command
 {
 public:
     NewFolder(
         const winapi::shell::pidl::apidl_t& folder_pidl,
-        const boost::function<
-            boost::shared_ptr<swish::provider::sftp_provider>()>& provider,
-        const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
+        const provider_factory& provider,
+        const consumer_factory& consumer);
     
     virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
@@ -66,9 +71,8 @@ public:
 private:
     HWND m_hwnd;
     winapi::shell::pidl::apidl_t m_folder_pidl;
-    boost::function<
-        boost::shared_ptr<swish::provider::sftp_provider>()> m_provider;
-    boost::function<comet::com_ptr<ISftpConsumer>()> m_consumer;
+    provider_factory m_provider_factory;
+    consumer_factory m_consumer_factory;
     comet::com_ptr<IUnknown> m_site;
 };
 

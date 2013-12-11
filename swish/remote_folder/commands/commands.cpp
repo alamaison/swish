@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -74,8 +74,8 @@ namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
     HWND /*hwnd*/, const apidl_t& folder_pidl,
-    const function<shared_ptr<sftp_provider>()>& provider,
-    const function<com_ptr<ISftpConsumer>()>& consumer)
+    const provider_factory& provider,
+    const consumer_factory& consumer)
 {
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(
@@ -117,8 +117,8 @@ std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
     HWND /*hwnd*/, const apidl_t& folder_pidl,
     com_ptr<IUnknown> ole_site,
-    const function<shared_ptr<sftp_provider>()>& provider,
-    const function<com_ptr<ISftpConsumer>()>& consumer)
+    const provider_factory& provider,
+    const consumer_factory& consumer)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
     shared_command_vector commands =

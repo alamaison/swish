@@ -138,8 +138,8 @@ namespace {
 }
 
 context_menu_callback::context_menu_callback(
-    function<shared_ptr<sftp_provider>()> provider_factory,
-    function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
+    my_provider_factory provider_factory,
+    my_consumer_factory consumer_factory)
     : m_provider_factory(provider_factory),
     m_consumer_factory(consumer_factory) {}
 
@@ -225,9 +225,10 @@ void context_menu_callback::verb(
 
 namespace {
 
+    template<typename ProviderFactory, typename ConsumerFactory>
     bool do_invoke_command(
-        function<shared_ptr<sftp_provider>()> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
         const wstring& /*arguments*/, int window_mode)
     {
@@ -244,11 +245,12 @@ namespace {
             {
                 PidlFormat format(selection);
 
-                shared_ptr<sftp_provider> provider = provider_from_pidl(
-                    format.parent_folder());
 
                 // Create SFTP Consumer for this HWNDs lifetime
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
+
+                shared_ptr<sftp_provider> provider = provider_from_pidl(
+                    format.parent_folder(), consumer);
 
                 CSftpDirectory directory(
                     format.parent_folder(), provider, consumer);

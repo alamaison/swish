@@ -73,14 +73,15 @@ namespace {
      * The list of items to delete is supplied as a list of PIDLs and may
      * contain a mix of files and folder.
      */
+    template<typename ProviderFactory, typename ConsumerFactory>
     void do_delete(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<shared_ptr<sftp_provider>()> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         const apidl_t& parent_folder)
     {
-        shared_ptr<sftp_provider> provider = provider_factory();
         com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
+        shared_ptr<sftp_provider> provider = provider_factory(consumer);
 
         // Create instance of our directory handler class
         CSftpDirectory directory(parent_folder, provider, consumer);
@@ -170,10 +171,11 @@ namespace {
      * confirmation message is displayed asking if the number of items are
      * to be deleted.
      */
+    template<typename ProviderFactory, typename ConsumerFactory>
     void execute_death_row(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<shared_ptr<sftp_provider>()> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         const apidl_t& parent_folder)
     {
         size_t item_count = death_row.size();
@@ -204,8 +206,8 @@ namespace {
 
 
 Delete::Delete(
-    function<shared_ptr<sftp_provider>()> provider_factory,
-    function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
+    my_provider_factory provider_factory,
+    my_consumer_factory consumer_factory)
     : m_provider_factory(provider_factory), m_consumer_factory(consumer_factory)
 {}
 

@@ -34,6 +34,8 @@
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
+#include <comet/ptr.h>
+
 #include <boost/shared_ptr.hpp>
 
 namespace swish {
@@ -52,7 +54,8 @@ swish::connection::connection_spec connection_from_pidl(
  * folder's PIDL, @a pidl, if connection is required.
  */
 boost::shared_ptr<swish::provider::sftp_provider> provider_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl);
+    const winapi::shell::pidl::apidl_t& pidl,
+    comet::com_ptr<ISftpConsumer> consumer);
 
 }} // namespace swish::remote_folder
 

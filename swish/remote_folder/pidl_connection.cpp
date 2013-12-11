@@ -42,6 +42,8 @@ using swish::provider::sftp_provider;
 
 using winapi::shell::pidl::apidl_t;
 
+using comet::com_ptr;
+
 using boost::make_shared;
 using boost::shared_ptr;
 
@@ -80,10 +82,12 @@ connection_spec connection_from_pidl(const apidl_t& pidl)
     return connection_spec(host, user, port);
 }
 
-shared_ptr<sftp_provider> provider_from_pidl(const apidl_t& pidl)
+shared_ptr<sftp_provider> provider_from_pidl(
+    const apidl_t& pidl, com_ptr<ISftpConsumer> consumer)
 {
     connection_spec specification = connection_from_pidl(pidl);
-    return make_shared<CProvider>(specification);
+
+    return make_shared<CProvider>(specification, consumer);
 }
 
 }} // namespace swish::remote_folder

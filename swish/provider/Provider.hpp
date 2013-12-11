@@ -53,7 +53,9 @@ class CProvider : public sftp_provider
 {
 public:
 
-    CProvider(const swish::connection::connection_spec& specification);
+    CProvider(
+        const swish::connection::connection_spec& specification,
+        comet::com_ptr<ISftpConsumer> consumer);
 
     virtual directory_listing listing(
         comet::com_ptr<ISftpConsumer> consumer,

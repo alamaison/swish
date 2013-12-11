@@ -176,8 +176,10 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
 {
     try
     {
-        shared_ptr<sftp_provider> provider = provider_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
+
+        shared_ptr<sftp_provider> provider =
+            provider_from_pidl(root_pidl(), consumer);
 
         // Create directory handler and get listing as PIDL enumeration
         CSftpDirectory directory(root_pidl(), provider, consumer);
@@ -424,8 +426,9 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
     try
     {
-        shared_ptr<sftp_provider> provider = provider_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
+        shared_ptr<sftp_provider> provider =
+            provider_from_pidl(root_pidl(), consumer);
 
         // Rename file
         CSftpDirectory directory(root_pidl(), provider, consumer);
@@ -626,7 +629,7 @@ CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 {
     TRACE("Request: IExplorerCommandProvider");
     return remote_folder_command_provider(
-        hwnd, root_pidl(), bind(&provider_from_pidl, root_pidl()),
+        hwnd, root_pidl(), bind(&provider_from_pidl, root_pidl(), _1),
         bind(m_consumer_factory, hwnd)).get();
 }
 
@@ -785,8 +788,9 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
     try
     {
-        shared_ptr<sftp_provider> provider = provider_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
+        shared_ptr<sftp_provider> provider =
+            provider_from_pidl(root_pidl(), consumer);
 
         return new swish::shell_folder::CSnitchingDataObject(
             new CSftpDataObject(
@@ -814,8 +818,9 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
     try
     {
-        shared_ptr<sftp_provider> provider = provider_from_pidl(root_pidl());
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
+        shared_ptr<sftp_provider> provider =
+            provider_from_pidl(root_pidl(), consumer);
 
         optional< window<wchar_t> > owner;
         if (hwnd)
@@ -864,6 +869,6 @@ HRESULT CRemoteFolder::MenuCallback(
     HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     context_menu_callback callback(
-        bind(&provider_from_pidl, root_pidl()), m_consumer_factory);
+        bind(&provider_from_pidl, root_pidl(), _1), m_consumer_factory);
     return callback(hwnd, pdtobj, uMsg, wParam, lParam);
 }

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,12 +48,18 @@ namespace remote_folder {
 
 class context_menu_callback : public swish::nse::default_context_menu_callback
 {
+    typedef boost::function<
+        boost::shared_ptr<swish::provider::sftp_provider>(
+        comet::com_ptr<ISftpConsumer>)
+    > my_provider_factory;
+
+    typedef boost::function<comet::com_ptr<ISftpConsumer>(HWND)>
+        my_consumer_factory;
+
 public:
     context_menu_callback(
-        boost::function<
-            boost::shared_ptr<swish::provider::sftp_provider>()
-        > provider_factory,
-        boost::function<comet::com_ptr<ISftpConsumer>(HWND)> consumer_factory);
+        my_provider_factory provider_factory,
+        my_consumer_factory consumer_factory);
 
 private:
     bool merge_context_menu(
@@ -83,10 +89,8 @@ private:
         HWND hwnd_view, comet::com_ptr<IDataObject> selection,
         UINT& default_command_id);
 
-    boost::function<
-        boost::shared_ptr<swish::provider::sftp_provider>()
-    > m_provider_factory;
-    boost::function<comet::com_ptr<ISftpConsumer>(HWND)> m_consumer_factory;
+    my_provider_factory m_provider_factory;
+    my_consumer_factory m_consumer_factory;
 };
 
 }} // namespace swish::remote_folder

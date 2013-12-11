@@ -50,13 +50,14 @@ namespace test {
 namespace detail {
 
     inline boost::shared_ptr<swish::provider::sftp_provider> provider_instance(
-        const std::string& host, const std::string& user, int port)
+        const std::string& host, const std::string& user, int port,
+        comet::com_ptr<ISftpConsumer> consumer)
     {
         return boost::make_shared<swish::provider::CProvider>(
             swish::connection::connection_spec(
                 swish::utils::Utf8StringToWideString(host),
                 swish::utils::Utf8StringToWideString(user),
-                port));
+                port), consumer);
     }
 
     /**
@@ -67,8 +68,9 @@ namespace detail {
     {
     public:
         static_provider(
-            const std::string& host, const std::string& user, int port)
-            : m_provider(provider_instance(host, user, port)) {}
+            const std::string& host, const std::string& user, int port,
+            comet::com_ptr<ISftpConsumer> consumer)
+            : m_provider(provider_instance(host, user, port, consumer)) {}
 
         boost::shared_ptr<swish::provider::sftp_provider> get() const
         { return m_provider; }
@@ -152,12 +154,13 @@ public:
      *
      * Created on demand on the first request.
      */
-    boost::shared_ptr<swish::provider::sftp_provider> provider() const
+    boost::shared_ptr<swish::provider::sftp_provider> provider(
+        comet::com_ptr<ISftpConsumer> consumer) const
     {
         if (!detail::s_provider)
         {
             detail::s_provider = boost::make_shared<detail::static_provider>(
-                host(), user(), port());
+                host(), user(), port(), consumer);
         }
 
         return detail::s_provider->get();
@@ -187,12 +190,14 @@ public:
     /**
      * Return a pointer to a new provider instance.
      */
-    boost::shared_ptr<swish::provider::sftp_provider> provider()
+    boost::shared_ptr<swish::provider::sftp_provider> provider(
+        comet::com_ptr<ISftpConsumer> consumer)
     {
         if (!m_provider)
         {
             m_provider = detail::provider_instance(
-                m_server.GetHost(), m_server.GetUser(), m_server.GetPort());
+                m_server.GetHost(), m_server.GetUser(), m_server.GetPort(),
+                consumer);
         }
 
         return m_provider;
@@ -216,9 +221,9 @@ public:
      * Get a CProvider instance connected to the fixture SSH server.
      */
     boost::shared_ptr<swish::provider::sftp_provider>
-    ProviderFixtureT::Provider()
+    ProviderFixtureT::Provider(comet::com_ptr<ISftpConsumer> consumer)
     {
-        return m_policy.provider();
+        return m_policy.provider(consumer);
     }
 
     /**

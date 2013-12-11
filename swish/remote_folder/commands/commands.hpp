@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,11 +44,16 @@ namespace swish {
 namespace remote_folder {
 namespace commands {
 
+typedef boost::function<
+    boost::shared_ptr<swish::provider::sftp_provider>(
+        comet::com_ptr<ISftpConsumer>)> provider_factory;
+
+typedef boost::function<comet::com_ptr<ISftpConsumer>()> consumer_factory;
+
 comet::com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
     HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
-    const boost::function<
-        boost::shared_ptr<swish::provider::sftp_provider>()>& provider,
-    const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
+    const provider_factory& provider,
+    const consumer_factory& consumer);
 
 std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
 remote_folder_task_pane_titles(
@@ -60,9 +65,8 @@ std::pair<
 remote_folder_task_pane_tasks(
     HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
     comet::com_ptr<IUnknown> ole_site,
-    const boost::function<
-        boost::shared_ptr<swish::provider::sftp_provider>()>& provider,
-    const boost::function<comet::com_ptr<ISftpConsumer>()>& consumer);
+    const provider_factory& provider,
+    const consumer_factory& consumer);
 
 }}} // namespace swish::remote_folder::commands
 

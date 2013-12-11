@@ -168,7 +168,7 @@ bool CViewCallback::on_get_webview_tasks(
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
         remote_folder_task_pane_tasks(
             m_hwnd_view, m_folder_pidl, ole_site(),
-            bind(provider_from_pidl, m_folder_pidl),
+            bind(provider_from_pidl, m_folder_pidl, _1),
             bind(&consumer, m_hwnd_view));
 
     tasks_out.pEnumExtraTasks = commands.first.detach();

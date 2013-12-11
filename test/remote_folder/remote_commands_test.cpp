@@ -61,7 +61,8 @@ namespace { // private
         NewFolder new_folder_command()
         {
             return NewFolder(
-                sandbox_pidl(), bind(&NewFolderCommandFixture::Provider, this),
+                sandbox_pidl(),
+                bind(&NewFolderCommandFixture::Provider, this, _1),
                 bind(&NewFolderCommandFixture::Consumer, this));
         }
     };
@@ -311,7 +312,7 @@ BOOST_AUTO_TEST_CASE( task_pane_old_site )
     std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > panes =
         remote_folder_task_pane_tasks(
             NULL, sandbox_pidl(), NULL,
-            bind(&NewFolderCommandFixture::Provider, this),
+            bind(&NewFolderCommandFixture::Provider, this, _1),
             bind(&NewFolderCommandFixture::Consumer, this));
 
     BOOST_REQUIRE(panes.first);
