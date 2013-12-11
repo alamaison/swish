@@ -216,8 +216,14 @@ provider::provider(
 void provider::_Connect(com_ptr<ISftpConsumer> consumer)
 {
     lock_guard<mutex> lock(m_session_creation_mutex);
-    if (!m_session || m_session->is_dead())
+    if (!m_session)
     {
+        m_session = session_pool().pooled_session(m_specification, consumer);
+    }
+
+    if (m_session->is_dead())
+    {
+        session_pool().remove_session(m_specification);
         m_session = session_pool().pooled_session(m_specification, consumer);
     }
 }
