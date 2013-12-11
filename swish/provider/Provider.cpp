@@ -38,7 +38,6 @@
 #include "Provider.hpp"
 
 #include "swish/connection/authenticated_session.hpp"
-#include "swish/connection/session_pool.hpp"
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
@@ -58,11 +57,8 @@
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
-#include <boost/make_shared.hpp> // make_shared<provider>
-#include <boost/thread/locks.hpp> // lock_guard
-#include <boost/thread/mutex.hpp>
+#include <boost/make_shared.hpp> // make_shared
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
-#include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp> // system_error, system_category
 
 #include <cassert> // assert
@@ -72,8 +68,6 @@
 #include <vector> // to hold listing
 
 using swish::connection::authenticated_session;
-using swish::connection::connection_spec;
-using swish::connection::session_pool;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
@@ -87,13 +81,9 @@ using comet::stl_enumeration;
 
 using boost::filesystem::path;
 using boost::filesystem::wpath;
-using boost::lock_guard;
 using boost::make_filter_iterator;
 using boost::make_shared;
-using boost::mutex;
-using boost::shared_ptr;
 namespace errc = boost::system::errc;
-using boost::system::error_code;
 using boost::system::system_category;
 using boost::system::system_error;
 
@@ -119,114 +109,69 @@ class provider
 {
 public:
 
-    provider(
-        const connection_spec& specification,
-        com_ptr<ISftpConsumer> consumer);
+    provider(authenticated_session& session);
 
-    virtual directory_listing listing(
-        com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory);
+    directory_listing listing(const sftp_provider_path& directory);
 
-    virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        std::ios_base::openmode open_mode);
+    comet::com_ptr<IStream> get_file(
+        std::wstring file_path, std::ios_base::openmode open_mode);
 
     VARIANT_BOOL rename(
         com_ptr<ISftpConsumer> consumer, const wpath& from_path,
         const wpath& to_path);
 
-    void remove_all(com_ptr<ISftpConsumer> consumer, const wpath& path);
+    void remove_all(const wpath& path);
 
-    void create_new_directory(
-        com_ptr<ISftpConsumer> consumer, const wpath& path);
+    void create_new_directory(const wpath& path);
 
-    BSTR resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path);
+    BSTR resolve_link(const wpath& path);
 
-    virtual sftp_filesystem_item stat(
-        com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-        bool follow_links);
+    sftp_filesystem_item stat(
+        const sftp_provider_path& path, bool follow_links);
 
 private:
 
-    connection_spec m_specification; ///< Data used for lazy connection
-    boost::mutex m_session_creation_mutex;
-    boost::shared_ptr<authenticated_session> m_session; ///< SSH/SFTP session
-
-    void _Connect(com_ptr<ISftpConsumer> consumer);
-
+    authenticated_session& m_session;
 };
 
-CProvider::CProvider(const connection_spec& specification,
-                     com_ptr<ISftpConsumer> consumer)
+CProvider::CProvider(authenticated_session& session)
 {
-    m_provider = make_shared<provider>(specification, consumer);
+    m_provider = make_shared<provider>(boost::ref(session));
 }
 
 
-directory_listing CProvider::listing(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory)
+directory_listing CProvider::listing(const sftp_provider_path& directory)
 {
-    return m_provider->listing(consumer, directory);
+    return m_provider->listing(directory);
 }
 
 comet::com_ptr<IStream> CProvider::get_file(
-    comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-    std::ios_base::openmode open_mode)
-{ return m_provider->get_file(consumer, file_path, open_mode); }
+    std::wstring file_path, std::ios_base::openmode open_mode)
+{ return m_provider->get_file(file_path, open_mode); }
 
 VARIANT_BOOL CProvider::rename(
     ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
 { return m_provider->rename(consumer, from_path, to_path); }
 
-void CProvider::remove_all(ISftpConsumer* consumer, BSTR path)
-{ m_provider->remove_all(consumer, path); }
+void CProvider::remove_all(BSTR path)
+{ m_provider->remove_all(path); }
 
-void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
-{ m_provider->create_new_directory(consumer, path); }
+void CProvider::create_new_directory(BSTR path)
+{ m_provider->create_new_directory(path); }
 
-BSTR CProvider::resolve_link(ISftpConsumer* consumer, BSTR path)
-{ return m_provider->resolve_link(consumer, path); }
+BSTR CProvider::resolve_link(BSTR path)
+{ return m_provider->resolve_link(path); }
 
 sftp_filesystem_item CProvider::stat(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-    bool follow_links)
+    const sftp_provider_path& path, bool follow_links)
 {
-    return m_provider->stat(consumer, path, follow_links);
+    return m_provider->stat(path, follow_links);
 }
 
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(
-    const connection_spec& specification, com_ptr<ISftpConsumer> consumer)
-    : m_specification(specification)
-{
-    _Connect(consumer);
-}
-
-/**
- * Sets up the SFTP session, prompting user for input if necessary.
- *
- * The remote server must have its identity verified which may require user
- * confirmation and the user must authenticate with the remote server
- * which might be done silently (i.e. with a public-key) or may require
- * user input.
- *
- * If the session has already been created, this function does nothing.
- */
-void provider::_Connect(com_ptr<ISftpConsumer> consumer)
-{
-    lock_guard<mutex> lock(m_session_creation_mutex);
-    if (!m_session)
-    {
-        m_session = session_pool().pooled_session(m_specification, consumer);
-    }
-
-    if (m_session->is_dead())
-    {
-        session_pool().remove_session(m_specification);
-        m_session = session_pool().pooled_session(m_specification, consumer);
-    }
-}
+provider::provider(authenticated_session& session) : m_session(session) {}
 
 namespace {
 
@@ -240,18 +185,14 @@ namespace {
 /**
 * Retrieves a file listing, @c ls, of a given directory.
 *
-* @param consumer   UI callback.  
 * @param directory  Absolute path of the directory to list.
 */
-directory_listing provider::listing(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory)
+directory_listing provider::listing(const sftp_provider_path& directory)
 {
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    _Connect(consumer);
-
-    sftp_filesystem& channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session.get_sftp_filesystem();
 
     string path = WideStringToUtf8String(directory.string());
 
@@ -268,17 +209,14 @@ directory_listing provider::listing(
 }
 
 com_ptr<IStream> provider::get_file(
-    com_ptr<ISftpConsumer> consumer, wstring file_path,
-    std::ios_base::openmode mode)
+    wstring file_path, std::ios_base::openmode mode)
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
 
-    _Connect(consumer);
-
     string path = WideStringToUtf8String(file_path);
 
-    sftp_filesystem& channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session.get_sftp_filesystem();
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
@@ -529,11 +467,9 @@ VARIANT_BOOL provider::rename(
     string from = WideStringToUtf8String(from_path.string());
     string to = WideStringToUtf8String(to_path.string());
 
-    _Connect(consumer);
-
     try
     {
-        m_session->get_sftp_filesystem().rename(
+        m_session.get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
         
         // Rename was successful without overwrite
@@ -542,7 +478,7 @@ VARIANT_BOOL provider::rename(
     catch (const system_error& e)
     {
         if (rename_retry_with_overwrite(
-            *m_session, consumer.get(), e, from, to))
+            m_session, consumer.get(), e, from, to))
         {
             return VARIANT_TRUE;
         }
@@ -553,21 +489,17 @@ VARIANT_BOOL provider::rename(
     }
 }
 
-void provider::remove_all(
-    com_ptr<ISftpConsumer> consumer, const wpath& target)
+void provider::remove_all(const wpath& target)
 {
     if (target.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     path utf8_path = WideStringToUtf8String(target.string());
 
-    _Connect(consumer);
-
-    m_session->get_sftp_filesystem().remove_all(utf8_path);
+    m_session.get_sftp_filesystem().remove_all(utf8_path);
 }
 
-void provider::create_new_directory(
-    com_ptr<ISftpConsumer> consumer, const wpath& path)
+void provider::create_new_directory(const wpath& path)
 {
     if (path.empty())
         BOOST_THROW_EXCEPTION(
@@ -576,18 +508,14 @@ void provider::create_new_directory(
 
     string utf8_path = WideStringToUtf8String(path.string());
 
-    _Connect(consumer);
-
-    m_session->get_sftp_filesystem().create_directory(utf8_path);
+    m_session.get_sftp_filesystem().create_directory(utf8_path);
 }
 
-BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
+BSTR provider::resolve_link(const wpath& path)
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    _Connect(consumer);
-
-    sftp_filesystem& channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session.get_sftp_filesystem();
     bstr_t target =
         Utf8StringToWideString(channel.canonical_path(utf8_path).string());
 
@@ -601,14 +529,12 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
  * owner and group names as string (these being derived from the long entry).
  */
 sftp_filesystem_item provider::stat(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
+    const sftp_provider_path& path,
     bool follow_links)
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    _Connect(consumer);
-
-    sftp_filesystem& channel = m_session->get_sftp_filesystem();
+    sftp_filesystem& channel = m_session.get_sftp_filesystem();
 
     file_attributes stat_result = channel.attributes(
         utf8_path, follow_links != FALSE);

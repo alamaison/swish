@@ -32,8 +32,6 @@
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/shared_ptr.hpp>
-
 #include <string>
 
 namespace swish {
@@ -66,7 +64,7 @@ public:
      * interaction needed to authenticate is performed via the `consumer`
      * callback.
      */
-    boost::shared_ptr<authenticated_session> create_session(
+    authenticated_session create_session(
         comet::com_ptr<ISftpConsumer> consumer) const;
 
     bool operator<(const connection_spec& other) const;

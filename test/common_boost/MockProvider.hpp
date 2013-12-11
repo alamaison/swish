@@ -491,7 +491,6 @@ public:
     }
 
     virtual swish::provider::directory_listing listing(
-        comet::com_ptr<ISftpConsumer> /*consumer*/,
         const swish::provider::sftp_provider_path& directory)
     {
         std::vector<swish::provider::sftp_filesystem_item> files;
@@ -533,8 +532,7 @@ public:
     }
 
     virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> /*consumer*/, std::wstring file_path,
-        std::ios_base::openmode /*mode*/)
+        std::wstring file_path, std::ios_base::openmode /*mode*/)
     {
         detail::find_location_from_path(
             m_filesystem, file_path); // test existence
@@ -542,7 +540,7 @@ public:
         // Create IStream instance whose data is the file path
         return ::SHCreateMemStream(
             reinterpret_cast<const BYTE*>(file_path.c_str()),
-            (file_path.size() + 1) * sizeof(wchar_t));
+            static_cast<UINT>((file_path.size() + 1) * sizeof(wchar_t)));
     }
 
     virtual VARIANT_BOOL rename(
@@ -578,14 +576,13 @@ public:
         }
     }
 
-    virtual void remove_all(ISftpConsumer* /*consumer*/, BSTR /*path*/)
+    virtual void remove_all(BSTR /*path*/)
     {};
 
-    virtual void create_new_directory(
-        ISftpConsumer* /*consumer*/, BSTR /*path*/)
+    virtual void create_new_directory(BSTR /*path*/)
     {};
 
-    virtual BSTR resolve_link(ISftpConsumer* /*consumer*/, BSTR path)
+    virtual BSTR resolve_link(BSTR path)
     {
         std::wstring p(path);
 
@@ -604,7 +601,6 @@ public:
     };
 
     virtual swish::provider::sftp_filesystem_item stat(
-        comet::com_ptr<ISftpConsumer> consumer,
         const swish::provider::sftp_provider_path& path,
         bool follow_links)
     {
@@ -615,7 +611,6 @@ public:
                 comet::bstr_t(
                     comet::auto_attach(
                         resolve_link(
-                            consumer.get(),
                             comet::bstr_t(path.string()).in()))).w_str();
         }
         else

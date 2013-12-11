@@ -111,19 +111,17 @@ public:
     virtual ~sftp_provider() {}
 
     virtual directory_listing listing(
-        comet::com_ptr<ISftpConsumer> consumer,
         const sftp_provider_path& directory) = 0;
 
     virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        std::ios_base::openmode mode) = 0;
+        std::wstring file_path, std::ios_base::openmode mode) = 0;
 
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
 
-    virtual void remove_all(ISftpConsumer* consumer, BSTR path) = 0;
+    virtual void remove_all(BSTR path) = 0;
 
-    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
+    virtual void create_new_directory(BSTR path) = 0;
 
     /**
      * Return the canonical path of the given non-canonical path.
@@ -131,11 +129,10 @@ public:
      * While generally used to resolve symlinks, it can also be used to
      * convert paths relative to the startup directory into absolute paths.
      */
-    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
+    virtual BSTR resolve_link(BSTR link_path) = 0;
 
     virtual sftp_filesystem_item stat(
-        comet::com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-        bool follow_links) = 0;
+        const sftp_provider_path& path, bool follow_links) = 0;
 };
 
 }}

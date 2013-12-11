@@ -97,7 +97,7 @@ namespace {
  */
 wstring prefix_if_necessary(
     const wstring& initial_name, shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer, const wpath& directory)
+    const wpath& directory)
 {
     wregex new_folder_pattern(
         str(wformat(L"%1%|%1% \\((\\d+)\\)") % initial_name));
@@ -106,7 +106,7 @@ wstring prefix_if_necessary(
     bool collision = false;
     vector<unsigned long> suffixes;
     BOOST_FOREACH(
-        const sftp_filesystem_item& lt, provider->listing(consumer, directory))
+        const sftp_filesystem_item& lt, provider->listing(directory))
     {
         wstring filename = lt.filename().string();
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))
@@ -218,7 +218,6 @@ const
         wstring initial_name = translate("Initial name", "New folder");
         initial_name = prefix_if_necessary(
             initial_name, m_provider_factory(m_consumer_factory()),
-            m_consumer_factory(),
             absolute_path_from_swish_pidl(m_folder_pidl));
 
         cpidl_t pidl = directory.CreateDirectory(initial_name);

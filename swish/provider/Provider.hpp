@@ -39,7 +39,7 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
-#include "swish/connection/connection_spec.hpp"
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/provider/sftp_provider.hpp"
 
 #include <boost/shared_ptr.hpp> // shared_ptr
@@ -53,30 +53,24 @@ class CProvider : public sftp_provider
 {
 public:
 
-    CProvider(
-        const swish::connection::connection_spec& specification,
-        comet::com_ptr<ISftpConsumer> consumer);
+    CProvider(swish::connection::authenticated_session& session);
 
-    virtual directory_listing listing(
-        comet::com_ptr<ISftpConsumer> consumer,
-        const sftp_provider_path& directory);
+    virtual directory_listing listing(const sftp_provider_path& directory);
 
     virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        std::ios_base::openmode open_mode);
+        std::wstring file_path, std::ios_base::openmode open_mode);
 
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
 
-    virtual void remove_all(ISftpConsumer* consumer, BSTR path);
+    virtual void remove_all(BSTR path);
 
-    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
+    virtual void create_new_directory(BSTR path);
 
-    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
+    virtual BSTR resolve_link(BSTR link_path);
 
     virtual sftp_filesystem_item stat(
-        comet::com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-        bool follow_links);
+        const sftp_provider_path& path, bool follow_links);
 
 private:
     boost::shared_ptr<provider> m_provider;

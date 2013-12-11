@@ -52,6 +52,7 @@ using test::remote_test_config;
 using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
 
+using swish::connection::authenticated_session;
 using swish::connection::connection_spec;
 using swish::provider::sftp_provider;
 using swish::provider::CProvider;
@@ -72,23 +73,24 @@ using std::wstring;
 
 namespace {
 
+authenticated_session create_session(com_ptr<MockConsumer> consumer)
+{
+    remote_test_config config;
+    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
+    consumer->set_keyboard_interactive_behaviour(
+        MockConsumer::CustomResponse);
+    consumer->set_password_behaviour(MockConsumer::CustomPassword);
+    consumer->set_password(config.GetPassword());
+
+    return config.as_connection_spec().create_session(consumer);
+}
+
 class RemoteSftpFixture : public WinsockFixture
 {
 public:
-    RemoteSftpFixture() : m_consumer(new MockConsumer())
-    {
-        remote_test_config config;
-        m_consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
-        m_consumer->set_keyboard_interactive_behaviour(
-            MockConsumer::CustomResponse);
-        m_consumer->set_password_behaviour(MockConsumer::CustomPassword);
-        m_consumer->set_password(config.GetPassword());
-
-        m_provider = make_shared<CProvider>(
-            connection_spec(
-                config.GetHost(), config.GetUser(), config.GetPort()),
-            m_consumer);
-    }
+    RemoteSftpFixture() :
+      m_session(create_session(new MockConsumer())),
+      m_provider(make_shared<CProvider>(boost::ref(m_session))) {}
 
     shared_ptr<sftp_provider> provider() const
     {
@@ -98,11 +100,11 @@ public:
     com_ptr<IStream> get_stream(
         const wstring& path, std::ios_base::openmode open_mode)
     {
-        return provider()->get_file(m_consumer, path, open_mode);
+        return provider()->get_file(path, open_mode);
     }
 
 private:
-    com_ptr<MockConsumer> m_consumer;
+    authenticated_session m_session;
     shared_ptr<sftp_provider> m_provider;
 };
 

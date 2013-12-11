@@ -1,7 +1,7 @@
 /**
     @file
 
-    Testing Provider authentication.
+    Testing session authentication over a real network connection.
 
     @if license
 
@@ -29,82 +29,50 @@
 #include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/remote_test_config.hpp"
 
-#include "swish/connection/connection_spec.hpp"
-#include "swish/provider/Provider.hpp"
+#include "swish/connection/authenticated_session.hpp"
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
-#include <string> // wstring
 
 using test::MockConsumer;
 using test::remote_test_config;
 
-using swish::connection::connection_spec;
-using swish::provider::CProvider;
-using swish::provider::sftp_provider;
+using swish::connection::authenticated_session;
 
 using comet::com_error;
 using comet::com_ptr;
 
-using boost::make_shared;
-using boost::shared_ptr;
 using boost::system::system_error;
 using boost::test_tools::predicate_result;
 
 using std::exception;
-using std::wstring;
 
 namespace {
-    
-    shared_ptr<sftp_provider> create_provider(com_ptr<ISftpConsumer> consumer)
-    {
-        remote_test_config config;
-
-        return make_shared<CProvider>(
-            connection_spec(
-                config.GetHost(), config.GetUser(), config.GetPort()),
-            consumer);
-    }
 
     /**
-     * Check that the given provider responds sensibly to a request given
-     * a particular consumer.
-     *
-     * This may mean that the provider wasn't authenticated but survived
-     * an attempt to make it do something (presumably) by authenticating.
+     * Check that the given session responds sensibly to a request.
      */
-    predicate_result alive(
-        shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+    predicate_result alive(authenticated_session& session)
     {
         try
         {
-            provider->listing(consumer, L"/");
+            session.get_sftp_filesystem().directory_iterator("/");
 
             predicate_result res(true);
-            res.message() << "Provider seems to be alive";
+            res.message() << "Session seems to be alive";
             return res;
         }
         catch(const exception& e)
         {
             predicate_result res(false);
-            res.message() << "Provider seems to be dead: " << e.what();
+            res.message() << "Session seems to be dead: " << e.what();
             return res;
         }
-    }
-    
-    /**
-     * Check that the given provider responds sensibly to a request.
-     */
-    predicate_result alive(shared_ptr<sftp_provider> provider)
-    {
-        return alive(provider, new MockConsumer());
     }
 
     bool is_e_abort(com_error e)
@@ -119,7 +87,7 @@ namespace {
 // can't test passwords as OpenSSH will always use a Windows user account
 // and we can't get at those passwords.  
 
-BOOST_AUTO_TEST_SUITE( provider_network_auth_tests )
+BOOST_AUTO_TEST_SUITE( network_auth_tests )
 
 BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
 {
@@ -134,9 +102,10 @@ BOOST_AUTO_TEST_CASE( SimplePasswordAuthentication )
 
     // Fails if keyboard-int supported on the server as that gets preference
     // and replies with user-aborted
-    shared_ptr<sftp_provider> provider = create_provider(consumer);
+    authenticated_session session =
+        config.as_connection_spec().create_session(consumer);
 
-    BOOST_CHECK(alive(provider, consumer));
+    BOOST_CHECK(alive(session));
 }
 
 BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
@@ -152,8 +121,10 @@ BOOST_AUTO_TEST_CASE( KeyboardInteractiveAuthentication )
 
     // This may fail if the server (which we can't control) doesn't allow
     // ki-auth
-    shared_ptr<sftp_provider> provider = create_provider(consumer);
-    BOOST_CHECK(alive(provider, consumer));
+    authenticated_session session =
+        config.as_connection_spec().create_session(consumer);
+
+    BOOST_CHECK(alive(session));
 }
 
 BOOST_AUTO_TEST_CASE( WrongPasswordOrResponse )
@@ -167,7 +138,11 @@ BOOST_AUTO_TEST_CASE( WrongPasswordOrResponse )
     consumer->set_keyboard_interactive_behaviour(MockConsumer::WrongResponse);
     consumer->set_password_behaviour(MockConsumer::WrongPassword);
 
-    BOOST_CHECK_THROW(create_provider(consumer), system_error);
+    remote_test_config config;
+    // FIXME: Any exception will do.  We don't have fine enough control over the
+    // mock to test this properly.
+    BOOST_CHECK_THROW(
+        config.as_connection_spec().create_session(consumer), exception);
 }
 
 BOOST_AUTO_TEST_CASE( UserAborted )
@@ -178,7 +153,10 @@ BOOST_AUTO_TEST_CASE( UserAborted )
     consumer->set_password_behaviour(MockConsumer::AbortPassword);
     consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
 
-    BOOST_CHECK_EXCEPTION(create_provider(consumer), com_error, is_e_abort);
+    remote_test_config config;
+    BOOST_CHECK_EXCEPTION(
+        config.as_connection_spec().create_session(consumer), com_error,
+        is_e_abort);
 }
 
 /**
@@ -193,18 +171,23 @@ BOOST_AUTO_TEST_CASE( ReconnectAfterAbort )
     consumer->set_keyboard_interactive_behaviour(
         MockConsumer::AbortResponse);
 
-    BOOST_CHECK_EXCEPTION(create_provider(consumer), com_error, is_e_abort);
+    remote_test_config config;
+    BOOST_CHECK_EXCEPTION(
+        config.as_connection_spec().create_session(consumer), com_error,
+        is_e_abort);
 
     // Change mock behaviours so that authentication succeeds
     consumer->set_password_max_attempts(2);
+    consumer->set_keyboard_interactive_max_attempts(2);
     consumer->set_password_behaviour(MockConsumer::CustomPassword);
     consumer->set_keyboard_interactive_behaviour(MockConsumer::CustomResponse);
 
-    remote_test_config config;
     consumer->set_password(config.GetPassword());
 
-    shared_ptr<sftp_provider> provider = create_provider(consumer);
-    BOOST_CHECK(alive(provider, consumer));
+    authenticated_session session =
+        config.as_connection_spec().create_session(consumer);
+
+    BOOST_CHECK(alive(session));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -30,7 +30,7 @@
 #include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, OpenSshFixture
 
-#include "swish/provider/Provider.hpp"
+#include "swish/provider/sftp_provider.hpp"
 
 #include <comet/ptr.h> // com_ptr
 
@@ -39,6 +39,15 @@
 
 #include <string>
 
+namespace swish
+{
+    namespace connection {
+        
+        class authenticated_session;
+
+    }
+}
+
 namespace test {
 
 class ProviderFixture :
@@ -46,16 +55,21 @@ class ProviderFixture :
 {
 public:
 
+    ProviderFixture();
+    ~ProviderFixture();
+
     /**
      * Get a CProvider instance connected to the fixture SSH server.
      */
-    boost::shared_ptr<swish::provider::sftp_provider> Provider(
-        comet::com_ptr<ISftpConsumer> consumer);
+    boost::shared_ptr<swish::provider::sftp_provider> Provider();
 
     /**
      * Get a dummy consumer to use in calls to provider.
      */
     comet::com_ptr<test::MockConsumer> Consumer();
+
+private:
+    swish::connection::authenticated_session* m_session;
 };
 
 } // namespace test

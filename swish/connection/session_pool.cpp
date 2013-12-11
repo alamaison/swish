@@ -75,15 +75,19 @@ public:
 
         if (session != m_sessions.end())
         {
-            return session->second;
+            if (!session->second->is_dead())
+            {
+                return session->second;
+            }
+
+            // Dead sessions are replaced in the pool
         }
-        else
-        {
-            shared_ptr<authenticated_session> provider =
-                specification.create_session(consumer);
-            m_sessions[specification] = provider;
-            return provider;
-        }
+        
+        shared_ptr<authenticated_session> fresh_session(
+            new authenticated_session(
+                specification.create_session(consumer)));
+        m_sessions[specification] = fresh_session;
+        return fresh_session;
     }
 
     bool has_session(const connection_spec& specification) const

@@ -28,7 +28,6 @@
 
 #include "swish/connection/authenticated_session.hpp"
 
-#include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/tuple/tuple.hpp> // tie
 #include <boost/tuple/tuple_comparison.hpp> // <
@@ -37,8 +36,6 @@
 
 using comet::com_ptr;
 
-using boost::make_shared;
-using boost::shared_ptr;
 using boost::tie;
 
 using std::invalid_argument;
@@ -58,10 +55,10 @@ connection_spec::connection_spec(
         BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
 }
 
-shared_ptr<authenticated_session> connection_spec::create_session(
+authenticated_session connection_spec::create_session(
     com_ptr<ISftpConsumer> consumer) const
 {
-    return make_shared<authenticated_session>(m_host, m_port, m_user, consumer);
+    return authenticated_session(m_host, m_port, m_user, consumer);
 }
 
 bool connection_spec::operator<(const connection_spec& other) const

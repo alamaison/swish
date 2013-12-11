@@ -35,7 +35,6 @@
 #include <comet/ptr.h>  // com_ptr
 
 #include <boost/test/unit_test.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <exception>
 #include <map>
@@ -49,7 +48,6 @@ using test::CConsumerStub;
 
 using comet::com_ptr;
 
-using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 
 using std::exception;
@@ -78,11 +76,11 @@ namespace {
         /**
          * Check that the given session responds sensibly to a request.
          */
-        predicate_result alive(shared_ptr<authenticated_session> session)
+        predicate_result alive(authenticated_session& session)
         {
             try
             {
-                session->get_sftp_filesystem().directory_iterator("/");
+                session.get_sftp_filesystem().directory_iterator("/");
 
                 predicate_result res(true);
                 res.message() << "Provider seems to be alive";
@@ -105,8 +103,8 @@ BOOST_FIXTURE_TEST_SUITE(
 
 BOOST_AUTO_TEST_CASE( create )
 {
-    shared_ptr<authenticated_session> session =
-        get_connection().create_session(Consumer());
+    authenticated_session session(
+        get_connection().create_session(Consumer()));
     BOOST_CHECK(alive(session));
 }
 
