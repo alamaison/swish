@@ -27,7 +27,6 @@
 
 #include "pidl_connection.hpp"
 
-#include "swish/connection/session_pool.hpp"
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
 #include "swish/provider/Provider.hpp" // CProvider
 
@@ -35,17 +34,13 @@
 
 #include <string>
 
-using swish::connection::authenticated_session;
 using swish::connection::connection_spec;
-using swish::connection::session_pool;
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
 using winapi::shell::pidl::apidl_t;
-
-using comet::com_ptr;
 
 using boost::make_shared;
 using boost::shared_ptr;
@@ -83,13 +78,6 @@ connection_spec connection_from_pidl(const apidl_t& pidl)
     params_from_pidl(pidl, user, host, port);
 
     return connection_spec(host, user, port);
-}
-
-
-shared_ptr<authenticated_session> session_from_pidl(
-    const apidl_t& pidl, com_ptr<ISftpConsumer> consumer)
-{
-    return session_pool().pooled_session(connection_from_pidl(pidl), consumer);
 }
 
 shared_ptr<sftp_provider> provider_from_pidl(const apidl_t& pidl)
