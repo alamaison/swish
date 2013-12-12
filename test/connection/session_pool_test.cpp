@@ -55,7 +55,6 @@ using test::CConsumerStub;
 using test::OpenSshFixture;
 
 using comet::com_ptr;
-using comet::bstr_t;
 using comet::thread;
 
 using boost::shared_ptr;
@@ -90,11 +89,11 @@ namespace { // private
         /**
          * Check that the given session responds sensibly to a request.
          */
-        predicate_result alive(shared_ptr<authenticated_session> session)
+        predicate_result alive(authenticated_session& session)
         {
             try
             {
-                session->get_sftp_filesystem().directory_iterator("/");
+                session.get_sftp_filesystem().directory_iterator("/");
 
                 predicate_result res(true);
                 res.message() << "Provider seems to be alive";
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE( new_session )
 
     BOOST_CHECK(!session_pool().has_session(spec));
 
-    shared_ptr<authenticated_session> session =
+    authenticated_session& session =
         session_pool().pooled_session(spec, Consumer());
 
     BOOST_CHECK(session_pool().has_session(spec));
@@ -144,7 +143,7 @@ BOOST_AUTO_TEST_CASE( unrelated_unaffected_by_creation )
 
     BOOST_CHECK(!session_pool().has_session(unrelated_spec));
 
-    shared_ptr<authenticated_session> session =
+    authenticated_session& session =
         session_pool().pooled_session(get_connection(), Consumer());
 
     BOOST_CHECK(!session_pool().has_session(unrelated_spec));
@@ -157,13 +156,13 @@ BOOST_AUTO_TEST_CASE( existing_session )
 {
     connection_spec spec(get_connection());
 
-    shared_ptr<authenticated_session> first_session =
+    authenticated_session& first_session =
         session_pool().pooled_session(spec, Consumer());
 
-    shared_ptr<authenticated_session> second_session = 
+    authenticated_session& second_session = 
         session_pool().pooled_session(spec, Consumer());
 
-    BOOST_CHECK(second_session == first_session);
+    BOOST_CHECK(&second_session == &first_session);
 
     BOOST_CHECK(alive(second_session));
 
@@ -191,7 +190,7 @@ private:
                 // its value, just that it succeeds.
                 session_pool().has_session(spec);
 
-                shared_ptr<authenticated_session> first_session =
+                authenticated_session& first_session =
                     session_pool().pooled_session(spec, m_fixture->Consumer());
 
                 // However, by this point it *must* be running
@@ -199,14 +198,14 @@ private:
 
                 BOOST_CHECK(m_fixture->alive(first_session));
 
-                shared_ptr<authenticated_session> second_session = 
+                authenticated_session& second_session = 
                     session_pool().pooled_session(spec, m_fixture->Consumer());
 
                 BOOST_CHECK(session_pool().has_session(spec));
 
                 BOOST_CHECK(m_fixture->alive(second_session));
 
-                BOOST_CHECK(second_session == first_session);
+                BOOST_CHECK(&second_session == &first_session);
             }
         }
         catch (const std::exception& e)
@@ -245,16 +244,12 @@ BOOST_AUTO_TEST_CASE( remove_session )
 {
     connection_spec spec(get_connection());
 
-    shared_ptr<authenticated_session> session =
+    authenticated_session& session =
         session_pool().pooled_session(spec, Consumer());
 
     session_pool().remove_session(spec);
 
     BOOST_CHECK(!session_pool().has_session(spec));
-
-    // Even though we removed the session from the pool, existing
-    // references should still be alive
-    BOOST_CHECK(alive(session));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

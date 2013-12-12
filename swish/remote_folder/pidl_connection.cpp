@@ -27,7 +27,6 @@
 
 #include "pidl_connection.hpp"
 
-#include "swish/connection/authenticated_session.hpp"
 #include "swish/connection/session_pool.hpp"
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
 #include "swish/provider/Provider.hpp" // CProvider
@@ -36,7 +35,6 @@
 
 #include <string>
 
-using swish::connection::authenticated_session;
 using swish::connection::connection_spec;
 using swish::connection::session_pool;
 using swish::host_folder::find_host_itemid;
@@ -91,10 +89,8 @@ shared_ptr<sftp_provider> provider_from_pidl(
 {
     connection_spec specification = connection_from_pidl(pidl);
 
-    shared_ptr<authenticated_session> session =
-        session_pool().pooled_session(specification, consumer);
-
-    return make_shared<CProvider>(boost::ref(*session));
+    return make_shared<CProvider>(
+        boost::ref(session_pool().pooled_session(specification, consumer)));
 }
 
 }} // namespace swish::remote_folder
