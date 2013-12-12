@@ -79,6 +79,7 @@ using boost::filesystem::wpath;
 using boost::function;
 using namespace boost::lambda;
 using boost::make_shared;
+using boost::ref;
 using boost::shared_ptr;
 
 using std::exception;
@@ -135,7 +136,7 @@ namespace {
 
     bool is_directory(
         const sftp_filesystem_item& file, const wpath& directory, 
-        shared_ptr<sftp_provider> provider)
+        sftp_provider& provider)
     {
         if (is_link(file))
         {
@@ -146,7 +147,7 @@ namespace {
 
             try
             {
-                sftp_filesystem_item target = provider->stat(
+                sftp_filesystem_item target = provider.stat(
                     link_path.in(), TRUE);
 
                 // TODO: consider what other properties we might want to
@@ -175,7 +176,7 @@ namespace {
 
     cpidl_t convert_directory_entry_to_pidl(
         const sftp_filesystem_item& file, const wpath& directory,
-        shared_ptr<sftp_provider> provider)
+        sftp_provider& provider)
     {
         return create_remote_itemid(
             file.filename().string(),
@@ -262,14 +263,15 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 
     function<bool(const sftp_filesystem_item&)> directory_filter =
         include_folders ||
-        !bind(is_directory, _1, m_directory, m_provider);
+        !bind(is_directory, _1, m_directory, ref(*m_provider));
 
     function<bool(const sftp_filesystem_item&)> non_directory_filter =
         include_non_folders ||
-        bind(is_directory, _1, m_directory, m_provider);
+        bind(is_directory, _1, m_directory, ref(*m_provider));
 
     function<cpidl_t(const sftp_filesystem_item&)> pidl_converter =
-        bind(convert_directory_entry_to_pidl, _1, m_directory, m_provider);
+        bind(
+            convert_directory_entry_to_pidl, _1, m_directory, ref(*m_provider));
 
     shared_ptr< vector<cpidl_t> > pidls = make_shared< vector<cpidl_t> >();
     boost::copy(
