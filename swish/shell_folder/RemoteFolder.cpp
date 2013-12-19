@@ -188,8 +188,8 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
     catch (...)
     {
         announce_last_exception(
-            hwnd, translate("Unable to access the directory"),
-            translate("You might not have permission."));
+            hwnd, translate(L"Unable to access the directory"),
+            translate(L"You might not have permission."));
         throw;
     }
 }
@@ -262,8 +262,8 @@ PIDLIST_RELATIVE CRemoteFolder::parse_display_name(
     catch (...)
     {
         announce_last_exception(
-            hwnd, translate("Path not recognised"),
-            translate("Check that the path was entered correctly."));
+            hwnd, translate(L"Path not recognised"),
+            translate(L"Check that the path was entered correctly."));
         throw;
     }
 }
@@ -472,8 +472,8 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
     catch (...)
     {
         announce_last_exception(
-            hwnd, translate("Unable to rename the item"),
-            translate("You might not have permission."));
+            hwnd, translate(L"Unable to rename the item"),
+            translate(L"You might not have permission."));
         throw;
     }
 }
@@ -800,9 +800,9 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
     {
         announce_last_exception(
             hwnd,
-            (cpidl > 1) ? translate("Unable to access the item") :
-                          translate("Unable to access the items"),
-            translate("You might not have permission."));
+            (cpidl > 1) ? translate(L"Unable to access the item") :
+                          translate(L"Unable to access the items"),
+            translate(L"You might not have permission."));
         throw;
     }
 }
@@ -851,8 +851,8 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
     catch (...)
     {
         announce_last_exception(
-            hwnd, translate("Unable to access the folder"),
-            translate("You might not have permission."));
+            hwnd, translate(L"Unable to access the folder"),
+            translate(L"You might not have permission."));
         throw;
     }
 }

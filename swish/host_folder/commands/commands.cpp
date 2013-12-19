@@ -90,7 +90,7 @@ public:
     virtual std::wstring title(
         const comet::com_ptr<IShellItemArray>& /*items*/) const
     {
-        return translate("SFTP Tasks");
+        return translate(L"SFTP Tasks");
     }
 
     virtual std::wstring icon(
@@ -103,7 +103,7 @@ public:
         const comet::com_ptr<IShellItemArray>& /*items*/) const
     {
         return translate(
-            "These tasks help you manage Swish SFTP connections.");
+            L"These tasks help you manage Swish SFTP connections.");
     }
 };
 

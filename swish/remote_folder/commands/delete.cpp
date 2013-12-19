@@ -232,8 +232,8 @@ const
     catch (...)
     {
         announce_last_exception(
-            hwnd_view, translate("Unable to delete the item"),
-            translate("You might not have permission."));
+            hwnd_view, translate(L"Unable to delete the item"),
+            translate(L"You might not have permission."));
         throw;
     }
 }

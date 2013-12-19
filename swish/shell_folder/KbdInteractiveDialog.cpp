@@ -71,7 +71,7 @@ LRESULT CKbdInteractiveDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
             Utf8StringToWideString(m_title).c_str());
     else
         this->SetWindowText(
-            translate("Keyboard-interactive request").str<wchar_t>().c_str());
+            translate(L"Keyboard-interactive request").str().c_str());
 
     // Get size of this dialogue box
     CRect rectDialog;

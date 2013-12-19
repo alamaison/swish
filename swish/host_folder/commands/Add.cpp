@@ -81,10 +81,10 @@ namespace {
 
 Add::Add(HWND hwnd, const apidl_t& folder_pidl) :
     Command(
-        translate("&Add SFTP Connection"), ADD_COMMAND_ID,
-        translate("Create a new SFTP connection with Swish."),
-        L"shell32.dll,-258", translate("&Add SFTP Connection..."),
-        translate("Add Connection")),
+        translate(L"&Add SFTP Connection"), ADD_COMMAND_ID,
+        translate(L"Create a new SFTP connection with Swish."),
+        L"shell32.dll,-258", translate(L"&Add SFTP Connection..."),
+        translate(L"Add Connection")),
     m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 BOOST_SCOPED_ENUM(Command::state) Add::state(

@@ -57,10 +57,10 @@ wstring CreateDirectoryOperation::title() const
 {
     return (wformat(
         translate(
-            "Top line of a transfer progress window saying which "
-            "file is being copied. {1} is replaced with the file path "
-            "and must be included in your translation.",
-            "Copying '{1}'"))
+            L"Top line of a transfer progress window saying which "
+            L"file is being copied. {1} is replaced with the file path "
+            L"and must be included in your translation.",
+            L"Copying '{1}'"))
         % m_source.relative_name()).str();
 }
 
@@ -68,10 +68,10 @@ wstring CreateDirectoryOperation::description() const
 {
     return (wformat(
         translate(
-            "Second line of a transfer progress window giving the destination "
-            "directory. {1} is replaced with the directory path and must be "
-            "included in your translation.",
-            "To '{1}'"))
+            L"Second line of a transfer progress window giving the destination "
+            L"directory. {1} is replaced with the directory path and must be "
+            L"included in your translation.",
+            L"To '{1}'"))
         % m_destination.root_name()).str();
 }
 

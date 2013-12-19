@@ -80,7 +80,7 @@ optional<wstring> CUserInteraction::prompt_for_password()
     {
         wstring password;
         if (password_prompt(
-                m_hwnd, translate("Prompt on password dialog", "Password:"),
+                m_hwnd, translate(L"Prompt on password dialog", L"Password:"),
                 password))
         {
             return password;
@@ -135,16 +135,16 @@ HRESULT on_confirm_overwrite(
     wstringstream message;
     
     message << wformat(
-        translate("The folder already contains a file named '%1%'"))
+        translate(L"The folder already contains a file named '%1%'"))
         % old_file;
     message << L"\n\n";
     message << wformat(
         translate(
-            "Would you like to replace the existing file\n\n\t%1%\n\n"
-            "with this one?\n\n\t%2%")) % old_file % new_file;
+            L"Would you like to replace the existing file\n\n\t%1%\n\n"
+            L"with this one?\n\n\t%2%")) % old_file % new_file;
 
     message_box::button_type::type button_clicked = message_box::message_box(
-        hwnd, message.str(), translate("File already exists"),
+        hwnd, message.str(), translate(L"File already exists"),
         message_box::box_type::yes_no, message_box::icon_type::question, 2);
 
     switch (button_clicked)
@@ -182,21 +182,21 @@ HRESULT on_hostkey_mismatch(
     if (!hwnd)
         BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
-    wstring title = translate("Mismatched host-key");
-    wstring instruction = translate("WARNING: the SSH host-key has changed!");
+    wstring title = translate(L"Mismatched host-key");
+    wstring instruction = translate(L"WARNING: the SSH host-key has changed!");
 
     wstringstream message;
     
     message << wformat(
         translate(
-            "The SSH host-key sent by '%1%' to identify itself doesn't match "
-            "the known key for this server.  This could mean a third-party "
-            "is pretending to be the computer you're trying to connect to "
-            "or the system administrator may have just changed the key."))
+            L"The SSH host-key sent by '%1%' to identify itself doesn't match "
+            L"the known key for this server.  This could mean a third-party "
+            L"is pretending to be the computer you're trying to connect to "
+            L"or the system administrator may have just changed the key."))
         % host;
     message << L"\n\n";
     message << translate(
-        "It is important to check this is the right key fingerprint:");
+        L"It is important to check this is the right key fingerprint:");
     message << wformat(L"\n\n        %1%    %2%") % key_type % key;
 
     task_dialog::task_dialog<HRESULT, best_taskdialog> td(
@@ -205,19 +205,19 @@ HRESULT on_hostkey_mismatch(
         boost::bind(return_hr, E_ABORT));
     td.add_button(
         translate(
-            "I trust this key: &update and connect\n"
-            "You won't have to verify this key again unless it changes"),
+            L"I trust this key: &update and connect\n"
+            L"You won't have to verify this key again unless it changes"),
         boost::bind(return_hr, S_OK));
     td.add_button(
         translate(
-            "I trust this key: &just connect\n"
-            "You will be warned about this key again next time you "
-            "connect"),
+            L"I trust this key: &just connect\n"
+            L"You will be warned about this key again next time you "
+            L"connect"),
         boost::bind(return_hr, S_FALSE));
     td.add_button(
         translate(
-            "&Cancel\n"
-            "Choose this option unless you are sure the key is correct"),
+            L"&Cancel\n"
+            L"Choose this option unless you are sure the key is correct"),
         boost::bind(return_hr, E_ABORT), true);
     return td.show();
 }
@@ -229,39 +229,39 @@ HRESULT on_hostkey_unknown(
     if (!hwnd)
         BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
-    wstring title = translate("Unknown host-key");
+    wstring title = translate(L"Unknown host-key");
 
     wstringstream message;
     
     message << wformat(
         translate(
-            "The server '%1%' has identified itself with an SSH host-key "
-            "whose fingerprint is:")) % host;
+            L"The server '%1%' has identified itself with an SSH host-key "
+            L"whose fingerprint is:")) % host;
     message << wformat(L"\n\n        %1%    %2%\n\n") % key_type % key;
     message << translate(
-        "If you are not expecting this key, a third-party may be pretending "
-        "to be the computer you're trying to connect to.");
+        L"If you are not expecting this key, a third-party may be pretending "
+        L"to be the computer you're trying to connect to.");
 
-    wstring instruction = translate("Verify unknown SSH host-key");
+    wstring instruction = translate(L"Verify unknown SSH host-key");
     task_dialog::task_dialog<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
         winapi::gui::task_dialog::icon_type::information, true,
         boost::bind(return_hr, E_ABORT));
     td.add_button(
         translate(
-            "I trust this key: &store and connect\n"
-            "You won't have to verify this key again unless it changes"),
+            L"I trust this key: &store and connect\n"
+            L"You won't have to verify this key again unless it changes"),
         boost::bind(return_hr, S_OK));
     td.add_button(
         translate(
-            "I trust this key: &just connect\n"
-            "You will be asked to verify the key again next time you "
-            "connect"),
+            L"I trust this key: &just connect\n"
+            L"You will be asked to verify the key again next time you "
+            L"connect"),
         boost::bind(return_hr, S_FALSE));
     td.add_button(
         translate(
-            "&Cancel\n"
-            "Choose this option unless you are sure the key is correct"),
+            L"&Cancel\n"
+            L"Choose this option unless you are sure the key is correct"),
         boost::bind(return_hr, E_ABORT), true);
     return td.show();
 }

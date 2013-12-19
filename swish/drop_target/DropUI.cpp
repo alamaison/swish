@@ -250,10 +250,10 @@ bool DropUI::can_overwrite(const wpath& target)
 
     wstringstream message;
     message << wformat(translate(
-        "This folder already contains a file named '{1}'."))
+        L"This folder already contains a file named '{1}'."))
         % target.filename();
     message << "\n\n";
-    message << translate("Would you like to replace it?");
+    message << translate(L"Would you like to replace it?");
 
     // If the caller has already displayed the progress dialog, we must
     // force-hide it as it gets in the way of other UI
@@ -261,7 +261,7 @@ bool DropUI::can_overwrite(const wpath& target)
 
     button_type::type button = message_box(
         (m_owner) ? m_owner->hwnd() : NULL,
-        message.str(), translate("Confirm File Replace"),
+        message.str(), translate(L"Confirm File Replace"),
         box_type::yes_no_cancel, icon_type::question);
     switch (button)
     {
@@ -283,10 +283,10 @@ void DropUI::handle_last_exception()
     if (m_owner)
     {
         announce_last_exception(
-            m_owner->hwnd(), translate("Unable to transfer files"),
+            m_owner->hwnd(), translate(L"Unable to transfer files"),
             translate(
-                "You might not have permission to write to this "
-                "directory."));
+                L"You might not have permission to write to this "
+                L"directory."));
     }
 
     throw;
@@ -329,7 +329,7 @@ auto_ptr<Progress> DropUI::progress()
     if (m_owner)
     {
         p = auto_ptr<Progress>(
-            new DropProgress(m_owner, translate("Progress", "Copying...")));
+            new DropProgress(m_owner, translate(L"Progress", L"Copying...")));
     }
     else
     {

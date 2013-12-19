@@ -91,7 +91,7 @@ public:
     virtual std::wstring title(
         const comet::com_ptr<IShellItemArray>& /*items*/) const
     {
-        return translate("File and Folder Tasks");
+        return translate(L"File and Folder Tasks");
     }
 
     virtual std::wstring icon(
@@ -103,7 +103,7 @@ public:
     virtual std::wstring tool_tip(
         const comet::com_ptr<IShellItemArray>& /*items*/) const
     {
-        return translate("These tasks help you manage your remote files.");
+        return translate(L"These tasks help you manage your remote files.");
     }
 };
 

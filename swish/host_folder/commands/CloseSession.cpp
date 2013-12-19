@@ -71,10 +71,10 @@ namespace {
 
 CloseSession::CloseSession(HWND hwnd, const apidl_t& folder_pidl) :
     Command(
-        translate("&Close SFTP connection"), CLOSE_SESSION_COMMAND_ID,
-        translate("Close the authenticated connection to the server."),
-        L"shell32.dll,-11", translate("&Close SFTP Connection..."),
-        translate("Close Connection")),
+        translate(L"&Close SFTP connection"), CLOSE_SESSION_COMMAND_ID,
+        translate(L"Close the authenticated connection to the server."),
+        L"shell32.dll,-11", translate(L"&Close SFTP Connection..."),
+        translate(L"Close Connection")),
     m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 BOOST_SCOPED_ENUM(Command::state) CloseSession::state(

@@ -81,10 +81,10 @@ namespace {
 
 Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
     Command(
-        translate("&Remove SFTP Connection"), REMOVE_COMMAND_ID,
-        translate("Remove a SFTP connection created with Swish."),
-        L"shell32.dll,-240", translate("&Remove SFTP Connection..."),
-        translate("Remove Connection")),
+        translate(L"&Remove SFTP Connection"), REMOVE_COMMAND_ID,
+        translate(L"Remove a SFTP connection created with Swish."),
+        L"shell32.dll,-240", translate(L"&Remove SFTP Connection..."),
+        translate(L"Remove Connection")),
     m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 BOOST_SCOPED_ENUM(Command::state) Remove::state(

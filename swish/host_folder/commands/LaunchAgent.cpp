@@ -94,16 +94,16 @@ namespace {
 LaunchAgent::LaunchAgent(HWND hwnd, const apidl_t& folder_pidl) :
    Command(
       translate(
-        "Title of command used to launch the SSH agent program",
-        "&Launch key agent"), ADD_COMMAND_ID,
-      translate("Launch Putty SSH key agent, Pageant."),
+        L"Title of command used to launch the SSH agent program",
+        L"&Launch key agent"), ADD_COMMAND_ID,
+      translate(L"Launch Putty SSH key agent, Pageant."),
       L"",
       translate(
-        "Title of command used to launch the SSH agent program",
-        "&Launch key agent"),
+        L"Title of command used to launch the SSH agent program",
+        L"&Launch key agent"),
       translate(
-        "Title of command used to launch the SSH agent program",
-        "Launch key agent")),
+        L"Title of command used to launch the SSH agent program",
+        L"Launch key agent")),
    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
 
 

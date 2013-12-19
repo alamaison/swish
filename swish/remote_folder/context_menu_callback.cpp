@@ -156,7 +156,7 @@ bool context_menu_callback::merge_context_menu(
         BOOL success = ::InsertMenuW(
             hmenu, first_item_index, MF_BYPOSITION, 
             minimum_id + MENU_OFFSET_OPEN,
-            wstring(translate("Open &link")).c_str());
+            wstring(translate(L"Open &link")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
                 enable_error_info(last_error()) << 
@@ -178,7 +178,7 @@ bool context_menu_callback::merge_context_menu(
         BOOL success = ::InsertMenuW(
             hmenu, first_item_index, MF_BYPOSITION, 
             minimum_id + MENU_OFFSET_OPEN,
-            wstring(translate("&Open")).c_str());
+            wstring(translate(L"&Open")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
                 enable_error_info(last_error()) << 
@@ -274,8 +274,8 @@ namespace {
             catch (...)
             {
                 announce_last_exception(
-                    hwnd_view, translate("Unable to open the link"),
-                    translate("You might not have permission."));
+                    hwnd_view, translate(L"Unable to open the link"),
+                    translate(L"You might not have permission."));
                 throw;
             }
 
@@ -380,8 +380,8 @@ namespace {
             catch (...)
             {
                 announce_last_exception(
-                    hwnd_view, translate("Unable to open the file"),
-                    translate("You might not have permission."));
+                    hwnd_view, translate(L"Unable to open the file"),
+                    translate(L"You might not have permission."));
                 throw;
             }
 

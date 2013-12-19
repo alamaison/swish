@@ -172,10 +172,10 @@ NewFolder::NewFolder(
     const provider_factory& provider,
     const consumer_factory& consumer) :
     Command(
-        translate("New &folder"), NEW_FOLDER_COMMAND_ID,
-        translate("Create a new, empty folder in the folder you have open."),
+        translate(L"New &folder"), NEW_FOLDER_COMMAND_ID,
+        translate(L"Create a new, empty folder in the folder you have open."),
         L"shell32.dll,-258", L"",
-        translate("Make a new folder")),
+        translate(L"Make a new folder")),
     m_folder_pidl(folder_pidl), m_provider_factory(provider),
     m_consumer_factory(consumer) {}
 
@@ -214,7 +214,7 @@ const
 
         // The default New Folder name may already exist in the folder. If it
         // does, we append a number to it to make it unique
-        wstring initial_name = translate("Initial name", "New folder");
+        wstring initial_name = translate(L"Initial name", L"New folder");
         initial_name = prefix_if_necessary(
             initial_name, m_provider_factory(m_consumer_factory()),
             absolute_path_from_swish_pidl(m_folder_pidl));
@@ -244,8 +244,8 @@ const
     catch (...)
     {
         announce_last_exception(
-            hwnd, translate("Could not create a new folder"),
-            translate("You might not have permission."));
+            hwnd, translate(L"Could not create a new folder"),
+            translate(L"You might not have permission."));
         throw;
     }
 }

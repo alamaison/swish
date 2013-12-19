@@ -80,11 +80,11 @@ namespace {
 About::About(HWND hwnd) :
    Command(
       translate(
-        "Title of command used to show the Swish 'About' box in the "
-        "Explorer Help menu",
-        "About &Swish"), ABOUT_COMMAND_ID,
+        L"Title of command used to show the Swish 'About' box in the "
+        L"Explorer Help menu",
+        L"About &Swish"), ABOUT_COMMAND_ID,
       translate(
-          "Displays version, licence and copyright information for Swish.")),
+          L"Displays version, licence and copyright information for Swish.")),
    m_hwnd(hwnd) {}
 
 BOOST_SCOPED_ENUM(Command::state) About::state(
@@ -102,7 +102,7 @@ const
     {
         snapshot = translate(
             "Placeholder version if actual version is not known",
-            "unknown").str<char>();
+            "unknown");
     }
 
     ostringstream message;

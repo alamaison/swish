@@ -139,8 +139,8 @@ void announce_error(
     td.extended_text(
         details, expansion_position::below,
         initial_expansion_state::default,
-        translate("Show &details (which may not be in your language)"),
-        translate("Hide &details"));
+        translate(L"Show &details (which may not be in your language)"),
+        translate(L"Hide &details"));
     td.show();
 }
 

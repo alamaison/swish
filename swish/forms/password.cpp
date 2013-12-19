@@ -61,11 +61,11 @@ namespace {
             m_form.add_control(m_password_box);
             m_form.add_control(label(prompt, 7, 7, 149, 8));
 
-            button ok(translate("OK"), 162, 7, 50, 16, true);
+            button ok(translate(L"OK"), 162, 7, 50, 16, true);
             ok.on_click().connect(bind(&PasswordForm::on_ok, this));
             m_form.add_control(ok);
 
-            button cancel(translate("Cancel"), 162, 26, 50, 16);
+            button cancel(translate(L"Cancel"), 162, 26, 50, 16);
             cancel.on_click().connect(m_form.killer());
             m_form.add_control(cancel);
             
