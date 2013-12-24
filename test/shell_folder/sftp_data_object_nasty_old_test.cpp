@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
-#include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/MockProvider.hpp"
 #include "test/common_boost/SwishPidlFixture.hpp"
 #include "exercise_data_object.h"
@@ -80,13 +79,10 @@ public:
     TestFixture()
     {
         // Create mock object coclass instances
-        m_pConsumer = com_ptr<ISftpConsumer>(new MockConsumer());
         m_pProvider = shared_ptr<sftp_provider>(new MockProvider());
     }
 
 protected:
-
-    com_ptr<ISftpConsumer> m_pConsumer;
     shared_ptr<sftp_provider> m_pProvider;
 };
 
@@ -106,8 +102,7 @@ BOOST_AUTO_TEST_CASE( Create )
     PCUITEMID_CHILD pidl_array[] = { pidl.get() };
 
     com_ptr<IDataObject> data_object = 
-        new CSftpDataObject(
-            1, pidl_array, root.get(), m_pProvider, m_pConsumer);
+        new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
 
     // Test CFSTR_SHELLIDLIST (PIDL array) format
     cpidl_t root_child = root.last_item();
@@ -135,7 +130,7 @@ BOOST_AUTO_TEST_CASE( CreateMulti )
     aPidl[2] = pidl3.get();
 
     com_ptr<IDataObject> data_object =
-        new CSftpDataObject(3, aPidl, root.get(), m_pProvider, m_pConsumer);
+        new CSftpDataObject(3, aPidl, root.get(), m_pProvider);
 
     // Test CFSTR_SHELLIDLIST (PIDL array) format
     cpidl_t root_child = root.last_item();
@@ -163,7 +158,7 @@ BOOST_AUTO_TEST_CASE( CreateMulti )
 BOOST_AUTO_TEST_CASE( QueryFormatsEmpty )
 {
     com_ptr<IDataObject> data_object = new CSftpDataObject(
-        0, NULL, NULL, m_pProvider, m_pConsumer);
+        0, NULL, NULL, m_pProvider);
 
     // Perform query tests
     _testQueryFormats(data_object, true);
@@ -176,7 +171,7 @@ BOOST_AUTO_TEST_CASE( QueryFormatsEmpty )
 BOOST_AUTO_TEST_CASE( EnumFormatsEmpty )
 {
     com_ptr<IDataObject> data_object = new CSftpDataObject(
-        0, NULL, NULL, m_pProvider, m_pConsumer);
+        0, NULL, NULL, m_pProvider);
 
     // Test enumerators of both GetData() and SetData() formats
     _testBothEnumerators(data_object, true);
@@ -194,7 +189,7 @@ BOOST_AUTO_TEST_CASE( QueryFormats )
 
     com_ptr<IDataObject> data_object = 
         new CSftpDataObject(
-            1, pidl_array, root.get(), m_pProvider, m_pConsumer);
+            1, pidl_array, root.get(), m_pProvider);
 
     // Perform query tests
     _testQueryFormats(data_object);
@@ -211,8 +206,7 @@ BOOST_AUTO_TEST_CASE( EnumFormats )
     PCUITEMID_CHILD pidl_array[] = { pidl.get() };
 
     com_ptr<IDataObject> data_object = 
-        new CSftpDataObject(
-            1, pidl_array, root.get(), m_pProvider, m_pConsumer);
+        new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
 
     // Test enumerators of both GetData() and SetData() formats
     _testBothEnumerators(data_object);
@@ -235,8 +229,7 @@ BOOST_AUTO_TEST_CASE( QueryFormatsMulti )
     aPidl[2] = pidl3.get();
 
     com_ptr<IDataObject> data_object =
-        new CSftpDataObject(
-            3, aPidl, root.get(), m_pProvider, m_pConsumer);
+        new CSftpDataObject(3, aPidl, root.get(), m_pProvider);
 
     // Perform query tests
     _testQueryFormats(data_object);
@@ -259,8 +252,7 @@ BOOST_AUTO_TEST_CASE( EnumFormatsMulti )
     aPidl[2] = pidl3.get();
 
     com_ptr<IDataObject> data_object =
-        new CSftpDataObject(
-            3, aPidl, root.get(), m_pProvider, m_pConsumer);
+        new CSftpDataObject(3, aPidl, root.get(), m_pProvider);
 
     // Test enumerators of both GetData() and SetData() formats
     _testBothEnumerators(data_object);
@@ -277,8 +269,7 @@ BOOST_AUTO_TEST_CASE( FullDirectoryTree )
     PCUITEMID_CHILD pidl_array[] = { pidl.get() };
 
     com_ptr<IDataObject> data_object =
-        new CSftpDataObject(
-            1, pidl_array, root.get(), m_pProvider, m_pConsumer);
+        new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
 
     // Test CFSTR_SHELLIDLIST (PIDL array) format.
     _testShellPIDLFolder(data_object, L"/");

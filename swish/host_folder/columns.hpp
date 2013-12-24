@@ -35,6 +35,7 @@
 #include <winapi/shell/pidl.hpp> // cpidl_t
 #include <winapi/shell/property_key.hpp> // property_key
 
+#include <boost/locale/encoding_utf.hpp> // utf_to_utf
 #include <boost/locale.hpp> // message
 
 #include <ShTypes.h> // SHCOLSTATEF
@@ -62,7 +63,11 @@ struct column_entry
     int m_avg_char_width;
     // @}
 
-    std::wstring title() const { return m_title; }
+    std::wstring title() const
+    {
+        return boost::locale::conv::utf_to_utf<wchar_t>(m_title.str());
+    }
+
     SHCOLSTATEF flags() const { return m_flags; }
     int format() const { return m_format; }
     int avg_char_width() const { return m_avg_char_width; }

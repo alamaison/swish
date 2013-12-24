@@ -48,8 +48,7 @@ public:
 
     virtual void execute_plan(
         DropActionCallback& callback,
-        boost::shared_ptr<swish::provider::sftp_provider> provider,
-        comet::com_ptr<ISftpConsumer> consumer) const = 0;
+        boost::shared_ptr<swish::provider::sftp_provider> provider) const = 0;
 };
 
 }}

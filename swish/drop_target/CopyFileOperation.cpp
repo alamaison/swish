@@ -107,10 +107,10 @@ namespace {
      */
     void copy_stream_to_remote_destination(
         com_ptr<IStream> local_stream, shared_ptr<sftp_provider> provider,
-        com_ptr<ISftpConsumer> consumer, const resolved_destination& target,
+        const resolved_destination& target,
         OperationCallback& callback)
     {
-        CSftpDirectory sftp_directory(target.directory(), provider, consumer);
+        CSftpDirectory sftp_directory(target.directory(), provider);
 
         cpidl_t file = create_remote_itemid(
             target.filename(), false, false, L"", L"", 0, 0, 0, 0,
@@ -138,7 +138,7 @@ namespace {
 
             wstringstream new_message;
             new_message <<
-                translate("Unable to create file on the server:") << L"\n";
+                translate(L"Unable to create file on the server:") << L"\n";
             new_message << provider_error.description();
             new_message << L"\n" << target.as_absolute_path();
 
@@ -232,10 +232,10 @@ std::wstring CopyFileOperation::title() const
 {
     return (wformat(
         translate(
-            "Top line of a transfer progress window saying which "
-            "file is being copied. {1} is replaced with the file path "
-            "and must be included in your translation.",
-            "Copying '{1}'"))
+            L"Top line of a transfer progress window saying which "
+            L"file is being copied. {1} is replaced with the file path "
+            L"and must be included in your translation.",
+            L"Copying '{1}'"))
         % m_source.relative_name()).str();
 }
 
@@ -243,23 +243,22 @@ std::wstring CopyFileOperation::description() const
 {
     return (wformat(
         translate(
-            "Second line of a transfer progress window giving the destination "
-            "directory. {1} is replaced with the directory path and must be "
-            "included in your translation.",
-            "To '{1}'"))
+            L"Second line of a transfer progress window giving the destination "
+            L"directory. {1} is replaced with the directory path and must be "
+            L"included in your translation.",
+            L"To '{1}'"))
         % m_destination.root_name()).str();
 }
 
 void CopyFileOperation::operator()(
-    OperationCallback& callback,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
+    OperationCallback& callback, shared_ptr<sftp_provider> provider) const
 {
     com_ptr<IStream> stream = stream_from_pidl(m_source.pidl());
 
     resolved_destination resolved_target(m_destination.resolve_destination());
 
     copy_stream_to_remote_destination(
-        stream, provider, consumer, resolved_target, callback);
+        stream, provider, resolved_target, callback);
 }
 
 Operation* CopyFileOperation::do_clone() const

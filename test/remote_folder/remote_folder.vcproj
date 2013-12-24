@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-Win32.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -84,7 +84,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Debug-x64.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -148,7 +148,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-Win32.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -212,7 +212,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-x64.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\boost_test_runner.vsprops;..\..\build\swish-Release-x64.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -281,10 +281,6 @@
 			RelativePathToProject=".\swish\remote_folder\remote_folder.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
-			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
-		/>
-		<ProjectReference
 			ReferencedProjectIdentifier="{EE5D0A77-AB9E-43DD-B72C-622FC2E327F5}"
 			RelativePathToProject=".\test\common_boost\common_boost.vcproj"
 		/>
@@ -296,10 +292,6 @@
 	<Files>
 		<File
 			RelativePath=".\columns_test.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\connection_test.cpp"
 			>
 		</File>
 		<File

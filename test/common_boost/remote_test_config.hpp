@@ -2,6 +2,8 @@
 
 #include "test/common_boost/helpers.hpp" // wstring output
 
+#include "swish/connection/connection_spec.hpp"
+
 #include <boost/lexical_cast.hpp> // lexical_cast
 
 #include <swish/utils.hpp> // environment_variable
@@ -103,6 +105,11 @@ public:
     std::wstring GetPassword() const
     {
         return m_password;
+    }
+
+    swish::connection::connection_spec as_connection_spec() const
+    {
+        return swish::connection::connection_spec(m_host, m_user, m_port);
     }
 
 private:

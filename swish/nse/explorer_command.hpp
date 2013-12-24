@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 #pragma once
 
 #include "swish/nse/data_object_util.hpp" // data_object_from_item_array
+#include "swish/nse/detail/command_state_conversion.hpp"
+                                               // command_state_to_expcmdstate
 
 #include <winapi/object_with_site.hpp> // object_with_site
 
@@ -264,15 +266,11 @@ private:
         const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow)
     const
     {
-        EXPCMDSTATE state = ECS_ENABLED;
         comet::com_ptr<IDataObject> data_object = 
             data_object_from_item_array(items);
 
-        if (m_command.disabled(data_object, ok_to_be_slow))
-            state |= ECS_DISABLED;
-        if (m_command.hidden(data_object, ok_to_be_slow))
-            state |= ECS_HIDDEN;
-        return state;
+        return detail::command_state_to_expcmdstate(
+            m_command.state(data_object, ok_to_be_slow));
     }
 
     EXPCMDFLAGS flags() const

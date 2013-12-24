@@ -1,6 +1,12 @@
+swish-0.7.4
+-Restored copy progress bar which had disappeared in 0.7.2.
+-Updated Welsh translation.
+
 swish-0.7.3
 -Fixed drag-and-drop crash on Windows 8.
+-Fixed timestamps so they are in user's timezone.
 -New Romanian translation.
+-Updated Korean translation.
 
 swish-0.7.2
 -Added direct downloading and installation of updates.

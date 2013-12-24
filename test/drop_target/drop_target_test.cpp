@@ -29,6 +29,7 @@
 #include "swish/shell_folder/shell.hpp"  // shell helper functions
 
 #include "test/common_boost/data_object_utils.hpp"  // DataObjects on zip
+#include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
 #include <boost/filesystem.hpp>
@@ -198,7 +199,7 @@ namespace { // private
             create_directory(target_directory);
 
             return new CDropTarget(
-                Provider(), Consumer(),
+                Provider(), 
                 absolute_directory_pidl(target_directory),
                 make_shared<CopyCallbackStub>());
         }
@@ -242,8 +243,8 @@ BOOST_AUTO_TEST_CASE( copy_single )
 
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     wpath expected = destination / local.filename();
     BOOST_REQUIRE(exists(expected));
@@ -271,8 +272,8 @@ BOOST_AUTO_TEST_CASE( copy_many )
 
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     vector<wpath>::const_iterator it;
     for (it = locals.begin(); it != locals.end(); ++it)
@@ -337,8 +338,8 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
 
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     wpath expected;
 
@@ -407,8 +408,8 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
 
     shared_ptr<CopyCallbackStub> cb(new CopyCallbackStub);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     wpath expected;
 
@@ -465,8 +466,8 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_yes )
 
     shared_ptr<AllowOverwrite> cb(new AllowOverwrite);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK(file_contents_correct(obstruction));
@@ -491,8 +492,8 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_no )
 
     shared_ptr<ForbidOverwrite> cb(new ForbidOverwrite);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     BOOST_CHECK(exists(obstruction));
     BOOST_CHECK_EQUAL(file_size(obstruction), 0); // still empty
@@ -524,8 +525,8 @@ BOOST_AUTO_TEST_CASE( copy_overwrite_larger )
 
     shared_ptr<AllowOverwrite> cb(new AllowOverwrite);
     copy_data_to_provider(
-        spdo, Provider(), Consumer(), absolute_directory_pidl(destination),
-        cb);
+        spdo, Provider(),
+        absolute_directory_pidl(destination), cb);
 
     BOOST_REQUIRE(exists(obstruction));
     BOOST_REQUIRE(file_contents_correct(obstruction));

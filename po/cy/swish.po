@@ -1,14 +1,15 @@
 # 
 # Translators:
-#   <rhysjones437@googlemail.com>, 2012.
+# Alexander Lamaison <alexander.lamaison@gmail.com>, 2013
+# rdj <rhysjones437@googlemail.com>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-11-18 21:20+0000\n"
-"Last-Translator: rdj <rhysjones437@googlemail.com>\n"
-"Language-Team: \n"
+"PO-Revision-Date: 2013-04-20 08:49+0000\n"
+"Last-Translator: Alexander Lamaison <alexander.lamaison@gmail.com>\n"
+"Language-Team: Welsh (http://www.transifex.com/projects/p/swish/language/cy/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -41,7 +42,7 @@ msgstr "I '{1}"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
-msgstr ""
+msgstr "Mae'r ffolder yn cynnwys y ffeil '{1}' yn barod"
 
 #: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
@@ -54,7 +55,7 @@ msgstr "Cadarnhewch y cyfnewidiad"
 #: ../../swish/drop_target/DropUI.cpp:366
 msgctxt "Progress"
 msgid "Copying..."
-msgstr "Copio..."
+msgstr "Adysgrifio..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
@@ -90,7 +91,7 @@ msgstr "Nodwch y wybodaeth amdano'r cyfrifiadur ac yr cyfrif hoffech chi cysyllt
 #: ../../swish/forms/add_host.cpp:155
 msgctxt "New Host"
 msgid "&Host:"
-msgstr ""
+msgstr "&Cynhaliwr"
 
 #: ../../swish/forms/add_host.cpp:159
 msgctxt "New Host"
@@ -106,7 +107,7 @@ msgstr "&Defnyddiwr:"
 msgid ""
 "Specify the directory on the server that you would like Swish to start the "
 "connection in:"
-msgstr ""
+msgstr "Nodwch pa cyfarwyddiadur ar y gwasanaethydd hoffwch Swish i ddechrau cysylltiad a"
 
 #: ../../swish/forms/add_host.cpp:173
 msgctxt "New Host"
@@ -119,7 +120,7 @@ msgstr "Er enghraifft: /Cartref/eichcyfeirenw"
 
 #: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
 msgid "Cancel"
-msgstr ""
+msgstr "Dirymu"
 
 #: ../../swish/forms/add_host.cpp:331
 msgid "The label cannot be longer than 30 characters."
@@ -127,19 +128,19 @@ msgstr "Ni all y label fod yn fwy na 30 llythyren o hyd."
 
 #: ../../swish/forms/add_host.cpp:335
 msgid "The host name is invalid."
-msgstr ""
+msgstr "Mae enw'r cynhaliwr yn annilys."
 
 #: ../../swish/forms/add_host.cpp:341
 msgid "The port is not valid (between 0 and 65535)."
-msgstr ""
+msgstr "Dydy'r porth ddim yn ddilys (rhwng 0 a 65535)"
 
 #: ../../swish/forms/add_host.cpp:345
 msgid "The username is invalid."
-msgstr ""
+msgstr "Mae'r cyfrifenw yn annilys."
 
 #: ../../swish/forms/add_host.cpp:349
 msgid "The path is invalid."
-msgstr ""
+msgstr "Mae'r llwybr yn annilys."
 
 #: ../../swish/forms/add_host.cpp:355
 msgid "A connection with the same label already exists. Please try another."
@@ -159,7 +160,7 @@ msgstr "OK"
 
 #: ../../swish/frontend/announce_error.cpp:136
 msgid "Show &details (which may not be in your language)"
-msgstr ""
+msgstr "Dangos &manylion (nid oes angen iddo fod yn eich iaith)"
 
 #: ../../swish/frontend/announce_error.cpp:137
 msgid "Hide &details"
@@ -167,7 +168,7 @@ msgstr "Cuddiwch &gwybodaeth"
 
 #: ../../swish/frontend/UserInteraction.cpp:195
 msgid "The folder already contains a file named '%1%'"
-msgstr ""
+msgstr "Mae'r ffolder yn cynnwy y ffeil o'r enw '%1%' yn barod"
 
 #: ../../swish/frontend/UserInteraction.cpp:200
 msgid ""
@@ -178,11 +179,11 @@ msgid ""
 "with this one?\n"
 "\n"
 "\t%2%"
-msgstr ""
+msgstr "Hoffech chi amnewid y ffeil presennol\n \n»%1%\n\ngyda?\n\n»%2% "
 
 #: ../../swish/frontend/UserInteraction.cpp:204
 msgid "File already exists"
-msgstr ""
+msgstr "Ffeil yn bodoli"
 
 #: ../../swish/frontend/UserInteraction.cpp:242
 msgid "Mismatched host-key"
@@ -263,7 +264,7 @@ msgstr "Enw"
 #: ../../swish/host_folder/columns.cpp:60
 msgctxt "Property"
 msgid "Host"
-msgstr ""
+msgstr "Cynhaliwr"
 
 #: ../../swish/host_folder/columns.cpp:63
 msgctxt "Property"
@@ -278,7 +279,7 @@ msgstr "Porth"
 #: ../../swish/host_folder/columns.cpp:69
 msgctxt "Property"
 msgid "Remote path"
-msgstr ""
+msgstr "Llwybr anghysbell"
 
 #: ../../swish/host_folder/columns.cpp:72
 msgctxt "Property"
@@ -378,12 +379,12 @@ msgstr "Grwp"
 #: ../../swish/remote_folder/columns.cpp:105
 msgctxt "Property"
 msgid "Owner ID"
-msgstr ""
+msgstr "Adnabyddiaeth Perchennog"
 
 #: ../../swish/remote_folder/columns.cpp:108
 msgctxt "Property"
 msgid "Group ID"
-msgstr ""
+msgstr "Adnabyddiaeth Grwp"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
@@ -402,7 +403,7 @@ msgstr "Methu agor y cysylltiad"
 #: ../../swish/remote_folder/commands/delete.cpp:232
 #: ../../swish/remote_folder/commands/NewFolder.cpp:240
 msgid "You might not have permission."
-msgstr ""
+msgstr "Efallai nid oes caniatad  ganddoch chi"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
@@ -418,7 +419,7 @@ msgstr ""
 
 #: ../../swish/remote_folder/commands/delete.cpp:231
 msgid "Unable to delete the item"
-msgstr ""
+msgstr "Methu dileu'r eitem"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:168
 msgid "New &folder"
@@ -443,23 +444,23 @@ msgstr ""
 
 #: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
 msgid "Keyboard-interactive request"
-msgstr ""
+msgstr "Cais bysyllfwrdd rhyngweithiol"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:182
 msgid "Unable to access the directory"
-msgstr ""
+msgstr "Methu cyrchu y cyfarwyddiadur"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:255
 msgid "Path not recognised"
-msgstr ""
+msgstr "Llwybr heb eu cydnabod"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:256
 msgid "Check that the path was entered correctly."
-msgstr ""
+msgstr "Gwiriwch bod y llwybr wedi ei mewnbynnu yn gywir."
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:377
 msgid "Unable to rename the item"
-msgstr ""
+msgstr "Methu ailenwi'r eitem"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:704
 msgid "Unable to access the item"
@@ -471,4 +472,4 @@ msgstr "Methu agor y gwrthrychau"
 
 #: ../../swish/shell_folder/RemoteFolder.cpp:732
 msgid "Unable to access the folder"
-msgstr ""
+msgstr "Methu cyrchu'r ffolder"

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include <comet/ptr.h> // com_ptr
 #include <comet/uuid_fwd.h> // uuid_t
 
+#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
 #include <boost/function.hpp> // function
 #include <boost/preprocessor.hpp> // creating variadic pass-through contructors
 
@@ -71,6 +72,14 @@ public:
         const comet::com_ptr<IDataObject>& data_object,
         const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
 
+
+    // For any of them methods that take a data_object, the implementation
+    // does what is appropriate for a situation where selection information
+    // is not available.
+    // This differs from the situation where it is known that no objects
+    // are selected.  In that case, a data_object is provided, but it renders
+    // no items.
+
     /** @name Attributes. */
     // @{
     const comet::uuid_t& guid() const;
@@ -93,10 +102,15 @@ public:
 
     /** @name State. */
     // @{
-    virtual bool disabled(
-        const comet::com_ptr<IDataObject>& data_object,
-        bool ok_to_be_slow) const = 0;
-    virtual bool hidden(
+    BOOST_SCOPED_ENUM_START(state)
+    {
+        enabled,
+        disabled,
+        hidden
+    };
+    BOOST_SCOPED_ENUM_END
+
+    virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
         bool ok_to_be_slow) const = 0;
     // @}
@@ -120,69 +134,11 @@ private:
     explicit classname(BOOST_PP_ENUM_BINARY_PARAMS(N, A, a)) \
         : initialiser(BOOST_PP_ENUM_PARAMS(N, a)) {}
 
-template<typename CommandImpl>
-class MenuCommandTitleAdapter
-{
-public:
-
-    // We aggregate rather than inherit because the latter can lead to a stack
-    // overflow if the superclass calls title() in its implementation of
-    // menu_title()
-
-// Define pass-through contructors with variable numbers of arguments
-#define BOOST_PP_LOCAL_MACRO(N) \
-    COMMAND_ADAPTER_VARIADIC_CONSTRUCTOR( \
-        N, MenuCommandTitleAdapter, m_inner)
-
-#define BOOST_PP_LOCAL_LIMITS (0, COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS)
-#include BOOST_PP_LOCAL_ITERATE()
-
-    std::wstring title(const comet::com_ptr<IDataObject>& data_object) const
-    {
-        return m_inner.menu_title(data_object);
-    }
-
-    // The rest of the methods just forward to the inner
-    
-    void operator()(
-        const comet::com_ptr<IDataObject>& data_object,
-        const comet::com_ptr<IBindCtx>& bind_ctx)
-    { m_inner(data_object, bind_ctx); }
-
-    const comet::uuid_t& guid() const { return m_inner.guid(); }
-    std::wstring tool_tip(
-        const comet::com_ptr<IDataObject>& data_object) const
-    { return m_inner.tool_tip(data_object); }
-
-    std::wstring icon_descriptor(
-        const comet::com_ptr<IDataObject>& data_object) const
-    { return m_inner.icon_descriptor(data_object); }
-
-    std::wstring menu_title(
-        const comet::com_ptr<IDataObject>& data_object) const
-    { return m_inner.menu_title(data_object); }
-
-    std::wstring webtask_title(
-        const comet::com_ptr<IDataObject>& data_object) const
-    { return m_inner.webtask_title(data_object); }
-
-    bool disabled(
-        const comet::com_ptr<IDataObject>& data_object,
-        bool ok_to_be_slow) const
-    { return m_inner.disabled(data_object, ok_to_be_slow); }
-
-    bool hidden(
-        const comet::com_ptr<IDataObject>& data_object,
-        bool ok_to_be_slow) const
-    { return m_inner.hidden(data_object, ok_to_be_slow); }
-
-private:
-    CommandImpl m_inner;
-};
-
-// TODO: This class should be changed like the one above to not use inheritance
-//       but, at the moment, other parts of the code rely on being able to pass
-//       commands with extra methods and have them available
+// TODO: This class should be changed to use aggregation rather than
+// inheritance because the latter can lead to a stack overflow if the
+// superclass calls title() in its implementation of webtask_title()
+// At the moment, other parts of the code rely on being able to pass
+// commands with extra methods and have them available
 template<typename CommandImpl>
 class WebtaskCommandTitleAdapter : public CommandImpl
 {

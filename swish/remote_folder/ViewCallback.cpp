@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/remote_folder/commands/commands.hpp" // NewFolder
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // provider_from_pidl
 
 #include <winapi/error.hpp> // last_error
 
@@ -42,7 +42,7 @@
 using swish::frontend::CUserInteraction;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUIElement;
-using swish::remote_folder::connection_from_pidl;
+using swish::remote_folder::provider_from_pidl;
 using swish::remote_folder::commands::remote_folder_task_pane_tasks;
 using swish::remote_folder::commands::remote_folder_task_pane_titles;
 
@@ -168,7 +168,7 @@ bool CViewCallback::on_get_webview_tasks(
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
         remote_folder_task_pane_tasks(
             m_hwnd_view, m_folder_pidl, ole_site(),
-            bind(connection_from_pidl, m_folder_pidl, m_hwnd_view),
+            bind(provider_from_pidl, m_folder_pidl, _1, _2),
             bind(&consumer, m_hwnd_view));
 
     tasks_out.pEnumExtraTasks = commands.first.detach();

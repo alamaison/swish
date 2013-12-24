@@ -253,10 +253,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\KeyboardInteractive.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\libssh2_sftp_filesystem_item.cpp"
 				>
 			</File>
@@ -300,18 +296,6 @@
 				RelativePath=".\Provider.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\Session.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SessionFactory.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SftpStream.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -319,23 +303,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\KeyboardInteractive.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\libssh2_sftp_filesystem_item.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\Provider.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Session.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SessionFactory.hpp"
 				>
 			</File>
 			<File
@@ -351,7 +323,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SftpStream.hpp"
+				RelativePath=".\ticketed_stream.hpp"
 				>
 			</File>
 		</Filter>

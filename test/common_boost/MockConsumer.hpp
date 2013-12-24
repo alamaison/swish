@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,12 +29,14 @@
 #pragma once
 
 #include "swish/provider/sftp_provider.hpp"
+#include "swish/utils.hpp" // WideStringToUtf8String
 
 #include <comet/bstr.h> // bstr_t
-#include <comet/bstr.h> // bstr_t
+#include <comet/error.h> // com_error
 #include <comet/safearray.h>
 #include <comet/server.h> // simple_object
 
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/test/test_tools.hpp> // BOOST_ERROR
 
@@ -62,13 +64,11 @@ public:
      * Possible behaviours of mock password request handler OnPasswordRequest.
      */
     enum PasswordBehaviour {
-        EmptyPassword,    ///< Return an empty BSTR (not NULL, "")
+        EmptyPassword,    ///< Return an empty string
         CustomPassword,   ///< Return the string set with SetPassword
         WrongPassword,    ///< Return a very unlikely sequence of characters
-        NullPassword,     ///< Return NULL and S_OK (catastrophic failure)
-        FailPassword,     ///< Return E_FAIL
-        AbortPassword,    ///< Return E_ABORT (simulate user cancelled)
-        ThrowPassword     ///< Throw exception if password requested
+        FailPassword,     ///< Throw E_FAIL exception if password requested
+        AbortPassword,    ///< Return unitialised optional indicating abort.
     };
 
     /**
@@ -79,18 +79,29 @@ public:
         EmptyResponse,    ///< Return an empty BSTR (not NULL, "")
         CustomResponse,   ///< Return the string set with SetPassword
         WrongResponse,    ///< Return a very unlikely sequence of characters
-        NullResponse,     ///< Return NULL and S_OK (catastrophic failure)
-        FailResponse,     ///< Return E_FAIL
+        FailResponse,     ///< Throw exception if kb-interaction requested
         AbortResponse,    ///< Return E_ABORT (simulate user cancelled)
-        ThrowResponse     ///< Throw exception if kb-interaction requested
+    };
+
+    /**
+     * Possible behaviours of mock public-key file requests.
+     */
+    enum PublicKeyBehaviour {
+        EmptyKeys,    ///< Return an empty BSTR (not NULL, "")
+        CustomKeys,   ///< Return the strings set with SetKeys
+        WrongKeys,    ///< Return the wrong, but existing, key files
+        InvalidKeys,  ///< Return key files that don't exist
+        FailKeys,     ///< Throw E_FAIL exceptionn if keys requested.
+        AbortKeys,    ///< Return unitialised optional indicating abort.
     };
 
     MockConsumer()
         :
-          m_password_behaviour(ThrowPassword),
+          m_password_behaviour(FailPassword),
           m_password_attempt_count(0),
           m_password_attempt_count_max(1),
-          m_keyboard_interative_behaviour(ThrowResponse),
+          m_keyboard_interative_behaviour(FailResponse),
+          m_pubkey_behaviour(FailKeys),
           m_ki_attempt_count(0),
           m_ki_attempt_count_max(1),
           m_confirm_overwrite_behaviour(PreventOverwrite),
@@ -122,141 +133,141 @@ public:
         m_ki_attempt_count_max = max;
     }
 
+    void set_key_files(
+        const std::string& private_key, const std::string& public_key)
+    {
+        m_private_key_file = private_key;
+        m_public_key_file = public_key;
+    }
+
+    void set_pubkey_behaviour(PublicKeyBehaviour behaviour)
+    {
+        m_pubkey_behaviour = behaviour;
+    }
+
     void set_confirm_overwrite_behaviour(ConfirmOverwriteBehaviour behaviour)
     {
         m_confirm_overwrite_behaviour = behaviour;
     }
 
-    bool confirmed_overwrite() const { return m_confirmed_overwrite; }
+    bool was_asked_to_confirm_overwrite() const
+    {
+        return m_confirmed_overwrite;
+    }
 
     // ISftpConsumer methods
-    HRESULT OnPasswordRequest(BSTR request, BSTR *password_out)
+    virtual boost::optional<std::wstring> prompt_for_password()
     {
         ++m_password_attempt_count;
-        *password_out = NULL;
-        if (m_password.empty())
-            return E_NOTIMPL;
-
-        BOOST_CHECK_GT(::SysStringLen(request), 0U);
         
         // Perform chosen test behaviour
         // The three password cases which should never succeed will try to send
         // their 'reply' up to m_nMaxPassword time to simulate a user repeatedly
         // trying the wrong password and then giving up. 
         if (m_password_attempt_count > m_password_attempt_count_max)
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(
+                comet::com_error("Too many attempts", E_FAIL));
 
-        comet::bstr_t password;
         switch (m_password_behaviour)
         {
         case CustomPassword:
-            password = m_password;
-            break;
+            return m_password;
         case WrongPassword:
-            password = L"WrongPasswordXyayshdkhjhdk";
-            break;
+            return L"WrongPasswordXyayshdkhjhdk";
         case EmptyPassword:
             // leave password blank
-            break;
-        case NullPassword:
-            *password_out = NULL;
-            return S_OK;
+            return std::wstring();
         case FailPassword:
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(
+                comet::com_error("Mock fail behaviour", E_FAIL));
         case AbortPassword:
-            return E_ABORT;
-        case ThrowPassword:
-            BOOST_FAIL("Unexpected call to " __FUNCTION__);
-            return E_FAIL;
+            return boost::optional<std::wstring>();
         default:
             BOOST_FAIL(
                 "Unreachable: Unrecognised OnPasswordRequest() behaviour");
-            return E_UNEXPECTED;
+            return boost::optional<std::wstring>();
         }
-
-        *password_out = password.detach();
-        return S_OK;
     }
 
-    HRESULT OnKeyboardInteractiveRequest(
-        BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
-        SAFEARRAY * prompts, SAFEARRAY * show_responses,
-        SAFEARRAY ** responses_out)
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files()
+    {
+        switch (m_pubkey_behaviour)
+        {
+        case CustomKeys:
+            return std::make_pair(m_private_key_file, m_public_key_file);
+        case WrongKeys:
+            return std::make_pair(m_public_key_file, m_private_key_file);
+        case InvalidKeys:
+            return std::make_pair("HumptyDumpty", "SatOnAWall");
+        case EmptyKeys:
+            return std::make_pair("", "");
+        case FailKeys:
+            BOOST_THROW_EXCEPTION(
+                comet::com_error("Mock fail behaviour", E_FAIL));
+        case AbortKeys:
+            return boost::optional<
+                std::pair<boost::filesystem::path, boost::filesystem::path>>();
+        default:
+            BOOST_FAIL("Unreachable: Unrecognised "  __FUNCTION__ " behaviour");
+            return boost::optional<
+                std::pair<boost::filesystem::path, boost::filesystem::path>>();
+        }
+    }
+
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& /*title*/, const std::string& /*instructions*/,
+        const std::vector<std::pair<std::string, bool>>& prompts)
     {
         ++m_ki_attempt_count;
 
-        comet::safearray_t<comet::bstr_t> prompts_array
-            = comet::safearray_t<comet::bstr_t>::create_const_reference(
-                prompts);
-        comet::safearray_t<comet::variant_bool_t> show_responses_array
-            = comet::safearray_t<comet::bstr_t>::create_const_reference(
-                show_responses);
-
-        BOOST_FOREACH(comet::bstr_t prompt, prompts_array)
+        typedef std::pair<std::string, bool> prompt_pair;
+        BOOST_FOREACH(const prompt_pair& prompt, prompts)
         {
-            BOOST_CHECK_GT(prompt.size(), 0U);
+            BOOST_CHECK_GT(prompt.first.size(), 0U);
         }
-
-        BOOST_CHECK_EQUAL(
-            prompts_array.lower_bound(), show_responses_array.lower_bound());
-        BOOST_CHECK_EQUAL(prompts_array.size(), show_responses_array.size());
 
         // Perform chosen test behaviour
         // The three response cases which should never succeed will try to send
-        // their 'reply' up to m_nMaxKbdAttempts time to simulate a user repeatedly
-        // trying the wrong password and then giving up.
+        // their 'reply' up to m_nMaxKbdAttempts time to simulate a user
+        // repeatedly trying the wrong password and then giving up.
         if (m_ki_attempt_count > m_ki_attempt_count_max)
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(std::exception("Too many kb-int attempts"));
 
-        comet::bstr_t response;
+        std::string response;
         switch (m_keyboard_interative_behaviour)
         {
         case CustomResponse:
-            response = m_password;
+            response = swish::utils::WideStringToUtf8String(m_password);
             break;
         case WrongResponse:
-            response = L"WrongPasswordXyayshdkhjhdk";
+            response = "WrongPasswordXyayshdkhjhdk";
             break;
         case EmptyResponse:
             // leave response empty
             break;
-        case NullResponse:
-            *responses_out = NULL;
-            return S_OK;
         case FailResponse:
-            return E_FAIL;
+            BOOST_THROW_EXCEPTION(std::exception("Mock fail behaviour"));
         case AbortResponse:
-            return E_ABORT;
-        case ThrowResponse:
-            BOOST_FAIL("Unexpected call to " __FUNCTION__);
-            return E_FAIL;
+            return boost::optional<std::vector<std::string>>();
         default:
             BOOST_FAIL("Unreachable: Unrecognised "
                 "OnKeyboardInteractiveRequest() behaviour");
-            return E_UNEXPECTED;
+            BOOST_THROW_EXCEPTION(
+                std::exception("Unrecognised mock behaviour"));
         }
 
-        // Create responses.  Return password BSTR as first response.  Any other 
+        std::vector<std::string> responses;
+        // Create responses.  Return password as first response.  Any other 
         // prompts are responded to with an empty string.
-        comet::safearray_t<comet::bstr_t> responses;
         responses.push_back(response);
-        while (responses.size() < prompts_array.size())
+        while (responses.size() < prompts.size())
         {
-            responses.push_back(comet::bstr_t());
+            responses.push_back("");
         }
 
-        *responses_out = responses.detach();
-        return S_OK;
-    }
-
-    HRESULT OnPrivateKeyFileRequest(BSTR * /*pbstrPrivateKeyFile*/)
-    {
-        return E_NOTIMPL;
-    }
-
-    HRESULT OnPublicKeyFileRequest(BSTR * /*pbstrPublicKeyFile*/)
-    {
-        return E_NOTIMPL;
+        return responses;
     }
 
     HRESULT OnConfirmOverwrite(
@@ -294,15 +305,18 @@ private:
     PasswordBehaviour m_password_behaviour;
     int m_password_attempt_count;
     int m_password_attempt_count_max;
+    std::wstring m_password;
 
     KeyboardInteractiveBehaviour m_keyboard_interative_behaviour;
     int m_ki_attempt_count;
     int m_ki_attempt_count_max;
 
+    PublicKeyBehaviour m_pubkey_behaviour;
+    std::string m_public_key_file;
+    std::string m_private_key_file;
+
     ConfirmOverwriteBehaviour m_confirm_overwrite_behaviour;
     bool m_confirmed_overwrite;
-
-    std::wstring m_password;
 };
 
 } // namespace test

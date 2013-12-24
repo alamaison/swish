@@ -74,6 +74,35 @@ namespace drop_target {
 namespace {
 
     /**
+     * Drain any messages in the queue.
+     */
+    void do_events()
+    {
+        MSG msg;
+        BOOL result;
+
+        while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            result = ::GetMessage(&msg, NULL, 0, 0);
+            if (result == 0) // WM_QUIT
+            {                
+                ::PostQuitMessage(msg.wParam);
+                break;
+            }
+            else if (result == -1)
+            {
+                return;
+            }
+            else 
+            {
+                ::TranslateMessage(&msg);
+                ::DispatchMessage(&msg);
+            }
+        }
+    }
+    
+
+    /**
      * Exception-safe lifetime manager for an IProgressDialog object.
      *
      * Calls StartProgressDialog when created and StopProgressDialog when
@@ -96,12 +125,27 @@ namespace {
             return m_inner.user_cancelled();
         }
 
+        // Because we are no longer doing the transfer in a different COM 
+        // apartment, which would pump messages during the call, the UI blocks
+        // on the drop.  That includes not showing the progress dialog.
+        //
+        // Therefore, we pump outstanding messages every time there is
+        // an update.  I don't think this it the right solution, but we can't
+        // run the progress dialog in a different thread as that breaks
+        // the windows rules.
+        //
+        // The UI is still not wonderfully responsive because it can only
+        // update a little each time the progress is updated.  We may be able
+        // to do better once we use libssh2's non-blocking API as then we
+        // can pump messages more frequently.
+
         /**
          * Set the indexth line of the display to the given text.
          */
         void line(DWORD index, const wstring& text)
         {
             m_inner.line(index, text);
+            do_events();
         }
 
         /**
@@ -112,6 +156,7 @@ namespace {
         void line_path(DWORD index, const wstring& text)
         {
             m_inner.line_compress_paths_if_needed(index, text);
+            do_events();
         }
 
         /**
@@ -120,6 +165,7 @@ namespace {
         void update(ULONGLONG so_far, ULONGLONG out_of)
         {
             m_inner.update(so_far, out_of);
+            do_events();
         }
 
         /**
@@ -134,6 +180,7 @@ namespace {
             optional< window<wchar_t> > window = m_inner.window();
             if (window)
                 window->enable(false);
+            do_events();
         }
 
         /**
@@ -149,6 +196,7 @@ namespace {
             optional< window<wchar_t> > window = m_inner.window();
             if (window)
                 window->enable(true);
+            do_events();
         }
 
     private:
@@ -202,10 +250,10 @@ bool DropUI::can_overwrite(const wpath& target)
 
     wstringstream message;
     message << wformat(translate(
-        "This folder already contains a file named '{1}'."))
+        L"This folder already contains a file named '{1}'."))
         % target.filename();
     message << "\n\n";
-    message << translate("Would you like to replace it?");
+    message << translate(L"Would you like to replace it?");
 
     // If the caller has already displayed the progress dialog, we must
     // force-hide it as it gets in the way of other UI
@@ -213,7 +261,7 @@ bool DropUI::can_overwrite(const wpath& target)
 
     button_type::type button = message_box(
         (m_owner) ? m_owner->hwnd() : NULL,
-        message.str(), translate("Confirm File Replace"),
+        message.str(), translate(L"Confirm File Replace"),
         box_type::yes_no_cancel, icon_type::question);
     switch (button)
     {
@@ -235,10 +283,10 @@ void DropUI::handle_last_exception()
     if (m_owner)
     {
         announce_last_exception(
-            m_owner->hwnd(), translate("Unable to transfer files"),
+            m_owner->hwnd(), translate(L"Unable to transfer files"),
             translate(
-                "You might not have permission to write to this "
-                "directory."));
+                L"You might not have permission to write to this "
+                L"directory."));
     }
 
     throw;
@@ -246,7 +294,7 @@ void DropUI::handle_last_exception()
 
 namespace {
 
-class DummyProgress
+class DummyProgress : public Progress
 {
 public:
     virtual bool user_cancelled()
@@ -281,7 +329,7 @@ auto_ptr<Progress> DropUI::progress()
     if (m_owner)
     {
         p = auto_ptr<Progress>(
-            new DropProgress(m_owner, translate("Progress", "Copying...")));
+            new DropProgress(m_owner, translate(L"Progress", L"Copying...")));
     }
     else
     {

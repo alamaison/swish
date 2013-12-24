@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011, 2012
+    Copyright (C) 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -204,7 +204,7 @@ BOOST_FIXTURE_TEST_SUITE(sftp_data_object_tests, DataObjectFixture)
 BOOST_AUTO_TEST_CASE( create )
 {
     com_ptr<IDataObject> data_object = new CSftpDataObject(
-        0, NULL, sandbox_pidl().get(), Provider(), Consumer());
+        0, NULL, sandbox_pidl().get(), Provider());
     BOOST_REQUIRE(data_object);
 }
 

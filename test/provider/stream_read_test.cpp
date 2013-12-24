@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@
 
     @endif
 */
-
-#include "swish/provider/SftpStream.hpp"  // Test subject
 
 #include "test/provider/StreamFixture.hpp"
 #include "test/common_boost/helpers.hpp"
@@ -98,7 +96,7 @@ namespace { // private
          */
         com_ptr<IStream> GetReadStream()
         {
-            return GetStream(CSftpStream::read);
+            return GetStream(std::ios_base::in);
         }
 
         /**

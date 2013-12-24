@@ -76,7 +76,7 @@ namespace {
 
     variant_t net_drive_returner(const cpidl_t& /*pidl*/)
     {
-        return translate("FileType", "Network Drive").str<wchar_t>();
+        return translate(L"FileType", L"Network Drive").str();
     }
 
     variant_t label_getter(const cpidl_t& pidl)

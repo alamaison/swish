@@ -27,59 +27,41 @@
 
 #include "ViewCallback.hpp"
 
-#include "swish/frontend/commands/About.hpp"
-#include "swish/host_folder/commands/Add.hpp"
-#include "swish/host_folder/commands/LaunchAgent.hpp"
-#include "swish/host_folder/commands/Remove.hpp"
 #include "swish/host_folder/commands/commands.hpp" // host commands
-#include "swish/nse/Command.hpp" // MenuCommandTitleAdapter
+#include "swish/utils.hpp" // Utf8StringToWideString
+#include "swish/version/version.hpp" // release_version
 
 #include <winapi/error.hpp> // last_error
-#include <winapi/gui/menu/basic_menu.hpp> // find_first_item_with_id
-#include <winapi/gui/menu/button/string_button_description.hpp>
-#include <winapi/gui/menu/item/command_item_description.hpp>
-#include <winapi/gui/menu/item/command_item.hpp>
-#include <winapi/gui/menu/item/item_state.hpp> // selectability
-#include <winapi/gui/menu/item/separator_item.hpp>
-#include <winapi/gui/menu/item/sub_menu_item.hpp>
 #include <winapi/shell/services.hpp> // shell_browser, shell_view
-#include <winapi/trace.hpp> // trace
+#include <winapi/window/window.hpp>
 
-#include <boost/exception/diagnostic_information.hpp> // diagnostic_information
-#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
-#include <boost/lambda/lambda.hpp> // _1
+#include <boost/exception/errinfo_api_function.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <algorithm> // find_if
 #include <cassert> // assert
-#include <stdexcept> // logic_error
 #include <string>
+#include <utility> // pair
 
-using swish::frontend::winsparkle_shower;
-using swish::frontend::commands::About;
-using swish::host_folder::commands::Add;
-using swish::host_folder::commands::LaunchAgent;
-using swish::host_folder::commands::Remove;
 using swish::host_folder::commands::host_folder_task_pane_tasks;
 using swish::host_folder::commands::host_folder_task_pane_titles;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUIElement;
-using swish::nse::MenuCommandTitleAdapter;
+using swish::release_version;
+using swish::utils::Utf8StringToWideString;
 
 using comet::com_ptr;
 
-using namespace winapi::gui::menu;
 using winapi::last_error;
 using winapi::shell::pidl::apidl_t;
 using winapi::shell::shell_browser;
-using winapi::shell::shell_view;
-using winapi::trace;
+using winapi::shell::shell_view;;
+using winapi::window::window;
+using winapi::window::window_handle;
 
-using boost::diagnostic_information;
 using boost::enable_error_info;
 using boost::errinfo_api_function;
 
-using std::find_if;
+using std::auto_ptr;
 using std::pair;
 using std::wstring;
 
@@ -93,68 +75,6 @@ namespace swish {
 namespace host_folder {
 
 namespace {
-
-    // Menu command ID offsets for Explorer menus
-    enum MENUOFFSET
-    {
-        MENUIDOFFSET_FIRST = 0,
-        MENUIDOFFSET_ADD = MENUIDOFFSET_FIRST,
-        MENUIDOFFSET_REMOVE,
-        MENUIDOFFSET_LAUNCH_AGENT,
-        MENUIDOFFSET_ABOUT,
-        MENUIDOFFSET_LAST
-    };
-
-    template<typename DescriptionType, typename HandleCreator>
-    item item_from_menu(
-        const basic_menu<DescriptionType, HandleCreator>& parent_menu,
-        UINT menu_id)
-    {
-        return *find_first_item_with_id(
-            parent_menu.begin(), parent_menu.end(), menu_id);
-    }
-
-    /**
-     * Get handle to explorer 'Tools' menu.
-     *
-     * The menu we want to insert into is actually the @e submenu of the
-     * Tools menu @e item.  Confusing!
-     */
-    item tools_menu_with_fallback(const menu_bar& parent_menu)
-    {
-        try
-        {
-            return item_from_menu(parent_menu, FCIDM_MENU_TOOLS);
-        }
-        catch (const std::exception& e)
-        {
-            trace("Failed getting tools menu: %s") % diagnostic_information(e);
-
-            // Fall back to using File menu
-            return item_from_menu(parent_menu, FCIDM_MENU_FILE);
-        }
-    }
-
-    /**
-     * Get handle to explorer 'Help' menu.
-     *
-     * The menu we want to insert into is actually the @e submenu of the
-     * Help menu @e item.  Confusing!
-     */
-    item help_menu_with_fallback(const menu_bar& parent_menu)
-    {
-        try
-        {
-            return item_from_menu(parent_menu, FCIDM_MENU_HELP);
-        }
-        catch (const std::exception& e)
-        {
-            trace("Failed getting help menu: %s") % diagnostic_information(e);
-
-            // Fall back to using File menu
-            return item_from_menu(parent_menu, FCIDM_MENU_FILE);
-        }
-    }
 
     /**
      * Return a DataObject representing the items currently selected.
@@ -193,14 +113,14 @@ namespace {
 /**
  * Create customisation callback object for Explorer default shell view.
  *
- * @param folder_pidl  Absolute PIDL to the folder for whom we are
- *                     creating this callback object.
+ * @param folder  The folder for whom we are creating this callback object.
  */
-CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
-    m_folder_pidl(folder_pidl), m_hwnd_view(NULL), m_first_command_id(0),
+CViewCallback::CViewCallback(const apidl_t& folder) :
+    m_folder(folder),
     m_winsparkle(
         "http://www.swish-sftp.org/autoupdate/appcast.xml", L"Swish",
-        L"0.7.3", L"", "Software\\Swish\\Updates") {}
+        Utf8StringToWideString(release_version().as_string()),
+        L"", "Software\\Swish\\Updates") {}
 
 /**
  * The folder window is being created.
@@ -209,10 +129,15 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
  */
 bool CViewCallback::on_window_created(HWND hwnd_view)
 {
-    m_hwnd_view = hwnd_view;
-
     if (hwnd_view)
+    {
+        m_view = window<wchar_t>(window_handle::foster_handle(hwnd_view));
+    }
+
+    if (m_view)
+    {
         m_winsparkle.show();
+    }
 
     return true;
 }
@@ -229,9 +154,9 @@ bool CViewCallback::on_window_created(HWND hwnd_view)
 bool CViewCallback::on_get_notify(
     PCIDLIST_ABSOLUTE& pidl_monitor, LONG& events)
 {
-    events = SHCNE_UPDATEDIR | SHCNE_RENAMEITEM | SHCNE_RENAMEFOLDER |
-        SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
-    pidl_monitor = m_folder_pidl.get(); // Owned by us
+    events = SHCNE_UPDATEDIR | SHCNE_UPDATEITEM | SHCNE_RENAMEITEM |
+        SHCNE_RENAMEFOLDER | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR;
+    pidl_monitor = m_folder.get(); // Owned by us
     return true;
 }
 
@@ -245,127 +170,11 @@ bool CViewCallback::on_fs_notify(
     return true;
 }
 
-class merge_tools_command_items
-{
-public:
-
-    typedef void result_type;
-
-    merge_tools_command_items(HWND hwnd_view, apidl_t pidl, UINT first_command_id)
-        : m_hwnd_view(hwnd_view), m_folder_pidl(pidl),
-          m_first_command_id(first_command_id) {}
-
-    void operator()(sub_menu_item& sub_menu)
-    {
-        menu::iterator insert_position = sub_menu.menu().begin();
-        insert_position += 2;
-        MenuCommandTitleAdapter<Add> add(m_hwnd_view, m_folder_pidl);
-
-        command_item_description add_item(
-            string_button_description(add.title(NULL).c_str()),
-            m_first_command_id + MENUIDOFFSET_ADD);
-        sub_menu.menu().insert(add_item, insert_position++);
-
-        MenuCommandTitleAdapter<Remove> remove(m_hwnd_view, m_folder_pidl);
-
-        command_item_description remove_item(
-            string_button_description(remove.title(NULL).c_str()),
-            m_first_command_id + MENUIDOFFSET_REMOVE);
-        remove_item.selectability(selectability::disabled);
-        sub_menu.menu().insert(remove_item, insert_position++);
-
-        MenuCommandTitleAdapter<LaunchAgent> launch(m_hwnd_view, m_folder_pidl);
-
-        command_item_description launch_item(
-             string_button_description(launch.title(NULL).c_str()),
-             m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
-        launch_item.selectability(selectability::disabled);
-        sub_menu.menu().insert(launch_item, insert_position++);
-    }
-
-    void operator()(command_item&)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Cannot insert into command item"));
-    }
-
-    void operator()(separator_item&)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Cannot insert into separator"));
-    }
-
-private:
-    HWND m_hwnd_view;
-    apidl_t m_folder_pidl;
-    UINT m_first_command_id;
-};
-
-class merge_help_command_items
-{
-public:
-
-    typedef void result_type;
-
-    merge_help_command_items(
-        HWND hwnd_view, apidl_t pidl, UINT first_command_id)
-        : m_hwnd_view(hwnd_view), m_folder_pidl(pidl),
-          m_first_command_id(first_command_id) {}
-
-    void operator()(sub_menu_item& sub_menu)
-    {
-        // Inserting into the bottom of the menu
-        menu::iterator insert_position = sub_menu.menu().end();
-        MenuCommandTitleAdapter<About> about(m_hwnd_view);
-
-        command_item_description about_item(
-            string_button_description(about.title(NULL).c_str()),
-            m_first_command_id + MENUIDOFFSET_ABOUT);
-        sub_menu.menu().insert(about_item, insert_position);
-    }
-
-    void operator()(command_item&)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Cannot insert into command item"));
-    }
-
-    void operator()(separator_item&)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Cannot insert into separator"));
-    }
-
-private:
-    HWND m_hwnd_view;
-    apidl_t m_folder_pidl;
-    UINT m_first_command_id;
-};
 
 bool CViewCallback::on_merge_menu(QCMINFO& menu_info)
 {
-    assert(menu_info.idCmdFirst >= FCIDM_SHVIEWFIRST);
-    assert(menu_info.idCmdLast <= FCIDM_SHVIEWLAST);
-    //assert(::IsMenu(menu_info.hmenu));
-    m_first_command_id = menu_info.idCmdFirst;
-
-    // Try to get a handle to the  Explorer Tools menu and insert
-    // add and remove connection menu items into it if we find it
-    m_tools_menu = tools_menu_with_fallback(
-        menu_handle::foster_handle(menu_info.hmenu));
-    m_tools_menu->accept(
-        merge_tools_command_items(
-            m_hwnd_view, m_folder_pidl, m_first_command_id));
-
-    // Try to get a handle to the  Explorer Help menu and insert About box
-    m_help_menu = help_menu_with_fallback(
-        menu_handle::foster_handle(menu_info.hmenu));
-    m_help_menu->accept(
-        merge_help_command_items(
-            m_hwnd_view, m_folder_pidl, m_first_command_id));
-
-    // Return value of last menu ID plus 1
-    menu_info.idCmdFirst += MENUIDOFFSET_LAST; // Added 3 items
+    m_menu_manager = auto_ptr<menu_command_manager>(
+        new menu_command_manager(menu_info, m_view, m_folder));
 
     return true;
 
@@ -389,32 +198,7 @@ bool CViewCallback::on_init_menu_popup(
 
 bool CViewCallback::on_invoke_command(UINT command_id)
 {
-    if (command_id == MENUIDOFFSET_ADD)
-    {
-        Add command(m_hwnd_view, m_folder_pidl);
-        command(selection(), NULL);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_REMOVE)
-    {
-        Remove command(m_hwnd_view, m_folder_pidl);
-        command(selection(), NULL);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
-    {
-        LaunchAgent command(m_hwnd_view, m_folder_pidl);
-        command(selection(), NULL);
-        return true;
-    }
-    else if (command_id == MENUIDOFFSET_ABOUT)
-    {
-        About command(m_hwnd_view);
-        command(selection(), NULL);
-        return true;
-    }
-
-    return false;
+    return m_menu_manager->invoke(command_id, selection());
 }
 
 #pragma warning(push)
@@ -424,35 +208,20 @@ bool CViewCallback::on_get_help_text(
     UINT command_id, UINT buffer_size, LPTSTR buffer)
 {
     wstring help_text;
-    if (command_id == MENUIDOFFSET_ADD)
+    bool handled = m_menu_manager->help_text(
+        command_id, help_text, selection());
+
+    if (handled)
     {
-        Add command(m_hwnd_view, m_folder_pidl);
-        help_text = command.tool_tip(selection());
-    }
-    else if (command_id == MENUIDOFFSET_REMOVE)
-    {
-        Remove command(m_hwnd_view, m_folder_pidl);
-        help_text = command.tool_tip(selection());
-    }
-    else if (command_id == MENUIDOFFSET_LAUNCH_AGENT)
-    {
-        LaunchAgent command(m_hwnd_view, m_folder_pidl);
-        help_text = command.tool_tip(selection());
-    }
-    else if (command_id == MENUIDOFFSET_ABOUT)
-    {
-        About command(m_hwnd_view);
-        help_text = command.tool_tip(selection());
+        size_t copied = help_text.copy(buffer, buffer_size - 1);
+        buffer[copied] = _T('\0');
+
+        return true;
     }
     else
     {
         return false;
     }
-
-    size_t copied = help_text.copy(buffer, buffer_size - 1);
-    buffer[copied] = _T('\0');
-    return true;
-
 }
 
 #pragma warning(pop)
@@ -470,7 +239,8 @@ bool CViewCallback::on_get_webview_content(
         return false;
 
     pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
-        host_folder_task_pane_titles(m_hwnd_view, m_folder_pidl);
+        host_folder_task_pane_titles(
+            (m_view) ? m_view->hwnd() : NULL, m_folder);
 
     content_out.pExtraTasksExpando = tasks.first.detach();
     content_out.pFolderTasksExpando = tasks.second.detach();
@@ -492,7 +262,8 @@ bool CViewCallback::on_get_webview_tasks(
         return false;
 
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
-        host_folder_task_pane_tasks(m_hwnd_view, m_folder_pidl);
+        host_folder_task_pane_tasks(
+            (m_view) ? m_view->hwnd() : NULL, m_folder);
 
     tasks_out.pEnumExtraTasks = commands.first.detach();
     tasks_out.pEnumFolderTasks = commands.second.detach();
@@ -509,111 +280,12 @@ com_ptr<IDataObject> CViewCallback::selection()
     return selection_data_object(browser);
 }
 
-class update_command_items
-{
-public:
-
-    typedef void result_type;
-
-    update_command_items(
-        HWND hwnd_view, apidl_t pidl, com_ptr<IDataObject> selection,
-        UINT first_command_id)
-        : m_hwnd_view(hwnd_view), m_folder_pidl(pidl), m_selection(selection),
-          m_first_command_id(first_command_id) {}
-
-    class selectability_setter
-    {
-    public:
-        typedef void result_type;
-
-        selectability_setter(BOOST_SCOPED_ENUM(selectability) selectability)
-            : m_selectability(selectability) {}
-
-        void operator()(command_item& item)
-        {
-            item.selectability(m_selectability);
-        }
-
-        template<typename T>
-        void operator()(T&)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("Unexpected menu item type"));
-        }
-
-    private:
-        BOOST_SCOPED_ENUM(selectability) m_selectability;
-    };
-
-    void operator()(sub_menu_item& sub_menu)
-    {
-        Add add(m_hwnd_view, m_folder_pidl);
-        BOOST_SCOPED_ENUM(selectability) add_state =
-            add.disabled(m_selection, false) ?
-            selectability::disabled : selectability::enabled;
-
-        item add_item = item_from_menu(
-            sub_menu.menu(), m_first_command_id + MENUIDOFFSET_ADD);
-        add_item.accept(selectability_setter(add_state));
-
-        Remove remove(m_hwnd_view, m_folder_pidl);
-        BOOST_SCOPED_ENUM(selectability) remove_state =
-            remove.disabled(m_selection, false) ?
-            selectability::disabled : selectability::enabled;
-
-        item remove_item = item_from_menu(
-            sub_menu.menu(), m_first_command_id + MENUIDOFFSET_REMOVE);
-        remove_item.accept(selectability_setter(remove_state));
-
-        LaunchAgent launch(m_hwnd_view, m_folder_pidl);
-        BOOST_SCOPED_ENUM(selectability) launch_state =
-            launch.disabled(m_selection, false) ?
-            selectability::disabled : selectability::enabled;
-
-       item launch_item = item_from_menu(
-           sub_menu.menu(), m_first_command_id + MENUIDOFFSET_LAUNCH_AGENT);
-       launch_item.accept(selectability_setter(launch_state));
-
-       About about(m_hwnd_view);
-       BOOST_SCOPED_ENUM(selectability) about_state =
-           about.disabled(m_selection, false) ?
-           selectability::disabled : selectability::enabled;
-
-       item about_item = item_from_menu(
-           sub_menu.menu(), m_first_command_id + MENUIDOFFSET_ABOUT);
-       about_item.accept(selectability_setter(about_state));
-    }
-
-    void operator()(command_item&)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Cannot insert into command item"));
-    }
-
-    void operator()(separator_item&)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Cannot insert into separator"));
-    }
-
-private:
-    HWND m_hwnd_view;
-    apidl_t m_folder_pidl;
-    com_ptr<IDataObject> m_selection;
-    UINT m_first_command_id;
-};
-
 /**
  * Update the menus to match the current selection.
  */
 void CViewCallback::update_menus()
 {
-    if (!m_tools_menu)
-        BOOST_THROW_EXCEPTION(std::logic_error("Missing menu"));
-
-    m_tools_menu->accept(
-        update_command_items(
-            m_hwnd_view, m_folder_pidl, selection(), m_first_command_id));
+    m_menu_manager->update_state(selection());
 }
 
 }} // namespace swish::host_folder

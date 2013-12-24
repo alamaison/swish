@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@
 #include <ezel/form.hpp> // form
 
 #include <winapi/dynamic_link.hpp> // module_handle
-#include <winapi/gui/icon.hpp> // load_icon
+#include <winapi/gui/icon/icon.hpp> // load_icon
 
 #include <boost/bind.hpp> // bind
 #include <boost/lexical_cast.hpp> // lexical_cast
@@ -99,7 +99,7 @@ namespace {
     public:
         AddHostForm(HWND owner)
             :
-            m_form(translate("New SFTP Connection"), 0, 0, 275, 176),
+            m_form(translate(L"New SFTP Connection"), 0, 0, 275, 176),
             m_cancelled(true),
             m_name_box(edit(L"", 42, 9, 222, 13)),
             m_host_box(
@@ -119,7 +119,7 @@ namespace {
             m_icon(icon(2,153,21,20)),
             m_ok(
                 button(
-                    translate("Create"), 162, 155, 50, 14, true))
+                    translate(L"Create"), 162, 155, 50, 14, true))
         {
             // every time a field is changed we revalidate all the fields,
             // enable or disable the OK button and a display a status message
@@ -140,41 +140,41 @@ namespace {
                 bind(&AddHostForm::update_validity, this));
 
             m_form.add_control(
-                label(translate("New Host", "&Label:"), 12, 11, 28, 8));
+                label(translate(L"New Host", L"&Label:"), 12, 11, 28, 8));
             m_form.add_control(m_name_box);
 
             m_form.add_control(
                 label(translate(
-                    "For example: \"Home Computer\"."), 42, 25, 228, 18));
+                    L"For example: \"Home Computer\"."), 42, 25, 228, 18));
             m_form.add_control(
                 label(translate(
-                    "Specify the details of the computer and account you would "
-                    "like to connect to:"), 12, 45, 258, 18));
+                    L"Specify the details of the computer and account you "
+                    L"would like to connect to:"), 12, 45, 258, 18));
             
             m_form.add_control(
-                label(translate("New Host", "&Host:"), 12, 60, 30, 8));
+                label(translate(L"New Host", L"&Host:"), 12, 60, 30, 8));
             m_form.add_control(m_host_box);
 
             m_form.add_control(
-                label(translate("New Host", "&Port:"), 204, 60, 18, 8));
+                label(translate(L"New Host", L"&Port:"), 204, 60, 18, 8));
             m_form.add_control(m_port_box);
             m_form.add_control(m_port_spinner);
 
             m_form.add_control(
-                label(translate("New Host", "&User:"), 12, 78, 56, 8));
+                label(translate(L"New Host", L"&User:"), 12, 78, 56, 8));
             m_form.add_control(m_user_box);
 
             m_form.add_control(
                 label(translate(
-                    "Specify the directory on the server that you would like "
-                    "Swish to start the connection in:"), 12, 96, 258, 18));
+                    L"Specify the directory on the server that you would like "
+                    L"Swish to start the connection in:"), 12, 96, 258, 18));
 
             m_form.add_control(
-                label(translate("New Host", "P&ath:"), 12, 117, 35, 8));
+                label(translate(L"New Host", L"P&ath:"), 12, 117, 35, 8));
             m_form.add_control(m_path_box);
             m_form.add_control(
                 label(
-                    translate("Example: /home/yourusername"),
+                    translate(L"Example: /home/yourusername"),
                     42, 131, 144, 8));
             
             m_form.add_control(line(0, 147, 277));
@@ -182,7 +182,7 @@ namespace {
             m_ok.on_click().connect(bind(&AddHostForm::on_ok, this));
             m_form.add_control(m_ok);
 
-            button cancel(translate("Cancel"), 216, 155, 50, 14);
+            button cancel(translate(L"Cancel"), 216, 155, 50, 14);
             cancel.on_click().connect(m_form.killer());
             m_form.add_control(cancel);
 
@@ -328,37 +328,37 @@ namespace {
             {
                 m_status.text(
                     translate(
-                        "The label cannot be longer than 30 characters."));
+                        L"The label cannot be longer than 30 characters."));
             }
             else if (!is_valid_host())
             {
-                m_status.text(translate("The host name is invalid."));
+                m_status.text(translate(L"The host name is invalid."));
             }
             else if (!is_valid_port())
             {
                 m_status.text(
                     translate(
-                        "The port is not valid (between 0 and 65535)."));
+                        L"The port is not valid (between 0 and 65535)."));
             }
             else if (!is_valid_user())
             {
-                m_status.text(translate("The username is invalid."));
+                m_status.text(translate(L"The username is invalid."));
             }
             else if (!is_valid_path())
             {
-                m_status.text(translate("The path is invalid."));
+                m_status.text(translate(L"The path is invalid."));
             }
             else if (ConnectionExists(name()))
             {
                 m_status.text(
                     translate(
-                        "A connection with the same label already exists. "
-                        "Please try another."));
+                        L"A connection with the same label already exists. "
+                        L"Please try another."));
             }
             else if (!all_fields_complete())
             {
                 info_icon_if_error = true;
-                m_status.text(translate("Complete all fields."));
+                m_status.text(translate(L"Complete all fields."));
             }
             else
             {

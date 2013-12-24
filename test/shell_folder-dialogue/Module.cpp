@@ -22,3 +22,6 @@ public :
 };
 
 CModule _AtlModule; ///< Global module instance
+
+#define BOOST_TEST_MODULE swish::shell_folders-dialog tests
+#include <boost/test/unit_test.hpp>

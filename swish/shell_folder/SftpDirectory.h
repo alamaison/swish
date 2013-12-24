@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -45,8 +45,7 @@ class CSftpDirectory
 public:
     CSftpDirectory(
         const winapi::shell::pidl::apidl_t& directory,
-        boost::shared_ptr<swish::provider::sftp_provider> provider,
-        comet::com_ptr<ISftpConsumer> consumer);
+        boost::shared_ptr<swish::provider::sftp_provider> provider);
 
     comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
     CSftpDirectory GetSubdirectory(
@@ -60,7 +59,8 @@ public:
 
     bool Rename(
         const winapi::shell::pidl::cpidl_t& old_file,
-        const std::wstring& new_filename);
+        const std::wstring& new_filename,
+        comet::com_ptr<ISftpConsumer> consumer);
     void Delete(
         const winapi::shell::pidl::cpidl_t& file);
     winapi::shell::pidl::cpidl_t CreateDirectory(const std::wstring& name);
@@ -70,7 +70,6 @@ public:
 private:
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
                                                       ///< Backend data provider
-    comet::com_ptr<ISftpConsumer> m_consumer;  ///< UI callback
     boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
     const winapi::shell::pidl::apidl_t m_directory_pidl;
                                  ///< Absolute PIDL to this directory.
