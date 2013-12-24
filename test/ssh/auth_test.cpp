@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,22 +38,45 @@
 
 #include <ssh/session.hpp> // test subject
 
+#include <boost/concept_check.hpp> // BOOST_CONCEPT_ASSERT
+#include <boost/move/move.hpp>
+#include <boost/range/concepts.hpp> // RandomAccessRangeConcept
+#include <boost/range/size.hpp>
+#include <boost/system/system_error.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
+#include <memory>
 #include <string>
+#include <vector>
 
-using ssh::exception::ssh_error;
+using boost::RandomAccessRangeConcept;
+using boost::move;
+using boost::size;
+using boost::system::system_error;
+
 using ssh::session;
-using ssh::agent::agent_identities;
-using ssh::agent::identity;
+using ssh::agent_identities;
+using ssh::identity;
 
 using test::ssh::session_fixture;
 
+using std::auto_ptr;
 using std::exception;
 using std::string;
+using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(auth_tests, session_fixture)
+
+BOOST_AUTO_TEST_CASE( available_auth_methods )
+{
+    session& s = test_session();
+    
+    vector<string> methods = s.authentication_methods(user());
+    // 'publickey' is the only required method
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "publickey") != methods.end());
+}
 
 /**
  * New sessions must not be authenticated.
@@ -62,10 +85,14 @@ BOOST_FIXTURE_TEST_SUITE(auth_tests, session_fixture)
  */
 BOOST_AUTO_TEST_CASE( intial_state )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 }
+
+// The next two test cases, password and kb-int are very limited.  We can't set
+// the password or kb-int responses that the Cygwin OpenSSH server is expecting
+// so we only test the failure case.  Would love to know a way round this!
 
 /**
  * Try password authentication.
@@ -76,10 +103,147 @@ BOOST_AUTO_TEST_CASE( intial_state )
  */
 BOOST_AUTO_TEST_CASE( password_fail )
 {
-    session s = test_session();
+    session& s = test_session();
+    
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "password") != methods.end());
+
+    BOOST_CHECK(!s.authenticate_by_password(user(), "dummy password"));
+    BOOST_CHECK(!s.authenticated());
+}
+
+namespace {
+
+    /**
+     * Callback for interactive authentication that responds with nonsense to
+     * every request.
+     */
+    class nonsense_interactor
+    {
+    public:
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& /* request_name */, const string& /* instructions */,
+            PromptRange prompts)
+        {
+            BOOST_CONCEPT_ASSERT((RandomAccessRangeConcept<PromptRange>));
+            return vector<string>(size(prompts), "gobbleygook");
+        }
+    };
+    
+    /**
+     * Callback for interactive authentication that responds with too few
+     * responses.
+     */
+    class short_interactor
+    {
+    public:
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& /* request_name */, const string& /* instructions */,
+            PromptRange /*prompts*/)
+        {
+            BOOST_CONCEPT_ASSERT((RandomAccessRangeConcept<PromptRange>));
+            return vector<string>();
+        }
+    };
+
+    class bob_exception {};
+    
+    /**
+     * Callback for interactive authentication that responds with too few
+     * responses.
+     */
+    class exception_interactor
+    {
+    public:
+
+        template<typename PromptRange>
+        vector<string> operator()(
+            const string& /* request_name */, const string& /* instructions */,
+            PromptRange /*prompts*/)
+        {
+            // Use custom exception so we can identify that the correct
+            // exception is bubbled up in the test
+            throw bob_exception();
+        }
+    };
+}
+
+/**
+ * Try keyboard-interactive authentication but give the wrong responses.
+ *
+ * This will fail as we can't get Cygwin OpenSSH to use kb-int
+ * authentication.  The server will say it is supported when it isn't.
+ *
+ * @todo  Find a way to test the case with the fixture server.
+ */
+BOOST_AUTO_TEST_CASE( kbint_fail_wrong )
+{
+    session& s = test_session();
+
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end());
+
+    // FIXME: Will throw because Cygwin server refuses kb-int after claiming
+    // to support it.  Suppressing test that, currently, cannot pass.
+    //BOOST_CHECK(!s.authenticate_interactively(user(), nonsense_interactor()));
+    BOOST_CHECK(!s.authenticated());
+}
+
+/**
+ * Try keyboard-interactive authentication but return no responses.
+ *
+ * This will fail as we can't get Cygwin OpenSSH to use kb-int
+ * authentication.  The server will say it is supported when it isn't.
+ *
+ * @todo  Find a way to test the case with the fixture server.
+ */
+BOOST_AUTO_TEST_CASE( kbint_fail_short )
+{
+    session& s = test_session();
+
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end());
+
+    // FIXME: Will throw because Cygwin server refuses kb-int after claiming
+    // to support it.  Suppressing test that, currently, cannot pass.
+    //BOOST_CHECK(!s.authenticate_interactively(user(), short_interactor()));
+    BOOST_CHECK(!s.authenticated());
+}
+
+/**
+ * Try keyboard-interactive authentication but return no responses.
+ *
+ * This will fail as we can't get Cygwin OpenSSH to use kb-int
+ * authentication.  The server will say it is supported when it isn't.
+ *
+ * @todo  Find a way to test the case with the fixture server.
+ */
+BOOST_AUTO_TEST_CASE( kbint_fail_exception )
+{
+    session& s = test_session();
+
+    vector<string> methods = s.authentication_methods(user());
+    BOOST_REQUIRE(
+        find(methods.begin(), methods.end(), "keyboard-interactive")
+        != methods.end());
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_password(user(), "dummy password"), ssh_error);
+        s.authenticate_interactively(user(), exception_interactor()),
+        // bob_exception);
+        exception);
+    // FIXME: Will throw wrong kind of exception because Cygwin server refuses
+    // kb-int after claiming to support it.  Suppressing test that, currently,
+    // cannot pass.
+
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -88,12 +252,12 @@ BOOST_AUTO_TEST_CASE( password_fail )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), wrong_public_key_path(), private_key_path(), ""),
-        ssh_error);
+        system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -102,12 +266,12 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_public )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), public_key_path(), wrong_private_key_path(), ""),
-        ssh_error);
+        system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -117,12 +281,12 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_private )
  */
 BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
+        s.authenticate_by_key_files(
             user(), wrong_public_key_path(), wrong_private_key_path(), ""),
-        ssh_error);
+        system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -131,11 +295,11 @@ BOOST_AUTO_TEST_CASE( pubkey_wrong_pair )
  */
 BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
-            user(), private_key_path(), private_key_path(), ""), ssh_error);
+        s.authenticate_by_key_files(
+            user(), private_key_path(), private_key_path(), ""), system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -144,11 +308,11 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_public )
  */
 BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK_THROW(
-        s.authenticate_by_key(
-            user(), public_key_path(), public_key_path(), ""), ssh_error);
+        s.authenticate_by_key_files(
+            user(), public_key_path(), public_key_path(), ""), system_error);
     BOOST_CHECK(!s.authenticated());
 }
 
@@ -157,11 +321,44 @@ BOOST_AUTO_TEST_CASE( pubkey_invalid_private )
  */
 BOOST_AUTO_TEST_CASE( pubkey )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
-    s.authenticate_by_key(user(), public_key_path(), private_key_path(), "");
+    s.authenticate_by_key_files(user(), public_key_path(), private_key_path(), "");
     BOOST_CHECK(s.authenticated());
+}
+
+/**
+ * Authentication carries across to move-constructed session.
+ */
+BOOST_AUTO_TEST_CASE( move_construct_after_auth )
+{
+    session& s = test_session();
+
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    session t(move(s));
+    BOOST_CHECK(t.authenticated());
+}
+
+/**
+ * Authentication carries across to move-assigned session.
+ */
+BOOST_AUTO_TEST_CASE( move_assign_after_auth )
+{
+    session& s = test_session();
+
+    s.authenticate_by_key_files(
+        user(), public_key_path(), private_key_path(), "");
+
+    auto_ptr<boost::asio::ip::tcp::socket> socket(connect_additional_socket());
+
+    session t(socket->native());
+
+    BOOST_CHECK(!t.authenticated());
+    t = move(s);
+    BOOST_CHECK(t.authenticated());
 }
 
 /**
@@ -169,7 +366,7 @@ BOOST_AUTO_TEST_CASE( pubkey )
  */
 BOOST_AUTO_TEST_CASE( agent )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -185,12 +382,12 @@ BOOST_AUTO_TEST_CASE( agent )
                 BOOST_CHECK(s.authenticated());
                 return;
             }
-            catch(const exception&) {}
+            catch(const system_error&) {}
 
             BOOST_CHECK(!s.authenticated());
         }
     }
-    catch (exception&) { /* agent not running - failure ok */ }
+    catch (system_error&) { /* agent not running - failure ok */ }
 }
 
 /**
@@ -198,7 +395,7 @@ BOOST_AUTO_TEST_CASE( agent )
  */
 BOOST_AUTO_TEST_CASE( agent_copy )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -214,7 +411,7 @@ BOOST_AUTO_TEST_CASE( agent_copy )
         {
         }
     }
-    catch (exception&) { /* agent not running - failure ok */ }
+    catch (system_error&) { /* agent not running - failure ok */ }
 }
 
 /**
@@ -222,7 +419,7 @@ BOOST_AUTO_TEST_CASE( agent_copy )
  */
 BOOST_AUTO_TEST_CASE( agent_idempotence )
 {
-    session s = test_session();
+    session& s = test_session();
 
     BOOST_CHECK(!s.authenticated());
 
@@ -238,7 +435,51 @@ BOOST_AUTO_TEST_CASE( agent_idempotence )
         {
         }
     } 
-    catch (exception&) { /* agent not running - failure ok */ }
+    catch (system_error&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent move-construct behaviour.
+ */
+BOOST_AUTO_TEST_CASE( agent_move_construct )
+{
+    session& s = test_session();
+
+    BOOST_CHECK(!s.authenticated());
+
+    try
+    {
+        agent_identities identities = s.agent_identities();
+        agent_identities identities2(move(identities));
+
+        BOOST_FOREACH(identity i, identities2)
+        {
+        }
+    }
+    catch (system_error&) { /* agent not running - failure ok */ }
+}
+
+/**
+ * Agent move-assign behaviour.
+ */
+BOOST_AUTO_TEST_CASE( agent_move_assign )
+{
+    session& s = test_session();
+
+    BOOST_CHECK(!s.authenticated());
+
+    try
+    {
+        agent_identities identities = s.agent_identities();
+        agent_identities identities2 = s.agent_identities();
+
+        identities2 = move(identities);
+
+        BOOST_FOREACH(identity i, identities2)
+        {
+        }
+    }
+    catch (system_error&) { /* agent not running - failure ok */ }
 }
 
 BOOST_AUTO_TEST_SUITE_END();

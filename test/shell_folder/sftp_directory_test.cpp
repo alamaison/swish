@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@ namespace { // private
 
         CSftpDirectory directory(const apidl_t& pidl)
         {
-            return CSftpDirectory(pidl, provider(), consumer());
+            return CSftpDirectory(pidl, provider());
         }
 
         shared_ptr<MockProvider> provider()
@@ -408,7 +408,8 @@ BOOST_AUTO_TEST_CASE( rename )
     // PIDL of old file.  Would normally come from GetEnum()
     cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-    BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), false);
+    BOOST_CHECK_EQUAL(
+        directory().Rename(pidl, L"renamed to", consumer()), false);
 }
 
 /**
@@ -425,7 +426,7 @@ BOOST_AUTO_TEST_CASE( rename_in_subfolder )
         directory(
             apidl_t() + create_host_itemid(
                 L"testhost", L"testuser", L"/tmp/swish", 22)).Rename(
-                    pidl, L"renamed to"),
+                    pidl, L"renamed to", consumer()),
         false);
 }
 
@@ -440,8 +441,9 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_granted )
 
     cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
-    BOOST_CHECK_EQUAL(directory().Rename(pidl, L"renamed to"), true);
-    BOOST_CHECK(consumer()->confirmed_overwrite());
+    BOOST_CHECK_EQUAL(
+        directory().Rename(pidl, L"renamed to", consumer()), true);
+    BOOST_CHECK(consumer()->was_asked_to_confirm_overwrite());
 }
 
 namespace {
@@ -469,8 +471,9 @@ BOOST_AUTO_TEST_CASE( rename_with_confirmation_denied )
     cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
     BOOST_CHECK_EXCEPTION(
-        directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
-    BOOST_CHECK(consumer()->confirmed_overwrite());
+        directory().Rename(pidl, L"renamed to", consumer()),
+        com_error, is_com_abort);
+    BOOST_CHECK(consumer()->was_asked_to_confirm_overwrite());
 }
 
 /**
@@ -483,8 +486,9 @@ BOOST_AUTO_TEST_CASE( rename_provider_aborts )
     cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
     BOOST_CHECK_EXCEPTION(
-        directory().Rename(pidl, L"renamed to"), com_error, is_com_abort);
-    BOOST_CHECK(!consumer()->confirmed_overwrite());
+        directory().Rename(pidl, L"renamed to", consumer()),
+        com_error, is_com_abort);
+    BOOST_CHECK(!consumer()->was_asked_to_confirm_overwrite());
 }
 
 /**
@@ -497,8 +501,9 @@ BOOST_AUTO_TEST_CASE( rename_provider_fail )
     cpidl_t pidl = create_test_pidl(L"testtmpfile");
 
     BOOST_CHECK_EXCEPTION(
-        directory().Rename(pidl, L"renamed to"), com_error, is_com_fail);
-    BOOST_CHECK(!consumer()->confirmed_overwrite());
+        directory().Rename(pidl, L"renamed to", consumer()),
+        com_error, is_com_fail);
+    BOOST_CHECK(!consumer()->was_asked_to_confirm_overwrite());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

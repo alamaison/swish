@@ -61,7 +61,8 @@ namespace { // private
         NewFolder new_folder_command()
         {
             return NewFolder(
-                sandbox_pidl(), bind(&NewFolderCommandFixture::Provider, this),
+                sandbox_pidl(),
+                bind(&NewFolderCommandFixture::Provider, this),
                 bind(&NewFolderCommandFixture::Consumer, this));
         }
     };

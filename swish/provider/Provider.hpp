@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2012
+    Copyright (C) 2008, 2009, 2010, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -39,8 +39,10 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
+#include "swish/connection/session_manager.hpp" // session_reservation
 #include "swish/provider/sftp_provider.hpp"
 
+#include <boost/move/move.hpp> // BOOST_RV_REF
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 namespace swish {
@@ -52,32 +54,25 @@ class CProvider : public sftp_provider
 {
 public:
 
-    CProvider(const std::wstring& user, const std::wstring& host, UINT port);
+    explicit CProvider(
+        BOOST_RV_REF(swish::connection::session_reservation) session_ticket);
 
-    virtual directory_listing listing(
-        comet::com_ptr<ISftpConsumer> consumer,
-        const sftp_provider_path& directory);
+    virtual directory_listing listing(const sftp_provider_path& directory);
 
     virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        bool writeable);
+        std::wstring file_path, std::ios_base::openmode open_mode);
 
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
 
-    virtual void delete_file(ISftpConsumer* consumer, BSTR path);
+    virtual void remove_all(BSTR path);
 
-    virtual void delete_directory(ISftpConsumer* consumer, BSTR path);
+    virtual void create_new_directory(BSTR path);
 
-    virtual void create_new_file(ISftpConsumer* consumer, BSTR path);
-
-    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path);
-
-    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path);
+    virtual BSTR resolve_link(BSTR link_path);
 
     virtual sftp_filesystem_item stat(
-        comet::com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-        bool follow_links);
+        const sftp_provider_path& path, bool follow_links);
 
 private:
     boost::shared_ptr<provider> m_provider;

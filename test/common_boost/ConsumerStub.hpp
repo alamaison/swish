@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,8 +32,9 @@
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/server.h> // simple_object
+
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
 
@@ -41,6 +42,9 @@
 
 namespace test {
 
+/**
+ * Very simple consumer that just handles authentication via pub-key.
+*/
 class CConsumerStub : public comet::simple_object<ISftpConsumer>
 {
 public:
@@ -52,59 +56,25 @@ public:
         : m_privateKey(privatekey), m_publicKey(publickey) {}
 
     // ISftpConsumer methods
-    HRESULT OnPasswordRequest(BSTR /*bstrRequest*/, BSTR *pbstrPassword)
+
+    virtual boost::optional<std::wstring> prompt_for_password()
     {
-        *pbstrPassword = NULL;
-        return E_NOTIMPL;
+        return boost::optional<std::wstring>();
     }
 
-    HRESULT OnKeyboardInteractiveRequest(
-        BSTR /*bstrName*/, BSTR /*bstrInstruction*/,
-        SAFEARRAY * /*psaPrompts*/, SAFEARRAY * /*psaShowResponses*/,
-        SAFEARRAY ** /*ppsaResponses*/)
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files()
+    {
+        return std::make_pair(m_privateKey, m_publicKey);
+    }
+
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& /*title*/, const std::string& /*instructions*/,
+        const std::vector<std::pair<std::string, bool>>& /*prompts*/)
     {
         BOOST_ERROR("Unexpected call to "__FUNCTION__);
-        return E_NOTIMPL;
-    }
-
-    /**
-     * Return the path of the file containing the private key.
-     *
-     * The path is set via SetKeyPaths().
-     */
-    HRESULT OnPrivateKeyFileRequest(BSTR *pbstrPrivateKeyFile)
-    {
-        ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
-        *pbstrPrivateKeyFile = NULL;
-
-        try
-        {
-            *pbstrPrivateKeyFile = comet::bstr_t::detach(
-                m_privateKey.file_string());
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
-    }
-
-    /**
-     * Return the path of the file containing the public key.
-     *
-     * The path is set via SetKeyPaths().
-     */
-    HRESULT OnPublicKeyFileRequest(BSTR *pbstrPublicKeyFile)
-    {
-        ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
-        *pbstrPublicKeyFile = NULL;
-
-        try
-        {
-            *pbstrPublicKeyFile = comet::bstr_t::detach(
-                m_publicKey.file_string());
-        }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
-
-        return S_OK;
+        BOOST_THROW_EXCEPTION(std::exception("Not implemented"));
     }
 
     HRESULT OnConfirmOverwrite(

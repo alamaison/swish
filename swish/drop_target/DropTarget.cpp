@@ -110,19 +110,18 @@ namespace { // private
  */
 void copy_format_to_provider(
     PidlFormat source_format, shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
-    shared_ptr<DropActionCallback> callback)
+    const apidl_t& destination_root, shared_ptr<DropActionCallback> callback)
 {
     PidlCopyPlan copy_list(source_format, destination_root);
 
-    copy_list.execute_plan(*callback, provider, consumer);
+    copy_list.execute_plan(*callback, provider);
 }
 
 namespace {
 
 void async_copy_format_to_provider(
     GIT_cookie<IDataObject> marshalling_cookie,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer,
+    shared_ptr<sftp_provider> provider,
     apidl_t destination_root, shared_ptr<DropActionCallback> callback)
 {
     auto_coinit com;
@@ -138,7 +137,7 @@ void async_copy_format_to_provider(
         try
         {
             copy_format_to_provider(
-                PidlFormat(data_object), provider, consumer, destination_root,
+                PidlFormat(data_object), provider, destination_root,
                 callback);
         }
         catch (...)
@@ -171,8 +170,7 @@ void async_copy_format_to_provider(
  */
 void copy_data_to_provider(
     com_ptr<IDataObject> data_object, shared_ptr<sftp_provider> provider, 
-    com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-    shared_ptr<DropActionCallback> callback)
+    const apidl_t& remote_directory, shared_ptr<DropActionCallback> callback)
 {
     ShellDataObject data(data_object);
     if (data.has_pidl_format())
@@ -193,12 +191,12 @@ void copy_data_to_provider(
 
             thread(
                 &async_copy_format_to_provider, marshalling_cookie,
-                provider, consumer, remote_directory, callback).detach();
+                provider, remote_directory, callback).detach();
         }
         else
         {
             copy_format_to_provider(
-                PidlFormat(data_object), provider, consumer, remote_directory,
+                PidlFormat(data_object), provider, remote_directory,
                 callback);
         }
     }
@@ -213,11 +211,10 @@ void copy_data_to_provider(
  * Create an instance of the DropTarget initialised with a data provider.
  */
 CDropTarget::CDropTarget(
-    shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
+    shared_ptr<sftp_provider> provider, const apidl_t& remote_directory,
     shared_ptr<DropActionCallback> callback)
     :
-    m_provider(provider), m_consumer(consumer),
+    m_provider(provider),
     m_remote_directory(remote_directory), m_callback(callback) {}
 
 /**
@@ -305,8 +302,7 @@ STDMETHODIMP CDropTarget::Drop(
             if (pdo && *pdwEffect == DROPEFFECT_COPY)
             {
                 copy_data_to_provider(
-                    pdo, m_provider, m_consumer, m_remote_directory,
-                    m_callback);
+                    pdo, m_provider, m_remote_directory, m_callback);
             }
         }
         catch (...)

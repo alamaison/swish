@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\swish-Debug-Win32.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\swish-Debug-Win32.vsprops;..\..\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -86,7 +86,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\swish-Debug-x64.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\swish-Debug-x64.vsprops;..\..\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -150,7 +150,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\swish-Release-Win32.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\swish-Release-Win32.vsprops;..\..\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -214,7 +214,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops;..\..\build\swish-Release-x64.vsprops"
+			InheritedPropertySheets="..\..\build\wtl_client.vsprops;..\..\build\boost_client.vsprops;..\..\build\swish-Release-x64.vsprops;..\..\build\libssh2_client.vsprops"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -276,10 +276,6 @@
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{86457BB0-ABB5-4AEC-9E58-F287FF9ACB82}"
-			RelativePathToProject=".\thirdparty\boost.locale\boost-locale.vcproj"
-		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{3341C8C4-01AB-4A6B-A0BF-22CFB0FE5F17}"
 			RelativePathToProject=".\swish\host_folder\host_folder.vcproj"

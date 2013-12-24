@@ -39,12 +39,13 @@
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture etc.
 
-#include "swish/provider/SessionFactory.hpp"  // CSessionFactory
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/shared_ptr.hpp>  // shared_ptr
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <memory>  // auto_ptr
 
@@ -63,18 +64,29 @@ class SftpFixture :
 public:
 
     /**
-     * Return a new running_session instance connected to the fixture SSH server.
+     * Return an authenticated_session instance connected to the fixture
+     * SSH server.
      */
-    boost::shared_ptr<running_session> Session()
+    boost::shared_ptr<swish::connection::authenticated_session> Session()
     {
-        comet::com_ptr<test::CConsumerStub> consumer =
-            new test::CConsumerStub(PrivateKeyPath(), PublicKeyPath());
+        if (!m_session)
+        {
+            comet::com_ptr<test::CConsumerStub> consumer =
+                new test::CConsumerStub(PrivateKeyPath(), PublicKeyPath());
 
-        return boost::shared_ptr<running_session>(CSessionFactory::CreateSftpSession(
-            swish::utils::Utf8StringToWideString(GetHost()).c_str(), GetPort(),
-            swish::utils::Utf8StringToWideString(GetUser()).c_str(),
-            consumer.get()));
+            m_session =
+                boost::make_shared<swish::connection::authenticated_session>(
+                    swish::utils::Utf8StringToWideString(GetHost()), GetPort(),
+                    swish::utils::Utf8StringToWideString(
+                        GetUser()), consumer.get());
+        }
+
+        return m_session;
     }
+
+private:
+
+    boost::shared_ptr<swish::connection::authenticated_session> m_session;
 };
 
 }} // namespace test::provider

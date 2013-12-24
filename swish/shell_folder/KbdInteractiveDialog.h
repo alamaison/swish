@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2009, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,14 +30,11 @@
 
 #include "swish/atl.hpp"  // Common ATL setup
 #include <atlwin.h>     // ATL windowing classes
-#include <atlstr.h>     // CString
 #include <atltypes.h>   // For CRect and CPoint
 
-#include <vector>       // To hold prompts and responses
-
-typedef std::vector<ATL::CString> PromptList;
-typedef std::vector<bool>         EchoList;
-typedef std::vector<ATL::CString> ResponseList;
+#include <string>
+#include <utility> // pair
+#include <vector>
 
 class CKbdInteractiveDialog : 
     public ATL::CDialogImpl<CKbdInteractiveDialog>
@@ -48,11 +45,10 @@ public:
     enum { IDD = IDD_KBDINTERACTIVEDIALOG };
 
     CKbdInteractiveDialog(
-        PCWSTR pszName, PCWSTR pszInstruction,
-        __in PromptList vecPrompts, __in EchoList vecEcho);
-    ~CKbdInteractiveDialog();
+        const std::string& title, const std::string& instructions,
+        const std::vector<std::pair<std::string, bool>>& prompts);
 
-    ResponseList GetResponses();
+    std::vector<std::string> GetResponses();
 
     BEGIN_MSG_MAP(CKbdInteractiveDialog)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -74,9 +70,9 @@ private:
 
     /** @name GUI drawing */
     // @{
-    CRect _DrawInstruction(PCWSTR pszInstruction, __in CRect rectDialog);
+    CRect _DrawInstruction(__in CRect rectDialog);
     CRect _DrawPrompt(
-        PCWSTR pszPrompt, __in CPoint point, __in CRect rectDialog);
+        const std::string&, __in CPoint point, __in CRect rectDialog);
     CRect _DrawResponseBox(
         bool fHideResponse, __in CPoint point, __in CRect rectDialog);
     CRect _DrawOKCancel(__in CPoint point, __in CRect rectDialog);
@@ -85,12 +81,11 @@ private:
     void _ExchangeData();
 
     // Input
-    ATL::CString      m_strName;
-    ATL::CString      m_strInstruction;
-    PromptList        m_vecPrompts;
-    EchoList          m_vecEcho;
+    std::string m_title;
+    std::string m_instructions;
+    std::vector<std::pair<std::string, bool>> m_prompts;
 
     // Output
     std::vector<HWND> m_vecResponseWindows;
-    ResponseList      m_vecResponses;
+    std::vector<std::string> m_responses;
 };

@@ -27,11 +27,9 @@
 #include "host_itemid_connection.hpp"
 
 #include "swish/connection/connection_spec.hpp"
-#include "swish/connection/session_pool.hpp"
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
 
 using swish::connection::connection_spec;
-using swish::connection::session_pool;
 using swish::host_folder::host_itemid_view;
 
 namespace swish {

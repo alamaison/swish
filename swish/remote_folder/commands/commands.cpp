@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include <comet/server.h> // simple_object
 #include <comet/smart_enum.h> // make_smart_enumeration
 
+#include <boost/bind.hpp> // bind, _1
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -59,6 +60,7 @@ using comet::com_ptr;
 using comet::make_smart_enumeration;
 using comet::simple_object;
 
+using boost::bind;
 using boost::function;
 using boost::locale::translate;
 using boost::make_shared;
@@ -74,8 +76,8 @@ namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
     HWND /*hwnd*/, const apidl_t& folder_pidl,
-    const function<shared_ptr<sftp_provider>()>& provider,
-    const function<com_ptr<ISftpConsumer>()>& consumer)
+    const provider_factory& provider,
+    const consumer_factory& consumer)
 {
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(
@@ -91,7 +93,7 @@ public:
     virtual std::wstring title(
         const comet::com_ptr<IShellItemArray>& /*items*/) const
     {
-        return translate("File and Folder Tasks");
+        return translate(L"File and Folder Tasks");
     }
 
     virtual std::wstring icon(
@@ -103,7 +105,7 @@ public:
     virtual std::wstring tool_tip(
         const comet::com_ptr<IShellItemArray>& /*items*/) const
     {
-        return translate("These tasks help you manage your remote files.");
+        return translate(L"These tasks help you manage your remote files.");
     }
 };
 
@@ -117,8 +119,8 @@ std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
     HWND /*hwnd*/, const apidl_t& folder_pidl,
     com_ptr<IUnknown> ole_site,
-    const function<shared_ptr<sftp_provider>()>& provider,
-    const function<com_ptr<ISftpConsumer>()>& consumer)
+    const provider_factory& provider,
+    const consumer_factory& consumer)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
     shared_command_vector commands =
@@ -126,7 +128,11 @@ remote_folder_task_pane_tasks(
 
     com_ptr<IUICommand> new_folder =
         new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
-                folder_pidl, provider, consumer);
+        folder_pidl,
+        bind(
+            provider, _1, 
+            translate("Name of a running task", "Creating new folder")),
+        consumer);
 
     com_ptr<IObjectWithSite> object_with_site = com_cast(new_folder);
 

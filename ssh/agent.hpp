@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,135 +36,43 @@
 
 #ifndef SSH_AGENT_HPP
 #define SSH_AGENT_HPP
-#pragma once
 
-#include "exception.hpp"
+#include <ssh/detail/agent_state.hpp>
+#include <ssh/detail/session_state.hpp>
+#include <ssh/detail/libssh2/agent.hpp> // ssh::detail::libssh2::agent
 
-#include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
-#include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <string>
 
-#include <libssh2.h>
+#include <libssh2.h> // LIBSSH2_AGENT, libssh2_agent_*
 
 namespace ssh {
-namespace agent {
-
-namespace detail {
-    namespace libssh2 {
-    namespace agent {
-
-        /**
-         * Thin wrapper around libssh2_agent_init.
-         */
-        inline boost::shared_ptr<LIBSSH2_AGENT> init(
-            boost::shared_ptr<LIBSSH2_SESSION> session)
-        {
-            boost::shared_ptr<LIBSSH2_AGENT> agent(
-                ::libssh2_agent_init(session.get()),
-                ::libssh2_agent_free);
-            if (!agent)
-                BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
-                    boost::errinfo_api_function("libssh2_agent_init"));
-
-            return agent;
-        }
-
-        /**
-         * Thin wrapper around libssh2_agent_connect.
-         */
-        inline boost::shared_ptr<LIBSSH2_AGENT> connect(
-            boost::shared_ptr<LIBSSH2_AGENT> agent,
-            boost::shared_ptr<LIBSSH2_SESSION> session)
-        {
-            int rc = ::libssh2_agent_connect(agent.get());
-            if (rc < 0)
-                BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
-                    boost::errinfo_api_function("libssh2_agent_connect"));
-
-            // This second shared pointer to the same object only exists to
-            // manage the lifetime of the connection
-            return boost::shared_ptr<LIBSSH2_AGENT>(
-                agent.get(), ::libssh2_agent_disconnect);
-        }
-
-        /**
-         * Thin wrapper around libssh2_agent_get_identity.
-         */
-        inline bool get_identity(
-            boost::shared_ptr<LIBSSH2_AGENT> agent,
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            libssh2_agent_publickey** out, libssh2_agent_publickey* previous)
-        {
-            int rc = ::libssh2_agent_get_identity(agent.get(), out, previous);
-            if (rc < 0)
-                BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
-                    boost::errinfo_api_function("libssh2_agent_get_identity"));
-
-            return rc != 0;
-        }
-
-        /**
-         * Thin wrapper around libssh2_agent_list_identities.
-         */
-        inline void list_identities(
-            boost::shared_ptr<LIBSSH2_AGENT> agent,
-            boost::shared_ptr<LIBSSH2_SESSION> session)
-        {
-            int rc = ::libssh2_agent_list_identities(agent.get());
-            if (rc < 0)
-                BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
-                    boost::errinfo_api_function(
-                        "libssh2_agent_list_identities"));
-        }
-
-        /**
-         * Thin wrapper around libssh2_agent_userauth.
-         */
-        inline void userauth(
-            boost::shared_ptr<LIBSSH2_AGENT> agent,
-            boost::shared_ptr<LIBSSH2_SESSION> session,
-            const std::string& user_name,
-            libssh2_agent_publickey* identity)
-        {
-            int rc = ::libssh2_agent_userauth(
-                agent.get(), user_name.c_str(), identity);
-            if (rc < 0)
-                BOOST_THROW_EXCEPTION(
-                    ssh::exception::last_error(session) <<
-                    boost::errinfo_api_function("libssh2_agent_userauth"));
-        }
-
-    }}
-}
 
 class identity
 {
 public:
 
     identity(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
-        boost::shared_ptr<LIBSSH2_AGENT> agent,
+        boost::shared_ptr<detail::agent_state> agent,
         libssh2_agent_publickey* identity) :
-    m_session(session), m_agent(agent), m_identity(identity) {}
+    m_agent(agent), m_identity(identity) {}
 
     void authenticate(const std::string& user_name)
     {
+        detail::agent_state::scoped_lock lock = m_agent->aquire_lock();
+
         detail::libssh2::agent::userauth(
-            m_agent, m_session, user_name, m_identity);
+            m_agent->agent_ptr(), m_agent->session_ptr(), user_name.c_str(),
+            m_identity);
     }
         
 private:
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent;
+    boost::shared_ptr<detail::agent_state> m_agent;
     libssh2_agent_publickey* m_identity;
 };
 
@@ -185,10 +93,8 @@ class identity_iterator_base :
 
 public:
 
-    identity_iterator_base(
-        boost::shared_ptr<LIBSSH2_SESSION> session,
-        boost::shared_ptr<LIBSSH2_AGENT> agent) :
-    m_session(session), m_agent(agent), m_pos(NULL)
+    identity_iterator_base(boost::shared_ptr<agent_state> agent)
+        : m_agent(agent), m_pos(NULL)
     {
         increment();
     }
@@ -205,8 +111,7 @@ public:
      */
     template<typename OtherValue>
     identity_iterator_base(const identity_iterator_base<OtherValue>& other)
-        : m_session(other.m_session), m_agent(other.m_agent),
-        m_pos(other.m_pos) {}
+        : m_agent(other.m_agent), m_pos(other.m_pos) {}
 
 private:
 
@@ -217,8 +122,10 @@ private:
                 std::logic_error(
                     "Can't increment past the end of a collection"));
 
+        detail::agent_state::scoped_lock lock = m_agent->aquire_lock();
+
         bool no_more_identities = detail::libssh2::agent::get_identity(
-            m_agent, m_session, &m_pos, m_pos);
+            m_agent->agent_ptr(), m_agent->session_ptr(), &m_pos, m_pos) == 1;
 
         if (no_more_identities)
         {
@@ -239,11 +146,10 @@ private:
             BOOST_THROW_EXCEPTION(
                 std::logic_error("Can't dereference the end of a collection"));
 
-        return identity(m_session, m_agent, m_pos);
+        return identity(m_agent, m_pos);
     }
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent;
+    boost::shared_ptr<agent_state> m_agent;
     libssh2_agent_publickey* m_pos;
 };
 
@@ -262,22 +168,26 @@ public:
     typedef detail::identity_iterator_base<identity> iterator;
     typedef detail::identity_iterator_base<const identity> const_iterator;
 
-    explicit agent_identities(boost::shared_ptr<LIBSSH2_SESSION> session)
-        : m_session(session),
-          m_agent(detail::libssh2::agent::init(session)),
-          m_agent_connection(
-              detail::libssh2::agent::connect(m_agent, m_session))
+    explicit agent_identities(detail::session_state& session)
+        :
+    m_agent(
+        boost::make_shared<detail::agent_state>(boost::ref(session)))
+        // http://stackoverflow.com/a/1374266/67013
     {
         // We pull the identities out here (AND ONLY HERE) so that all copies
         // of the agent, iterators and identity objects refer to valid data.
         // If we called this when creating the iterator it would wipe out all
         // other iterators.
-        detail::libssh2::agent::list_identities(m_agent, m_session);
+
+        detail::agent_state::scoped_lock lock = m_agent->aquire_lock();
+
+        ::ssh::detail::libssh2::agent::list_identities(
+            m_agent->agent_ptr(), m_agent->session_ptr());
     }
 
     iterator begin() const
     {
-        return iterator(m_session, m_agent);
+        return iterator(m_agent);
     }
 
     iterator end() const
@@ -287,14 +197,9 @@ public:
 
 private:
 
-    boost::shared_ptr<LIBSSH2_SESSION> m_session;
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent;
-    // This must remain after m_agent so it is destroyed first as it points to
-    // the same agent struct.  It only exists to ensure the connection is shared
-    // between copies of this instance in the same way as the agent itself.
-    boost::shared_ptr<LIBSSH2_AGENT> m_agent_connection;
+    boost::shared_ptr<detail::agent_state> m_agent;
 };
 
-}} // namespace ssh::agent
+} // namespace ssh
 
 #endif

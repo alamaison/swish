@@ -26,7 +26,7 @@
 
 #include "connection_spec.hpp"
 
-#include "swish/provider/Provider.hpp" // CProvider
+#include "swish/connection/authenticated_session.hpp"
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/tuple/tuple.hpp> // tie
@@ -34,10 +34,8 @@
 
 #include <stdexcept> // invalid_argument
 
-using swish::provider::CProvider;
-using swish::provider::sftp_provider;
+using comet::com_ptr;
 
-using boost::shared_ptr;
 using boost::tie;
 
 using std::invalid_argument;
@@ -57,9 +55,10 @@ connection_spec::connection_spec(
         BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
 }
 
-shared_ptr<sftp_provider> connection_spec::create_session() const
+authenticated_session connection_spec::create_session(
+    com_ptr<ISftpConsumer> consumer) const
 {
-    return shared_ptr<sftp_provider>(new CProvider(m_user, m_host, m_port));
+    return authenticated_session(m_host, m_port, m_user, consumer);
 }
 
 bool connection_spec::operator<(const connection_spec& other) const

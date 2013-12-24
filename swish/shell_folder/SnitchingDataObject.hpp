@@ -148,8 +148,8 @@ public: // IDataObject methods
                 // need no-UI drag-and-drop.
                 swish::frontend::announce_last_exception(
                     NULL,
-                    boost::locale::translate("Unable to access the item"),
-                    boost::locale::translate("You might not have permission."),
+                    boost::locale::translate(L"Unable to access the item"),
+                    boost::locale::translate(L"You might not have permission."),
                     true);
                 throw;
             }

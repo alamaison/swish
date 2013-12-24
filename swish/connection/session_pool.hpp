@@ -29,10 +29,11 @@
 #define SWISH_CONNECTION_SESSION_POOL_HPP
 #pragma once
 
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/connection/connection_spec.hpp"
-#include "swish/provider/sftp_provider.hpp"
+#include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
-#include <boost/shared_ptr.hpp>
+#include <comet/ptr.h> // com_ptr
 
 #include <string>
 
@@ -54,9 +55,14 @@ public:
      * If an appropriate SFTP session already exists in the pool,
      * that connection is reused.  Otherwise a new one is created, and added
      * to the pool.
+     *
+     * The returned session is authenticated ready for use.  Any
+     * interaction needed to authenticate is performed via the `consumer`
+     * callback.
      */
-    boost::shared_ptr<swish::provider::sftp_provider> pooled_session(
-        const connection_spec& specification);
+    authenticated_session& pooled_session(
+        const connection_spec& specification,
+        comet::com_ptr<ISftpConsumer> consumer);
     
     /**
      * Is a connection with the given specification in the pool?

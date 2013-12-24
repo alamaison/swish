@@ -34,8 +34,11 @@
 
 #include <winapi/shell/pidl.hpp> // apidl_t
 
+#include <comet/ptr.h>
+
 #include <boost/shared_ptr.hpp>
 
+#include <string>
 
 namespace swish {
 namespace remote_folder {
@@ -47,13 +50,15 @@ swish::connection::connection_spec connection_from_pidl(
     const winapi::shell::pidl::apidl_t& pidl);
 
 /**
- * Creates an SFTP session.
+ * Creates lazy-connecting provider primed to connect for given PIDL.
  *
- * The session is created from the information stored in this
- * folder's PIDL, @a pidl.
+ * The session will be created from the information stored in this
+ * folder's PIDL, @a pidl, if connection is required.
  */
-boost::shared_ptr<swish::provider::sftp_provider> session_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl);
+boost::shared_ptr<swish::provider::sftp_provider> provider_from_pidl(
+    const winapi::shell::pidl::apidl_t& pidl,
+    comet::com_ptr<ISftpConsumer> consumer,
+    const std::string& task_name);
 
 }} // namespace swish::remote_folder
 

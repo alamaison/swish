@@ -54,18 +54,18 @@ namespace {
     public:
         PasswordForm(HWND hwnd_owner, const wstring& prompt)
             :
-            m_form(translate("Password"), 0, 0, 219, 49),
+            m_form(L"Swish", 0, 0, 219, 49),
             m_cancelled(true),
             m_password_box(edit(L"", 7, 18, 148, 14, edit::style::password))
         {
             m_form.add_control(m_password_box);
             m_form.add_control(label(prompt, 7, 7, 149, 8));
 
-            button ok(translate("OK"), 162, 7, 50, 16, true);
+            button ok(translate(L"OK"), 162, 7, 50, 16, true);
             ok.on_click().connect(bind(&PasswordForm::on_ok, this));
             m_form.add_control(ok);
 
-            button cancel(translate("Cancel"), 162, 26, 50, 16);
+            button cancel(translate(L"Cancel"), 162, 26, 50, 16);
             cancel.on_click().connect(m_form.killer());
             m_form.add_control(cancel);
             

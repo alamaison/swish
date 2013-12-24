@@ -27,23 +27,28 @@
 
 #include "pidl_connection.hpp"
 
-#include "swish/connection/connection_spec.hpp"
-#include "swish/connection/session_pool.hpp"
-#include "swish/provider/sftp_provider.hpp" // sftp_provider
+#include "swish/connection/session_manager.hpp"
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
+#include "swish/provider/Provider.hpp" // CProvider
+
+#include <boost/shared_ptr.hpp>
 
 #include <string>
 
 using swish::connection::connection_spec;
-using swish::connection::session_pool;
+using swish::connection::session_manager;
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
+using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
 using winapi::shell::pidl::apidl_t;
 
+using comet::com_ptr;
+
 using boost::shared_ptr;
 
+using std::string;
 using std::wstring;
 
 
@@ -79,10 +84,16 @@ connection_spec connection_from_pidl(const apidl_t& pidl)
     return connection_spec(host, user, port);
 }
 
-
-shared_ptr<sftp_provider> session_from_pidl(const apidl_t& pidl)
+shared_ptr<sftp_provider> provider_from_pidl(
+    const apidl_t& pidl, com_ptr<ISftpConsumer> consumer,
+    const string& task_name)
 {
-    return session_pool().pooled_session(connection_from_pidl(pidl));
+    connection_spec specification = connection_from_pidl(pidl);
+
+    return shared_ptr<CProvider>(
+        new CProvider(
+            session_manager().reserve_session(
+                specification, consumer, task_name)));
 }
 
 }} // namespace swish::remote_folder

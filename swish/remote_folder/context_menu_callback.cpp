@@ -29,7 +29,7 @@
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell_folder/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
-#include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // provider_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 
@@ -138,8 +138,8 @@ namespace {
 }
 
 context_menu_callback::context_menu_callback(
-    function<shared_ptr<sftp_provider>()> provider_factory,
-    function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
+    my_provider_factory provider_factory,
+    my_consumer_factory consumer_factory)
     : m_provider_factory(provider_factory),
     m_consumer_factory(consumer_factory) {}
 
@@ -156,7 +156,7 @@ bool context_menu_callback::merge_context_menu(
         BOOL success = ::InsertMenuW(
             hmenu, first_item_index, MF_BYPOSITION, 
             minimum_id + MENU_OFFSET_OPEN,
-            wstring(translate("Open &link")).c_str());
+            wstring(translate(L"Open &link")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
                 enable_error_info(last_error()) << 
@@ -178,7 +178,7 @@ bool context_menu_callback::merge_context_menu(
         BOOL success = ::InsertMenuW(
             hmenu, first_item_index, MF_BYPOSITION, 
             minimum_id + MENU_OFFSET_OPEN,
-            wstring(translate("&Open")).c_str());
+            wstring(translate(L"&Open")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
                 enable_error_info(last_error()) << 
@@ -225,9 +225,10 @@ void context_menu_callback::verb(
 
 namespace {
 
+    template<typename ProviderFactory, typename ConsumerFactory>
     bool do_invoke_command(
-        function<shared_ptr<sftp_provider>()> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
         const wstring& /*arguments*/, int window_mode)
     {
@@ -244,13 +245,15 @@ namespace {
             {
                 PidlFormat format(selection);
 
+
                 // Create SFTP Consumer for this HWNDs lifetime
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
-                shared_ptr<sftp_provider> provider = session_from_pidl(
-                    format.parent_folder());
-                CSftpDirectory directory(
-                    format.parent_folder(), provider, consumer);
+                shared_ptr<sftp_provider> provider = provider_from_pidl(
+                    format.parent_folder(), consumer,
+                    translate("Name of a running task", "Resolving link"));
+
+                CSftpDirectory directory(format.parent_folder(), provider);
 
                 apidl_t target = directory.ResolveLink(
                     pidl_cast<cpidl_t>(format.relative_file(0)));
@@ -272,8 +275,8 @@ namespace {
             catch (...)
             {
                 announce_last_exception(
-                    hwnd_view, translate("Unable to open the link"),
-                    translate("You might not have permission."));
+                    hwnd_view, translate(L"Unable to open the link"),
+                    translate(L"You might not have permission."));
                 throw;
             }
 
@@ -378,8 +381,8 @@ namespace {
             catch (...)
             {
                 announce_last_exception(
-                    hwnd_view, translate("Unable to open the file"),
-                    translate("You might not have permission."));
+                    hwnd_view, translate(L"Unable to open the file"),
+                    translate(L"You might not have permission."));
                 throw;
             }
 

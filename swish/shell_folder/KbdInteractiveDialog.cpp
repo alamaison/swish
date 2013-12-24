@@ -1,6 +1,6 @@
 /*  WTL dialog box for keyboard-interactive requests.
 
-    Copyright (C) 2008  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2008, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,11 +19,16 @@
 
 #include "KbdInteractiveDialog.h"
 
+#include "swish/utils.hpp"
+
+#include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/locale.hpp> // translate
 
 #include "wtl.hpp"          // WTL
 #include <atlctrls.h>       // WTL control wrappers
 
+using swish::utils::Utf8StringToWideString;
+using swish::utils::WideStringToUtf8String;
 using boost::locale::translate;
 
 using WTL::CStatic;
@@ -34,23 +39,24 @@ using WTL::CFontHandle;
 
 using ATL::CString;
 
+using std::pair;
+using std::string;
+using std::vector;
+
 #define SEPARATION 10
 #define MINI_SEPARATION 3
 #define RESPONSE_BOX_HEIGHT 22
 
+
 CKbdInteractiveDialog::CKbdInteractiveDialog(
-    PCWSTR pszName, PCWSTR pszInstruction,
-    PromptList vecPrompts, EchoList vecEcho)
+    const std::string& title, const std::string& instructions,
+    const std::vector<std::pair<std::string, bool>>& prompts)
     :
-    m_strName(pszName), m_strInstruction(pszInstruction),
-    m_vecPrompts(vecPrompts), m_vecEcho(vecEcho)
-{}
+m_title(title), m_instructions(instructions), m_prompts(prompts) {}
 
-CKbdInteractiveDialog::~CKbdInteractiveDialog() {}
-
-ResponseList CKbdInteractiveDialog::GetResponses()
+vector<string> CKbdInteractiveDialog::GetResponses()
 {
-    return m_vecResponses;
+    return m_responses;
 }
 
 /*----------------------------------------------------------------------------*
@@ -59,12 +65,13 @@ ResponseList CKbdInteractiveDialog::GetResponses()
 
 LRESULT CKbdInteractiveDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 {
-    // If server specifies a 'name' use it as the dialogue title
-    if (!m_strName.IsEmpty())
-        this->SetWindowText(m_strName);
+    // If server specifies a title use it as the dialogue title
+    if (!m_title.empty())
+        this->SetWindowText(
+            Utf8StringToWideString(m_title).c_str());
     else
         this->SetWindowText(
-            translate("Keyboard-interactive request").str<wchar_t>().c_str());
+            translate(L"Keyboard-interactive request").str().c_str());
 
     // Get size of this dialogue box
     CRect rectDialog;
@@ -74,18 +81,20 @@ LRESULT CKbdInteractiveDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
     CPoint point(0,0);
 
     // Draw instruction label
-    CRect rect = _DrawInstruction(m_strInstruction, rectDialog);
+    CRect rect = _DrawInstruction(rectDialog);
     point.Offset(rect.left, rect.Height()+2*SEPARATION);
 
     // Draw prompts and response boxes
-    for (size_t i = 0; i < m_vecPrompts.size(); i++)
+    typedef pair<string, bool> prompt_pair;
+    BOOST_FOREACH(const prompt_pair& prompt, m_prompts)
     {
-        CRect rectPrompt = _DrawPrompt(m_vecPrompts[i], point, rectDialog);
+        CRect rectPrompt = _DrawPrompt(prompt.first, point, rectDialog);
 
         // Increment point by height of prompt text plus small separation
         point.Offset(0, rectPrompt.Height() + MINI_SEPARATION);
 
-        CRect rectResponse = _DrawResponseBox(!m_vecEcho[i], point, rectDialog);
+        CRect rectResponse = _DrawResponseBox(
+            !prompt.second, point, rectDialog);
 
         // Increment point by height of response box plus separation
         point.Offset(0, rectResponse.Height() + SEPARATION);
@@ -123,8 +132,7 @@ LRESULT CKbdInteractiveDialog::OnCancel(WORD, WORD wID, HWND, BOOL&)
  * Private functions
  *----------------------------------------------------------------------------*/
 
-CRect CKbdInteractiveDialog::_DrawInstruction(
-    PCWSTR pszInstruction, CRect rectDialog)
+CRect CKbdInteractiveDialog::_DrawInstruction(CRect rectDialog)
 {
     // Fix instruction text's width to 20px fewer than the dialog and centre
     CRect rect(0, 0, rectDialog.Width()-20, 0);
@@ -132,7 +140,7 @@ CRect CKbdInteractiveDialog::_DrawInstruction(
 
     // Always draw the instruction label even if empty to override resource text
     CStatic instruction(GetDlgItem(IDC_INSTRUCTION));
-    instruction.SetWindowText(pszInstruction);
+    instruction.SetWindowText(Utf8StringToWideString(m_instructions).c_str());
 
     CFontHandle font, fontOld;
     font = instruction.GetFont();
@@ -140,20 +148,20 @@ CRect CKbdInteractiveDialog::_DrawInstruction(
     // Calculate neccessary size of instruction label
     CClientDC dc(instruction);
     fontOld = dc.SelectFont(font);
-    dc.DrawText(m_strInstruction, -1, rect,
+    dc.DrawText(Utf8StringToWideString(m_instructions).c_str(), -1, rect,
         DT_CALCRECT | DT_WORDBREAK | DT_NOPREFIX);
     dc.SelectFont(fontOld);
 
     // Set instruction size, position and text
     instruction.MoveWindow(rect);
-    instruction.SetWindowText(pszInstruction);
+    instruction.SetWindowText(Utf8StringToWideString(m_instructions).c_str());
 
     // Return instruction's rectangle
     return rect;
 }
 
 CRect CKbdInteractiveDialog::_DrawPrompt(
-    PCWSTR pszPrompt, CPoint point, CRect rectDialog)
+    const string& prompt, CPoint point, CRect rectDialog)
 {
     // Use same font as instruction label
     CStatic instruction(GetDlgItem(IDC_INSTRUCTION));
@@ -161,25 +169,26 @@ CRect CKbdInteractiveDialog::_DrawPrompt(
     font = instruction.GetFont();
 
     // Prompt label
-    CStatic prompt;
-    prompt.Create(*this, NULL, NULL, 
+    CStatic prompt_label;
+    prompt_label.Create(*this, NULL, NULL, 
         WS_VISIBLE | WS_CHILD | SS_WORDELLIPSIS | SS_NOPREFIX);
 
     // Fix prompt text's width to 20px fewer than the dialog
     CRect rect(0, 0, rectDialog.Width()-20, 0);
 
     // Calculate necessary (vertical) size of prompt label
-    CClientDC dcPrompt(prompt);
+    CClientDC dcPrompt(prompt_label);
     fontOld = dcPrompt.SelectFont(font);
     dcPrompt.DrawText(
-        pszPrompt, -1, rect, DT_CALCRECT | DT_WORD_ELLIPSIS | DT_NOPREFIX);
+        Utf8StringToWideString(prompt).c_str(), -1, rect,
+        DT_CALCRECT | DT_WORD_ELLIPSIS | DT_NOPREFIX);
     dcPrompt.SelectFont(fontOld);
 
     // Set prompt size, position, font and text
     rect.OffsetRect(point);
-    prompt.MoveWindow(rect);
-    prompt.SetFont(font);
-    prompt.SetWindowText(pszPrompt);
+    prompt_label.MoveWindow(rect);
+    prompt_label.SetFont(font);
+    prompt_label.SetWindowText(Utf8StringToWideString(prompt).c_str());
 
     // Return prompt's rectangle
     return rect;
@@ -247,13 +256,13 @@ CRect CKbdInteractiveDialog::_DrawOKCancel(
  */
 void CKbdInteractiveDialog::_ExchangeData()
 {
-    m_vecResponses.clear();
+    m_responses.clear();
 
     for each (HWND hwnd in m_vecResponseWindows)
     {
         CEdit edit(hwnd);
         CString strResponse;
         edit.GetWindowText(strResponse);
-        m_vecResponses.push_back(strResponse);
+        m_responses.push_back(WideStringToUtf8String(strResponse.GetString()));
     }
 }

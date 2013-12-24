@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,10 +57,10 @@ wstring CreateDirectoryOperation::title() const
 {
     return (wformat(
         translate(
-            "Top line of a transfer progress window saying which "
-            "file is being copied. {1} is replaced with the file path "
-            "and must be included in your translation.",
-            "Copying '{1}'"))
+            L"Top line of a transfer progress window saying which "
+            L"file is being copied. {1} is replaced with the file path "
+            L"and must be included in your translation.",
+            L"Copying '{1}'"))
         % m_source.relative_name()).str();
 }
 
@@ -68,23 +68,23 @@ wstring CreateDirectoryOperation::description() const
 {
     return (wformat(
         translate(
-            "Second line of a transfer progress window giving the destination "
-            "directory. {1} is replaced with the directory path and must be "
-            "included in your translation.",
-            "To '{1}'"))
+            L"Second line of a transfer progress window giving the destination "
+            L"directory. {1} is replaced with the directory path and must be "
+            L"included in your translation.",
+            L"To '{1}'"))
         % m_destination.root_name()).str();
 }
 
 void CreateDirectoryOperation::operator()(
     OperationCallback& callback,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer) const
+    shared_ptr<sftp_provider> provider) const
 {
     callback.update_progress(0, 1);
 
     resolved_destination resolved_target(m_destination.resolve_destination());
 
     CSftpDirectory sftp_directory(
-        resolved_target.directory(), provider, consumer);
+        resolved_target.directory(), provider);
     sftp_directory.CreateDirectory(resolved_target.filename());
 
     callback.update_progress(1, 1);

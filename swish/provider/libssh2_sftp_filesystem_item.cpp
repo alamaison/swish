@@ -33,7 +33,7 @@
 
 #include "swish/utils.hpp" // Utf8StringToWideString
 
-#include <ssh/sftp.hpp> // file_attributes, sftp_file
+#include <ssh/filesystem.hpp> // file_attributes, sftp_file
 
 #include <boost/regex.hpp> // Regular expressions
 #include <boost/shared_ptr.hpp>
@@ -42,8 +42,8 @@ using swish::utils::Utf8StringToWideString;
 
 using comet::datetime_t;
 
-using ssh::sftp::file_attributes;
-using ssh::sftp::sftp_file;
+using ssh::filesystem::file_attributes;
+using ssh::filesystem::sftp_file;
 
 using boost::optional;
 using boost::shared_ptr;

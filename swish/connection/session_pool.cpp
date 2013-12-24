@@ -27,21 +27,24 @@
 
 #include "session_pool.hpp"
 
+// Using ptr_map because move-aware map isn't usable with C++03
+#include <boost/ptr_container/ptr_map.hpp>
+//#include <boost/container/map.hpp> // move-aware map
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp> // call_once
 
-#include <map>
 #include <memory> // auto_ptr
 
 using swish::provider::sftp_provider;
 
+using comet::com_ptr;
+
 using boost::call_once;
+using boost::container::map;
 using boost::mutex;
 using boost::once_flag;
-using boost::shared_ptr;
 
 using std::auto_ptr;
-using std::map;
 
 
 namespace swish {
@@ -54,7 +57,12 @@ namespace {
  */
 class session_pool_impl
 {
-    typedef map<connection_spec, shared_ptr<sftp_provider>> pool_mapping;
+    // Using ptr_map because move-aware map isn't usable with C++03
+    // (http://bit.ly/1jP9BDL, https://svn.boost.org/trac/boost/ticket/6618)
+    typedef boost::ptr_map<connection_spec, authenticated_session>
+        pool_mapping;
+    //typedef boost::container::map<connection_spec, authenticated_session>
+    //    pool_mapping;
 
 public:
 
@@ -64,8 +72,8 @@ public:
         return *m_instance;
     }
 
-    shared_ptr<sftp_provider> pooled_session(
-        const connection_spec& specification)
+    authenticated_session& pooled_session(
+        connection_spec specification, com_ptr<ISftpConsumer> consumer)
     {
         mutex::scoped_lock lock(m_session_pool_guard);
 
@@ -73,14 +81,25 @@ public:
 
         if (session != m_sessions.end())
         {
-            return session->second;
+            if (!session->second->is_dead())
+            {
+                return *(session->second);
+            }
+
+            // Dead sessions are replaced in the pool
         }
-        else
-        {
-            shared_ptr<sftp_provider> provider = specification.create_session();
-            m_sessions[specification] = provider;
-            return provider;
-        }
+
+        /*
+        return *(m_sessions.insert(
+            pool_mapping::value_type(
+                specification,
+                authenticated_session(
+                    specification.create_session(consumer)))).first);
+        */
+        return *m_sessions.insert(
+                specification,
+                new authenticated_session(
+                    specification.create_session(consumer))).first->second;
     }
 
     bool has_session(const connection_spec& specification) const
@@ -121,10 +140,10 @@ auto_ptr<session_pool_impl> session_pool_impl::m_instance;
 }
 
 
-shared_ptr<sftp_provider> session_pool::pooled_session(
-    const connection_spec& specification)
+authenticated_session& session_pool::pooled_session(
+    const connection_spec& specification, com_ptr<ISftpConsumer> consumer)
 {
-    return session_pool_impl::get().pooled_session(specification);
+    return session_pool_impl::get().pooled_session(specification, consumer);
 }
 
 bool session_pool::has_session(const connection_spec& specification) const

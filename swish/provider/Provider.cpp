@@ -37,10 +37,8 @@
 
 #include "Provider.hpp"
 
-#include "KeyboardInteractive.hpp"
-#include "SessionFactory.hpp" // running_session
-#include "SftpStream.hpp"
-
+#include "swish/connection/authenticated_session.hpp"
+#include "swish/connection/session_manager.hpp" // session_reservation
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
@@ -49,18 +47,19 @@
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/datetime.h> // datetime_t
+#include <comet/enum.h> // stl_enumeration
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
-#include <comet/enum.h> // stl_enumeration
 #include <comet/server.h> // simple_object for STL holder with AddRef lifetime
+#include <comet/stream.h> // adapt_stream_pointer
 
-#include <ssh/sftp.hpp> // directory_iterator
+#include <ssh/filesystem.hpp> // directory_iterator
+#include <ssh/stream.hpp> // ofstream, ifstream
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
-#include <boost/make_shared.hpp> // make_shared<provider>
-#include <boost/thread/locks.hpp> // lock_guard
-#include <boost/thread/mutex.hpp>
+#include <boost/make_shared.hpp> // make_shared
+#include <boost/move/move.hpp> // BOOST_RV_REF
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error, system_category
 
@@ -70,31 +69,35 @@
 #include <string>
 #include <vector> // to hold listing
 
+using swish::connection::authenticated_session;
+using swish::connection::session_reservation;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
 
+using comet::adapt_stream_pointer;
 using comet::bstr_t;
 using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
 using comet::stl_enumeration;
 
+using boost::filesystem::path;
 using boost::filesystem::wpath;
-using boost::lock_guard;
 using boost::make_filter_iterator;
 using boost::make_shared;
-using boost::mutex;
-using boost::shared_ptr;
+namespace errc = boost::system::errc;
 using boost::system::system_category;
 using boost::system::system_error;
 
-using ssh::sftp::attributes;
-using ssh::sftp::canonical_path;
-using ssh::sftp::directory_iterator;
-using ssh::sftp::file_attributes;
-using ssh::sftp::sftp_channel;
-using ssh::sftp::sftp_file;
+using ssh::filesystem::directory_iterator;
+using ssh::filesystem::file_attributes;
+using ssh::filesystem::fstream;
+using ssh::filesystem::ifstream;
+using ssh::filesystem::ofstream;
+using ssh::filesystem::overwrite_behaviour;
+using ssh::filesystem::sftp_filesystem;
+using ssh::filesystem::sftp_file;
 
 using std::exception;
 using std::invalid_argument;
@@ -109,176 +112,72 @@ class provider
 {
 public:
 
-    provider(const wstring& user, const wstring& host, int port);
-    ~provider() throw();
+    explicit provider(BOOST_RV_REF(session_reservation) session_ticket);
 
-    virtual directory_listing listing(
-        com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory);
+    directory_listing listing(const sftp_provider_path& directory);
 
-    virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        bool writeable);
+    comet::com_ptr<IStream> get_file(
+        std::wstring file_path, std::ios_base::openmode open_mode);
 
     VARIANT_BOOL rename(
         com_ptr<ISftpConsumer> consumer, const wpath& from_path,
         const wpath& to_path);
 
-    void delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
+    void remove_all(const wpath& path);
 
-    void delete_directory(com_ptr<ISftpConsumer> consumer, const wpath& path);
+    void create_new_directory(const wpath& path);
 
-    void create_new_file(com_ptr<ISftpConsumer> consumer, const wpath& path);
+    BSTR resolve_link(const wpath& path);
 
-    void create_new_directory(
-        com_ptr<ISftpConsumer> consumer, const wpath& path);
-
-    BSTR resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path);
-
-    virtual sftp_filesystem_item stat(
-        com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-        bool follow_links);
+    sftp_filesystem_item stat(
+        const sftp_provider_path& path, bool follow_links);
 
 private:
 
-    boost::mutex m_session_creation_mutex;
-    boost::shared_ptr<running_session> m_session; ///< SSH/SFTP session
-
-    /** @name Fields used for lazy connection. */
-    // @{
-    wstring m_user;
-    wstring m_host;
-    UINT m_port;
-    // @}
-
-    void _Connect(com_ptr<ISftpConsumer> consumer);
-    void _Disconnect();
-
-    wstring _GetLastErrorMessage();
-    wstring _GetSftpErrorMessage( ULONG uError );
-
-    HRESULT _RenameSimple(const string& from, const string& to);
-    HRESULT _RenameRetryWithOverwrite(
-        __in ISftpConsumer *pConsumer, __in ULONG uPreviousError,
-        const string& from, const string& to,
-        wstring& error_out);
-    HRESULT _RenameAtomicOverwrite(
-        const string& from, const string& to,
-        wstring& error_out);
-    HRESULT _RenameNonAtomicOverwrite(
-        const string& from, const string& to,
-        wstring& error_out);
-
-    HRESULT _Delete(
-        __in_z const char *szPath, wstring& error_out);
-    HRESULT _DeleteDirectory(
-        __in_z const char *szPath, wstring& error_out);
-    HRESULT _DeleteRecursive(
-        __in_z const char *szPath, wstring& error_out);
+    session_reservation m_ticket;
 };
 
-CProvider::CProvider(const wstring& user, const wstring& host, UINT port)
+CProvider::CProvider(BOOST_RV_REF(session_reservation) session_ticket)
 {
-    if (user.empty())
-        BOOST_THROW_EXCEPTION(invalid_argument("User name required"));
-    if (host.empty())
-        BOOST_THROW_EXCEPTION(invalid_argument("Host name required"));
-    if (port < MIN_PORT || port > MAX_PORT)
-        BOOST_THROW_EXCEPTION(invalid_argument("Not a valid port number"));
-
-    m_provider = make_shared<provider>(user, host, port);
+    m_provider = make_shared<provider>(boost::ref(session_ticket));
 }
 
 
-directory_listing CProvider::listing(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory)
+directory_listing CProvider::listing(const sftp_provider_path& directory)
 {
-    return m_provider->listing(consumer, directory);
+    return m_provider->listing(directory);
 }
 
 comet::com_ptr<IStream> CProvider::get_file(
-    comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-    bool writeable)
-{ return m_provider->get_file(consumer, file_path, writeable); }
+    std::wstring file_path, std::ios_base::openmode open_mode)
+{ return m_provider->get_file(file_path, open_mode); }
 
 VARIANT_BOOL CProvider::rename(
     ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
 { return m_provider->rename(consumer, from_path, to_path); }
 
-void CProvider::delete_file(ISftpConsumer* consumer, BSTR path)
-{ m_provider->delete_file(consumer, path); }
+void CProvider::remove_all(BSTR path)
+{ m_provider->remove_all(path); }
 
-void CProvider::delete_directory(ISftpConsumer* consumer, BSTR path)
-{ m_provider->delete_directory(consumer, path); }
+void CProvider::create_new_directory(BSTR path)
+{ m_provider->create_new_directory(path); }
 
-void CProvider::create_new_file(ISftpConsumer* consumer, BSTR path)
-{ m_provider->create_new_file(consumer, path); }
-
-void CProvider::create_new_directory(ISftpConsumer* consumer, BSTR path)
-{ m_provider->create_new_directory(consumer, path); }
-
-BSTR CProvider::resolve_link(ISftpConsumer* consumer, BSTR path)
-{ return m_provider->resolve_link(consumer, path); }
+BSTR CProvider::resolve_link(BSTR path)
+{ return m_provider->resolve_link(path); }
 
 sftp_filesystem_item CProvider::stat(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-    bool follow_links)
+    const sftp_provider_path& path, bool follow_links)
 {
-    return m_provider->stat(consumer, path, follow_links);
+    return m_provider->stat(path, follow_links);
 }
 
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(const wstring& user, const wstring& host, int port)
-    : m_user(user), m_host(host), m_port(port)
-{
-    assert(!m_user.empty());
-    assert(!m_host.empty());
-    assert(m_port >= MIN_PORT);
-    assert(m_port <= MAX_PORT);
-}
-
-/**
- * Free libssh2.
- */
-provider::~provider() throw()
-{
-    try
-    {
-        _Disconnect(); // Destroy session before shutting down Winsock
-    }
-    catch (const std::exception& e)
-    {
-        trace("EXCEPTION THROWN IN DESTRUCTOR: %s") % e.what();
-        assert(!"EXCEPTION THROWN IN DESTRUCTOR");
-    }
-}
-
-/**
- * Sets up the SFTP session, prompting user for input if necessary.
- *
- * The remote server must have its identity verified which may require user
- * confirmation and the user must authenticate with the remote server
- * which might be done silently (i.e. with a public-key) or may require
- * user input.
- *
- * If the session has already been created, this function does nothing.
- */
-void provider::_Connect(com_ptr<ISftpConsumer> consumer)
-{
-    lock_guard<mutex> lock(m_session_creation_mutex);
-    if (!m_session || m_session->IsDead())
-    {
-        m_session = CSessionFactory::CreateSftpSession(
-            m_host.c_str(), m_port, m_user.c_str(), consumer.get());
-    }
-}
-
-void provider::_Disconnect()
-{
-    lock_guard<mutex> lock(m_session_creation_mutex);
-    m_session.reset();
-}
+provider::provider(BOOST_RV_REF(session_reservation) ticket)
+:
+m_ticket(ticket)
+{}
 
 namespace {
 
@@ -292,29 +191,23 @@ namespace {
 /**
 * Retrieves a file listing, @c ls, of a given directory.
 *
-* @param consumer   UI callback.  
 * @param directory  Absolute path of the directory to list.
 */
-directory_listing provider::listing(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& directory)
+directory_listing provider::listing(const sftp_provider_path& directory)
 {
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    _Connect(consumer);
-
-    mutex::scoped_lock lock = m_session->aquire_lock();
-
-    sftp_channel channel(m_session->get(), m_session->sftp());
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     string path = WideStringToUtf8String(directory.string());
 
     vector<sftp_filesystem_item> files;
     transform(
         make_filter_iterator(
-            not_special_file, directory_iterator(channel, path)),
+            not_special_file, channel.directory_iterator(path)),
         make_filter_iterator(
-            not_special_file, directory_iterator()),
+            not_special_file, channel.directory_iterator()),
         back_inserter(files),
         libssh2_sftp_filesystem_item::create_from_libssh2_file);
 
@@ -322,19 +215,208 @@ directory_listing provider::listing(
 }
 
 com_ptr<IStream> provider::get_file(
-    com_ptr<ISftpConsumer> consumer, wstring file_path, bool writeable)
+    wstring file_path, std::ios_base::openmode mode)
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
 
-    _Connect(consumer);
-
-    CSftpStream::OpenFlags flags = CSftpStream::read;
-    if (writeable)
-        flags |= CSftpStream::write | CSftpStream::create;
-
     string path = WideStringToUtf8String(file_path);
-    return new CSftpStream(m_session, path, flags);
+
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
+
+    if (mode & std::ios_base::out && mode & std::ios_base::in)
+    {
+        return adapt_stream_pointer(
+            make_shared<fstream>(boost::ref(channel), path, mode),
+            wpath(file_path).filename());
+    }
+    else if (mode & std::ios_base::out)
+    {
+        return adapt_stream_pointer(
+            make_shared<ofstream>(boost::ref(channel), path, mode),
+            wpath(file_path).filename());
+    }
+    else if (mode & std::ios_base::in)
+    {
+        return adapt_stream_pointer(
+            make_shared<ifstream>(boost::ref(channel), path, mode),
+            wpath(file_path).filename());
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("Stream must be input, output or both"));
+    }
+}
+
+namespace {
+    
+/**
+ * Rename file or directory and overwrite any obstruction non-atomically.
+ *
+ * This involves renaming the obstruction at the target to a temporary file, 
+ * renaming the source file to the target and then deleting the renamed 
+ * obstruction.  As this is not an atomic operation it is possible to fail 
+ * between any of these stages and is not a prefect solution.  It may, for 
+ * instance, leave the temporary file behind.
+ *
+ * @param from
+ *     Absolute path of the file or directory to be renamed.
+ * @param to
+ *     Absolute path to rename `from` to.
+ *
+ * @throws  ssh_error if the operation fails.
+ */
+void rename_non_atomic_overwrite(
+    authenticated_session& session, const string& from, const string& to)
+{
+    string temporary = to + ".swish_rename_temp";
+
+    session.get_sftp_filesystem().rename(
+        to, temporary, overwrite_behaviour::prevent_overwrite);
+
+    try
+    {
+        session.get_sftp_filesystem().rename(
+            from, to, overwrite_behaviour::prevent_overwrite);
+    }
+    catch (const exception&)
+    {
+        // Rename failed, rename our temporary back to its old name
+        try
+        {
+            session.get_sftp_filesystem().rename(
+                from, to,  overwrite_behaviour::prevent_overwrite);
+        }
+        catch (const exception&) { /* Suppress to avoid nested exception */ }
+
+        throw;
+    }
+   
+    // We ignore any failure to clean up the temporary backup as the rename
+    // has succeeded, whether or not cleanup fails.
+    //
+    // XXX: We could inform the user of this here.  Might make UI
+    // separation messy though.
+    try
+    {
+        session.get_sftp_filesystem().remove_all(temporary);
+    }
+    catch (const exception&) {}
+}
+
+
+/**
+ * Retry renaming after seeking permission to overwrite the obstruction at
+ * the target.
+ *
+ * If this fails the file or directory really can't be renamed and the error
+ * message from libssh2 is returned in @a error_out.
+ *
+ * @param pConsumer
+ *     Callback for user confirmation.
+ *
+ * @param previous_error
+ *     Error code of the previous rename attempt in order to determine if an
+ *     overwrite has any chance of being successful.
+ *
+ * @param from
+ *     Absolute path of the file or directory to be renamed.
+ *
+ * @param to
+ *     Absolute path to rename @a from to.
+ *
+ * @returns `true` if the the rename operation succeeds as a result of
+ *           retrying it,
+ *          `false` if the the rename operation needed user permission for
+ *           something and the user chose to abort the renaming.
+ *
+ * @throws `previous_error` if the situation is not caused by an obstruction
+ *         at the target.  Retrying renaming is not going to help here.
+ *
+ * @bug  The strings aren't converted from UTF-8 to UTF-16 before displaying
+ *       to the user.  Any unicode filenames will produce gibberish in the
+ *       confirmation dialogues.
+ */
+bool rename_retry_with_overwrite(
+    authenticated_session& session, ISftpConsumer *pConsumer,
+    const system_error& previous_error, const string& from, const string& to)
+{
+    assert(
+        previous_error.code() && "Previous attempt succeeded; why retry?");
+
+    if (previous_error.code() == errc::file_exists)
+    {
+        HRESULT hr = pConsumer->OnConfirmOverwrite(
+            bstr_t(from).in(), bstr_t(to).in());
+        if (FAILED(hr))
+            return false;
+
+        // Attempt rename again this time allowing it to atomically overwrite
+        // any obstruction.
+        // This will only work on a server supporting SFTP version 5 or above.
+
+        try
+        {
+            session.get_sftp_filesystem().rename(
+                from, to, overwrite_behaviour::atomic_overwrite);
+            return true;
+        }
+        catch (const system_error& e)
+        {
+            if (e.code() == errc::operation_not_supported)
+            {
+                rename_non_atomic_overwrite(session, from, to);
+                return true;
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+    }
+    else
+    {
+        // The failure is an unspecified one. This isn't the end of the world. 
+        // SFTP servers < v5 (i.e. most of them) return this error code if the
+        // file already exists as they don't explicitly support overwriting.
+        // We need to stat() the file to find out if this is the case and if 
+        // the user confirms the overwrite we will have to explicitly delete
+        // the target file first (via a temporary) and then repeat the rename.
+        //
+        // NOTE: this is not a perfect solution due to the possibility
+        // for race conditions.
+
+        // We used to test for FX_FAILURE here, because that's what OpenSSH 
+        // returns, but changed it because the v3 standard (v5 handled above)
+        // doesn't promise any particular error code so we might as well
+        // treat them all this way.
+
+        if (exists(session.get_sftp_filesystem(), to))
+        {
+            HRESULT hr = pConsumer->OnConfirmOverwrite(
+                bstr_t(from).in(), bstr_t(to).in());
+            if (FAILED(hr))
+                return false;
+
+            rename_non_atomic_overwrite(session, from, to);
+            return true;
+        }
+        else
+        {
+            // Rethrow the last exception because it wasn't caused by an
+            // obstruction.
+            //
+            // RACE CONDITION: It might have been caused by an obstruction
+            // which was then cleared by the time we did the existence check
+            // above.  The result it just that we would fail when we could
+            // have succeeded.  Such an edge case that it doesn't matter.
+            throw previous_error;
+        }
+    }
+}
+
 }
 
 /**
@@ -391,403 +473,39 @@ VARIANT_BOOL provider::rename(
     string from = WideStringToUtf8String(from_path.string());
     string to = WideStringToUtf8String(to_path.string());
 
-    _Connect(consumer);
-
-    HRESULT hr = _RenameSimple(from, to);
-    if (SUCCEEDED(hr)) // Rename was successful without overwrite
+    try
+    {
+        m_ticket.session().get_sftp_filesystem().rename(
+            from, to, overwrite_behaviour::prevent_overwrite);
+        
+        // Rename was successful without overwrite
         return VARIANT_FALSE;
-
-    // Rename failed - this is OK, it might be an overwrite - check
-    bstr_t message;
-    int nErr; PSTR pszErr; int cchErr;
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        nErr = libssh2_session_last_error(
-            *m_session, &pszErr, &cchErr, false);
     }
-
-    if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
+    catch (const system_error& e)
     {
-        wstring error_out;
-        
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        ULONG sftp_last_error = libssh2_sftp_last_error(*m_session);
-
-        hr = _RenameRetryWithOverwrite(
-            consumer.get(), sftp_last_error, from, to, error_out);
-        if (SUCCEEDED(hr))
+        if (rename_retry_with_overwrite(
+            m_ticket.session(), consumer.get(), e, from, to))
+        {
             return VARIANT_TRUE;
-        else if (hr == E_ABORT) // User denied overwrite
-            BOOST_THROW_EXCEPTION(com_error(hr));
+        }
         else
-            message = error_out;
-    }
-    else // A non-SFTP error occurred
-        message = pszErr;
-
-    // Report remaining errors
-    BOOST_THROW_EXCEPTION(com_error(message, E_FAIL));
-}
-
-/**
- * Renames a file or directory but prevents overwriting any existing item.
- *
- * @returns Success or failure of the operation.
- *    @retval S_OK   if the file or directory was successfully renamed
- *    @retval E_FAIL if there already is a file or directory at the target path
- *
- * @param from  Absolute path of the file or directory to be renamed.
- * @param to    Absolute path to rename @a from to.
- */
-HRESULT provider::_RenameSimple(const string& from, const string& to)
-{
-    mutex::scoped_lock lock = m_session->aquire_lock();
-    int rc = libssh2_sftp_rename_ex(
-        *m_session, from.data(), from.size(), to.data(), to.size(),
-        LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE);
-
-    return (!rc) ? S_OK : E_FAIL;
-}
-
-/**
- * Retry renaming file or directory if possible, after seeking permission to 
- * overwrite the obstruction at the target.
- *
- * If this fails the file or directory really can't be renamed and the error
- * message from libssh2 is returned in @a error_out.
- *
- * @param [in]  uPreviousError Error code of the previous rename attempt in
- *                             order to determine if an overwrite has any chance
- *                             of being successful.
- *
- * @param [in]  from           Absolute path of the file or directory to 
- *                             be renamed.
- *
- * @param [in]  to             Absolute path to rename @a from to.
- *
- * @param [out] error_out       Error message if the operation fails.
- *
- * @bug  The strings aren't converted from UTF-8 to UTF-16 before displaying
- *       to the user.  Any unicode filenames will produce gibberish in the
- *       confirmation dialogues.
- */
-HRESULT provider::_RenameRetryWithOverwrite(
-    ISftpConsumer *pConsumer,
-    ULONG uPreviousError, const string& from, const string& to, 
-    wstring& error_out)
-{
-    HRESULT hr;
-
-    if (uPreviousError == LIBSSH2_FX_FILE_ALREADY_EXISTS)
-    {
-        hr = pConsumer->OnConfirmOverwrite(bstr_t(from).in(), bstr_t(to).in());
-        if (FAILED(hr))
-            return E_ABORT; // User disallowed overwrite
-
-        // Attempt rename again this time allowing overwrite
-        return _RenameAtomicOverwrite(from, to, error_out);
-    }
-    else if (uPreviousError == LIBSSH2_FX_FAILURE)
-    {
-        // The failure is an unspecified one. This isn't the end of the world. 
-        // SFTP servers < v5 (i.e. most of them) return this error code if the
-        // file already exists as they don't explicitly support overwriting.
-        // We need to stat() the file to find out if this is the case and if 
-        // the user confirms the overwrite we will have to explicitly delete
-        // the target file first (via a temporary) and then repeat the rename.
-        //
-        // NOTE: this is not a perfect solution due to the possibility
-        // for race conditions.
-        LIBSSH2_SFTP_ATTRIBUTES attrsTarget;
-        ::ZeroMemory(&attrsTarget, sizeof attrsTarget);
-        
-        int rc;
         {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_stat(*m_session, to.c_str(), &attrsTarget);
+            BOOST_THROW_EXCEPTION(com_error(E_ABORT));
         }
-        if (!rc)
-        {
-            // File already exists
-            hr = pConsumer->OnConfirmOverwrite(
-                bstr_t(from).in(), bstr_t(to).in());
-            if (FAILED(hr))
-                return E_ABORT; // User disallowed overwrite
-
-            return _RenameNonAtomicOverwrite(from, to, error_out);
-        }
-    }
-        
-    // File does not already exist, another error caused rename failure
-    error_out = _GetSftpErrorMessage(uPreviousError);
-    return E_FAIL;
-}
-
-/**
- * Rename file or directory and atomically overwrite any obstruction.
- *
- * @remarks
- * This will only work on a server supporting SFTP version 5 or above.
- *
- * @param [in]  from      Absolute path of the file or directory to be renamed.
- * @param [in]  to        Absolute path to rename @a from to.
- * @param [out] error_out  Error message if the operation fails.
- */
-HRESULT provider::_RenameAtomicOverwrite(
-    const string& from, const string& to, wstring& error_out)
-{
-    // Lock must not be released until after we get the error message
-    // or we might get a message produced on another thread
-
-    mutex::scoped_lock lock = m_session->aquire_lock();
-
-    int rc = libssh2_sftp_rename_ex(
-        *m_session, from.data(), from.size(), to.data(), to.size(), 
-        LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | 
-        LIBSSH2_SFTP_RENAME_NATIVE);
-
-    if (!rc)
-        return S_OK;
-    else
-    {
-        char *pszMessage; int cchMessage;
-        libssh2_session_last_error(
-            *m_session, &pszMessage, &cchMessage, false);
-        
-        error_out = Utf8StringToWideString(pszMessage);
-        return E_FAIL;
     }
 }
 
-
-/**
- * Rename file or directory and overwrite any obstruction non-atomically.
- *
- * This involves renaming the obstruction at the target to a temporary file, 
- * renaming the source file to the target and then deleting the renamed 
- * obstruction.  As this is not an atomic operation it is possible to fail 
- * between any of these stages and is not a prefect solution.  It may, for 
- * instance, leave the temporary file behind.
- *
- * @param [in]  from      Absolute path of the file or directory to be renamed.
- * @param [in]  to        Absolute path to rename @a from to.
- * @param [out] error_out  Error message if the operation fails.
- */
-HRESULT provider::_RenameNonAtomicOverwrite(
-    const string& from, const string& to, wstring& error_out)
+void provider::remove_all(const wpath& target)
 {
-    // First, rename existing file to temporary
-    string temporary(to);
-    temporary += ".swish_rename_temp";
-    int rc;
-    
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        rc = libssh2_sftp_rename(*m_session, to.c_str(), temporary.c_str());
-    }
-
-    if (!rc)
-    {
-        // Rename our subject
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
-        }
-        if (!rc)
-        {
-            // Delete temporary
-            wstring error_out; // unused
-            HRESULT hr = _DeleteRecursive(temporary.c_str(), error_out);
-            assert(SUCCEEDED(hr));
-            (void)hr; // The rename succeeded even if this fails
-            return S_OK;
-        }
-
-        // Rename failed, rename our temporary back to its old name
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_rename(*m_session, from.c_str(), to.c_str());
-        }
-        assert(!rc);
-
-        error_out = _T("Cannot overwrite \"");
-        error_out += Utf8StringToWideString(from + "\" with \"" + to);
-        error_out += _T("\": Please specify a different name or delete \"");
-        error_out += Utf8StringToWideString(to + "\" first.");
-    }
-
-    return E_FAIL;
-}
-
-void provider::delete_file(com_ptr<ISftpConsumer> consumer, const wpath& path)
-{
-    if (path.empty())
+    if (target.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    _Connect(consumer);
+    path utf8_path = WideStringToUtf8String(target.string());
 
-    // Delete file
-    wstring error_out;
-    string utf8_path = WideStringToUtf8String(path.string());
-    HRESULT hr = _Delete(utf8_path.c_str(), error_out);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
+    m_ticket.session().get_sftp_filesystem().remove_all(utf8_path);
 }
 
-HRESULT provider::_Delete( const char *szPath, wstring& error_out )
-{
-    // Lock must not be released until after we get the error message
-    // or we might get a message produced on another thread
-
-    mutex::scoped_lock lock = m_session->aquire_lock();
-    if (libssh2_sftp_unlink(*m_session, szPath) == 0)
-        return S_OK;
- 
-    // Delete failed
-    error_out = _GetLastErrorMessage();
-    return E_FAIL;
-}
-
-void provider::delete_directory(
-    com_ptr<ISftpConsumer> consumer, const wpath& path)
-{
-    if (path.empty())
-        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-
-    string utf8_path = WideStringToUtf8String(path.string());
-
-    _Connect(consumer);
-
-    // Delete directory recursively
-    wstring error_out;
-    HRESULT hr = _DeleteDirectory(utf8_path.c_str(), error_out);
-    if (FAILED(hr))
-        BOOST_THROW_EXCEPTION(com_error(error_out, E_FAIL));
-}
-
-HRESULT provider::_DeleteDirectory(const char* szPath, wstring& error_out)
-{
-    HRESULT hr;
-
-    // Open directory
-    LIBSSH2_SFTP_HANDLE *pSftpHandle;
-    
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        pSftpHandle = libssh2_sftp_opendir(*m_session, szPath);
-    
-        // Lock must not be released until after we get the error message
-        // or we might get a message produced on another thread
-        if (!pSftpHandle)
-        {
-            error_out = _GetLastErrorMessage();
-            return E_FAIL;
-        }
-    }
-
-    // Delete content of directory
-
-    // BUG: If deletion fails in this loop the user gets the wrong error
-    // message because the real error is ignored and the user only get
-    // to see the one caused by trying to delete the non-empty top directory
-    do {
-        // Read filename and attributes. Returns length of filename.
-        char szFilename[MAX_FILENAME_LENZ];
-        LIBSSH2_SFTP_ATTRIBUTES attrs;
-        ::ZeroMemory(&attrs, sizeof(attrs));
-
-        int rc;
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_readdir(
-                pSftpHandle, szFilename, sizeof(szFilename), &attrs);
-        }
-        if (rc <= 0)
-            break;
-
-        assert(szFilename[0]); // TODO: can files have no filename?
-        if (szFilename[0] == '.' && !szFilename[1])
-            continue; // Skip .
-        if (szFilename[0] == '.' && szFilename[1] == '.' && !szFilename[2])
-            continue; // Skip ..
-
-        string strSubPath(szPath);
-        strSubPath += "/";
-        strSubPath += szFilename;
-        hr = _DeleteRecursive(strSubPath.c_str(), error_out);
-        if (FAILED(hr))
-        {
-            mutex::scoped_lock lock = m_session->aquire_lock();
-            rc = libssh2_sftp_close_handle(pSftpHandle);
-            assert(rc == 0);
-            return hr;
-        }
-    } while (true);
-
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        int rc = libssh2_sftp_close_handle(pSftpHandle);
-        assert(rc == 0); (void)rc;
-    }
-
-    // Delete directory itself
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        if (libssh2_sftp_rmdir(*m_session, szPath) == 0)
-            return S_OK;
-
-        // Delete failed
-        error_out = _GetLastErrorMessage();
-    }
-
-    return E_FAIL;
-}
-
-HRESULT provider::_DeleteRecursive(
-    const char *szPath, wstring& error_out)
-{
-    LIBSSH2_SFTP_ATTRIBUTES attrs;
-    ::ZeroMemory(&attrs, sizeof attrs);
-    {
-        mutex::scoped_lock lock = m_session->aquire_lock();
-        if (libssh2_sftp_lstat(*m_session, szPath, &attrs) != 0)
-        {
-            error_out = _GetLastErrorMessage();
-            return E_FAIL;
-        }
-    }
-
-    assert( // Permissions field is valid
-        attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS);
-    if (attrs.permissions & LIBSSH2_SFTP_S_IFDIR)
-        return _DeleteDirectory(szPath, error_out);
-    else
-        return _Delete(szPath, error_out);
-}
-
-void provider::create_new_file(
-    com_ptr<ISftpConsumer> consumer, const wpath& path)
-{
-    if (path.empty())
-        BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-
-    string utf8_path = WideStringToUtf8String(path.string());
-
-    _Connect(consumer);
-    
-    mutex::scoped_lock lock = m_session->aquire_lock();
-
-    LIBSSH2_SFTP_HANDLE *pHandle = libssh2_sftp_open(
-        *m_session, utf8_path.c_str(), LIBSSH2_FXF_CREAT, 0644);
-    if (pHandle == NULL)
-        BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
-
-    int rc = libssh2_sftp_close_handle(pHandle);
-    assert(rc == 0); (void)rc;
-}
-
-void provider::create_new_directory(
-    com_ptr<ISftpConsumer> consumer, const wpath& path)
+void provider::create_new_directory(const wpath& path)
 {
     if (path.empty())
         BOOST_THROW_EXCEPTION(
@@ -796,23 +514,16 @@ void provider::create_new_directory(
 
     string utf8_path = WideStringToUtf8String(path.string());
 
-    _Connect(consumer);
-
-    mutex::scoped_lock lock = m_session->aquire_lock();
-    if (libssh2_sftp_mkdir(*m_session, utf8_path.c_str(), 0755) != 0)
-        BOOST_THROW_EXCEPTION(com_error(_GetLastErrorMessage(), E_FAIL));
+    m_ticket.session().get_sftp_filesystem().create_directory(utf8_path);
 }
 
-BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
+BSTR provider::resolve_link(const wpath& path)
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    _Connect(consumer);
-
-    mutex::scoped_lock lock = m_session->aquire_lock();
-    sftp_channel channel(m_session->get(), m_session->sftp());
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
     bstr_t target =
-        Utf8StringToWideString(canonical_path(channel, utf8_path).string());
+        Utf8StringToWideString(channel.canonical_path(utf8_path).string());
 
     return target.detach();
 }
@@ -824,100 +535,18 @@ BSTR provider::resolve_link(com_ptr<ISftpConsumer> consumer, const wpath& path)
  * owner and group names as string (these being derived from the long entry).
  */
 sftp_filesystem_item provider::stat(
-    com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
+    const sftp_provider_path& path,
     bool follow_links)
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    _Connect(consumer);
-    
-    mutex::scoped_lock lock = m_session->aquire_lock();
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
-    sftp_channel channel(m_session->get(), m_session->sftp());
-
-    file_attributes stat_result = attributes(
-        channel, utf8_path, follow_links != FALSE);
+    file_attributes stat_result = channel.attributes(
+        utf8_path, follow_links != FALSE);
 
     return libssh2_sftp_filesystem_item::create_from_libssh2_attributes(
         utf8_path, stat_result);
-}
-
-/**
- * Retrieves a string description of the last error reported by libssh2.
- *
- * In the case that the last SSH error is an SFTP error it returns the SFTP
- * error message in preference.
- */
-wstring provider::_GetLastErrorMessage()
-{
-    int nErr; PSTR pszErr; int cchErr;
-
-    nErr = libssh2_session_last_error(*m_session, &pszErr, &cchErr, false);
-    if (nErr == LIBSSH2_ERROR_SFTP_PROTOCOL)
-    {
-        ULONG uErr = libssh2_sftp_last_error(*m_session);
-        return _GetSftpErrorMessage(uErr);
-    }
-    else // A non-SFTP error occurred
-        return Utf8StringToWideString(pszErr);
-}
-
-/**
- * Maps between libssh2 SFTP error codes and an appropriate error string.
- *
- * @param uError  SFTP error code as returned by libssh2_sftp_last_error().
- */
-wstring provider::_GetSftpErrorMessage(ULONG uError)
-{
-    switch (uError)
-    {
-    case LIBSSH2_FX_OK:
-        return _T("Successful");
-    case LIBSSH2_FX_EOF:
-        return _T("File ended unexpectedly");
-    case LIBSSH2_FX_NO_SUCH_FILE:
-        return _T("Required file or folder does not exist");
-    case LIBSSH2_FX_PERMISSION_DENIED:
-        return _T("Permission denied");
-    case LIBSSH2_FX_FAILURE:
-        return _T("Unknown failure");
-    case LIBSSH2_FX_BAD_MESSAGE:
-        return _T("Server returned an invalid message");
-    case LIBSSH2_FX_NO_CONNECTION:
-        return _T("No connection");
-    case LIBSSH2_FX_CONNECTION_LOST:
-        return _T("Connection lost");
-    case LIBSSH2_FX_OP_UNSUPPORTED:
-        return _T("Server does not support this operation");
-    case LIBSSH2_FX_INVALID_HANDLE:
-        return _T("Invalid handle");
-    case LIBSSH2_FX_NO_SUCH_PATH:
-        return _T("The path does not exist");
-    case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-        return _T("A file or folder of that name already exists");
-    case LIBSSH2_FX_WRITE_PROTECT:
-        return _T("This file or folder has been write-protected");
-    case LIBSSH2_FX_NO_MEDIA:
-        return _T("No media was found");
-    case LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM:
-        return _T("There is no space left on the server's filesystem");
-    case LIBSSH2_FX_QUOTA_EXCEEDED:
-        return _T("You have exceeded your disk quota on the server");
-    case LIBSSH2_FX_UNKNOWN_PRINCIPLE:
-        return _T("Unknown principle");
-    case LIBSSH2_FX_LOCK_CONFlICT:
-        return _T("Lock conflict");
-    case LIBSSH2_FX_DIR_NOT_EMPTY:
-        return _T("The folder is not empty");
-    case LIBSSH2_FX_NOT_A_DIRECTORY:
-        return _T("This file is not a folder");
-    case LIBSSH2_FX_INVALID_FILENAME:
-        return _T("The filename is not valid on the server's filesystem");
-    case LIBSSH2_FX_LINK_LOOP:
-        return _T("Operation would cause a link loop which is not permitted");
-    default:
-        return _T("Unexpected error code returned by server");
-    }
 }
 
 }} // namespace swish::provider
