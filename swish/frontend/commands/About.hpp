@@ -49,10 +49,9 @@ class About : public swish::nse::Command
 {
 public:
     About(HWND hwnd);
-    
-    bool disabled(const comet::com_ptr<IDataObject>& data_object,
-        bool ok_to_be_slow) const;
-    bool hidden(const comet::com_ptr<IDataObject>& data_object,
+
+    virtual BOOST_SCOPED_ENUM(state) state(
+        const comet::com_ptr<IDataObject>& data_object,
         bool ok_to_be_slow) const;
 
     void operator()(

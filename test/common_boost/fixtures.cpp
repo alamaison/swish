@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -356,6 +357,27 @@ wpath SandboxFixture::NewFileInSandbox()
     BOOST_CHECK(exists(p));
     BOOST_CHECK(is_regular_file(p));
     BOOST_CHECK(p.is_complete());
+    return p;
+}
+
+wpath SandboxFixture::NewDirectoryInSandbox()
+{
+    // This is a bit of a hack but it's simple and works: create a new file,
+    // delete it, reuse the filename to make a folder.  It's not worth
+    // investigating the proper way to get a new random directory name.
+
+    wpath file = NewFileInSandbox();
+    remove(file);
+    create_directory(file);
+    BOOST_CHECK(is_directory(file));
+    return file;
+}
+
+wpath SandboxFixture::NewDirectoryInSandbox(wstring name)
+{
+    wpath p = Sandbox() / name;
+    BOOST_REQUIRE(!exists(p));
+    create_directory(p);
     return p;
 }
 

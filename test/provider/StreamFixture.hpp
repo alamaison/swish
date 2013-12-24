@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,11 +40,15 @@
 
 #include "test/common_boost/ConsumerStub.hpp"  // CConsumerStub
 
-#include "swish/provider/SessionFactory.hpp"  // CSessionFactory
+#include "swish/connection/authenticated_session.hpp"
 #include "swish/utils.hpp"  // String conversion functions, GetCurrentUser
 
-#include <comet/ptr.h> // com_ptr
+#include <ssh/stream.hpp> // fstream
 
+#include <comet/ptr.h> // com_ptr
+#include <comet/stream.h> // adapt_stream_pointer
+
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>  // shared_ptr
 
 #include <memory>  // auto_ptr
@@ -81,11 +85,18 @@ public:
      * flags can be passed to change this.
      */
     comet::com_ptr<IStream> GetStream(
-        CSftpStream::OpenFlags flags = CSftpStream::read | CSftpStream::write)
+        std::ios_base::openmode flags=std::ios_base::in | std::ios_base::out)
     {
-        boost::shared_ptr<CSession> session(Session());
+        boost::shared_ptr<swish::connection::authenticated_session> session(Session());
 
-        return new CSftpStream(session, m_remote_path, flags);
+        // TODO: This should not create the stream directly but should use
+        // SftpDirectory.  This can happen when SftpDirectory is merged with
+        // the provider project
+        return comet::adapt_stream_pointer(
+            boost::make_shared<ssh::filesystem::fstream>(
+                boost::ref(session->get_sftp_filesystem()), m_remote_path,
+                flags),
+            boost::filesystem::path(m_remote_path).filename());
     }
 };
 

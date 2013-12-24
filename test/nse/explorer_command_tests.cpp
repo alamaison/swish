@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -63,11 +63,10 @@ namespace {
             const wstring& icon_descriptor=wstring())
         : Command(title, guid, tool_tip, icon_descriptor) {}
 
-        bool disabled(const com_ptr<IDataObject>&, bool) const
-        { return false; }
-
-        bool hidden(const com_ptr<IDataObject>&, bool) const
-        { return false; }
+        BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
+        {
+            return state::enabled;
+        }
 
         void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
         const
@@ -182,11 +181,8 @@ namespace {
     {
         HostCommand() : Command(L"title", TEST_GUID, L"tool-tip") {}
 
-        bool disabled(const com_ptr<IDataObject>&, bool) const
-        { return false; }
-
-        bool hidden(const com_ptr<IDataObject>&, bool) const
-        { return false; }
+        BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
+        { return state::enabled; }
 
         void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
         const
@@ -307,11 +303,8 @@ namespace {
     {
         CommandNeedingSite() : Command(L"title", TEST_GUID2, L"tool-tip") {}
 
-        bool disabled(const com_ptr<IDataObject>&, bool) const
-        { return false; }
-
-        bool hidden(const com_ptr<IDataObject>&, bool) const
-        { return false; }
+        BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
+        { return state::enabled; }
 
         void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
             const

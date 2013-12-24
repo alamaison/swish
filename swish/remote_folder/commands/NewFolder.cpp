@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #include "NewFolder.hpp"
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
@@ -49,7 +49,7 @@
 #include <string>
 #include <vector>
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::nse::Command;
 using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
@@ -97,7 +97,7 @@ namespace {
  */
 wstring prefix_if_necessary(
     const wstring& initial_name, shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer, const wpath& directory)
+    const wpath& directory)
 {
     wregex new_folder_pattern(
         str(wformat(L"%1%|%1% \\((\\d+)\\)") % initial_name));
@@ -106,7 +106,7 @@ wstring prefix_if_necessary(
     bool collision = false;
     vector<unsigned long> suffixes;
     BOOST_FOREACH(
-        const sftp_filesystem_item& lt, provider->listing(consumer, directory))
+        const sftp_filesystem_item& lt, provider->listing(directory))
     {
         wstring filename = lt.filename().string();
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))
@@ -169,24 +169,22 @@ namespace {
 
 NewFolder::NewFolder(
     const apidl_t& folder_pidl,
-    const function<shared_ptr<sftp_provider>()>& provider,
-    const function<com_ptr<ISftpConsumer>()>& consumer) :
+    const provider_factory& provider,
+    const consumer_factory& consumer) :
     Command(
-        translate("New &folder"), NEW_FOLDER_COMMAND_ID,
-        translate("Create a new, empty folder in the folder you have open."),
+        translate(L"New &folder"), NEW_FOLDER_COMMAND_ID,
+        translate(L"Create a new, empty folder in the folder you have open."),
         L"shell32.dll,-258", L"",
-        translate("Make a new folder")),
-    m_folder_pidl(folder_pidl), m_provider(provider), m_consumer(consumer) {}
+        translate(L"Make a new folder")),
+    m_folder_pidl(folder_pidl), m_provider_factory(provider),
+    m_consumer_factory(consumer) {}
 
-bool NewFolder::disabled(
+BOOST_SCOPED_ENUM(Command::state) NewFolder::state(
     const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
-{ return false; }
-
-bool NewFolder::hidden(
-    const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
-const
-{ return false; }
+{
+    return state::enabled;
+}
 
 void NewFolder::operator()(
     const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
@@ -211,13 +209,18 @@ const
             trace("WARNING: couldn't get current IShellView or HWND");
         }
 
-        CSftpDirectory directory(m_folder_pidl, m_provider(), m_consumer());
+
+        shared_ptr<sftp_provider> provider = m_provider_factory(
+            m_consumer_factory(),
+            translate("Name of a running task", "Creating new folder"));
+
+        CSftpDirectory directory(m_folder_pidl, provider);
 
         // The default New Folder name may already exist in the folder. If it
         // does, we append a number to it to make it unique
-        wstring initial_name = translate("Initial name", "New folder");
+        wstring initial_name = translate(L"Initial name", L"New folder");
         initial_name = prefix_if_necessary(
-            initial_name, m_provider(), m_consumer(),
+            initial_name, provider,
             absolute_path_from_swish_pidl(m_folder_pidl));
 
         cpidl_t pidl = directory.CreateDirectory(initial_name);
@@ -244,9 +247,10 @@ const
     }
     catch (...)
     {
-        rethrow_and_announce(
-            hwnd, translate("Could not create a new folder"),
-            translate("You might not have permission."));
+        announce_last_exception(
+            hwnd, translate(L"Could not create a new folder"),
+            translate(L"You might not have permission."));
+        throw;
     }
 }
 

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2008, 2009, 2010, 2011
+    Copyright (C) 2008, 2009, 2010, 2011, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -27,48 +27,42 @@
 
 #include "UserInteraction.hpp"
 
-#include "swish/atl.hpp"  // Common ATL setup
 #include "swish/debug.hpp"
 #include "swish/forms/password.hpp" // password_prompt
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 #include "swish/shell_folder/KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/gui/task_dialog.hpp> // task_dialog
+#include <winapi/gui/task_dialog.hpp> // task_dialog_builder
 #include <winapi/gui/message_box.hpp> // message_box
 
-#include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
 
 #include <boost/bind.hpp> // bind
 #include <boost/format.hpp> // format
 #include <boost/locale.hpp> // translate
 
-#include <atlsafe.h> // CComSafeArray
-#include <atlcore.h> // _AtlBaseModule
-
 #include <cassert> // assert
 #include <sstream> // wstringstream
 #include <string>
-
-using ATL::CComBSTR;
-using ATL::CString;
-using ATL::CComSafeArray;
 
 using swish::forms::password_prompt;
 using swish::frontend::best_taskdialog;
 
 using namespace winapi::gui;
 
-using comet::bstr_t;
 using comet::com_error;
 
+using boost::filesystem::path;
 using boost::locale::translate;
+using boost::optional;
 using boost::wformat;
 
-using std::wstringstream;
+using std::pair;
 using std::string;
+using std::vector;
 using std::wstring;
+using std::wstringstream;
 
 namespace swish {
 namespace frontend {
@@ -78,106 +72,55 @@ CUserInteraction::CUserInteraction(HWND hwnd) : m_hwnd(hwnd) {}
 /**
  * Displays UI dialog to get password from user and returns it.
  *
- * @param [in]  bstrRequest    The prompt to display to the user.
- * @param [out] pbstrPassword  The reply from the user - the password.
- *
- * @return E_ABORT if the user chooses Cancel, E_FAIL if user interaction is
- *         forbidden and S_OK otherwise.
+ * If no window given, abort authentication.
  */
-HRESULT CUserInteraction::OnPasswordRequest(
-    BSTR bstrRequest, BSTR *pbstrPassword
-)
+optional<wstring> CUserInteraction::prompt_for_password()
 {
-    if (m_hwnd == NULL)
-        return E_FAIL;
-
-    try
+    if (m_hwnd)
     {
         wstring password;
-        if (!password_prompt(m_hwnd, bstrRequest, password))
-            BOOST_THROW_EXCEPTION(com_error(E_ABORT));
-
-        *pbstrPassword = bstr_t::detach(bstr_t(password));
+        if (password_prompt(
+                m_hwnd, translate(L"Prompt on password dialog", L"Password:"),
+                password))
+        {
+            return password;
+        }
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
-        
-    return S_OK;
+
+    return optional<wstring>();
 }
 
-HRESULT CUserInteraction::OnKeyboardInteractiveRequest(
-    BSTR bstrName, BSTR bstrInstruction, SAFEARRAY *psaPrompts, 
-    SAFEARRAY *psaShowResponses, SAFEARRAY **ppsaResponses
-)
+
+optional<pair<path, path>> CUserInteraction::key_files()
 {
-    if (m_hwnd == NULL)
-        return E_FAIL;
+    // Swish doesn't use this way of pub-key auth - it uses Pageant via
+    // the agent interface.  This method is only implemented by unit
+    // test helpers.
+    return optional<pair<path, path>>();
+}
 
-    CComSafeArray<BSTR> saPrompts(psaPrompts);
-    CComSafeArray<VARIANT_BOOL> saShowPrompts(psaShowResponses);
+optional<vector<string>> CUserInteraction::challenge_response(
+    const string& title, const string& instructions,
+    const vector<pair<string, bool>>& prompts)
+{
+    if (!m_hwnd)
+        BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
-    // Prompt array and echo mask array should correspond
-    ATLASSERT(saPrompts.GetLowerBound() == saShowPrompts.GetLowerBound());
-    ATLASSERT(saPrompts.GetUpperBound() == saShowPrompts.GetUpperBound());
-
-    PromptList vecPrompts;
-    EchoList vecEcho;
-    for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
+    // We don't show the dialog if there is nothing to tell the user.
+    // Kb-int authentication usually seems to end with such an empty
+    // interaction for some reason.
+    if (title.empty() && instructions.empty() && prompts.empty())
     {
-        vecPrompts.push_back(CString(saPrompts[i]));
-        vecEcho.push_back((saShowPrompts[i] == VARIANT_TRUE) ? true : false);
+        // Not optional<vector<string>> because that means abort.
+        return vector<string>();
     }
 
     // Show dialogue and fetch responses when user clicks OK
-    CKbdInteractiveDialog dlg(bstrName, bstrInstruction, vecPrompts, vecEcho);
+    CKbdInteractiveDialog dlg(title, instructions, prompts);
     if (dlg.DoModal(m_hwnd) == IDCANCEL)
-        return E_ABORT;
-    ResponseList vecResponses = dlg.GetResponses();
+        return optional<vector<string>>();
 
-    // Create response array. Indices must correspond to prompts array!
-    CComSafeArray<BSTR> saResponses(
-        saPrompts.GetCount(), saPrompts.GetLowerBound());
-    ATLASSERT(vecResponses.size() == saPrompts.GetCount());
-    ATLASSERT(saPrompts.GetLowerBound() == saResponses.GetLowerBound());
-    ATLASSERT(saPrompts.GetUpperBound() == saResponses.GetUpperBound());
-
-    // SAFEARRAY may start at any index but vector will always start at 0.
-    // We need to keep an offset value to map between them
-    int nIndexOffset = saPrompts.GetLowerBound();
-
-    // Fill responses SAFEARRAY
-    for (int i = saPrompts.GetLowerBound(); i <= saPrompts.GetUpperBound(); i++)
-    {
-        ATLVERIFY(SUCCEEDED( saResponses.SetAt(
-            i, CComBSTR(vecResponses[i-nIndexOffset]).Detach(), false) ));
-    }
-
-    *ppsaResponses = saResponses.Detach();
-
-    return S_OK;
-}
-
-/**
- * Return the path of the file containing the private key.
- */
-HRESULT CUserInteraction::OnPrivateKeyFileRequest(
-    BSTR *pbstrPrivateKeyFile)
-{
-    ATLENSURE_RETURN_HR(pbstrPrivateKeyFile, E_POINTER);
-    *pbstrPrivateKeyFile = NULL;
-
-    return E_NOTIMPL;
-}
-
-/**
- * Return the path of the file containing the public key.
- */
-HRESULT CUserInteraction::OnPublicKeyFileRequest(
-    BSTR *pbstrPublicKeyFile)
-{
-    ATLENSURE_RETURN_HR(pbstrPublicKeyFile, E_POINTER);
-    *pbstrPublicKeyFile = NULL;
-
-    return E_NOTIMPL;
+    return dlg.GetResponses();
 }
 
 namespace {
@@ -192,16 +135,16 @@ HRESULT on_confirm_overwrite(
     wstringstream message;
     
     message << wformat(
-        translate("The folder already contains a file named '%1%'"))
+        translate(L"The folder already contains a file named '%1%'"))
         % old_file;
     message << L"\n\n";
     message << wformat(
         translate(
-            "Would you like to replace the existing file\n\n\t%1%\n\n"
-            "with this one?\n\n\t%2%")) % old_file % new_file;
+            L"Would you like to replace the existing file\n\n\t%1%\n\n"
+            L"with this one?\n\n\t%2%")) % old_file % new_file;
 
     message_box::button_type::type button_clicked = message_box::message_box(
-        hwnd, message.str(), translate("File already exists"),
+        hwnd, message.str(), translate(L"File already exists"),
         message_box::box_type::yes_no, message_box::icon_type::question, 2);
 
     switch (button_clicked)
@@ -239,42 +182,42 @@ HRESULT on_hostkey_mismatch(
     if (!hwnd)
         BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
-    wstring title = translate("Mismatched host-key");
-    wstring instruction = translate("WARNING: the SSH host-key has changed!");
+    wstring title = translate(L"Mismatched host-key");
+    wstring instruction = translate(L"WARNING: the SSH host-key has changed!");
 
     wstringstream message;
     
     message << wformat(
         translate(
-            "The SSH host-key sent by '%1%' to identify itself doesn't match "
-            "the known key for this server.  This could mean a third-party "
-            "is pretending to be the computer you're trying to connect to "
-            "or the system administrator may have just changed the key."))
+            L"The SSH host-key sent by '%1%' to identify itself doesn't match "
+            L"the known key for this server.  This could mean a third-party "
+            L"is pretending to be the computer you're trying to connect to "
+            L"or the system administrator may have just changed the key."))
         % host;
     message << L"\n\n";
     message << translate(
-        "It is important to check this is the right key fingerprint:");
+        L"It is important to check this is the right key fingerprint:");
     message << wformat(L"\n\n        %1%    %2%") % key_type % key;
 
-    task_dialog::task_dialog<HRESULT, best_taskdialog> td(
+    task_dialog::task_dialog_builder<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
         winapi::gui::task_dialog::icon_type::warning, true,
         boost::bind(return_hr, E_ABORT));
     td.add_button(
         translate(
-            "I trust this key: &update and connect\n"
-            "You won't have to verify this key again unless it changes"),
+            L"I trust this key: &update and connect\n"
+            L"You won't have to verify this key again unless it changes"),
         boost::bind(return_hr, S_OK));
     td.add_button(
         translate(
-            "I trust this key: &just connect\n"
-            "You will be warned about this key again next time you "
-            "connect"),
+            L"I trust this key: &just connect\n"
+            L"You will be warned about this key again next time you "
+            L"connect"),
         boost::bind(return_hr, S_FALSE));
     td.add_button(
         translate(
-            "&Cancel\n"
-            "Choose this option unless you are sure the key is correct"),
+            L"&Cancel\n"
+            L"Choose this option unless you are sure the key is correct"),
         boost::bind(return_hr, E_ABORT), true);
     return td.show();
 }
@@ -286,39 +229,39 @@ HRESULT on_hostkey_unknown(
     if (!hwnd)
         BOOST_THROW_EXCEPTION(com_error("User interation forbidden", E_FAIL));
 
-    wstring title = translate("Unknown host-key");
+    wstring title = translate(L"Unknown host-key");
 
     wstringstream message;
     
     message << wformat(
         translate(
-            "The server '%1%' has identified itself with an SSH host-key "
-            "whose fingerprint is:")) % host;
+            L"The server '%1%' has identified itself with an SSH host-key "
+            L"whose fingerprint is:")) % host;
     message << wformat(L"\n\n        %1%    %2%\n\n") % key_type % key;
     message << translate(
-        "If you are not expecting this key, a third-party may be pretending "
-        "to be the computer you're trying to connect to.");
+        L"If you are not expecting this key, a third-party may be pretending "
+        L"to be the computer you're trying to connect to.");
 
-    wstring instruction = translate("Verify unknown SSH host-key");
-    task_dialog::task_dialog<HRESULT, best_taskdialog> td(
+    wstring instruction = translate(L"Verify unknown SSH host-key");
+    task_dialog::task_dialog_builder<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
         winapi::gui::task_dialog::icon_type::information, true,
         boost::bind(return_hr, E_ABORT));
     td.add_button(
         translate(
-            "I trust this key: &store and connect\n"
-            "You won't have to verify this key again unless it changes"),
+            L"I trust this key: &store and connect\n"
+            L"You won't have to verify this key again unless it changes"),
         boost::bind(return_hr, S_OK));
     td.add_button(
         translate(
-            "I trust this key: &just connect\n"
-            "You will be asked to verify the key again next time you "
-            "connect"),
+            L"I trust this key: &just connect\n"
+            L"You will be asked to verify the key again next time you "
+            L"connect"),
         boost::bind(return_hr, S_FALSE));
     td.add_button(
         translate(
-            "&Cancel\n"
-            "Choose this option unless you are sure the key is correct"),
+            L"&Cancel\n"
+            L"Choose this option unless you are sure the key is correct"),
         boost::bind(return_hr, E_ABORT), true);
     return td.show();
 }

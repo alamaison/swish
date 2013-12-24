@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 #include "swish/remote_folder/commands/delete.hpp"
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
@@ -42,7 +42,7 @@
 
 #include <Windows.h> // IsolationAwareMessageBox
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 
@@ -73,17 +73,19 @@ namespace {
      * The list of items to delete is supplied as a list of PIDLs and may
      * contain a mix of files and folder.
      */
+    template<typename ProviderFactory, typename ConsumerFactory>
     void do_delete(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         const apidl_t& parent_folder)
     {
-        shared_ptr<sftp_provider> provider = provider_factory(hwnd_view);
         com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
+        shared_ptr<sftp_provider> provider = provider_factory(
+            consumer, translate("Name of a running task", "Deleting files"));
 
         // Create instance of our directory handler class
-        CSftpDirectory directory(parent_folder, provider, consumer);
+        CSftpDirectory directory(parent_folder, provider);
 
         // Delete each item and notify shell
         vector<cpidl_t>::const_iterator it = death_row.begin();
@@ -170,10 +172,11 @@ namespace {
      * confirmation message is displayed asking if the number of items are
      * to be deleted.
      */
+    template<typename ProviderFactory, typename ConsumerFactory>
     void execute_death_row(
         HWND hwnd_view, const vector<cpidl_t>& death_row,
-        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         const apidl_t& parent_folder)
     {
         size_t item_count = death_row.size();
@@ -204,8 +207,8 @@ namespace {
 
 
 Delete::Delete(
-    function<shared_ptr<sftp_provider>(HWND)> provider_factory,
-    function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
+    my_provider_factory provider_factory,
+    my_consumer_factory consumer_factory)
     : m_provider_factory(provider_factory), m_consumer_factory(consumer_factory)
 {}
 
@@ -229,9 +232,10 @@ const
     }
     catch (...)
     {
-        rethrow_and_announce(
-            hwnd_view, translate("Unable to delete the item"),
-            translate("You might not have permission."));
+        announce_last_exception(
+            hwnd_view, translate(L"Unable to delete the item"),
+            translate(L"You might not have permission."));
+        throw;
     }
 }
 

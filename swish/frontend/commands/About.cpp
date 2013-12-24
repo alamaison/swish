@@ -80,25 +80,18 @@ namespace {
 About::About(HWND hwnd) :
    Command(
       translate(
-        "Title of command used to show the Swish 'About' box in the "
-        "Explorer Help menu",
-        "About &Swish"), ABOUT_COMMAND_ID,
+        L"Title of command used to show the Swish 'About' box in the "
+        L"Explorer Help menu",
+        L"About &Swish"), ABOUT_COMMAND_ID,
       translate(
-          "Displays version, licence and copyright information for Swish.")),
+          L"Displays version, licence and copyright information for Swish.")),
    m_hwnd(hwnd) {}
 
-bool About::disabled(
+BOOST_SCOPED_ENUM(Command::state) About::state(
    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
 const
 {
-    return false;
-}
-
-bool About::hidden(
-   const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
-const
-{
-    return false;
+    return state::enabled;
 }
 
 void About::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
@@ -109,7 +102,7 @@ const
     {
         snapshot = translate(
             "Placeholder version if actual version is not known",
-            "unknown").str<char>();
+            "unknown");
     }
 
     ostringstream message;

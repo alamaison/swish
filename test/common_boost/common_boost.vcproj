@@ -308,6 +308,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProviderFixture.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stream_utils.cpp"
 				>
 			</File>

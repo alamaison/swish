@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -177,10 +177,9 @@ PidlCopyPlan::PidlCopyPlan(
 }
 
 void PidlCopyPlan::execute_plan(
-    DropActionCallback& callback, shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer) const
+    DropActionCallback& callback, shared_ptr<sftp_provider> provider) const
 {
-    m_plan.execute_plan(callback, provider, consumer);
+    m_plan.execute_plan(callback, provider);
 }
 
 void PidlCopyPlan::add_stage(const Operation& entry)

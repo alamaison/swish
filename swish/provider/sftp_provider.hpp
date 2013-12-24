@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,35 +33,53 @@
 #include "swish/provider/sftp_provider_path.hpp"
 
 #include <boost/filesystem/path.hpp> // wpath
+#include <boost/optional/optional.hpp>
 //#include <boost/range/any_range.hpp> USE ONCE WE UPGRADE BOOST
 
 #include <comet/interface.h> // comtype
 #include <comet/ptr.h> // com_ptr
 
 #include <string> // wstring
+#include <utility> // pair
 #include <vector>
 
 class ISftpConsumer : public IUnknown
 {
 public:
 
-    virtual HRESULT OnPasswordRequest(
-        BSTR bstrRequest,
-        BSTR *pbstrPassword
-    ) = 0;
-    virtual HRESULT OnKeyboardInteractiveRequest(
-        BSTR bstrName,
-        BSTR bstrInstruction,
-        SAFEARRAY* saPrompts,
-        SAFEARRAY* saShowResponses,
-        SAFEARRAY* *psaResponses
-    ) = 0;
-    virtual HRESULT OnPrivateKeyFileRequest(
-        BSTR *pbstrPrivateKeyFile
-    ) = 0;
-    virtual HRESULT OnPublicKeyFileRequest(
-        BSTR *pbstrPublicKeyFile
-    ) = 0;
+    /**
+     * Get password from the user.
+     *
+     * @return
+     *     Uninitialised optional if authentication should be aborted.
+     *     String containing password, otherwise.
+     */
+    virtual boost::optional<std::wstring> prompt_for_password() = 0;
+
+    /**
+     * Get files containing private and public keys for public-key
+     * authentication.
+     *
+     * @return
+     *     Uninitialised optional if public-key authentication should not be
+     *     performed using file-based keys.
+     *     Pair of paths: private-key file first, public-key file second.
+     */
+    virtual boost::optional<
+        std::pair<boost::filesystem::path, boost::filesystem::path>>
+        key_files() = 0;
+
+    /**
+     * Perform a challenge-response interaction with the user.
+     *
+     * @return
+     *     Uninitialised optional if authentication should be aborted.
+     *     As many responses as there were prompts, otherwise.
+     */
+    virtual boost::optional<std::vector<std::string>> challenge_response(
+        const std::string& title, const std::string& instructions,
+        const std::vector<std::pair<std::string, bool>>& prompts) = 0;
+
     virtual HRESULT OnConfirmOverwrite(
         BSTR bstrOldFile,
         BSTR bstrNewFile
@@ -92,45 +111,17 @@ public:
     virtual ~sftp_provider() {}
 
     virtual directory_listing listing(
-        comet::com_ptr<ISftpConsumer> consumer,
         const sftp_provider_path& directory) = 0;
 
     virtual comet::com_ptr<IStream> get_file(
-        comet::com_ptr<ISftpConsumer> consumer, std::wstring file_path,
-        bool writeable) = 0;
+        std::wstring file_path, std::ios_base::openmode mode) = 0;
 
     virtual VARIANT_BOOL rename(
         ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
 
-    /**
-     * @name Deletion methods
-     * We use two methods rather than one for safety.  This makes it explicit 
-     * what the intended consequence was. It's possible for a user to ask
-     * for a file to be deleted but, meanwhile, it has been changed to a 
-     * directory by someone else.  We do not want to delete the directory 
-     * without the user knowing.
-     */
-    // @{
+    virtual void remove_all(BSTR path) = 0;
 
-    virtual void delete_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void delete_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    // @}
-
-    /**
-     * @name Creation methods
-     * These are the dual of the deletion methods.  `create_new_file`
-     * is mainly for the test-suite.  It just creates an empty file at the
-     * given path (roughly equivalent to Unix `touch`).
-     */
-    // @{
-
-    virtual void create_new_file(ISftpConsumer* consumer, BSTR path) = 0;
-
-    virtual void create_new_directory(ISftpConsumer* consumer, BSTR path) = 0;
-
-    // @}
+    virtual void create_new_directory(BSTR path) = 0;
 
     /**
      * Return the canonical path of the given non-canonical path.
@@ -138,11 +129,10 @@ public:
      * While generally used to resolve symlinks, it can also be used to
      * convert paths relative to the startup directory into absolute paths.
      */
-    virtual BSTR resolve_link(ISftpConsumer* consumer, BSTR link_path) = 0;
+    virtual BSTR resolve_link(BSTR link_path) = 0;
 
     virtual sftp_filesystem_item stat(
-        comet::com_ptr<ISftpConsumer> consumer, const sftp_provider_path& path,
-        bool follow_links) = 0;
+        const sftp_provider_path& path, bool follow_links) = 0;
 };
 
 }}

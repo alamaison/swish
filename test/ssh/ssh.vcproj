@@ -27,7 +27,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -92,7 +92,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -159,7 +159,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -225,7 +225,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Copying test input files..."
-				CommandLine="xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(ProjectDir)fixture_hostkey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_hostkey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_rsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_dsakey.pub&quot; &quot;$(TargetDir)\sshd-etc\&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;cacls &quot;$(TargetDir)\sshd-etc\fixture_hostkey&quot; /E /R Everyone &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_out&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)test_known_hosts_hashed&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;xcopy &quot;$(ProjectDir)fixture_wrong_dsakey.pub&quot; &quot;$(TargetDir)&quot; /S /Y /V /I /R /Q &gt; nul&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -300,6 +300,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\filesystem_test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_key_test.cpp"
 				>
 			</File>
@@ -356,7 +360,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\sftp_test.cpp"
+				RelativePath=".\session_test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stream_test.cpp"
 				>
 			</File>
 		</Filter>

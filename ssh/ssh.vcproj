@@ -105,12 +105,60 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="detail"
+			>
+			<File
+				RelativePath=".\detail\agent_state.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\file_handle_state.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\session_state.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detail\sftp_channel_state.hpp"
+				>
+			</File>
+			<Filter
+				Name="libssh2"
+				>
+				<File
+					RelativePath=".\detail\libssh2\agent.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\detail\libssh2\knownhost.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\detail\libssh2\libssh2.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\detail\libssh2\session.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\detail\libssh2\sftp.hpp"
+					>
+				</File>
+				<File
+					RelativePath=".\detail\libssh2\userauth.hpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 		<File
 			RelativePath=".\agent.hpp"
 			>
 		</File>
 		<File
-			RelativePath=".\exception.hpp"
+			RelativePath=".\filesystem.hpp"
 			>
 		</File>
 		<File
@@ -126,7 +174,15 @@
 			>
 		</File>
 		<File
-			RelativePath=".\sftp.hpp"
+			RelativePath=".\sftp_error.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ssh_error.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stream.hpp"
 			>
 		</File>
 	</Files>

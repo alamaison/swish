@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include "DataObject.h"
 #include "data_object/FileGroupDescriptor.hpp"  // FileGroupDescriptor
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 #include "swish/shell_folder/Pidl.h"
 
 #include <winapi/shell/pidl.hpp> // cpidl_t
@@ -75,8 +75,7 @@ public:
     CSftpDataObject(
         UINT cPidl, __in_ecount_opt(cPidl) PCUITEMID_CHILD_ARRAY aPidl,
         __in PCIDLIST_ABSOLUTE pidlCommonParent,
-        boost::shared_ptr<swish::provider::sftp_provider> provider,
-        comet::com_ptr<ISftpConsumer> consumer);
+        boost::shared_ptr<swish::provider::sftp_provider> provider);
 
 public: // IDataObject methods
 
@@ -107,7 +106,6 @@ private:
 
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
                                                      ///< Connection to backend
-    comet::com_ptr<ISftpConsumer> m_consumer; ///< UI callback
 
     /** @name Cached PIDLs */
     // @{

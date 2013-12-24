@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2010, 2012, 2013
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,12 +35,13 @@
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
+#include <boost/thread.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
 #include <comet/error.h> // com_error
+#include <comet/git.h>
 #include <comet/ptr.h>  // com_ptr
-
-#include <memory> // auto_ptr
+#include <comet/util.h> // auto_coinit
 
 using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
@@ -49,11 +51,25 @@ using winapi::shell::pidl::pidl_t;
 using winapi::shell::pidl::apidl_t;
 
 using boost::shared_ptr;
+using boost::thread;
 
+using comet::auto_coinit;
 using comet::com_error;
 using comet::com_ptr;
+using comet::GIT;
+using comet::GIT_cookie;
 
-using std::auto_ptr;
+template<> struct comet::comtype<IAsyncOperation>
+{
+    static const IID& uuid() throw() { return IID_IAsyncOperation; }
+    typedef IUnknown base;
+};
+
+template<> struct comet::comtype<IDataObject>
+{
+    static const IID& uuid() throw() { return IID_IDataObject; }
+    typedef IUnknown base;
+};
 
 namespace swish {
 namespace drop_target {
@@ -94,12 +110,54 @@ namespace { // private
  */
 void copy_format_to_provider(
     PidlFormat source_format, shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer, const apidl_t& destination_root,
-    DropActionCallback& callback)
+    const apidl_t& destination_root, shared_ptr<DropActionCallback> callback)
 {
     PidlCopyPlan copy_list(source_format, destination_root);
 
-    copy_list.execute_plan(callback, provider, consumer);
+    copy_list.execute_plan(*callback, provider);
+}
+
+namespace {
+
+void async_copy_format_to_provider(
+    GIT_cookie<IDataObject> marshalling_cookie,
+    shared_ptr<sftp_provider> provider,
+    apidl_t destination_root, shared_ptr<DropActionCallback> callback)
+{
+    auto_coinit com;
+    GIT git;
+
+    // These interface from the GIT will be properly marshalled across thread
+    // apartments
+    com_ptr<IDataObject> data_object = git.get_interface(marshalling_cookie);
+    com_ptr<IAsyncOperation> async = try_cast(data_object);
+
+    try
+    {
+        try
+        {
+            copy_format_to_provider(
+                PidlFormat(data_object), provider, destination_root,
+                callback);
+        }
+        catch (...)
+        {
+            callback->handle_last_exception();
+            throw;
+        }
+    }
+    catch (const com_error& e)
+    {
+        async->EndOperation(e.hr(), NULL, DROPEFFECT_COPY);
+    }
+    catch (...)
+    {
+        async->EndOperation(E_FAIL, NULL, DROPEFFECT_COPY);
+    }
+
+    git.revoke_interface(marshalling_cookie);
+}
+
 }
 
 /**
@@ -112,15 +170,35 @@ void copy_format_to_provider(
  */
 void copy_data_to_provider(
     com_ptr<IDataObject> data_object, shared_ptr<sftp_provider> provider, 
-    com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
-    DropActionCallback& callback)
+    const apidl_t& remote_directory, shared_ptr<DropActionCallback> callback)
 {
-    ShellDataObject data(data_object.get());
+    ShellDataObject data(data_object);
     if (data.has_pidl_format())
     {
-        copy_format_to_provider(
-            PidlFormat(data_object), provider, consumer, remote_directory,
-            callback);
+        if (data.supports_async())
+        {
+            com_ptr<IAsyncOperation> async = data.async();
+            HRESULT hr = async->StartOperation(NULL);
+            if (FAILED(hr))
+                BOOST_THROW_EXCEPTION(com_error_from_interface(async, hr));
+
+            // We place the interfaces in the Global Interface Table because
+            // the other thread needs marshalled versions of the interfaces.
+            // The GIT promises to provide that.
+            GIT git;
+            GIT_cookie<IDataObject> marshalling_cookie =
+                git.register_interface(data_object);
+
+            thread(
+                &async_copy_format_to_provider, marshalling_cookie,
+                provider, remote_directory, callback).detach();
+        }
+        else
+        {
+            copy_format_to_provider(
+                PidlFormat(data_object), provider, remote_directory,
+                callback);
+        }
     }
     else
     {
@@ -133,17 +211,11 @@ void copy_data_to_provider(
  * Create an instance of the DropTarget initialised with a data provider.
  */
 CDropTarget::CDropTarget(
-    shared_ptr<sftp_provider> provider,
-    com_ptr<ISftpConsumer> consumer, const apidl_t& remote_directory,
+    shared_ptr<sftp_provider> provider, const apidl_t& remote_directory,
     shared_ptr<DropActionCallback> callback)
     :
-    m_provider(provider), m_consumer(consumer),
+    m_provider(provider),
     m_remote_directory(remote_directory), m_callback(callback) {}
-
-void CDropTarget::on_set_site(com_ptr<IUnknown> ole_site)
-{
-    m_callback->site(ole_site);
-}
 
 /**
  * Indicate whether the contents of the DataObject can be dropped on
@@ -215,19 +287,29 @@ STDMETHODIMP CDropTarget::Drop(
 {
     try
     {
-        if (!pdwEffect)
-            BOOST_THROW_EXCEPTION(com_error(E_POINTER));
+        try
+        {
+            if (!pdwEffect)
+                BOOST_THROW_EXCEPTION(com_error(E_POINTER));
 
-        // Drop doesn't need to maintain any state and is handed a fresh copy
-        // of the IDataObject so we can can immediately cancel the one we were
-        // using for the other parts of the drag-drop loop
-        m_data_object = NULL;
+            // Drop doesn't need to maintain any state and is handed a fresh
+            // copy of the IDataObject so we can can immediately cancel the
+            // one we were using for the other parts of the drag-drop loop
+            m_data_object = NULL;
 
-        *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
+            *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
 
-        if (pdo && *pdwEffect == DROPEFFECT_COPY)
-            copy_data_to_provider(
-                pdo, m_provider, m_consumer, m_remote_directory, *m_callback);
+            if (pdo && *pdwEffect == DROPEFFECT_COPY)
+            {
+                copy_data_to_provider(
+                    pdo, m_provider, m_remote_directory, m_callback);
+            }
+        }
+        catch (...)
+        {
+            m_callback->handle_last_exception();
+            throw;
+        }
     }
     WINAPI_COM_CATCH_AUTO_INTERFACE();
 

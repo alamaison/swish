@@ -1,6 +1,6 @@
 /*  Manage remote directory as a collection of PIDLs.
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -79,6 +79,7 @@ using boost::filesystem::wpath;
 using boost::function;
 using namespace boost::lambda;
 using boost::make_shared;
+using boost::ref;
 using boost::shared_ptr;
 
 using std::exception;
@@ -121,10 +122,9 @@ template<> struct impl::type_policy<PITEMID_CHILD>
  *                        start at or before a HostItemId.
  */
 CSftpDirectory::CSftpDirectory(
-    const apidl_t& directory_pidl,
-    shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+    const apidl_t& directory_pidl, shared_ptr<sftp_provider> provider)
 : 
-m_provider(provider), m_consumer(consumer), m_directory_pidl(directory_pidl),
+m_provider(provider), m_directory_pidl(directory_pidl),
 m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
 namespace {
@@ -136,7 +136,7 @@ namespace {
 
     bool is_directory(
         const sftp_filesystem_item& file, const wpath& directory, 
-        shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+        sftp_provider& provider)
     {
         if (is_link(file))
         {
@@ -147,8 +147,8 @@ namespace {
 
             try
             {
-                sftp_filesystem_item target = provider->stat(
-                    consumer.in(), link_path.in(), TRUE);
+                sftp_filesystem_item target = provider.stat(
+                    link_path.in(), TRUE);
 
                 // TODO: consider what other properties we might want to
                 // take from the target instead of the link.  Currently
@@ -176,11 +176,11 @@ namespace {
 
     cpidl_t convert_directory_entry_to_pidl(
         const sftp_filesystem_item& file, const wpath& directory,
-        shared_ptr<sftp_provider> provider, com_ptr<ISftpConsumer> consumer)
+        sftp_provider& provider)
     {
         return create_remote_itemid(
             file.filename().string(),
-            is_directory(file, directory, provider, consumer),
+            is_directory(file, directory, provider),
             is_link(file), 
             (file.owner()) ? *file.owner() : wstring(),
             (file.group()) ? *file.group() : wstring(),
@@ -250,7 +250,7 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
     bool include_hidden = (flags & SHCONTF_INCLUDEHIDDEN) != 0;
 
     vector<sftp_filesystem_item> directory_enum = m_provider->listing(
-        m_consumer, m_directory);
+        m_directory);
 
     // XXX: PERFORMANCE:
     // For a link, we look its target details up 3 times!  Once to see if it is
@@ -263,16 +263,15 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
 
     function<bool(const sftp_filesystem_item&)> directory_filter =
         include_folders ||
-        !bind(is_directory, _1, m_directory, m_provider, m_consumer);
+        !bind(is_directory, _1, m_directory, ref(*m_provider));
 
     function<bool(const sftp_filesystem_item&)> non_directory_filter =
         include_non_folders ||
-        bind(is_directory, _1, m_directory, m_provider, m_consumer);
+        bind(is_directory, _1, m_directory, ref(*m_provider));
 
     function<cpidl_t(const sftp_filesystem_item&)> pidl_converter =
         bind(
-            convert_directory_entry_to_pidl, _1, m_directory, m_provider,
-            m_consumer);
+            convert_directory_entry_to_pidl, _1, m_directory, ref(*m_provider));
 
     shared_ptr< vector<cpidl_t> > pidls = make_shared< vector<cpidl_t> >();
     boost::copy(
@@ -300,7 +299,23 @@ CSftpDirectory CSftpDirectory::GetSubdirectory(const cpidl_t& directory)
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     apidl_t sub_directory = m_directory_pidl + directory;
-    return CSftpDirectory(sub_directory, m_provider, m_consumer);
+    return CSftpDirectory(sub_directory, m_provider);
+}
+
+namespace {
+
+    std::ios_base::openmode writeable_to_openmode(bool writeable)
+    {
+        if (writeable)
+        {
+            return std::ios_base::out;
+        }
+        else
+        {
+            return std::ios_base::in;
+        }
+    }
+
 }
 
 /**
@@ -319,7 +334,7 @@ com_ptr<IStream> CSftpDirectory::GetFile(const cpidl_t& file, bool writeable)
     wstring file_path =
         (m_directory / remote_itemid_view(file).filename()).string();
 
-    return m_provider->get_file(m_consumer, file_path, writeable);
+    return m_provider->get_file(file_path, writeable_to_openmode(writeable));
 }
 
 /**
@@ -338,7 +353,7 @@ com_ptr<IStream> CSftpDirectory::GetFileByPath(
     const wpath& file, bool writeable)
 {
     return m_provider->get_file(
-        m_consumer, (m_directory / file).string(), writeable);
+        (m_directory / file).string(), writeable_to_openmode(writeable));
 }
 
 bool CSftpDirectory::exists(const cpidl_t& file)
@@ -348,7 +363,8 @@ bool CSftpDirectory::exists(const cpidl_t& file)
 
     try
     {
-        m_provider->get_file(m_consumer, file_path, false);
+        // std::ios_base::in makes it fail if file doesn't exist
+        m_provider->get_file(file_path, std::ios_base::in);
     }
     catch (const exception&)
     {
@@ -359,14 +375,15 @@ bool CSftpDirectory::exists(const cpidl_t& file)
 }
 
 bool CSftpDirectory::Rename(
-    const cpidl_t& old_file, const wstring& new_filename)
+    const cpidl_t& old_file, const wstring& new_filename,
+    com_ptr<ISftpConsumer> consumer)
 {
     bstr_t old_file_path =
         (m_directory / remote_itemid_view(old_file).filename()).string();
     bstr_t new_file_path = (m_directory / new_filename).string();
 
     return m_provider->rename(
-        m_consumer.in(), old_file_path.in(), new_file_path.in())
+        consumer.in(), old_file_path.in(), new_file_path.in())
         == VARIANT_TRUE;
 }
 
@@ -375,10 +392,7 @@ void CSftpDirectory::Delete(const cpidl_t& file)
     bstr_t target_path =
         (m_directory / remote_itemid_view(file).filename()).string();
     
-    if (remote_itemid_view(file).is_folder())
-        m_provider->delete_directory(m_consumer.in(), target_path.in());
-    else
-        m_provider->delete_file(m_consumer.in(), target_path.in());
+    m_provider->remove_all(target_path.in());
 
     try
     {
@@ -402,7 +416,7 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
         name, true, false, L"", L"", 0, 0, 0, 0, datetime_t::now(),
         datetime_t::now());
 
-    m_provider->create_new_directory(m_consumer.in(), target_path.in());
+    m_provider->create_new_directory(target_path.in());
 
     try
     {
@@ -425,8 +439,7 @@ apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
 {
     remote_itemid_view symlink(item);
     bstr_t link_path = (m_directory / symlink.filename()).string();
-    bstr_t target_path(
-        auto_attach(m_provider->resolve_link(m_consumer.in(), link_path.in())));
+    bstr_t target_path(auto_attach(m_provider->resolve_link(link_path.in())));
 
     // XXX: HACK:
     // Currently, we create the new PIDL for the resolved path by copying all

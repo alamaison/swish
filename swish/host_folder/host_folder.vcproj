@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_client.vsprops;..\..\build\libssh2_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -74,7 +74,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_client.vsprops;..\..\build\libssh2_client.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -128,7 +128,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_client.vsprops;..\..\build\libssh2_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -182,7 +182,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Release-x64.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Release-x64.vsprops;..\..\build\boost_client.vsprops;..\..\build\libssh2_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -244,6 +244,10 @@
 			ReferencedProjectIdentifier="{58F5F798-25C4-4769-BF8C-8646BA44C349}"
 			RelativePathToProject=".\swish\frontend\frontend.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{4795C72C-1ED4-4900-87F6-DB18602D7EF4}"
+			RelativePathToProject=".\swish\connection\connection.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -256,7 +260,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\host_itemid_connection.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\menu_command_manager.cpp"
 				>
 			</File>
 			<File
@@ -314,11 +326,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\extract_icon.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\host_itemid_connection.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\host_management.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\host_pidl.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\menu_command_manager.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\overlay_icon.hpp"
 				>
 			</File>
 			<File
@@ -339,6 +367,14 @@
 			</File>
 			<File
 				RelativePath=".\commands\Add.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\CloseSession.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\commands\CloseSession.hpp"
 				>
 			</File>
 			<File

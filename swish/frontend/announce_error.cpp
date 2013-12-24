@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 
-#include <winapi/gui/task_dialog.hpp> // task_dialog
+#include <winapi/gui/task_dialog.hpp> // task_dialog_builder
 
 #include <comet/error.h> // com_error
 
@@ -134,23 +134,23 @@ void announce_error(
     HWND hwnd, const wstring& problem, const wstring& suggested_resolution,
     const wstring& details)
 {
-    task_dialog<void, best_taskdialog> td(
+    task_dialog_builder<void, best_taskdialog> td(
         hwnd, problem, suggested_resolution, L"Swish", icon_type::error, true);
     td.extended_text(
         details, expansion_position::below,
         initial_expansion_state::default,
-        translate("Show &details (which may not be in your language)"),
-        translate("Hide &details"));
+        translate(L"Show &details (which may not be in your language)"),
+        translate(L"Hide &details"));
     td.show();
 }
 
-void rethrow_and_announce(
+void announce_last_exception(
     HWND hwnd, const wstring& title, const wstring& suggested_resolution,
     bool force_ui)
 {
     // Only try and announce if we have an owner window
     if (!force_ui && hwnd == NULL)
-        throw; 
+        return;
 
     // Each call to announce_error below is guarded with a try/catch.
     // I've tested these catch handler and they works the way I
@@ -172,8 +172,6 @@ void rethrow_and_announce(
                     hwnd, title, suggested_resolution, format_exception(error));
         }
         catch (...) { assert(!"Exception announcer threw new exception"); }
-
-        throw;
     }
     catch (const exception& error)
     {
@@ -183,8 +181,6 @@ void rethrow_and_announce(
                 hwnd, title, suggested_resolution, format_exception(error));
         }
         catch (...) { assert(!"Exception announcer threw new exception"); }
-
-        throw;
     }
 #ifdef DEBUG
     catch (...)
@@ -197,8 +193,6 @@ void rethrow_and_announce(
                 L"exception.");
         }
         catch (...) { assert(!"Exception announcer threw new exception"); }
-
-        throw;
     }
 #endif
 }

@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #define SWISH_TEST_PIDL_FIXTURE_HPP
 #pragma once
 
+#include "test/common_boost/fixtures.hpp" // ComFixture
 #include "test/common_boost/ProviderFixture.hpp" // ProviderFixture
 
 #include <boost/filesystem/path.hpp> // wpath
@@ -42,7 +43,7 @@
 
 namespace test {
 
-class PidlFixture : public ProviderFixture
+class PidlFixture : public ProviderFixture, public ComFixture
 {
 public:
 

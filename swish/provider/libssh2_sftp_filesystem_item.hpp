@@ -43,7 +43,7 @@
 #include <string>
 
 namespace ssh {
-namespace sftp {
+namespace filesystem {
 
 class file_attributes;
 class sftp_file;
@@ -62,13 +62,13 @@ class libssh2_sftp_filesystem_item : public sftp_filesystem_item_interface
 public:
 
     /**
-     * Create sftp entry from libssh2 filesystem item representation.
+     * Create filesystem entry from libssh2 filesystem item representation.
      */
     static sftp_filesystem_item create_from_libssh2_file(
-        const ssh::sftp::sftp_file& file);
+        const ssh::filesystem::sftp_file& file);
 
     /**
-     * Create sftp entry from libssh2 filesystem item representation using
+     * Create filesystem entry from libssh2 filesystem item representation using
      * only the attributes and filename.
      *
      * This constructor is for use with a stat-style situation where the full
@@ -87,7 +87,7 @@ public:
      */
     static sftp_filesystem_item create_from_libssh2_attributes(
         const std::string& char_blob_file_name,
-        const ssh::sftp::file_attributes& attributes);
+        const ssh::filesystem::file_attributes& attributes);
 
     virtual BOOST_SCOPED_ENUM(type) type() const;
     virtual sftp_provider_path filename() const;
@@ -103,15 +103,15 @@ public:
 private:
 
     libssh2_sftp_filesystem_item(
-        const ssh::sftp::sftp_file& file);
+        const ssh::filesystem::sftp_file& file);
 
     libssh2_sftp_filesystem_item(
         const std::string& char_blob_file_name,
-        const ssh::sftp::file_attributes& attributes);
+        const ssh::filesystem::file_attributes& attributes);
 
     void common_init(
         const std::string& char_blob_file_name,
-        const ssh::sftp::file_attributes& attributes);
+        const ssh::filesystem::file_attributes& attributes);
 
     BOOST_SCOPED_ENUM(type) m_type;
     sftp_provider_path m_path;

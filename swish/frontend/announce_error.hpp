@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ void announce_error(
     HWND hwnd, const std::wstring& problem,
     const std::wstring& suggested_resolution, const std::wstring& details);
 
-__declspec(noreturn) void rethrow_and_announce(
+void announce_last_exception(
     HWND hwnd, const std::wstring& title,
     const std::wstring& suggested_resolution, bool force_ui=false);
 

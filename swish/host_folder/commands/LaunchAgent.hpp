@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,20 +43,19 @@ namespace commands {
 class LaunchAgent : public swish::nse::Command
 {
 public:
-   LaunchAgent(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
-   
-   bool disabled(const comet::com_ptr<IDataObject>& data_object,
-      bool ok_to_be_slow) const;
-   bool hidden(const comet::com_ptr<IDataObject>& data_object,
-      bool ok_to_be_slow) const;
+    LaunchAgent(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
 
-   void operator()(
-      const comet::com_ptr<IDataObject>& data_object,
-      const comet::com_ptr<IBindCtx>& bind_ctx) const;
+    virtual BOOST_SCOPED_ENUM(state) state(
+        const comet::com_ptr<IDataObject>& data_object,
+        bool ok_to_be_slow) const;
+
+    void operator()(
+        const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
 private:
-   HWND m_hwnd;
-   winapi::shell::pidl::apidl_t m_folder_pidl;
+    HWND m_hwnd;
+    winapi::shell::pidl::apidl_t m_folder_pidl;
 };
 
 }}} // namespace swish::host_folder::commands

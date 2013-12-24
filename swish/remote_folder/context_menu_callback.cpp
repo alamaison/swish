@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@
     @endif
 */
 
-#include "swish/frontend/announce_error.hpp" // rethrow_and_announce
+#include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell_folder/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
-#include "swish/remote_folder/connection.hpp" // connection_from_pidl
+#include "swish/remote_folder/pidl_connection.hpp" // provider_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 
@@ -51,7 +51,7 @@
 #include <ShellApi.h> // ShellExecuteEx
 #include <Windows.h> // InsertMenu, SetMenuDefaultItem
 
-using swish::frontend::rethrow_and_announce;
+using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::ui_object_of_item;
@@ -138,8 +138,8 @@ namespace {
 }
 
 context_menu_callback::context_menu_callback(
-    function<shared_ptr<sftp_provider>(HWND)> provider_factory,
-    function<com_ptr<ISftpConsumer>(HWND)> consumer_factory)
+    my_provider_factory provider_factory,
+    my_consumer_factory consumer_factory)
     : m_provider_factory(provider_factory),
     m_consumer_factory(consumer_factory) {}
 
@@ -156,7 +156,7 @@ bool context_menu_callback::merge_context_menu(
         BOOL success = ::InsertMenuW(
             hmenu, first_item_index, MF_BYPOSITION, 
             minimum_id + MENU_OFFSET_OPEN,
-            wstring(translate("Open &link")).c_str());
+            wstring(translate(L"Open &link")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
                 enable_error_info(last_error()) << 
@@ -178,7 +178,7 @@ bool context_menu_callback::merge_context_menu(
         BOOL success = ::InsertMenuW(
             hmenu, first_item_index, MF_BYPOSITION, 
             minimum_id + MENU_OFFSET_OPEN,
-            wstring(translate("&Open")).c_str());
+            wstring(translate(L"&Open")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
                 enable_error_info(last_error()) << 
@@ -225,9 +225,10 @@ void context_menu_callback::verb(
 
 namespace {
 
+    template<typename ProviderFactory, typename ConsumerFactory>
     bool do_invoke_command(
-        function<shared_ptr<sftp_provider>(HWND)> provider_factory,
-        function<com_ptr<ISftpConsumer>(HWND)> consumer_factory,
+        ProviderFactory provider_factory,
+        ConsumerFactory consumer_factory,
         HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
         const wstring& /*arguments*/, int window_mode)
     {
@@ -244,13 +245,15 @@ namespace {
             {
                 PidlFormat format(selection);
 
+
                 // Create SFTP Consumer for this HWNDs lifetime
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
-                shared_ptr<sftp_provider> provider = connection_from_pidl(
-                    format.parent_folder(), hwnd_view);
-                CSftpDirectory directory(
-                    format.parent_folder(), provider, consumer);
+                shared_ptr<sftp_provider> provider = provider_from_pidl(
+                    format.parent_folder(), consumer,
+                    translate("Name of a running task", "Resolving link"));
+
+                CSftpDirectory directory(format.parent_folder(), provider);
 
                 apidl_t target = directory.ResolveLink(
                     pidl_cast<cpidl_t>(format.relative_file(0)));
@@ -271,9 +274,10 @@ namespace {
             }
             catch (...)
             {
-                rethrow_and_announce(
-                    hwnd_view, translate("Unable to open the link"),
-                    translate("You might not have permission."));
+                announce_last_exception(
+                    hwnd_view, translate(L"Unable to open the link"),
+                    translate(L"You might not have permission."));
+                throw;
             }
 
             return true; // Even if the above fails, we don't want to invoke
@@ -376,9 +380,10 @@ namespace {
             }
             catch (...)
             {
-                rethrow_and_announce(
-                    hwnd_view, translate("Unable to open the file"),
-                    translate("You might not have permission."));
+                announce_last_exception(
+                    hwnd_view, translate(L"Unable to open the file"),
+                    translate(L"You might not have permission."));
+                throw;
             }
 
             return true; // Even if the above fails, we don't want to invoke

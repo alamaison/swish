@@ -37,6 +37,7 @@
 
 #include <comet/variant.h> // variant_t
 
+#include <boost/locale/encoding_utf.hpp> // utf_to_utf
 #include <boost/locale.hpp> // message
 #include <boost/function.hpp> // function
 
@@ -66,7 +67,11 @@ struct column_entry
     boost::function<std::wstring (const comet::variant_t&)> m_stringifier;
     // @}
 
-    std::wstring title() const { return m_title; }
+    std::wstring title() const
+    {
+        return boost::locale::conv::utf_to_utf<wchar_t>(m_title.str());
+    }
+
     SHCOLSTATEF flags() const { return m_flags; }
     int format() const { return m_format; }
     int avg_char_width() const { return m_avg_char_width; }

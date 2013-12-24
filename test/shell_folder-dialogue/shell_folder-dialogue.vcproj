@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish-Debug-Win32.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Debug-Win32.vsprops;..\..\build\wtl_client.vsprops;..\..\build\boost_test_runner.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -86,7 +86,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish-Debug-x64.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Debug-x64.vsprops;..\..\build\wtl_client.vsprops;..\..\build\boost_test_runner.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -152,7 +152,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish-Release-Win32.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Release-Win32.vsprops;..\..\build\wtl_client.vsprops;..\..\build\boost_test_runner.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -218,7 +218,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(SolutionDir)\build\swish-Release-x64.vsprops;$(SolutionDir)\build\wtl_client.vsprops;$(SolutionDir)\build\cppunit_runner.vsprops;..\..\build\boost_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Release-x64.vsprops;..\..\build\wtl_client.vsprops;..\..\build\boost_test_runner.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -290,66 +290,50 @@
 		/>
 	</References>
 	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+		<File
+			RelativePath=".\KbdInteractiveDialog_test.cpp"
 			>
-			<File
-				RelativePath=".\KbdInteractiveDialog_test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Module.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\swish\pch.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+		</File>
+		<File
+			RelativePath=".\Module.cpp"
 			>
-		</Filter>
+		</File>
+		<File
+			RelativePath="..\..\swish\pch.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+				/>
+			</FileConfiguration>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

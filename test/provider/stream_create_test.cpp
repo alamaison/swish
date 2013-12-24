@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,8 +34,6 @@
     @endif
 */
 
-#include "swish/provider/SftpStream.hpp"  // Test subject
-
 #include "test/provider/StreamFixture.hpp"
 
 #include <comet/error.h> // com_error
@@ -51,7 +49,7 @@ BOOST_FIXTURE_TEST_SUITE(StreamCreate, StreamFixture)
 
 /**
  * Open a stream to a file that doesn't already exist.
- * The file should be created as the CSftpStream::create flag is set.
+ * The file should be created as only the `std::ios_base::out` flag is set.
  */
 BOOST_AUTO_TEST_CASE( new_file )
 {
@@ -60,24 +58,25 @@ BOOST_AUTO_TEST_CASE( new_file )
 
     BOOST_REQUIRE(!exists(m_local_path));
 
-    GetStream(CSftpStream::create);
+    GetStream(std::ios_base::out);
 
     BOOST_REQUIRE(exists(m_local_path));
 }
 
 /**
- * Open a stream to a file that doesn't already exist.
+ * Open a stream for reading to a file that doesn't already exist.
  * This should fail and the file should not be created as the 
- * CSftpStream::create flag isn't set.
+ * `std::ios_base::out` flag isn't set which would cause the file to
+ * be created.
  */
-BOOST_AUTO_TEST_CASE( new_file_fail )
+BOOST_AUTO_TEST_CASE( non_existent_file_fail )
 {
     // Delete sandbox file before creating stream
     remove(m_local_path);
 
     BOOST_REQUIRE(!exists(m_local_path));
 
-    BOOST_REQUIRE_THROW(GetStream(), com_error);
+    BOOST_REQUIRE_THROW(GetStream(std::ios_base::in), std::exception);
 
     BOOST_REQUIRE(!exists(m_local_path));
 }

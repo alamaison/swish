@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Debug-Win32.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="0"
 			CharacterSet="1"
 			>
@@ -76,7 +76,7 @@
 		<Configuration
 			Name="Debug|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Debug-x64.vsprops;..\..\build\boost_client.vsprops"
 			UseOfATL="0"
 			CharacterSet="1"
 			>
@@ -132,7 +132,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Release-Win32.vsprops;..\..\build\boost_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -187,7 +187,7 @@
 		<Configuration
 			Name="Release|x64"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\build\swish-Release-x64.vsprops;..\..\build\boost_client.vsprops;..\..\build\boost_locale_client.vsprops"
+			InheritedPropertySheets="..\..\build\swish-Release-x64.vsprops;..\..\build\boost_client.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -309,10 +309,6 @@
 				RelativePath=".\SequentialPlan.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\SnitchingDropTarget.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -365,10 +361,6 @@
 			</File>
 			<File
 				RelativePath=".\SftpDestination.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SnitchingDropTarget.hpp"
 				>
 			</File>
 		</Filter>

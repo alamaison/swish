@@ -153,4 +153,7 @@ private:
         UINT uMsg, WPARAM wParam, LPARAM lParam );
     // @}
 
+    
+    bool CRemoteFolder::show_extension(PCUITEMID_CHILD pidl);
+
 };

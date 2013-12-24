@@ -342,6 +342,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="detail"
+			>
+			<File
+				RelativePath=".\detail\command_state_conversion.hpp"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

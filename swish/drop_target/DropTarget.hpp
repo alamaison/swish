@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011, 2012
+    Copyright (C) 2009, 2010, 2011, 2012, 2013
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 #define SWISH_DROP_TARGET_DROPTARGET_HPP
 #pragma once
 
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
+#include "swish/provider/sftp_provider.hpp" // sftp_provider
 #include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
 #include "swish/drop_target/Progress.hpp" // Progress
 
@@ -61,9 +61,11 @@ public:
 
     typedef IDropTarget interface_is;
 
+    /**
+     * Create SFTP drop target.
+     */
     CDropTarget(
         boost::shared_ptr<swish::provider::sftp_provider> provider,
-        comet::com_ptr<ISftpConsumer> consumer,
         const winapi::shell::pidl::apidl_t& remote_directory,
         boost::shared_ptr<DropActionCallback> callback);
 
@@ -93,10 +95,7 @@ public:
 
 private:
 
-    virtual void on_set_site(comet::com_ptr<IUnknown> ole_site);
-
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
-    comet::com_ptr<ISftpConsumer> m_consumer;
 
     winapi::shell::pidl::apidl_t m_remote_directory;
     comet::com_ptr<IDataObject> m_data_object;
@@ -106,9 +105,8 @@ private:
 void copy_data_to_provider(
     comet::com_ptr<IDataObject> data_object,
     boost::shared_ptr<swish::provider::sftp_provider> provider,
-    comet::com_ptr<ISftpConsumer> consumer,
     const winapi::shell::pidl::apidl_t& remote_directory,
-    DropActionCallback& callback);
+    boost::shared_ptr<DropActionCallback> callback);
 
 }} // namespace swish::drop_target
 

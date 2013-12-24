@@ -26,14 +26,14 @@
 
 #include "bind_best_taskdialog.hpp"
 
-#include <winapi/dynamic_link.hpp> // proc_address
+#include <winapi/dynamic_link.hpp> // load_function
 
 #include <TaskDialog.h> // Task98DialogIndirect
 
 #include <exception>
 
 using winapi::gui::task_dialog::tdi_function;
-using winapi::proc_address;
+using winapi::load_function;
 
 using std::exception;
 
@@ -44,8 +44,8 @@ tdi_function bind_best_taskdialog()
 {
     try
     {
-        return proc_address<
-            HRESULT (WINAPI*)(const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
+        return load_function<
+            HRESULT (const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
                 "comctl32.dll", "TaskDialogIndirect");
     }
     catch (const exception&)

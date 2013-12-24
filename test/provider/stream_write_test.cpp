@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,8 +34,6 @@
     @endif
 */
 
-#include "swish/provider/SftpStream.hpp"  // Test subject
-
 #include "test/provider/StreamFixture.hpp"
 #include "test/common_boost/helpers.hpp"
 #include "test/common_boost/stream_utils.hpp" // verify_stream_read
@@ -49,6 +47,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
+#include <algorithm> // generate
+#include <cstdlib> // rand
 #include <string>
 #include <vector>
 
@@ -65,6 +65,9 @@ using boost::system::system_error;
 using boost::system::get_system_category;
 using boost::shared_ptr;
 
+using std::exception;
+using std::generate;
+using std::rand;
 using std::string;
 using std::vector;
 
@@ -88,7 +91,7 @@ BOOST_AUTO_TEST_CASE( get_readonly )
     if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
         BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
-    BOOST_REQUIRE_THROW(GetStream(), com_error);
+    BOOST_REQUIRE_THROW(GetStream(), exception);
 }
 
 /**
@@ -136,6 +139,16 @@ BOOST_AUTO_TEST_CASE( write_a_string )
         out.begin(), out.end(), in.begin(), in.end());
 }
 
+namespace {
+
+    vector<int> random_buffer(size_t buffer_size)
+    {
+        vector<int> buffer(buffer_size);
+        generate(buffer.begin(), buffer.end(), rand);
+        return buffer;
+    }
+}
+
 /**
  * Write a large buffer.
  */
@@ -143,19 +156,19 @@ BOOST_AUTO_TEST_CASE( write_large )
 {
     com_ptr<IStream> stream = GetStream();
 
-    vector<char> in(1000000); // Doesn't need to be initialised
+    vector<int> in = random_buffer(1000000);
 
     ULONG cbWritten = 0;
-    BOOST_REQUIRE_OK(
-        stream->Write(&in[0], numeric_cast<ULONG>(in.size()), &cbWritten));
-    BOOST_REQUIRE_EQUAL(cbWritten, in.size());
+    ULONG size_in_bytes = numeric_cast<ULONG>(in.size() * sizeof(int));
+    BOOST_REQUIRE_OK(stream->Write(&in[0], size_in_bytes, &cbWritten));
+    BOOST_REQUIRE_EQUAL(cbWritten, size_in_bytes);
 
     // Reset seek pointer to beginning and read back
     LARGE_INTEGER move = {0};
     BOOST_REQUIRE_OK(stream->Seek(move, STREAM_SEEK_SET, NULL));
 
-    vector<char> out(in.size());
-    verify_stream_read(&out[0], numeric_cast<ULONG>(out.size()), stream);
+    vector<int> out(in.size());
+    verify_stream_read(&out[0], size_in_bytes, stream);
     BOOST_REQUIRE_EQUAL_COLLECTIONS(
         out.begin(), out.end(), in.begin(), in.end());
 }
