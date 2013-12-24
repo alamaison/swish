@@ -1,14 +1,15 @@
 # 
 # Translators:
-# Éliton Claus <eliton@eliton.com.br>, 2012.
+# Éliton Claus <eliton@eliton.com.br>, 2012
+# jmruas <jmruas@gmail.com>, 2013
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-07-30 13:20+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
-"Language-Team: \n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
+"Last-Translator: jmruas <jmruas@gmail.com>\n"
+"Language-Team: Portuguese (http://www.transifex.com/projects/p/swish/language/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,7 +21,7 @@ msgstr ""
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:152
 msgid "Unable to create file on the server:"
-msgstr ""
+msgstr "Não foi possível criar ficheiro no servidor:"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:249
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
@@ -28,7 +29,7 @@ msgctxt ""
 "Top line of a transfer progress window saying which file is being copied. "
 "{1} is replaced with the file path and must be included in your translation."
 msgid "Copying '{1}'"
-msgstr ""
+msgstr "A copiar '{1}'"
 
 #: ../../swish/drop_target/CopyFileOperation.cpp:260
 #: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
@@ -37,7 +38,7 @@ msgctxt ""
 "{1} is replaced with the directory path and must be included in your "
 "translation."
 msgid "To '{1}'"
-msgstr ""
+msgstr "Para '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
@@ -58,11 +59,11 @@ msgstr "A copiar..."
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:125
 msgid "Unable to transfer files"
-msgstr ""
+msgstr "Não foi possível transferir os ficheiros"
 
 #: ../../swish/drop_target/SnitchingDropTarget.cpp:127
 msgid "You might not have permission to write to this directory."
-msgstr ""
+msgstr "Pode não ter permissão para escrever nesta pasta."
 
 #: ../../swish/forms/add_host.cpp:102
 msgid "New SFTP Connection"
@@ -318,16 +319,16 @@ msgstr "Estas tarefas facilitam a gestão das ligações SFTP do Swish."
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:103
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "&Launch key agent"
-msgstr ""
+msgstr "La&nçar agente-chave"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:99
 msgid "Launch Putty SSH key agent, Pageant."
-msgstr ""
+msgstr "Lançar agente-chave SSH Putty, Pageant."
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "Lançar agente-chave"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
@@ -387,15 +388,15 @@ msgstr "ID de grupo"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
-msgstr ""
+msgstr "Abrir &ligação"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
-msgstr ""
+msgstr "&Abrir"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
-msgstr ""
+msgstr "Não foi possível abrir a ligação"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:274
 #: ../../swish/remote_folder/context_menu_callback.cpp:379
@@ -406,7 +407,7 @@ msgstr "Possivelmente não tem permissões."
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:378
 msgid "Unable to open the file"
-msgstr ""
+msgstr "Não foi possível abrir o ficheiro"
 
 #: ../../swish/remote_folder/commands/commands.cpp:93
 msgid "File and Folder Tasks"

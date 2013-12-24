@@ -1,15 +1,16 @@
 # 
 # Translators:
-# Satoshi Kikuta <kik0220@gmail.com>, 2012.
-# Tadashi Jokagi <elf@poyo.jp>, 2012.
+# Satoshi Kikuta <kik0220@gmail.com>, 2012
+# Tadashi "ELF" Jokagi <elf@poyo.jp>, 2012
+# takaf <m465c3iiwrih@gmail.com>, 2013
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-07-30 13:20+0000\n"
-"Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
-"Language-Team: \n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
+"Last-Translator: takaf <m465c3iiwrih@gmail.com>\n"
+"Language-Team: Japanese (http://www.transifex.com/projects/p/swish/language/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -319,16 +320,16 @@ msgstr "これらのタスクでSwishのSFTP接続を管理できます"
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:103
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "&Launch key agent"
-msgstr ""
+msgstr "SSH key agentの起動"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:99
 msgid "Launch Putty SSH key agent, Pageant."
-msgstr ""
+msgstr "Putty SSH key agentのページェントの起動"
 
 #: ../../swish/host_folder/commands/LaunchAgent.cpp:106
 msgctxt "Title of command used to launch the SSH agent program"
 msgid "Launch key agent"
-msgstr ""
+msgstr "SSH agent programの起動"
 
 #: ../../swish/host_folder/commands/Remove.cpp:83
 msgid "&Remove SFTP Connection"
@@ -336,7 +337,7 @@ msgstr "接続を削除する(&R)"
 
 #: ../../swish/host_folder/commands/Remove.cpp:84
 msgid "Remove a SFTP connection created with Swish."
-msgstr "作成したSeishのSFTP接続を削除します。"
+msgstr "作成したSwishのSFTP接続を削除します。"
 
 #: ../../swish/host_folder/commands/Remove.cpp:85
 msgid "&Remove SFTP Connection..."

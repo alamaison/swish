@@ -1,14 +1,14 @@
 # 
 # Translators:
-#   <rbnwmk@gmail.com>, 2012.
+# Rob . <rbnwmk@gmail.com>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-07-30 13:20+0000\n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
 "Last-Translator: alamaison <awl03@doc.ic.ac.uk>\n"
-"Language-Team: \n"
+"Language-Team: Chinese (Taiwan) (http://www.transifex.com/projects/p/swish/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
