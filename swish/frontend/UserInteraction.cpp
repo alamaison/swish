@@ -33,7 +33,7 @@
 #include "swish/shell_folder/KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 
 #include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/gui/task_dialog.hpp> // task_dialog
+#include <winapi/gui/task_dialog.hpp> // task_dialog_builder
 #include <winapi/gui/message_box.hpp> // message_box
 
 #include <comet/error.h> // com_error
@@ -199,7 +199,7 @@ HRESULT on_hostkey_mismatch(
         L"It is important to check this is the right key fingerprint:");
     message << wformat(L"\n\n        %1%    %2%") % key_type % key;
 
-    task_dialog::task_dialog<HRESULT, best_taskdialog> td(
+    task_dialog::task_dialog_builder<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
         winapi::gui::task_dialog::icon_type::warning, true,
         boost::bind(return_hr, E_ABORT));
@@ -243,7 +243,7 @@ HRESULT on_hostkey_unknown(
         L"to be the computer you're trying to connect to.");
 
     wstring instruction = translate(L"Verify unknown SSH host-key");
-    task_dialog::task_dialog<HRESULT, best_taskdialog> td(
+    task_dialog::task_dialog_builder<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
         winapi::gui::task_dialog::icon_type::information, true,
         boost::bind(return_hr, E_ABORT));

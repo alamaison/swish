@@ -28,7 +28,7 @@
 
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 
-#include <winapi/gui/task_dialog.hpp> // task_dialog
+#include <winapi/gui/task_dialog.hpp> // task_dialog_builder
 
 #include <comet/error.h> // com_error
 
@@ -134,7 +134,7 @@ void announce_error(
     HWND hwnd, const wstring& problem, const wstring& suggested_resolution,
     const wstring& details)
 {
-    task_dialog<void, best_taskdialog> td(
+    task_dialog_builder<void, best_taskdialog> td(
         hwnd, problem, suggested_resolution, L"Swish", icon_type::error, true);
     td.extended_text(
         details, expansion_position::below,
