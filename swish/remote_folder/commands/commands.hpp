@@ -46,7 +46,8 @@ namespace commands {
 
 typedef boost::function<
     boost::shared_ptr<swish::provider::sftp_provider>(
-        comet::com_ptr<ISftpConsumer>)> provider_factory;
+        comet::com_ptr<ISftpConsumer>, const std::string& task_name)>
+    provider_factory;
 
 typedef boost::function<comet::com_ptr<ISftpConsumer>()> consumer_factory;
 

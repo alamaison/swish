@@ -293,6 +293,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\session_manager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\session_pool.cpp"
 				>
 			</File>
@@ -312,6 +316,10 @@
 			</File>
 			<File
 				RelativePath=".\running_session.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\session_manager.hpp"
 				>
 			</File>
 			<File

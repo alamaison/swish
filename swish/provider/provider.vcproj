@@ -322,6 +322,10 @@
 				RelativePath=".\sftp_provider_path.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ticketed_stream.hpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

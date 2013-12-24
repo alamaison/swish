@@ -55,9 +55,6 @@ class ProviderFixture :
 {
 public:
 
-    ProviderFixture();
-    ~ProviderFixture();
-
     /**
      * Get a CProvider instance connected to the fixture SSH server.
      */
@@ -68,8 +65,6 @@ public:
      */
     comet::com_ptr<test::MockConsumer> Consumer();
 
-private:
-    swish::connection::authenticated_session* m_session;
 };
 
 } // namespace test

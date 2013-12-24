@@ -30,19 +30,22 @@
 #include "test/common_boost/MockConsumer.hpp"
 #include "test/common_boost/fixtures.hpp"  // SandboxFixture, OpenSshFixture
 
-#include "swish/connection/authenticated_session.hpp"
-#include "swish/provider/Provider.hpp"
+#include "swish/connection/connection_spec.hpp"
+#include "swish/connection/session_manager.hpp"
+#include "swish/provider/Provider.hpp" // CProvider
 #include "swish/utils.hpp" // Utf8StringToWideString
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/make_shared.hpp> // make_shared
 #include <boost/shared_ptr.hpp>
 
 #include <string>
 
-using swish::connection::authenticated_session;
+using swish::connection::connection_spec;
+using swish::connection::session_manager;
+using swish::connection::session_reservation;
 using swish::provider::sftp_provider;
+using swish::provider::CProvider;
 using swish::utils::Utf8StringToWideString;
 
 using comet::com_ptr;
@@ -51,24 +54,17 @@ using boost::shared_ptr;
 
 namespace test {
 
-ProviderFixture::ProviderFixture()
-    :
-m_session(
-    new authenticated_session(
-        Utf8StringToWideString(GetHost()), GetPort(),
-        Utf8StringToWideString(GetUser()), Consumer()))
-{}
-
-ProviderFixture::~ProviderFixture()
-{
-    delete m_session;
-}
-
-
 shared_ptr<sftp_provider> ProviderFixture::Provider()
 {
-    return boost::make_shared<swish::provider::CProvider>(
-        boost::ref(*m_session));
+    session_reservation ticket(
+        session_manager().reserve_session(
+            connection_spec(
+                Utf8StringToWideString(GetHost()),
+                Utf8StringToWideString(GetUser()), GetPort()),
+            Consumer(),
+            "Running tests"));
+
+    return boost::shared_ptr<CProvider>(new CProvider(ticket));
 }
 
 /**

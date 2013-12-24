@@ -81,7 +81,8 @@ namespace {
         const apidl_t& parent_folder)
     {
         com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
-        shared_ptr<sftp_provider> provider = provider_factory(consumer);
+        shared_ptr<sftp_provider> provider = provider_factory(
+            consumer, translate("Name of a running task", "Deleting files"));
 
         // Create instance of our directory handler class
         CSftpDirectory directory(parent_folder, provider);

@@ -332,6 +332,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\session_manager_test.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\session_pool_test.cpp"
 			>
 		</File>

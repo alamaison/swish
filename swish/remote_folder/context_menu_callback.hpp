@@ -50,7 +50,7 @@ class context_menu_callback : public swish::nse::default_context_menu_callback
 {
     typedef boost::function<
         boost::shared_ptr<swish::provider::sftp_provider>(
-        comet::com_ptr<ISftpConsumer>)
+        comet::com_ptr<ISftpConsumer>, const std::string&)
     > my_provider_factory;
 
     typedef boost::function<comet::com_ptr<ISftpConsumer>(HWND)>

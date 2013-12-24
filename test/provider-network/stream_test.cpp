@@ -30,6 +30,7 @@
 #include "test/common_boost/stream_utils.hpp" // verify_stream_read
 
 #include "swish/connection/connection_spec.hpp"
+#include "swish/connection/session_manager.hpp" // session_reservation
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/provider/Provider.hpp" // CProvider
 
@@ -37,8 +38,7 @@
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm> // generate
@@ -52,7 +52,8 @@ using test::remote_test_config;
 using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
 
-using swish::connection::authenticated_session;
+using swish::connection::session_manager;
+using swish::connection::session_reservation;
 using swish::connection::connection_spec;
 using swish::provider::sftp_provider;
 using swish::provider::CProvider;
@@ -61,7 +62,6 @@ using comet::com_ptr;
 
 using boost::filesystem::wpath;
 using boost::numeric_cast;
-using boost::make_shared;
 using boost::shared_ptr;
 
 using std::auto_ptr;
@@ -73,7 +73,7 @@ using std::wstring;
 
 namespace {
 
-authenticated_session create_session(com_ptr<MockConsumer> consumer)
+session_reservation reserve_session(com_ptr<MockConsumer> consumer)
 {
     remote_test_config config;
     consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
@@ -82,15 +82,16 @@ authenticated_session create_session(com_ptr<MockConsumer> consumer)
     consumer->set_password_behaviour(MockConsumer::CustomPassword);
     consumer->set_password(config.GetPassword());
 
-    return config.as_connection_spec().create_session(consumer);
+    return session_manager().reserve_session(
+        config.as_connection_spec(), consumer, "Running tests");
 }
 
 class RemoteSftpFixture : public WinsockFixture
 {
 public:
     RemoteSftpFixture() :
-      m_session(create_session(new MockConsumer())),
-      m_provider(make_shared<CProvider>(boost::ref(m_session))) {}
+      m_provider(
+          new CProvider(reserve_session(new MockConsumer()))) {}
 
     shared_ptr<sftp_provider> provider() const
     {
@@ -104,7 +105,6 @@ public:
     }
 
 private:
-    authenticated_session m_session;
     shared_ptr<sftp_provider> m_provider;
 };
 

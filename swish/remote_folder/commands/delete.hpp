@@ -45,7 +45,7 @@ class Delete
 {
     typedef boost::function<
         boost::shared_ptr<swish::provider::sftp_provider>(
-        comet::com_ptr<ISftpConsumer>)
+        comet::com_ptr<ISftpConsumer>, const std::string& task_name)
     > my_provider_factory;
 
     typedef boost::function<comet::com_ptr<ISftpConsumer>(HWND)>

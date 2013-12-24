@@ -28,7 +28,7 @@
 #define SWISH_HOST_FOLDER_OVERLAY_ICON_HPP
 
 #include "swish/connection/connection_spec.hpp"
-#include "swish/connection/session_pool.hpp"
+#include "swish/connection/session_manager.hpp"
 #include "swish/host_folder/host_itemid_connection.hpp"
                                                   // connection_from_host_itemid
 
@@ -49,7 +49,7 @@ public:
 
     bool has_overlay() const
     {
-        return swish::connection::session_pool().has_session(m_connection);
+        return swish::connection::session_manager().has_session(m_connection);
     }
 
     int index() const

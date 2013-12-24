@@ -33,6 +33,7 @@
 #include <comet/server.h> // simple_object
 #include <comet/smart_enum.h> // make_smart_enumeration
 
+#include <boost/bind.hpp> // bind, _1
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -59,6 +60,7 @@ using comet::com_ptr;
 using comet::make_smart_enumeration;
 using comet::simple_object;
 
+using boost::bind;
 using boost::function;
 using boost::locale::translate;
 using boost::make_shared;
@@ -126,7 +128,11 @@ remote_folder_task_pane_tasks(
 
     com_ptr<IUICommand> new_folder =
         new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
-                folder_pidl, provider, consumer);
+        folder_pidl,
+        bind(
+            provider, _1, 
+            translate("Name of a running task", "Creating new folder")),
+        consumer);
 
     com_ptr<IObjectWithSite> object_with_site = com_cast(new_folder);
 

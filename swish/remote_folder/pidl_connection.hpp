@@ -38,6 +38,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <string>
+
 namespace swish {
 namespace remote_folder {
 
@@ -55,7 +57,8 @@ swish::connection::connection_spec connection_from_pidl(
  */
 boost::shared_ptr<swish::provider::sftp_provider> provider_from_pidl(
     const winapi::shell::pidl::apidl_t& pidl,
-    comet::com_ptr<ISftpConsumer> consumer);
+    comet::com_ptr<ISftpConsumer> consumer,
+    const std::string& task_name);
 
 }} // namespace swish::remote_folder
 

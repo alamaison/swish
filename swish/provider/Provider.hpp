@@ -39,9 +39,10 @@
 #define SWISH_PROVIDER_PROVIDER_HPP
 #pragma once
 
-#include "swish/connection/authenticated_session.hpp"
+#include "swish/connection/session_manager.hpp" // session_reservation
 #include "swish/provider/sftp_provider.hpp"
 
+#include <boost/move/move.hpp> // BOOST_RV_REF
 #include <boost/shared_ptr.hpp> // shared_ptr
 
 namespace swish {
@@ -53,7 +54,8 @@ class CProvider : public sftp_provider
 {
 public:
 
-    CProvider(swish::connection::authenticated_session& session);
+    explicit CProvider(
+        BOOST_RV_REF(swish::connection::session_reservation) session_ticket);
 
     virtual directory_listing listing(const sftp_provider_path& directory);
 

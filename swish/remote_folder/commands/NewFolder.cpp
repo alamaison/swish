@@ -209,14 +209,18 @@ const
             trace("WARNING: couldn't get current IShellView or HWND");
         }
 
-        CSftpDirectory directory(
-            m_folder_pidl, m_provider_factory(m_consumer_factory()));
+
+        shared_ptr<sftp_provider> provider = m_provider_factory(
+            m_consumer_factory(),
+            translate("Name of a running task", "Creating new folder"));
+
+        CSftpDirectory directory(m_folder_pidl, provider);
 
         // The default New Folder name may already exist in the folder. If it
         // does, we append a number to it to make it unique
         wstring initial_name = translate(L"Initial name", L"New folder");
         initial_name = prefix_if_necessary(
-            initial_name, m_provider_factory(m_consumer_factory()),
+            initial_name, provider,
             absolute_path_from_swish_pidl(m_folder_pidl));
 
         cpidl_t pidl = directory.CreateDirectory(initial_name);

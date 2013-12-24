@@ -178,8 +178,10 @@ IEnumIDList* CRemoteFolder::enum_objects(HWND hwnd, SHCONTF flags)
     {
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
 
-        shared_ptr<sftp_provider> provider =
-            provider_from_pidl(root_pidl(), consumer);
+        // TODO: get the name of the directory and embed in the task name
+        shared_ptr<sftp_provider> provider = provider_from_pidl(
+            root_pidl(), consumer, translate(
+                "Name of a running task", "Reading a directory"));
 
         // Create directory handler and get listing as PIDL enumeration
         CSftpDirectory directory(root_pidl(), provider);
@@ -426,9 +428,11 @@ PITEMID_CHILD CRemoteFolder::set_name_of(
 {
     try
     {
+        // TODO: embed the name of the file in the task name
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
         shared_ptr<sftp_provider> provider =
-            provider_from_pidl(root_pidl(), consumer);
+            provider_from_pidl(root_pidl(), consumer, translate(
+                "Name of a running task", "Renaming a file"));
 
         // Rename file
         CSftpDirectory directory(root_pidl(), provider);
@@ -629,7 +633,7 @@ CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(HWND hwnd)
 {
     TRACE("Request: IExplorerCommandProvider");
     return remote_folder_command_provider(
-        hwnd, root_pidl(), bind(&provider_from_pidl, root_pidl(), _1),
+        hwnd, root_pidl(), bind(&provider_from_pidl, root_pidl(), _1, _2),
         bind(m_consumer_factory, hwnd)).get();
 }
 
@@ -788,9 +792,12 @@ CComPtr<IDataObject> CRemoteFolder::data_object(
 
     try
     {
+        // TODO: pass a provider factory instead of the provider to the
+        // data object and create more specific reservations when needed
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
         shared_ptr<sftp_provider> provider =
-            provider_from_pidl(root_pidl(), consumer);
+            provider_from_pidl(root_pidl(), consumer, translate(
+                "Name of a running task", "Accessing files"));
 
         return new swish::shell_folder::CSnitchingDataObject(
             new CSftpDataObject(
@@ -818,9 +825,12 @@ CComPtr<IDropTarget> CRemoteFolder::drop_target(HWND hwnd)
 
     try
     {
+        // TODO: pass a provider factory instead of the provider to the
+        // drop target and create more specific reservations when needed
         com_ptr<ISftpConsumer> consumer = m_consumer_factory(hwnd);
         shared_ptr<sftp_provider> provider =
-            provider_from_pidl(root_pidl(), consumer);
+            provider_from_pidl(root_pidl(), consumer, translate(
+                "Name of a running task", "Copying to directory"));
 
         optional< window<wchar_t> > owner;
         if (hwnd)
@@ -869,6 +879,6 @@ HRESULT CRemoteFolder::MenuCallback(
     HWND hwnd, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     context_menu_callback callback(
-        bind(&provider_from_pidl, root_pidl(), _1), m_consumer_factory);
+        bind(&provider_from_pidl, root_pidl(), _1, _2), m_consumer_factory);
     return callback(hwnd, pdtobj, uMsg, wParam, lParam);
 }

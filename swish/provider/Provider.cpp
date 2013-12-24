@@ -38,6 +38,7 @@
 #include "Provider.hpp"
 
 #include "swish/connection/authenticated_session.hpp"
+#include "swish/connection/session_manager.hpp" // session_reservation
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
@@ -58,6 +59,7 @@
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
 #include <boost/make_shared.hpp> // make_shared
+#include <boost/move/move.hpp> // BOOST_RV_REF
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp> // system_error, system_category
 
@@ -68,6 +70,7 @@
 #include <vector> // to hold listing
 
 using swish::connection::authenticated_session;
+using swish::connection::session_reservation;
 using swish::utils::WideStringToUtf8String;
 using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
@@ -109,7 +112,7 @@ class provider
 {
 public:
 
-    provider(authenticated_session& session);
+    explicit provider(BOOST_RV_REF(session_reservation) session_ticket);
 
     directory_listing listing(const sftp_provider_path& directory);
 
@@ -131,12 +134,12 @@ public:
 
 private:
 
-    authenticated_session& m_session;
+    session_reservation m_ticket;
 };
 
-CProvider::CProvider(authenticated_session& session)
+CProvider::CProvider(BOOST_RV_REF(session_reservation) session_ticket)
 {
-    m_provider = make_shared<provider>(boost::ref(session));
+    m_provider = make_shared<provider>(boost::ref(session_ticket));
 }
 
 
@@ -171,7 +174,10 @@ sftp_filesystem_item CProvider::stat(
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(authenticated_session& session) : m_session(session) {}
+provider::provider(BOOST_RV_REF(session_reservation) ticket)
+:
+m_ticket(ticket)
+{}
 
 namespace {
 
@@ -192,7 +198,7 @@ directory_listing provider::listing(const sftp_provider_path& directory)
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    sftp_filesystem& channel = m_session.get_sftp_filesystem();
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     string path = WideStringToUtf8String(directory.string());
 
@@ -216,7 +222,7 @@ com_ptr<IStream> provider::get_file(
 
     string path = WideStringToUtf8String(file_path);
 
-    sftp_filesystem& channel = m_session.get_sftp_filesystem();
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
@@ -239,7 +245,7 @@ com_ptr<IStream> provider::get_file(
     else
     {
         BOOST_THROW_EXCEPTION(
-            std::invalid_argument("Stream but be input, output or both"));
+            std::invalid_argument("Stream must be input, output or both"));
     }
 }
 
@@ -469,7 +475,7 @@ VARIANT_BOOL provider::rename(
 
     try
     {
-        m_session.get_sftp_filesystem().rename(
+        m_ticket.session().get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
         
         // Rename was successful without overwrite
@@ -478,7 +484,7 @@ VARIANT_BOOL provider::rename(
     catch (const system_error& e)
     {
         if (rename_retry_with_overwrite(
-            m_session, consumer.get(), e, from, to))
+            m_ticket.session(), consumer.get(), e, from, to))
         {
             return VARIANT_TRUE;
         }
@@ -496,7 +502,7 @@ void provider::remove_all(const wpath& target)
 
     path utf8_path = WideStringToUtf8String(target.string());
 
-    m_session.get_sftp_filesystem().remove_all(utf8_path);
+    m_ticket.session().get_sftp_filesystem().remove_all(utf8_path);
 }
 
 void provider::create_new_directory(const wpath& path)
@@ -508,14 +514,14 @@ void provider::create_new_directory(const wpath& path)
 
     string utf8_path = WideStringToUtf8String(path.string());
 
-    m_session.get_sftp_filesystem().create_directory(utf8_path);
+    m_ticket.session().get_sftp_filesystem().create_directory(utf8_path);
 }
 
 BSTR provider::resolve_link(const wpath& path)
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    sftp_filesystem& channel = m_session.get_sftp_filesystem();
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
     bstr_t target =
         Utf8StringToWideString(channel.canonical_path(utf8_path).string());
 
@@ -534,7 +540,7 @@ sftp_filesystem_item provider::stat(
 {
     string utf8_path = WideStringToUtf8String(path.string());
 
-    sftp_filesystem& channel = m_session.get_sftp_filesystem();
+    sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     file_attributes stat_result = channel.attributes(
         utf8_path, follow_links != FALSE);

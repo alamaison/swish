@@ -250,7 +250,8 @@ namespace {
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
                 shared_ptr<sftp_provider> provider = provider_from_pidl(
-                    format.parent_folder(), consumer);
+                    format.parent_folder(), consumer,
+                    translate("Name of a running task", "Resolving link"));
 
                 CSftpDirectory directory(format.parent_folder(), provider);
 
