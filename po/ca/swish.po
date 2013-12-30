@@ -1,0 +1,474 @@
+# 
+# Translators:
+# lluis.dalmau <lluis.dalmau@guifi.net>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-07-30 14:18-0000\n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
+"Last-Translator: lluis.dalmau <lluis.dalmau@guifi.net>\n"
+"Language-Team: Catalan (http://www.transifex.com/projects/p/swish/language/ca/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ca\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"X-Poedit-SearchPath-0: ../../swish\n"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:152
+msgid "Unable to create file on the server:"
+msgstr "Impossible crear l'arxiu al servidor"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:249
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
+msgctxt ""
+"Top line of a transfer progress window saying which file is being copied. "
+"{1} is replaced with the file path and must be included in your translation."
+msgid "Copying '{1}'"
+msgstr "Copiant '{1}'"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:260
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
+msgctxt ""
+"Second line of a transfer progress window giving the destination directory. "
+"{1} is replaced with the directory path and must be included in your "
+"translation."
+msgid "To '{1}'"
+msgstr "A '{1}'"
+
+#: ../../swish/drop_target/DropUI.cpp:316
+msgid "This folder already contains a file named '{1}'."
+msgstr "La carpeta ja conté un arxiu anomenat '{1}'"
+
+#: ../../swish/drop_target/DropUI.cpp:319
+msgid "Would you like to replace it?"
+msgstr "Voleu reemplaçar-lo?"
+
+#: ../../swish/drop_target/DropUI.cpp:327
+msgid "Confirm File Replace"
+msgstr "Confirmar sobrescriptura"
+
+#: ../../swish/drop_target/DropUI.cpp:366
+msgctxt "Progress"
+msgid "Copying..."
+msgstr "Copiant..."
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:125
+msgid "Unable to transfer files"
+msgstr "Impossible transferir arxius"
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:127
+msgid "You might not have permission to write to this directory."
+msgstr "No teniu permisos per escriure al directori."
+
+#: ../../swish/forms/add_host.cpp:102
+msgid "New SFTP Connection"
+msgstr "Nova connexió SFTP"
+
+#: ../../swish/forms/add_host.cpp:122
+msgid "Create"
+msgstr "Crear"
+
+#: ../../swish/forms/add_host.cpp:143
+msgctxt "New Host"
+msgid "&Label:"
+msgstr "&Etiqueta:"
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "For example: \"Home Computer\"."
+msgstr "Per exemple: \"El meu ordinador\"."
+
+#: ../../swish/forms/add_host.cpp:151
+msgid ""
+"Specify the details of the computer and account you would like to connect "
+"to:"
+msgstr "Descriure els detalls de l'ordinador i el compte al qual voleu connectar:"
+
+#: ../../swish/forms/add_host.cpp:155
+msgctxt "New Host"
+msgid "&Host:"
+msgstr "&Amfitrió:"
+
+#: ../../swish/forms/add_host.cpp:159
+msgctxt "New Host"
+msgid "&Port:"
+msgstr "&Port:"
+
+#: ../../swish/forms/add_host.cpp:164
+msgctxt "New Host"
+msgid "&User:"
+msgstr "&Usuari"
+
+#: ../../swish/forms/add_host.cpp:169
+msgid ""
+"Specify the directory on the server that you would like Swish to start the "
+"connection in:"
+msgstr "Descriure el directori del servidor on voleu que Swish comenci la connexió:"
+
+#: ../../swish/forms/add_host.cpp:173
+msgctxt "New Host"
+msgid "P&ath:"
+msgstr "Rut&a:"
+
+#: ../../swish/forms/add_host.cpp:177
+msgid "Example: /home/yourusername"
+msgstr "Exemple: /home/elteunom"
+
+#: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
+msgid "Cancel"
+msgstr "Cancel·la"
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The label cannot be longer than 30 characters."
+msgstr "L'etiqueta no pot tenir més de 30 caràcters."
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The host name is invalid."
+msgstr "El nom d'amfitrió no és vàlid."
+
+#: ../../swish/forms/add_host.cpp:341
+msgid "The port is not valid (between 0 and 65535)."
+msgstr "El port no és vàlid (entre 0 i 65535)."
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "The username is invalid."
+msgstr "Nom d'usuari invàlid."
+
+#: ../../swish/forms/add_host.cpp:349
+msgid "The path is invalid."
+msgstr "Ruta invàlida."
+
+#: ../../swish/forms/add_host.cpp:355
+msgid "A connection with the same label already exists. Please try another."
+msgstr "Existeix una connexió amb la mateixa etiqueta. Prova'n una altra."
+
+#: ../../swish/forms/add_host.cpp:361
+msgid "Complete all fields."
+msgstr "Completa tots els camps."
+
+#: ../../swish/forms/password.cpp:57
+msgid "Password"
+msgstr "Contrasenya"
+
+#: ../../swish/forms/password.cpp:64
+msgid "OK"
+msgstr "D'acord"
+
+#: ../../swish/frontend/announce_error.cpp:136
+msgid "Show &details (which may not be in your language)"
+msgstr "Mostra &detalls (poden no ser en la teva llengua)"
+
+#: ../../swish/frontend/announce_error.cpp:137
+msgid "Hide &details"
+msgstr "Amaga &detalls"
+
+#: ../../swish/frontend/UserInteraction.cpp:195
+msgid "The folder already contains a file named '%1%'"
+msgstr "La carpeta té un arxiu anomenat  '%1%'"
+
+#: ../../swish/frontend/UserInteraction.cpp:200
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr "Vols substituir l'arxiu existent⏎\n⏎\n⇥%1%⏎\n⏎\nper aquest altre?⏎\n⏎\n⇥%2%"
+
+#: ../../swish/frontend/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "L'arxiu existeix"
+
+#: ../../swish/frontend/UserInteraction.cpp:242
+msgid "Mismatched host-key"
+msgstr "Error en la clau"
+
+#: ../../swish/frontend/UserInteraction.cpp:243
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "PERILL: la clau SSH de l'amfitrió ha canviat!"
+
+#: ../../swish/frontend/UserInteraction.cpp:249
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
+msgstr "La clau SSH de l'anfitrió enviada per '%1%' per a identificar-se no coincideix amb la clau d'aquest servidor.  Això pot ser perque algú està intentant falsejar l'ordinador al qual estàs volent accedir, o bé, que l'administrador del sistema ha canviat la clau SSH."
+
+#: ../../swish/frontend/UserInteraction.cpp:256
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "És importat comprovar que l'empremta sigui correcta:"
+
+#: ../../swish/frontend/UserInteraction.cpp:265
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Confio en aquesta clau: &actualitza-la i connecta\nNo et caldrà tornar-la a verificar mentre no canviï."
+
+#: ../../swish/frontend/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr "Confio en aquesta clau: &només connecta\nSeràs avisat sobre aquesta clau a la propera connexió"
+
+#: ../../swish/frontend/UserInteraction.cpp:276
+#: ../../swish/frontend/UserInteraction.cpp:320
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr "&Cancel·la\nEscull aquesta opció només si estàs segur que la clau és correcta"
+
+#: ../../swish/frontend/UserInteraction.cpp:289
+msgid "Unknown host-key"
+msgstr "Clau desconeguda"
+
+#: ../../swish/frontend/UserInteraction.cpp:295
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
+msgstr "El servidor '%1%' s'ha identificat amb la clau d'amfitrió SSH, la qual té l'empremta:"
+
+#: ../../swish/frontend/UserInteraction.cpp:299
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Si no esperaves aquesta clau, algú podria intentat fer-se passar per l'ordinador amfitrió al que volies connectar."
+
+#: ../../swish/frontend/UserInteraction.cpp:302
+msgid "Verify unknown SSH host-key"
+msgstr "Verifica la clau SSH desconeguda"
+
+#: ../../swish/frontend/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Confio en la clau: %desa i connecta\nNo hauràs de tornar a verificar la clau mentre no canviï."
+
+#: ../../swish/frontend/UserInteraction.cpp:314
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr "Confio en la clau: &només connecta\nHauràs de tornar a verificar la clau a la propera connexió"
+
+#: ../../swish/host_folder/columns.cpp:57
+msgctxt "Property (filename/label)"
+msgid "Name"
+msgstr "Nom"
+
+#: ../../swish/host_folder/columns.cpp:60
+msgctxt "Property"
+msgid "Host"
+msgstr "Amfitrió"
+
+#: ../../swish/host_folder/columns.cpp:63
+msgctxt "Property"
+msgid "Username"
+msgstr "Nom d'usuari"
+
+#: ../../swish/host_folder/columns.cpp:66
+msgctxt "Property"
+msgid "Port"
+msgstr "Port"
+
+#: ../../swish/host_folder/columns.cpp:69
+msgctxt "Property"
+msgid "Remote path"
+msgstr "Ruta remota"
+
+#: ../../swish/host_folder/columns.cpp:72
+msgctxt "Property"
+msgid "Type"
+msgstr "Tipus"
+
+#: ../../swish/host_folder/properties.cpp:79
+msgctxt "FileType"
+msgid "Network Drive"
+msgstr "Unitat de xarxa"
+
+#: ../../swish/host_folder/commands/Add.cpp:83
+msgid "&Add SFTP Connection"
+msgstr "&Afegir connexió SFTP"
+
+#: ../../swish/host_folder/commands/Add.cpp:84
+msgid "Create a new SFTP connection with Swish."
+msgstr "Crear una nova connexió SFTP amb Swish."
+
+#: ../../swish/host_folder/commands/Add.cpp:85
+msgid "&Add SFTP Connection..."
+msgstr "&Afegir una connexió SFTP..."
+
+#: ../../swish/host_folder/commands/Add.cpp:86
+msgid "Add Connection"
+msgstr "Afegir Connexió"
+
+#: ../../swish/host_folder/commands/commands.cpp:91
+msgid "SFTP Tasks"
+msgstr "Accions SFTP"
+
+#: ../../swish/host_folder/commands/commands.cpp:104
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Aquestes accions t'ajuden a administrar les connexions SFTP."
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:98
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:103
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "&Launch key agent"
+msgstr "Activa el gestor de claus"
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:99
+msgid "Launch Putty SSH key agent, Pageant."
+msgstr "Activa l'agent de claus Putty SSH, Pageant."
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:106
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "Launch key agent"
+msgstr "Activa l'agent de claus"
+
+#: ../../swish/host_folder/commands/Remove.cpp:83
+msgid "&Remove SFTP Connection"
+msgstr "&Esborra Connexió SFTP"
+
+#: ../../swish/host_folder/commands/Remove.cpp:84
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Esborra una connexió SFTP creada per Swish."
+
+#: ../../swish/host_folder/commands/Remove.cpp:85
+msgid "&Remove SFTP Connection..."
+msgstr "&Esborra Connexió SFTP..."
+
+#: ../../swish/host_folder/commands/Remove.cpp:86
+msgid "Remove Connection"
+msgstr "Esborra Connexió"
+
+#: ../../swish/remote_folder/columns.cpp:82
+msgctxt "Property"
+msgid "Size"
+msgstr "Mida"
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgctxt "Property"
+msgid "Date Modified"
+msgstr "Data de modificació"
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgctxt "Property"
+msgid "Date Accessed"
+msgstr "Data d'accés"
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgctxt "Property"
+msgid "Permissions"
+msgstr "Permisos"
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgctxt "Property"
+msgid "Owner"
+msgstr "Propietari"
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgctxt "Property"
+msgid "Group"
+msgstr "Grup"
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgctxt "Property"
+msgid "Owner ID"
+msgstr "ID propietari"
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgctxt "Property"
+msgid "Group ID"
+msgstr "ID grup"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:157
+msgid "Open &link"
+msgstr "Obrir enllaç"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:179
+msgid "&Open"
+msgstr "&Obrir"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:273
+msgid "Unable to open the link"
+msgstr "Impossible obrir l'enllaç"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:274
+#: ../../swish/remote_folder/context_menu_callback.cpp:379
+#: ../../swish/remote_folder/commands/delete.cpp:232
+#: ../../swish/remote_folder/commands/NewFolder.cpp:240
+msgid "You might not have permission."
+msgstr "Pot ser que no tinguis permisos."
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:378
+msgid "Unable to open the file"
+msgstr "Impossible obrir l'arxiu"
+
+#: ../../swish/remote_folder/commands/commands.cpp:93
+msgid "File and Folder Tasks"
+msgstr "Accions sobre arxius i carpetes"
+
+#: ../../swish/remote_folder/commands/commands.cpp:105
+msgid "These tasks help you manage your remote files."
+msgstr "Aquestes accions t'ajuden a administrar els teus arxius remots."
+
+#: ../../swish/remote_folder/commands/delete.cpp:231
+msgid "Unable to delete the item"
+msgstr "Impossible d'esborrar"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:168
+msgid "New &folder"
+msgstr "Nova &carpeta"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:169
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Crear nova carpeta i buida a la carpeta que hagi obert."
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:171
+msgid "Make a new folder"
+msgstr "Crea nova carpeta"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:211
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Nova carpeta"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:239
+msgid "Could not create a new folder"
+msgstr "Impossible crear carpeta"
+
+#: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
+msgid "Keyboard-interactive request"
+msgstr "Petició de paraula clau"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:182
+msgid "Unable to access the directory"
+msgstr "Accés impossible al directori"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:255
+msgid "Path not recognised"
+msgstr "Ruta no reconeguda"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:256
+msgid "Check that the path was entered correctly."
+msgstr "Comprova que la ruta sigui correcta."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:377
+msgid "Unable to rename the item"
+msgstr "Canvi de nom impossible"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:704
+msgid "Unable to access the item"
+msgstr "Accés impossible"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:705
+msgid "Unable to access the items"
+msgstr "Accés impossible"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:732
+msgid "Unable to access the folder"
+msgstr "Accés a la carpeta impossible"

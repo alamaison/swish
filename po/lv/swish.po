@@ -1,0 +1,473 @@
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: Swish\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-07-30 14:18-0000\n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
+"Last-Translator: Artūrs Zalužinskis <artchijs2@inbox.lv>\n"
+"Language-Team: Latvian (http://www.transifex.com/projects/p/swish/language/lv/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lv\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: translate:1,1t;translate:1c,2,2t;translate:1,2,3t\n"
+"X-Poedit-SearchPath-0: ../../swish\n"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:152
+msgid "Unable to create file on the server:"
+msgstr "Nav iespējams izveidot datni uz servera:"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:249
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:60
+msgctxt ""
+"Top line of a transfer progress window saying which file is being copied. "
+"{1} is replaced with the file path and must be included in your translation."
+msgid "Copying '{1}'"
+msgstr "'{1}' kopēšana"
+
+#: ../../swish/drop_target/CopyFileOperation.cpp:260
+#: ../../swish/drop_target/CreateDirectoryOperation.cpp:71
+msgctxt ""
+"Second line of a transfer progress window giving the destination directory. "
+"{1} is replaced with the directory path and must be included in your "
+"translation."
+msgid "To '{1}'"
+msgstr "Uz '{1}'"
+
+#: ../../swish/drop_target/DropUI.cpp:316
+msgid "This folder already contains a file named '{1}'."
+msgstr "Šī mape jau satur datni ar nosaukumu '{1}'."
+
+#: ../../swish/drop_target/DropUI.cpp:319
+msgid "Would you like to replace it?"
+msgstr "Vai vēlaties aizvietot to?"
+
+#: ../../swish/drop_target/DropUI.cpp:327
+msgid "Confirm File Replace"
+msgstr "Apstiprināt datnes aizvietošanu"
+
+#: ../../swish/drop_target/DropUI.cpp:366
+msgctxt "Progress"
+msgid "Copying..."
+msgstr "Kopēšana..."
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:125
+msgid "Unable to transfer files"
+msgstr "Nav iespējams pārnest datnes"
+
+#: ../../swish/drop_target/SnitchingDropTarget.cpp:127
+msgid "You might not have permission to write to this directory."
+msgstr "Iespējams Jums nav rakstīšanas tiesību šajā mapē."
+
+#: ../../swish/forms/add_host.cpp:102
+msgid "New SFTP Connection"
+msgstr "Jauns SFTP pieslēgums"
+
+#: ../../swish/forms/add_host.cpp:122
+msgid "Create"
+msgstr "Izveidot"
+
+#: ../../swish/forms/add_host.cpp:143
+msgctxt "New Host"
+msgid "&Label:"
+msgstr "&Etiķete:"
+
+#: ../../swish/forms/add_host.cpp:148
+msgid "For example: \"Home Computer\"."
+msgstr "Piemēram: \"Mājas dators\"."
+
+#: ../../swish/forms/add_host.cpp:151
+msgid ""
+"Specify the details of the computer and account you would like to connect "
+"to:"
+msgstr "Norādiet papildus informāciju par datoru un kontu kuram vēlaties pieslēgties:"
+
+#: ../../swish/forms/add_host.cpp:155
+msgctxt "New Host"
+msgid "&Host:"
+msgstr "&Saimniekdators"
+
+#: ../../swish/forms/add_host.cpp:159
+msgctxt "New Host"
+msgid "&Port:"
+msgstr "&Ports:"
+
+#: ../../swish/forms/add_host.cpp:164
+msgctxt "New Host"
+msgid "&User:"
+msgstr "&Lietotājs:"
+
+#: ../../swish/forms/add_host.cpp:169
+msgid ""
+"Specify the directory on the server that you would like Swish to start the "
+"connection in:"
+msgstr "Norādiet mapi uz servera, kuru vēlaties norādīt kā Swish starta pieslēguma punktu:"
+
+#: ../../swish/forms/add_host.cpp:173
+msgctxt "New Host"
+msgid "P&ath:"
+msgstr "C&eļš:"
+
+#: ../../swish/forms/add_host.cpp:177
+msgid "Example: /home/yourusername"
+msgstr "Piemēram: /home/janis"
+
+#: ../../swish/forms/add_host.cpp:185 ../../swish/forms/password.cpp:68
+msgid "Cancel"
+msgstr "At&celt"
+
+#: ../../swish/forms/add_host.cpp:331
+msgid "The label cannot be longer than 30 characters."
+msgstr "Etiķetes garums nedrīkst pārsniegt 30 rakstzīmes."
+
+#: ../../swish/forms/add_host.cpp:335
+msgid "The host name is invalid."
+msgstr "Saimniekdatora vārds ir nepareizs."
+
+#: ../../swish/forms/add_host.cpp:341
+msgid "The port is not valid (between 0 and 65535)."
+msgstr "Ports nav derīgs (no 0 līdz 65535)."
+
+#: ../../swish/forms/add_host.cpp:345
+msgid "The username is invalid."
+msgstr "Lietotājvārds ir nepareizs."
+
+#: ../../swish/forms/add_host.cpp:349
+msgid "The path is invalid."
+msgstr "Ceļš ir nepareizs."
+
+#: ../../swish/forms/add_host.cpp:355
+msgid "A connection with the same label already exists. Please try another."
+msgstr "Pieslēgums jau eksistē ar šādu etiķeti. Lūdzu izmantojiet citu."
+
+#: ../../swish/forms/add_host.cpp:361
+msgid "Complete all fields."
+msgstr "Aizpildiet visus laukus."
+
+#: ../../swish/forms/password.cpp:57
+msgid "Password"
+msgstr "Parole"
+
+#: ../../swish/forms/password.cpp:64
+msgid "OK"
+msgstr "Labi"
+
+#: ../../swish/frontend/announce_error.cpp:136
+msgid "Show &details (which may not be in your language)"
+msgstr "Rādīt &detaļas (kuras var nebūt jūsu valodā)"
+
+#: ../../swish/frontend/announce_error.cpp:137
+msgid "Hide &details"
+msgstr "Slēpt &detaļas"
+
+#: ../../swish/frontend/UserInteraction.cpp:195
+msgid "The folder already contains a file named '%1%'"
+msgstr "Mape jau satur failu ar nosaukumu '%1%'"
+
+#: ../../swish/frontend/UserInteraction.cpp:200
+msgid ""
+"Would you like to replace the existing file\n"
+"\n"
+"\t%1%\n"
+"\n"
+"with this one?\n"
+"\n"
+"\t%2%"
+msgstr "Vai vēlaties aizvietot eksistējošo datni\n\n\t%1%\n\nar šo?\n\n\t%2%"
+
+#: ../../swish/frontend/UserInteraction.cpp:204
+msgid "File already exists"
+msgstr "Datne jau eksistē"
+
+#: ../../swish/frontend/UserInteraction.cpp:242
+msgid "Mismatched host-key"
+msgstr "Host-atslēga nesakrīt"
+
+#: ../../swish/frontend/UserInteraction.cpp:243
+msgid "WARNING: the SSH host-key has changed!"
+msgstr "UZMANīBU: SSH host-atslēga ir mainīta!"
+
+#: ../../swish/frontend/UserInteraction.cpp:249
+msgid ""
+"The SSH host-key sent by '%1%' to identify itself doesn't match the known "
+"key for this server.  This could mean a third-party is pretending to be the "
+"computer you're trying to connect to or the system administrator may have "
+"just changed the key."
+msgstr "SSH host-atslēga kas nosūtītā no '%1%' lai identificētu sevi neatbislt zināmai atslēgai kas paredzēta šim serverim. Tas varētu nozīmēt kā trešās personas uzdodas par datoru kuram mēģinat pieslēgties vai iespējams sistēmas administrators tikko nomainīja atslēgu."
+
+#: ../../swish/frontend/UserInteraction.cpp:256
+msgid "It is important to check this is the right key fingerprint:"
+msgstr "Ir svarīgi pārbaudīt tā ir pareizā identificējošā zīmju virkne:"
+
+#: ../../swish/frontend/UserInteraction.cpp:265
+msgid ""
+"I trust this key: &update and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Es uzticos šai atslēgai: &atjaunināt un pieslēgt\nJums nav nepieciešams apstiprināt šīs atslēgas pareizību kamēr tā netiks nomainīta."
+
+#: ../../swish/frontend/UserInteraction.cpp:270
+msgid ""
+"I trust this key: &just connect\n"
+"You will be warned about this key again next time you connect"
+msgstr "Es uzticos šai atslēgai: &tikai pieslēgt\nJūs saņemsiet brīdinājumu par šo atslēgu nākamajā pieslēguma reizē"
+
+#: ../../swish/frontend/UserInteraction.cpp:276
+#: ../../swish/frontend/UserInteraction.cpp:320
+msgid ""
+"&Cancel\n"
+"Choose this option unless you are sure the key is correct"
+msgstr "At&celt\nIzvēlaties šo opciju ja neesat pārliecināts ka atslēga ir pareiza"
+
+#: ../../swish/frontend/UserInteraction.cpp:289
+msgid "Unknown host-key"
+msgstr "Nezināmā host-atslēga"
+
+#: ../../swish/frontend/UserInteraction.cpp:295
+msgid ""
+"The server '%1%' has identified itself with an SSH host-key whose "
+"fingerprint is:"
+msgstr "Serveris '%1%' ir identificējis sevi ar SSH host-atslēgu kuras identificējošā zīmju virkne: ir:"
+
+#: ../../swish/frontend/UserInteraction.cpp:299
+msgid ""
+"If you are not expecting this key, a third-party may be pretending to be the"
+" computer you're trying to connect to."
+msgstr "Ja jūs neesat sagaidījis šo atslēgu, trešās puses var kļūt par datoru kuram jūs mēģinat pieslēgties."
+
+#: ../../swish/frontend/UserInteraction.cpp:302
+msgid "Verify unknown SSH host-key"
+msgstr "Apstiprināt nezināmo SSH-host atslēgu"
+
+#: ../../swish/frontend/UserInteraction.cpp:309
+msgid ""
+"I trust this key: &store and connect\n"
+"You won't have to verify this key again unless it changes"
+msgstr "Es uzticos šai atslēgai: &uzglabāt un pieslēgties\nJums nav jāapstirina šo atslēgu kamēr tā netiks nomainīta"
+
+#: ../../swish/frontend/UserInteraction.cpp:314
+msgid ""
+"I trust this key: &just connect\n"
+"You will be asked to verify the key again next time you connect"
+msgstr "Es uzticos šai atslegai: &tikai pieslēgties\nJums tiks pieprasīts apstiprinājums par atslēgas pareizību nākamajā pieslēgšanas reizē"
+
+#: ../../swish/host_folder/columns.cpp:57
+msgctxt "Property (filename/label)"
+msgid "Name"
+msgstr "Vārds"
+
+#: ../../swish/host_folder/columns.cpp:60
+msgctxt "Property"
+msgid "Host"
+msgstr "Saimniekdators"
+
+#: ../../swish/host_folder/columns.cpp:63
+msgctxt "Property"
+msgid "Username"
+msgstr "Lietotājvārds"
+
+#: ../../swish/host_folder/columns.cpp:66
+msgctxt "Property"
+msgid "Port"
+msgstr "Ports"
+
+#: ../../swish/host_folder/columns.cpp:69
+msgctxt "Property"
+msgid "Remote path"
+msgstr "Attālinātais ceļš"
+
+#: ../../swish/host_folder/columns.cpp:72
+msgctxt "Property"
+msgid "Type"
+msgstr "Tips"
+
+#: ../../swish/host_folder/properties.cpp:79
+msgctxt "FileType"
+msgid "Network Drive"
+msgstr "Tīkla diskdzinis"
+
+#: ../../swish/host_folder/commands/Add.cpp:83
+msgid "&Add SFTP Connection"
+msgstr "Pi&evienot SFTP pieslēgumu"
+
+#: ../../swish/host_folder/commands/Add.cpp:84
+msgid "Create a new SFTP connection with Swish."
+msgstr "Izveidot jaunu SFTP pieslēgumu ar Swish."
+
+#: ../../swish/host_folder/commands/Add.cpp:85
+msgid "&Add SFTP Connection..."
+msgstr "P&ievienot SFTP pieslēgumu..."
+
+#: ../../swish/host_folder/commands/Add.cpp:86
+msgid "Add Connection"
+msgstr "Pievienot pieslēgumu"
+
+#: ../../swish/host_folder/commands/commands.cpp:91
+msgid "SFTP Tasks"
+msgstr "SFTP uzdevumi"
+
+#: ../../swish/host_folder/commands/commands.cpp:104
+msgid "These tasks help you manage Swish SFTP connections."
+msgstr "Šie uzdevumi palīdz jums pārvaldīt Swish SFTP pieslēgumus."
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:98
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:103
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "&Launch key agent"
+msgstr "&Palaist atslēgu aģentu"
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:99
+msgid "Launch Putty SSH key agent, Pageant."
+msgstr "Palaist Putty SSH atslēgu aģentu, Pageant."
+
+#: ../../swish/host_folder/commands/LaunchAgent.cpp:106
+msgctxt "Title of command used to launch the SSH agent program"
+msgid "Launch key agent"
+msgstr "Palaist atslēgu aģentu"
+
+#: ../../swish/host_folder/commands/Remove.cpp:83
+msgid "&Remove SFTP Connection"
+msgstr "&Dzest SFTP pieslēgumu"
+
+#: ../../swish/host_folder/commands/Remove.cpp:84
+msgid "Remove a SFTP connection created with Swish."
+msgstr "Dzēst SFTP pieslēgumu kas ir izveidots ar Swish"
+
+#: ../../swish/host_folder/commands/Remove.cpp:85
+msgid "&Remove SFTP Connection..."
+msgstr "&Dzēst SFTP pieslēgumu..."
+
+#: ../../swish/host_folder/commands/Remove.cpp:86
+msgid "Remove Connection"
+msgstr "Dzēst pieslēgumu"
+
+#: ../../swish/remote_folder/columns.cpp:82
+msgctxt "Property"
+msgid "Size"
+msgstr "Izmērs"
+
+#: ../../swish/remote_folder/columns.cpp:89
+msgctxt "Property"
+msgid "Date Modified"
+msgstr "Modificēšanas datums"
+
+#: ../../swish/remote_folder/columns.cpp:93
+msgctxt "Property"
+msgid "Date Accessed"
+msgstr "Piekļuves datums"
+
+#: ../../swish/remote_folder/columns.cpp:96
+msgctxt "Property"
+msgid "Permissions"
+msgstr "Atļaujas"
+
+#: ../../swish/remote_folder/columns.cpp:99
+msgctxt "Property"
+msgid "Owner"
+msgstr "Īpašnieks"
+
+#: ../../swish/remote_folder/columns.cpp:102
+msgctxt "Property"
+msgid "Group"
+msgstr "Grupa"
+
+#: ../../swish/remote_folder/columns.cpp:105
+msgctxt "Property"
+msgid "Owner ID"
+msgstr "Īpašnieka ID"
+
+#: ../../swish/remote_folder/columns.cpp:108
+msgctxt "Property"
+msgid "Group ID"
+msgstr "Grupas ID"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:157
+msgid "Open &link"
+msgstr "Atvērt &saiti"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:179
+msgid "&Open"
+msgstr "&Atvērt"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:273
+msgid "Unable to open the link"
+msgstr "Nav iespējams atvērt saiti"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:274
+#: ../../swish/remote_folder/context_menu_callback.cpp:379
+#: ../../swish/remote_folder/commands/delete.cpp:232
+#: ../../swish/remote_folder/commands/NewFolder.cpp:240
+msgid "You might not have permission."
+msgstr "Iespējams jums nav tiesīnu"
+
+#: ../../swish/remote_folder/context_menu_callback.cpp:378
+msgid "Unable to open the file"
+msgstr "Nav iespējams atvērt datni"
+
+#: ../../swish/remote_folder/commands/commands.cpp:93
+msgid "File and Folder Tasks"
+msgstr "Datņu un mapju uzdevumi"
+
+#: ../../swish/remote_folder/commands/commands.cpp:105
+msgid "These tasks help you manage your remote files."
+msgstr "Šie uzdevumi palīdz jums pārvaldīt jūsu attalinātas datnes."
+
+#: ../../swish/remote_folder/commands/delete.cpp:231
+msgid "Unable to delete the item"
+msgstr "Nav iespējams dzēst vienību"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:168
+msgid "New &folder"
+msgstr "Jauna &Mape"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:169
+msgid "Create a new, empty folder in the folder you have open."
+msgstr "Izveidot jaunu, tukšu mapi atvērtajā mapē"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:171
+msgid "Make a new folder"
+msgstr "Izveidot jaunu mapi"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:211
+msgctxt "Initial name"
+msgid "New folder"
+msgstr "Jauna mape"
+
+#: ../../swish/remote_folder/commands/NewFolder.cpp:239
+msgid "Could not create a new folder"
+msgstr "Nav iespējams izveidot jaunu mapi"
+
+#: ../../swish/shell_folder/KbdInteractiveDialog.cpp:67
+msgid "Keyboard-interactive request"
+msgstr "Tastatūras interaktīvais pieprasījums"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:182
+msgid "Unable to access the directory"
+msgstr "Nav iespējams piekļūt mapei"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:255
+msgid "Path not recognised"
+msgstr "Ceļš nav atpazīts"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:256
+msgid "Check that the path was entered correctly."
+msgstr "Pārbaudiet vai ceļš ir ievadīts korekti."
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:377
+msgid "Unable to rename the item"
+msgstr "Nav iespējams pārdēvēt vienību"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:704
+msgid "Unable to access the item"
+msgstr "Nav iespējams piekļūt vienībai"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:705
+msgid "Unable to access the items"
+msgstr "Nav iespējams piekļūt vienībām"
+
+#: ../../swish/shell_folder/RemoteFolder.cpp:732
+msgid "Unable to access the folder"
+msgstr "Nav iespējams piekļūt mapei"
