@@ -235,25 +235,27 @@ namespace { // private
 
 namespace test {
 
-OpenSshFixture::OpenSshFixture() : 
-    m_port(GenerateRandomPort()),
-    m_sshd(StartSshd(GetSshdOptions(m_port)))
-{
-}
+namespace detail {
 
-OpenSshFixture::~OpenSshFixture()
-{
-    try
+    OpenSshServer::OpenSshServer(int port)
+    : m_sshd(StartSshd(GetSshdOptions(port))) {}
+
+    OpenSshServer::~OpenSshServer()
     {
-        StopServer();
+        try
+        {
+            m_sshd.terminate();
+            m_sshd.wait();
+        }
+        catch (...) {}
     }
-    catch (...) {}
-}
 
-int OpenSshFixture::StopServer()
+} // detail
+
+OpenSshFixture::OpenSshFixture()
+: 
+m_port(GenerateRandomPort()), m_openssh(m_port)
 {
-    m_sshd.terminate();
-    return m_sshd.wait();
 }
 
 string OpenSshFixture::GetHost() const

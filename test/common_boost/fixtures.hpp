@@ -77,6 +77,19 @@ public:
     }
 };
 
+namespace detail {
+
+    class OpenSshServer
+    {
+    public:
+        explicit OpenSshServer(int port);
+        ~OpenSshServer();
+
+    private:
+        boost::process::child m_sshd;
+    };
+}
+
 /**
  * Fixture that starts and stops a local OpenSSH server instance.
  */
@@ -84,9 +97,6 @@ class OpenSshFixture : public WinsockFixture
 {
 public:
     OpenSshFixture();
-    virtual ~OpenSshFixture();
-
-    int StopServer();
 
     std::string GetHost() const;
     std::string GetUser() const;
@@ -100,7 +110,7 @@ public:
 
 private:
     int m_port;
-    boost::process::child m_sshd;
+    detail::OpenSshServer m_openssh;
 };
 
 /**
