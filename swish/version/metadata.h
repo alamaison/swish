@@ -38,8 +38,8 @@
 // resource (RC) compiler.  No C++ allowed.
 
 #define SWISH_MAJOR_VERSION 0
-#define SWISH_MINOR_VERSION 7
-#define SWISH_BUGFIX_VERSION 4
+#define SWISH_MINOR_VERSION 8
+#define SWISH_BUGFIX_VERSION 0
 
 #define SWISH_MAKE_STRING(x) #x
 
