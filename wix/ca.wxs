@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir9A0B204D905DB896E046E87B38DF1F60" Name="ca" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="CATrans">
+      <Component Id="cmpEB2C4FFA2D9645CB6D2DA4BF9EAF805A" Directory="dir7941852A353C319ED36D06039F899326" Guid="*">
+        <File Id="fil7463BF9955DE53CF45D45A2050EDCCB3" KeyPath="yes" Source="$(var.SolutionDir)\po\ca\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir9A0B204D905DB896E046E87B38DF1F60">
+      <Directory Id="dir7941852A353C319ED36D06039F899326" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>

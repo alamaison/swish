@@ -1,14 +1,14 @@
 # 
 # Translators:
-#   <swkim85@gmail.com>, 2012-2013.
+# swkim85 <swkim85@gmail.com>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2013-01-02 07:02+0000\n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
 "Last-Translator: swkim85 <swkim85@gmail.com>\n"
-"Language-Team: \n"
+"Language-Team: Korean (http://www.transifex.com/projects/p/swish/language/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
