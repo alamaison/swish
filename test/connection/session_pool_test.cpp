@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2010, 2011, 2013
+    Copyright (C) 2009, 2010, 2011, 2013, 2014
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -250,6 +250,27 @@ BOOST_AUTO_TEST_CASE( remove_session )
     session_pool().remove_session(spec);
 
     BOOST_CHECK(!session_pool().has_session(spec));
+}
+
+/**
+ * Test that sessions in the pool survive server restarts
+ * (modulo re-authentication).
+ *
+ * By 'survive', we mean the pool is able to server a usable session
+ * with the same specification, not that the actual session instance has
+ * to be the same (value-semantics and all that jazz).
+ */
+BOOST_AUTO_TEST_CASE( sessions_across_server_restart )
+{
+    connection_spec spec(get_connection());
+
+    session_pool().pooled_session(spec, Consumer());
+
+    BOOST_CHECK(session_pool().has_session(spec));
+
+    restart_server();
+
+    BOOST_CHECK(alive(session_pool().pooled_session(spec, Consumer())));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
