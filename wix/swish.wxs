@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define Swish_ProductVersion = "0.7.4" ?>
+<?define Swish_ProductVersion = "0.8.0" ?>
 
 <?if $(var.Platform) = x64?>
 <?define Win64 = "yes"?>
@@ -154,6 +154,8 @@
     </DirectoryRef>
 
     <ComponentGroup Id="Translations">
+      <ComponentGroupRef Id="LVTrans" />
+      <ComponentGroupRef Id="CATrans" />
       <ComponentGroupRef Id="ROTrans" />
       <ComponentGroupRef Id="DADKTrans" />
       <ComponentGroupRef Id="KOTrans" />

@@ -1,14 +1,14 @@
 # 
 # Translators:
-#   <sopor@hotmail.com>, 2012.
+# Sopor, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2012-08-10 22:14+0000\n"
-"Last-Translator: Sopor <sopor@hotmail.com>\n"
-"Language-Team: \n"
+"PO-Revision-Date: 2013-11-20 11:36+0000\n"
+"Last-Translator: Sopor\n"
+"Language-Team: Swedish (http://www.transifex.com/projects/p/swish/language/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"

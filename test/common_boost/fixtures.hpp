@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2012, 2013, 2014
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/process/child.hpp> // child process
 #include <boost/system/system_error.hpp>  // For system_error
 
@@ -77,6 +79,23 @@ public:
     }
 };
 
+namespace detail {
+
+    class OpenSshServer
+    {
+    public:
+        explicit OpenSshServer(int port);
+        ~OpenSshServer();
+        int pid() const;
+
+    private:
+        OpenSshServer(const OpenSshServer&);
+        OpenSshServer& operator=(const OpenSshServer&);
+
+        boost::process::child m_sshd;
+    };
+}
+
 /**
  * Fixture that starts and stops a local OpenSSH server instance.
  */
@@ -84,9 +103,8 @@ class OpenSshFixture : public WinsockFixture
 {
 public:
     OpenSshFixture();
-    virtual ~OpenSshFixture();
 
-    int StopServer();
+    void restart_server();
 
     std::string GetHost() const;
     std::string GetUser() const;
@@ -100,7 +118,7 @@ public:
 
 private:
     int m_port;
-    boost::process::child m_sshd;
+    boost::optional<detail::OpenSshServer> m_openssh;
 };
 
 /**

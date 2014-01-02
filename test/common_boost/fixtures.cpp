@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011, 2012, 2013
+    Copyright (C) 2009, 2011, 2012, 2013, 2014
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -45,7 +45,9 @@
 #pragma warning(pop)
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/mersenne_twister.hpp>  // mt19937
+#include <boost/utility/in_place_factory.hpp> // in_place
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -72,8 +74,10 @@ using boost::shared_ptr;
 using boost::uniform_int;
 using boost::variate_generator;
 using boost::mt19937;
+using boost::in_place;
 
 using std::string;
+using std::stringstream;
 using std::wstring;
 using std::vector;
 using std::map;
@@ -235,25 +239,69 @@ namespace { // private
 
 namespace test {
 
-OpenSshFixture::OpenSshFixture() : 
-    m_port(GenerateRandomPort()),
-    m_sshd(StartSshd(GetSshdOptions(m_port)))
-{
-}
+namespace detail {
 
-OpenSshFixture::~OpenSshFixture()
-{
-    try
+    OpenSshServer::OpenSshServer(int port)
+    : m_sshd(StartSshd(GetSshdOptions(port))) {}
+
+    OpenSshServer::~OpenSshServer()
     {
-        StopServer();
+        try
+        {
+            m_sshd.terminate();
+            m_sshd.wait();
+        }
+        catch (...) {}
     }
-    catch (...) {}
+
+    int OpenSshServer::pid() const
+    {
+        return m_sshd.get_id();
+    }
+
+} // detail
+
+OpenSshFixture::OpenSshFixture()
+: 
+m_port(GenerateRandomPort()), m_openssh(m_port)
+{
 }
 
-int OpenSshFixture::StopServer()
+void OpenSshFixture::restart_server()
 {
-    m_sshd.terminate();
-    return m_sshd.wait();
+    // OpenSSH spawns child processes that take over the session once
+    // authentication is done (http://serverfault.com/a/306367/50992).
+    // These processes keep the session running even if the main sshd
+    // is restarted.  We want all the sessions to die to test disconnection,
+    // therefore we need to kill all the children as well.  Because
+    // sshd is a cygwin process, this has to be done via cygwin ps.
+
+    int listener_pid = m_openssh->pid();
+
+    context ctx; 
+    ctx.env = self::get_environment();
+
+    ctx.process_name = "bash";
+
+    // This command extract filter the output of ps to include only those lines
+    // with the listeners PID in the PID or PPID columns.  Then kills
+    // those processes.
+    stringstream command;
+    command << "kill `ps | tr -s \" \" | cut -f 2,3 -d \" \" | grep ";
+    command << listener_pid;
+    command << " | cut -f 1 -d \" \"`";
+
+    vector<string> args;
+    args.push_back("-c");
+    args.push_back(command.str());
+
+    child sshd_tree_killer =
+        create_child(find_executable_in_path("bash"), args, ctx);
+    sshd_tree_killer.wait();
+
+    m_openssh.reset(); // redundant - should already be dead
+
+    m_openssh = in_place(m_port);
 }
 
 string OpenSshFixture::GetHost() const

@@ -1,3 +1,9 @@
+swish-0.8.0
+-Added option to log out of server manually.
+-Fixed bug where timestamps were adjusted to local time twice.
+-New Latvian and Catalan translations.
+-Updated Hungarian, Japanese and Portuguese translations.
+
 swish-0.7.4
 -Restored copy progress bar which had disappeared in 0.7.2.
 -Updated Welsh translation.

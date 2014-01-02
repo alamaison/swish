@@ -5,7 +5,7 @@ Update version number in
 - setup_conf.xml (x4)
 - swish/wix/swish.wxs
 - swish/wix/wix.wixproj
-- swish/version/metadata.h
+- swish/version/metadata.h (x1 and copyright date)
 
 Add notable changes to NEWS.
 

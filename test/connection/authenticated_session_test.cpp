@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013, 2014  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,8 +30,10 @@
 #include "test/common_boost/ConsumerStub.hpp"
 #include "test/common_boost/fixtures.hpp" // OpenSshFixture
 
+#include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp>
+#include <boost/thread/thread.hpp> // this_thread
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -46,11 +48,32 @@ using swish::utils::Utf8StringToWideString;
 using boost::make_shared;
 using boost::move;
 using boost::shared_ptr;
+using boost::test_tools::predicate_result;
 
 using std::vector;
 using std::wstring;
 
 BOOST_FIXTURE_TEST_SUITE( authenticated_session_tests, OpenSshFixture )
+
+namespace {
+
+    predicate_result sftp_is_alive(authenticated_session& session)
+    {
+        try
+        {
+            session.get_sftp_filesystem().directory_iterator("/");
+            return true;
+        }
+        catch (...)
+        {
+            predicate_result res(false);
+            res.message() <<
+                "SFTP not working; unable to access root directory";
+            return res;
+        }
+    }
+
+}
 
 /**
  * Test that connecting succeeds.
@@ -62,6 +85,7 @@ BOOST_AUTO_TEST_CASE( connect )
         Utf8StringToWideString(GetUser()),
         new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
     BOOST_CHECK(!session.is_dead());
+    BOOST_CHECK(sftp_is_alive(session));
 }
 
 BOOST_AUTO_TEST_CASE( multiple_connections )
@@ -79,19 +103,28 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
     for (int i = 0; i < 5; i++)
     {
         BOOST_CHECK(!sessions.at(i)->is_dead());
+        BOOST_CHECK(sftp_is_alive(*sessions.at(i)));
     }
 }
 
-/** 
- * Test that getting SFTP channel succeeds
+/**
+ * Test that session reports its death if server is restarted.
  */
-BOOST_AUTO_TEST_CASE( sftp_started )
+BOOST_AUTO_TEST_CASE( server_restart )
 {
     authenticated_session session(
         Utf8StringToWideString(GetHost()), GetPort(),
         Utf8StringToWideString(GetUser()),
         new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
-    session.get_sftp_filesystem();
+
+    BOOST_CHECK(sftp_is_alive(session));
+
+    restart_server();
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+
+    BOOST_CHECK(session.is_dead());
+    BOOST_CHECK(!sftp_is_alive(session));
 }
 
 namespace {
@@ -112,6 +145,7 @@ BOOST_AUTO_TEST_CASE( move_contruct )
         Utf8StringToWideString(GetUser()),
         new CConsumerStub(PrivateKeyPath(), PublicKeyPath()));
     BOOST_CHECK(!session.is_dead());
+    BOOST_CHECK(sftp_is_alive(session));
 }
 
 BOOST_AUTO_TEST_CASE( move_assign )
@@ -128,6 +162,7 @@ BOOST_AUTO_TEST_CASE( move_assign )
     session1 = move(session2);
 
     BOOST_CHECK(!session1.is_dead());
+    BOOST_CHECK(sftp_is_alive(session1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

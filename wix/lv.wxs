@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="dir1198786F90077903B77DC77F0AE437C3" Name="lv" />
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <ComponentGroup Id="LVTrans">
+      <Component Id="cmp960D99332607BE5C5CB9ECFC34AF5CD4" Directory="dirAA6267F002D261A6FC525748C4CAC2FB" Guid="*">
+        <File Id="fil2C6BBF4D7F6CD1B1047E243DC1D81137" KeyPath="yes" Source="$(var.SolutionDir)\po\lv\swish.mo" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <DirectoryRef Id="dir1198786F90077903B77DC77F0AE437C3">
+      <Directory Id="dirAA6267F002D261A6FC525748C4CAC2FB" Name="LC_MESSAGES" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>
