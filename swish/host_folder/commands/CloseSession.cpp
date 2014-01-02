@@ -28,6 +28,7 @@
 
 #include "swish/connection/session_manager.hpp"
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
+#include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 #include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 
 #include <winapi/gui/task_dialog.hpp>
@@ -55,6 +56,7 @@
 #include <utility> // pair
 
 using swish::connection::session_manager;
+using swish::frontend::best_taskdialog;
 using swish::nse::Command;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::remote_folder::connection_from_pidl;
@@ -187,11 +189,11 @@ namespace {
         return make_pair(result, running_task);
     }
 
-    template<typename Result=void>
+    template<typename Result, typename Impl>
     class async_task_dialog_runner : private noncopyable
     {
     public:
-        explicit async_task_dialog_runner(task_dialog_builder<Result> builder)
+        explicit async_task_dialog_runner(task_dialog_builder<Result, Impl> builder)
             :
         m_builder(builder),
         m_dialog(m_promised_dialog.get_future()),
@@ -249,7 +251,7 @@ namespace {
                 bind(&async_task_dialog_runner::on_create, this, _1));
         }
 
-        task_dialog_builder<Result> m_builder;
+        task_dialog_builder<Result, Impl> m_builder;
 
         // Class is not movable because thread holds reference to this instance
         // when bound to `dialog_loop`.  Moving it would leave moved thread
@@ -264,7 +266,8 @@ namespace {
     public:
 
         running_dialog(
-            auto_ptr<async_task_dialog_runner<>> runner, command_id id)
+            auto_ptr<async_task_dialog_runner<void, best_taskdialog>> runner,
+            command_id id)
             :
             m_dialog_runner(runner), m_id(id) {}
 
@@ -284,14 +287,15 @@ namespace {
         }
 
     private:
-        auto_ptr<async_task_dialog_runner<>> m_dialog_runner;
+        auto_ptr<async_task_dialog_runner<void, best_taskdialog>>
+            m_dialog_runner;
         command_id m_id;
     };
 
     template<typename PendingTaskRange>
     running_dialog run_task_dialog(const PendingTaskRange& pending_tasks)
     {
-        task_dialog_builder<> builder(
+        task_dialog_builder<void, best_taskdialog> builder(
             NULL, //m_parent_window,
             translate(
                 L"Title of a progress dialog", L"Disconnecting session"),
@@ -302,8 +306,8 @@ namespace {
         command_id id = builder.add_button(
             button_type::cancel, do_nothing_command);
 
-        auto_ptr<async_task_dialog_runner<>> runner(
-            new async_task_dialog_runner<>(builder));
+        auto_ptr<async_task_dialog_runner<void, best_taskdialog>> runner(
+            new async_task_dialog_runner<void, best_taskdialog>(builder));
 
         return running_dialog(runner, id);
     }

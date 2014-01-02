@@ -500,7 +500,8 @@ public:
 
    BOOL SetProgressBarState(int nNewState)
    {
-      ATLASSERT(RunTimeHelper::IsVista());
+      // Not sure why these assertions were here; marquee works fine on XP
+      //ATLASSERT(RunTimeHelper::IsVista());
       ATLASSERT(::IsWindow(GetDlgItem(IDC_TASKDLG_PROGRESSBAR)));
 #ifndef PBM_SETSTATE
       const UINT PBM_SETSTATE = WM_USER + 16;
@@ -510,7 +511,8 @@ public:
 
    BOOL SetProgressBarMarquee(int iMarquee, UINT uTimer)
    {
-      ATLASSERT(RunTimeHelper::IsVista());
+      // Not sure why these assertions were here; marquee works fine on XP
+      //ATLASSERT(RunTimeHelper::IsVista());
       ATLASSERT(::IsWindow(GetDlgItem(IDC_TASKDLG_PROGRESSBAR)));
 #ifndef PBM_SETMARQUEE
       const UINT PBM_SETMARQUEE = WM_USER + 10;
@@ -522,7 +524,8 @@ public:
 
    void SetMarqueeProgressBar(BOOL bMarquee)
    {
-      ATLASSERT(RunTimeHelper::IsVista());
+      // Not sure why these assertions were here; marquee works fine on XP
+      //ATLASSERT(RunTimeHelper::IsVista());
       ATLASSERT(::IsWindow(GetDlgItem(IDC_TASKDLG_PROGRESSBAR)));
 #ifndef PBS_MARQUEE
       const DWORD PBS_MARQUEE = 0x08;
