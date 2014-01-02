@@ -500,7 +500,8 @@ public:
 
    BOOL SetProgressBarState(int nNewState)
    {
-      ATLASSERT(RunTimeHelper::IsVista());
+      // Not sure why these assertions were here; marquee works fine on XP
+      //ATLASSERT(RunTimeHelper::IsVista());
       ATLASSERT(::IsWindow(GetDlgItem(IDC_TASKDLG_PROGRESSBAR)));
 #ifndef PBM_SETSTATE
       const UINT PBM_SETSTATE = WM_USER + 16;
@@ -510,7 +511,8 @@ public:
 
    BOOL SetProgressBarMarquee(int iMarquee, UINT uTimer)
    {
-      ATLASSERT(RunTimeHelper::IsVista());
+      // Not sure why these assertions were here; marquee works fine on XP
+      //ATLASSERT(RunTimeHelper::IsVista());
       ATLASSERT(::IsWindow(GetDlgItem(IDC_TASKDLG_PROGRESSBAR)));
 #ifndef PBM_SETMARQUEE
       const UINT PBM_SETMARQUEE = WM_USER + 10;
@@ -522,7 +524,8 @@ public:
 
    void SetMarqueeProgressBar(BOOL bMarquee)
    {
-      ATLASSERT(RunTimeHelper::IsVista());
+      // Not sure why these assertions were here; marquee works fine on XP
+      //ATLASSERT(RunTimeHelper::IsVista());
       ATLASSERT(::IsWindow(GetDlgItem(IDC_TASKDLG_PROGRESSBAR)));
 #ifndef PBS_MARQUEE
       const DWORD PBS_MARQUEE = 0x08;
@@ -776,7 +779,9 @@ public:
       // the dialog. Then calculate the height of the dialog based on that width.
       m_sizeDialog = _LayoutControls(WIDTH_PROBE, false);
       const LONG CX_MIN_DIALOG = baseUnit.cx * 60;
+      const LONG CX_MAX_DIALOG = baseUnit.cx * 150;
       if( m_sizeDialog.cx < CX_MIN_DIALOG ) m_sizeDialog.cx = CX_MIN_DIALOG;
+      if( m_sizeDialog.cx > CX_MAX_DIALOG ) m_sizeDialog.cx = CX_MAX_DIALOG;
       if( m_cfg.cxWidth > 0 ) m_sizeDialog.cx = MapDialogUnitsX(m_cfg.cxWidth);
       LONG cxWidth = m_sizeDialog.cx;
       m_sizeDialog = _LayoutControls(cxWidth, false);

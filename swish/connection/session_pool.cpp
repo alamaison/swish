@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -81,25 +81,26 @@ public:
 
         if (session != m_sessions.end())
         {
-            if (!session->second->is_dead())
+            // Dead sessions are replaced in the pool so that we always serve
+            // something usable
+
+            if (session->second->is_dead())
             {
-                return *(session->second);
+                m_sessions.replace(
+                    session,
+                    new authenticated_session(
+                        specification.create_session(consumer)));
             }
-
-            // Dead sessions are replaced in the pool
         }
-
-        /*
-        return *(m_sessions.insert(
-            pool_mapping::value_type(
-                specification,
-                authenticated_session(
-                    specification.create_session(consumer)))).first);
-        */
-        return *m_sessions.insert(
+        else
+        {
+            session = m_sessions.insert(
                 specification,
                 new authenticated_session(
-                    specification.create_session(consumer))).first->second;
+                    specification.create_session(consumer))).first;
+        }
+
+        return *(session->second);
     }
 
     bool has_session(const connection_spec& specification) const
