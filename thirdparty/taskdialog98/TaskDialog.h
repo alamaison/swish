@@ -779,7 +779,9 @@ public:
       // the dialog. Then calculate the height of the dialog based on that width.
       m_sizeDialog = _LayoutControls(WIDTH_PROBE, false);
       const LONG CX_MIN_DIALOG = baseUnit.cx * 60;
+      const LONG CX_MAX_DIALOG = baseUnit.cx * 150;
       if( m_sizeDialog.cx < CX_MIN_DIALOG ) m_sizeDialog.cx = CX_MIN_DIALOG;
+      if( m_sizeDialog.cx > CX_MAX_DIALOG ) m_sizeDialog.cx = CX_MAX_DIALOG;
       if( m_cfg.cxWidth > 0 ) m_sizeDialog.cx = MapDialogUnitsX(m_cfg.cxWidth);
       LONG cxWidth = m_sizeDialog.cx;
       m_sizeDialog = _LayoutControls(cxWidth, false);
