@@ -8,7 +8,7 @@
     <item>
       <title>Version 0.8.0</title>
       <sparkle:releaseNotesLink>http://www.swish-sftp.org/autoupdate/NEWS-0.8.0.html</sparkle:releaseNotesLink>
-      <pubDate>30 Dec 2013</pubDate>
+      <pubDate>02 Jan 2014</pubDate>
       <enclosure url="http://sourceforge.net/projects/swish/files/swish/swish-0.8.0/swish-0.8.0.exe"
                  sparkle:version="0.8.0"
                  type="application/octet-stream"/>
