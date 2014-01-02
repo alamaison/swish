@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013, 2014  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,7 +42,8 @@
 #include <boost/locale/encoding_utf.hpp> // utf_to_utf
 #include <boost/noncopyable.hpp>
 #include <boost/optional/optional.hpp>
-#include <boost/thread/future.hpp> // promise
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/future.hpp> // promise, packaged_task
 #include <boost/thread/thread.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/utility/in_place_factory.hpp> // in_place
@@ -51,6 +52,7 @@
 #include <memory> // auto_ptr
 #include <sstream> // wostringstream;
 #include <string>
+#include <utility> // pair
 
 using swish::connection::session_manager;
 using swish::nse::Command;
@@ -70,11 +72,15 @@ using boost::locale::conv::utf_to_utf;
 using boost::locale::translate;
 using boost::noncopyable;
 using boost::optional;
+using boost::packaged_task;
 using boost::promise;
+using boost::shared_ptr;
 using boost::thread;
 
 using std::auto_ptr;
 using std::endl;
+using std::make_pair;
+using std::pair;
 using std::string;
 using std::wostringstream;
 using std::wstring;
@@ -168,6 +174,19 @@ namespace {
 
     void do_nothing_command() {}
 
+    template<typename Result, typename Callable>
+    pair<shared_ptr<unique_future<Result>>, shared_ptr<thread>>
+    start_async(Callable operation)
+    {
+        packaged_task<Result> task(operation);
+        shared_ptr<unique_future<Result>> result(
+            new unique_future<Result>(boost::move(task.get_future())));
+
+        shared_ptr<thread> running_task(new thread(boost::move(task)));
+
+        return make_pair(result, running_task);
+    }
+
     template<typename Result=void>
     class async_task_dialog_runner : private noncopyable
     {
@@ -175,24 +194,45 @@ namespace {
         explicit async_task_dialog_runner(task_dialog_builder<Result> builder)
             :
         m_builder(builder),
-        m_thread(&async_task_dialog_runner::dialog_loop<Result>, this),
         m_dialog(m_promised_dialog.get_future()),
-        m_result(m_promised_result.get_future()) {}
+        m_result(
+            start_async<Result>(
+                bind(&async_task_dialog_runner::dialog_loop<Result>, this)))
+        {}
 
         ~async_task_dialog_runner()
         {
-            // Member variables must be valid for entire lifetime of the thread
-            m_thread.join();
+            // Ideally, we would use boost::async to run the dialog, which returns
+            // a future whose destructor blocks until the dialog finishes.  Making
+            // that future a member of this class then ensures the member variables
+            // remain valid for entire lifetime of the async operation.
+            //
+            // However, Boost 1.49 doesn't have async() so we need to keep
+            // the thread around and join in the destructor
+
+            m_result.second->join();
         }
 
         task_dialog dialog()
         {
+            // Dialog creation might have failed so we don't want to block here
+            // on an event that may never happen.
+
+            // FIXME: Horrible mess with a race condition: creation may fail
+            // with an exception after we check for it.  The solution is to
+            // rewrite the task dialog class to use futures.
+
+            if (m_result.first->has_exception())
+            {
+                m_result.first->get();
+            }
+            
             return m_dialog.get();
         }
 
         unique_future<Result>& result()
         {
-            return m_result;
+            return *(m_result.first);
         }
 
     private:
@@ -203,21 +243,10 @@ namespace {
         }
 
         template<typename Result>
-        void dialog_loop()
+        Result dialog_loop()
         {
-            Result res = m_builder.show(
+            return m_builder.show(
                 bind(&async_task_dialog_runner::on_create, this, _1));
-
-            m_promised_result.set_value(res);
-        }
-
-        template<>
-        void dialog_loop<void>()
-        {
-            m_builder.show(
-                bind(&async_task_dialog_runner::on_create, this, _1));
-
-            m_promised_result.set_value();
         }
 
         task_dialog_builder<Result> m_builder;
@@ -227,9 +256,7 @@ namespace {
         // using `dialog_loop` with old `this`
         promise<task_dialog> m_promised_dialog;
         unique_future<task_dialog> m_dialog;
-        promise<Result> m_promised_result;
-        unique_future<Result> m_result;
-        thread m_thread;
+        pair<shared_ptr<unique_future<Result>>, shared_ptr<thread>> m_result;
     };
 
     class running_dialog
