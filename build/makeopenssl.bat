@@ -1,5 +1,5 @@
 call "%VS80COMNTOOLS%vsvars32.bat"
-cd openssl-1.0.0a
+cd openssl-1.0.0l
 
 del /Q inc32\*
 del /Q tmp32\*

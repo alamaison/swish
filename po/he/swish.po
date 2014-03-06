@@ -1,13 +1,14 @@
 # 
 # Translators:
 # aharonoosh <aharonoosh1@gmail.com>, 2012
+# SmileyBarry <smiley@smileybarry.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: Swish\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-30 14:18-0000\n"
-"PO-Revision-Date: 2013-11-20 11:36+0000\n"
-"Last-Translator: aharonoosh <aharonoosh1@gmail.com>\n"
+"PO-Revision-Date: 2014-02-22 19:00+0000\n"
+"Last-Translator: SmileyBarry <smiley@smileybarry.com>\n"
 "Language-Team: Hebrew (http://www.transifex.com/projects/p/swish/language/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -41,7 +42,7 @@ msgstr "ל '{1}'"
 
 #: ../../swish/drop_target/DropUI.cpp:316
 msgid "This folder already contains a file named '{1}'."
-msgstr "'{1}' התקייה הזאת כבר מכילה קובץ בשם"
+msgstr "'{1}' התיקייה הזו כבר מכילה קובץ בשם"
 
 #: ../../swish/drop_target/DropUI.cpp:319
 msgid "Would you like to replace it?"
@@ -159,11 +160,11 @@ msgstr "אישור"
 
 #: ../../swish/frontend/announce_error.cpp:136
 msgid "Show &details (which may not be in your language)"
-msgstr ""
+msgstr "ה&צג פרטים"
 
 #: ../../swish/frontend/announce_error.cpp:137
 msgid "Hide &details"
-msgstr ""
+msgstr "הסתר &פרטים"
 
 #: ../../swish/frontend/UserInteraction.cpp:195
 msgid "The folder already contains a file named '%1%'"
@@ -387,11 +388,11 @@ msgstr "מספר קבוצה"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:157
 msgid "Open &link"
-msgstr ""
+msgstr "פתח &קישור"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:179
 msgid "&Open"
-msgstr ""
+msgstr "&פתח"
 
 #: ../../swish/remote_folder/context_menu_callback.cpp:273
 msgid "Unable to open the link"
@@ -422,7 +423,7 @@ msgstr "אין אפשרות למחוק את הפריט"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:168
 msgid "New &folder"
-msgstr ""
+msgstr "&תיקייה חדשה"
 
 #: ../../swish/remote_folder/commands/NewFolder.cpp:169
 msgid "Create a new, empty folder in the folder you have open."

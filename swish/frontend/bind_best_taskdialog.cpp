@@ -45,7 +45,7 @@ tdi_function bind_best_taskdialog()
     try
     {
         return load_function<
-            HRESULT (const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
+            HRESULT WINAPI (const TASKDIALOGCONFIG*, int*, int*, BOOL*)>(
                 "comctl32.dll", "TaskDialogIndirect");
     }
     catch (const exception&)
