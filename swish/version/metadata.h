@@ -6,7 +6,7 @@
     @if license
 
     Copyright (C) 2009-2012 Vaclav Slavik
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013, 2014  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the "Software"),
@@ -39,7 +39,7 @@
 
 #define SWISH_MAJOR_VERSION 0
 #define SWISH_MINOR_VERSION 8
-#define SWISH_BUGFIX_VERSION 0
+#define SWISH_BUGFIX_VERSION 1
 
 #define SWISH_MAKE_STRING(x) #x
 
@@ -54,7 +54,7 @@
 
 #define SWISH_PROGRAM_NAME "Swish"
 
-#define SWISH_COPYRIGHT "Copyright (C) 2007-2013 Alexander Lamaison and contributers."
+#define SWISH_COPYRIGHT "Copyright (C) 2007-2014 Alexander Lamaison and contributers."
 
 #define SWISH_DESCRIPTION "Easy SFTP for Windows Explorer"
 

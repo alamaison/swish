@@ -1,3 +1,5 @@
+swish-0.8.1
+
 swish-0.8.0
 -Added option to log out of server manually.
 -Fix file extension behaviour to match Windows folder options.

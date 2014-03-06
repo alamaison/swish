@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define Swish_ProductVersion = "0.8.0" ?>
+<?define Swish_ProductVersion = "0.8.1" ?>
 
 <?if $(var.Platform) = x64?>
 <?define Win64 = "yes"?>
