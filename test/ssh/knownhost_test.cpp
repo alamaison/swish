@@ -106,10 +106,22 @@ const string KEY_C =
     "+BoB23HQ6utyC4ZBA40dB/Bpq+jbQUq1RLmhlHULqVT/2Z9QLHHcygBddKrUZznsk1/I"
     "QcyLHk77/cxQn6dW+B/7G7AdBc4MYMGM/w==";
 
+const string KEY_UNKNOWN_FORMAT =
+    "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBOnHj5Uw9UIVhG/q"
+    "Jfqz4MXX0AqaIvsX/cO3Y2rR6qRo6HUDS4mD3QPLQxw2tDTs12Iji5v/mWUerKPwnRx1"
+    "E7E=";
+
 const vector<const test_datum> test_data = list_of
     (test_datum(
         "host1.example.com", "192.168.0.1", "ssh-rsa", KEY_A, KEY_B, 
         "test@swish"))
+    // The next key is not recognised by libssh2 (yet).  We use it to test that
+    // unrecognised keys are handled gracefully.  Added in the middle to catch
+    // if it halts processing silently - the later keys won't be processed.
+    // Key format name is "unknown" because actual format name isn't exposed
+    (test_datum(
+        "unrecognisedkey.example.com", "192.168.2.1", "unknown",
+        KEY_UNKNOWN_FORMAT, KEY_A, "test@swish"))
     (test_datum(
         "host2.example.com", "10.0.0.1", "ssh-rsa", KEY_B, KEY_C, ""))
     (test_datum(
@@ -353,10 +365,16 @@ BOOST_AUTO_TEST_CASE( iterator_independence )
     BOOST_CHECK(entry_matches_ip(*it1++, test_data[2]));
     BOOST_CHECK(entry_matches(*it1++, test_data[2]));
 
-    BOOST_REQUIRE(it1 == kh.end());
-
         BOOST_CHECK(entry_matches_ip(*it2++, test_data[2]));
         BOOST_CHECK(entry_matches(*it2++, test_data[2]));
+
+    BOOST_CHECK(entry_matches_ip(*it1++, test_data[3]));
+    BOOST_CHECK(entry_matches(*it1++, test_data[3]));
+
+    BOOST_REQUIRE(it1 == kh.end());
+
+        BOOST_CHECK(entry_matches_ip(*it2++, test_data[3]));
+        BOOST_CHECK(entry_matches(*it2++, test_data[3]));
 
         BOOST_REQUIRE(it2 == kh.end());
 }
@@ -616,14 +634,19 @@ BOOST_AUTO_TEST_CASE( erase_all )
 BOOST_AUTO_TEST_CASE( erase_last )
 {
     openssh_knownhost_collection kh("test_known_hosts");
-    knownhost_search_result result = kh.find(test_data[2].name, test_data[2].key, true);
+    knownhost_search_result result =
+        kh.find(
+            test_data[test_data.size() - 1].name,
+            test_data[test_data.size() - 1].key, true);
 
     BOOST_REQUIRE(result.host() != kh.end());
 
     knownhost_iterator next = erase(result.host());
     BOOST_REQUIRE(next == kh.end());
 
-    result = kh.find(test_data[2].name, test_data[2].key, true);
+    result = kh.find(
+        test_data[test_data.size() - 1].name,
+        test_data[test_data.size() - 1].key, true);
     BOOST_CHECK(result.not_found());
 }
 
