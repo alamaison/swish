@@ -43,11 +43,11 @@ cd thirdparty
 
 echo.
 echo ===- Downloading OpenSSL ...
-%WGET% "http://sourceforge.net/projects/swish/files/openssl-swish/openssl-1.0.0a-swish/openssl-1.0.0a-swish.zip/download" || (
+%WGET% "http://sourceforge.net/projects/swish/files/openssl-swish/openssl-1.0.0l-swish/openssl-1.0.0l-swish.7z/download" || (
 	echo ===- Error while trying to download OpenSSL. & goto error)
-%SEVENZ% x openssl-1.0.0a-swish.zip -oopenssl -aoa || (
+%SEVENZ% x openssl-1.0.0l-swish.7z -oopenssl -aoa || (
 	echo ===- Error while trying to extract OpenSSL. & goto error)
-del openssl-1.0.0a-swish.zip
+del openssl-1.0.0l-swish.7z
 
 :: WTL
 
