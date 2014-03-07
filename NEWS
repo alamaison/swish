@@ -1,3 +1,6 @@
+swish-0.8.2
+-Fixed error when known_hosts contained unrecognised key types.
+
 swish-0.8.1
 -Fix crash in 32-bit version when showing dialogues.
 -Updated OpenSSL to 1.0.0l.

@@ -3,8 +3,8 @@ Update version number in
 - Doxyfile
 - appcast.xml (x5 and date)
 - setup_conf.xml (x4)
-- swish/wix/swish.wxs
-- swish/wix/wix.wixproj
+- wix/swish.wxs
+- wix/wix.wixproj
 - swish/version/metadata.h (x1 and copyright date)
 
 Add notable changes to NEWS.
@@ -13,3 +13,5 @@ Make sure .po files are compiled to .mo files (po/compile_mo.sh).
 
 To build the final multi-architecture EXE, run this command in the top level:
 "C:\Program Files (x86)\dotNetInstaller\bin\InstallerLinker.exe" /Output:swish.exe /Template:"C:\Program Files (x86)\dotNetInstaller\bin\dotNetInstaller.exe" /Configuration:setup_conf.xml
+
+Add version to Trac.
