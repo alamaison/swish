@@ -1,6 +1,5 @@
 Update version number in:
 - top-level CMakeLists.txt
-- setup_conf.xml (x4)
 - wix/swish.wxs
 - wix/wix.wixproj
 - swish/versions/metadata.h (x1 and copyright date)

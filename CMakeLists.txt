@@ -73,3 +73,10 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/appcast.xml.in
   ${CMAKE_CURRENT_BINARY_DIR}/appcast.xml
   @ONLY)
+
+set(SWISH_COPYRIGHT "Copyright (C) 2006-2015  Alexander Lamaison and Contributors")
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/setup_conf.xml.in
+  ${CMAKE_CURRENT_BINARY_DIR}/setup_conf.xml
+  @ONLY)
