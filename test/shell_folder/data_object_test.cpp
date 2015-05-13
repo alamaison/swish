@@ -33,7 +33,7 @@
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 #include "swish/shell_folder/DataObject.h"
 
-#include <winapi/shell/pidl.hpp>
+#include <washer/shell/pidl.hpp>
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/ptr.h> // com_ptr
@@ -45,8 +45,8 @@
 using swish::host_folder::create_host_itemid;
 using swish::remote_folder::remote_itemid_view;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
 
 using comet::bstr_t;
 using comet::com_ptr;

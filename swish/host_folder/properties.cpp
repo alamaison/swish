@@ -39,8 +39,8 @@
 #include <initguid.h> // Make DEFINE_PROPERTYKEY() actually define a key
 #include <Propkey.h> // PKEY_ *
 
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::property_key;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::property_key;
 
 using comet::variant_t;
 

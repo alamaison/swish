@@ -764,7 +764,8 @@ public:
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
                     std::runtime_error(
-                        "Could not read from known-hosts file")) <<
+                        "Could not read from known-hosts file '"
+                        +complete(filename).string()+"'")) <<
                 boost::errinfo_file_name(filename.external_file_string()));
 
         load_entries<LIBSSH2_KNOWNHOST_FILE_OPENSSH>(

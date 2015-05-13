@@ -45,6 +45,8 @@
 #include <string>
 #include <vector>
 
+#include <Windows.h> // MAX_PATH, GetTempFileName, GetLastError
+
 using boost::system::system_error;
 using boost::system::get_system_category;
 using boost::filesystem::ofstream;

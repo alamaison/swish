@@ -27,7 +27,7 @@
 #include <swish/remote_folder/properties.hpp> // test subject
 #include <swish/remote_folder/remote_pidl.hpp> // create_remote_itemid
 
-#include <winapi/shell/property_key.hpp> // property_key
+#include <washer/shell/property_key.hpp> // property_key
 
 #include <comet/datetime.h> // datetime_t
 
@@ -41,8 +41,8 @@ using swish::remote_folder::compare_pidls_by_property;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::property_from_pidl;
 
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::property_key;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::property_key;
 
 using comet::variant_t;
 using comet::datetime_t;

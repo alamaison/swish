@@ -36,7 +36,7 @@
 using swish::host_folder::Column;
 using swish::host_folder::create_host_itemid;
 
-using winapi::shell::pidl::cpidl_t;
+using washer::shell::pidl::cpidl_t;
 
 using std::wstring;
 

@@ -32,7 +32,7 @@
 #include "swish/host_folder/columns.hpp" // Column
 
 #include "resource.h"            // main symbols
-#include "swish/shell_folder/Swish.h" // For CHostFolder UUID
+#include "Swish.h" // For CHostFolder UUID
 #include "swish/CoFactory.hpp"   // CComObject factory
 
 #include "swish/atl.hpp"         // Common ATL setup
@@ -58,11 +58,11 @@ protected:
     void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
 
     ATL::CComPtr<IShellFolder> subfolder(
-        const winapi::shell::pidl::cpidl_t& pidl);
+        const washer::shell::pidl::cpidl_t& pidl);
     
     comet::variant_t property(
-        const winapi::shell::property_key& key,
-        const winapi::shell::pidl::cpidl_t& pidl);
+        const washer::shell::property_key& key,
+        const washer::shell::pidl::cpidl_t& pidl);
 
     ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
 

@@ -44,7 +44,7 @@ using swish::shell_folder::data_object::StorageMedium;  // test subject
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using test::ComFixture;
 using test::data_object_utils::create_test_zip_file;

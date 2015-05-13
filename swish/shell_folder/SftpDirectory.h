@@ -30,7 +30,7 @@
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/enum_iterator.h> // enum_iterator
 #include <comet/ptr.h> // com_ptr
@@ -44,33 +44,33 @@ class CSftpDirectory
 {
 public:
     CSftpDirectory(
-        const winapi::shell::pidl::apidl_t& directory,
+        const washer::shell::pidl::apidl_t& directory,
         boost::shared_ptr<swish::provider::sftp_provider> provider);
 
     comet::com_ptr<IEnumIDList> GetEnum(SHCONTF flags);
     CSftpDirectory GetSubdirectory(
-        const winapi::shell::pidl::cpidl_t& directory);
+        const washer::shell::pidl::cpidl_t& directory);
     comet::com_ptr<IStream> GetFile(
-        const winapi::shell::pidl::cpidl_t& file, bool writeable);
+        const washer::shell::pidl::cpidl_t& file, bool writeable);
     comet::com_ptr<IStream> GetFileByPath(
         const boost::filesystem::wpath& file, bool writeable);
 
-    bool exists(const winapi::shell::pidl::cpidl_t& file);
+    bool exists(const washer::shell::pidl::cpidl_t& file);
 
     bool Rename(
-        const winapi::shell::pidl::cpidl_t& old_file,
+        const washer::shell::pidl::cpidl_t& old_file,
         const std::wstring& new_filename,
         comet::com_ptr<ISftpConsumer> consumer);
     void Delete(
-        const winapi::shell::pidl::cpidl_t& file);
-    winapi::shell::pidl::cpidl_t CreateDirectory(const std::wstring& name);
-    winapi::shell::pidl::apidl_t ResolveLink(
-        const winapi::shell::pidl::cpidl_t& item);
+        const washer::shell::pidl::cpidl_t& file);
+    washer::shell::pidl::cpidl_t CreateDirectory(const std::wstring& name);
+    washer::shell::pidl::apidl_t ResolveLink(
+        const washer::shell::pidl::cpidl_t& item);
 
 private:
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
                                                       ///< Backend data provider
     boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
-    const winapi::shell::pidl::apidl_t m_directory_pidl;
+    const washer::shell::pidl::apidl_t m_directory_pidl;
                                  ///< Absolute PIDL to this directory.
 };

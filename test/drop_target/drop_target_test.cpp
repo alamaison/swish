@@ -69,7 +69,7 @@ using std::wstring;
 using std::vector;
 using std::istreambuf_iterator;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 namespace { // private
 

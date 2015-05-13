@@ -31,7 +31,7 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <string>
-
+#include <shobjidl.h> // CMINVOKECOMMANDINFO
 #include <Windows.h> // HRESULT, HWND, LPARAM, WPARAM, HMENU, IDataObject
 
 namespace swish {

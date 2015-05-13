@@ -26,8 +26,8 @@
 
 #include "LaunchAgent.hpp"
 
-#include <winapi/error.hpp> // last_error
-#include <winapi/dynamic_link.hpp> // module_path, module_handle
+#include <washer/error.hpp> // last_error
+#include <washer/dynamic_link.hpp> // module_path, module_handle
 
 #include <comet/error.h> // com_error
 #include <comet/uuid_fwd.h> // uuid_t
@@ -42,11 +42,13 @@
 #include <cassert> // assert
 #include <string>
 
+#include <shlobj.h> // SHChangeNotify
+
 using swish::nse::Command;
 
-using winapi::module_handle;
-using winapi::module_path;
-using winapi::shell::pidl::apidl_t;
+using washer::module_handle;
+using washer::module_path;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -126,7 +128,7 @@ const
     if (!::CreateProcessW(
         pageant.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
             BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(winapi::last_error()) <<
+                boost::enable_error_info(washer::last_error()) <<
                 boost::errinfo_file_name("pageant") <<
                 boost::errinfo_api_function("CreateProcess"));
 

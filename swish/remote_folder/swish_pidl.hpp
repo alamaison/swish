@@ -31,8 +31,8 @@
 #include "swish/host_folder/host_pidl.hpp" // find_host_itemid, host_itemid_view
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
-#include <winapi/shell/pidl.hpp> // apidl_t
-#include <winapi/shell/pidl_iterator.hpp> // raw_pidl_iterator
+#include <washer/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
 #include <boost/filesystem/path.hpp> // wpath
 
@@ -46,15 +46,15 @@ namespace remote_folder {
  * remote item ids, but doesn't have to.
  */
 inline boost::filesystem::wpath absolute_path_from_swish_pidl(
-    const winapi::shell::pidl::apidl_t& pidl)
+    const washer::shell::pidl::apidl_t& pidl)
 {
-    winapi::shell::pidl::raw_pidl_iterator item_pos =
+    washer::shell::pidl::raw_pidl_iterator item_pos =
         swish::host_folder::find_host_itemid(pidl);
 
     boost::filesystem::wpath path =
         swish::host_folder::host_itemid_view(*item_pos).path();
 
-    if (++item_pos != winapi::shell::pidl::raw_pidl_iterator())
+    if (++item_pos != washer::shell::pidl::raw_pidl_iterator())
     {
         if (remote_itemid_view(*item_pos).valid())
         {

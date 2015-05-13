@@ -31,7 +31,7 @@
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/nse/Command.hpp" // Command
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -54,7 +54,7 @@ class NewFolder : public swish::nse::Command
 {
 public:
     NewFolder(
-        const winapi::shell::pidl::apidl_t& folder_pidl,
+        const washer::shell::pidl::apidl_t& folder_pidl,
         const provider_factory& provider,
         const consumer_factory& consumer);
     
@@ -70,7 +70,7 @@ public:
 
 private:
     HWND m_hwnd;
-    winapi::shell::pidl::apidl_t m_folder_pidl;
+    washer::shell::pidl::apidl_t m_folder_pidl;
     provider_factory m_provider_factory;
     consumer_factory m_consumer_factory;
     comet::com_ptr<IUnknown> m_site;

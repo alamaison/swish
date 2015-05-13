@@ -31,8 +31,8 @@
 #include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp" // PidlFixture
 
-#include <winapi/shell/pidl.hpp> // apidl_t
-#include <winapi/shell/shell.hpp> // strret_to_string
+#include <washer/shell/pidl.hpp> // apidl_t
+#include <washer/shell/shell.hpp> // strret_to_string
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/enum_iterator.h> // enum_iterator
@@ -50,9 +50,9 @@ using test::PidlFixture;
 using swish::remote_folder::remote_itemid_view;
 using swish::utils::Utf8StringToWideString;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::strret_to_string;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::strret_to_string;
 
 using comet::com_error;
 using comet::com_ptr;

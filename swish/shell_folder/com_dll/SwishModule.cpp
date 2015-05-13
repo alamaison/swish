@@ -26,7 +26,7 @@
 
 #include "resource.h"                  // main symbols
 #include <swish/shell_folder/locale_setup.hpp> // LocaleSetup lifetime manager
-#include "swish/shell_folder/Swish.h"  // Swish type-library
+#include "Swish.h"  // Swish type-library
 
 #include "swish/atl.hpp"
 

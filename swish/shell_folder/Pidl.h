@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "swish/atl.hpp"   // Common ATL setup
+#include <comet/error.h> // com_error
 
 #include <shlobj.h>  // Native PIDL handling
 
@@ -156,7 +156,11 @@ public:
     PidlType CopyParent() const throw(...)
     {
         PidlType pidl = CopyTo();
-        ATLVERIFY(::ILRemoveLastID(pidl));
+        if (!::ILRemoveLastID(pidl))
+		{
+			assert(false);
+			throw comet::com_error(E_FAIL);
+		}
         return pidl;
     }
 
@@ -263,7 +267,8 @@ public:
 
         m_pidl = reinterpret_cast<PidlType>(::ILCombine(
             reinterpret_cast<PCIDLIST_ABSOLUTE>(pidl1), pidl2));
-        ATLENSURE_THROW(m_pidl, E_OUTOFMEMORY);
+        if (!m_pidl)
+			throw comet::com_error(E_OUTOFMEMORY);
     }
     
     /**

@@ -28,9 +28,9 @@
 #define EZEL_WINDOW_PROC_HPP
 #pragma once
 
-#include <winapi/trace.hpp> // trace
-#include <winapi/window/dialog.hpp> // dialog
-#include <winapi/window/window.hpp> // window
+#include <washer/trace.hpp> // trace
+#include <washer/window/dialog.hpp> // dialog
+#include <washer/window/window.hpp> // window
 
 #include <cassert> // assert
 #include <exception>
@@ -58,7 +58,7 @@ public:
      * Subclass window.
      */
     window_proc(HWND hwnd, WNDPROC new_proc) :
-        m_window(winapi::window::window_handle::foster_handle(hwnd)),
+        m_window(washer::window::window_handle::foster_handle(hwnd)),
         m_proc(new_proc),
         m_sub_proc(m_window.change_window_procedure(m_proc)) {}
 
@@ -80,7 +80,7 @@ public:
         }
         catch (const std::exception& e)
         {
-            winapi::trace("window_proc destructor threw exception: %s")
+            washer::trace("window_proc destructor threw exception: %s")
                 % boost::diagnostic_information(e);
         }
     }
@@ -93,10 +93,10 @@ public:
     }
 
 protected:
-    winapi::window::window<wchar_t>& window() { return m_window; }
+    washer::window::window<wchar_t>& window() { return m_window; }
 
 private:
-    winapi::window::window<wchar_t> m_window;
+    washer::window::window<wchar_t> m_window;
     WNDPROC m_proc;
     WNDPROC m_sub_proc; ///< Subclassed window's default message handler
 };

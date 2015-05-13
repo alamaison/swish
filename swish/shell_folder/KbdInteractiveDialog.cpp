@@ -26,6 +26,7 @@
 
 #include "wtl.hpp"          // WTL
 #include <atlctrls.h>       // WTL control wrappers
+#include <atlstr.h> // CString
 
 using swish::utils::Utf8StringToWideString;
 using swish::utils::WideStringToUtf8String;

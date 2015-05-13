@@ -30,6 +30,8 @@
 
 #include <string>
 
+#include <windows.h> // DWORD, ULONGLONG
+
 namespace swish {
 namespace drop_target {
 

@@ -26,14 +26,14 @@
 
 #include "shell.hpp"
 
-#include <winapi/shell/shell_item.hpp> // pidl_shell_item
+#include <washer/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/error.h> // com_error
 
 #include <shlobj.h>  // SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
-using winapi::shell::pidl_shell_item;
+using washer::shell::pidl_shell_item;
 
 using comet::com_error;
 using comet::com_ptr;

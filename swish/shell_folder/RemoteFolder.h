@@ -25,11 +25,11 @@
 #include "swish/CoFactory.hpp"  // CComObject factory
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/remote_folder/columns.hpp" // Column
-#include "swish/shell_folder/Swish.h" // For CRemoteFolder UUID
+#include "Swish.h" // For CRemoteFolder UUID
 
 #include "swish/atl.hpp"        // Common ATL setup
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -90,11 +90,11 @@ protected:
     void validate_pidl(PCUIDLIST_RELATIVE pidl) const;
 
     ATL::CComPtr<IShellFolder> subfolder(
-        const winapi::shell::pidl::cpidl_t& pidl);
+        const washer::shell::pidl::cpidl_t& pidl);
 
     comet::variant_t property(
-        const winapi::shell::property_key& key,
-        const winapi::shell::pidl::cpidl_t& pidl);
+        const washer::shell::property_key& key,
+        const washer::shell::pidl::cpidl_t& pidl);
 
     ATL::CComPtr<IExplorerCommandProvider> command_provider(HWND hwnd);
     ATL::CComPtr<IContextMenu> background_context_menu(HWND hwnd);

@@ -46,10 +46,10 @@
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/trace.hpp" // trace
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_INTERFACE
-#include <winapi/shell/shell.hpp> // strret_to_string
-#include <winapi/window/window.hpp>
-#include <winapi/window/window_handle.hpp>
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_INTERFACE
+#include <washer/shell/shell.hpp> // strret_to_string
+#include <washer/window/window.hpp>
+#include <washer/window/window_handle.hpp>
 
 #include <comet/smart_enum.h> // make_smart_enumeration
 #include <comet/error.h> // com_error
@@ -99,14 +99,14 @@ using swish::host_folder::url_from_host_itemid;
 using swish::nse::default_context_menu_callback;
 using swish::tracing::trace;
 
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::property_key;
-using winapi::shell::strret_to_string;
-using winapi::shell::string_to_strret;
-using winapi::window::window;
-using winapi::window::window_handle;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::property_key;
+using washer::shell::strret_to_string;
+using washer::shell::string_to_strret;
+using washer::window::window;
+using washer::window::window_handle;
 
 namespace comet {
 
@@ -387,7 +387,7 @@ STDMETHODIMP CHostFolder::GetOverlayIndex(PCUITEMID_CHILD item, int* index)
             return S_FALSE;
         }
     }
-    WINAPI_COM_CATCH_INTERFACE(IShellIconOverlay)
+    WASHER_COM_CATCH_INTERFACE(IShellIconOverlay)
 }
 
 STDMETHODIMP CHostFolder::GetOverlayIconIndex(
@@ -407,7 +407,7 @@ STDMETHODIMP CHostFolder::GetOverlayIconIndex(
             return S_FALSE;
         }
     }
-    WINAPI_COM_CATCH_INTERFACE(IShellIconOverlay)
+    WASHER_COM_CATCH_INTERFACE(IShellIconOverlay)
 }
 
 /*--------------------------------------------------------------------------*/

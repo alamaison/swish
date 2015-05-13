@@ -30,7 +30,7 @@
 
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/hook.hpp> // windows_hook
+#include <washer/hook.hpp> // windows_hook
 
 #include <iostream> // cerr
 
@@ -143,10 +143,10 @@ class creation_hooks
 public:
     creation_hooks()
         :
-        m_cbt_hook(winapi::windows_hook(WH_CBT, &cbt_hook_function<T>)) {}
+        m_cbt_hook(washer::windows_hook(WH_CBT, &cbt_hook_function<T>)) {}
 
 private:
-    winapi::hhook m_cbt_hook;
+    washer::hhook m_cbt_hook;
 };
 
 }} // namespace ezel::detail

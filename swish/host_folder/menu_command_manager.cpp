@@ -37,14 +37,14 @@
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
 
-#include <winapi/gui/menu/basic_menu.hpp> // find_first_item_with_id
-#include <winapi/gui/menu/button/string_button_description.hpp>
-#include <winapi/gui/menu/item/command_item_description.hpp>
-#include <winapi/gui/menu/item/command_item.hpp>
-#include <winapi/gui/menu/item/item_state.hpp> // selectability
-#include <winapi/gui/menu/item/separator_item.hpp>
-#include <winapi/gui/menu/item/sub_menu_item.hpp>
-#include <winapi/trace.hpp> // trace
+#include <washer/gui/menu/basic_menu.hpp> // find_first_item_with_id
+#include <washer/gui/menu/button/string_button_description.hpp>
+#include <washer/gui/menu/item/command_item_description.hpp>
+#include <washer/gui/menu/item/command_item.hpp>
+#include <washer/gui/menu/item/item_state.hpp> // selectability
+#include <washer/gui/menu/item/separator_item.hpp>
+#include <washer/gui/menu/item/sub_menu_item.hpp>
+#include <washer/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/foreach.hpp> // BOOST_FOREACH
@@ -61,10 +61,10 @@ using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
 using swish::nse::Command;
 
-using namespace winapi::gui::menu;
-using winapi::shell::pidl::apidl_t;
-using winapi::trace;
-using winapi::window::window;
+using namespace washer::gui::menu;
+using washer::shell::pidl::apidl_t;
+using washer::trace;
+using washer::window::window;
 
 using comet::com_ptr;
 

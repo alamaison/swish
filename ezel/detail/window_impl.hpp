@@ -34,10 +34,10 @@
 #include <ezel/detail/window_proc.hpp> // window_proc_base, window_proc
 #include <ezel/detail/window_proxy.hpp> // window_proxy
 
-#include <winapi/gui/messages.hpp> // message
-#include <winapi/gui/commands.hpp> // command
-#include <winapi/trace.hpp> // trace
-#include <winapi/window/window.hpp>
+#include <washer/gui/messages.hpp> // message
+#include <washer/gui/commands.hpp> // command
+#include <washer/trace.hpp> // trace
+#include <washer/window/window.hpp>
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/make_shared.hpp> // make_shared
@@ -50,11 +50,11 @@
 namespace ezel {
     
 /**
- * We are EXPLICITLY bringing the winapi::gui::message/command classes into
+ * We are EXPLICITLY bringing the washer::gui::message/command classes into
  * the ezel namespace.
  */
-using winapi::gui::message;
-using winapi::gui::command;
+using washer::gui::message;
+using washer::gui::command;
 
 namespace detail {
 
@@ -152,7 +152,7 @@ class real_window : public internal_window<T>
 {
 public:
     real_window(HWND hwnd) :
-        m_window(winapi::window::window_handle::foster_handle(hwnd))
+        m_window(washer::window::window_handle::foster_handle(hwnd))
     {
         if (hwnd == NULL)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid window handle"));
@@ -192,10 +192,10 @@ public:
 
 private:
 
-    winapi::window::window<T>& window() { return m_window; }
-    const winapi::window::window<T>& window() const { return m_window; }
+    washer::window::window<T>& window() { return m_window; }
+    const washer::window::window<T>& window() const { return m_window; }
 
-    winapi::window::window<T> m_window;
+    washer::window::window<T> m_window;
 };
 
 template<typename T>
@@ -376,12 +376,12 @@ public:
      * function.  By default, it does nothing.  Override if you want to
      * to handle unhandled command messages.
      */
-    virtual void on(winapi::gui::command_base unknown)
+    virtual void on(washer::gui::command_base unknown)
     {
         (void)unknown;
 #ifdef _DEBUG
         window_impl* w = window_from_hwnd(unknown.control_hwnd());
-        winapi::trace(
+        washer::trace(
             "Unhandled command (code 0x%x) from window with title '%s'")
             % unknown.command_code() % w->text();
 #endif
@@ -552,7 +552,7 @@ inline LRESULT CALLBACK window_impl_proc(
         // replace the window proc with this one then we must have hooked
         // it correctly so why can't we find it now?
 
-        winapi::trace("window_impl_proc exception: %s")
+        washer::trace("window_impl_proc exception: %s")
             % boost::diagnostic_information(e);
 
         assert(!"Something went very wrong here - we couldn't get our window");

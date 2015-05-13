@@ -29,7 +29,7 @@
 #include "swish/debug.hpp"
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <boost/filesystem/path.hpp> // wpath
 
@@ -71,7 +71,7 @@ throw()
         return _GetHKEYArrayFromKeynames(
             _GetHostFolderAssocKeynames(), pcKeys, paKeys);
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 /**
@@ -109,7 +109,7 @@ HRESULT CRegistry::GetRemoteFolderAssocKeys(
         return _GetHKEYArrayFromKeynames(
             _GetRemoteFolderAssocKeynames(itemid), pcKeys, paKeys);
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 namespace {
@@ -133,7 +133,7 @@ HRESULT CRegistry::GetRemoteFolderBackgroundAssocKeys(
         return _GetHKEYArrayFromKeynames(
             remote_folder_background_key_names(), pcKeys, paKeys);
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 

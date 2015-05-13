@@ -34,8 +34,8 @@
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 
-#include <winapi/shell/pidl_array.hpp>  // PIDL array wrapper
-#include <winapi/shell/shell.hpp> // desktop_folder
+#include <washer/shell/pidl_array.hpp>  // PIDL array wrapper
+#include <washer/shell/shell.hpp> // desktop_folder
 
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 
@@ -44,8 +44,8 @@
 using swish::host_folder::create_host_itemid;
 using swish::utils::Utf8StringToWideString;
 
-using namespace winapi::shell::pidl;
-using winapi::shell::desktop_folder;
+using namespace washer::shell::pidl;
+using washer::shell::desktop_folder;
 
 using comet::com_ptr;
 

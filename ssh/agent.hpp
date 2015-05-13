@@ -43,6 +43,7 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 

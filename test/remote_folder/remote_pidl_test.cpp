@@ -30,8 +30,8 @@
 
 #include <comet/datetime.h> // datetime_t
 
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
-#include <winapi/shell/shell.hpp> // pidl_from_parsing_name
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/shell.hpp> // pidl_from_parsing_name
 
 #include <boost/test/unit_test.hpp>
 
@@ -43,10 +43,10 @@ using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::path_from_remote_pidl;
 using swish::remote_folder::remote_itemid_view;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl_from_parsing_name;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl_from_parsing_name;
 
 using comet::com_ptr;
 using comet::datetime_t;
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE( create_for_folder )
 
 BOOST_AUTO_TEST_CASE( invalid_remote_item )
 {
-    apidl_t pidl = winapi::shell::special_folder_pidl(CSIDL_DRIVES);
+    apidl_t pidl = washer::shell::special_folder_pidl(CSIDL_DRIVES);
 
     BOOST_CHECK(!remote_itemid_view(pidl).valid());
     BOOST_CHECK_THROW(remote_itemid_view(pidl).filename(), exception);

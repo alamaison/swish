@@ -72,6 +72,11 @@ public:
         return *m_instance;
     }
 
+    static void destroy()
+    {
+        m_instance.reset();
+    }
+
     authenticated_session& pooled_session(
         connection_spec specification, com_ptr<ISftpConsumer> consumer)
     {
@@ -145,6 +150,11 @@ authenticated_session& session_pool::pooled_session(
     const connection_spec& specification, com_ptr<ISftpConsumer> consumer)
 {
     return session_pool_impl::get().pooled_session(specification, consumer);
+}
+
+void session_pool::destroy()
+{
+    return session_pool_impl::destroy();
 }
 
 bool session_pool::has_session(const connection_spec& specification) const

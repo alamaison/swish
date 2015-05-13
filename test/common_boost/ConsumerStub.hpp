@@ -30,7 +30,7 @@
 
 #include "test/common_boost/helpers.hpp"
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/server.h> // simple_object
 

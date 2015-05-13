@@ -30,7 +30,7 @@
 
 #include <string>
 
-#include <WinDef.h> // HWND
+#include <Windows.h> // HWND
 
 namespace swish {
 namespace frontend {

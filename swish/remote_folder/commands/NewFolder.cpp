@@ -31,8 +31,8 @@
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
-#include <winapi/shell/services.hpp> // shell_browser, shell_view
-#include <winapi/trace.hpp> // trace
+#include <washer/shell/services.hpp> // shell_browser, shell_view
+#include <washer/trace.hpp> // trace
 
 #include <comet/error.h> // com_error
 #include <comet/uuid_fwd.h> // uuid_t
@@ -55,11 +55,11 @@ using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::shell_browser;
-using winapi::shell::shell_view;
-using winapi::trace;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::shell_browser;
+using washer::shell::shell_view;
+using washer::trace;
 
 using comet::com_error;
 using comet::com_error_from_interface;

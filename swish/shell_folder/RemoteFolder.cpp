@@ -49,8 +49,8 @@
 #include "swish/trace.hpp" // trace
 #include "swish/windows_api.hpp" // SHBindToParent
 
-#include <winapi/shell/shell.hpp> // string_to_strret
-#include <winapi/window/window.hpp>
+#include <washer/shell/shell.hpp> // string_to_strret
+#include <washer/window/window.hpp>
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/regkey.h>
@@ -79,13 +79,13 @@ using swish::remote_folder::provider_from_pidl;
 using swish::remote_folder::remote_itemid_view;
 using swish::tracing::trace;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::property_key;
-using winapi::shell::string_to_strret;
-using winapi::window::window;
-using winapi::window::window_handle;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::property_key;
+using washer::shell::string_to_strret;
+using washer::window::window;
+using washer::window::window_handle;
 
 using comet::com_ptr;
 using comet::com_error;

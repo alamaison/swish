@@ -26,9 +26,12 @@
 
 #pragma once
 
+#include "swish/atl.hpp"
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
 #include <vector>
+
+#include <AtlStr.h> // CString
 
 class CRegistry
 {

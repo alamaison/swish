@@ -26,7 +26,7 @@
 
 #include "view_callback.hpp"
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error
 
@@ -140,7 +140,7 @@ STDMETHODIMP CViewCallback::MessageSFVCB(
                 BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
         }
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     assert(false && "Unreachable");
     return E_UNEXPECTED;

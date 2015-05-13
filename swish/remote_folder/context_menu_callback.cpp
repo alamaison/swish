@@ -33,9 +33,9 @@
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
 
-#include <winapi/error.hpp> // last_error
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
-#include <winapi/shell/shell.hpp> // pidl_from_parsing_name
+#include <washer/error.hpp> // last_error
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/shell.hpp> // pidl_from_parsing_name
 
 #include <comet/uuid.h> // uuid_t
 
@@ -56,11 +56,11 @@ using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::shell_folder::ui_object_of_item;
 
-using winapi::last_error;
-using winapi::shell::pidl_from_parsing_name;
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_cast;
+using washer::last_error;
+using washer::shell::pidl_from_parsing_name;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_cast;
 
 using comet::com_error;
 using comet::com_ptr;

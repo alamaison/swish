@@ -33,8 +33,8 @@
 #include "swish/drop_target/DropActionCallback.hpp" // DropActionCallback
 #include "swish/drop_target/Progress.hpp" // Progress
 
-#include <winapi/object_with_site.hpp> // object_with_site
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/object_with_site.hpp> // object_with_site
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <boost/shared_ptr.hpp>
 
@@ -55,7 +55,7 @@ namespace swish {
 namespace drop_target {
 
 class CDropTarget :
-    public comet::simple_object<IDropTarget, winapi::object_with_site>
+    public comet::simple_object<IDropTarget, washer::object_with_site>
 {
 public:
 
@@ -66,7 +66,7 @@ public:
      */
     CDropTarget(
         boost::shared_ptr<swish::provider::sftp_provider> provider,
-        const winapi::shell::pidl::apidl_t& remote_directory,
+        const washer::shell::pidl::apidl_t& remote_directory,
         boost::shared_ptr<DropActionCallback> callback);
 
     /** @name IDropTarget methods */
@@ -97,7 +97,7 @@ private:
 
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
 
-    winapi::shell::pidl::apidl_t m_remote_directory;
+    washer::shell::pidl::apidl_t m_remote_directory;
     comet::com_ptr<IDataObject> m_data_object;
     boost::shared_ptr<DropActionCallback> m_callback;
 };
@@ -105,7 +105,7 @@ private:
 void copy_data_to_provider(
     comet::com_ptr<IDataObject> data_object,
     boost::shared_ptr<swish::provider::sftp_provider> provider,
-    const winapi::shell::pidl::apidl_t& remote_directory,
+    const washer::shell::pidl::apidl_t& remote_directory,
     boost::shared_ptr<DropActionCallback> callback);
 
 }} // namespace swish::drop_target

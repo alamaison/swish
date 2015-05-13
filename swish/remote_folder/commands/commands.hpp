@@ -31,7 +31,7 @@
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/nse/UICommand.hpp" // IUIElement
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -52,19 +52,19 @@ typedef boost::function<
 typedef boost::function<comet::com_ptr<ISftpConsumer>()> consumer_factory;
 
 comet::com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-    HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
+    HWND hwnd, const washer::shell::pidl::apidl_t& folder_pidl,
     const provider_factory& provider,
     const consumer_factory& consumer);
 
 std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
 remote_folder_task_pane_titles(
-    HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+    HWND hwnd, const washer::shell::pidl::apidl_t& folder_pidl);
 
 std::pair<
     comet::com_ptr<nse::IEnumUICommand>,
     comet::com_ptr<nse::IEnumUICommand> >
 remote_folder_task_pane_tasks(
-    HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl,
+    HWND hwnd, const washer::shell::pidl::apidl_t& folder_pidl,
     comet::com_ptr<IUnknown> ole_site,
     const provider_factory& provider,
     const consumer_factory& consumer);

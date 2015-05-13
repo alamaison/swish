@@ -42,8 +42,8 @@
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
-#include <winapi/shell/shell_item.hpp> // pidl_shell_item
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/ptr.h>  // com_ptr
 
@@ -67,8 +67,8 @@ using namespace swish::shell_folder::data_object;
 
 using test::PidlFixture;
 
-using namespace winapi::shell::pidl;
-using winapi::shell::pidl_shell_item;
+using namespace washer::shell::pidl;
+using washer::shell::pidl_shell_item;
 
 using comet::com_ptr;
 

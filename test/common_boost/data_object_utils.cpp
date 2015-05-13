@@ -28,7 +28,7 @@
 
 #include "swish/shell_folder/shell.hpp"
 
-#include <winapi/shell/shell.hpp> // bind_to_handler_object
+#include <washer/shell/shell.hpp> // bind_to_handler_object
 
 #include <comet/error.h> // com_error
 
@@ -43,7 +43,7 @@
 using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::ui_object_of_items;
 
-using winapi::shell::bind_to_handler_object;
+using washer::shell::bind_to_handler_object;
 
 using boost::filesystem::wpath;
 using boost::shared_ptr;

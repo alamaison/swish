@@ -24,5 +24,7 @@
     @endif
 */
 
+#include <Windows.h> // IID
+#include <cguid.h> // GUID_NULL
 #include <initguid.h>
 #include "UICommand.hpp"

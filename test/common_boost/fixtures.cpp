@@ -29,6 +29,7 @@
 
 #include "swish/port_conversion.hpp" // port_to_string
 #include "swish/utils.hpp"
+#include "swish/connection/session_pool.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp> // wofstream
@@ -234,6 +235,41 @@ namespace { // private
             "-o", "Subsystem sftp " + Cygdriveify(GetSftpPath()).string());
         return options;
     }
+
+}
+
+extern "C" {
+    extern void ERR_free_strings();
+    extern void ERR_remove_state(unsigned long);
+    extern void EVP_cleanup();
+    extern void CRYPTO_cleanup_all_ex_data();
+    extern void ENGINE_cleanup();
+    extern void CONF_modules_unload(int);
+    extern void CONF_modules_free();
+    extern void RAND_cleanup();
+}
+
+namespace {
+    struct global_fixture
+    {
+        ~global_fixture()
+        {            
+            // We call this here as a bit of a hack to stop memory-leak
+            // detection incorrectly detecting OpenSSL global data as a
+            // leak
+            swish::connection::session_pool().destroy();
+            ::RAND_cleanup();
+            ::ENGINE_cleanup();
+            ::CONF_modules_unload(1);
+            ::CONF_modules_free();
+            ::EVP_cleanup();
+            ::ERR_free_strings();
+            ::ERR_remove_state(0);
+            ::CRYPTO_cleanup_all_ex_data();
+        }
+    };
+
+    BOOST_GLOBAL_FIXTURE(global_fixture);
 }
 
 

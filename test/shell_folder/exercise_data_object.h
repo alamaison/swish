@@ -137,7 +137,7 @@ static void _testShellPIDLFolder(
     BOOST_CHECK(pida);
 
     // Test folder PIDL which may be a RemoteItemId or a HostItemId
-    winapi::shell::pidl::cpidl_t actual = ::ILFindLastID(GetPIDLFolder(pida));
+    washer::shell::pidl::cpidl_t actual = ::ILFindLastID(GetPIDLFolder(pida));
     if (swish::remote_folder::remote_itemid_view(actual).valid())
     {
         BOOST_CHECK_EQUAL(

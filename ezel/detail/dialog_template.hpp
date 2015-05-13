@@ -272,7 +272,7 @@ const unsigned short BUTTON_ID_OFFSET = 100;
 /**
  * Build a dialog resource template in memory.
  */
-inline std::vector<byte> build_dialog_template_in_memory(
+inline std::vector<unsigned char> build_dialog_template_in_memory(
     const std::wstring& font, short font_size, const std::wstring& title,
     short width, short height, short left, short top,
     const std::vector<boost::shared_ptr<window_impl> >& controls)
@@ -283,7 +283,7 @@ inline std::vector<byte> build_dialog_template_in_memory(
         buffer_len = increment_required_buffer_size(w.get(), buffer_len);
     }
 
-    std::vector<byte> buffer(buffer_len, 0);
+    std::vector<unsigned char> buffer(buffer_len, 0);
 
     DLGITEMTEMPLATE* pos = write_template_to_buffer(
         title, font_size, font, width, height, left, top,

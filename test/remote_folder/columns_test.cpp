@@ -29,7 +29,7 @@
 
 #include <test/common_boost/helpers.hpp> // wide-string output
 
-#include <winapi/shell/format.hpp> // format_date_time
+#include <washer/shell/format.hpp> // format_date_time
 
 #include <comet/datetime.h> // datetime_t
 
@@ -40,8 +40,8 @@
 using swish::remote_folder::Column;
 using swish::remote_folder::create_remote_itemid;
 
-using winapi::shell::format_date_time;
-using winapi::shell::pidl::cpidl_t;
+using washer::shell::format_date_time;
+using washer::shell::pidl::cpidl_t;
 
 using comet::datetime_t;
 

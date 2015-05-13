@@ -28,7 +28,7 @@
 #define SWISH_HOST_FOLDER_HOST_MANAGEMENT_HPP
 #pragma once
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <string>
 #include <vector>
@@ -37,7 +37,7 @@ namespace swish {
 namespace host_folder {
 namespace host_management {
 
-std::vector<winapi::shell::pidl::cpidl_t> LoadConnectionsFromRegistry();
+std::vector<washer::shell::pidl::cpidl_t> LoadConnectionsFromRegistry();
 
 void AddConnectionToRegistry(
     std::wstring label, std::wstring host, int port, 

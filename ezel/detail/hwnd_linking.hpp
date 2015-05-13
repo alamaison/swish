@@ -28,8 +28,8 @@
 #define EZEL_DETAIL_WINDOW_HPP
 #pragma once
 
-#include <winapi/error.hpp> // last_error
-#include <winapi/gui/hwnd.hpp> // set_window_field, window_field
+#include <washer/error.hpp> // last_error
+#include <washer/gui/hwnd.hpp> // set_window_field, window_field
 
 namespace ezel {
 namespace detail {
@@ -42,7 +42,7 @@ namespace detail {
 template<typename T, typename U>
 inline void store_user_window_data(HWND hwnd, const U& data)
 {
-    winapi::gui::set_window_field<T>(hwnd, GWLP_USERDATA, data);
+    washer::gui::set_window_field<T>(hwnd, GWLP_USERDATA, data);
 }
 
 /**
@@ -53,7 +53,7 @@ inline void store_user_window_data(HWND hwnd, const U& data)
 template<typename T, typename U>
 inline void store_dialog_window_data(HWND hwnd, const U& data)
 {
-    winapi::gui::set_window_field<T>(hwnd, DWLP_USER, data);
+    washer::gui::set_window_field<T>(hwnd, DWLP_USER, data);
 }
 
 /**
@@ -70,7 +70,7 @@ inline void store_dialog_window_data(HWND hwnd, const U& data)
 template<typename T, typename U>
 inline U fetch_user_window_data(HWND hwnd)
 {
-    return winapi::gui::window_field<T, U>(hwnd, GWLP_USERDATA);
+    return washer::gui::window_field<T, U>(hwnd, GWLP_USERDATA);
 }
 
 /**
@@ -87,7 +87,7 @@ inline U fetch_user_window_data(HWND hwnd)
 template<typename T, typename U>
 inline U fetch_dialog_window_data(HWND hwnd)
 {
-    return winapi::gui::window_field<T, U>(hwnd, DWLP_USER);
+    return washer::gui::window_field<T, U>(hwnd, DWLP_USER);
 }
 
 }} // namespace ezel::detail

@@ -34,12 +34,12 @@
 #include <test/common_boost/helpers.hpp> // BOOST_CHECK_OK
 #include <test/common_boost/SwishPidlFixture.hpp> // swish_pidl
 
-#include <winapi/gui/menu/button/string_button_description.hpp>
-#include <winapi/gui/menu/item/command_item.hpp>
-#include <winapi/gui/menu/item/separator_item.hpp>
-#include <winapi/gui/menu/item/sub_menu_item.hpp>
-#include <winapi/gui/menu/item/sub_menu_item_description.hpp>
-#include <winapi/gui/menu/menu.hpp>
+#include <washer/gui/menu/button/string_button_description.hpp>
+#include <washer/gui/menu/item/command_item.hpp>
+#include <washer/gui/menu/item/separator_item.hpp>
+#include <washer/gui/menu/item/sub_menu_item.hpp>
+#include <washer/gui/menu/item/sub_menu_item_description.hpp>
+#include <washer/gui/menu/menu.hpp>
 
 #include <comet/ptr.h> // com_ptr
 
@@ -52,7 +52,7 @@ using test::SwishPidlFixture;
 
 using swish::host_folder::CViewCallback;
 
-using namespace winapi::gui::menu;
+using namespace washer::gui::menu;
 
 using comet::com_ptr;
 

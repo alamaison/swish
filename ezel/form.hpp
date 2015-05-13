@@ -38,9 +38,9 @@
 #include <ezel/detail/window_proc.hpp> // dialog_proc
 #include <ezel/window.hpp> // window
 
-#include <winapi/dynamic_link.hpp> // module_handle
-#include <winapi/gui/commands.hpp> // command
-#include <winapi/gui/messages.hpp> // message
+#include <washer/dynamic_link.hpp> // module_handle
+#include <washer/gui/commands.hpp> // command
+#include <washer/gui/messages.hpp> // message
 
 #include <boost/bind.hpp> // bind
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
@@ -56,7 +56,7 @@
 #include <string>
 #include <vector>
 
-#include <Winuser.h> // DialogBoxIndirectParam
+#include <Windows.h> // DialogBoxIndirectParam
 
 namespace ezel {
 
@@ -98,7 +98,7 @@ namespace detail {
 
         void show(HWND hwnd_owner)
         {
-            std::vector<byte> buffer = build_dialog_template_in_memory(
+            std::vector<unsigned char> buffer = build_dialog_template_in_memory(
                 L"MS Shell Dlg", 8, text(), left(), top(), width(), height(),
                 m_controls);
 
@@ -106,14 +106,14 @@ namespace detail {
             try
             {
                 INT_PTR rc = ::DialogBoxIndirectParamW(
-                    winapi::module_handle(),
+                    washer::module_handle(),
                     (buffer.empty()) ?
                         NULL : reinterpret_cast<DLGTEMPLATE*>(&buffer[0]),
                     hwnd_owner, dialog_creation_handler,
                     reinterpret_cast<LPARAM>(this));
                 if (rc < 1)
                     BOOST_THROW_EXCEPTION(
-                        boost::enable_error_info(winapi::last_error()) << 
+                        boost::enable_error_info(washer::last_error()) << 
                         boost::errinfo_api_function(
                             "DialogBoxIndirectParamW"));
             }
@@ -130,7 +130,7 @@ namespace detail {
             // return value of DialogBoxIndirectParam
             if(!::EndDialog(hwnd(), 1))
                 BOOST_THROW_EXCEPTION(
-                    boost::enable_error_info(winapi::last_error()) << 
+                    boost::enable_error_info(washer::last_error()) << 
                     boost::errinfo_api_function("EndDialog"));
         }
 
@@ -277,7 +277,7 @@ namespace detail {
         catch (const std::exception& e)
         {
             (void)e; /* ignore */
-            winapi::trace("threw when trying to link to dialog window: %s")
+            washer::trace("threw when trying to link to dialog window: %s")
                 % e.what();
             return FALSE;
         }

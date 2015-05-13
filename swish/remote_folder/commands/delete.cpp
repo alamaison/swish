@@ -30,7 +30,7 @@
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t, pidl_cast
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t, pidl_cast
 
 #include <boost/locale.hpp> // translate
 #include <boost/format.hpp> // wformat
@@ -46,9 +46,9 @@ using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_cast;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_cast;
 
 using comet::com_ptr;
 
@@ -127,7 +127,7 @@ namespace {
             message += L"' and all of its contents?";
         }
 
-        int ret = ::IsolationAwareMessageBox(
+        int ret = ::IsolationAwareMessageBoxW(
             hwnd_view, message.c_str(),
             (is_folder) ? L"Confirm Folder Delete" : L"Confirm File Delete", 
             MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
@@ -154,7 +154,7 @@ namespace {
                 L"Are you sure you want to permanently delete these %d items?")
                 % item_count);
 
-        int ret = ::IsolationAwareMessageBox(
+        int ret = ::IsolationAwareMessageBoxW(
             hwnd_view, message.c_str(), L"Confirm Multiple Item Delete",
             MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
 

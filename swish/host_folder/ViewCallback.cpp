@@ -29,11 +29,11 @@
 
 #include "swish/host_folder/commands/commands.hpp" // host commands
 #include "swish/utils.hpp" // Utf8StringToWideString
-#include "swish/version/version.hpp" // release_version
+#include "swish/versions/version.hpp" // release_version
 
-#include <winapi/error.hpp> // last_error
-#include <winapi/shell/services.hpp> // shell_browser, shell_view
-#include <winapi/window/window.hpp>
+#include <washer/error.hpp> // last_error
+#include <washer/shell/services.hpp> // shell_browser, shell_view
+#include <washer/window/window.hpp>
 
 #include <boost/exception/errinfo_api_function.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
@@ -51,12 +51,12 @@ using swish::utils::Utf8StringToWideString;
 
 using comet::com_ptr;
 
-using winapi::last_error;
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::shell_browser;
-using winapi::shell::shell_view;;
-using winapi::window::window;
-using winapi::window::window_handle;
+using washer::last_error;
+using washer::shell::pidl::apidl_t;
+using washer::shell::shell_browser;
+using washer::shell::shell_view;;
+using washer::window::window;
+using washer::window::window_handle;
 
 using boost::enable_error_info;
 using boost::errinfo_api_function;

@@ -34,7 +34,7 @@
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 #include "swish/shell_folder/SftpDataObject.h"
 
-#include <winapi/shell/pidl.hpp> // cpidl_t, apidl_t
+#include <washer/shell/pidl.hpp> // cpidl_t, apidl_t
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/ptr.h> // com_ptr
@@ -49,8 +49,8 @@ using swish::remote_folder::remote_itemid_view;
 
 using boost::shared_ptr;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
 
 using comet::bstr_t;
 using comet::com_ptr;

@@ -25,8 +25,8 @@
                                                // create_remote_itemid
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 
-#include <winapi/shell/pidl_iterator.hpp> // pidl_iterator, find_host_itemid
-#include <winapi/trace.hpp> // trace
+#include <washer/shell/pidl_iterator.hpp> // pidl_iterator, find_host_itemid
+#include <washer/trace.hpp> // trace
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
@@ -58,11 +58,11 @@ using swish::host_folder::create_host_itemid;
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_iterator;
-using winapi::shell::pidl::raw_pidl_iterator;
-using winapi::trace;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_iterator;
+using washer::shell::pidl::raw_pidl_iterator;
+using washer::trace;
 
 using comet::auto_attach;
 using comet::bstr_t;

@@ -1,7 +1,7 @@
 /**
     @file
 
-    FILEDESCRIPTOR clipboard format wrapper.
+    FILEDESCRIPTORW clipboard format wrapper.
 
     @if license
 
@@ -44,6 +44,7 @@
 
 #include <stdexcept> // out_of_range, length_error, logic_error
 
+#include <shlobj.h> // FILEDESCRIPTOR, FILEGROUPDESCRIPTOR
 #include <Windows.h> // HGLOBAL, GetLastError
 
 #pragma warning(push)
@@ -101,17 +102,17 @@ public:
 };
 
 /**
- * C++ interface to the FILEDESCRIPTOR structure.
+ * C++ interface to the FILEDESCRIPTORW structure.
  */
-class Descriptor : private FILEDESCRIPTOR
+class Descriptor : private FILEDESCRIPTORW
 {
 public:
     
-    Descriptor() : FILEDESCRIPTOR() {}
-    Descriptor(const FILEDESCRIPTOR& d) : FILEDESCRIPTOR(d) {}
+    Descriptor() : FILEDESCRIPTORW() {}
+    Descriptor(const FILEDESCRIPTORW& d) : FILEDESCRIPTORW(d) {}
     // default copy, assign and destruct OK
 
-    const FILEDESCRIPTOR& get() const
+    const FILEDESCRIPTORW& get() const
     {
         return *this;
     }
@@ -297,10 +298,10 @@ private:
     }
 };
 
-BOOST_STATIC_ASSERT(sizeof(Descriptor) == sizeof(FILEDESCRIPTOR));
+BOOST_STATIC_ASSERT(sizeof(Descriptor) == sizeof(FILEDESCRIPTORW));
 
 /**
- * Wrapper around the FILEGROUPDESCRIPTOR structure.
+ * Wrapper around the FILEGROUPDESCRIPTORW structure.
  *
  * This wrapper adds construction as well as access to the FILEDESCRIPTORS
  * contained within it.
@@ -310,14 +311,14 @@ class FileGroupDescriptor
 public:
 
     /**
-     * Create wrapper around an existing FILEGROUPDESCRIPTOR in global memory.
+     * Create wrapper around an existing FILEGROUPDESCRIPTORW in global memory.
      */
     FileGroupDescriptor(HGLOBAL hglobal) : m_lock(hglobal) {}
 
     // default copy, assign and destruct OK
 
     /**
-     * Number of FILEDESCRIPTORS in the FILEGROUPDESCRIPTOR.
+     * Number of FILEDESCRIPTORS in the FILEGROUPDESCRIPTORW.
      */
     size_t size() const
     {
@@ -325,28 +326,28 @@ public:
     }
 
     /**
-     * Return a reference to the ith FILEDESCRIPTOR as a Descriptor.
+     * Return a reference to the ith FILEDESCRIPTORW as a Descriptor.
      */
     Descriptor& operator[](size_t i) const
     {
         if (i >= size())
             BOOST_THROW_EXCEPTION(
                 std::out_of_range(
-                    "Attempt to access FILEDESCRIPTOR out of range"));
+                    "Attempt to access FILEDESCRIPTORW out of range"));
 
         return *static_cast<Descriptor*>(&m_lock.get()->fgd[i]);
     }
 
 private:
-    GlobalLocker<FILEGROUPDESCRIPTOR> m_lock;
+    GlobalLocker<FILEGROUPDESCRIPTORW> m_lock;
 };
 
 /**
- * Allocate a FILEGROUPDESCRIPTOR in global memory holding the given 
+ * Allocate a FILEGROUPDESCRIPTORW in global memory holding the given 
  * descriptors.
  *
  * The descriptor are give as a [first, last) range who element type is
- * copyable to FILEDESCRIPTOR.
+ * copyable to FILEDESCRIPTORW.
  *
  * @returns  HGLOBAL handle to the allocated global memory.  Caller must free.
  */
@@ -359,7 +360,7 @@ HGLOBAL group_descriptor_from_range(It first, It last)
             std::length_error("Range must have at least one descriptor."));
 
     size_t bytes = 
-        sizeof(FILEGROUPDESCRIPTOR) + (count * sizeof(FILEDESCRIPTOR));
+        sizeof(FILEGROUPDESCRIPTORW ) + (count * sizeof(FILEDESCRIPTORW));
 
     HGLOBAL hglobal = ::GlobalAlloc(GMEM_MOVEABLE, bytes);
     if (!hglobal)
@@ -369,7 +370,7 @@ HGLOBAL group_descriptor_from_range(It first, It last)
 
     try
     {
-        GlobalLocker<FILEGROUPDESCRIPTOR> lock(hglobal);
+        GlobalLocker<FILEGROUPDESCRIPTORW> lock(hglobal);
         lock.get()->cItems = boost::numeric_cast<UINT>(count);
         std::copy(first, last, &lock.get()->fgd[0]);
         // last arg above: decay array to stop false +ive by checked iterator

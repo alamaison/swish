@@ -31,10 +31,10 @@
 
 #include "About.hpp"
 
-#include "swish/version/version.hpp" // release_version
+#include "swish/versions/version.hpp" // release_version
 
-#include <winapi/gui/message_box.hpp>
-#include <winapi/dynamic_link.hpp> // module_path
+#include <washer/gui/message_box.hpp>
+#include <washer/dynamic_link.hpp> // module_path
 
 #include <comet/uuid_fwd.h> // uuid_t
 
@@ -47,9 +47,9 @@
 
 using swish::nse::Command;
 
-using namespace winapi::gui::message_box;
-using winapi::module_path;
-using winapi::shell::pidl::apidl_t;
+using namespace washer::gui::message_box;
+using washer::module_path;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_ptr;
 using comet::uuid_t;

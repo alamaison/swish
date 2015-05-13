@@ -42,7 +42,7 @@
 #include <ssh/session.hpp>
 #include <ssh/filesystem.hpp> // sftp_filesystem
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
@@ -63,9 +63,6 @@
 #include <stdexcept> // logic_error
 #include <string>
 #include <vector>
-
-#include <libssh2.h>
-#include <libssh2_sftp.h>
 
 using swish::connection::authenticated_session;
 using swish::connection::running_session;

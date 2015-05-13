@@ -48,7 +48,7 @@ public:
 
     PidlCopyPlan(
         const swish::shell_folder::data_object::PidlFormat& source,
-        const winapi::shell::pidl::apidl_t& destination);
+        const washer::shell::pidl::apidl_t& destination);
 
 public: // Plan
 

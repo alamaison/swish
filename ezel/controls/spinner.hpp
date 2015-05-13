@@ -31,12 +31,14 @@
 #include <ezel/control.hpp> // control base class
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/message.hpp> // send_message
+#include <washer/message.hpp> // send_message
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/cstdint.hpp> // int32_t
 
 #include <string>
+
+#include <Commctrl.h> // UDS_*, UDM_*
 
 namespace ezel {
 namespace controls {
@@ -76,7 +78,7 @@ public:
         }
         else
         {
-            winapi::send_message<wchar_t>(
+            washer::send_message<wchar_t>(
                 hwnd(), UDM_SETRANGE32, minimum, maximum);
         }
     }
@@ -86,7 +88,7 @@ public:
         if (!is_active())
             m_value = v;
         else
-            return winapi::send_message_return<wchar_t, boost::int32_t>(
+            return washer::send_message_return<wchar_t, boost::int32_t>(
                 hwnd(), UDM_SETPOS32, 0, v);
     }
 
@@ -99,8 +101,8 @@ protected:
     {
         super::push();
 
-        winapi::send_message<wchar_t>(hwnd(), UDM_SETRANGE32, m_min, m_max);
-        winapi::send_message<wchar_t>(hwnd(), UDM_SETPOS32, 0, m_value);
+        washer::send_message<wchar_t>(hwnd(), UDM_SETRANGE32, m_min, m_max);
+        washer::send_message<wchar_t>(hwnd(), UDM_SETPOS32, 0, m_value);
     }
 
 private:

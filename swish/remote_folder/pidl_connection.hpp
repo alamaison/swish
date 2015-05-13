@@ -32,7 +32,7 @@
 #include "swish/connection/connection_spec.hpp"
 #include "swish/provider/sftp_provider.hpp"
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h>
 
@@ -47,7 +47,7 @@ namespace remote_folder {
  * Converts a host PIDL into a connection specification.
  */
 swish::connection::connection_spec connection_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl);
+    const washer::shell::pidl::apidl_t& pidl);
 
 /**
  * Creates lazy-connecting provider primed to connect for given PIDL.
@@ -56,7 +56,7 @@ swish::connection::connection_spec connection_from_pidl(
  * folder's PIDL, @a pidl, if connection is required.
  */
 boost::shared_ptr<swish::provider::sftp_provider> provider_from_pidl(
-    const winapi::shell::pidl::apidl_t& pidl,
+    const washer::shell::pidl::apidl_t& pidl,
     comet::com_ptr<ISftpConsumer> consumer,
     const std::string& task_name);
 

@@ -28,7 +28,7 @@
 #define EZEL_MESSAGE_DISPATCH_HPP
 #pragma once
 
-#include <winapi/gui/messages.hpp> // message
+#include <washer/gui/messages.hpp> // message
 
 #ifndef BOOST_MPL_LIMIT_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
@@ -159,6 +159,6 @@ public:
     >::type messages;
 };
 
-}} // namespace winapi::gui
+}} // namespace washer::gui
 
 #endif

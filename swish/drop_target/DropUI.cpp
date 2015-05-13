@@ -29,11 +29,11 @@
 #include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/trace.hpp" // trace
 
-#include <winapi/com/ole_window.hpp> // window_from_ole_window
-#include <winapi/gui/message_box.hpp> // message_box
-#include <winapi/gui/progress.hpp>
-#include <winapi/window/window.hpp>
-#include <winapi/window/window_handle.hpp>
+#include <washer/com/ole_window.hpp> // window_from_ole_window
+#include <washer/gui/message_box.hpp> // message_box
+#include <washer/gui/progress.hpp>
+#include <washer/window/window.hpp>
+#include <washer/window/window_handle.hpp>
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
@@ -49,11 +49,11 @@
 using swish::frontend::announce_last_exception;
 using swish::tracing::trace;
 
-using winapi::com::window_from_ole_window;
-using namespace winapi::gui::message_box;
-using winapi::gui::progress;
-using winapi::window::window;
-using winapi::window::window_handle;
+using washer::com::window_from_ole_window;
+using namespace washer::gui::message_box;
+using washer::gui::progress;
+using washer::window::window;
+using washer::window::window_handle;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -208,7 +208,7 @@ namespace {
                 owner, title,
                 progress::modality::non_modal,
                 progress::time_estimation::automatic_time_estimate,
-                progress::bar_type::progress,
+                progress::bar_type::finite,
                 progress::minimisable::yes,
                 progress::cancellability::cancellable);
         }

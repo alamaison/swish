@@ -32,8 +32,8 @@
 
 #include <comet/datetime.h> // datetime_t
 
-#include <winapi/shell/pidl.hpp> // pidl_t
-#include <winapi/shell/pidl_iterator.hpp> // raw_pidl_iterator
+#include <washer/shell/pidl.hpp> // pidl_t
+#include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
@@ -107,7 +107,7 @@ public:
     // invalidating the PIDL we've stored a reference to.
     template<typename T, typename Alloc>
     explicit remote_itemid_view(
-        const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
+        const washer::shell::pidl::basic_pidl<T, Alloc>& pidl)
         : m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl.get()))
     {}
 
@@ -231,7 +231,7 @@ namespace detail {
  * @param date_modified  Date that file was last modified.
  * @param date_accessed  Date that file was last accessed.
  */
-inline winapi::shell::pidl::cpidl_t create_remote_itemid(
+inline washer::shell::pidl::cpidl_t create_remote_itemid(
     const std::wstring& filename, bool is_folder, bool is_link,
     const std::wstring& owner, const std::wstring& group, ULONG owner_id,
     ULONG group_id, DWORD permissions, ULONGLONG size,
@@ -271,7 +271,7 @@ inline winapi::shell::pidl::cpidl_t create_remote_itemid(
 
     assert(item.terminator.cb == 0);
 
-    return winapi::shell::pidl::cpidl_t(
+    return washer::shell::pidl::cpidl_t(
         reinterpret_cast<PCITEMID_CHILD>(&item));
 }
 
@@ -283,13 +283,13 @@ inline winapi::shell::pidl::cpidl_t create_remote_itemid(
  * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
  */
 inline boost::filesystem::wpath path_from_remote_pidl(
-    const winapi::shell::pidl::pidl_t& remote_pidl)
+    const washer::shell::pidl::pidl_t& remote_pidl)
 {
     // Walk over RemoteItemIds and append each filename to form the path
-    winapi::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
+    washer::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
 
     boost::filesystem::wpath path;
-    while (it != winapi::shell::pidl::raw_pidl_iterator())
+    while (it != washer::shell::pidl::raw_pidl_iterator())
     {
         remote_itemid_view itemid(*it);
         if (!itemid.valid())

@@ -26,14 +26,16 @@
 
 #include "bind_best_taskdialog.hpp"
 
-#include <winapi/dynamic_link.hpp> // load_function
+#include "swish/atl.hpp" // required by TaskDialog.h
+
+#include <washer/dynamic_link.hpp> // load_function
 
 #include <TaskDialog.h> // Task98DialogIndirect
 
 #include <exception>
 
-using winapi::gui::task_dialog::tdi_function;
-using winapi::load_function;
+using washer::gui::task_dialog::tdi_function;
+using washer::load_function;
 
 using std::exception;
 

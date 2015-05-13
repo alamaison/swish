@@ -37,8 +37,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
-#include <winapi/shell/shell.hpp> // stream_from_pidl, bind_to_handler_object
-#include <winapi/shell/shell_item.hpp> // pidl_shell_item
+#include <washer/shell/shell.hpp> // stream_from_pidl, bind_to_handler_object
+#include <washer/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/error.h> // com_error
 
@@ -47,12 +47,12 @@
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
 
-using winapi::shell::bind_to_handler_object;
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl_shell_item;
-using winapi::shell::stream_from_pidl;
+using washer::shell::bind_to_handler_object;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl_shell_item;
+using washer::shell::stream_from_pidl;
 
 using comet::com_error;
 using comet::com_ptr;

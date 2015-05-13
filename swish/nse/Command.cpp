@@ -28,7 +28,7 @@
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_ptr;
 using comet::uuid_t;

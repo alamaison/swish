@@ -30,7 +30,7 @@
 
 #include <ezel/detail/hwnd_linking.hpp> // store_user_window_data
 
-#include <winapi/trace.hpp> // trace
+#include <washer/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
 #include <boost/noncopyable.hpp> // noncopyable
@@ -79,7 +79,7 @@ public:
         }
         catch (const std::exception& e)
         {
-            winapi::trace("Unlinking window threw exception: %s")
+            washer::trace("Unlinking window threw exception: %s")
                 % boost::diagnostic_information(e);
         }
     }

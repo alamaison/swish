@@ -35,7 +35,7 @@
 #include "test/common_boost/MockConsumer.hpp" // MockConsumer
 #include "test/common_boost/MockProvider.hpp" // MockProvider
 
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/enum_iterator.h> // enum_iterator
@@ -55,8 +55,8 @@ using swish::host_folder::create_host_itemid;
 using swish::remote_folder::create_remote_itemid;
 using swish::remote_folder::remote_itemid_view;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
 
 using comet::com_error;
 using comet::com_ptr;

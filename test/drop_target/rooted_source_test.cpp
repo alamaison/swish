@@ -29,9 +29,9 @@
 #include <test/common_boost/helpers.hpp> // wchar_t ostream
 #include <test/common_boost/fixtures.hpp> // SandboxFixture
 
-#include <winapi/shell/shell.hpp> // pidl_from_parsing_name
-#include <winapi/shell/shell_item.hpp> // pidl_shell_item
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/shell.hpp> // pidl_from_parsing_name
+#include <washer/shell/shell_item.hpp> // pidl_shell_item
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/filesystem/fstream.hpp> // ofstream
@@ -41,11 +41,11 @@ using swish::drop_target::RootedSource;
 
 using test::SandboxFixture;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl_from_parsing_name;
-using winapi::shell::pidl_shell_item;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl_from_parsing_name;
+using washer::shell::pidl_shell_item;
 
 using boost::filesystem::wofstream;
 using boost::filesystem::wpath;

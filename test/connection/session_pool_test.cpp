@@ -194,22 +194,34 @@ private:
                     session_pool().pooled_session(spec, m_fixture->Consumer());
 
                 // However, by this point it *must* be running
-                BOOST_CHECK(session_pool().has_session(spec));
+                if (!session_pool().has_session(spec))
+					BOOST_THROW_EXCEPTION(std::exception("Test failed: no session"));
 
-                BOOST_CHECK(m_fixture->alive(first_session));
+                if(!m_fixture->alive(first_session))
+					BOOST_THROW_EXCEPTION(
+					    std::exception("Test failed: first session is dead"));
 
                 authenticated_session& second_session = 
                     session_pool().pooled_session(spec, m_fixture->Consumer());
 
-                BOOST_CHECK(session_pool().has_session(spec));
+                if(!session_pool().has_session(spec))
+					BOOST_THROW_EXCEPTION(std::exception("Test failed: no session"));
 
-                BOOST_CHECK(m_fixture->alive(second_session));
+                if(!m_fixture->alive(second_session))
+					BOOST_THROW_EXCEPTION(
+					    std::exception("Test failed: second session is dead"));
 
-                BOOST_CHECK(&second_session == &first_session);
+                if(&second_session != &first_session)
+					BOOST_THROW_EXCEPTION(
+					    std::exception("Test failed: session was not reused"));
             }
         }
         catch (const std::exception& e)
         {
+			// Boost.Test is not threadsafe so we can't use its functions
+			// in the main thread body.  But it's safe enough to use one here
+			// because this only excutes if something fails, which is unlikely
+			// to happen on multiple threads at once.
             BOOST_MESSAGE(boost::diagnostic_information(e));
         }
 

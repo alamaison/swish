@@ -32,7 +32,7 @@
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -52,7 +52,7 @@ using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using test::ComFixture;
 using test::SandboxFixture;

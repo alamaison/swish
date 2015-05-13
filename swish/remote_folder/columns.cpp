@@ -26,7 +26,7 @@
 
 #include "columns.hpp"
 
-#include <winapi/shell/format.hpp> // format_date_time,
+#include <washer/shell/format.hpp> // format_date_time,
                                    // format_filesize_kilobytes
 #pragma warning(push)
 #pragma warning(disable: 4510 4610) // Cannot generate default constructor
@@ -36,11 +36,12 @@
 
 #include <string>
 
+#include <Commctrl.h> // LVCFMT_*
 #include <Propkey.h> // PKEY_ *
 
-using winapi::shell::format_date_time;
-using winapi::shell::format_filesize_kilobytes;
-using winapi::shell::property_key;
+using washer::shell::format_date_time;
+using washer::shell::format_filesize_kilobytes;
+using washer::shell::property_key;
 
 using comet::variant_t;
 

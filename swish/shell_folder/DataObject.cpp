@@ -26,7 +26,7 @@
 
 #include "DataObject.h"
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error_from_interface
 #include <comet/ptr.h> // com_ptr
@@ -136,7 +136,7 @@ STDMETHODIMP CDataObject::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
                 BOOST_THROW_EXCEPTION(com_error_from_interface(m_inner, hr));
         }
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
     return hr;
 }
 
@@ -201,7 +201,7 @@ STDMETHODIMP CDataObject::SetData(
                 BOOST_THROW_EXCEPTION(com_error_from_interface(m_inner, hr));
         }
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
     return hr;
 }
 

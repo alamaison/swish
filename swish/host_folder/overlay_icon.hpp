@@ -32,7 +32,7 @@
 #include "swish/host_folder/host_itemid_connection.hpp"
                                                   // connection_from_host_itemid
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <shlobj.h> // SHGetIconOverlayIndex
 
@@ -42,7 +42,7 @@ namespace host_folder {
 class overlay_icon
 {
 public:
-    overlay_icon(const winapi::shell::pidl::cpidl_t& item)
+    overlay_icon(const washer::shell::pidl::cpidl_t& item)
         :
     m_connection(connection_from_host_itemid(host_itemid_view(item)))
     {}

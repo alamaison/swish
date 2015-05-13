@@ -30,7 +30,7 @@
 
 #include "swish/nse/Command.hpp" // Command
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -43,7 +43,7 @@ namespace commands {
 class CloseSession : public swish::nse::Command
 {
 public:
-    CloseSession(HWND hwnd, const winapi::shell::pidl::apidl_t& folder_pidl);
+    CloseSession(HWND hwnd, const washer::shell::pidl::apidl_t& folder_pidl);
 
     virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
@@ -55,7 +55,7 @@ public:
 
 private:
     HWND m_hwnd;
-    winapi::shell::pidl::apidl_t m_folder_pidl;
+    washer::shell::pidl::apidl_t m_folder_pidl;
 };
 
 }}} // namespace swish::host_folder::commands

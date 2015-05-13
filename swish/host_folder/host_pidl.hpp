@@ -30,8 +30,8 @@
 
 #include "swish/remotelimits.h"  // Text field limits
 
-#include <winapi/shell/pidl.hpp> // pidl_t, apidl_t, cpidl_t
-#include <winapi/shell/pidl_iterator.hpp> // raw_pidl_iterator
+#include <washer/shell/pidl.hpp> // pidl_t, apidl_t, cpidl_t
+#include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
 #include <boost/filesystem/path.hpp> // wpath
 #include <boost/format.hpp> // wformat
@@ -99,7 +99,7 @@ public:
     // invalidating the PIDL we've stored a reference to.
     template<typename T, typename Alloc>
     explicit host_itemid_view(
-        const winapi::shell::pidl::basic_pidl<T, Alloc>& pidl)
+        const washer::shell::pidl::basic_pidl<T, Alloc>& pidl)
         : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl.get())) {}
 
     explicit host_itemid_view(PCUIDLIST_RELATIVE pidl)
@@ -156,7 +156,7 @@ private:
 namespace detail {
     struct is_valid_host_item
     {
-        bool operator()(const winapi::shell::pidl::pidl_t& pidl)
+        bool operator()(const washer::shell::pidl::pidl_t& pidl)
         {
             return host_itemid_view(pidl).valid();
         }
@@ -173,15 +173,15 @@ namespace detail {
  *          original PIDL.
  * @throws if no host ITEMID is found in the PIDL.
  */
-inline winapi::shell::pidl::raw_pidl_iterator find_host_itemid(
+inline washer::shell::pidl::raw_pidl_iterator find_host_itemid(
     PCIDLIST_ABSOLUTE pidl)
 {
-    winapi::shell::pidl::raw_pidl_iterator begin(pidl);
-    winapi::shell::pidl::raw_pidl_iterator end;
+    washer::shell::pidl::raw_pidl_iterator begin(pidl);
+    washer::shell::pidl::raw_pidl_iterator end;
     
     // Search along pidl until we find one that matches our fingerprint or
     // we run off the end
-    winapi::shell::pidl::raw_pidl_iterator pos = std::find_if(
+    washer::shell::pidl::raw_pidl_iterator pos = std::find_if(
         begin, end, detail::is_valid_host_item());
     if (pos != end)
         return pos;
@@ -190,8 +190,8 @@ inline winapi::shell::pidl::raw_pidl_iterator find_host_itemid(
             std::runtime_error("PIDL doesn't contain host ITEMID"));
 }
 
-inline winapi::shell::pidl::raw_pidl_iterator find_host_itemid(
-    const winapi::shell::pidl::apidl_t& pidl)
+inline washer::shell::pidl::raw_pidl_iterator find_host_itemid(
+    const washer::shell::pidl::apidl_t& pidl)
 {
     return swish::host_folder::find_host_itemid(pidl.get());
 }
@@ -211,7 +211,7 @@ namespace detail {
 /**
  * Construct a new host folder PIDL with the fields initialised.
  */
-inline winapi::shell::pidl::cpidl_t create_host_itemid(
+inline washer::shell::pidl::cpidl_t create_host_itemid(
     const std::wstring& host, const std::wstring& user, 
     const boost::filesystem::wpath& path, int port,
     const std::wstring& label=std::wstring())
@@ -243,7 +243,7 @@ inline winapi::shell::pidl::cpidl_t create_host_itemid(
 
     assert(item.terminator.cb == 0);
 
-    return winapi::shell::pidl::cpidl_t(
+    return washer::shell::pidl::cpidl_t(
         reinterpret_cast<PCITEMID_CHILD>(&item));
 }
     
@@ -256,7 +256,7 @@ inline winapi::shell::pidl::cpidl_t create_host_itemid(
  *     sftp://username\@hostname/path
  */
 inline std::wstring url_from_host_itemid(
-    const winapi::shell::pidl::cpidl_t itemid, bool canonical)
+    const washer::shell::pidl::cpidl_t itemid, bool canonical)
 {
     host_itemid_view host_pidl(itemid);
 
