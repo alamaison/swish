@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-<channel>
+  <channel>
     <title>Swish updates</title>
     <link>http://www.swish-sftp.org/autoupdate/appcast.xml</link>
     <description>Appcast for Swish updates.</description>
     <language>en</language>
     <item>
-      <title>Version 0.8.2</title>
-      <sparkle:releaseNotesLink>http://www.swish-sftp.org/autoupdate/NEWS-0.8.2.html</sparkle:releaseNotesLink>
-      <pubDate>07 March 2014</pubDate>
-      <enclosure url="http://sourceforge.net/projects/swish/files/swish/swish-0.8.2/swish-0.8.2.exe"
-                 sparkle:version="0.8.2"
+      <title>Version @swish_VERSION@</title>
+      <sparkle:releaseNotesLink>
+	http://www.swish-sftp.org/autoupdate/NEWS-@swish_VERSION@.html
+      </sparkle:releaseNotesLink>
+      <pubDate>@PUBLICATION_DATE@</pubDate>
+      <enclosure url="@INSTALLER_URL@"
+                 sparkle:version="@swish_VERSION@"
                  type="application/octet-stream"/>
     </item>
   </channel>

@@ -29,7 +29,7 @@ HunterGate(
 
 ################################################################################
 
-project(swish)
+project(swish VERSION 0.8.2)
 
 #include(max_warnings)
 
@@ -64,3 +64,12 @@ if(BUILD_TESTING)
   enable_testing()
   add_subdirectory(test)
 endif()
+
+set(INSTALLER_URL
+  "https://sourceforge.net/projects/swish/files/swish/swish-${swish_VERSION}/swish-${swish_VERSION}.exe")
+string(TIMESTAMP PUBLICATION_DATE UTC)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/appcast.xml.in
+  ${CMAKE_CURRENT_BINARY_DIR}/appcast.xml
+  @ONLY)

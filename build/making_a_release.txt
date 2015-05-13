@@ -1,6 +1,5 @@
 Update version number in:
 - top-level CMakeLists.txt
-- appcast.xml (x5 and date)
 - setup_conf.xml (x4)
 - wix/swish.wxs
 - wix/wix.wixproj
