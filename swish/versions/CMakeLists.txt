@@ -29,8 +29,18 @@ add_custom_target(git_version
   -P ${CMAKE_CURRENT_SOURCE_DIR}/configure_git_version.cmake
   VERBATIM)
 
+set(METADATA_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/metadata.h.in")
+set(METADATA_GENERATED_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/swish/versions/metadata.h")
+
+configure_file(
+  ${METADATA_TEMPLATE}
+  ${METADATA_GENERATED_OUTPUT}
+  @ONLY)
+set_source_files_properties(
+  ${METADATA_GENERATED_OUTPUT} PROPERTIES GENERATED TRUE)
+
 set(SOURCES
-  metadata.h
+  ${METADATA_GENERATED_OUTPUT}
   version.cpp
   version.hpp)
 

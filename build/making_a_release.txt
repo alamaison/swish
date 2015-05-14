@@ -2,7 +2,6 @@ Update version number in:
 - top-level CMakeLists.txt
 - wix/swish.wxs
 - wix/wix.wixproj
-- swish/versions/metadata.h (x1 and copyright date)
 
 Add notable changes to NEWS.
 
