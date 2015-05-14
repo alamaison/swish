@@ -29,9 +29,10 @@ HunterGate(
 
 ################################################################################
 
-project(swish VERSION 0.8.2)
+project(swish VERSION 0.8.3)
 
 set(SWISH_FRIENDLY_NAME "Swish")
+set(SWISH_VENDOR "swish-sftp.org")
 set(SWISH_DESCRIPTION "Easy SFTP for Windows Explorer")
 set(SWISH_COPYRIGHT "Copyright (C) 2006-2015  Alexander Lamaison and contributors")
 
@@ -62,6 +63,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_subdirectory(ezel)
 add_subdirectory(ssh)
 add_subdirectory(swish)
+add_subdirectory(po)
 
 option(BUILD_TESTING "Build test suite" ON)
 if(BUILD_TESTING)
@@ -82,3 +84,36 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/setup_conf.xml.in
   ${CMAKE_CURRENT_BINARY_DIR}/setup_conf.xml
   @ONLY)
+
+file(DOWNLOAD "http://the.earth.li/~sgtatham/putty/0.64/x86/pageant.exe"
+  "${CMAKE_CURRENT_BINARY_DIR}/pageant.exe"
+  SHOW_PROGRESS
+  EXPECTED_HASH SHA1=4f7ec7e53b7dd557603c2447fd177d85f14006ad)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/pageant.exe" NEWS LICENSE.txt README
+  DESTINATION .)
+
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_GENERATOR WIX)
+set(CPACK_PACKAGE_NAME "${SWISH_FRIENDLY_NAME}")
+set(CPACK_PACKAGE_VENDOR "${SWISH_VENDOR}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${SWISH_DESCRIPTION}")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
+
+set(CPACK_WIX_UPGRADE_GUID "97CF376F-FFDE-472A-946B-E3F5D45229DA")
+set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cpack_wix_patch.xml")
+
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${SWISH_FRIENDLY_NAME}")
+set(CMAKE_WIX_PROPERTY_ARPCONTACT swish@lammy.co.uk)
+set(CMAKE_WIX_PROPERTY_ARPHELPLINK http://www.swish-sftp.org)
+set(CMAKE_WIX_PROPERTY_ARPURLINFOABOUT http://www.swish-sftp.org)
+set(CMAKE_WIX_PROPERTY_ARPURLUPDATEINFO http://sourceforge.net/projects/swish/)
+
+#set(CPACK_WIX_UI_REF WixUI_Minimal)
+
+include(CPack)
