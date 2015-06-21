@@ -616,6 +616,7 @@ BOOST_AUTO_TEST_CASE( remove_non_empty_dir )
     create_directory(target / "bob");
 
     BOOST_CHECK_THROW(filesystem().remove(to_remote_path(target)), system_error);
+    BOOST_CHECK(exists(target));
 }
 
 BOOST_AUTO_TEST_CASE( remove_link )
