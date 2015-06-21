@@ -51,4 +51,4 @@ set(SOURCES
 add_library(versions ${SOURCES})
 add_dependencies(versions git_version)
 
-target_include_directories(versions PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(versions PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
