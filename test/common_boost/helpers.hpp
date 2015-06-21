@@ -54,7 +54,7 @@ namespace std {
     }
 
     inline std::ostream& operator<<(
-        std::ostream& out, const boost::filesystem::wpath& path)
+        std::ostream& out, const boost::filesystem::path& path)
     {
         out << path.string();
         return out;

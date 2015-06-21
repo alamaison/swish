@@ -33,7 +33,7 @@
 #include <washer/shell/pidl.hpp> // pidl_t, apidl_t, cpidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/format.hpp> // wformat
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
@@ -135,7 +135,7 @@ public:
         return detail::copy_unaligned_string(m_itemid->wszLabel);
     }
 
-    boost::filesystem::wpath path() const
+    boost::filesystem::path path() const
     {
         if (!valid())
             BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
@@ -213,7 +213,7 @@ namespace detail {
  */
 inline washer::shell::pidl::cpidl_t create_host_itemid(
     const std::wstring& host, const std::wstring& user, 
-    const boost::filesystem::wpath& path, int port,
+    const boost::filesystem::path& path, int port,
     const std::wstring& label=std::wstring())
 {
     // We create the item on the stack and then clone it into 
@@ -232,7 +232,7 @@ inline washer::shell::pidl::cpidl_t create_host_itemid(
     user.copy(item.id.wszUser, MAX_USERNAME_LENZ);
     item.id.wszUser[MAX_USERNAME_LENZ - 1] = wchar_t();
 
-    path.string().copy(item.id.wszPath, MAX_PATH_LENZ);
+    path.wstring().copy(item.id.wszPath, MAX_PATH_LENZ);
     item.id.wszPath[MAX_PATH_LENZ - 1] = wchar_t();
 
     label.copy(item.id.wszLabel, MAX_LABEL_LENZ);
@@ -265,13 +265,14 @@ inline std::wstring url_from_host_itemid(
         return str(
             boost::wformat(L"sftp://%s@%s:%u/%s")
             % host_pidl.user() % host_pidl.host() % host_pidl.port()
-            % host_pidl.path());
+            % host_pidl.path().generic_wstring());
     }
     else
     {
         return str(
             boost::wformat(L"sftp://%s@%s/%s")
-            % host_pidl.user() % host_pidl.host() % host_pidl.path());
+            % host_pidl.user() % host_pidl.host()
+            % host_pidl.path().generic_wstring());
     }
 }
 

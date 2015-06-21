@@ -35,7 +35,7 @@
 #include <comet/enum_iterator.h> // enum_iterator
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/filesystem.hpp> // wpath
+#include <boost/filesystem.hpp> // path
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -53,7 +53,7 @@ public:
     comet::com_ptr<IStream> GetFile(
         const washer::shell::pidl::cpidl_t& file, bool writeable);
     comet::com_ptr<IStream> GetFileByPath(
-        const boost::filesystem::wpath& file, bool writeable);
+        const boost::filesystem::path& file, bool writeable);
 
     bool exists(const washer::shell::pidl::cpidl_t& file);
 
@@ -70,7 +70,7 @@ public:
 private:
     boost::shared_ptr<swish::provider::sftp_provider> m_provider;
                                                       ///< Backend data provider
-    boost::filesystem::wpath m_directory; ///< Absolute path to this directory.
+    boost::filesystem::path m_directory; ///< Absolute path to this directory.
     const washer::shell::pidl::apidl_t m_directory_pidl;
                                  ///< Absolute PIDL to this directory.
 };

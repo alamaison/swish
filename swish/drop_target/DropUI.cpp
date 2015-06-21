@@ -58,7 +58,7 @@ using washer::window::window_handle;
 using comet::com_error;
 using comet::com_ptr;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::locale::translate;
 using boost::locale::wformat;
 using boost::noncopyable;
@@ -243,7 +243,7 @@ DropUI::DropUI(const optional< window<wchar_t> >& owner) : m_owner(owner) {}
 /**
  * Does user give permission to overwrite remote target file?
  */
-bool DropUI::can_overwrite(const wpath& target)
+bool DropUI::can_overwrite(const path& target)
 {
     if (!m_owner)
         return false;

@@ -368,7 +368,7 @@ namespace detail {
                 }
                 catch (boost::exception& e)
                 {
-                    e << boost::errinfo_file_name(open_path.file_string());
+                    e << boost::errinfo_file_name(open_path.string());
                     throw;
                 }
 

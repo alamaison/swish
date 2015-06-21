@@ -72,7 +72,7 @@ using washer::shell::pidl_shell_item;
 
 using comet::com_ptr;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::filesystem::ifstream;
 using boost::filesystem::ofstream;
 using boost::numeric_cast;
@@ -102,9 +102,9 @@ namespace { // private
     {
     public:
 
-        vector<wpath> make_test_files(bool readonly=false)
+        vector<path> make_test_files(bool readonly=false)
         {
-            vector<wpath> files;
+            vector<path> files;
             files.push_back(NewFileInSandbox());
             files.push_back(NewFileInSandbox());
 
@@ -118,10 +118,10 @@ namespace { // private
 
             if (readonly)
             {
-                if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
+                if (_wchmod(files.at(0).wstring().c_str(), _S_IREAD) != 0)
                     BOOST_THROW_EXCEPTION(
                         system_error(errno, get_system_category()));
-                if (_wchmod(files.at(0).string().c_str(), _S_IREAD) != 0)
+                if (_wchmod(files.at(0).wstring().c_str(), _S_IREAD) != 0)
                     BOOST_THROW_EXCEPTION(
                         system_error(errno, get_system_category()));
             }
@@ -155,7 +155,7 @@ namespace { // private
      * Check that the contents of a file and a stream are the same
      */
     predicate_result file_stream_equivalence(
-        const wpath& file, const com_ptr<IStream>& stream)
+        const path& file, const com_ptr<IStream>& stream)
     {
         // Read in from file
         ifstream in_stream(file);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE( hdrop )
 }
 
 void do_filedescriptor_test(
-    const com_ptr<IDataObject>& data_object, const vector<wpath>& files)
+    const com_ptr<IDataObject>& data_object, const vector<path>& files)
 {
     FORMATETC fetc = {
         CF_FILEDESCRIPTORW, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
@@ -271,7 +271,7 @@ void do_filedescriptor_test(
 }
 
 void do_filecontents_test(
-    const com_ptr<IDataObject>& data_object, const vector<wpath>& files,
+    const com_ptr<IDataObject>& data_object, const vector<path>& files,
     size_t index)
 {
     FORMATETC fetc = {
@@ -293,7 +293,7 @@ void do_filecontents_test(
  */
 BOOST_AUTO_TEST_CASE( file_descriptor )
 {
-    vector<wpath> files = make_test_files();
+    vector<path> files = make_test_files();
 
     com_ptr<IDataObject> data_object = data_object_from_sandbox();
 
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE( file_descriptor )
  */
 BOOST_AUTO_TEST_CASE( file_descriptor_readonly )
 {
-    vector<wpath> files = make_test_files(true);
+    vector<path> files = make_test_files(true);
 
     com_ptr<IDataObject> data_object = data_object_from_sandbox();
 

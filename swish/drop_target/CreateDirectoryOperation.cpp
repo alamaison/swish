@@ -36,7 +36,6 @@ using swish::provider::sftp_provider;
 using washer::shell::pidl::pidl_t;
 using washer::shell::pidl::apidl_t;
 
-using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
 using boost::locale::wformat;

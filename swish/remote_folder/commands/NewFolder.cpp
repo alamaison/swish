@@ -67,7 +67,7 @@ using comet::com_ptr;
 using comet::enum_iterator;
 using comet::uuid_t;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::function;
 using boost::shared_ptr;
 using boost::lexical_cast;
@@ -97,7 +97,7 @@ namespace {
  */
 wstring prefix_if_necessary(
     const wstring& initial_name, shared_ptr<sftp_provider> provider,
-    const wpath& directory)
+    const path& directory)
 {
     wregex new_folder_pattern(
         str(wformat(L"%1%|%1% \\((\\d+)\\)") % initial_name));
@@ -108,7 +108,7 @@ wstring prefix_if_necessary(
     BOOST_FOREACH(
         const sftp_filesystem_item& lt, provider->listing(directory))
     {
-        wstring filename = lt.filename().string();
+        wstring filename = lt.filename().wstring();
         if (regex_match(filename, digit_suffix_match, new_folder_pattern))
         {
             assert(digit_suffix_match.size() == 2); // complete + capture group

@@ -31,7 +31,7 @@
 #include "test/common_boost/PidlFixture.hpp"  // PidlFixture
 
 #include <boost/bind.hpp> // bind;
-#include <boost/filesystem/path.hpp> // wpath, wdirectory_iterator
+#include <boost/filesystem/path.hpp> // path, directory_iterator
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -46,9 +46,10 @@ using test::PidlFixture;
 using comet::com_ptr;
 
 using boost::bind;
-using boost::filesystem::wdirectory_iterator;
-using boost::filesystem::wpath;
+using boost::filesystem::directory_iterator;
+using boost::filesystem::path;
 
+using std::distance;
 using std::wstring;
 
 namespace { // private
@@ -96,7 +97,7 @@ BOOST_AUTO_TEST_CASE( non_execution_properties )
  */
 BOOST_AUTO_TEST_CASE( no_collision_empty )
 {
-    wpath expected = Sandbox() / NEW_FOLDER;
+    path expected = Sandbox() / NEW_FOLDER;
 
     NewFolder command = new_folder_command();
     command(NULL, NULL);
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE( no_collision_empty )
     BOOST_REQUIRE(is_directory(expected));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 1);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 1);
 }
 
 /**
@@ -113,7 +114,7 @@ BOOST_AUTO_TEST_CASE( no_collision_empty )
 BOOST_AUTO_TEST_CASE( no_collision )
 {
     NewFileInSandbox();
-    wpath expected = Sandbox() / NEW_FOLDER;
+    path expected = Sandbox() / NEW_FOLDER;
 
     NewFolder command = new_folder_command();
     command(NULL, NULL);
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE( no_collision )
     BOOST_REQUIRE(is_directory(expected));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 2);
 }
 
 /**
@@ -130,8 +131,8 @@ BOOST_AUTO_TEST_CASE( no_collision )
  */
 BOOST_AUTO_TEST_CASE( basic_collision )
 {
-    wpath collision = Sandbox() / NEW_FOLDER;
-    wpath expected = Sandbox() / (NEW_FOLDER + L" (2)");
+    path collision = Sandbox() / NEW_FOLDER;
+    path expected = Sandbox() / (NEW_FOLDER + L" (2)");
 
     BOOST_REQUIRE(create_directory(collision));
 
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE( basic_collision )
     BOOST_REQUIRE(is_directory(collision));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 2);
 }
 
 /**
@@ -151,8 +152,8 @@ BOOST_AUTO_TEST_CASE( basic_collision )
  */
 BOOST_AUTO_TEST_CASE( non_interfering_collision )
 {
-    wpath collision = Sandbox() / (NEW_FOLDER + L" (2)");
-    wpath expected = Sandbox() / NEW_FOLDER;
+    path collision = Sandbox() / (NEW_FOLDER + L" (2)");
+    path expected = Sandbox() / NEW_FOLDER;
 
     BOOST_REQUIRE(create_directory(collision));
 
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE( non_interfering_collision )
     BOOST_REQUIRE(is_directory(collision));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 2);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 2);
 }
 
 /**
@@ -172,9 +173,9 @@ BOOST_AUTO_TEST_CASE( non_interfering_collision )
  */
 BOOST_AUTO_TEST_CASE( multiple_collision )
 {
-    wpath collision1 = Sandbox() / NEW_FOLDER;
-    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    path collision1 = Sandbox() / NEW_FOLDER;
+    path collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    path expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
     BOOST_REQUIRE(create_directory(collision1));
     BOOST_REQUIRE(create_directory(collision2));
@@ -187,7 +188,7 @@ BOOST_AUTO_TEST_CASE( multiple_collision )
     BOOST_REQUIRE(is_directory(collision2));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 3);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 3);
 }
 
 /**
@@ -196,9 +197,9 @@ BOOST_AUTO_TEST_CASE( multiple_collision )
  */
 BOOST_AUTO_TEST_CASE( non_contiguous_collision1 )
 {
-    wpath collision1 = Sandbox() / NEW_FOLDER;
-    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (3)");
-    wpath expected = Sandbox() / (NEW_FOLDER + L" (2)");
+    path collision1 = Sandbox() / NEW_FOLDER;
+    path collision2 = Sandbox() / (NEW_FOLDER + L" (3)");
+    path expected = Sandbox() / (NEW_FOLDER + L" (2)");
 
     BOOST_REQUIRE(create_directory(collision1));
     BOOST_REQUIRE(create_directory(collision2));
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision1 )
     BOOST_REQUIRE(is_directory(collision2));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 3);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 3);
 }
 
 /**
@@ -221,10 +222,10 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision1 )
  */
 BOOST_AUTO_TEST_CASE( non_contiguous_collision2 )
 {
-    wpath collision1 = Sandbox() / NEW_FOLDER;
-    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-    wpath collision3 = Sandbox() / (NEW_FOLDER + L" (4)");
-    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    path collision1 = Sandbox() / NEW_FOLDER;
+    path collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    path collision3 = Sandbox() / (NEW_FOLDER + L" (4)");
+    path expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
     BOOST_REQUIRE(create_directory(collision1));
     BOOST_REQUIRE(create_directory(collision2));
@@ -239,7 +240,7 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision2 )
     BOOST_REQUIRE(is_directory(collision3));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 4);
 }
 
 /**
@@ -249,10 +250,10 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision2 )
  */
 BOOST_AUTO_TEST_CASE( collision_suffix_mismatch )
 {
-    wpath collision1 = Sandbox() / NEW_FOLDER;
-    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-    wpath collision3 = Sandbox() / (NEW_FOLDER + L" (3) ");
-    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    path collision1 = Sandbox() / NEW_FOLDER;
+    path collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    path collision3 = Sandbox() / (NEW_FOLDER + L" (3) ");
+    path expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
     BOOST_REQUIRE(create_directory(collision1));
     BOOST_REQUIRE(create_directory(collision2));
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE( collision_suffix_mismatch )
     BOOST_REQUIRE(is_directory(collision3));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 4);
 }
 
 /**
@@ -277,10 +278,10 @@ BOOST_AUTO_TEST_CASE( collision_suffix_mismatch )
  */
 BOOST_AUTO_TEST_CASE( collision_prefix_mismatch )
 {
-    wpath collision1 = Sandbox() / NEW_FOLDER;
-    wpath collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
-    wpath collision3 = Sandbox() / (L" " + NEW_FOLDER + L" (3) ");
-    wpath expected = Sandbox() / (NEW_FOLDER + L" (3)");
+    path collision1 = Sandbox() / NEW_FOLDER;
+    path collision2 = Sandbox() / (NEW_FOLDER + L" (2)");
+    path collision3 = Sandbox() / (L" " + NEW_FOLDER + L" (3) ");
+    path expected = Sandbox() / (NEW_FOLDER + L" (3)");
 
     BOOST_REQUIRE(create_directory(collision1));
     BOOST_REQUIRE(create_directory(collision2));
@@ -295,7 +296,7 @@ BOOST_AUTO_TEST_CASE( collision_prefix_mismatch )
     BOOST_REQUIRE(is_directory(collision3));
 
     BOOST_CHECK_EQUAL(
-        distance(wdirectory_iterator(Sandbox()), wdirectory_iterator()), 4);
+        distance(directory_iterator(Sandbox()), directory_iterator()), 4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

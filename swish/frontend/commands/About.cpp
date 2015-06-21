@@ -122,7 +122,7 @@ const
         << translate("Title for a date and time", "Build time:")
         << " " << build_date() << " " << build_time() << "\n"
         << translate("Title of a filesystem path", "Installation path:")
-        << " " << installation_path().file_string();
+        << " " << installation_path().string();
 
    message_box(
         m_hwnd, message.str(),

@@ -313,7 +313,7 @@ throw(...)
 
     // Get stream from relative path stored in the lindexth FILEDESCRIPTOR
     CSftpDirectory dir(m_pidlCommonParent, m_provider);
-    return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
+    return dir.GetFileByPath(fgd[lindex].path(), false);
 }
 
 /**

@@ -31,7 +31,7 @@
 
 #include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 
 #include <string>
 
@@ -40,7 +40,7 @@ using swish::remote_folder::remote_itemid_view;
 using ATL::CRegKey;
 using ATL::CString;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 
 using std::vector;
 using std::wstring;
@@ -195,7 +195,7 @@ throw(...)
     }
     else
     {
-        wstring extension = wpath(itemid.filename()).extension();
+        wstring extension = path(itemid.filename()).extension().wstring();
         wstring::size_type dot_index = extension.find(L".");
         if (dot_index != wstring::npos)
             extension.erase(dot_index);

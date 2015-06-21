@@ -88,7 +88,7 @@ namespace {
     variant_t port_getter(const cpidl_t& pidl)
     { return host_itemid_view(pidl).port(); }
     variant_t path_getter(const cpidl_t& pidl)
-    { return host_itemid_view(pidl).path().string(); }
+    { return host_itemid_view(pidl).path().wstring(); }
 
     const host_property_map host_property_getters = map_list_of
         (PKEY_ItemNameDisplay, label_getter) // Display name (Label)

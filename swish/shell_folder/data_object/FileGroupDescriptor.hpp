@@ -30,7 +30,7 @@
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/shared_ptr.hpp> // shared_ptr
-#include <boost/filesystem.hpp> // wpath
+#include <boost/filesystem.hpp> // path
 #pragma warning(push)
 #pragma warning(disable:4244) // conversion from uint64_t to uint32_t
 #include <boost/date_time/posix_time/posix_time_types.hpp> // ptime
@@ -120,7 +120,7 @@ public:
     /**
      * Return the stored filename or relative path.
      */
-    boost::filesystem::wpath path() const
+    boost::filesystem::path path() const
     {
         return cFileName;
     }
@@ -128,16 +128,16 @@ public:
     /**
      * Save given path as the descriptor filename/path.
      */
-    void path(const boost::filesystem::wpath& path)
+    void path(const boost::filesystem::path& path)
     {
         static const size_t BUFFER_SIZE =
             sizeof(cFileName) / sizeof(cFileName[0]);
 
-        if (path.file_string().size() >= BUFFER_SIZE)
+        if (path.wstring().size() >= BUFFER_SIZE)
             BOOST_THROW_EXCEPTION(
                 std::length_error("Path greater than MAX_PATH"));
 
-        size_t count = path.file_string().copy(cFileName, BUFFER_SIZE - 1);
+        size_t count = path.wstring().copy(cFileName, BUFFER_SIZE - 1);
         cFileName[count] = L'\0';
     }
 

@@ -55,7 +55,6 @@ using washer::shell::stream_from_pidl;
 using washer::trace;
 
 using boost::int64_t;
-using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
 using boost::locale::wformat;
@@ -126,7 +125,7 @@ namespace {
         }
 
         com_ptr<IStream> remote_stream;
-        
+
         try
         {
             remote_stream = sftp_directory.GetFile(file, true);

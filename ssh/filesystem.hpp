@@ -221,7 +221,7 @@ public:
         :
         m_file(file), m_long_entry(long_entry), m_attributes(attributes) {}
 
-    std::string name() const { return m_file.filename(); }
+    std::string name() const { return m_file.filename().string(); }
     const boost::filesystem::path& path() const { return m_file; }
     const std::string& long_entry() const { return m_long_entry; }
 

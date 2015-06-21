@@ -55,6 +55,7 @@ using boost::shared_ptr;
 
 using std::string;
 using std::vector;
+using std::wstring;
 
 namespace test {
 namespace ssh {
@@ -100,13 +101,19 @@ path sandbox_fixture::sandbox()
  */
 path sandbox_fixture::new_file_in_sandbox()
 {
-    vector<char> buffer(MAX_PATH);
+    vector<wchar_t> buffer(MAX_PATH);
 
-    if (!GetTempFileNameA(
-        sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
+    if (!GetTempFileNameW(
+        sandbox().wstring().c_str(), NULL, 0, &buffer[0]))
         throw system_error(::GetLastError(), get_system_category());
-    
-    path p = path(string(&buffer[0], buffer.size()));
+    buffer[buffer.size() - 1] = L'\0';
+
+    // The path in the buffer is NULL-terminated and the buffer will be
+    // larger than the path.  Therefore, do NOT pass the buffer directly
+    // to the path constructor and do not use the wstring constructor.
+    // Doing so results in the extra NULLs in the buffer being included
+    // in the path, which is not good.
+    path p = path(wstring(&buffer[0]));
     BOOST_CHECK(exists(p));
     BOOST_CHECK(is_regular_file(p));
     BOOST_CHECK(p.is_complete());

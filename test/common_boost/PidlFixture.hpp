@@ -31,7 +31,7 @@
 #include "test/common_boost/fixtures.hpp" // ComFixture
 #include "test/common_boost/ProviderFixture.hpp" // ProviderFixture
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 
 #include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 
@@ -54,7 +54,7 @@ public:
      * shortcut path set to the remote directory.
      */
     washer::shell::pidl::apidl_t directory_pidl(
-        const boost::filesystem::wpath& directory);
+        const boost::filesystem::path& directory);
 
     /**
      * Return an absolute PIDL to the sandbox on the remote end.

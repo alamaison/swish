@@ -41,7 +41,7 @@
 
 #include <boost/locale.hpp> // translate
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -68,7 +68,7 @@ using comet::uuid_t;
 
 using boost::enable_error_info;
 using boost::errinfo_api_function;
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::function;
 using boost::locale::translate;
 using boost::numeric_cast;
@@ -310,7 +310,7 @@ namespace {
                 // exists, the universe may be close to collapse in which case
                 // we should probably find our loved ones and stop worrying
                 // about file transfers.
-                wpath temp_dir = &system_temp_dir[0];
+                path temp_dir = &system_temp_dir[0];
                 temp_dir /= uuid_t::create().w_str();
                 if (!create_directory(temp_dir))
                     BOOST_THROW_EXCEPTION(
@@ -319,8 +319,7 @@ namespace {
                 
                 com_ptr<IDropTarget> drop_target =
                     ui_object_of_item<IDropTarget>(
-                        pidl_from_parsing_name(
-                            temp_dir.external_directory_string()).get());
+                        pidl_from_parsing_name(temp_dir.wstring()).get());
 
                 POINTL pt = { 0, 0 };
                 DWORD dwEffect = DROPEFFECT_COPY;
@@ -351,9 +350,9 @@ namespace {
                             "temporary location"));
                 }
 
-                wpath target = temp_dir;
+                path target = temp_dir;
                 target /= remote_itemid_view(format.relative_file(0)).filename();
-                wstring target_windows_path = target.external_file_string();
+                wstring target_windows_path = target.wstring();
 
                 // Before opening the file we make it read-only to discourage
                 // users from making changes and saving it to the temporary

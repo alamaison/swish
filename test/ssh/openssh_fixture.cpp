@@ -84,7 +84,7 @@ namespace { // private
     const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
     const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
 
-    const path CYGDRIVE_PREFIX = "/cygdrive/";
+    const path CYGDRIVE_PREFIX = L"/cygdrive/";
 
     /**
      * Locale-independent port number to port string conversion.
@@ -246,8 +246,9 @@ namespace { // private
      */
     path Cygdriveify(path windowsPath)
     {
-        string drive(windowsPath.root_name(), 0, 1);
-        return CYGDRIVE_PREFIX / drive / windowsPath.relative_path();
+        string drive(windowsPath.root_name().string(), 0, 1);
+        return (CYGDRIVE_PREFIX / drive / windowsPath.relative_path())
+            .generic_wstring();
     }
 
     vector<string> GetSshdOptions(int port)

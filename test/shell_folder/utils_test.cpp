@@ -38,13 +38,12 @@
 
 #include "test/common_boost/helpers.hpp"
 
-#include <boost/filesystem.hpp> // path, wpath
+#include <boost/filesystem.hpp> // path
 #include <boost/test/unit_test.hpp>
 
 #include <string>
 
 using boost::filesystem::path;
-using boost::filesystem::wpath;
 
 using std::string;
 using std::wstring;
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE( get_homedir )
  */
 BOOST_AUTO_TEST_CASE( get_homedir_w )
 {
-    wpath home = swish::utils::home_directory<wpath>();
+    path home = swish::utils::home_directory<path>();
 
     BOOST_CHECK(!home.empty());
     BOOST_CHECK(is_directory(home));

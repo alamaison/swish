@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE( get )
  */
 BOOST_AUTO_TEST_CASE( get_readonly )
 {
-    if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+    if (_wchmod(m_local_path.wstring().c_str(), _S_IREAD) != 0)
         BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
     com_ptr<IStream> stream = GetReadStream();
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE( read_a_string )
  */
 BOOST_AUTO_TEST_CASE( read_a_string_readonly )
 {
-    if (_wchmod(m_local_path.file_string().c_str(), _S_IREAD) != 0)
+    if (_wchmod(m_local_path.wstring().c_str(), _S_IREAD) != 0)
         BOOST_THROW_EXCEPTION(system_error(errno, get_system_category()));
 
     com_ptr<IStream> stream = GetReadStream();
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE( read_fail )
 
     // Open stream's file
     shared_ptr<void> file_handle(
-        ::CreateFile(
-            m_local_path.file_string().c_str(), 
+        ::CreateFileW(
+            m_local_path.wstring().c_str(), 
             GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
             NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL),
         ::CloseHandle);

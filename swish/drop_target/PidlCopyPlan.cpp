@@ -32,7 +32,7 @@
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 
 #include <boost/bind.hpp> // bind
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/function_output_iterator.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -58,7 +58,7 @@ using comet::com_error;
 using comet::com_ptr;
 
 using boost::bind;
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::make_function_output_iterator;
 using boost::shared_ptr;
 using boost::ref;
@@ -73,7 +73,7 @@ namespace {
     /**
      * Return the name the copy should have at the target location.
      */
-    wpath target_name_from_source(const RootedSource& source)
+    path target_name_from_source(const RootedSource& source)
     {
         return pidl_shell_item(source.pidl()).friendly_name(
             pidl_shell_item::friendly_name_type::relative);
@@ -84,7 +84,7 @@ namespace {
         const RootedSource& source, const SftpDestination& destination,
         OutIt output_iterator)
     {
-        wpath new_name = target_name_from_source(source);
+        path new_name = target_name_from_source(source);
 
         SftpDestination new_destination = destination / new_name;
 
@@ -98,7 +98,7 @@ namespace {
         com_ptr<IShellFolder> folder, const RootedSource& source,
         const SftpDestination& destination, OutIt output_iterator)
     {
-        wpath new_name = target_name_from_source(source);
+        path new_name = target_name_from_source(source);
 
         SftpDestination new_destination = destination / new_name;
 
@@ -170,7 +170,7 @@ PidlCopyPlan::PidlCopyPlan(
         output_operations_for_pidl(
             RootedSource(
                 source_format.parent_folder(), source_format.relative_file(i)),
-            SftpDestination(destination_root, wpath()),
+            SftpDestination(destination_root, path()),
             make_function_output_iterator(
                 bind(&SequentialPlan::add_stage, ref(m_plan), _1)));
     }

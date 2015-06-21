@@ -49,7 +49,7 @@ using washer::shell::desktop_folder;
 
 using comet::com_ptr;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::numeric_cast;
 
 using std::vector;
@@ -76,7 +76,7 @@ namespace {
     }
 }
 
-apidl_t PidlFixture::directory_pidl(const wpath& directory)
+apidl_t PidlFixture::directory_pidl(const path& directory)
 {
     return swish_pidl() + create_host_itemid(
         Utf8StringToWideString(GetHost()),

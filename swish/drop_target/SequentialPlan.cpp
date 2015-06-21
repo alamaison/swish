@@ -31,7 +31,7 @@
 #include "swish/drop_target/Operation.hpp"
 
 #include <boost/cstdint.hpp> // uintmax_t
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/shared_array.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -46,7 +46,7 @@ using swish::provider::sftp_provider;
 using comet::com_error;
 using comet::com_ptr;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::numeric_cast;
 using boost::shared_ptr;
 using boost::uintmax_t;
@@ -102,7 +102,7 @@ namespace {
             return m_callback.check_if_user_cancelled();
         }
 
-        virtual bool request_overwrite_permission(const wpath& target) const
+        virtual bool request_overwrite_permission(const path& target) const
         {
             return m_callback.request_overwrite_permission(target);
         }
@@ -179,7 +179,7 @@ namespace {
             }
         }
 
-        virtual bool request_overwrite_permission(const wpath& target) const
+        virtual bool request_overwrite_permission(const path& target) const
         {
             return m_callback.can_overwrite(target);
         }

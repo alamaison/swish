@@ -56,7 +56,7 @@
 #include <ssh/filesystem.hpp> // directory_iterator
 #include <ssh/stream.hpp> // ofstream, ifstream
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
 #include <boost/make_shared.hpp> // make_shared
 #include <boost/move/move.hpp> // BOOST_RV_REF
@@ -83,7 +83,6 @@ using comet::datetime_t;
 using comet::stl_enumeration;
 
 using boost::filesystem::path;
-using boost::filesystem::wpath;
 using boost::make_filter_iterator;
 using boost::make_shared;
 namespace errc = boost::system::errc;
@@ -120,14 +119,14 @@ public:
         std::wstring file_path, std::ios_base::openmode open_mode);
 
     VARIANT_BOOL rename(
-        com_ptr<ISftpConsumer> consumer, const wpath& from_path,
-        const wpath& to_path);
+        com_ptr<ISftpConsumer> consumer, const path& from_path,
+        const path& to_path);
 
-    void remove_all(const wpath& path);
+    void remove_all(const path& path);
 
-    void create_new_directory(const wpath& path);
+    void create_new_directory(const path& path);
 
-    BSTR resolve_link(const wpath& path);
+    BSTR resolve_link(const path& path);
 
     sftp_filesystem_item stat(
         const sftp_provider_path& path, bool follow_links);
@@ -200,7 +199,7 @@ directory_listing provider::listing(const sftp_provider_path& directory)
 
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
-    string path = WideStringToUtf8String(directory.string());
+    string path = WideStringToUtf8String(directory.wstring());
 
     vector<sftp_filesystem_item> files;
     transform(
@@ -220,27 +219,27 @@ com_ptr<IStream> provider::get_file(
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
 
-    string path = WideStringToUtf8String(file_path);
+    string utf8_path = WideStringToUtf8String(file_path);
 
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<fstream>(boost::ref(channel), path, mode),
-            wpath(file_path).filename());
+            make_shared<fstream>(boost::ref(channel), utf8_path, mode),
+            path(file_path).filename().wstring());
     }
     else if (mode & std::ios_base::out)
     {
         return adapt_stream_pointer(
-            make_shared<ofstream>(boost::ref(channel), path, mode),
-            wpath(file_path).filename());
+            make_shared<ofstream>(boost::ref(channel), utf8_path, mode),
+            path(file_path).filename().wstring());
     }
     else if (mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<ifstream>(boost::ref(channel), path, mode),
-            wpath(file_path).filename());
+            make_shared<ifstream>(boost::ref(channel), utf8_path, mode),
+            path(file_path).filename().wstring());
     }
     else
     {
@@ -457,8 +456,8 @@ bool rename_retry_with_overwrite(
  *           directory at the target path. 
  */
 VARIANT_BOOL provider::rename(
-    com_ptr<ISftpConsumer> consumer, const wpath& from_path,
-    const wpath& to_path)
+    com_ptr<ISftpConsumer> consumer, const path& from_path,
+    const path& to_path)
 {
     if (from_path.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
@@ -470,8 +469,8 @@ VARIANT_BOOL provider::rename(
         return VARIANT_FALSE;
 
     // Attempt to rename old path to new path
-    string from = WideStringToUtf8String(from_path.string());
-    string to = WideStringToUtf8String(to_path.string());
+    string from = WideStringToUtf8String(from_path.wstring());
+    string to = WideStringToUtf8String(to_path.wstring());
 
     try
     {
@@ -495,35 +494,34 @@ VARIANT_BOOL provider::rename(
     }
 }
 
-void provider::remove_all(const wpath& target)
+void provider::remove_all(const path& target)
 {
     if (target.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    path utf8_path = WideStringToUtf8String(target.string());
+    path utf8_path = WideStringToUtf8String(target.wstring());
 
     m_ticket.session().get_sftp_filesystem().remove_all(utf8_path);
 }
 
-void provider::create_new_directory(const wpath& path)
+void provider::create_new_directory(const path& path)
 {
     if (path.empty())
         BOOST_THROW_EXCEPTION(
             com_error(
                 "Cannot create a directory without a name", E_INVALIDARG));
 
-    string utf8_path = WideStringToUtf8String(path.string());
+    string utf8_path = WideStringToUtf8String(path.wstring());
 
     m_ticket.session().get_sftp_filesystem().create_directory(utf8_path);
 }
 
-BSTR provider::resolve_link(const wpath& path)
+BSTR provider::resolve_link(const path& path)
 {
-    string utf8_path = WideStringToUtf8String(path.string());
+    string utf8_path = WideStringToUtf8String(path.wstring());
 
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
-    bstr_t target =
-        Utf8StringToWideString(channel.canonical_path(utf8_path).string());
+    bstr_t target = channel.canonical_path(utf8_path).wstring();
 
     return target.detach();
 }
@@ -538,7 +536,7 @@ sftp_filesystem_item provider::stat(
     const sftp_provider_path& path,
     bool follow_links)
 {
-    string utf8_path = WideStringToUtf8String(path.string());
+    string utf8_path = WideStringToUtf8String(path.wstring());
 
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 

@@ -32,7 +32,7 @@
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_provider_path.hpp"
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/optional/optional.hpp>
 //#include <boost/range/any_range.hpp> USE ONCE WE UPGRADE BOOST
 

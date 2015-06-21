@@ -35,7 +35,7 @@
 #include <washer/shell/pidl.hpp> // pidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -282,13 +282,13 @@ inline washer::shell::pidl::cpidl_t create_remote_itemid(
  * - A relative PIDL returns:  "dir2/dir2/dir3/filename.ext"
  * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
  */
-inline boost::filesystem::wpath path_from_remote_pidl(
+inline boost::filesystem::path path_from_remote_pidl(
     const washer::shell::pidl::pidl_t& remote_pidl)
 {
     // Walk over RemoteItemIds and append each filename to form the path
     washer::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
 
-    boost::filesystem::wpath path;
+    boost::filesystem::path path;
     while (it != washer::shell::pidl::raw_pidl_iterator())
     {
         remote_itemid_view itemid(*it);

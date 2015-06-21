@@ -34,7 +34,7 @@
 #include <washer/shell/pidl.hpp> // apidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 
 namespace swish {
 namespace remote_folder {
@@ -45,13 +45,13 @@ namespace remote_folder {
  * The PIDL must contain a host itemid an after that can contain any number of
  * remote item ids, but doesn't have to.
  */
-inline boost::filesystem::wpath absolute_path_from_swish_pidl(
+inline boost::filesystem::path absolute_path_from_swish_pidl(
     const washer::shell::pidl::apidl_t& pidl)
 {
     washer::shell::pidl::raw_pidl_iterator item_pos =
         swish::host_folder::find_host_itemid(pidl);
 
-    boost::filesystem::wpath path =
+    boost::filesystem::path path =
         swish::host_folder::host_itemid_view(*item_pos).path();
 
     if (++item_pos != washer::shell::pidl::raw_pidl_iterator())

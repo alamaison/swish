@@ -65,7 +65,7 @@ class StreamFixture : public test::provider::SftpFixture
 {
 public:
 
-    boost::filesystem::wpath m_local_path;
+    boost::filesystem::path m_local_path;
     std::string m_remote_path;
 
     /**
@@ -74,8 +74,9 @@ public:
      */
     StreamFixture() 
         : m_local_path(NewFileInSandbox()), 
-          m_remote_path(ToRemotePath(
-            swish::utils::WideStringToUtf8String(m_local_path.file_string())))
+          m_remote_path(
+            swish::utils::WideStringToUtf8String(
+                ToRemotePath(m_local_path).wstring()))
     {
     }
 
@@ -96,7 +97,7 @@ public:
             boost::make_shared<ssh::filesystem::fstream>(
                 boost::ref(session->get_sftp_filesystem()), m_remote_path,
                 flags),
-            boost::filesystem::path(m_remote_path).filename());
+            boost::filesystem::path(m_remote_path).filename().wstring());
     }
 };
 
