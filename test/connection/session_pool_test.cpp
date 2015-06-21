@@ -40,6 +40,7 @@
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/foreach.hpp>  // BOOST_FOREACH
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
+#include <boost/exception_ptr.hpp>
 
 #include <algorithm>
 #include <exception>
@@ -57,6 +58,7 @@ using test::OpenSshFixture;
 using comet::com_ptr;
 using comet::thread;
 
+using boost::exception_ptr;
 using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 
@@ -175,7 +177,8 @@ template <typename T>
 class use_session_thread : public thread
 {
 public:
-    use_session_thread(T* fixture) : thread(), m_fixture(fixture) {}
+    use_session_thread(T* fixture, exception_ptr& error) :
+      thread(), m_fixture(fixture), m_error(error) {}
 
 private:
     DWORD thread_main()
@@ -216,18 +219,18 @@ private:
 					    std::exception("Test failed: session was not reused"));
             }
         }
-        catch (const std::exception& e)
+        catch (...)
         {
-			// Boost.Test is not threadsafe so we can't use its functions
-			// in the main thread body.  But it's safe enough to use one here
-			// because this only excutes if something fails, which is unlikely
-			// to happen on multiple threads at once.
-            BOOST_MESSAGE(boost::diagnostic_information(e));
+            // Boost.Test is not threadsafe so we can't report the error
+            // directly when it happens.  Instead pass it out via exception_ptr
+            // to let the test find it.
+            m_error = boost::current_exception();
         }
 
         return 1;
     }
 
+    exception_ptr& m_error;
     T* m_fixture;
 };
 
@@ -238,17 +241,29 @@ typedef use_session_thread<PoolFixture> test_thread;
  */
 BOOST_AUTO_TEST_CASE( threaded )
 {
-    vector<shared_ptr<test_thread> > threads(THREAD_COUNT);
+    vector<shared_ptr<test_thread>> threads(THREAD_COUNT);
+    vector<exception_ptr> errors(THREAD_COUNT);
 
-    BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
+    for (size_t i=0; i < threads.size(); ++i)
     {
-        thread = shared_ptr<test_thread>(new test_thread(this));
-        thread->start();
+        threads[i] = shared_ptr<test_thread>(new test_thread(this, errors[i]));
+        threads[i]->start();
     }
 
-    BOOST_FOREACH(shared_ptr<test_thread>& thread, threads)
+    for (size_t i=0; i < threads.size(); ++i)
     {
-        thread->wait();
+        threads[i]->wait();
+    }
+
+    // Must process errors after finished waiting for all threads, otherwise
+    // remaining threads will try to write to errors vector after it has been
+    // destroyed
+    for (size_t i=0; i < errors.size(); ++i)
+    {
+        if (errors[i])
+        {
+            boost::rethrow_exception(errors[i]);
+        }
     }
 }
 
