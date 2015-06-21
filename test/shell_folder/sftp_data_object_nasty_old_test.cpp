@@ -92,7 +92,7 @@ protected:
 // A lot of these tests rely on SwishPidlFixture creating a host PIDL with
 // path `/tmp` and a remote root PIDL with path `swish`.
 
-BOOST_FIXTURE_TEST_SUITE( sftp_data_object_tests, TestFixture )
+BOOST_FIXTURE_TEST_SUITE( sftp_data_object_nasty_old_tests, TestFixture )
 
 BOOST_AUTO_TEST_CASE( Create )
 {
