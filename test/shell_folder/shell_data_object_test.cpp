@@ -44,14 +44,14 @@ using swish::shell_folder::data_object::StorageMedium;  // test subject
 using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using test::ComFixture;
 using test::data_object_utils::create_test_zip_file;
 using test::data_object_utils::data_object_for_zipfile;
 using test::SandboxFixture;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::test_tools::predicate_result;
 
 using std::vector;
@@ -62,7 +62,7 @@ namespace { // private
     /**
      * Check that a PIDL and a filesystem path refer to the same item.
      */
-    predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
+    predicate_result pidl_path_equivalence(apidl_t pidl, path path)
     {
         vector<wchar_t> name(MAX_PATH);
         ::SHGetPathFromIDListW(pidl.get(), &name[0]);
@@ -72,7 +72,7 @@ namespace { // private
             predicate_result res(false);
             res.message()
                 << "Different items [" << wstring(&name[0])
-                << " != " << path.file_string() << "]";
+                << " != " << path.string() << "]";
             return res;
         }
 
@@ -120,7 +120,7 @@ BOOST_FIXTURE_TEST_SUITE(shell_data_object_tests, DataObjectFixture)
  */
 BOOST_AUTO_TEST_CASE( cf_hdrop_format )
 {
-    wpath file = NewFileInSandbox();
+    path file = NewFileInSandbox();
     ShellDataObject data_object(data_object_for_file(file).get());
 
     BOOST_REQUIRE(data_object.has_hdrop_format());
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE( cf_hdrop_format )
  */
 BOOST_AUTO_TEST_CASE( cf_hdrop_format_virtual )
 {
-    wpath zip_file = create_test_zip_file(Sandbox());
+    path zip_file = create_test_zip_file(Sandbox());
     ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
     BOOST_REQUIRE(!data_object.has_hdrop_format());
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE( cf_hdrop_format_virtual )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format )
 {
-    wpath file = NewFileInSandbox();
+    path file = NewFileInSandbox();
     ShellDataObject data_object(data_object_for_file(file).get());
 
     BOOST_REQUIRE(data_object.has_pidl_format());
@@ -166,24 +166,10 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format_virtual )
 {
-    wpath zip_file = create_test_zip_file(Sandbox());
+    path zip_file = create_test_zip_file(Sandbox());
     ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
     BOOST_REQUIRE(data_object.has_pidl_format());
-}
-
-/**
- * Detecting the CFSTR_FILEDESCRIPTOR format for a filesystem item.
- *
- * This format is not expected for regular filesystem (non-virtual) items.  Here
- * we are checking that we recognise this absence correctly.
- */
-BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format )
-{
-    wpath file = NewFileInSandbox();
-    ShellDataObject data_object(data_object_for_file(file).get());
-
-    BOOST_REQUIRE(!data_object.has_file_group_descriptor_format());
 }
 
 /**
@@ -194,7 +180,7 @@ BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format )
  */
 BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format_virtual )
 {
-    wpath zip_file = create_test_zip_file(Sandbox());
+    path zip_file = create_test_zip_file(Sandbox());
     ShellDataObject data_object(data_object_for_zipfile(zip_file).get());
 
     BOOST_REQUIRE(data_object.has_file_group_descriptor_format());
@@ -215,7 +201,7 @@ BOOST_FIXTURE_TEST_SUITE(pidl_format_tests, DataObjectFixture)
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
 {
-    wpath file = NewFileInSandbox();
+    path file = NewFileInSandbox();
     PidlFormat format(data_object_for_file(file));
 
     BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
@@ -234,7 +220,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
 {
-    wpath file = NewFileInSandbox();
+    path file = NewFileInSandbox();
     PidlFormat format(data_object_for_file(file));
 
     BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
@@ -253,7 +239,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item_fail )
 {
-    wpath file = NewFileInSandbox();
+    path file = NewFileInSandbox();
     PidlFormat format(data_object_for_file(file));
 
     BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
@@ -269,9 +255,9 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item_fail )
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_multiple_items )
 {
-    wpath file1 = NewFileInSandbox();
-    wpath file2 = NewFileInSandbox();
-    wpath file3 = NewFileInSandbox();
+    path file1 = NewFileInSandbox();
+    path file2 = NewFileInSandbox();
+    path file3 = NewFileInSandbox();
     PidlFormat format(data_object_for_directory(Sandbox()));
 
     BOOST_REQUIRE_EQUAL(format.pidl_count(), 3U);

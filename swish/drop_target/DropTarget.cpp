@@ -32,7 +32,7 @@
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
                                                   // PidlFormat, ShellDataObject
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <boost/shared_ptr.hpp>  // shared_ptr
 #include <boost/thread.hpp>
@@ -47,8 +47,8 @@ using swish::shell_folder::data_object::ShellDataObject;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::provider::sftp_provider;
 
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl::apidl_t;
 
 using boost::shared_ptr;
 using boost::thread;
@@ -235,7 +235,7 @@ STDMETHODIMP CDropTarget::DragEnter(
 
         *pdwEffect = determine_drop_effect(pdo, *pdwEffect);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -257,7 +257,7 @@ STDMETHODIMP CDropTarget::DragOver(
 
         *pdwEffect = determine_drop_effect(m_data_object, *pdwEffect);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -271,7 +271,7 @@ STDMETHODIMP CDropTarget::DragLeave()
     {
         m_data_object = NULL;
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -311,7 +311,7 @@ STDMETHODIMP CDropTarget::Drop(
             throw;
         }
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }

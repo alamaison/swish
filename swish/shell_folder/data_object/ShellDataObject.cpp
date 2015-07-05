@@ -30,16 +30,19 @@
 #include "GlobalLocker.hpp" // GlobalLocker
 #include "StorageMedium.hpp" // StorageMedium
 
-#include <winapi/clipboard.hpp> // register_format
+#include <washer/clipboard.hpp> // register_format
 
 #include <comet/error.h> // com_error
+#include <comet/ptr.h> // com_cast
 
 #include <boost/shared_ptr.hpp>  // share_ptr
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 
-using winapi::clipboard::register_format;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl::apidl_t;
+#include <shldisp.h> // IAsyncOperation
+
+using washer::clipboard::register_format;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl::apidl_t;
 
 using boost::shared_ptr;
 
@@ -136,7 +139,7 @@ namespace { // private
      */
     apidl_t parent_from_cida(const CIDA& cida)
     {
-        return winapi::shell::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
+        return washer::shell::pidl::pidl_cast<apidl_t>(pidl_from_cida(cida, 0));
     }
 
     /**
@@ -166,7 +169,7 @@ ShellDataObject::~ShellDataObject()
  */
 bool ShellDataObject::supports_async() const
 {
-    com_ptr<IAsyncOperation> async = com_cast(m_data_object);
+	com_ptr<IAsyncOperation> async = (comet::com_cast)(m_data_object);
     if (!async)
         return false;
 

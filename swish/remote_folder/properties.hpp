@@ -28,8 +28,8 @@
 #define SWISH_REMOTE_FOLDER_PROPERTIES_HPP
 #pragma once
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
-#include <winapi/shell/property_key.hpp> // property_key
+#include <washer/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/property_key.hpp> // property_key
 
 #include <comet/variant.h> // variant_t
 
@@ -39,13 +39,13 @@ namespace swish {
 namespace remote_folder {
 
 comet::variant_t property_from_pidl(
-    const winapi::shell::pidl::cpidl_t& pidl,
-    const winapi::shell::property_key& key);
+    const washer::shell::pidl::cpidl_t& pidl,
+    const washer::shell::property_key& key);
 
 int compare_pidls_by_property(
-    const winapi::shell::pidl::cpidl_t& pidl_left,
-    const winapi::shell::pidl::cpidl_t& pidl_right,
-    const winapi::shell::property_key& key);
+    const washer::shell::pidl::cpidl_t& pidl_left,
+    const washer::shell::pidl::cpidl_t& pidl_right,
+    const washer::shell::property_key& key);
 
 /**
  * Custom properties (PKEYs) for Swish remote folder.

@@ -31,8 +31,8 @@
 #include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
 #include "test/common_boost/PidlFixture.hpp" // PidlFixture
 
-#include <winapi/shell/pidl.hpp> // apidl_t
-#include <winapi/shell/shell.hpp> // strret_to_string
+#include <washer/shell/pidl.hpp> // apidl_t
+#include <washer/shell/shell.hpp> // strret_to_string
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/enum_iterator.h> // enum_iterator
@@ -50,16 +50,16 @@ using test::PidlFixture;
 using swish::remote_folder::remote_itemid_view;
 using swish::utils::Utf8StringToWideString;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::strret_to_string;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::strret_to_string;
 
 using comet::com_error;
 using comet::com_ptr;
 using comet::datetime_t;
 using comet::enum_iterator;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::lexical_cast;
 using boost::test_tools::predicate_result;
 
@@ -194,11 +194,11 @@ BOOST_AUTO_TEST_CASE( enum_empty )
  */
 BOOST_AUTO_TEST_CASE( enum_everything )
 {
-    wpath file1 = NewFileInSandbox();
-    wpath file2 = NewFileInSandbox();
-    wpath folder1 = Sandbox() / L"folder1";
+    path file1 = NewFileInSandbox();
+    path file2 = NewFileInSandbox();
+    path folder1 = Sandbox() / L"folder1";
     create_directory(folder1);
-    wpath folder2 = Sandbox() / L"folder2";
+    path folder2 = Sandbox() / L"folder2";
     create_directory(folder2);
 
     SHCONTF flags = 
@@ -238,10 +238,10 @@ namespace {
     }
 
     predicate_result display_name_matches(
-        com_ptr<IShellFolder> folder, SHGDNF flags, const wstring& filename,
+        com_ptr<IShellFolder> folder, SHGDNF flags, const path& filename,
         const wstring& expected_display_name)
     {
-        cpidl_t pidl = pidl_for_file(folder, filename);
+        cpidl_t pidl = pidl_for_file(folder, filename.wstring());
 
         STRRET strret;
         HRESULT hr = folder->GetDisplayNameOf(pidl.get(), flags, &strret);
@@ -277,7 +277,7 @@ namespace {
  */
 BOOST_AUTO_TEST_CASE( display_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected_with = L"testfile.txt";
@@ -302,8 +302,8 @@ BOOST_AUTO_TEST_CASE( display_name_file )
  */
 BOOST_AUTO_TEST_CASE( display_name_hidden_file )
 {
-    wpath file1 = NewFileInSandbox(L".hidden");
-    wpath file2 = NewFileInSandbox(L".testfile.txt");
+    path file1 = NewFileInSandbox(L".hidden");
+    path file2 = NewFileInSandbox(L".testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected1 = L".hidden";
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE( display_name_hidden_file )
  */
 BOOST_AUTO_TEST_CASE( editing_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FOREDITING;
     wstring expected = L"testfile.txt";
@@ -342,13 +342,13 @@ BOOST_AUTO_TEST_CASE( editing_name_file )
  */
 BOOST_AUTO_TEST_CASE( address_bar_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR;
     wstring expected = L"sftp://" + 
         Utf8StringToWideString(GetUser()) + L"@" +
         Utf8StringToWideString(GetHost()) + L":" +
-        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
+        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).wstring();
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE( address_bar_name_file )
  */
 BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER;
     wstring expected_with = L"testfile.txt";
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
 BOOST_AUTO_TEST_CASE( in_folder_display_name_unknown_file )
 {
     // May fail if .xyz is actually a registered type
-    wpath file = NewFileInSandbox(L"testfile.xyz");
+    path file = NewFileInSandbox(L"testfile.xyz");
 
     SHGDNF flags = SHGDN_INFOLDER;
     wstring expected = L"testfile.xyz";
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_unknown_file )
  */
 BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER | SHGDN_FORPARSING;
     wstring expected = L"testfile.txt";
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
  */
 BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER | SHGDN_FOREDITING;
     wstring expected = L"testfile.txt";
@@ -459,13 +459,13 @@ BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
  */
 BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
     wstring expected = L"Computer\\Swish\\sftp://" + 
         Utf8StringToWideString(GetUser()) + L"@" +
         Utf8StringToWideString(GetHost()) + L":" +
-        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).string();
+        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).wstring();
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
  */
 BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
 {
-    wpath file = NewFileInSandbox(L"testfile.txt");
+    path file = NewFileInSandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FORPARSING;
     wstring expected = 
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
         Utf8StringToWideString(GetUser()) + L"@" +
         Utf8StringToWideString(GetHost()) + L":" +
         lexical_cast<wstring>(GetPort()) + L"/" +
-        ToRemotePath(file).string();
+        ToRemotePath(file).wstring();
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
  */
 BOOST_AUTO_TEST_CASE( display_name_folder )
 {
-    wpath directory = Sandbox() / L"testfolder";
+    path directory = Sandbox() / L"testfolder";
     create_directory(directory);
 
     SHGDNF flags = SHGDN_NORMAL;
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE( display_name_folder )
  */
 BOOST_AUTO_TEST_CASE( in_folder_name_folder )
 {
-    wpath directory = Sandbox() / L"testfolder";
+    path directory = Sandbox() / L"testfolder";
     create_directory(directory);
 
     SHGDNF flags = SHGDN_INFOLDER;
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder )
  */
 BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
 {
-    wpath directory = Sandbox() / L"testfolder.txt";
+    path directory = Sandbox() / L"testfolder.txt";
     create_directory(directory);
 
     SHGDNF flags = SHGDN_NORMAL;
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
  */
 BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
 {
-    wpath directory = Sandbox() / L"testfolder.txt";
+    path directory = Sandbox() / L"testfolder.txt";
     create_directory(directory);
 
     SHGDNF flags = SHGDN_INFOLDER;
@@ -580,9 +580,9 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
  */
 BOOST_AUTO_TEST_CASE( display_name_hidden_folder )
 {
-    wpath dir1 = Sandbox() / L".hidden";
+    path dir1 = Sandbox() / L".hidden";
     create_directory(dir1);
-    wpath dir2 = Sandbox() / L".testfolder.txt";
+    path dir2 = Sandbox() / L".testfolder.txt";
     create_directory(dir2);
 
     SHGDNF flags = SHGDN_NORMAL;

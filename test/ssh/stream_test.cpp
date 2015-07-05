@@ -1011,21 +1011,14 @@ BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_appends )
 
     string bob;
 
-    /*
-    XXX: Should be as follows but OpenSSH doesn't support FXF_APPEND
+    /* If the tests fail here, the version of OpenSSH being used
+       is probably old and doesn't support FXF_APPEND */
 
     BOOST_CHECK(local_stream >> bob);
-    BOOST_CHECK_EQUAL(bob, "gobbeldy");
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
 
     BOOST_CHECK(local_stream >> bob);
     BOOST_CHECK_EQUAL(bob, "gookabcdef");
-    */
-
-    BOOST_CHECK(local_stream >> bob);
-    BOOST_CHECK_EQUAL(bob, "abcdefdy");
-
-    BOOST_CHECK(local_stream >> bob);
-    BOOST_CHECK_EQUAL(bob, "gook");
 
     BOOST_CHECK(!(local_stream >> bob));
     BOOST_CHECK(local_stream.eof());

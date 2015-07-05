@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @todo  This file should probably move to the winapi project although
+ * @todo  This file should probably move to the Washer project although
  *        CUICommand should stay here.
  */
 
@@ -39,8 +39,8 @@
                                            // command_state_to_expcmdstate
 #include "swish/nse/UICommand.hpp" // IUIElement, IUICommand
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/object_with_site.hpp> // object_with_site
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
+#include <washer/object_with_site.hpp> // object_with_site
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
@@ -52,6 +52,8 @@
 #include <boost/type_traits/is_base_of.hpp> // is_base_of
 
 #include <string>
+
+#include <Shlwapi.h> // SHStrDupW
 
 namespace swish {
 namespace nse {
@@ -100,11 +102,11 @@ public:
 
         try
         {
-            HRESULT hr = ::SHStrDup(title(psiItemArray).c_str(), ppszName);
+            HRESULT hr = ::SHStrDupW(title(psiItemArray).c_str(), ppszName);
             if (FAILED(hr))
                 BOOST_THROW_EXCEPTION(comet::com_error(hr));
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
 
         return S_OK;
     }
@@ -129,11 +131,11 @@ public:
 
         try
         {
-            HRESULT hr = ::SHStrDup(icon(psiItemArray).c_str(), ppszIcon);
+            HRESULT hr = ::SHStrDupW(icon(psiItemArray).c_str(), ppszIcon);
             if (FAILED(hr))
                 BOOST_THROW_EXCEPTION(comet::com_error(hr));
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
 
         return S_OK;
     }
@@ -161,7 +163,7 @@ public:
             if (FAILED(hr))
                 BOOST_THROW_EXCEPTION(comet::com_error(hr));
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
 
         return S_OK;
     }
@@ -224,7 +226,7 @@ public:
         {
             *pguidCommandName = canonical_name();
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
 
         return S_OK;
     }
@@ -251,7 +253,7 @@ public:
         {
             *pCmdState = state(psiItemArray, (nRequested) ? true : false);
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
 
         return S_OK;
     }
@@ -271,7 +273,7 @@ public:
         {
             invoke(psiItemArray, pbc);
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
 
         return S_OK;
     }
@@ -442,11 +444,11 @@ public:
  *           set_site method.
  */
 template<typename T>
-class CUICommandWithSite : public CUICommandImpl<T, winapi::object_with_site>
+class CUICommandWithSite : public CUICommandImpl<T, washer::object_with_site>
 {
 public:
 
-    typedef CUICommandImpl<T, winapi::object_with_site> super;
+    typedef CUICommandImpl<T, washer::object_with_site> super;
 
 // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \

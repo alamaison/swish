@@ -39,7 +39,7 @@
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::host_itemid_view;
 
-using winapi::shell::pidl::cpidl_t;
+using washer::shell::pidl::cpidl_t;
 
 using ATL::CRegKey;
 

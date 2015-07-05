@@ -39,8 +39,8 @@
 #include <initguid.h> // Make DEFINE_PROPERTYKEY() actually define a key
 #include <Propkey.h> // PKEY_ *
 
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::property_key;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::property_key;
 
 using comet::variant_t;
 
@@ -88,7 +88,7 @@ namespace {
     variant_t port_getter(const cpidl_t& pidl)
     { return host_itemid_view(pidl).port(); }
     variant_t path_getter(const cpidl_t& pidl)
-    { return host_itemid_view(pidl).path().string(); }
+    { return host_itemid_view(pidl).path().wstring(); }
 
     const host_property_map host_property_getters = map_list_of
         (PKEY_ItemNameDisplay, label_getter) // Display name (Label)

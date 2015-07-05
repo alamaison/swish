@@ -26,20 +26,20 @@
 
 #include "shell.hpp"
 
-#include <winapi/shell/shell_item.hpp> // pidl_shell_item
+#include <washer/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/error.h> // com_error
 
 #include <shlobj.h>  // SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
-using winapi::shell::pidl_shell_item;
+using washer::shell::pidl_shell_item;
 
 using comet::com_error;
 using comet::com_ptr;
 
-using boost::filesystem::wpath;
-using boost::filesystem::wdirectory_iterator;
+using boost::filesystem::path;
+using boost::filesystem::directory_iterator;
 using boost::shared_ptr;
 
 using std::invalid_argument;
@@ -47,36 +47,36 @@ using std::invalid_argument;
 namespace swish {
 namespace shell_folder {
 
-wpath path_from_pidl(PIDLIST_ABSOLUTE pidl)
+path path_from_pidl(PIDLIST_ABSOLUTE pidl)
 {
     return pidl_shell_item(pidl).parsing_name();
 }
 
 shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
-    const wpath& filesystem_path)
+    const path& filesystem_path)
 {
     PIDLIST_ABSOLUTE pidl;
     HRESULT hr = ::SHILCreateFromPath(
-        filesystem_path.file_string().c_str(), &pidl, NULL);
+        filesystem_path.wstring().c_str(), &pidl, NULL);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(com_error(hr));
 
     return shared_ptr<ITEMIDLIST_ABSOLUTE>(pidl, ::ILFree);
 }
 
-com_ptr<IDataObject> data_object_for_file(const wpath& file)
+com_ptr<IDataObject> data_object_for_file(const path& file)
 {
     return data_object_for_files(&file, &file + 1);
 }
 
-com_ptr<IDataObject> data_object_for_directory(const wpath& directory)
+com_ptr<IDataObject> data_object_for_directory(const path& directory)
 {
     if (!is_directory(directory))
         BOOST_THROW_EXCEPTION(
             invalid_argument("The path must be to a directory."));
 
     return data_object_for_files(
-        wdirectory_iterator(directory), wdirectory_iterator());
+        directory_iterator(directory), directory_iterator());
 }
 
 

@@ -34,9 +34,10 @@
 
 #include <string>
 
+#include <Commctrl.h> // LVCFMT_*
 #include <Propkey.h> // PKEY_ *
 
-using winapi::shell::property_key;
+using washer::shell::property_key;
 
 using boost::array;
 using boost::locale::translate;

@@ -1,0 +1,65 @@
+<CPackWiXPatch>
+  <!-- When #PRODUCT is supported (CMake 3.3?) we can yse this to remove the
+       license page -->
+  <!-- <CPackWiXFragment Id="#PRODUCT"> -->
+  <!--   <UI> -->
+  <!--     <UIRef Id="WixUI_InstallDir" /> -->
+
+  <!--     <Publish Dialog="WelcomeDlg" -->
+  <!--              Control="Next" -->
+  <!--              Event="NewDialog" -->
+  <!--              Value="InstallDirDlg" -->
+  <!--              Order="2">1</Publish> -->
+  <!--     <Publish Dialog="InstallDirDlg" -->
+  <!--              Control="Back" -->
+  <!--              Event="NewDialog" -->
+  <!--              Value="WelcomeDlg" -->
+  <!--              Order="2">1</Publish> -->
+  <!--   </UI> -->
+  <!-- </CPackWiXFragment> -->
+
+  <CPackWiXFragment Id="CM_FP_shell_folder_com_dlld.dll">
+
+    <TypeLib Id="B816A838-5022-11DC-9153-0090F5284F85"
+	     Description="Swish Type Library" Language="0" MajorVersion="0"
+	     MinorVersion="3">
+      <AppId Description="Swish"
+	     Id="B816A838-5022-11DC-9153-0090F5284F85">
+        <Class Id="B816A83A-5022-11DC-9153-0090F5284F85"
+	       Context="InprocServer32" Description="Swish"
+	       ThreadingModel="apartment">
+          <ProgId Id="Swish.HostFolder.1" Description="CHostFolder Class">
+            <ProgId Id="Swish.HostFolder" Description="CHostFolder Class" />
+          </ProgId>
+        </Class>
+        <Class Id="B816A83C-5022-11DC-9153-0090F5284F85"
+	       Context="InprocServer32" Description="CRemoteFolder Class"
+	       ThreadingModel="apartment">
+          <ProgId Id="Swish.RemoteFolder.1" Description="CRemoteFolder Class">
+            <ProgId Id="Swish.RemoteFolder" Description="CRemoteFolder Class" />
+          </ProgId>
+        </Class>
+      </AppId>
+    </TypeLib>
+
+  </CPackWiXFragment>
+
+  <CPackWiXFragment Id="CM_CP_shell_folder_com_dlld.dll">
+
+    <RegistryValue Root="HKCR" Key="AppID\Swish.DLL" Name="AppID" Value="{b816a838-5022-11dc-9153-0090f5284f85}" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="InfoTip" Value="Remote file-system access via SFTP" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="TileInfo" Value="prop:{28636AA6-953D-11D2-B5D6-00C04FD918D0} 5;{b816a850-5022-11dc-9153-0090f5284f85} 2;{E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD} 7" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}\DefaultIcon" Value="shell32.dll,9" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}\ShellFolder" Name="Attributes" Value="-1610612736" Type="integer" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}" Name="InfoTip" Value="Remote file-system access via SFTP" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="CLSID\{b816a83c-5022-11dc-9153-0090f5284f85}" Name="TileInfo" Value="prop:{B725F130-47EF-101A-A5F1-02608C9EEBAC}, 12;{B725F130-47EF-101A-A5F1-02608C9EEBAC, 14}" Type="string" Action="write" />
+    <RegistryValue Root="HKCR" Key="Interface" Value="" Type="string" Action="write" />
+    <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish" Type="string" Action="write" />
+    <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{b816a83a-5022-11dc-9153-0090f5284f85}" Name="Removal Message" Value="Please don't remove Swish this way - uninstall it." Type="string" Action="write" />
+    <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83a-5022-11dc-9153-0090f5284f85}" Value="Swish HostFolder" Type="string" Action="write" />
+    <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{b816a83c-5022-11dc-9153-0090f5284f85}" Value="Swish SFTP Folder" Type="string" Action="write" />
+
+  </CPackWiXFragment>
+</CPackWiXPatch>

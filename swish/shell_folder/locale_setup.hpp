@@ -28,7 +28,9 @@
 #define SWISH_SHELL_FOLDER_LOCALE_SETUP_HPP
 #pragma once
 
-#include <winapi/dynamic_link.hpp> // module_path
+#include "swish/atl.hpp"
+
+#include <washer/dynamic_link.hpp> // module_path
 
 #include <boost/filesystem.hpp> // path
 #include <boost/locale.hpp> // boost::locale::generator
@@ -50,10 +52,9 @@ namespace detail {
         {
             generator gen;
 
-            path module_directory = winapi::module_path<char>(
+            path module_directory = washer::module_path<char>(
                 ATL::_AtlBaseModule.GetModuleInstance()).parent_path();
-            gen.add_messages_path(
-                module_directory.external_directory_string());
+            gen.add_messages_path(module_directory.string());
 
             gen.add_messages_domain("swish");
 

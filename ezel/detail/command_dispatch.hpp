@@ -28,7 +28,7 @@
 #define EZEL_COMMAND_DISPATCH_HPP
 #pragma once
 
-#include <winapi/gui/commands.hpp> // command
+#include <washer/gui/commands.hpp> // command
 
 #ifndef BOOST_MPL_LIMIT_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
@@ -78,7 +78,7 @@ template<typename It, typename End, typename T>
 inline void dispatch_command_next(
     T* obj, WORD /*id*/, WPARAM wparam, LPARAM lparam, boost::mpl::true_)
 {
-    obj->on(winapi::gui::command_base(wparam, lparam));
+    obj->on(washer::gui::command_base(wparam, lparam));
 }
 
 template<typename It, typename End, typename T>
@@ -158,6 +158,6 @@ public:
     >::type commands;
 };
 
-}} // namespace winapi::gui
+}} // namespace washer::gui
 
 #endif

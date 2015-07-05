@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include <winapi/shell/shell.hpp> // known_folder_path
+#include <washer/shell/shell.hpp> // known_folder_path
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
@@ -276,7 +276,7 @@ template<typename T>
 inline T home_directory()
 {
     // try SHGetKnowFolderPath
-    T home = winapi::shell::special_folder_path<T::value_type>(CSIDL_PROFILE);
+    T home = washer::shell::special_folder_path<T::value_type>(CSIDL_PROFILE);
     if (!home.empty())
         return home;
 

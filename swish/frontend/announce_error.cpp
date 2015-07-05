@@ -28,7 +28,7 @@
 
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 
-#include <winapi/gui/task_dialog.hpp> // task_dialog_builder
+#include <washer/gui/task_dialog.hpp> // task_dialog_builder
 
 #include <comet/error.h> // com_error
 
@@ -41,7 +41,7 @@
 
 using swish::frontend::best_taskdialog;
 
-using namespace winapi::gui::task_dialog;
+using namespace washer::gui::task_dialog;
 
 using comet::com_error;
 

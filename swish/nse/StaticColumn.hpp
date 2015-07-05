@@ -28,7 +28,7 @@
 #define SWISH_NSE_STATIC_COLUMN_HPP
 #pragma once
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <string>
 
@@ -64,7 +64,7 @@ public:
      * returns the data as a string.  If any formatting is required, it must
      * be done in this function.
      */
-    std::wstring detail(const winapi::shell::pidl::cpidl_t& pidl) const
+    std::wstring detail(const washer::shell::pidl::cpidl_t& pidl) const
     {
         return entry(m_index).detail(pidl);
     }
@@ -102,8 +102,8 @@ public:
      * @retval  1 if lhs > rhs
      */
     int compare(
-        const winapi::shell::pidl::cpidl_t& lhs,
-        const winapi::shell::pidl::cpidl_t& rhs) const
+        const washer::shell::pidl::cpidl_t& lhs,
+        const washer::shell::pidl::cpidl_t& rhs) const
     {
         return entry(m_index).compare(lhs, rhs);
     }

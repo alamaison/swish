@@ -31,7 +31,7 @@
 #include "swish/atl.hpp" // Common ATL setup
 #include "swish/debug.hpp" // METHOD_TRACE
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error
 

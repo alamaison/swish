@@ -601,8 +601,8 @@ public:
 
         detail::libssh2::userauth::public_key_from_file(
             session_ref().session_ptr(), username.data(), username.size(),
-            public_key.external_file_string().c_str(),
-            private_key.external_file_string().c_str(), passphrase.c_str());
+            public_key.string().c_str(),
+            private_key.string().c_str(), passphrase.c_str());
     }
 
     /**

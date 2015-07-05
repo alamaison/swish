@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Swish updates</title>
+    <link>http://www.swish-sftp.org/autoupdate/appcast.xml</link>
+    <description>Appcast for Swish updates.</description>
+    <language>en</language>
+    <item>
+      <title>Version @swish_VERSION@</title>
+      <sparkle:releaseNotesLink>
+	http://www.swish-sftp.org/autoupdate/NEWS-@swish_VERSION@.html
+      </sparkle:releaseNotesLink>
+      <pubDate>@PUBLICATION_DATE@</pubDate>
+      <enclosure url="@INSTALLER_URL@"
+                 sparkle:version="@swish_VERSION@"
+                 type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>

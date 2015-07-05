@@ -32,9 +32,9 @@
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 #include "swish/shell_folder/KbdInteractiveDialog.h" // Keyboard-interactive auth dialog box
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/gui/task_dialog.hpp> // task_dialog_builder
-#include <winapi/gui/message_box.hpp> // message_box
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
+#include <washer/gui/task_dialog.hpp> // task_dialog_builder
+#include <washer/gui/message_box.hpp> // message_box
 
 #include <comet/error.h> // com_error
 
@@ -49,7 +49,7 @@
 using swish::forms::password_prompt;
 using swish::frontend::best_taskdialog;
 
-using namespace winapi::gui;
+using namespace washer::gui;
 
 using comet::com_error;
 
@@ -166,7 +166,7 @@ HRESULT CUserInteraction::OnConfirmOverwrite(
     {
         return on_confirm_overwrite(bstrOldFile, bstrNewFile, m_hwnd);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 }
 
 
@@ -201,7 +201,7 @@ HRESULT on_hostkey_mismatch(
 
     task_dialog::task_dialog_builder<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
-        winapi::gui::task_dialog::icon_type::warning, true,
+        washer::gui::task_dialog::icon_type::warning, true,
         boost::bind(return_hr, E_ABORT));
     td.add_button(
         translate(
@@ -245,7 +245,7 @@ HRESULT on_hostkey_unknown(
     wstring instruction = translate(L"Verify unknown SSH host-key");
     task_dialog::task_dialog_builder<HRESULT, best_taskdialog> td(
         hwnd, instruction, message.str(), title,
-        winapi::gui::task_dialog::icon_type::information, true,
+        washer::gui::task_dialog::icon_type::information, true,
         boost::bind(return_hr, E_ABORT));
     td.add_button(
         translate(
@@ -275,7 +275,7 @@ HRESULT CUserInteraction::OnHostkeyMismatch(
         return on_hostkey_mismatch(
             bstrHostName, bstrHostKey, bstrHostKeyType, m_hwnd);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 }
 
 HRESULT CUserInteraction::OnHostkeyUnknown(
@@ -286,7 +286,7 @@ HRESULT CUserInteraction::OnHostkeyUnknown(
         return on_hostkey_unknown(
             bstrHostName, bstrHostKey, bstrHostKeyType, m_hwnd);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 }
 
 }} // namespace swish::frontend

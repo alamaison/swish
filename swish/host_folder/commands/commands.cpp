@@ -54,7 +54,7 @@ using swish::nse::IUICommand;
 using swish::nse::IUIElement;
 using swish::nse::WebtaskCommandTitleAdapter;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_ptr;
 using comet::make_smart_enumeration;

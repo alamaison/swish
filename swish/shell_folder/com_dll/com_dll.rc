@@ -1,7 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include "swish/version/metadata.h"
+#include "swish/versions/metadata.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -133,7 +133,7 @@ IDR_REMOTEFOLDER        REGISTRY                "RemoteFolder.rgs"
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-#include "shell_folder.rc"
+#include "swish/shell_folder/shell_folder.rc"
 1 TYPELIB "Swish.tlb"
 
 /////////////////////////////////////////////////////////////////////////////

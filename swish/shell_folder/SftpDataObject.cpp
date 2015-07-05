@@ -26,9 +26,9 @@
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
                                                // path_from_remote_pidl
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/shell/pidl.hpp> // cpidl_t, pidl_t
-#include <winapi/shell/pidl_iterator.hpp> // raw_pidl_iterator
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
+#include <washer/shell/pidl.hpp> // cpidl_t, pidl_t
+#include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
 #pragma warning(push)
 #pragma warning(disable:4244) // conversion from uint64_t to uint32_t
@@ -50,10 +50,10 @@ using swish::shell_folder::data_object::Descriptor;
 using swish::shell_folder::data_object::StorageMedium;
 using swish::shell_folder::data_object::group_descriptor_from_range;
 
-using winapi::shell::pidl::basic_pidl;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl::raw_pidl_iterator;
+using washer::shell::pidl::basic_pidl;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl::raw_pidl_iterator;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -152,7 +152,7 @@ STDMETHODIMP CSftpDataObject::GetData(
         // Delegate all non-FILECONTENTS requests to the superclass
         return __super::GetData(pformatetcIn, pmedium);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 }
 
 /*----------------------------------------------------------------------------*
@@ -313,7 +313,7 @@ throw(...)
 
     // Get stream from relative path stored in the lindexth FILEDESCRIPTOR
     CSftpDirectory dir(m_pidlCommonParent, m_provider);
-    return dir.GetFileByPath(fgd[lindex].path().string().c_str(), false);
+    return dir.GetFileByPath(fgd[lindex].path(), false);
 }
 
 /**

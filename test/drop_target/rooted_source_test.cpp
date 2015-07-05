@@ -29,11 +29,11 @@
 #include <test/common_boost/helpers.hpp> // wchar_t ostream
 #include <test/common_boost/fixtures.hpp> // SandboxFixture
 
-#include <winapi/shell/shell.hpp> // pidl_from_parsing_name
-#include <winapi/shell/shell_item.hpp> // pidl_shell_item
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/shell.hpp> // pidl_from_parsing_name
+#include <washer/shell/shell_item.hpp> // pidl_shell_item
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/test/unit_test.hpp>
 
@@ -41,57 +41,57 @@ using swish::drop_target::RootedSource;
 
 using test::SandboxFixture;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::pidl_from_parsing_name;
-using winapi::shell::pidl_shell_item;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::pidl_from_parsing_name;
+using washer::shell::pidl_shell_item;
 
 using boost::filesystem::wofstream;
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 
 namespace {
 
     class RootedSourceFixture : public SandboxFixture
     {
     public:
-        wpath test_root()
+        path test_root()
         {
             return Sandbox();
         }
 
-        wpath child_file()
+        path child_file()
         {
             return NewFileInSandbox();
         }
 
-        wpath child_directory()
+        path child_directory()
         {
-            wpath directory = Sandbox() / L"testdir";
+            path directory = Sandbox() / L"testdir";
             create_directory(directory);
             return directory;
         }
 
-        wpath grandchild_file()
+        path grandchild_file()
         {
-            wpath directory = Sandbox() / L"testdir";
+            path directory = Sandbox() / L"testdir";
             create_directory(directory);
 
-            wpath file = directory / L"testfile.txt";
+            path file = directory / L"testfile.txt";
             wofstream s(file);
 
             return file;
         }
 
-        wpath greatgrandchild_file()
+        path greatgrandchild_file()
         {
-            wpath directory1 = Sandbox() / L"testdir1";
+            path directory1 = Sandbox() / L"testdir1";
             create_directory(directory1);
 
-            wpath directory2 = directory1 / L"testdir2";
+            path directory2 = directory1 / L"testdir2";
             create_directory(directory2);
 
-            wpath file = directory2 / L"testfile.txt";
+            path file = directory2 / L"testfile.txt";
             wofstream s(file);
 
             return file;
@@ -105,9 +105,9 @@ namespace {
             == pidl_shell_item(rhs).parsing_name();
     }
 
-    apidl_t to_pidl(const wpath& path)
+    apidl_t to_pidl(const path& path)
     {
-        return pidl_from_parsing_name(path.file_string());
+        return pidl_from_parsing_name(path.wstring());
     }
 
 }
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE( root )
  */
 BOOST_AUTO_TEST_CASE( child )
 {
-    wpath file = child_file();
+    path file = child_file();
     apidl_t pidl = to_pidl(file);
 
     RootedSource source(pidl.parent(), pidl.last_item());
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE( child )
  */
 BOOST_AUTO_TEST_CASE( child_dir )
 {
-    wpath directory = child_directory();
+    path directory = child_directory();
     apidl_t pidl = to_pidl(directory);
 
     RootedSource source(pidl.parent(), pidl.last_item());
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE( child_dir )
  */
 BOOST_AUTO_TEST_CASE( grandchild )
 {
-    wpath file = grandchild_file();
+    path file = grandchild_file();
     apidl_t pidl = to_pidl(file);
     apidl_t root_pidl = pidl.parent().parent();
     pidl_t branch = pidl.parent().last_item() + pidl.last_item();
@@ -172,10 +172,10 @@ BOOST_AUTO_TEST_CASE( grandchild )
     BOOST_CHECK(source.pidl() == pidl);
     BOOST_CHECK(source.common_root() == root_pidl);
 
-    wpath expected_relative_name = file.parent_path().filename();
+    path expected_relative_name = file.parent_path().filename();
     expected_relative_name /= file.filename();
     BOOST_CHECK_EQUAL(
-        source.relative_name(), expected_relative_name.file_string());
+        source.relative_name(), expected_relative_name.wstring());
 }
 
 /**
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( grandchild )
  */
 BOOST_AUTO_TEST_CASE( greatgrandchild )
 {
-    wpath file = greatgrandchild_file();
+    path file = greatgrandchild_file();
     apidl_t pidl = to_pidl(file);
     apidl_t root_pidl = pidl.parent().parent().parent();
     pidl_t branch = 
@@ -195,11 +195,11 @@ BOOST_AUTO_TEST_CASE( greatgrandchild )
     BOOST_CHECK(source.pidl() == pidl);
     BOOST_CHECK(source.common_root() == root_pidl);
 
-    wpath expected_relative_name = file.parent_path().parent_path().filename();
+    path expected_relative_name = file.parent_path().parent_path().filename();
     expected_relative_name /= file.parent_path().filename();
     expected_relative_name /= file.filename();
     BOOST_CHECK_EQUAL(
-        source.relative_name(), expected_relative_name.file_string());
+        source.relative_name(), expected_relative_name.wstring());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -30,6 +30,8 @@
 
 #include <string>
 
+#include <windows.h> // HWND
+
 namespace swish {
 namespace forms {
 

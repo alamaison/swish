@@ -37,8 +37,8 @@
 #include <ezel/controls/spinner.hpp> // spinner
 #include <ezel/form.hpp> // form
 
-#include <winapi/dynamic_link.hpp> // module_handle
-#include <winapi/gui/icon/icon.hpp> // load_icon
+#include <washer/dynamic_link.hpp> // module_handle
+#include <washer/gui/icon/icon.hpp> // load_icon
 
 #include <boost/bind.hpp> // bind
 #include <boost/lexical_cast.hpp> // lexical_cast
@@ -50,10 +50,10 @@
 
 using swish::host_folder::host_management::ConnectionExists;
 
-using winapi::module_handle;
+using washer::module_handle;
 using ezel::form;
-using winapi::gui::hicon;
-using winapi::gui::load_icon;
+using washer::gui::hicon;
+using washer::gui::load_icon;
 using namespace ezel::controls;
 
 using boost::bad_lexical_cast;

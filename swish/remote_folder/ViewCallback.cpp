@@ -31,9 +31,10 @@
 #include "swish/remote_folder/commands/commands.hpp" // NewFolder
 #include "swish/remote_folder/pidl_connection.hpp" // provider_from_pidl
 
-#include <winapi/error.hpp> // last_error
+#include <washer/error.hpp> // last_error
 
 #include <boost/bind.hpp> // bind
+#include <boost/exception/info.hpp>
 #include <boost/exception/errinfo_api_function.hpp> // errinfo_api_function
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -48,8 +49,8 @@ using swish::remote_folder::commands::remote_folder_task_pane_titles;
 
 using comet::com_ptr;
 
-using winapi::last_error;
-using winapi::shell::pidl::apidl_t;
+using washer::last_error;
+using washer::shell::pidl::apidl_t;
 
 using boost::bind;
 using boost::enable_error_info;

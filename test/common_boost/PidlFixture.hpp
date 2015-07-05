@@ -31,9 +31,9 @@
 #include "test/common_boost/fixtures.hpp" // ComFixture
 #include "test/common_boost/ProviderFixture.hpp" // ProviderFixture
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -53,8 +53,8 @@ public:
      * We cheat by returning a PIDL to a HostFolder item with the
      * shortcut path set to the remote directory.
      */
-    winapi::shell::pidl::apidl_t directory_pidl(
-        const boost::filesystem::wpath& directory);
+    washer::shell::pidl::apidl_t directory_pidl(
+        const boost::filesystem::path& directory);
 
     /**
      * Return an absolute PIDL to the sandbox on the remote end.
@@ -62,12 +62,12 @@ public:
      * This is, of course, the local sandbox but the PIDL points to
      * it via Swish rather than via the local filesystem.
      */
-    winapi::shell::pidl::apidl_t sandbox_pidl();
+    washer::shell::pidl::apidl_t sandbox_pidl();
 
     /**
      * Return pidls for all the items in the sandbox directory.
      */
-    std::vector<winapi::shell::pidl::cpidl_t> pidls_in_sandbox();
+    std::vector<washer::shell::pidl::cpidl_t> pidls_in_sandbox();
 
     /**
      * Make a DataObject to all the items in the sandbox, via the SFTP 

@@ -38,7 +38,9 @@
 #define SSH_SSH_ERROR_HPP
 
 #include <boost/exception/exception.hpp> // enable_error_info
-#include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
+#include <boost/exception/error_info.hpp>
+#include <boost/exception/errinfo_file_name.hpp>
+#include <boost/exception/errinfo_api_function.hpp>
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/throw_exception.hpp>
 #include <boost/lexical_cast.hpp>
@@ -222,8 +224,9 @@ namespace detail {
         int source_line, const char* api_function,
         const char* path, size_t path_len)
     {
+        boost::system::system_error e = boost::system::system_error(ec, message);
         throw_api_exception(
-            boost::enable_error_info(boost::system::system_error(ec, message)),
+            boost::enable_error_info(e),
             current_function, source_file, source_line, api_function, path,
             path_len);
     }

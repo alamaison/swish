@@ -102,7 +102,7 @@ static void _testShellPIDL(
     BOOST_CHECK_EQUAL(
         expected,
         swish::remote_folder::path_from_remote_pidl(
-            GetPIDLItem(pida, iFile)).string().c_str());
+            GetPIDLItem(pida, iFile)).wstring().c_str());
 
     ::GlobalUnlock(stg.hGlobal);
     pida = NULL;
@@ -137,7 +137,7 @@ static void _testShellPIDLFolder(
     BOOST_CHECK(pida);
 
     // Test folder PIDL which may be a RemoteItemId or a HostItemId
-    winapi::shell::pidl::cpidl_t actual = ::ILFindLastID(GetPIDLFolder(pida));
+    washer::shell::pidl::cpidl_t actual = ::ILFindLastID(GetPIDLFolder(pida));
     if (swish::remote_folder::remote_itemid_view(actual).valid())
     {
         BOOST_CHECK_EQUAL(
@@ -147,8 +147,8 @@ static void _testShellPIDLFolder(
     else if (swish::host_folder::host_itemid_view(actual).valid())
     {
         swish::host_folder::host_itemid_view itemid(actual);
-        boost::filesystem::wpath actual_path = itemid.path();
-        BOOST_CHECK_EQUAL(expected, actual_path.string());
+        boost::filesystem::path actual_path = itemid.path();
+        BOOST_CHECK_EQUAL(expected, actual_path.wstring());
     }
     else
     {

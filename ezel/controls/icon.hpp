@@ -31,7 +31,7 @@
 #include <ezel/control.hpp> // control base class
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/window/icon.hpp> // icon_window
+#include <washer/window/icon.hpp> // icon_window
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 
@@ -71,8 +71,8 @@ public:
         }
         else
         {
-            winapi::window::icon_window<wchar_t> icon(
-                winapi::window::window_handle::foster_handle(hwnd()));
+            washer::window::icon_window<wchar_t> icon(
+                washer::window::window_handle::foster_handle(hwnd()));
             return icon.change_icon(new_icon);
         }
     }
@@ -86,7 +86,7 @@ protected:
     {
         super::push();
 
-        winapi::send_message<wchar_t>(
+        washer::send_message<wchar_t>(
             hwnd(), STM_SETIMAGE, IMAGE_ICON, m_icon);
     }
 

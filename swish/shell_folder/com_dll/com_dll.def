@@ -1,4 +1,4 @@
-LIBRARY	"shell_folder-com_dll"
+LIBRARY
 
 EXPORTS
 	DllCanUnloadNow		PRIVATE

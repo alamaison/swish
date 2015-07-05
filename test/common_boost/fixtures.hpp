@@ -111,10 +111,8 @@ public:
     int GetPort() const;
     boost::filesystem::path PrivateKeyPath() const;
     boost::filesystem::path PublicKeyPath() const;
-    std::string ToRemotePath(
+    boost::filesystem::path ToRemotePath(
         boost::filesystem::path local_path) const;
-    boost::filesystem::wpath ToRemotePath(
-        boost::filesystem::wpath local_path) const;
 
 private:
     int m_port;
@@ -130,14 +128,14 @@ public:
     SandboxFixture();
     virtual ~SandboxFixture();
 
-    boost::filesystem::wpath Sandbox();
-    boost::filesystem::wpath NewFileInSandbox();
-    boost::filesystem::wpath NewFileInSandbox(std::wstring name);
-    boost::filesystem::wpath NewDirectoryInSandbox();
-    boost::filesystem::wpath NewDirectoryInSandbox(std::wstring name);
+    boost::filesystem::path Sandbox();
+    boost::filesystem::path NewFileInSandbox();
+    boost::filesystem::path NewFileInSandbox(std::wstring name);
+    boost::filesystem::path NewDirectoryInSandbox();
+    boost::filesystem::path NewDirectoryInSandbox(std::wstring name);
 
 private:
-    boost::filesystem::wpath m_sandbox;
+    boost::filesystem::path m_sandbox;
 };
 
 } // namespace test

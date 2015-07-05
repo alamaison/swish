@@ -32,11 +32,11 @@
 #include "swish/atl.hpp" // Common ATL setup
 #include "swish/debug.hpp" // METHOD_TRACE
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
-#include <winapi/shell/folder_error_adapters.hpp> // folder2_error_adapter
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
-#include <winapi/shell/property_key.hpp> // property_key
-#include <winapi/shell/shell.hpp> // string_to_strret
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
+#include <washer/shell/folder_error_adapters.hpp> // folder2_error_adapter
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/property_key.hpp> // property_key
+#include <washer/shell/shell.hpp> // string_to_strret
 
 #include <comet/error.h> // com_error
 #include <comet/variant.h> // variant_t
@@ -121,8 +121,8 @@ namespace detail {
 template<typename ColumnType>
 class CFolder :
     public ATL::CComObjectRoot,
-    public winapi::shell::folder2_error_adapter,
-    public winapi::shell::shell_details_error_adapter,
+    public washer::shell::folder2_error_adapter,
+    public washer::shell::shell_details_error_adapter,
     public IPersistFolder3,
     public IPersistIDList
 {
@@ -143,7 +143,7 @@ public:
 
     virtual ~CFolder() {}
 
-    const winapi::shell::pidl::apidl_t& root_pidl() const    
+    const washer::shell::pidl::apidl_t& root_pidl() const    
     {
         return m_root_pidl;
     }
@@ -217,7 +217,7 @@ public: // IPersistFolder2 methods
             // Copy the PIDL that was passed to us in Initialize()
             root_pidl().copy_to(*ppidl);
         }
-        WINAPI_COM_CATCH_INTERFACE(IPersistFolder2);
+        WASHER_COM_CATCH_INTERFACE(IPersistFolder2);
         
         return S_OK;
     }
@@ -390,7 +390,7 @@ public: // IShellFolder methods
 
             comet::com_ptr<IShellFolder> folder;
 
-            winapi::shell::pidl::cpidl_t child;
+            washer::shell::pidl::cpidl_t child;
             child.attach(::ILCloneFirst(pidl1));        
             bind_to_object(child.get(), NULL, IID_PPV_ARGS(folder.out()));
 
@@ -560,11 +560,11 @@ public: // IShellFolder2 methods
         {
             details.cxChar = col.average_width_in_chars();
             details.fmt = col.format();
-            details.str = winapi::shell::string_to_strret(col.header());
+            details.str = washer::shell::string_to_strret(col.header());
         }
         else
         {
-            details.str = winapi::shell::string_to_strret(col.detail(pidl));
+            details.str = washer::shell::string_to_strret(col.detail(pidl));
         }
 
         return details;
@@ -777,7 +777,7 @@ protected:
      * in the current folder (not a grandchild).
      */
     virtual ATL::CComPtr<IShellFolder> subfolder(
-        const winapi::shell::pidl::cpidl_t& pidl) = 0;
+        const washer::shell::pidl::cpidl_t& pidl) = 0;
 
     /**
      * The caller is asking for some property of an item in this folder.
@@ -789,8 +789,8 @@ protected:
      * support.
      */
     virtual comet::variant_t property(
-        const winapi::shell::property_key& key,
-        const winapi::shell::pidl::cpidl_t& pidl) = 0;
+        const washer::shell::property_key& key,
+        const washer::shell::pidl::cpidl_t& pidl) = 0;
 
 private:
 
@@ -819,7 +819,7 @@ private:
         return object;
     }
 
-    winapi::shell::pidl::apidl_t m_root_pidl;
+    washer::shell::pidl::apidl_t m_root_pidl;
 };
 
 }}} // namespace swish::shell_folder::folder

@@ -32,7 +32,7 @@
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -52,12 +52,12 @@ using swish::shell_folder::data_object_for_file;
 using swish::shell_folder::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using test::ComFixture;
 using test::SandboxFixture;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::test_tools::predicate_result;
 using boost::shared_ptr;
 
@@ -69,7 +69,7 @@ namespace { // private
     /**
      * Check that a PIDL and a filesystem path refer to the same item.
      */
-    predicate_result pidl_path_equivalence(apidl_t pidl, wpath path)
+    predicate_result pidl_path_equivalence(apidl_t pidl, path path)
     {
         vector<wchar_t> name(MAX_PATH);
         ::SHGetPathFromIDListW(pidl.get(), &name[0]);
@@ -79,7 +79,7 @@ namespace { // private
             predicate_result res(false);
             res.message()
                 << "Different items [" << wstring(&name[0])
-                << " != " << path.file_string() << "]";
+                << " != " << path.string() << "]";
             return res;
         }
 
@@ -112,11 +112,11 @@ BOOST_FIXTURE_TEST_SUITE(shell_utility_tests, ShellFunctionFixture)
  */
 BOOST_AUTO_TEST_CASE( convert_pidl_to_path )
 {
-    wpath source = NewFileInSandbox();
+    path source = NewFileInSandbox();
     shared_ptr<ITEMIDLIST_ABSOLUTE> pidl(
-        ::ILCreateFromPathW(source.file_string().c_str()), ::ILFree);
+        ::ILCreateFromPathW(source.wstring().c_str()), ::ILFree);
 
-    wpath path_from_conversion = path_from_pidl(pidl.get());
+    path path_from_conversion = path_from_pidl(pidl.get());
 
     BOOST_REQUIRE(equivalent(path_from_conversion, source));
 }
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE( convert_pidl_to_path )
  */
 BOOST_AUTO_TEST_CASE( convert_path_to_pidl )
 {
-    wpath source = NewFileInSandbox();
+    path source = NewFileInSandbox();
 
     shared_ptr<ITEMIDLIST_ABSOLUTE> pidl = pidl_from_path(source);
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE( convert_path_to_pidl )
  */
 BOOST_AUTO_TEST_CASE( single_item_dataobject )
 {
-    wpath source = NewFileInSandbox();
+    path source = NewFileInSandbox();
     
     PidlFormat format(data_object_for_file(source));
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE( single_item_dataobject )
  */
 BOOST_AUTO_TEST_CASE( multi_item_dataobject )
 {
-    vector<wpath> sources;
+    vector<path> sources;
     sources.push_back(NewFileInSandbox());
     sources.push_back(NewFileInSandbox());
     
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE( multi_item_dataobject )
  */
 BOOST_AUTO_TEST_CASE( single_item_ui_object )
 {
-    wpath source = NewFileInSandbox();
+    path source = NewFileInSandbox();
     
     PidlFormat format(
         ui_object_of_item<IDataObject>(pidl_from_path(source).get()));
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE( single_item_ui_object )
  */
 BOOST_AUTO_TEST_CASE( multi_item_ui_object )
 {
-    vector<wpath> sources;
+    vector<path> sources;
     sources.push_back(NewFileInSandbox());
     sources.push_back(NewFileInSandbox());
 

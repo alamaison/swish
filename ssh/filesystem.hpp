@@ -42,6 +42,7 @@
 #include <ssh/detail/libssh2/sftp.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t, uintmax_t
+#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM*
 #include <boost/exception/info.hpp> // errinfo_api_function
 #include <boost/filesystem/path.hpp> // path
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
@@ -49,6 +50,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
+#include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp> // errc
 #include <boost/system/system_error.hpp>
@@ -219,7 +221,7 @@ public:
         :
         m_file(file), m_long_entry(long_entry), m_attributes(attributes) {}
 
-    std::string name() const { return m_file.filename(); }
+    std::string name() const { return m_file.filename().string(); }
     const boost::filesystem::path& path() const { return m_file; }
     const std::string& long_entry() const { return m_long_entry; }
 

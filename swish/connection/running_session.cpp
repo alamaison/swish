@@ -45,9 +45,6 @@
 #include <ssh/session.hpp>
 #include <ssh/filesystem.hpp> // sftp_filesystem
 
-#include <libssh2.h>
-#include <libssh2_sftp.h>
-
 #include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
 #include <boost/move/move.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION

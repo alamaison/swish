@@ -30,7 +30,7 @@
 
 #include "swish/frontend/announce_error.hpp" // announce_last_exception
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/error.h> // com_error_from_interface
 #include <comet/ptr.h> // com_ptr
@@ -154,7 +154,7 @@ public: // IDataObject methods
                 throw;
             }
         }
-        WINAPI_COM_CATCH_AUTO_INTERFACE();
+        WASHER_COM_CATCH_AUTO_INTERFACE();
         return hr;
     }
     

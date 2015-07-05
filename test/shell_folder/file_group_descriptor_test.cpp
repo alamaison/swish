@@ -33,7 +33,7 @@
 
 using namespace swish::shell_folder::data_object;
 using boost::shared_ptr;
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 
 namespace {
 
@@ -118,9 +118,9 @@ BOOST_AUTO_TEST_CASE( size )
 BOOST_AUTO_TEST_CASE( access )
 {
     FileGroupDescriptor fgd(get());
-    BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
-    BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
-    BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
+    BOOST_REQUIRE(fgd[0].path() == path(L"test/item/path"));
+    BOOST_REQUIRE(fgd[1].path() == path(L"test\\item\\bob"));
+    BOOST_REQUIRE(fgd[0].path() == path(L"test/item/path"));
 }
 
 /**
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE( descriptor_lifetime )
         d = scoped_fgd[1];
     }
 
-    BOOST_REQUIRE(d.path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE(d.path() == path(L"test\\item\\bob"));
 }
 
 /**
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE( descriptor_independence )
     d.path(L"replaced/path");
 
     BOOST_REQUIRE(d.path() == L"replaced/path");
-    BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE(fgd[1].path() == path(L"test\\item\\bob"));
 }
 
 /**
@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE( copy_construct )
 {
     FileGroupDescriptor fgd_orig(get());
     FileGroupDescriptor fgd = fgd_orig;
-    BOOST_REQUIRE(fgd[0].path() == wpath(L"test/item/path"));
-    BOOST_REQUIRE(fgd[1].path() == wpath(L"test\\item\\bob"));
+    BOOST_REQUIRE(fgd[0].path() == path(L"test/item/path"));
+    BOOST_REQUIRE(fgd[1].path() == path(L"test\\item\\bob"));
     BOOST_REQUIRE_EQUAL(fgd.size(), 2U);
 }
 

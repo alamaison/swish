@@ -31,7 +31,7 @@
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 #include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 
-#include <winapi/gui/task_dialog.hpp>
+#include <washer/gui/task_dialog.hpp>
 
 #include <comet/ptr.h> // com_ptr
 #include <comet/error.h> // com_error
@@ -55,14 +55,16 @@
 #include <string>
 #include <utility> // pair
 
+#include <ShlObj.h> // SHChangeNotify
+
 using swish::connection::session_manager;
 using swish::frontend::best_taskdialog;
 using swish::nse::Command;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::remote_folder::connection_from_pidl;
 
-using namespace winapi::gui::task_dialog;
-using winapi::shell::pidl::apidl_t;
+using namespace washer::gui::task_dialog;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_error;
 using comet::com_ptr;

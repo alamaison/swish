@@ -35,7 +35,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 namespace swish {
 namespace drop_target {

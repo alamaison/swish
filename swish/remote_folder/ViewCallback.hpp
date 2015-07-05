@@ -30,8 +30,8 @@
 
 #include "swish/nse/view_callback.hpp" // CViewCallback
 
-#include <winapi/object_with_site.hpp> // object_with_site
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/object_with_site.hpp> // object_with_site
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/server.h> // simple_object
 
@@ -39,11 +39,11 @@ namespace swish {
 namespace remote_folder {
 
 class CViewCallback :
-    public comet::simple_object<nse::CViewCallback, winapi::object_with_site>
+    public comet::simple_object<nse::CViewCallback, washer::object_with_site>
 {
 public:
 
-    CViewCallback(const winapi::shell::pidl::apidl_t& folder_pidl);
+    CViewCallback(const washer::shell::pidl::apidl_t& folder_pidl);
 
 private:
 
@@ -59,7 +59,7 @@ private:
     // @}
 
     HWND m_hwnd_view;         ///< Handle to folder view window
-    winapi::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
+    washer::shell::pidl::apidl_t m_folder_pidl; ///< Our copy of pidl to owning
                                                 ///< folder
 };
 

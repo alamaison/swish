@@ -42,7 +42,7 @@ using swish::host_folder::host_itemid_view;
 using swish::provider::CProvider;
 using swish::provider::sftp_provider;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_ptr;
 

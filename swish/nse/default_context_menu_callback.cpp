@@ -26,13 +26,16 @@
 
 #include "swish/nse/default_context_menu_callback.hpp"
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
 
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
 #include <string>
 
+#include <shlobj.h> // DFM_*
 #include <Windows.h> // HRESULT, HWND, lparam, wparam, HMENU, IDataObject
 
 using comet::com_error;
@@ -160,7 +163,7 @@ HRESULT default_context_menu_callback::operator()(
                 hwnd, selection, menu_message_id, wparam, lparam);
         }
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 HRESULT default_context_menu_callback::on_unknown_dfm(

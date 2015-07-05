@@ -1,11 +1,7 @@
-Update version number in
-- NEWS
-- Doxyfile
-- appcast.xml (x5 and date)
-- setup_conf.xml (x4)
+Update version number in:
+- top-level CMakeLists.txt
 - wix/swish.wxs
 - wix/wix.wixproj
-- swish/version/metadata.h (x1 and copyright date)
 
 Add notable changes to NEWS.
 

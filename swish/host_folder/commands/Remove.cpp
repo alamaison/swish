@@ -46,7 +46,7 @@ using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
 using swish::host_folder::host_management::RemoveConnectionFromRegistry;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 using comet::com_error;
 using comet::com_ptr;

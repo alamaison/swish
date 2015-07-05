@@ -36,7 +36,7 @@
 #include <comet/datetime.h> // datetime_t
 
 #include <boost/bind.hpp>
-#include <boost/filesystem.hpp> // wpath
+#include <boost/filesystem.hpp> // path
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/format.hpp> // wformat
 #include <boost/shared_ptr.hpp>
@@ -66,15 +66,15 @@ namespace detail {
      * path given as a string.
      */
     inline FilesystemLocation find_location_from_path(
-        const Filesystem& filesystem, const boost::filesystem::wpath& path)
+        const Filesystem& filesystem, const boost::filesystem::path& path)
     {
         // Start searching in root of 'filesystem'
         FilesystemLocation current_dir = filesystem.begin();
 
         // Walk down list of tokens finding each item below the previous
-        BOOST_FOREACH(boost::filesystem::wpath segment, path.relative_path())
+        BOOST_FOREACH(boost::filesystem::path segment, path.relative_path())
         {
-            std::wstring name = segment.string();
+            std::wstring name = segment.wstring();
 
             if (name == L".")
                 continue;
@@ -312,9 +312,12 @@ namespace detail {
     };
 
     inline comet::bstr_t tag_filename(
-        const wchar_t* filename, const boost::filesystem::wpath& directory)
+        const wchar_t* filename, const boost::filesystem::path& directory)
     {
-        return str(boost::wformat(filename) % directory.filename());
+        // UNOBVIOUS: converting the path to a string here, rather than passing
+        // the path directly to the formatter, because Boost.Filesystem v3,
+        // surprisingly, quotes all paths that are sent to an output stream.
+        return str(boost::wformat(filename) % directory.filename().wstring());
     }
 
     inline void make_item_in(
@@ -325,7 +328,7 @@ namespace detail {
     }
 
     inline void make_item_in(
-        Filesystem& filesystem, const boost::filesystem::wpath& path,
+        Filesystem& filesystem, const boost::filesystem::path& path,
         const swish::provider::sftp_filesystem_item& item)
     {
         make_item_in(
@@ -338,7 +341,7 @@ namespace detail {
      * listing later.
      */
     inline void fill_mock_listing(
-        Filesystem& filesystem, const boost::filesystem::wpath& directory)
+        Filesystem& filesystem, const boost::filesystem::path& directory)
     {
         std::vector<comet::bstr_t> filenames;
         filenames.push_back(tag_filename(L"test%sfile", directory));
@@ -604,14 +607,14 @@ public:
         const swish::provider::sftp_provider_path& path,
         bool follow_links)
     {
-        boost::filesystem::wpath target;
+        boost::filesystem::path target;
         if (follow_links)
         {
             target =
                 comet::bstr_t(
                     comet::auto_attach(
                         resolve_link(
-                            comet::bstr_t(path.string()).in()))).w_str();
+                            comet::bstr_t(path.wstring()).in()))).w_str();
         }
         else
         {

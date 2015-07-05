@@ -32,7 +32,7 @@
 #include "swish/nse/detail/command_state_conversion.hpp"
                                                // command_state_to_expcmdstate
 
-#include <winapi/object_with_site.hpp> // object_with_site
+#include <washer/object_with_site.hpp> // object_with_site
 
 #include <comet/error.h> // com_error
 #include <comet/ptr.h> // com_ptr
@@ -332,11 +332,11 @@ public:
  */
 template<typename T>
 class CExplorerCommandWithSite :
-    public CExplorerCommandImpl<T, winapi::object_with_site>
+    public CExplorerCommandImpl<T, washer::object_with_site>
 {
 public:
 
-    typedef CExplorerCommandImpl<T, winapi::object_with_site> super;
+    typedef CExplorerCommandImpl<T, washer::object_with_site> super;
 
 // Define pass-through constructors with variable numbers of arguments
 #define BOOST_PP_LOCAL_MACRO(N) \

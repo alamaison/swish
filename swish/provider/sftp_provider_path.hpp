@@ -32,7 +32,7 @@
 #ifndef SWISH_PROVIDER_SFTP_PROVIDER_PATH_HPP
 #define SWISH_PROVIDER_SFTP_PROVIDER_PATH_HPP
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 
 namespace swish {
 namespace provider {
@@ -40,7 +40,7 @@ namespace provider {
 // Currently we just borrow the Boost.Filesystem path, unadulterated.
 // Eventually we should adapt it to handle locales and maybe even SFTP
 // operations.
-typedef boost::filesystem::wpath sftp_provider_path;
+typedef boost::filesystem::path sftp_provider_path;
 
 }}
 

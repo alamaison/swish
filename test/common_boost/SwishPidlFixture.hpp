@@ -32,8 +32,8 @@
 
 #include <comet/datetime.h> // datetime_t
 
-#include <winapi/shell/pidl.hpp> // apidl_t, cpidl_t
-#include <winapi/shell/shell.hpp> // pidl_from_parsing_name
+#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/shell.hpp> // pidl_from_parsing_name
 
 #include <string>
 
@@ -46,14 +46,14 @@ public:
     /**
      * Return the PIDL to the Swish HostFolder in Explorer.
      */
-    winapi::shell::pidl::apidl_t swish_pidl()
+    washer::shell::pidl::apidl_t swish_pidl()
     {
-        return winapi::shell::pidl_from_parsing_name(
+        return washer::shell::pidl_from_parsing_name(
             L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
             L"::{B816A83A-5022-11DC-9153-0090F5284F85}");
     }
 
-    winapi::shell::pidl::cpidl_t create_dummy_remote_itemid(
+    washer::shell::pidl::cpidl_t create_dummy_remote_itemid(
         const std::wstring& filename, bool is_folder)
     {
         return swish::remote_folder::create_remote_itemid(
@@ -66,7 +66,7 @@ public:
     /**
      * Get an absolute PIDL that ends in a HOSTPIDL to root RemoteFolder on.
      */
-    winapi::shell::pidl::apidl_t create_dummy_root_host_pidl()
+    washer::shell::pidl::apidl_t create_dummy_root_host_pidl()
     {
         return swish_pidl() + swish::host_folder::create_host_itemid(
             L"test.example.com", L"user", L"/tmp", 22, L"Test PIDL");
@@ -75,7 +75,7 @@ public:
     /**
      * Get an absolute PIDL that ends in a REMOTEPIDL to root RemoteFolder on.
      */
-    winapi::shell::pidl::apidl_t create_dummy_root_pidl()
+    washer::shell::pidl::apidl_t create_dummy_root_pidl()
     {
         return create_dummy_root_host_pidl() + create_dummy_remote_itemid(
             L"swish", true);

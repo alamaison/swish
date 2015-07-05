@@ -29,8 +29,8 @@
 
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
-#include <winapi/window/window.hpp>
+#include <washer/shell/pidl.hpp> // cpidl_t
+#include <washer/window/window.hpp>
 
 #include <boost/optional.hpp>
 
@@ -43,8 +43,8 @@ class extract_icon_co : public comet::simple_object<IExtractIconW>
 {
 public:
     extract_icon_co(
-        const boost::optional<winapi::window::window<wchar_t>>& owning_view,
-        const winapi::shell::pidl::cpidl_t& item)
+        const boost::optional<washer::window::window<wchar_t>>& owning_view,
+        const washer::shell::pidl::cpidl_t& item)
         :
     m_owning_view(owning_view), m_item(item) {}
 
@@ -82,8 +82,8 @@ public:
     }
 
 private:
-    boost::optional<winapi::window::window<wchar_t>> m_owning_view;
-    winapi::shell::pidl::cpidl_t m_item;
+    boost::optional<washer::window::window<wchar_t>> m_owning_view;
+    washer::shell::pidl::cpidl_t m_item;
 };
 
 }}

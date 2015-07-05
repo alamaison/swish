@@ -42,12 +42,12 @@
 #include <ssh/session.hpp>
 #include <ssh/filesystem.hpp> // sftp_filesystem
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/bstr.h> // bstr_t
 #include <comet/error.h> // com_error
 
-#include <boost/filesystem.hpp> // wpath
+#include <boost/filesystem.hpp> // path
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/function.hpp>
@@ -63,9 +63,6 @@
 #include <stdexcept> // logic_error
 #include <string>
 #include <vector>
-
-#include <libssh2.h>
-#include <libssh2_sftp.h>
 
 using swish::connection::authenticated_session;
 using swish::connection::running_session;
@@ -84,7 +81,6 @@ using comet::com_error;
 using comet::com_ptr;
 
 using boost::filesystem::path;
-using boost::filesystem::wpath;
 using boost::filesystem::ofstream;
 using boost::function;
 using boost::move;
@@ -106,8 +102,8 @@ namespace connection {
 
 namespace {
 
-const wpath known_hosts_path =
-    home_directory<wpath>() / L".ssh" / L"known_hosts";
+const path known_hosts_path =
+    home_directory<path>() / L".ssh" / L"known_hosts";
 
 void verify_host_key(
     const wstring& host, running_session& session,

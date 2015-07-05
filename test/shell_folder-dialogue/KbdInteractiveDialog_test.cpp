@@ -24,6 +24,7 @@
     @endif
 */
 
+#include <winapi/error.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -32,6 +33,8 @@
 #include <vector>
 
 #include "swish/shell_folder/KbdInteractiveDialog.h"
+
+using winapi::last_error;
 
 using std::make_pair;
 using std::pair;
@@ -86,8 +89,12 @@ namespace {
         BOOST_REQUIRE( hClickThread );
 
         // Launch dialog (blocks until dialog ends) and check button ID
-        BOOST_CHECK_EQUAL(
-            dlg.DoModal(), (INT_PTR) ((fClickCancel) ? IDCANCEL : IDOK));
+        INT_PTR rc = dlg.DoModal();
+		if (rc == -1)
+			BOOST_THROW_EXCEPTION(last_error());
+			
+		
+		BOOST_CHECK_EQUAL(rc, (INT_PTR) ((fClickCancel) ? IDCANCEL : IDOK));
 
         // Check that thread terminated
         ::Sleep(CLICK_DELAY);

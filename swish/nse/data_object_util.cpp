@@ -26,6 +26,8 @@
 
 #include "data_object_util.hpp"
 
+#include <shlguid.h> // BHID_DataObject
+
 using comet::com_ptr;
 
 namespace swish {

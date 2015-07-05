@@ -29,8 +29,8 @@
 #include "swish/remote_folder/remote_pidl.hpp" // create_remote_itemid
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 
-#include <winapi/shell/shell.hpp> // stream_from_pidl
-#include <winapi/trace.hpp> // trace
+#include <washer/shell/shell.hpp> // stream_from_pidl
+#include <washer/trace.hpp> // trace
 
 #include <comet/datetime.h> // datetime_t
 #include <comet/error.h> // com_error
@@ -48,14 +48,13 @@
 using swish::provider::sftp_provider;
 using swish::remote_folder::create_remote_itemid;
 
-using winapi::shell::pidl::apidl_t;
-using winapi::shell::pidl::cpidl_t;
-using winapi::shell::pidl::pidl_t;
-using winapi::shell::stream_from_pidl;
-using winapi::trace;
+using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
+using washer::shell::pidl::pidl_t;
+using washer::shell::stream_from_pidl;
+using washer::trace;
 
 using boost::int64_t;
-using boost::filesystem::wpath;
 using boost::function;
 using boost::locale::translate;
 using boost::locale::wformat;
@@ -126,7 +125,7 @@ namespace {
         }
 
         com_ptr<IStream> remote_stream;
-        
+
         try
         {
             remote_stream = sftp_directory.GetFile(file, true);

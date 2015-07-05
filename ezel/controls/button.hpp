@@ -32,7 +32,7 @@
 #include <ezel/detail/command_dispatch.hpp> // command_map
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/gui/commands.hpp> // command
+#include <washer/gui/commands.hpp> // command
 
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/signal.hpp> // signal

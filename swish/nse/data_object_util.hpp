@@ -31,6 +31,7 @@
 #include <comet/ptr.h> // com_ptr
 
 #include <ObjIdl.h> // IDataObject, IBindCtx
+#include <shobjidl.h> // IShellItemArray
 
 template<> struct comet::comtype<IDataObject>
 {

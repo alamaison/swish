@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "swish/atl.hpp"
+
 #include <comet/ptr.h> // com_ptr
 #include <comet/server.h> // simple_object
 
@@ -170,7 +172,7 @@ public:
         DWORD dwAspect = DVASPECT_CONTENT, DVTARGETDEVICE *ptd = NULL)
         throw(...)
     {
-        UINT nFormat = ::RegisterClipboardFormat(pszFormat);
+        UINT nFormat = ::RegisterClipboardFormatW(pszFormat);
         ATLENSURE_THROW(nFormat, E_INVALIDARG);
 
         _Construct(static_cast<CLIPFORMAT>(nFormat), 

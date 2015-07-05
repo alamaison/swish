@@ -28,7 +28,7 @@
 
 #include "swish/shell_folder/shell.hpp"
 
-#include <winapi/shell/shell.hpp> // bind_to_handler_object
+#include <washer/shell/shell.hpp> // bind_to_handler_object
 
 #include <comet/error.h> // com_error
 
@@ -43,9 +43,9 @@
 using swish::shell_folder::pidl_from_path;
 using swish::shell_folder::ui_object_of_items;
 
-using winapi::shell::bind_to_handler_object;
+using washer::shell::bind_to_handler_object;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::shared_ptr;
 using boost::numeric_cast;
 using boost::system::get_system_category;
@@ -62,7 +62,7 @@ namespace {
     /**
      * Return the path of the currently running executable.
      */
-    wpath get_module_path(HMODULE hmodule=NULL)
+    path get_module_path(HMODULE hmodule=NULL)
     {
         vector<wchar_t> buffer(MAX_PATH);
         unsigned long len = ::GetModuleFileNameW(
@@ -91,11 +91,11 @@ namespace data_object_utils {
  * files inside a .zip.  We're going to use one of these to test our 
  * shell data object wrapper with virtual items.
  */
-wpath create_test_zip_file(const wpath& in_directory)
+path create_test_zip_file(const path& in_directory)
 {
-    wpath source = get_module_path().parent_path()
+    path source = get_module_path().parent_path()
         / L"test_zip_file.zip";
-    wpath destination = in_directory / L"test_zip_file.zip";
+    path destination = in_directory / L"test_zip_file.zip";
 
     copy_file(source, destination);
 
@@ -105,7 +105,7 @@ wpath create_test_zip_file(const wpath& in_directory)
 /**
  * Return a DataObject with the contents of a zip file.
  */
-com_ptr<IDataObject> data_object_for_zipfile(const wpath& zip_file)
+com_ptr<IDataObject> data_object_for_zipfile(const path& zip_file)
 {
     shared_ptr<ITEMIDLIST_ABSOLUTE> zip_pidl = pidl_from_path(zip_file);
     com_ptr<IShellFolder> zip_folder = 

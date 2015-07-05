@@ -32,8 +32,8 @@
 
 #include "swish/nse/StaticColumn.hpp" // StaticColumn
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
-#include <winapi/shell/property_key.hpp> // property_key
+#include <washer/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/property_key.hpp> // property_key
 
 #include <comet/variant.h> // variant_t
 
@@ -59,7 +59,7 @@ struct column_entry
      * These can be set using an aggregate initialiser: { val1, val2, ... }
      */
     // @{
-    winapi::shell::property_key m_key;
+    washer::shell::property_key m_key;
     boost::locale::message m_title;
     SHCOLSTATEF m_flags;
     int m_format;
@@ -82,7 +82,7 @@ struct column_entry
      * Transforms the output using m_stringifier, if any, otherwise performs
      * simple wstring conversion.
      */
-    std::wstring detail(const winapi::shell::pidl::cpidl_t& pidl) const
+    std::wstring detail(const washer::shell::pidl::cpidl_t& pidl) const
     {
         comet::variant_t var = property_from_pidl(pidl, m_key);
         if (m_stringifier)
@@ -92,8 +92,8 @@ struct column_entry
     }
 
     int compare(
-        const winapi::shell::pidl::cpidl_t& lhs,
-        const winapi::shell::pidl::cpidl_t& rhs) const
+        const washer::shell::pidl::cpidl_t& lhs,
+        const washer::shell::pidl::cpidl_t& rhs) const
     {
         return compare_pidls_by_property(lhs, rhs, m_key);
     }
@@ -112,7 +112,7 @@ protected:
 
 typedef swish::nse::StaticColumn<RemoteColumnEntries> Column;
 
-const winapi::shell::property_key& property_key_from_column_index(
+const washer::shell::property_key& property_key_from_column_index(
     size_t index);
 
 }} // namespace swish::remote_folder

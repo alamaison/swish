@@ -32,14 +32,14 @@
 #include "test/common_boost/SwishPidlFixture.hpp"
 
 
-#include <winapi/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp> // apidl_t
 
 #include <boost/test/unit_test.hpp>
 
 using swish::host_folder::create_host_itemid;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 
-using winapi::shell::pidl::apidl_t;
+using washer::shell::pidl::apidl_t;
 
 
 BOOST_FIXTURE_TEST_SUITE( swish_pidl_tests, test::SwishPidlFixture )

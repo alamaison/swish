@@ -27,8 +27,6 @@
 
 #include "pidl.hpp"  // Custom PIDL functions
 
-#include "test/common/CppUnitExtensions.h"
-
 #include "swish/shell_folder/Swish.h" // for HostFolder UUID
 
 #include "swish/atl.hpp"  // Common ATL setup
@@ -94,7 +92,7 @@ public:
         hr = m_spFolder.CoCreateInstance(__uuidof(CHostFolder));
         CPPUNIT_ASSERT_OK(hr);
 
-        // Copy to regular interface pointer so we can test for memory 
+        // Copy to regular interface pointer so we can test for memory
         // leaks in tearDown()
         m_spFolder.CopyTo(&m_pFolder);
     }
@@ -127,8 +125,8 @@ protected:
      * Test that the class responds to IUnknown::QueryInterface correctly.
      *
      * This test will be roughly the same for *any* valid COM object except
-     * one that implementa IHTMLDOMTextNode2 as this has been chosen to test 
-     * failure. 
+     * one that implementa IHTMLDOMTextNode2 as this has been chosen to test
+     * failure.
      * The cases being tested are based on those explained by Raymond Chen:
      * http://blogs.msdn.com/oldnewthing/archive/2004/03/26/96777.aspx
      */
@@ -226,9 +224,9 @@ protected:
         CComPtr<IShellFolder> spDesktop;
         hr = ::SHGetDesktopFolder(&spDesktop);
         CPPUNIT_ASSERT_OK(hr);
-        hr = spDesktop->ParseDisplayName(NULL, NULL, 
+        hr = spDesktop->ParseDisplayName(NULL, NULL,
             L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-            L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL, 
+            L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL,
             reinterpret_cast<PIDLIST_RELATIVE*>(&pidl), NULL);
         CPPUNIT_ASSERT_OK(hr);
 
@@ -264,24 +262,24 @@ public:
 //     ComputerPIDL\SwishPIDL
 
 static const wchar_t *DN_FRIENDLY_RELATIVE = L"Test PIDL";
-static const wchar_t *DN_FRIENDLY_ABSOLUTE = 
+static const wchar_t *DN_FRIENDLY_ABSOLUTE =
     L"sftp://user@test.example.com//home/user/dir";
 
-static const wchar_t *DN_PARSING_RELATIVE = 
+static const wchar_t *DN_PARSING_RELATIVE =
     L"sftp://user@test.example.com:22//home/user/dir";
-static const wchar_t *DN_PARSING_ABSOLUTE = 
+static const wchar_t *DN_PARSING_ABSOLUTE =
     L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
     L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\"
     L"sftp://user@test.example.com:22//home/user/dir";
 
-static const wchar_t *DN_ADDRESSBAR_RELATIVE = 
+static const wchar_t *DN_ADDRESSBAR_RELATIVE =
     L"sftp://user@test.example.com//home/user/dir";
-static const wchar_t *DN_ADDRESSBAR_ABSOLUTE = 
+static const wchar_t *DN_ADDRESSBAR_ABSOLUTE =
     L"sftp://user@test.example.com//home/user/dir";
 
-static const wchar_t *DN_PARSINGADDRESSBAR_RELATIVE = 
+static const wchar_t *DN_PARSINGADDRESSBAR_RELATIVE =
     L"sftp://user@test.example.com:22//home/user/dir";
-static const wchar_t *DN_PARSINGADDRESSBAR_ABSOLUTE = 
+static const wchar_t *DN_PARSINGADDRESSBAR_ABSOLUTE =
     L"Computer\\Swish\\sftp://user@test.example.com:22//home/user/dir";
 
 static const wchar_t *DN_EDITING_RELATIVE = L"Test PIDL";
@@ -352,14 +350,14 @@ protected:
     void testParsingAddressbarNormal()
     {
         _testName(
-            DN_PARSINGADDRESSBAR_ABSOLUTE, 
+            DN_PARSINGADDRESSBAR_ABSOLUTE,
             SHGDN_FORADDRESSBAR | SHGDN_FORPARSING);
     }
 
     void testParsingAddressbarInFolder()
     {
         _testName(
-            DN_PARSINGADDRESSBAR_RELATIVE, 
+            DN_PARSINGADDRESSBAR_RELATIVE,
             SHGDN_INFOLDER | SHGDN_FORADDRESSBAR | SHGDN_FORPARSING);
     }
 

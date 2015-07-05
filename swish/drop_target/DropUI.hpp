@@ -31,7 +31,7 @@
 #include "swish/drop_target/DropActionCallback.hpp"
 #include "swish/drop_target/Progress.hpp"
 
-#include <winapi/window/window.hpp>
+#include <washer/window/window.hpp>
 
 #include <boost/optional.hpp>
 
@@ -48,14 +48,14 @@ namespace drop_target {
     {
     public:
         DropUI(
-            const boost::optional< winapi::window::window<wchar_t> >& owner);
+            const boost::optional< washer::window::window<wchar_t> >& owner);
 
-        virtual bool can_overwrite(const boost::filesystem::wpath& target);
+        virtual bool can_overwrite(const boost::filesystem::path& target);
         virtual std::auto_ptr<Progress> progress();
         virtual void handle_last_exception();
         
     private:
-        boost::optional< winapi::window::window<wchar_t> > m_owner;
+        boost::optional< washer::window::window<wchar_t> > m_owner;
         Progress* m_progress;
     };
 

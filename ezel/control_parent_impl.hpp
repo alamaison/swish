@@ -30,7 +30,7 @@
 
 #include <ezel/detail/window_impl.hpp> // window_impl
 
-#include <winapi/gui/messages.hpp> // message
+#include <washer/gui/messages.hpp> // message
 
 #include <cassert> // assert
 

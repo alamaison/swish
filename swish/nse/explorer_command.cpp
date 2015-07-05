@@ -26,7 +26,7 @@
 
 #include "explorer_command.hpp"
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
 #include <comet/enum.h> // stl_enumeration
 #include <comet/ptr.h> // com_ptr
@@ -93,7 +93,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommands(
                 m_commands, get_unknown());
         return commands->QueryInterface(riid, ppv);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -114,7 +114,7 @@ STDMETHODIMP CExplorerCommandProvider::GetCommand(
 
         return item->second->QueryInterface(riid, ppv);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -145,7 +145,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetTitle(
         if (FAILED(hr))
             BOOST_THROW_EXCEPTION(com_error(hr));
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -174,7 +174,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetIcon(
         if (FAILED(hr))
             BOOST_THROW_EXCEPTION(com_error(hr));
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -201,7 +201,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetToolTip(
         if (FAILED(hr))
             BOOST_THROW_EXCEPTION(com_error(hr));
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -223,7 +223,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetCanonicalName(
     {
         *pguidCommandName = canonical_name();
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -249,7 +249,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetState(
     {
         *pCmdState = state(psiItemArray, (fOkToBeSlow) ? true : false);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -268,7 +268,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::Invoke(
     {
         invoke(psiItemArray, pbc);
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -284,7 +284,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::GetFlags(EXPCMDFLAGS* pFlags)
     {
         *pFlags = flags();
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }
@@ -301,7 +301,7 @@ STDMETHODIMP CExplorerCommandErrorAdapter::EnumSubCommands(
     {
         *ppEnum = subcommands().detach();
     }
-    WINAPI_COM_CATCH_AUTO_INTERFACE();
+    WASHER_COM_CATCH_AUTO_INTERFACE();
 
     return S_OK;
 }

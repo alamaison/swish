@@ -32,7 +32,7 @@
 #include "swish/provider/sftp_provider.hpp" // sftp_provider
 #include "swish/shell_folder/Pidl.h"
 
-#include <winapi/shell/pidl.hpp> // cpidl_t
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <comet/ptr.h> // com_ptr
 
@@ -89,7 +89,7 @@ private:
      * and will always be single-level children of m_pidlCommonParent.
      */
     // @{
-    typedef winapi::shell::pidl::cpidl_t TopLevelPidl;
+    typedef washer::shell::pidl::cpidl_t TopLevelPidl;
     typedef std::vector<TopLevelPidl> TopLevelList;
     // @}
 

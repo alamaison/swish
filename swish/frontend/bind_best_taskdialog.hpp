@@ -28,18 +28,18 @@
 #define SWISH_FRONTEND_BIND_BEST_TASKDIALOG
 #pragma once
 
-#include <winapi/gui/task_dialog.hpp> // tdi_function, tdi_implementation
+#include <washer/gui/task_dialog.hpp> // tdi_function, tdi_implementation
 
 namespace swish {
 namespace frontend {
 
-winapi::gui::task_dialog::tdi_function bind_best_taskdialog();
+washer::gui::task_dialog::tdi_function bind_best_taskdialog();
 
-class best_taskdialog : public winapi::gui::task_dialog::tdi_implementation
+class best_taskdialog : public washer::gui::task_dialog::tdi_implementation
 {
 public:
     best_taskdialog()
-        : winapi::gui::task_dialog::tdi_implementation(bind_best_taskdialog())
+        : washer::gui::task_dialog::tdi_implementation(bind_best_taskdialog())
     {}
 };
 

@@ -29,6 +29,7 @@
 
 #include "swish/port_conversion.hpp" // port_to_string
 #include "swish/utils.hpp"
+#include "swish/connection/session_pool.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp> // wofstream
@@ -62,7 +63,7 @@ using boost::system::get_system_category;
 using boost::system::system_error;
 using boost::filesystem::wofstream;
 using boost::filesystem::path;
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 using boost::process::environment;
 using boost::process::context;
 using boost::process::child;
@@ -94,7 +95,7 @@ namespace { // private
     const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
     const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
 
-    const path CYGDRIVE_PREFIX = "/cygdrive/";
+    const path CYGDRIVE_PREFIX = L"/cygdrive/";
 
     /**
      * Return the path of the currently running executable.
@@ -205,16 +206,9 @@ namespace { // private
      */
     path Cygdriveify(path windowsPath)
     {
-        string drive(windowsPath.root_name(), 0, 1);
-        return CYGDRIVE_PREFIX / drive / windowsPath.relative_path();
-    }
-
-    wpath Cygdriveify(wpath windowsPath)
-    {
-        wstring drive(windowsPath.root_name(), 0, 1);
-        return wpath(Utf8StringToWideString(
-            CYGDRIVE_PREFIX.directory_string())) / drive / 
-            windowsPath.relative_path();
+        wstring drive(windowsPath.root_name().wstring(), 0, 1);
+        return (CYGDRIVE_PREFIX / drive / windowsPath.relative_path())
+            .generic_wstring();
     }
 
     vector<string> GetSshdOptions(int port)
@@ -234,6 +228,41 @@ namespace { // private
             "-o", "Subsystem sftp " + Cygdriveify(GetSftpPath()).string());
         return options;
     }
+
+}
+
+extern "C" {
+    extern void ERR_free_strings();
+    extern void ERR_remove_state(unsigned long);
+    extern void EVP_cleanup();
+    extern void CRYPTO_cleanup_all_ex_data();
+    extern void ENGINE_cleanup();
+    extern void CONF_modules_unload(int);
+    extern void CONF_modules_free();
+    extern void RAND_cleanup();
+}
+
+namespace {
+    struct global_fixture
+    {
+        ~global_fixture()
+        {            
+            // We call this here as a bit of a hack to stop memory-leak
+            // detection incorrectly detecting OpenSSL global data as a
+            // leak
+            swish::connection::session_pool().destroy();
+            ::RAND_cleanup();
+            ::ENGINE_cleanup();
+            ::CONF_modules_unload(1);
+            ::CONF_modules_free();
+            ::EVP_cleanup();
+            ::ERR_free_strings();
+            ::ERR_remove_state(0);
+            ::CRYPTO_cleanup_all_ex_data();
+        }
+    };
+
+    BOOST_GLOBAL_FIXTURE(global_fixture);
 }
 
 
@@ -333,16 +362,10 @@ path OpenSshFixture::PublicKeyPath() const
  * Transform a local (Windows) path into a form usuable on the
  * command-line of the fixture SSH server.
  */
-string OpenSshFixture::ToRemotePath(path local_path) const
+path OpenSshFixture::ToRemotePath(path local_path) const
 {
-    return Cygdriveify(local_path).string();
+    return Cygdriveify(local_path);
 }
-
-wpath OpenSshFixture::ToRemotePath(wpath local_path) const
-{
-    return Cygdriveify(local_path).string();
-}
-
 
 namespace { // private
 
@@ -351,13 +374,13 @@ namespace { // private
     /**
      * Return the path to the sandbox directory.
      */
-    wpath SandboxDirectory()
+    path SandboxDirectory()
     {
         shared_ptr<wchar_t> name(
             _wtempnam(NULL, SANDBOX_NAME.c_str()), free);
         BOOST_REQUIRE(name);
         
-        return wpath(name.get());
+        return path(name.get());
     }
 }
 
@@ -375,14 +398,14 @@ SandboxFixture::~SandboxFixture()
     catch (...) {}
 }
 
-wpath SandboxFixture::Sandbox()
+path SandboxFixture::Sandbox()
 {
     return m_sandbox;
 }
 
-wpath SandboxFixture::NewFileInSandbox(wstring name)
+path SandboxFixture::NewFileInSandbox(wstring name)
 {
-    wpath p = Sandbox() / name;
+    path p = Sandbox() / name;
     BOOST_REQUIRE(!exists(p));
     wofstream file(p);
     BOOST_CHECK(exists(p));
@@ -393,37 +416,43 @@ wpath SandboxFixture::NewFileInSandbox(wstring name)
  * Create a new empty file in the fixture sandbox with a random name
  * and return the path.
  */
-wpath SandboxFixture::NewFileInSandbox()
+path SandboxFixture::NewFileInSandbox()
 {
     vector<wchar_t> buffer(MAX_PATH);
 
-    if (!GetTempFileName(
-        Sandbox().directory_string().c_str(), NULL, 0, &buffer[0]))
+    if (!GetTempFileNameW(
+        Sandbox().wstring().c_str(), NULL, 0, &buffer[0]))
         throw system_error(::GetLastError(), get_system_category());
-    
-    wpath p = wpath(wstring(&buffer[0], buffer.size()));
+    buffer[buffer.size() - 1] = L'\0';
+
+    // The path in the buffer is NULL-terminated and the buffer will be
+    // larger than the path.  Therefore, do NOT pass the buffer directly
+    // to the path constructor and do not use the wstring constructor.
+    // Doing so results in the extra NULLs in the buffer being included
+    // in the path, which is not good.
+    path p = path(wstring(&buffer[0]));
     BOOST_CHECK(exists(p));
     BOOST_CHECK(is_regular_file(p));
     BOOST_CHECK(p.is_complete());
     return p;
 }
 
-wpath SandboxFixture::NewDirectoryInSandbox()
+path SandboxFixture::NewDirectoryInSandbox()
 {
     // This is a bit of a hack but it's simple and works: create a new file,
     // delete it, reuse the filename to make a folder.  It's not worth
     // investigating the proper way to get a new random directory name.
 
-    wpath file = NewFileInSandbox();
+    path file = NewFileInSandbox();
     remove(file);
     create_directory(file);
     BOOST_CHECK(is_directory(file));
     return file;
 }
 
-wpath SandboxFixture::NewDirectoryInSandbox(wstring name)
+path SandboxFixture::NewDirectoryInSandbox(wstring name)
 {
-    wpath p = Sandbox() / name;
+    path p = Sandbox() / name;
     BOOST_REQUIRE(!exists(p));
     create_directory(p);
     return p;

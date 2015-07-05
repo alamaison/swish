@@ -37,9 +37,6 @@
 
 #include "openssh_fixture.hpp"
 
-#include "swish/port_conversion.hpp" // port_to_string
-#include "swish/utils.hpp"
-
 #include <boost/assign/list_of.hpp>
 #include <boost/process/context.hpp> // context
 #include <boost/process/environment.hpp> // environment
@@ -51,13 +48,12 @@
 #pragma warning(pop)
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/mersenne_twister.hpp>  // mt19937
+#include <boost/test/unit_test.hpp>
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
-
-using swish::port_to_string;
-using swish::utils::current_user_a;
 
 using boost::filesystem::path;
 using boost::process::environment;
@@ -88,7 +84,58 @@ namespace { // private
     const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
     const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
 
-    const path CYGDRIVE_PREFIX = "/cygdrive/";
+    const path CYGDRIVE_PREFIX = L"/cygdrive/";
+
+    /**
+     * Locale-independent port number to port string conversion.
+     */
+    inline std::string port_to_string(long port)
+    {
+        std::ostringstream stream;
+        stream.imbue(std::locale::classic()); // force locale-independence
+        stream << port;
+        if (!stream)
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Unable to convert port number to string"));
+
+        return stream.str();
+    }
+
+    string current_user()
+    {
+        // Calculate required size of output buffer
+        DWORD len = 0;
+        if (::GetUserNameA(NULL, &len))
+            return string();
+
+        DWORD err = ::GetLastError();
+        if (err != ERROR_INSUFFICIENT_BUFFER)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::system::system_error(
+                    err, boost::system::get_system_category()));
+        }
+
+        // Repeat call with a buffer of required size
+        if (len > 0)
+        {
+            std::vector<char> buffer(len);
+            if (::GetUserNameA(&buffer[0], &len))
+            {
+                return string(&buffer[0], len - 1);
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION(
+                    boost::system::system_error(
+                    ::GetLastError(), boost::system::get_system_category()));
+            }
+        }
+        else
+        {
+            return string();
+        }
+    }
 
     /**
      * Return the path of the currently running executable.
@@ -199,8 +246,9 @@ namespace { // private
      */
     path Cygdriveify(path windowsPath)
     {
-        string drive(windowsPath.root_name(), 0, 1);
-        return CYGDRIVE_PREFIX / drive / windowsPath.relative_path();
+        string drive(windowsPath.root_name().string(), 0, 1);
+        return (CYGDRIVE_PREFIX / drive / windowsPath.relative_path())
+            .generic_wstring();
     }
 
     vector<string> GetSshdOptions(int port)
@@ -222,6 +270,38 @@ namespace { // private
     }
 }
 
+extern "C" {
+    extern void ERR_free_strings();
+    extern void ERR_remove_state(unsigned long);
+    extern void EVP_cleanup();
+    extern void CRYPTO_cleanup_all_ex_data();
+    extern void ENGINE_cleanup();
+    extern void CONF_modules_unload(int);
+    extern void CONF_modules_free();
+    extern void RAND_cleanup();
+}
+
+namespace {
+    struct global_fixture
+    {
+        ~global_fixture()
+        {            
+            // We call this here as a bit of a hack to stop memory-leak
+            // detection incorrectly detecting OpenSSL global data as a
+            // leak
+            ::RAND_cleanup();
+            ::ENGINE_cleanup();
+            ::CONF_modules_unload(1);
+            ::CONF_modules_free();
+            ::EVP_cleanup();
+            ::ERR_free_strings();
+            ::ERR_remove_state(0);
+            ::CRYPTO_cleanup_all_ex_data();
+        }
+    };
+
+    BOOST_GLOBAL_FIXTURE(global_fixture);
+}
 
 namespace test {
 namespace ssh {
@@ -254,7 +334,7 @@ string openssh_fixture::host() const
 
 string openssh_fixture::user() const
 {
-    return current_user_a();
+    return current_user();
 }
 
 int openssh_fixture::port() const

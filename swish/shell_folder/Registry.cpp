@@ -29,9 +29,9 @@
 #include "swish/debug.hpp"
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
-#include <winapi/com/catch.hpp> // WINAPI_COM_CATCH_AUTO_INTERFACE
+#include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp> // path
 
 #include <string>
 
@@ -40,7 +40,7 @@ using swish::remote_folder::remote_itemid_view;
 using ATL::CRegKey;
 using ATL::CString;
 
-using boost::filesystem::wpath;
+using boost::filesystem::path;
 
 using std::vector;
 using std::wstring;
@@ -71,7 +71,7 @@ throw()
         return _GetHKEYArrayFromKeynames(
             _GetHostFolderAssocKeynames(), pcKeys, paKeys);
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 /**
@@ -109,7 +109,7 @@ HRESULT CRegistry::GetRemoteFolderAssocKeys(
         return _GetHKEYArrayFromKeynames(
             _GetRemoteFolderAssocKeynames(itemid), pcKeys, paKeys);
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 namespace {
@@ -133,7 +133,7 @@ HRESULT CRegistry::GetRemoteFolderBackgroundAssocKeys(
         return _GetHKEYArrayFromKeynames(
             remote_folder_background_key_names(), pcKeys, paKeys);
     }
-    WINAPI_COM_CATCH();
+    WASHER_COM_CATCH();
 }
 
 
@@ -195,7 +195,7 @@ throw(...)
     }
     else
     {
-        wstring extension = wpath(itemid.filename()).extension();
+        wstring extension = path(itemid.filename()).extension().wstring();
         wstring::size_type dot_index = extension.find(L".");
         if (dot_index != wstring::npos)
             extension.erase(dot_index);

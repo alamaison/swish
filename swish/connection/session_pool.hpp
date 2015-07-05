@@ -78,6 +78,10 @@ public:
      */
     void remove_session(const connection_spec& specification);
 
+    /**
+     * Destroy the singleton pool.
+     */
+    void destroy();
 };
 
 }} // namespace swish::connection

@@ -30,7 +30,7 @@
 #include <comet/interface.h>  // uuidof, comtype
 #include <comet/ptr.h>  // com_ptr
 
-#include <boost/filesystem.hpp>  // wpath
+#include <boost/filesystem.hpp>  // path
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -78,14 +78,14 @@ namespace shell_folder {
  * name looks sufficiently path-like, however, it may silently
  * succeed and return a bogus path.
  */
-boost::filesystem::wpath path_from_pidl(PIDLIST_ABSOLUTE pidl);
+boost::filesystem::path path_from_pidl(PIDLIST_ABSOLUTE pidl);
 
 /**
  * Return an absolute PIDL to the item in the filesystem at the given 
  * path.
  */
 boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
-    const boost::filesystem::wpath& filesystem_path);
+    const boost::filesystem::path& filesystem_path);
 
 /**
  * Return an IDataObject representing several files in the same folder.
@@ -93,8 +93,8 @@ boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
  * The files are passed as a half-open range of fully-qualified paths to
  * each file.
  *
- * @templateparam It  An iterator type whose items are convertible to wpath
- *                    by the wpath constructor (e.g. could be wpaths or 
+ * @templateparam It  An iterator type whose items are convertible to path
+ *                    by the path constructor (e.g. could be paths or 
  *                    strings).
  */
 template<typename It>
@@ -110,13 +110,13 @@ comet::com_ptr<IDataObject> data_object_for_files(It begin, It end)
  * Return an IDataObject representing a file on the local filesystem.
  */
 comet::com_ptr<IDataObject> data_object_for_file(
-    const boost::filesystem::wpath& file);
+    const boost::filesystem::path& file);
 
 /**
  * Return an IDataObject representing all the files in a directory.
  */
 comet::com_ptr<IDataObject> data_object_for_directory(
-    const boost::filesystem::wpath& directory);
+    const boost::filesystem::path& directory);
 
 /**
  * Return the associated object of several items.
