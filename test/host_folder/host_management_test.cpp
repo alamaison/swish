@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -79,13 +79,13 @@ BOOST_AUTO_TEST_CASE( add_minimal )
 
 BOOST_AUTO_TEST_CASE( add )
 {
-    wstring hostname = 
+    wstring hostname =
         L"a.nice.really.beautiful.long.loooooooooooooooooooooooooooooo"
         L"ooooooong.host.name.example";
-    wstring username = 
+    wstring username =
         L"dsflkm dfsdoifmo opim[i\"moimoimoimoim[ipom]0k3\"9k42p3m4l23 4k 23;"
         L"krjn1;oi[9j[c09j38j4kj2 3k4 ;2o3iun4[029j3[9mre4;cj ;l3i45r c£";
-    wstring path = 
+    wstring path =
         L"/krjn1;oi[9j[c09j38j4kj2 3k4 ;2o3iun4[029j3[9mre4;cj ;l3i45r c£"
         L"dsflkm dfsdoifmo opim[i\"moimoimoimoim[ipom]0k3\"9k42p3m4l23 4k 23;";
 
@@ -103,7 +103,9 @@ BOOST_AUTO_TEST_CASE( add )
 BOOST_AUTO_TEST_CASE( remove )
 {
     AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
-    RemoveConnectionFromRegistry(L"T");
+    RemoveConnectionFromRegistry(TEST_CONNECTION_NAME);
+
+    BOOST_CHECK_THROW(test_connection_key(), exception);
 
     BOOST_CHECK_THROW(test_connection_key(), exception);
 }

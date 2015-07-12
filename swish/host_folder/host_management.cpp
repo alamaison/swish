@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,100 +26,63 @@
 
 #include "host_management.hpp"
 
-#include "swish/atl.hpp"
 #include "swish/debug.hpp"
 #include "swish/host_folder/host_pidl.hpp" // create_host_itemid,
                                            // host_itemid_view
 
-#include <algorithm>
+#include <comet/regkey.h>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/numeric/conversion/cast.hpp>  // numeric_cast
+#include <algorithm>
+#include <stdexcept>
 
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::host_itemid_view;
 
 using washer::shell::pidl::cpidl_t;
 
-using ATL::CRegKey;
+using comet::regkey;
 
-using boost::numeric_cast;
-
+using std::runtime_error;
+using std::transform;
 using std::wstring;
 using std::vector;
 
 namespace { // private
 
-    static const wstring CONNECTIONS_REGISTRY_KEY_NAME = 
+    static const wstring CONNECTIONS_REGISTRY_KEY_NAME =
         L"Software\\Swish\\Connections";
     static const wchar_t* HOST_VALUE_NAME = L"Host";
     static const wchar_t* PORT_VALUE_NAME = L"Port";
     static const wchar_t* USER_VALUE_NAME = L"User";
     static const wchar_t* PATH_VALUE_NAME = L"Path";
 
-    static const int MAX_REGISTRY_LEN = 2048;
-
     /**
      * Get a single connection from the registry as a PIDL.
      *
      * @pre The @c Software\\Swish\\Connections registry key exists.
-     * @pre The connection is present as a subkey of the 
+     * @pre The connection is present as a subkey of the
      *      @c Software\\Swish\\Connections registry key whose name is given
      *      by @p label.
      *
      * @param label  Friendly name of the connection to load.
      *
      * @returns  A host PIDL holding the connection details.
-     * @throws  com_error: E_FAIL if the registry key does not exist
-     *          and E_UNEXPECTED if the registry is corrupted.
+     * @throws  com_error if the connection does not exist in the
+     *                    or is corrupted.
      */
     cpidl_t GetConnectionDetailsFromRegistry(wstring label)
     {
-        CRegKey registry;
-        LSTATUS rc;
+        regkey swish_connections = regkey(HKEY_CURRENT_USER).open(
+            CONNECTIONS_REGISTRY_KEY_NAME);
 
-        // Open HKCU\Software\Swish\Connections\<label> registry key
-        wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;
-        rc = registry.Open(HKEY_CURRENT_USER, key.c_str());
-        ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+        regkey connection = swish_connections.open(label);
 
-        // Host
-        vector<wchar_t> host(MAX_HOSTNAME_LENZ);
-        if (host.size() > 0)
-        {
-            ULONG cch = numeric_cast<ULONG>(host.size());
-            rc = registry.QueryStringValue(HOST_VALUE_NAME, &host[0], &cch);
-            ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-        }
+        wstring host = connection[HOST_VALUE_NAME];
+        int port = connection[PORT_VALUE_NAME];
+        wstring user = connection[USER_VALUE_NAME];
+        wstring path = connection[PATH_VALUE_NAME];
 
-        // Port
-        DWORD port;
-        rc = registry.QueryDWORDValue(PORT_VALUE_NAME, port);
-        ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-        ATLASSERT(port >= MIN_PORT && port <= MAX_PORT);
-
-        // User
-        vector<wchar_t> user(MAX_USERNAME_LENZ);
-        if (user.size() > 0)
-        {
-            ULONG cch = numeric_cast<ULONG>(user.size());
-            rc = registry.QueryStringValue(USER_VALUE_NAME, &user[0], &cch);
-            ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-        }
-
-        // Path
-        vector<wchar_t> path(MAX_PATH_LENZ);
-        if (path.size() > 0)
-        {
-            ULONG cch = numeric_cast<ULONG>(path.size());
-            rc = registry.QueryStringValue(PATH_VALUE_NAME, &path[0], &cch);
-            ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_UNEXPECTED);
-        }
-
-        ATLENSURE(host.size() > 0 && user.size() > 0 && path.size() > 0);
-
-        return create_host_itemid(
-            &host[0], &user[0], &path[0], port, &label[0]);
+        return create_host_itemid(host, user, path, port, label);
     }
 }
 
@@ -130,8 +93,8 @@ namespace host_management {
 /**
  * Load all the connections stored in the registry into PIDLs.
  *
- * It's possible that there aren't any connections in 
- * the @c Software\\Swish\\Connections key of the registry, in which case 
+ * It's possible that there aren't any connections in
+ * the @c Software\\Swish\\Connections key of the registry, in which case
  * the vector is left empty.
  *
  * @returns  Vector of PIDLs containing the details of all the SFTP
@@ -141,34 +104,22 @@ namespace host_management {
  */
 vector<cpidl_t> LoadConnectionsFromRegistry()
 {
-    CRegKey registry;
-    LSTATUS rc;
-    vector<cpidl_t> connections;
+    vector<cpidl_t> connection_pidls;
 
-    rc = registry.Open(
-        HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
+    regkey connections = regkey(HKEY_CURRENT_USER).open(
+        CONNECTIONS_REGISTRY_KEY_NAME);
 
-    if (rc == ERROR_SUCCESS) // Legal to fail here - may be first ever connection
+    if (connections) // Legal to fail here - may be first ever connection
     {
-        int iSubKey = 0;
-        do {
-            wchar_t label[MAX_LABEL_LENZ]; 
-            DWORD cchLabel = MAX_LABEL_LENZ;
-            rc = registry.EnumKey(iSubKey, label, &cchLabel);
-            if (rc == ERROR_SUCCESS)
-            {
-                connections.push_back(
-                    GetConnectionDetailsFromRegistry(label));
-            }
-            iSubKey++;
-            // rc may be an error for corrupted registry entries such 
-            // as a label being too big.  We continue looping regardless.
-        } while (rc != ERROR_NO_MORE_ITEMS);
+        regkey::subkeys_type connection_collection =
+            connections.enumerate().subkeys();
 
-        ATLASSERT_REPORT(rc == ERROR_NO_MORE_ITEMS, rc);
+        transform(
+            connection_collection.begin(), connection_collection.end(),
+            connection_pidls.begin(), GetConnectionDetailsFromRegistry);
     }
 
-    return connections; // May be empty
+    return connection_pidls;
 }
 
 /**
@@ -180,25 +131,47 @@ vector<cpidl_t> LoadConnectionsFromRegistry()
 void AddConnectionToRegistry(
     wstring label, wstring host, int port, wstring username, wstring path)
 {
-    CRegKey registry;
-    LSTATUS rc;
+    DWORD key_disposition;
+    regkey connection = regkey(HKEY_CURRENT_USER).create(
+        CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label,
+        REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, 0, &key_disposition);
+    if (key_disposition == REG_OPENED_EXISTING_KEY)
+    {
+        BOOST_THROW_EXCEPTION(
+            runtime_error("connection already exists in registry"));
+    }
+    else
+    {
+        connection[HOST_VALUE_NAME] = host;
+        connection[PORT_VALUE_NAME] = port;
+        connection[USER_VALUE_NAME] = username;
+        connection[PATH_VALUE_NAME] = path;
+    }
+}
 
-    // Create HKCU\Software\Swish\Connections\<label> registry key
-    wstring key = CONNECTIONS_REGISTRY_KEY_NAME + L"\\" + label;
-    rc = registry.Create(HKEY_CURRENT_USER, key.c_str());
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+namespace {
 
-    rc = registry.SetStringValue(HOST_VALUE_NAME, host.c_str());
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    // TODO: move into Comet
 
-    rc = registry.SetDWORDValue(PORT_VALUE_NAME, port);
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    void delete_subkey_recursively(
+        const regkey& key, const wstring& subkey_name);
 
-    rc = registry.SetStringValue(USER_VALUE_NAME, username.c_str());
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    void delete_all_subkeys_recursively(const regkey& key)
+    {
+        regkey::subkeys_type subkeys = key.enumerate().subkeys();
+        for(regkey::subkeys_type::iterator it=subkeys.begin();
+            it != subkeys.end(); ++it)
+        {
+            delete_subkey_recursively(key, *it);
+        }
+    }
 
-    rc = registry.SetStringValue(PATH_VALUE_NAME, path.c_str());
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    void delete_subkey_recursively(
+        const regkey& key, const wstring& subkey_name)
+    {
+        delete_all_subkeys_recursively(key.open(subkey_name));
+        key.delete_subkey(subkey_name);
+    }
 }
 
 /**
@@ -206,15 +179,10 @@ void AddConnectionToRegistry(
  */
 void RemoveConnectionFromRegistry(wstring label)
 {
-    CRegKey registry;
-    LSTATUS rc;
+    regkey connections = regkey(HKEY_CURRENT_USER).open(
+        CONNECTIONS_REGISTRY_KEY_NAME);
 
-    rc = registry.Open(
-        HKEY_CURRENT_USER, CONNECTIONS_REGISTRY_KEY_NAME.c_str());
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
-    
-    rc = registry.RecurseDeleteKey(label.c_str());
-    ATLENSURE_REPORT_THROW(rc == ERROR_SUCCESS, rc, E_FAIL);
+    delete_subkey_recursively(connections, label);
 }
 
 namespace {
