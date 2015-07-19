@@ -45,6 +45,9 @@ void AddConnectionToRegistry(
 
 void RemoveConnectionFromRegistry(std::wstring label);
 
+void RenameConnectionInRegistry(
+    const std::wstring& from_label, const std::wstring& to_label);
+
 bool ConnectionExists(std::wstring label);
 
 }}} // namespace swish::host_folder::host_management

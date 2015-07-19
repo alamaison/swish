@@ -56,6 +56,14 @@ namespace { // private
     static const wchar_t* USER_VALUE_NAME = L"User";
     static const wchar_t* PATH_VALUE_NAME = L"Path";
 
+    regkey get_connection_from_registry(const wstring& label)
+    {
+        regkey swish_connections = regkey(HKEY_CURRENT_USER).open(
+            CONNECTIONS_REGISTRY_KEY_NAME);
+
+        return swish_connections.open(label);
+    }
+
     /**
      * Get a single connection from the registry as a PIDL.
      *
@@ -116,7 +124,7 @@ vector<cpidl_t> LoadConnectionsFromRegistry()
 
         transform(
             connection_collection.begin(), connection_collection.end(),
-            connection_pidls.begin(), GetConnectionDetailsFromRegistry);
+            back_inserter(connection_pidls), GetConnectionDetailsFromRegistry);
     }
 
     return connection_pidls;
@@ -183,6 +191,19 @@ void RemoveConnectionFromRegistry(wstring label)
         CONNECTIONS_REGISTRY_KEY_NAME);
 
     delete_subkey_recursively(connections, label);
+}
+
+void RenameConnectionInRegistry(const wstring& from_label, const wstring& to_label)
+{
+    regkey connection = get_connection_from_registry(from_label);
+
+    wstring host = connection[HOST_VALUE_NAME];
+    int port = connection[PORT_VALUE_NAME];
+    wstring user = connection[USER_VALUE_NAME];
+    wstring path = connection[PATH_VALUE_NAME];
+
+    AddConnectionToRegistry(to_label, host, port, user, path);
+    RemoveConnectionFromRegistry(from_label);
 }
 
 namespace {

@@ -35,7 +35,9 @@
 #include <string>
 
 using swish::host_folder::host_management::AddConnectionToRegistry;
+using swish::host_folder::host_management::LoadConnectionsFromRegistry;
 using swish::host_folder::host_management::RemoveConnectionFromRegistry;
+using swish::host_folder::host_management::RenameConnectionInRegistry;
 
 using comet::regkey;
 
@@ -45,6 +47,8 @@ using std::wstring;
 namespace {
 
     const wstring TEST_CONNECTION_NAME = L"T";
+    // It doesn't matter what this name is, just as long as it's different
+    const wstring OTHER_TEST_CONNECTION_NAME = L"T2";
 
     struct cleanup_fixture
     {
@@ -53,6 +57,7 @@ namespace {
             regkey connections =
                 regkey(HKEY_CURRENT_USER).open(L"Software\\Swish\\Connections");
             connections.delete_subkey_nothrow(TEST_CONNECTION_NAME);
+            connections.delete_subkey_nothrow(OTHER_TEST_CONNECTION_NAME);
         }
     };
 
@@ -60,6 +65,12 @@ namespace {
     {
         return regkey(HKEY_CURRENT_USER).open(
             L"Software\\Swish\\Connections\\" + TEST_CONNECTION_NAME);
+    }
+
+    regkey other_test_connection_key()
+    {
+        return regkey(HKEY_CURRENT_USER).open(
+            L"Software\\Swish\\Connections\\" + OTHER_TEST_CONNECTION_NAME);
     }
 }
 
@@ -100,12 +111,31 @@ BOOST_AUTO_TEST_CASE( add )
     BOOST_CHECK_EQUAL(new_connection[L"Path"].str(), path);
 }
 
+BOOST_AUTO_TEST_CASE( load )
+{
+    AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
+    BOOST_CHECK_GE(LoadConnectionsFromRegistry().size(), 1);
+}
+
 BOOST_AUTO_TEST_CASE( remove )
 {
     AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
     RemoveConnectionFromRegistry(TEST_CONNECTION_NAME);
 
     BOOST_CHECK_THROW(test_connection_key(), exception);
+}
+
+BOOST_AUTO_TEST_CASE( rename )
+{
+    AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
+    RenameConnectionInRegistry(TEST_CONNECTION_NAME, OTHER_TEST_CONNECTION_NAME);
+
+    regkey renamed_connection = other_test_connection_key();
+
+    BOOST_CHECK_EQUAL(renamed_connection[L"Host"].str(), L"h");
+    BOOST_CHECK_EQUAL(renamed_connection[L"User"].str(), L"u");
+    BOOST_CHECK_EQUAL(renamed_connection[L"Port"].dword(), 1U);
+    BOOST_CHECK_EQUAL(renamed_connection[L"Path"].str(), L"/");
 
     BOOST_CHECK_THROW(test_connection_key(), exception);
 }
