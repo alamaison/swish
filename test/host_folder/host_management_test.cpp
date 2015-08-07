@@ -26,7 +26,12 @@
 
 #include <swish/host_folder/host_management.hpp> // test subject
 
+#include <swish/host_folder/host_pidl.hpp> // host_itemid_view,
+                                           // find_host_itemid
+
 #include <test/common_boost/helpers.hpp> // wide-string output
+
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <boost/test/unit_test.hpp>
 
@@ -35,9 +40,14 @@
 #include <string>
 
 using swish::host_folder::host_management::AddConnectionToRegistry;
+using swish::host_folder::host_management::FindConnectionInRegistry;
 using swish::host_folder::host_management::LoadConnectionsFromRegistry;
 using swish::host_folder::host_management::RemoveConnectionFromRegistry;
 using swish::host_folder::host_management::RenameConnectionInRegistry;
+using swish::host_folder::host_itemid_view;
+using swish::host_folder::find_host_itemid;
+
+using washer::shell::pidl::cpidl_t;
 
 using comet::regkey;
 
@@ -138,6 +148,18 @@ BOOST_AUTO_TEST_CASE( rename )
     BOOST_CHECK_EQUAL(renamed_connection[L"Path"].str(), L"/");
 
     BOOST_CHECK_THROW(test_connection_key(), exception);
+}
+
+BOOST_AUTO_TEST_CASE( find )
+{
+    AddConnectionToRegistry(TEST_CONNECTION_NAME, L"h", 1U, L"u", L"/");
+    cpidl_t connection = *FindConnectionInRegistry(TEST_CONNECTION_NAME);
+    host_itemid_view connection_view = host_itemid_view(connection);
+
+    BOOST_CHECK_EQUAL(connection_view.host(), L"h");
+    BOOST_CHECK_EQUAL(connection_view.user(), L"u");
+    BOOST_CHECK_EQUAL(connection_view.port(), 1U);
+    BOOST_CHECK_EQUAL(connection_view.path(), L"/");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

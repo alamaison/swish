@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2015
     Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
@@ -36,9 +36,11 @@
 #include "swish/host_folder/extract_icon.hpp"
 #include "swish/host_folder/host_management.hpp"
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
+                                           // find_host_itemid
                                            // url_from_host_itemid
 #include "swish/host_folder/overlay_icon.hpp"
 #include "swish/host_folder/properties.hpp" // property_from_pidl
+#include "swish/host_folder/host_management.hpp" // RemoveConnectionFromRegistry
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/nse/default_context_menu_callback.hpp"
                                                // default_context_menu_callback
@@ -90,8 +92,11 @@ using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::extract_icon_co;
+using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
+using swish::host_folder::host_management::FindConnectionInRegistry;
 using swish::host_folder::host_management::LoadConnectionsFromRegistry;
+using swish::host_folder::host_management::RenameConnectionInRegistry;
 using swish::host_folder::overlay_icon;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
@@ -136,12 +141,12 @@ template<> struct comtype<::IExtractIconW>
  */
 template<> struct impl::type_policy<PITEMID_CHILD>
 {
-    static void init(PITEMID_CHILD& raw_pidl, const cpidl_t& pidl) 
+    static void init(PITEMID_CHILD& raw_pidl, const cpidl_t& pidl)
     {
         pidl.copy_to(raw_pidl);
     }
 
-    static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }    
+    static void clear(PITEMID_CHILD& raw_pidl) { ::CoTaskMemFree(raw_pidl); }
 };
 
 
@@ -288,7 +293,7 @@ STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
             HRESULT hr = swish::windows_api::SHBindToParent(
                 root_pidl().get(), parent.iid(),
                 reinterpret_cast<void**>(parent.out()), &pidlThisFolder);
-            
+
             if (FAILED(hr))
                 BOOST_THROW_EXCEPTION(com_error(hr));
 
@@ -321,17 +326,33 @@ STRRET CHostFolder::get_display_name_of(PCUITEMID_CHILD pidl, SHGDNF flags)
     return string_to_strret(name);
 }
 
+namespace {
+
+    void notify_shell_that_rename_occurred(
+        const apidl_t& old_pidl, const apidl_t& new_pidl)
+    {
+        ::SHChangeNotify(
+            SHCNE_RENAMEFOLDER, SHCNF_IDLIST, old_pidl.get(), new_pidl.get());
+    }
+}
+
 /**
  * Rename item.
- *
- * @todo  Support renaming host items.
  */
 PITEMID_CHILD CHostFolder::set_name_of(
-    HWND /*hwnd*/, PCUITEMID_CHILD /*pidl*/, const wchar_t* /*name*/,
+    HWND /*hwnd*/, PCUITEMID_CHILD pidl, const wchar_t* new_label,
     SHGDNF /*flags*/)
 {
-    BOOST_THROW_EXCEPTION(com_error(E_NOTIMPL));
-    return NULL;
+    wstring from_label = host_itemid_view(pidl).label();
+    RenameConnectionInRegistry(from_label, new_label);
+    optional<cpidl_t> connection = FindConnectionInRegistry(new_label);
+    if (connection) {
+        notify_shell_that_rename_occurred(
+            root_pidl() + pidl, root_pidl() + *connection);
+        return connection->detach();
+    } else {
+        return NULL;
+    }
 }
 
 /**
@@ -349,6 +370,7 @@ void CHostFolder::get_attributes_of(
     DWORD dwAttribs = 0;
     dwAttribs |= SFGAO_FOLDER;
     dwAttribs |= SFGAO_HASSUBFOLDER;
+    dwAttribs |= SFGAO_CANRENAME;
     *attributes_inout &= dwAttribs;
 }
 
@@ -540,7 +562,7 @@ CComPtr<IQueryAssociations> CHostFolder::query_associations(
 namespace {
 
     HRESULT CALLBACK menu_callback(
-        IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection, 
+        IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection,
         UINT message_id, WPARAM wparam, LPARAM lparam)
     {
         default_context_menu_callback callback;
@@ -561,13 +583,13 @@ CComPtr<IContextMenu> CHostFolder::context_menu(
     assert(cpidl > 0);
 
     // Get keys associated with filetype from registry.
-    // We only take into account the item that was right-clicked on 
+    // We only take into account the item that was right-clicked on
     // (the first array element) even if this was a multi-selection.
     //
     // This article says that we don't need to specify the keys:
     // http://groups.google.com/group/microsoft.public.platformsdk.shell/
     // browse_thread/thread/6f07525eaddea29d/
-    // but we do for the context menu to appear in versions of Windows 
+    // but we do for the context menu to appear in versions of Windows
     // earlier than Vista.
     HKEY *akeys; UINT ckeys;
     ATLENSURE_THROW(SUCCEEDED(
@@ -581,7 +603,7 @@ CComPtr<IContextMenu> CHostFolder::context_menu(
     // Create default context menu from list of PIDLs
     CComPtr<IContextMenu> spMenu;
     HRESULT hr = ::CDefFolderMenu_Create2(
-        root_pidl().get(), hwnd, cpidl, apidl, spThisFolder, 
+        root_pidl().get(), hwnd, cpidl, apidl, spThisFolder,
         menu_callback, ckeys, akeys, &spMenu);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(com_error(hr));
@@ -600,13 +622,13 @@ CComPtr<IDataObject> CHostFolder::data_object(
     TRACE("Request: IDataObject");
     assert(cpidl > 0);
 
-    // A DataObject is required in order for the call to 
+    // A DataObject is required in order for the call to
     // CDefFolderMenu_Create2 (above) to succeed on versions of Windows
     // earlier than Vista
 
     CComPtr<IDataObject> spdo;
     HRESULT hr = ::CIDLData_CreateFromIDArray(
-        root_pidl().get(), cpidl, 
+        root_pidl().get(), cpidl,
         reinterpret_cast<PCUIDLIST_RELATIVE_ARRAY>(apidl), &spdo);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(com_error(hr));
@@ -623,4 +645,3 @@ CComPtr<IShellFolderViewCB> CHostFolder::folder_view_callback(HWND /*hwnd*/)
 {
     return new CViewCallback(root_pidl());
 }
-

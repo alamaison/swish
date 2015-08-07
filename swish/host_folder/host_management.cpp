@@ -42,6 +42,8 @@ using washer::shell::pidl::cpidl_t;
 
 using comet::regkey;
 
+using boost::optional;
+
 using std::runtime_error;
 using std::transform;
 using std::wstring;
@@ -63,40 +65,49 @@ namespace { // private
 
         return swish_connections.open(label);
     }
-
-    /**
-     * Get a single connection from the registry as a PIDL.
-     *
-     * @pre The @c Software\\Swish\\Connections registry key exists.
-     * @pre The connection is present as a subkey of the
-     *      @c Software\\Swish\\Connections registry key whose name is given
-     *      by @p label.
-     *
-     * @param label  Friendly name of the connection to load.
-     *
-     * @returns  A host PIDL holding the connection details.
-     * @throws  com_error if the connection does not exist in the
-     *                    or is corrupted.
-     */
-    cpidl_t GetConnectionDetailsFromRegistry(wstring label)
-    {
-        regkey swish_connections = regkey(HKEY_CURRENT_USER).open(
-            CONNECTIONS_REGISTRY_KEY_NAME);
-
-        regkey connection = swish_connections.open(label);
-
-        wstring host = connection[HOST_VALUE_NAME];
-        int port = connection[PORT_VALUE_NAME];
-        wstring user = connection[USER_VALUE_NAME];
-        wstring path = connection[PATH_VALUE_NAME];
-
-        return create_host_itemid(host, user, path, port, label);
-    }
 }
 
 namespace swish {
 namespace host_folder {
 namespace host_management {
+
+/**
+ * Get a single connection from the registry as a PIDL.
+ *
+ * @pre The connection, if present, is a subkey of the
+ *      @c Software\\Swish\\Connections registry key whose name is given
+ *      by @p label.
+ *
+ * @param label  Friendly name of the connection to load.
+ *
+ * @returns  A host PIDL holding the connection details.
+ */
+optional<cpidl_t> FindConnectionInRegistry(const wstring& label)
+{
+    regkey swish_connections = regkey(HKEY_CURRENT_USER).open_nothrow(
+        CONNECTIONS_REGISTRY_KEY_NAME);
+    // Legal to fail here - may be first ever connection
+    if(!swish_connections)
+        return optional<cpidl_t>();
+
+    regkey connection = swish_connections.open(label);
+    if(!connection)
+        return optional<cpidl_t>();
+
+    wstring host = connection[HOST_VALUE_NAME];
+    int port = connection[PORT_VALUE_NAME];
+    wstring user = connection[USER_VALUE_NAME];
+    wstring path = connection[PATH_VALUE_NAME];
+
+    return create_host_itemid(host, user, path, port, label);
+}
+
+namespace {
+
+    cpidl_t GetConnectionDetailsFromRegistry(const wstring& label) {
+        return *FindConnectionInRegistry(label);
+    }
+}
 
 /**
  * Load all the connections stored in the registry into PIDLs.

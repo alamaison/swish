@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012, 2015
+    Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,12 +31,16 @@
 
 #include <comet/error.h> // com_error
 
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
 #include <shlobj.h>  // SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
+using washer::shell::pidl::cpidl_t;
 using washer::shell::pidl_shell_item;
 
 using comet::com_error;
+using comet::com_error_from_interface;
 using comet::com_ptr;
 
 using boost::filesystem::path;
@@ -43,6 +48,12 @@ using boost::filesystem::directory_iterator;
 using boost::shared_ptr;
 
 using std::invalid_argument;
+
+template<> struct comet::comtype<IShellView>
+{
+    static const IID& uuid() throw() { return IID_IShellView; }
+    typedef IUnknown base;
+};
 
 namespace swish {
 namespace shell_folder {
@@ -79,5 +90,16 @@ com_ptr<IDataObject> data_object_for_directory(const path& directory)
         directory_iterator(directory), directory_iterator());
 }
 
+void put_view_item_into_rename_mode(
+    comet::com_ptr<IShellView> view,
+    const washer::shell::pidl::cpidl_t& item)
+{
+    HRESULT hr = view->SelectItem(
+        item.get(),
+        SVSI_EDIT | SVSI_SELECT | SVSI_DESELECTOTHERS |
+        SVSI_ENSUREVISIBLE | SVSI_FOCUSED);
+    if (FAILED(hr))
+        BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
+}
 
 }} // namespace swish::shell_folder

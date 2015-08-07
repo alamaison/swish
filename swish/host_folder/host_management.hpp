@@ -30,6 +30,8 @@
 
 #include <washer/shell/pidl.hpp> // cpidl_t
 
+#include <boost/optional/optional.hpp>
+
 #include <string>
 #include <vector>
 
@@ -42,6 +44,9 @@ std::vector<washer::shell::pidl::cpidl_t> LoadConnectionsFromRegistry();
 void AddConnectionToRegistry(
     std::wstring label, std::wstring host, int port,
     std::wstring username, std::wstring path);
+
+boost::optional<washer::shell::pidl::cpidl_t> FindConnectionInRegistry(
+    const std::wstring& label);
 
 void RemoveConnectionFromRegistry(std::wstring label);
 
