@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2009, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@
 
 #include <washer/shell/pidl.hpp> // cpidl_t
 
+#include <boost/optional/optional.hpp>
+
 #include <string>
 #include <vector>
 
@@ -40,10 +42,16 @@ namespace host_management {
 std::vector<washer::shell::pidl::cpidl_t> LoadConnectionsFromRegistry();
 
 void AddConnectionToRegistry(
-    std::wstring label, std::wstring host, int port, 
+    std::wstring label, std::wstring host, int port,
     std::wstring username, std::wstring path);
 
+boost::optional<washer::shell::pidl::cpidl_t> FindConnectionInRegistry(
+    const std::wstring& label);
+
 void RemoveConnectionFromRegistry(std::wstring label);
+
+void RenameConnectionInRegistry(
+    const std::wstring& from_label, const std::wstring& to_label);
 
 bool ConnectionExists(std::wstring label);
 

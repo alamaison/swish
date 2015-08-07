@@ -23,7 +23,9 @@ set(COMMAND_SOURCES
   commands/LaunchAgent.cpp
   commands/LaunchAgent.hpp
   commands/Remove.cpp
-  commands/Remove.hpp)
+  commands/Remove.hpp
+  commands/Rename.cpp
+  commands/Rename.hpp)
 
 set(SOURCES
   columns.cpp

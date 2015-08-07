@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2010, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2010, 2011, 2012, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include "swish/host_folder/commands/CloseSession.hpp"
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
+#include "swish/host_folder/commands/Rename.hpp"
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
 #include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter
 
@@ -45,6 +46,7 @@
 #include <vector>
 
 using swish::nse::CExplorerCommand;
+using swish::nse::CExplorerCommandWithSite;
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CUICommand;
 using swish::nse::CUIElementErrorAdapter;
@@ -78,6 +80,7 @@ com_ptr<IExplorerCommandProvider> host_folder_command_provider(
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(new CExplorerCommand<Add>(hwnd, folder_pidl));
     commands.push_back(new CExplorerCommand<Remove>(hwnd, folder_pidl));
+    commands.push_back(new CExplorerCommandWithSite<Rename>(hwnd, folder_pidl));
     commands.push_back(new CExplorerCommand<CloseSession>(hwnd, folder_pidl));
     commands.push_back(new CExplorerCommand<LaunchAgent>(hwnd, folder_pidl));
     return new CExplorerCommandProvider(commands);
@@ -125,12 +128,14 @@ host_folder_task_pane_tasks(HWND hwnd, const apidl_t& folder_pidl)
     commands->push_back(
         new CUICommand< WebtaskCommandTitleAdapter<Remove> >(hwnd, folder_pidl));
     commands->push_back(
+        new CUICommand< WebtaskCommandTitleAdapter<Rename> >(hwnd, folder_pidl));
+    commands->push_back(
         new CUICommand< WebtaskCommandTitleAdapter<CloseSession> >(hwnd, folder_pidl));
     commands->push_back(
         new CUICommand< WebtaskCommandTitleAdapter<LaunchAgent> >(
             hwnd, folder_pidl));
 
-    com_ptr<IEnumUICommand> e = 
+    com_ptr<IEnumUICommand> e =
         make_smart_enumeration<IEnumUICommand>(commands);
 
     return make_pair(e, com_ptr<IEnumUICommand>());

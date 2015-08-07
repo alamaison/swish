@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2011, 2012, 2013, 2015  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
+#include "swish/shell_folder/shell.hpp" // put_view_item_into_rename_mode
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/trace.hpp> // trace
@@ -54,6 +55,7 @@ using swish::nse::Command;
 using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
+using swish::shell_folder::put_view_item_into_rename_mode;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
@@ -230,14 +232,7 @@ const
             // A failure after this point is not worth reporting.  The folder
             // was created even if we didn't allow the user a chance to pick a
             // name.
-
-            // Put item into 'rename' mode
-            HRESULT hr = view->SelectItem(
-                pidl.get(),
-                SVSI_EDIT | SVSI_SELECT | SVSI_DESELECTOTHERS |
-                SVSI_ENSUREVISIBLE | SVSI_FOCUSED);
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
+            put_view_item_into_rename_mode(view, pidl);
         }
         catch (const exception& e)
         {

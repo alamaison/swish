@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012, 2015
+    Alexander Lamaison <swish@lammy.co.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +26,8 @@
 */
 
 #include "swish/windows_api.hpp" // SHBindToParent
+
+#include <washer/shell/pidl.hpp> // cpidl_t
 
 #include <comet/error.h> // com_error
 #include <comet/interface.h>  // uuidof, comtype
@@ -81,7 +84,7 @@ namespace shell_folder {
 boost::filesystem::path path_from_pidl(PIDLIST_ABSOLUTE pidl);
 
 /**
- * Return an absolute PIDL to the item in the filesystem at the given 
+ * Return an absolute PIDL to the item in the filesystem at the given
  * path.
  */
 boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
@@ -94,7 +97,7 @@ boost::shared_ptr<ITEMIDLIST_ABSOLUTE> pidl_from_path(
  * each file.
  *
  * @templateparam It  An iterator type whose items are convertible to path
- *                    by the path constructor (e.g. could be paths or 
+ *                    by the path constructor (e.g. could be paths or
  *                    strings).
  */
 template<typename It>
@@ -122,7 +125,7 @@ comet::com_ptr<IDataObject> data_object_for_directory(
  * Return the associated object of several items.
  *
  * This is a convenience function that binds to the items' parent and then
- * asks the parent for the associated object.  The items are passed as a 
+ * asks the parent for the associated object.  The items are passed as a
  * half-open range of absolute PIDLs.
  *
  * Analogous to GetUIObjectOf().
@@ -183,5 +186,9 @@ comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
 {
     return ui_object_of_items<T>(&pidl, &pidl + 1);
 }
+
+void put_view_item_into_rename_mode(
+    comet::com_ptr<IShellView> view,
+    const washer::shell::pidl::cpidl_t& item);
 
 }} // namespace swish::shell_folder
