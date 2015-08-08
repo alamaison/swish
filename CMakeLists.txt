@@ -45,6 +45,9 @@ include_directories(
 # Prevent Winsock errors and gives quicker builds
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 
+# Silence bogus MSVC warnings
+add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+
 # Currently required because not all Win32 calls use A or W form explicitly
 add_definitions(-DUNICODE -D_UNICODE)
 

@@ -29,6 +29,8 @@ set(COMMAND_SOURCES
 
 set(SOURCES
   columns.cpp
+  context_menu_callback.hpp
+  context_menu_callback.cpp
   host_itemid_connection.cpp
   host_management.cpp
   menu_command_manager.cpp

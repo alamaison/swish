@@ -33,6 +33,7 @@
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
 #include "swish/host_folder/commands/commands.hpp" // host_folder_commands
+#include "swish/host_folder/context_menu_callback.hpp"
 #include "swish/host_folder/extract_icon.hpp"
 #include "swish/host_folder/host_management.hpp"
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
@@ -42,8 +43,6 @@
 #include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/host_management.hpp" // RemoveConnectionFromRegistry
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
-#include "swish/nse/default_context_menu_callback.hpp"
-                                               // default_context_menu_callback
 #include "swish/remotelimits.h"   // Text field limits
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/trace.hpp" // trace
@@ -90,6 +89,7 @@ using std::wstring;
 using swish::frontend::CUserInteraction;
 using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
+using swish::host_folder::context_menu_callback;
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::extract_icon_co;
 using swish::host_folder::find_host_itemid;
@@ -101,7 +101,6 @@ using swish::host_folder::overlay_icon;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::host_folder::url_from_host_itemid;
-using swish::nse::default_context_menu_callback;
 using swish::tracing::trace;
 
 using washer::shell::pidl::cpidl_t;
@@ -370,7 +369,15 @@ void CHostFolder::get_attributes_of(
     DWORD dwAttribs = 0;
     dwAttribs |= SFGAO_FOLDER;
     dwAttribs |= SFGAO_HASSUBFOLDER;
+
+    // This adds a 'rename' item to the default context menu that SetNameOf
+    // directly on the IShellFolder
     dwAttribs |= SFGAO_CANRENAME;
+
+    // This adds an 'delete' item to the default context menu that calls the
+    // menu handler with ID DFM_CMD_DELETE
+    dwAttribs |= SFGAO_CANDELETE;
+
     *attributes_inout &= dwAttribs;
 }
 
@@ -562,10 +569,12 @@ CComPtr<IQueryAssociations> CHostFolder::query_associations(
 namespace {
 
     HRESULT CALLBACK menu_callback(
-        IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection,
+        IShellFolder* folder, HWND hwnd_view, IDataObject* selection,
         UINT message_id, WPARAM wparam, LPARAM lparam)
     {
-        default_context_menu_callback callback;
+        CRemoteFolder* remote_folder = static_cast<CRemoteFolder*>(folder);
+
+        context_menu_callback callback(remote_folder->root_pidl());
         return callback(hwnd_view, selection, message_id, wparam, lparam);
     }
 
