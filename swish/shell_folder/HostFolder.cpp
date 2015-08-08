@@ -1,28 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    SFTP connections Explorer folder implementation.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2015
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "HostFolder.h"
@@ -32,6 +22,8 @@
 #include "swish/debug.hpp"
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
+#include "swish/host_folder/commands/Rename.hpp"
+#include "swish/host_folder/commands/Remove.hpp"
 #include "swish/host_folder/commands/commands.hpp" // host_folder_commands
 #include "swish/host_folder/context_menu_callback.hpp"
 #include "swish/host_folder/extract_icon.hpp"
@@ -513,10 +505,16 @@ variant_t CHostFolder::property(const property_key& key, const cpidl_t& pidl)
  * Create a toolbar command provider for the folder.
  */
 CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
-    HWND hwnd)
+    HWND owning_hwnd)
 {
     TRACE("Request: IExplorerCommandProvider");
-    return host_folder_command_provider(hwnd, root_pidl()).get();
+
+    optional<window<wchar_t>> owning_view;
+    if (owning_hwnd)
+        owning_view = window<wchar_t>(
+            window_handle::foster_handle(owning_hwnd));
+
+    return host_folder_command_provider(owning_view, root_pidl()).get();
 }
 
 /**

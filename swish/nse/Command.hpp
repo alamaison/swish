@@ -63,6 +63,11 @@ public:
      * Concrete commands will provide their implementation by overriding
      * this method.
      *
+     * NOTE: If commands need access to the view's window, to use as a UI
+     * parent, they need to be constructed with that as a parameter.
+     * Invocation sites, like the Explorer command bar, don't have access
+     * to that view.
+     *
      * @param data_object  DataObject holding items on which to perform the
      *                     command.  This may be NULL in which case the
      *                     command should only execute if it makes sense to

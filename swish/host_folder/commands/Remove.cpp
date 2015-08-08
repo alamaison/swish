@@ -1,28 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2010, 2011, 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Remove host command.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2010, 2011, 2012, 2013
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "Remove.hpp"
@@ -53,6 +43,7 @@ using comet::com_ptr;
 using comet::uuid_t;
 
 using boost::locale::translate;
+using boost::optional;
 
 using std::wstring;
 
@@ -70,22 +61,21 @@ namespace {
      * exactly what the new PIDL is until we reload from the registry, hence
      * UPDATEDIR).
      */
-    void notify_shell(const apidl_t folder_pidl)
+    void notify_shell(const apidl_t& folder_pidl)
     {
-        assert(folder_pidl);
         ::SHChangeNotify(
             SHCNE_UPDATEDIR, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT,
             folder_pidl.get(), NULL);
     }
 }
 
-Remove::Remove(HWND hwnd, const apidl_t& folder_pidl) :
+Remove::Remove(const apidl_t& folder_pidl) :
     Command(
         translate(L"&Remove SFTP Connection"), REMOVE_COMMAND_ID,
         translate(L"Remove a SFTP connection created with Swish."),
         L"shell32.dll,-240", translate(L"&Remove SFTP Connection..."),
         translate(L"Remove Connection")),
-    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+    m_folder_pidl(folder_pidl) {}
 
 BOOST_SCOPED_ENUM(Command::state) Remove::state(
     const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)

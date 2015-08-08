@@ -43,11 +43,14 @@ using swish::remote_folder::commands::remote_folder_task_pane_tasks;
 
 using test::PidlFixture;
 
+using washer::window::window;
+
 using comet::com_ptr;
 
 using boost::bind;
 using boost::filesystem::directory_iterator;
 using boost::filesystem::path;
+using boost::optional;
 
 using std::distance;
 using std::wstring;
@@ -62,6 +65,7 @@ namespace { // private
         NewFolder new_folder_command()
         {
             return NewFolder(
+                optional<window<wchar_t>>(),
                 sandbox_pidl(),
                 bind(&NewFolderCommandFixture::Provider, this),
                 bind(&NewFolderCommandFixture::Consumer, this));

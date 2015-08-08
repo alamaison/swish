@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2011, 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Swish remote folder commands.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "commands.hpp"
@@ -30,12 +21,16 @@
 #include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommandWithSite
 #include "swish/remote_folder/commands/NewFolder.hpp"
 
+#include <washer/window/window.hpp>
+#include <washer/window/window_handle.hpp>
+
 #include <comet/server.h> // simple_object
 #include <comet/smart_enum.h> // make_smart_enumeration
 
 #include <boost/bind.hpp> // bind, _1
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
+#include <boost/optional/optional.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
@@ -55,6 +50,7 @@ using swish::nse::WebtaskCommandTitleAdapter;
 using swish::provider::sftp_provider;
 
 using washer::shell::pidl::apidl_t;
+using washer::window::window;
 
 using comet::com_ptr;
 using comet::make_smart_enumeration;
@@ -64,6 +60,7 @@ using boost::bind;
 using boost::function;
 using boost::locale::translate;
 using boost::make_shared;
+using boost::optional;
 using boost::shared_ptr;
 
 using std::make_pair;
@@ -75,14 +72,15 @@ namespace remote_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-    HWND /*hwnd*/, const apidl_t& folder_pidl,
+    const optional<window<wchar_t>>& owning_view,
+    const apidl_t& folder_pidl,
     const provider_factory& provider,
     const consumer_factory& consumer)
 {
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(
         new CExplorerCommandWithSite<NewFolder>(
-            folder_pidl, provider, consumer));
+            owning_view, folder_pidl, provider, consumer));
     return new CExplorerCommandProvider(commands);
 }
 
@@ -110,14 +108,17 @@ public:
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
-remote_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
+remote_folder_task_pane_titles(
+    const optional<window<wchar_t>>& /*owning_view*/,
+    const apidl_t& /*folder_pidl*/)
 {
     return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
-    HWND /*hwnd*/, const apidl_t& folder_pidl,
+    const optional<window<wchar_t>>& owning_view,
+    const apidl_t& folder_pidl,
     com_ptr<IUnknown> ole_site,
     const provider_factory& provider,
     const consumer_factory& consumer)
@@ -128,7 +129,7 @@ remote_folder_task_pane_tasks(
 
     com_ptr<IUICommand> new_folder =
         new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
-        folder_pidl,
+        owning_view, folder_pidl,
         bind(
             provider, _1, 
             translate("Name of a running task", "Creating new folder")),

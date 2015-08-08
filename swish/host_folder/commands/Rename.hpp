@@ -19,12 +19,6 @@
 
 #include "swish/nse/Command.hpp" // Command
 
-#include <washer/shell/pidl.hpp> // apidl_t
-
-#include <comet/ptr.h> // com_ptr
-
-#include <ObjIdl.h> // IDataObject, IBindCtx
-
 namespace swish {
 namespace host_folder {
 namespace commands {
@@ -32,7 +26,7 @@ namespace commands {
 class Rename : public swish::nse::Command
 {
 public:
-    Rename(HWND hwnd, const washer::shell::pidl::apidl_t& folder_pidl);
+    Rename();
 
     virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
@@ -45,8 +39,6 @@ public:
     void set_site(comet::com_ptr<IUnknown> ole_site);
 
 private:
-    HWND m_hwnd;
-    washer::shell::pidl::apidl_t m_folder_pidl;
     comet::com_ptr<IUnknown> m_site;
 };
 

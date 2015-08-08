@@ -55,13 +55,13 @@ namespace {
     const uuid_t RENAME_COMMAND_ID("b816a883-5022-11dc-9153-0090f5284f85");
 }
 
-Rename::Rename(HWND hwnd, const apidl_t& folder_pidl) :
+Rename::Rename() :
     Command(
         translate(L"&Rename SFTP Connection"), RENAME_COMMAND_ID,
         translate(L"Rename an SFTP connection created with Swish."),
         L"shell32.dll,133", translate(L"&Rename SFTP Connection..."),
-        translate(L"Rename Connection")),
-    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+        translate(L"Rename Connection"))
+    {}
 
 BOOST_SCOPED_ENUM(Command::state) Rename::state(
     const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)

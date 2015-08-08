@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2013, 2014, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Ending running sessions.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2013, 2014  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "CloseSession.hpp"
@@ -65,6 +56,7 @@ using swish::remote_folder::connection_from_pidl;
 
 using namespace washer::gui::task_dialog;
 using washer::shell::pidl::apidl_t;
+using washer::window::window;
 
 using comet::com_error;
 using comet::com_ptr;
@@ -107,13 +99,12 @@ namespace {
     }
 }
 
-CloseSession::CloseSession(HWND hwnd, const apidl_t& folder_pidl) :
+CloseSession::CloseSession() :
     Command(
         translate(L"&Close SFTP connection"), CLOSE_SESSION_COMMAND_ID,
         translate(L"Close the authenticated connection to the server."),
         L"shell32.dll,-11", translate(L"&Close SFTP Connection..."),
-        translate(L"Close Connection")),
-    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+        translate(L"Close Connection")) {}
 
 BOOST_SCOPED_ENUM(Command::state) CloseSession::state(
     const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
@@ -344,12 +335,7 @@ namespace {
 
     class disconnection_progress : private noncopyable
     {
-
     public:
-        explicit disconnection_progress(HWND parent_window)
-            :
-        m_parent_window(parent_window)
-        {}
 
         template<typename PendingTaskRange>
         bool operator()(const PendingTaskRange& pending_tasks)
@@ -374,24 +360,24 @@ namespace {
         }
 
     private:
-
-        HWND m_parent_window;
         optional<waiting_ui> m_dialog;
     };
 
 };
 
 void CloseSession::operator()(
-    const com_ptr<IDataObject>& data_object, const com_ptr<IBindCtx>&)
+    const com_ptr<IDataObject>& data_object,
+    const com_ptr<IBindCtx>&)
 const
 {
+    // TODO: use the view to decide whether to show a progress dialog
     PidlFormat format(data_object);
     if (format.pidl_count() != 1)
         BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
     apidl_t pidl_selected = format.file(0);
 
-    disconnection_progress progress(m_hwnd);;
+    disconnection_progress progress;
 
     session_manager().disconnect_session(
         connection_from_pidl(pidl_selected), boost::ref(progress));

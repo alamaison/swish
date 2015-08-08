@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2011, 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    New remote folder command.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2011, 2012, 2013, 2015  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "NewFolder.hpp"
@@ -61,6 +52,7 @@ using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
 using washer::shell::shell_browser;
 using washer::shell::shell_view;
+using washer::window::window;
 using washer::trace;
 
 using comet::com_error;
@@ -74,6 +66,7 @@ using boost::function;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::locale::translate;
+using boost::optional;
 using boost::regex_match;
 using boost::wformat;
 using boost::wregex;
@@ -170,6 +163,7 @@ namespace {
 }
 
 NewFolder::NewFolder(
+    const optional<window<wchar_t>>& parent_window,
     const apidl_t& folder_pidl,
     const provider_factory& provider,
     const consumer_factory& consumer) :
@@ -178,6 +172,7 @@ NewFolder::NewFolder(
         translate(L"Create a new, empty folder in the folder you have open."),
         L"shell32.dll,-258", L"",
         translate(L"Make a new folder")),
+    m_parent_window(parent_window),
     m_folder_pidl(folder_pidl), m_provider_factory(provider),
     m_consumer_factory(consumer) {}
 
@@ -192,26 +187,8 @@ void NewFolder::operator()(
     const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
 const
 {
-    HWND hwnd = NULL;
     try
     {
-        // Get the view which we need to report errors and to put new folder
-        // into edit mode.  Failure to get the view is not enough reason to
-        // abort the operation so we swallow any errors
-        com_ptr<IShellView> view;
-        try
-        {
-            view = shell_view(shell_browser(m_site));
-            HRESULT hr = view->GetWindow(&hwnd);
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
-        }
-        catch (const exception&)
-        {
-            trace("WARNING: couldn't get current IShellView or HWND");
-        }
-
-
         shared_ptr<sftp_provider> provider = m_provider_factory(
             m_consumer_factory(),
             translate("Name of a running task", "Creating new folder"));
@@ -232,6 +209,7 @@ const
             // A failure after this point is not worth reporting.  The folder
             // was created even if we didn't allow the user a chance to pick a
             // name.
+            com_ptr<IShellView> view = shell_view(shell_browser(m_site));
             put_view_item_into_rename_mode(view, pidl);
         }
         catch (const exception& e)
@@ -242,9 +220,13 @@ const
     }
     catch (...)
     {
-        announce_last_exception(
-            hwnd, translate(L"Could not create a new folder"),
-            translate(L"You might not have permission."));
+        if (m_parent_window)
+        {
+            announce_last_exception(
+                m_parent_window->hwnd(),
+                translate(L"Could not create a new folder"),
+                translate(L"You might not have permission."));
+        }
         throw;
     }
 }

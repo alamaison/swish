@@ -1,6 +1,4 @@
-/* HostFolder context menu implementation.
-
-   Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+/* Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by the
@@ -37,12 +35,12 @@ namespace {
 
     bool do_invoke_command(
         const apidl_t& folder_pidl,
-        HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
+        HWND /*hwnd_view*/, com_ptr<IDataObject> selection, UINT item_offset,
         const wstring& /*arguments*/, int /*window_mode*/)
     {
         if (item_offset == DFM_CMD_DELETE)
         {
-            commands::Remove deletion_command(hwnd_view, folder_pidl);
+            commands::Remove deletion_command(folder_pidl);
             deletion_command(selection, NULL);
             return true;
         }

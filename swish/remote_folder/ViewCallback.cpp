@@ -1,28 +1,20 @@
-/**
-    @file
+/* Handler for remote folder's interaction with Explorer Shell Folder View.
 
-    Handler for remote folder's interaction with Explorer Shell Folder View.
+   Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    @if license
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "ViewCallback.hpp"
@@ -51,6 +43,8 @@ using comet::com_ptr;
 
 using washer::last_error;
 using washer::shell::pidl::apidl_t;
+using washer::window::window;
+using washer::window::window_handle;
 
 using boost::bind;
 using boost::enable_error_info;
@@ -83,7 +77,7 @@ namespace {
  *                     creating this callback object.
  */
 CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
-    m_folder_pidl(folder_pidl), m_hwnd_view(NULL) {}
+    m_folder_pidl(folder_pidl) {}
 
 /**
  * The folder window is being created.
@@ -92,7 +86,12 @@ CViewCallback::CViewCallback(const apidl_t& folder_pidl) :
  */
 bool CViewCallback::on_window_created(HWND hwnd_view)
 {
-    m_hwnd_view = hwnd_view;
+    if (hwnd_view)
+    {
+        m_owning_folder_view = window<wchar_t>(
+            window_handle::foster_handle(hwnd_view));
+    }
+
     return true;
 }
 
@@ -138,7 +137,7 @@ bool CViewCallback::on_get_webview_content(
         return false;
 
     pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
-        remote_folder_task_pane_titles(m_hwnd_view, m_folder_pidl);
+        remote_folder_task_pane_titles(m_owning_folder_view, m_folder_pidl);
 
     content_out.pExtraTasksExpando = tasks.first.detach();
     content_out.pFolderTasksExpando = tasks.second.detach();
@@ -160,17 +159,19 @@ bool CViewCallback::on_get_webview_tasks(
 
     assert(tasks_out.pEnumFolderTasks == NULL);
 
-
     // HACK: webview conflicts with ExplorerCommands so we disable it if
     //       ExplorerCommands are likely to be used.
     if (is_vista_or_greater())
         return false;
 
+    HWND nasty_old_hwnd = (m_owning_folder_view) ?
+        m_owning_folder_view->hwnd() : NULL;
+
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
         remote_folder_task_pane_tasks(
-            m_hwnd_view, m_folder_pidl, ole_site(),
+            m_owning_folder_view, m_folder_pidl, ole_site(),
             bind(provider_from_pidl, m_folder_pidl, _1, _2),
-            bind(&consumer, m_hwnd_view));
+            bind(&consumer, nasty_old_hwnd));
 
     tasks_out.pEnumExtraTasks = commands.first.detach();
     tasks_out.pEnumFolderTasks = commands.second.detach();
