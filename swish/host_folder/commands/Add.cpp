@@ -19,6 +19,7 @@
 
 #include "swish/forms/add_host.hpp" // add_host
 #include "swish/host_folder/host_management.hpp" // AddConnectionToRegistry
+#include "swish/shell_folder/shell.hpp" // window_for_ole_site
 
 #include <comet/error.h> // com_error
 #include <comet/uuid_fwd.h> // uuid_t
@@ -37,6 +38,7 @@ using swish::forms::host_info;
 using swish::nse::Command;
 using swish::host_folder::host_management::AddConnectionToRegistry;
 using swish::host_folder::host_management::ConnectionExists;
+using swish::shell_folder::window_for_ole_site;
 
 using washer::shell::pidl::apidl_t;
 using washer::window::window;
@@ -73,15 +75,13 @@ namespace {
     }
 }
 
-Add::Add(
-    const optional<window<wchar_t>>& parent_window,
-    const apidl_t& folder_pidl) :
+Add::Add(const apidl_t& folder_pidl) :
     Command(
         translate(L"&Add SFTP Connection"), ADD_COMMAND_ID,
         translate(L"Create a new SFTP connection with Swish."),
         L"shell32.dll,-258", translate(L"&Add SFTP Connection..."),
         translate(L"Add Connection")),
-    m_parent_window(parent_window), m_folder_pidl(folder_pidl) {}
+    m_folder_pidl(folder_pidl) {}
 
 BOOST_SCOPED_ENUM(Command::state) Add::state(
     const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
@@ -91,12 +91,16 @@ const
 }
 
 /** Display dialog to get connection info from user. */
-void Add::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+void Add::operator()(
+    const com_ptr<IDataObject>&, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IBindCtx>&)
 const
 {
-    if (m_parent_window)
+    optional<window<wchar_t>> view_window = window_for_ole_site(
+        ole_site);
+    if (view_window)
     {
-        host_info info = add_host(m_parent_window->hwnd());
+        host_info info = add_host(view_window->hwnd());
 
         if (ConnectionExists(info.name))
             BOOST_THROW_EXCEPTION(com_error(E_FAIL));

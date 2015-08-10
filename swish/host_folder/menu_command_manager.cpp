@@ -286,7 +286,7 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
     menu_id_command_map tools_menu_commands;
 
     UINT offset = 0;
-    tools_menu_commands[offset++] = make_shared<Add>(m_view, m_folder);
+    tools_menu_commands[offset++] = make_shared<Add>(m_folder);
     tools_menu_commands[offset++] = make_shared<Remove>(m_folder);
     tools_menu_commands[offset++] = make_shared<Rename>();
     tools_menu_commands[offset++] = make_shared<CloseSession>();
@@ -301,7 +301,7 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
             m_first_command_id, menu_info.idCmdLast, tools_menu_commands));
 
     menu_id_command_map help_menu_commands;
-    help_menu_commands[offset++] = make_shared<About>(m_view);
+    help_menu_commands[offset++] = make_shared<About>();
 
     // Try to get a handle to the Explorer Help menu and insert About box
     m_help_menu = help_menu_with_fallback(
@@ -325,12 +325,13 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
 }
 
 bool menu_command_manager::invoke(
-    UINT command_id, com_ptr<IDataObject> selection)
+    UINT command_id, com_ptr<IDataObject> selection,
+    com_ptr<IUnknown> ole_site)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
     {
-        (*(pos->second))(selection, NULL);
+        (*(pos->second))(selection, ole_site, NULL);
         return true;
     }
     else

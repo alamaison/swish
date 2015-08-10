@@ -41,7 +41,6 @@
 
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CExplorerCommand;
-using swish::nse::CExplorerCommandWithSite;
 using swish::nse::Command;
 
 using comet::com_error;
@@ -68,7 +67,9 @@ namespace {
             return state::enabled;
         }
 
-        void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+        void operator()(
+            const com_ptr<IDataObject>&, const com_ptr<IUnknown>&,
+            const com_ptr<IBindCtx>&)
         const
         {} // noop    
     };
@@ -184,7 +185,8 @@ namespace {
         BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
         { return state::enabled; }
 
-        void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+        void operator()(
+            const com_ptr<IDataObject>&, const com_ptr<IUnknown>&, const com_ptr<IBindCtx>&)
         const
         {
             throw com_error(E_ABORT);
@@ -306,8 +308,10 @@ namespace {
         BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
         { return state::enabled; }
 
-        void operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
-            const
+        void operator()(
+            const com_ptr<IDataObject>&, const com_ptr<IUnknown>&,
+            const com_ptr<IBindCtx>&)
+        const
         {
             throw com_error(E_ABORT);
         }
@@ -318,12 +322,12 @@ namespace {
 }
 
 /**
- * A CExplorerCommandWithSite must support IObjectWithSite.
+ * A CExplorerCommand must support IObjectWithSite.
  */
 BOOST_AUTO_TEST_CASE( support_ole_site )
 {
     com_ptr<IExplorerCommand> command =
-        new CExplorerCommandWithSite<CommandNeedingSite>();
+        new CExplorerCommand<CommandNeedingSite>();
 
     com_ptr<IObjectWithSite> object_with_site = try_cast(command);
     BOOST_REQUIRE(object_with_site);

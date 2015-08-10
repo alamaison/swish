@@ -105,10 +105,11 @@ const
 }
 
 void Remove::operator()(
-    const com_ptr<IDataObject>& data_object, const com_ptr<IBindCtx>&)
+    const com_ptr<IDataObject>& selection, const com_ptr<IUnknown>&,
+    const com_ptr<IBindCtx>&)
 const
 {
-    PidlFormat format(data_object);
+    PidlFormat format(selection);
     // XXX: for the moment we only allow removing one item.
     //      is this what we want?
     if (format.pidl_count() != 1)

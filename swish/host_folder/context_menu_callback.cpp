@@ -36,12 +36,13 @@ namespace {
     bool do_invoke_command(
         const apidl_t& folder_pidl,
         HWND /*hwnd_view*/, com_ptr<IDataObject> selection, UINT item_offset,
-        const wstring& /*arguments*/, int /*window_mode*/)
+        const wstring& /*arguments*/, int /*window_mode*/,
+        com_ptr<IUnknown> context_menu_site)
     {
         if (item_offset == DFM_CMD_DELETE)
         {
             commands::Remove deletion_command(folder_pidl);
-            deletion_command(selection, NULL);
+            deletion_command(selection, context_menu_site, NULL);
             return true;
         }
         else
@@ -57,7 +58,8 @@ bool context_menu_callback::invoke_command(
     const wstring& arguments)
 {
     return do_invoke_command(
-        m_folder_pidl, hwnd_view, selection, item_offset, arguments, SW_NORMAL);
+        m_folder_pidl, hwnd_view, selection, item_offset, arguments, SW_NORMAL,
+        NULL);
 }
 
 /**
@@ -67,11 +69,11 @@ bool context_menu_callback::invoke_command(
     HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
     const wstring& arguments, DWORD /*behaviour_flags*/, UINT /*minimum_id*/,
     UINT /*maximum_id*/, const CMINVOKECOMMANDINFO& invocation_details,
-    com_ptr<IUnknown> /*context_menu_site*/)
+    com_ptr<IUnknown> context_menu_site)
 {
     return do_invoke_command(
         m_folder_pidl, hwnd_view, selection, item_offset, arguments,
-        invocation_details.nShow);
+        invocation_details.nShow, context_menu_site);
 }
 
 }} // namespace swish::remote_folder

@@ -21,7 +21,8 @@
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/shell.hpp" // put_view_item_into_rename_mode
+#include "swish/shell_folder/shell.hpp" // put_view_item_into_rename_mode,
+                                        // window_for_ole_site
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/trace.hpp> // trace
@@ -47,6 +48,7 @@ using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::shell_folder::put_view_item_into_rename_mode;
+using swish::shell_folder::window_for_ole_site;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
@@ -163,7 +165,6 @@ namespace {
 }
 
 NewFolder::NewFolder(
-    const optional<window<wchar_t>>& parent_window,
     const apidl_t& folder_pidl,
     const provider_factory& provider,
     const consumer_factory& consumer) :
@@ -172,7 +173,6 @@ NewFolder::NewFolder(
         translate(L"Create a new, empty folder in the folder you have open."),
         L"shell32.dll,-258", L"",
         translate(L"Make a new folder")),
-    m_parent_window(parent_window),
     m_folder_pidl(folder_pidl), m_provider_factory(provider),
     m_consumer_factory(consumer) {}
 
@@ -184,7 +184,8 @@ const
 }
 
 void NewFolder::operator()(
-    const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+    const com_ptr<IDataObject>&, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IBindCtx>&)
 const
 {
     try
@@ -209,8 +210,12 @@ const
             // A failure after this point is not worth reporting.  The folder
             // was created even if we didn't allow the user a chance to pick a
             // name.
-            com_ptr<IShellView> view = shell_view(shell_browser(m_site));
-            put_view_item_into_rename_mode(view, pidl);
+
+            com_ptr<IShellView> view = shell_view(shell_browser(ole_site));
+            if (view)
+            {
+                put_view_item_into_rename_mode(view, pidl);
+            }
         }
         catch (const exception& e)
         {
@@ -220,20 +225,21 @@ const
     }
     catch (...)
     {
-        if (m_parent_window)
+        try
         {
-            announce_last_exception(
-                m_parent_window->hwnd(),
-                translate(L"Could not create a new folder"),
-                translate(L"You might not have permission."));
-        }
+            optional<window<wchar_t>> view_window = window_for_ole_site(
+                ole_site);
+            if (view_window)
+            {
+                announce_last_exception(
+                    view_window->hwnd(),
+                    translate(L"Could not create a new folder"),
+                    translate(L"You might not have permission."));
+            }
+        } catch (...) {}
+
         throw;
     }
-}
-
-void NewFolder::set_site(com_ptr<IUnknown> ole_site)
-{
-    m_site = ole_site;
 }
 
 }}} // namespace swish::remote_folder::commands

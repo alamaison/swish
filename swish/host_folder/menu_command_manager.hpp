@@ -58,7 +58,9 @@ public:
     /**
      * Invoke a command by merge offset.
      */
-    bool invoke(UINT command_id, comet::com_ptr<IDataObject> selection);
+    bool invoke(
+        UINT command_id, comet::com_ptr<IDataObject> selection,
+        comet::com_ptr<IUnknown> ole_site);
 
     /**
      * Request tool tip for command by merge offset.

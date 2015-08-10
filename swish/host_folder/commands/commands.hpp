@@ -22,11 +22,8 @@
 #include "swish/nse/UICommand.hpp" // IUIElement
 
 #include <washer/shell/pidl.hpp> // apidl_t
-#include <washer/window/window.hpp>
 
 #include <comet/ptr.h> // com_ptr
-
-#include <boost/optional/optional.hpp>
 
 #include <shobjidl.h> // IExplorerCommandProvider
 
@@ -35,20 +32,15 @@ namespace host_folder {
 namespace commands {
 
 comet::com_ptr<IExplorerCommandProvider> host_folder_command_provider(
-    const boost::optional<washer::window::window<wchar_t>>& parent_window,
     const washer::shell::pidl::apidl_t& folder_pidl);
 
 std::pair<comet::com_ptr<nse::IUIElement>, comet::com_ptr<nse::IUIElement> >
-host_folder_task_pane_titles(
-    const boost::optional<washer::window::window<wchar_t>>& parent_window,
-    const washer::shell::pidl::apidl_t& folder_pidl);
+host_folder_task_pane_titles(const washer::shell::pidl::apidl_t& folder_pidl);
 
 std::pair<
     comet::com_ptr<nse::IEnumUICommand>,
     comet::com_ptr<nse::IEnumUICommand> >
-host_folder_task_pane_tasks(
-    const boost::optional<washer::window::window<wchar_t>>& parent_window,
-    const washer::shell::pidl::apidl_t& folder_pidl);
+host_folder_task_pane_tasks(const washer::shell::pidl::apidl_t& folder_pidl);
 
 }}} // namespace swish::host_folder::commands
 

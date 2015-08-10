@@ -92,23 +92,19 @@ const
 // finishes typing the new name, the shell takes care of performing the rest of
 // the renaming process by calling SetNameOf() on the HostFolder
 void Rename::operator()(
-    const com_ptr<IDataObject>& data_object, const com_ptr<IBindCtx>&)
+    const com_ptr<IDataObject>& selection, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IBindCtx>&)
 const
 {
-    PidlFormat format(data_object);
+    PidlFormat format(selection);
     if (format.pidl_count() != 1)
         BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-    com_ptr<IShellView> view = shell_view(shell_browser(m_site));
+    com_ptr<IShellView> view = shell_view(shell_browser(ole_site));
 
     apidl_t pidl_selected = format.file(0);
 
     put_view_item_into_rename_mode(view, pidl_selected.last_item());
-}
-
-void Rename::set_site(com_ptr<IUnknown> ole_site)
-{
-    m_site = ole_site;
 }
 
 }}} // namespace swish::host_folder::commands

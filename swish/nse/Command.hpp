@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2010, 2011, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Swish host folder commands.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef SWISH_NSE_COMMAND_HPP
@@ -64,17 +55,16 @@ public:
      * this method.
      *
      * NOTE: If commands need access to the view's window, to use as a UI
-     * parent, they need to be constructed with that as a parameter.
-     * Invocation sites, like the Explorer command bar, don't have access
-     * to that view.
+     * parent, they need to get this from the OLE site parameter.
      *
-     * @param data_object  DataObject holding items on which to perform the
+     * @param selection    DataObject holding items on which to perform the
      *                     command.  This may be NULL in which case the
      *                     command should only execute if it makes sense to
      *                     do so regardless of selected items.
      */
     virtual void operator()(
-        const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IDataObject>& selection,
+        const comet::com_ptr<IUnknown>& ole_site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
 
 

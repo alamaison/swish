@@ -18,11 +18,9 @@
 #include "commands.hpp"
 
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
-#include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommandWithSite
+#include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommand
 #include "swish/remote_folder/commands/NewFolder.hpp"
 
-#include <washer/window/window.hpp>
-#include <washer/window/window_handle.hpp>
 
 #include <comet/server.h> // simple_object
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -30,7 +28,6 @@
 #include <boost/bind.hpp> // bind, _1
 #include <boost/locale.hpp> // translate
 #include <boost/make_shared.hpp> // make_shared
-#include <boost/optional/optional.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
@@ -40,9 +37,9 @@
 #include <vector>
 
 using swish::nse::CExplorerCommandProvider;
-using swish::nse::CExplorerCommandWithSite;
+using swish::nse::CExplorerCommand;
 using swish::nse::CUIElementErrorAdapter;
-using swish::nse::CUICommandWithSite;
+using swish::nse::CUICommand;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
@@ -50,7 +47,6 @@ using swish::nse::WebtaskCommandTitleAdapter;
 using swish::provider::sftp_provider;
 
 using washer::shell::pidl::apidl_t;
-using washer::window::window;
 
 using comet::com_ptr;
 using comet::make_smart_enumeration;
@@ -60,7 +56,6 @@ using boost::bind;
 using boost::function;
 using boost::locale::translate;
 using boost::make_shared;
-using boost::optional;
 using boost::shared_ptr;
 
 using std::make_pair;
@@ -72,15 +67,14 @@ namespace remote_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-    const optional<window<wchar_t>>& owning_view,
     const apidl_t& folder_pidl,
     const provider_factory& provider,
     const consumer_factory& consumer)
 {
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(
-        new CExplorerCommandWithSite<NewFolder>(
-            owning_view, folder_pidl, provider, consumer));
+        new CExplorerCommand<NewFolder>(
+            folder_pidl, provider, consumer));
     return new CExplorerCommandProvider(commands);
 }
 
@@ -108,30 +102,25 @@ public:
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
-remote_folder_task_pane_titles(
-    const optional<window<wchar_t>>& /*owning_view*/,
-    const apidl_t& /*folder_pidl*/)
+remote_folder_task_pane_titles(const apidl_t& /*folder_pidl*/)
 {
     return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
-    const optional<window<wchar_t>>& owning_view,
-    const apidl_t& folder_pidl,
-    com_ptr<IUnknown> ole_site,
-    const provider_factory& provider,
-    const consumer_factory& consumer)
+    const apidl_t& folder_pidl, com_ptr<IUnknown> ole_site,
+    const provider_factory& provider, const consumer_factory& consumer)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
     shared_command_vector commands =
         make_shared< vector< com_ptr<IUICommand> > >();
 
     com_ptr<IUICommand> new_folder =
-        new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
-        owning_view, folder_pidl,
+        new CUICommand<WebtaskCommandTitleAdapter<NewFolder>>(
+        folder_pidl,
         bind(
-            provider, _1, 
+            provider, _1,
             translate("Name of a running task", "Creating new folder")),
         consumer);
 
@@ -147,7 +136,7 @@ remote_folder_task_pane_tasks(
 
     commands->push_back(new_folder);
 
-    com_ptr<IEnumUICommand> e = 
+    com_ptr<IEnumUICommand> e =
         make_smart_enumeration<IEnumUICommand>(commands);
 
     return make_pair(e, com_ptr<IEnumUICommand>());

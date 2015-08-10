@@ -367,6 +367,7 @@ namespace {
 
 void CloseSession::operator()(
     const com_ptr<IDataObject>& data_object,
+    const com_ptr<IUnknown>& /*ole_site*/,
     const com_ptr<IBindCtx>&)
 const
 {

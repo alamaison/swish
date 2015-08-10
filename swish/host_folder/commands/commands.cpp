@@ -37,7 +37,6 @@
 #include <vector>
 
 using swish::nse::CExplorerCommand;
-using swish::nse::CExplorerCommandWithSite;
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CUICommand;
 using swish::nse::CUIElementErrorAdapter;
@@ -48,7 +47,6 @@ using swish::nse::IUIElement;
 using swish::nse::WebtaskCommandTitleAdapter;
 
 using washer::shell::pidl::apidl_t;
-using washer::window::window;
 
 using comet::com_ptr;
 using comet::make_smart_enumeration;
@@ -56,7 +54,6 @@ using comet::simple_object;
 
 using boost::locale::translate;
 using boost::make_shared;
-using boost::optional;
 using boost::shared_ptr;
 
 using std::make_pair;
@@ -68,12 +65,12 @@ namespace host_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> host_folder_command_provider(
-    const optional<window<wchar_t>>& owning_view, const apidl_t& folder_pidl)
+    const apidl_t& folder_pidl)
 {
     CExplorerCommandProvider::ordered_commands commands;
-    commands.push_back(new CExplorerCommand<Add>(owning_view, folder_pidl));
+    commands.push_back(new CExplorerCommand<Add>(folder_pidl));
     commands.push_back(new CExplorerCommand<Remove>(folder_pidl));
-    commands.push_back(new CExplorerCommandWithSite<Rename>());
+    commands.push_back(new CExplorerCommand<Rename>());
     commands.push_back(new CExplorerCommand<CloseSession>());
     commands.push_back(new CExplorerCommand<LaunchAgent>(folder_pidl));
     return new CExplorerCommandProvider(commands);
@@ -104,23 +101,20 @@ public:
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
-host_folder_task_pane_titles(
-    const optional<window<wchar_t>>& /*owning_view*/,
-    const apidl_t& /*folder_pidl*/)
+host_folder_task_pane_titles(const apidl_t& /*folder_pidl*/)
 {
     return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
-host_folder_task_pane_tasks(
-    const optional<window<wchar_t>>& owning_view, const apidl_t& folder_pidl)
+host_folder_task_pane_tasks(const apidl_t& folder_pidl)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
     shared_command_vector commands =
         make_shared< vector< com_ptr<IUICommand> > >();
 
     commands->push_back(
-        new CUICommand<WebtaskCommandTitleAdapter<Add>>(owning_view, folder_pidl));
+        new CUICommand<WebtaskCommandTitleAdapter<Add>>(folder_pidl));
     commands->push_back(
         new CUICommand<WebtaskCommandTitleAdapter<Remove>>(folder_pidl));
     commands->push_back(

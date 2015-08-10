@@ -505,16 +505,11 @@ variant_t CHostFolder::property(const property_key& key, const cpidl_t& pidl)
  * Create a toolbar command provider for the folder.
  */
 CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
-    HWND owning_hwnd)
+    HWND /*owning_hwnd*/)
 {
     TRACE("Request: IExplorerCommandProvider");
 
-    optional<window<wchar_t>> owning_view;
-    if (owning_hwnd)
-        owning_view = window<wchar_t>(
-            window_handle::foster_handle(owning_hwnd));
-
-    return host_folder_command_provider(owning_view, root_pidl()).get();
+    return host_folder_command_provider(root_pidl()).get();
 }
 
 /**

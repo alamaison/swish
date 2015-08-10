@@ -137,7 +137,7 @@ bool CViewCallback::on_get_webview_content(
         return false;
 
     pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
-        remote_folder_task_pane_titles(m_owning_folder_view, m_folder_pidl);
+        remote_folder_task_pane_titles(m_folder_pidl);
 
     content_out.pExtraTasksExpando = tasks.first.detach();
     content_out.pFolderTasksExpando = tasks.second.detach();
@@ -169,7 +169,7 @@ bool CViewCallback::on_get_webview_tasks(
 
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
         remote_folder_task_pane_tasks(
-            m_owning_folder_view, m_folder_pidl, ole_site(),
+            m_folder_pidl, ole_site(),
             bind(provider_from_pidl, m_folder_pidl, _1, _2),
             bind(&consumer, nasty_old_hwnd));
 

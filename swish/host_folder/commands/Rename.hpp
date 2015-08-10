@@ -34,12 +34,8 @@ public:
 
     void operator()(
         const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IUnknown>& ole_site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const;
-
-    void set_site(comet::com_ptr<IUnknown> ole_site);
-
-private:
-    comet::com_ptr<IUnknown> m_site;
 };
 
 }}} // namespace swish::host_folder::commands

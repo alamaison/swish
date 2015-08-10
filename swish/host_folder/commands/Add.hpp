@@ -17,14 +17,10 @@
 
 #ifndef SWISH_HOST_FOLDER_COMMANDS_ADD_HPP
 #define SWISH_HOST_FOLDER_COMMANDS_ADD_HPP
-#pragma once
 
 #include "swish/nse/Command.hpp" // Command
 
 #include <washer/shell/pidl.hpp> // apidl_t
-#include <washer/window/window.hpp>
-
-#include <boost/optional/optional.hpp>
 
 namespace swish {
 namespace host_folder {
@@ -33,9 +29,7 @@ namespace commands {
 class Add : public swish::nse::Command
 {
 public:
-    Add(
-        const boost::optional<washer::window::window<wchar_t>>& parent_window,
-        const washer::shell::pidl::apidl_t& folder_pidl);
+    Add(const washer::shell::pidl::apidl_t& folder_pidl);
 
     virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
@@ -43,10 +37,10 @@ public:
 
     void operator()(
         const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IUnknown>& ole_site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
 private:
-    boost::optional<washer::window::window<wchar_t>> m_parent_window;
     washer::shell::pidl::apidl_t m_folder_pidl;
 };
 

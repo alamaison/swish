@@ -43,14 +43,11 @@ using swish::remote_folder::commands::remote_folder_task_pane_tasks;
 
 using test::PidlFixture;
 
-using washer::window::window;
-
 using comet::com_ptr;
 
 using boost::bind;
 using boost::filesystem::directory_iterator;
 using boost::filesystem::path;
-using boost::optional;
 
 using std::distance;
 using std::wstring;
@@ -65,7 +62,6 @@ namespace { // private
         NewFolder new_folder_command()
         {
             return NewFolder(
-                optional<window<wchar_t>>(),
                 sandbox_pidl(),
                 bind(&NewFolderCommandFixture::Provider, this),
                 bind(&NewFolderCommandFixture::Consumer, this));
@@ -104,7 +100,7 @@ BOOST_AUTO_TEST_CASE( no_collision_empty )
     path expected = Sandbox() / NEW_FOLDER;
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
 
@@ -121,7 +117,7 @@ BOOST_AUTO_TEST_CASE( no_collision )
     path expected = Sandbox() / NEW_FOLDER;
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
 
@@ -141,7 +137,7 @@ BOOST_AUTO_TEST_CASE( basic_collision )
     BOOST_REQUIRE(create_directory(collision));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision));
@@ -162,7 +158,7 @@ BOOST_AUTO_TEST_CASE( non_interfering_collision )
     BOOST_REQUIRE(create_directory(collision));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision));
@@ -185,7 +181,7 @@ BOOST_AUTO_TEST_CASE( multiple_collision )
     BOOST_REQUIRE(create_directory(collision2));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision1));
@@ -209,7 +205,7 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision1 )
     BOOST_REQUIRE(create_directory(collision2));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision1));
@@ -236,7 +232,7 @@ BOOST_AUTO_TEST_CASE( non_contiguous_collision2 )
     BOOST_REQUIRE(create_directory(collision3));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision1));
@@ -264,7 +260,7 @@ BOOST_AUTO_TEST_CASE( collision_suffix_mismatch )
     BOOST_REQUIRE(create_directory(collision3));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision1));
@@ -292,7 +288,7 @@ BOOST_AUTO_TEST_CASE( collision_prefix_mismatch )
     BOOST_REQUIRE(create_directory(collision3));
 
     NewFolder command = new_folder_command();
-    command(NULL, NULL);
+    command(NULL, NULL, NULL);
 
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(is_directory(collision1));
@@ -316,7 +312,7 @@ BOOST_AUTO_TEST_CASE( task_pane_old_site )
 {
     std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > panes =
         remote_folder_task_pane_tasks(
-            NULL, sandbox_pidl(), NULL,
+            sandbox_pidl(), NULL,
             bind(&NewFolderCommandFixture::Provider, this),
             bind(&NewFolderCommandFixture::Consumer, this));
 

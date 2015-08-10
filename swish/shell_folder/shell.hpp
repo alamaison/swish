@@ -28,6 +28,7 @@
 #include "swish/windows_api.hpp" // SHBindToParent
 
 #include <washer/shell/pidl.hpp> // cpidl_t
+#include <washer/window/window.hpp>
 
 #include <comet/error.h> // com_error
 #include <comet/interface.h>  // uuidof, comtype
@@ -35,6 +36,7 @@
 
 #include <boost/filesystem.hpp>  // path
 #include <boost/numeric/conversion/cast.hpp>  // numeric_cast
+#include <boost/optional/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
 #include <boost/iterator/indirect_iterator.hpp>
@@ -190,5 +192,11 @@ comet::com_ptr<T> ui_object_of_item(PCIDLIST_ABSOLUTE pidl)
 void put_view_item_into_rename_mode(
     comet::com_ptr<IShellView> view,
     const washer::shell::pidl::cpidl_t& item);
+
+/**
+ * Get the window for the give OLE site, if available.
+ */
+boost::optional<washer::window::window<wchar_t>> window_for_ole_site(
+    comet::com_ptr<IUnknown> ole_site);
 
 }} // namespace swish::shell_folder

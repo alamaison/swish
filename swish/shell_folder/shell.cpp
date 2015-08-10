@@ -27,17 +27,24 @@
 
 #include "shell.hpp"
 
+#include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/shell/shell_item.hpp> // pidl_shell_item
 
 #include <comet/error.h> // com_error
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <exception>
+
 #include <shlobj.h>  // SHILCreateFromPath, ILFree
 #include <Winerror.h>  // FAILED
 
 using washer::shell::pidl::cpidl_t;
 using washer::shell::pidl_shell_item;
+using washer::shell::shell_browser;
+using washer::shell::shell_view;
+using washer::window::window;
+using washer::window::window_handle;
 
 using comet::com_error;
 using comet::com_error_from_interface;
@@ -45,15 +52,10 @@ using comet::com_ptr;
 
 using boost::filesystem::path;
 using boost::filesystem::directory_iterator;
+using boost::optional;
 using boost::shared_ptr;
 
 using std::invalid_argument;
-
-template<> struct comet::comtype<IShellView>
-{
-    static const IID& uuid() throw() { return IID_IShellView; }
-    typedef IUnknown base;
-};
 
 namespace swish {
 namespace shell_folder {
@@ -100,6 +102,21 @@ void put_view_item_into_rename_mode(
         SVSI_ENSUREVISIBLE | SVSI_FOCUSED);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
+}
+
+optional<window<wchar_t>> window_for_ole_site(com_ptr<IUnknown> ole_site)
+{
+    try
+    {
+        com_ptr<IShellView> view = shell_view(shell_browser(ole_site));
+        HWND hwnd = NULL;
+        if (view->GetWindow(&hwnd) == S_OK && hwnd)
+        {
+            return window<wchar_t>(window_handle::foster_handle(hwnd));
+        }
+    } catch(const std::exception&) {}
+
+    return optional<window<wchar_t>>();
 }
 
 }} // namespace swish::shell_folder

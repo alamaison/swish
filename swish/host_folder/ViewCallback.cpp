@@ -190,7 +190,7 @@ bool CViewCallback::on_init_menu_popup(
 
 bool CViewCallback::on_invoke_command(UINT command_id)
 {
-    return m_menu_manager->invoke(command_id, selection());
+    return m_menu_manager->invoke(command_id, selection(), ole_site());
 }
 
 #pragma warning(push)
@@ -231,7 +231,7 @@ bool CViewCallback::on_get_webview_content(
         return false;
 
     pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
-        host_folder_task_pane_titles(m_view, m_folder);
+        host_folder_task_pane_titles(m_folder);
 
     content_out.pExtraTasksExpando = tasks.first.detach();
     content_out.pFolderTasksExpando = tasks.second.detach();
@@ -253,7 +253,7 @@ bool CViewCallback::on_get_webview_tasks(
         return false;
 
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
-        host_folder_task_pane_tasks(m_view, m_folder);
+        host_folder_task_pane_tasks(m_folder);
 
     tasks_out.pEnumExtraTasks = commands.first.detach();
     tasks_out.pEnumFolderTasks = commands.second.detach();

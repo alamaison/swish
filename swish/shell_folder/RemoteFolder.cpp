@@ -622,15 +622,10 @@ variant_t CRemoteFolder::property(const property_key& key, const cpidl_t& pidl)
 CComPtr<IExplorerCommandProvider> CRemoteFolder::command_provider(
     HWND owning_hwnd)
 {
-    TRACE("Request: IExplorerCommandProvider");;
-
-    optional<window<wchar_t>> owning_view;
-    if (owning_hwnd)
-        owning_view = window<wchar_t>(
-            window_handle::foster_handle(owning_hwnd));
+    TRACE("Request: IExplorerCommandProvider");
 
     return remote_folder_command_provider(
-        owning_view, root_pidl(),
+        root_pidl(),
         bind(&provider_from_pidl, root_pidl(), _1, _2),
         bind(m_consumer_factory, owning_hwnd)).get();
 }

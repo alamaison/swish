@@ -23,9 +23,7 @@
 #include "swish/nse/Command.hpp" // Command
 
 #include <washer/shell/pidl.hpp> // apidl_t
-#include <washer/window/window.hpp>
 
-#include <boost/optional/optional.hpp>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -43,7 +41,6 @@ class NewFolder : public swish::nse::Command
 {
 public:
     NewFolder(
-        const boost::optional<washer::window::window<wchar_t>>& parent_window,
         const washer::shell::pidl::apidl_t& folder_pidl,
         const provider_factory& provider,
         const consumer_factory& consumer);
@@ -54,16 +51,13 @@ public:
 
     void operator()(
         const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IUnknown>& ole_site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
-    void set_site(comet::com_ptr<IUnknown> ole_site);
-
 private:
-    boost::optional<washer::window::window<wchar_t>> m_parent_window;
     washer::shell::pidl::apidl_t m_folder_pidl;
     provider_factory m_provider_factory;
     consumer_factory m_consumer_factory;
-    comet::com_ptr<IUnknown> m_site;
 };
 
 }}} // namespace swish::remote_folder::commands

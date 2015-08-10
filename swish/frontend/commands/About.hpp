@@ -16,18 +16,8 @@
 
 #ifndef SWISH_FRONTEND_COMMANDS_ABOUT_HPP
 #define SWISH_FRONTEND_COMMANDS_ABOUT_HPP
-#pragma once
 
 #include "swish/nse/Command.hpp" // Command
-
-#include <washer/shell/pidl.hpp> // apidl_t
-#include <washer/window/window.hpp>
-
-#include <boost/optional/optional.hpp>
-
-#include <comet/ptr.h> // com_ptr
-
-#include <ObjIdl.h> // IDataObject, IBindCtx
 
 namespace swish {
 namespace frontend {
@@ -36,8 +26,7 @@ namespace commands {
 class About : public swish::nse::Command
 {
 public:
-    About(
-        const boost::optional<washer::window::window<wchar_t>>& parent_window);
+    About();
 
     virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
@@ -45,10 +34,8 @@ public:
 
     void operator()(
         const comet::com_ptr<IDataObject>& data_object,
+        const comet::com_ptr<IUnknown>& ole_site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const;
-
-private:
-    boost::optional<washer::window::window<wchar_t>> m_parent_window;
 };
 
 }}} // namespace swish::frontend::commands

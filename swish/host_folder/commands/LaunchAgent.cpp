@@ -67,7 +67,7 @@ namespace {
        return module_path<wchar_t>(((HINSTANCE)&__ImageBase)).parent_path()
            / PAGEANT_FILE_NAME;
    }
-   
+
    /**
     * Cause Explorer to refresh any windows displaying the owning folder.
     *
@@ -109,7 +109,9 @@ const
     return (hwnd) ? state::hidden : state::enabled;
 }
 
-void LaunchAgent::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+void LaunchAgent::operator()(
+    const com_ptr<IDataObject>&, const com_ptr<IUnknown>&,
+    const com_ptr<IBindCtx>&)
 const
 {
     static wstring pageant = pageant_path().wstring();

@@ -16,6 +16,7 @@
 
 #include "About.hpp"
 
+#include "swish/shell_folder/shell.hpp" // window_for_ole_site
 #include "swish/versions/version.hpp" // release_version
 
 #include <washer/gui/message_box.hpp>
@@ -31,6 +32,7 @@
 #include <string>
 
 using swish::nse::Command;
+using swish::shell_folder::window_for_ole_site;
 
 using namespace washer::gui::message_box;
 using washer::module_path;
@@ -64,15 +66,14 @@ namespace {
    }
 }
 
-About::About(const optional<window<wchar_t>>& parent_window) :
+About::About() :
     Command(
       translate(
         L"Title of command used to show the Swish 'About' box in the "
         L"Explorer Help menu",
         L"About &Swish"), ABOUT_COMMAND_ID,
       translate(
-          L"Displays version, licence and copyright information for Swish.")),
-m_parent_window(parent_window)
+          L"Displays version, licence and copyright information for Swish."))
     {}
 
 BOOST_SCOPED_ENUM(Command::state) About::state(
@@ -82,10 +83,14 @@ const
     return state::enabled;
 }
 
-void About::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+void About::operator()(
+    const com_ptr<IDataObject>&, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IBindCtx>&)
 const
 {
-    if (!m_parent_window)
+    optional<window<wchar_t>> view_window = window_for_ole_site(
+        ole_site);
+    if (!view_window)
         return;
 
     string snapshot = snapshot_version();
@@ -116,7 +121,7 @@ const
         << " " << installation_path().string();
 
    message_box(
-        m_parent_window->hwnd(), message.str(),
+        view_window->hwnd(), message.str(),
         translate("Title of About dialog box", "About Swish"), box_type::ok,
         icon_type::information);
 }
