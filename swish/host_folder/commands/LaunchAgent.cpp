@@ -36,6 +36,7 @@
 #include <shlobj.h> // SHChangeNotify
 
 using swish::nse::Command;
+using swish::nse::command_site;
 
 using washer::module_handle;
 using washer::module_path;
@@ -110,7 +111,7 @@ const
 }
 
 void LaunchAgent::operator()(
-    const com_ptr<IDataObject>&, const com_ptr<IUnknown>&,
+    const com_ptr<IDataObject>&, const command_site&,
     const com_ptr<IBindCtx>&)
 const
 {

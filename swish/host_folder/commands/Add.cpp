@@ -19,7 +19,6 @@
 
 #include "swish/forms/add_host.hpp" // add_host
 #include "swish/host_folder/host_management.hpp" // AddConnectionToRegistry
-#include "swish/shell_folder/shell.hpp" // window_for_ole_site
 
 #include <comet/error.h> // com_error
 #include <comet/uuid_fwd.h> // uuid_t
@@ -36,9 +35,9 @@
 using swish::forms::add_host;
 using swish::forms::host_info;
 using swish::nse::Command;
+using swish::nse::command_site;
 using swish::host_folder::host_management::AddConnectionToRegistry;
 using swish::host_folder::host_management::ConnectionExists;
-using swish::shell_folder::window_for_ole_site;
 
 using washer::shell::pidl::apidl_t;
 using washer::window::window;
@@ -92,12 +91,11 @@ const
 
 /** Display dialog to get connection info from user. */
 void Add::operator()(
-    const com_ptr<IDataObject>&, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IDataObject>&, const command_site& site,
     const com_ptr<IBindCtx>&)
 const
 {
-    optional<window<wchar_t>> view_window = window_for_ole_site(
-        ole_site);
+    optional<window<wchar_t>> view_window = site.ui_owner();
     if (view_window)
     {
         host_info info = add_host(view_window->hwnd());

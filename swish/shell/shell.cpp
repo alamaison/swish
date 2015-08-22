@@ -58,7 +58,7 @@ using boost::shared_ptr;
 using std::invalid_argument;
 
 namespace swish {
-namespace shell_folder {
+namespace shell {
 
 path path_from_pidl(PIDLIST_ABSOLUTE pidl)
 {
@@ -119,4 +119,4 @@ optional<window<wchar_t>> window_for_ole_site(com_ptr<IUnknown> ole_site)
     return optional<window<wchar_t>>();
 }
 
-}} // namespace swish::shell_folder
+}} // namespace swish::shell

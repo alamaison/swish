@@ -17,7 +17,7 @@
 #include "Rename.hpp"
 
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
-#include "swish/shell_folder/shell.hpp" // put_view_item_into_rename_mode
+#include "swish/shell/shell.hpp" // put_view_item_into_rename_mode
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 
@@ -32,8 +32,9 @@
 #include <string>
 
 using swish::nse::Command;
+using swish::nse::command_site;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::put_view_item_into_rename_mode;
+using swish::shell::put_view_item_into_rename_mode;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::shell_browser;
@@ -92,7 +93,7 @@ const
 // finishes typing the new name, the shell takes care of performing the rest of
 // the renaming process by calling SetNameOf() on the HostFolder
 void Rename::operator()(
-    const com_ptr<IDataObject>& selection, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IDataObject>& selection, const command_site& site,
     const com_ptr<IBindCtx>&)
 const
 {
@@ -100,7 +101,7 @@ const
     if (format.pidl_count() != 1)
         BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-    com_ptr<IShellView> view = shell_view(shell_browser(ole_site));
+    com_ptr<IShellView> view = shell_view(shell_browser(site.ole_site()));
 
     apidl_t pidl_selected = format.file(0);
 

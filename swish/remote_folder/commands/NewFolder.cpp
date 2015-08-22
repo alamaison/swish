@@ -21,8 +21,7 @@
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/shell.hpp" // put_view_item_into_rename_mode,
-                                        // window_for_ole_site
+#include "swish/shell/shell.hpp" // put_view_item_into_rename_mode
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/trace.hpp> // trace
@@ -44,11 +43,11 @@
 
 using swish::frontend::announce_last_exception;
 using swish::nse::Command;
+using swish::nse::command_site;
 using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
-using swish::shell_folder::put_view_item_into_rename_mode;
-using swish::shell_folder::window_for_ole_site;
+using swish::shell::put_view_item_into_rename_mode;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
@@ -184,7 +183,7 @@ const
 }
 
 void NewFolder::operator()(
-    const com_ptr<IDataObject>&, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IDataObject>&, const command_site& site,
     const com_ptr<IBindCtx>&)
 const
 {
@@ -211,7 +210,7 @@ const
             // was created even if we didn't allow the user a chance to pick a
             // name.
 
-            com_ptr<IShellView> view = shell_view(shell_browser(ole_site));
+            com_ptr<IShellView> view = shell_view(shell_browser(site.ole_site()));
             if (view)
             {
                 put_view_item_into_rename_mode(view, pidl);
@@ -227,8 +226,7 @@ const
     {
         try
         {
-            optional<window<wchar_t>> view_window = window_for_ole_site(
-                ole_site);
+            optional<window<wchar_t>> view_window = site.ui_owner();
             if (view_window)
             {
                 announce_last_exception(

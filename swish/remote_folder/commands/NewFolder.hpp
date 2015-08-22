@@ -44,14 +44,14 @@ public:
         const washer::shell::pidl::apidl_t& folder_pidl,
         const provider_factory& provider,
         const consumer_factory& consumer);
-    
+
     virtual BOOST_SCOPED_ENUM(state) state(
         const comet::com_ptr<IDataObject>& data_object,
         bool ok_to_be_slow) const;
 
     void operator()(
         const comet::com_ptr<IDataObject>& data_object,
-        const comet::com_ptr<IUnknown>& ole_site,
+        const swish::nse::command_site& command_site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const;
 
 private:

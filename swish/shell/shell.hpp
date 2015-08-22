@@ -71,7 +71,7 @@ template<> struct comtype<IDataObject>
 }
 
 namespace swish {
-namespace shell_folder {
+namespace shell {
 
 /**
  * Return the filesystem path represented by the given PIDL.
@@ -199,4 +199,4 @@ void put_view_item_into_rename_mode(
 boost::optional<washer::window::window<wchar_t>> window_for_ole_site(
     comet::com_ptr<IUnknown> ole_site);
 
-}} // namespace swish::shell_folder
+}} // namespace swish::shell

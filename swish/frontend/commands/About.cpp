@@ -16,7 +16,6 @@
 
 #include "About.hpp"
 
-#include "swish/shell_folder/shell.hpp" // window_for_ole_site
 #include "swish/versions/version.hpp" // release_version
 
 #include <washer/gui/message_box.hpp>
@@ -32,7 +31,7 @@
 #include <string>
 
 using swish::nse::Command;
-using swish::shell_folder::window_for_ole_site;
+using swish::nse::command_site;
 
 using namespace washer::gui::message_box;
 using washer::module_path;
@@ -59,7 +58,7 @@ namespace commands {
 namespace {
 
    const uuid_t ABOUT_COMMAND_ID(L"b816a885-5022-11dc-9153-0090f5284f85");
-   
+
    path installation_path()
    {
        return module_path<char>(((HINSTANCE)&__ImageBase));
@@ -84,12 +83,11 @@ const
 }
 
 void About::operator()(
-    const com_ptr<IDataObject>&, const com_ptr<IUnknown>& ole_site,
+    const com_ptr<IDataObject>&, const command_site& site,
     const com_ptr<IBindCtx>&)
 const
 {
-    optional<window<wchar_t>> view_window = window_for_ole_site(
-        ole_site);
+    optional<window<wchar_t>> view_window = site.ui_owner();
     if (!view_window)
         return;
 

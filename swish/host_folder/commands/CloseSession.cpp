@@ -51,6 +51,7 @@
 using swish::connection::session_manager;
 using swish::frontend::best_taskdialog;
 using swish::nse::Command;
+using swish::nse::command_site;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::remote_folder::connection_from_pidl;
 
@@ -221,7 +222,7 @@ namespace {
             {
                 m_result.first->get();
             }
-            
+
             return m_dialog.get();
         }
 
@@ -366,8 +367,7 @@ namespace {
 };
 
 void CloseSession::operator()(
-    const com_ptr<IDataObject>& data_object,
-    const com_ptr<IUnknown>& /*ole_site*/,
+    const com_ptr<IDataObject>& data_object, const command_site& /*site*/,
     const com_ptr<IBindCtx>&)
 const
 {

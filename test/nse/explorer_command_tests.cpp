@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2010, 2011, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Unit tests for Explorer command implementation classes.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2010, 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "swish/nse/explorer_command.hpp" // test subject
@@ -42,7 +33,7 @@
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CExplorerCommand;
 using swish::nse::Command;
-
+using swish::nse::command_site;
 using comet::com_error;
 using comet::com_ptr;
 using comet::uuidof;
@@ -68,10 +59,10 @@ namespace {
         }
 
         void operator()(
-            const com_ptr<IDataObject>&, const com_ptr<IUnknown>&,
+            const com_ptr<IDataObject>&, const command_site&,
             const com_ptr<IBindCtx>&)
         const
-        {} // noop    
+        {} // noop
     };
 
     const uuid_t DUMMY_GUID_1("002F9D5D-DB85-4224-9097-B1D06E681252");
@@ -112,7 +103,7 @@ BOOST_AUTO_TEST_CASE( create_empty_provider )
         commands->GetCommands(
             NULL, uuidof(enum_commands.in()),
             reinterpret_cast<void**>(enum_commands.out())));
-    
+
     com_ptr<IExplorerCommand> command;
     BOOST_REQUIRE_EQUAL(enum_commands->Next(1, command.out(), NULL), S_FALSE);
 
@@ -136,7 +127,7 @@ BOOST_AUTO_TEST_CASE( commands )
         commands->GetCommands(
             NULL, uuidof(enum_commands.in()),
             reinterpret_cast<void**>(enum_commands.out())));
-    
+
     com_ptr<IExplorerCommand> command;
     uuid_t guid;
 
@@ -174,8 +165,8 @@ BOOST_AUTO_TEST_CASE( commands )
 
 namespace {
 
-    const GUID TEST_GUID = 
-        { 0x1621a875, 0x1252, 0x4bde, 
+    const GUID TEST_GUID =
+        { 0x1621a875, 0x1252, 0x4bde,
         { 0xb7, 0x69, 0x70, 0xa9, 0x5f, 0x49, 0x7c, 0x5f } };
 
     struct HostCommand : public Command
@@ -186,7 +177,7 @@ namespace {
         { return state::enabled; }
 
         void operator()(
-            const com_ptr<IDataObject>&, const com_ptr<IUnknown>&, const com_ptr<IBindCtx>&)
+            const com_ptr<IDataObject>&, const command_site&, const com_ptr<IBindCtx>&)
         const
         {
             throw com_error(E_ABORT);
@@ -228,7 +219,7 @@ BOOST_AUTO_TEST_CASE( icon )
 
     wchar_t* ret_val;
     BOOST_REQUIRE_OK(command->GetIcon(NULL, &ret_val));
-    
+
     shared_ptr<wchar_t> icon(ret_val, ::CoTaskMemFree);
     BOOST_REQUIRE_EQUAL(icon.get(), L"");
 }
@@ -284,7 +275,7 @@ BOOST_AUTO_TEST_CASE( state )
 }
 
 /**
- * Invoke returns error that matches exception thrown by throwing_function 
+ * Invoke returns error that matches exception thrown by throwing_function
  * passed to constructor.
  */
 BOOST_AUTO_TEST_CASE( invoke )
@@ -297,7 +288,7 @@ BOOST_AUTO_TEST_CASE( invoke )
 
 namespace {
 
-    const GUID TEST_GUID2 = 
+    const GUID TEST_GUID2 =
         { 0xae4792b2, 0x3b35, 0x4c07,
         { 0x9a, 0x96, 0x2f, 0x33, 0xc5, 0x56, 0xdb, 0x4a } };
 
@@ -309,7 +300,7 @@ namespace {
         { return state::enabled; }
 
         void operator()(
-            const com_ptr<IDataObject>&, const com_ptr<IUnknown>&,
+            const com_ptr<IDataObject>&, const command_site&,
             const com_ptr<IBindCtx>&)
         const
         {

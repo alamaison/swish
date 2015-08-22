@@ -19,6 +19,8 @@
 #define SWISH_NSE_COMMAND_HPP
 #pragma once
 
+#include "swish/nse/command_site.hpp"
+
 #include <washer/shell/pidl.hpp> // apidl_t
 
 #include <comet/ptr.h> // com_ptr
@@ -54,8 +56,9 @@ public:
      * Concrete commands will provide their implementation by overriding
      * this method.
      *
-     * NOTE: If commands need access to the view's window, to use as a UI
-     * parent, they need to get this from the OLE site parameter.
+     * NOTE: If commands need access to the view's window, to use as a UI owner,
+     * they need to get this from the command site parameter.  If the owner
+     * window is not available from the site, the command must not show UI.
      *
      * @param selection    DataObject holding items on which to perform the
      *                     command.  This may be NULL in which case the
@@ -64,7 +67,7 @@ public:
      */
     virtual void operator()(
         const comet::com_ptr<IDataObject>& selection,
-        const comet::com_ptr<IUnknown>& ole_site,
+        const command_site& site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
 
 

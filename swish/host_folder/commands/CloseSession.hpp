@@ -36,7 +36,7 @@ public:
 
     void operator()(
         const comet::com_ptr<IDataObject>& data_object,
-        const comet::com_ptr<IUnknown>& ole_site,
+        const swish::nse::command_site& site,
         const comet::com_ptr<IBindCtx>& bind_ctx) const;
 };
 

@@ -27,7 +27,7 @@
 #include "swish/frontend/announce_error.hpp" // announce_last_exception
 #include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/shell.hpp" // ui_object_of_item
+#include "swish/shell/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
 #include "swish/remote_folder/pidl_connection.hpp" // provider_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
@@ -54,7 +54,7 @@
 using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
 using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::ui_object_of_item;
+using swish::shell::ui_object_of_item;
 
 using washer::last_error;
 using washer::shell::pidl_from_parsing_name;
@@ -154,12 +154,12 @@ bool context_menu_callback::merge_context_menu(
     if (is_single_link(selection))
     {
         BOOL success = ::InsertMenuW(
-            hmenu, first_item_index, MF_BYPOSITION, 
+            hmenu, first_item_index, MF_BYPOSITION,
             minimum_id + MENU_OFFSET_OPEN,
             wstring(translate(L"Open &link")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
-                enable_error_info(last_error()) << 
+                enable_error_info(last_error()) <<
                 errinfo_api_function("InsertMenuW"));
 
         // It's not worth aborting menu creation just because we can't
@@ -176,12 +176,12 @@ bool context_menu_callback::merge_context_menu(
     else if (are_normal_files(selection))
     {
         BOOL success = ::InsertMenuW(
-            hmenu, first_item_index, MF_BYPOSITION, 
+            hmenu, first_item_index, MF_BYPOSITION,
             minimum_id + MENU_OFFSET_OPEN,
             wstring(translate(L"&Open")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
-                enable_error_info(last_error()) << 
+                enable_error_info(last_error()) <<
                 errinfo_api_function("InsertMenuW"));
 
         // It's not worth aborting menu creation just because we can't
@@ -269,7 +269,7 @@ namespace {
                 sei.lpVerb = L"open";
                 if (!::ShellExecuteEx(&sei))
                     BOOST_THROW_EXCEPTION(
-                        enable_error_info(last_error()) << 
+                        enable_error_info(last_error()) <<
                         errinfo_api_function("ShellExecuteEx"));
             }
             catch (...)
@@ -293,7 +293,7 @@ namespace {
             {
                 PidlFormat format(selection);
 
-                // XXX: We're only opening the first file even though we copy all 
+                // XXX: We're only opening the first file even though we copy all
                 // of them.  Is this what we want?
 
                 vector<wchar_t> system_temp_dir(MAX_PATH + 1, L'\0');
@@ -302,7 +302,7 @@ namespace {
                     &system_temp_dir[0]);
                 if (rc < 1)
                     BOOST_THROW_EXCEPTION(last_error());
-                
+
                 // We're using drag-and-drop to do the copy, so we don't
                 // want collisions to be possible as they will throw up
                 // confirmation dialogues.  We create a unique directory to
@@ -316,7 +316,7 @@ namespace {
                     BOOST_THROW_EXCEPTION(
                         runtime_error(
                             "Temporary download location already exists"));
-                
+
                 com_ptr<IDropTarget> drop_target =
                     ui_object_of_item<IDropTarget>(
                         pidl_from_parsing_name(temp_dir.wstring()).get());
@@ -374,7 +374,7 @@ namespace {
                 sei.lpVerb = L"open";
                 if (!::ShellExecuteEx(&sei))
                     BOOST_THROW_EXCEPTION(
-                        enable_error_info(last_error()) << 
+                        enable_error_info(last_error()) <<
                         errinfo_api_function("ShellExecuteEx"));
             }
             catch (...)

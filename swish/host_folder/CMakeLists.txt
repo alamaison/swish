@@ -56,5 +56,5 @@ find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(host_folder
-  PRIVATE connection nse version forms frontend shell_folder
+  PRIVATE connection nse version forms frontend shell_folder shell
   PUBLIC Washer::washer Comet::comet ${Boost_LIBRARIES})

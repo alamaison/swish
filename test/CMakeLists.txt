@@ -166,6 +166,7 @@ endif()
 
 add_subdirectory(host_folder)
 add_subdirectory(nse)
+add_subdirectory(shell)
 add_subdirectory(versions)
 
 # From http://stackoverflow.com/a/16163137/67013

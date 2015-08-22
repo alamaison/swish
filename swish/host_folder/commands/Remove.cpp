@@ -31,6 +31,7 @@
 #include <string>
 
 using swish::nse::Command;
+using swish::nse::command_site;
 using swish::shell_folder::data_object::PidlFormat;
 using swish::host_folder::find_host_itemid;
 using swish::host_folder::host_itemid_view;
@@ -105,7 +106,7 @@ const
 }
 
 void Remove::operator()(
-    const com_ptr<IDataObject>& selection, const com_ptr<IUnknown>&,
+    const com_ptr<IDataObject>& selection, const command_site& /*site*/,
     const com_ptr<IBindCtx>&)
 const
 {

@@ -29,7 +29,6 @@
 #include "swish/host_folder/host_pidl.hpp" // create_host_itemid
 #include "swish/shell_folder/SftpDataObject.h" // CSftpDataObject
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/shell.hpp" // desktop_folder
 #include "swish/utils.hpp" // Utf8StringToWideString
 
 #include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
@@ -54,6 +53,16 @@ using boost::numeric_cast;
 
 using std::vector;
 
+namespace comet {
+
+template<> struct comtype<IDataObject>
+{
+    static const IID& uuid() { return IID_IDataObject; }
+    typedef ::IUnknown base;
+};
+
+}
+
 namespace test { // private
 
 namespace {
@@ -68,7 +77,7 @@ namespace {
         apidl_t pidl;
         HRESULT hr = desktop->ParseDisplayName(
             NULL, NULL, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-            L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL, 
+            L"::{B816A83A-5022-11DC-9153-0090F5284F85}", NULL,
             reinterpret_cast<PIDLIST_RELATIVE*>(&pidl), NULL);
         BOOST_REQUIRE_OK(hr);
 
