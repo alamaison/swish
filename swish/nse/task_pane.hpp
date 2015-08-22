@@ -26,6 +26,7 @@
 #define SWISH_NSE_TASK_PANE_EXPANDOS_HPP
 #pragma once
 
+#include "swish/nse/command_site.hpp"
 #include "swish/nse/data_object_util.hpp" // data_object_from_item_array
 #include "swish/nse/detail/command_state_conversion.hpp"
                                            // command_state_to_expcmdstate
@@ -403,7 +404,8 @@ private:
         const comet::com_ptr<IBindCtx>& bind_ctx) const
     {
         m_command(
-            data_object_from_item_array(items, bind_ctx), m_ole_site,
+            data_object_from_item_array(items, bind_ctx),
+            command_site(m_ole_site),
             bind_ctx);
     }
 

@@ -24,6 +24,7 @@
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
 #include "swish/host_folder/commands/Rename.hpp"
+#include "swish/nse/command_site.hpp"
 
 #include <washer/gui/menu/basic_menu.hpp> // find_first_item_with_id
 #include <washer/gui/menu/button/string_button_description.hpp>
@@ -49,6 +50,7 @@ using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
 using swish::host_folder::commands::Rename;
 using swish::nse::Command;
+using swish::nse::command_site;
 
 using namespace washer::gui::menu;
 using washer::shell::pidl::apidl_t;
@@ -331,7 +333,9 @@ bool menu_command_manager::invoke(
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
     {
-        (*(pos->second))(selection, ole_site, NULL);
+        // Use given window as a UI owner fallback in case the SFV callback
+        // object was get an OLE site set
+        (*(pos->second))(selection, command_site(ole_site, m_view), NULL);
         return true;
     }
     else

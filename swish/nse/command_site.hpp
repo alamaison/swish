@@ -70,7 +70,7 @@ public:
     /**
      * A site where UI interaction is permitted via the OLE site.
      */
-    command_site(comet::com_ptr<IUnknown> ole_site);
+    explicit command_site(comet::com_ptr<IUnknown> ole_site);
 
     /**
      * A site where UI interaction is permitted via an OLE site or via a window.
