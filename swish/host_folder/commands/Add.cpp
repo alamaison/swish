@@ -83,7 +83,7 @@ Add::Add(const apidl_t& folder_pidl) :
     m_folder_pidl(folder_pidl) {}
 
 BOOST_SCOPED_ENUM(Command::state) Add::state(
-    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     return state::enabled;
@@ -91,8 +91,7 @@ const
 
 /** Display dialog to get connection info from user. */
 void Add::operator()(
-    const com_ptr<IDataObject>&, const command_site& site,
-    const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
     optional<window<wchar_t>> view_window = site.ui_owner();

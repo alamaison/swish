@@ -59,7 +59,7 @@ public:
      * Invoke a command by merge offset.
      */
     bool invoke(
-        UINT command_id, comet::com_ptr<IDataObject> selection,
+        UINT command_id, comet::com_ptr<IShellItemArray> selection,
         comet::com_ptr<IUnknown> ole_site);
 
     /**
@@ -67,12 +67,12 @@ public:
      */
     bool help_text(
         UINT command_id, std::wstring& text_out,
-        comet::com_ptr<IDataObject> selection);
+        comet::com_ptr<IShellItemArray> selection);
 
     /**
      * Refresh command states to match current selection.
      */
-    void update_state(comet::com_ptr<IDataObject> selection);
+    void update_state(comet::com_ptr<IShellItemArray> selection);
 
 private:
 

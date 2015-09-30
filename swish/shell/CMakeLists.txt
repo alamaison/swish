@@ -14,8 +14,11 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 set(SOURCES
+  parent_and_item.hpp
   shell.hpp
-  shell.cpp)
+  shell.cpp
+  shell_item.hpp
+  shell_item_array.hpp)
 
 add_library(shell ${SOURCES})
 

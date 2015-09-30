@@ -53,14 +53,14 @@ namespace {
             const wstring& icon_descriptor=wstring())
         : Command(title, guid, tool_tip, icon_descriptor) {}
 
-        BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
+        BOOST_SCOPED_ENUM(state) state(com_ptr<IShellItemArray>, bool) const
         {
             return state::enabled;
         }
 
         void operator()(
-            const com_ptr<IDataObject>&, const command_site&,
-            const com_ptr<IBindCtx>&)
+            com_ptr<IShellItemArray>, const command_site&,
+            com_ptr<IBindCtx>)
         const
         {} // noop
     };
@@ -173,11 +173,11 @@ namespace {
     {
         HostCommand() : Command(L"title", TEST_GUID, L"tool-tip") {}
 
-        BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
+        BOOST_SCOPED_ENUM(state) state(com_ptr<IShellItemArray>, bool) const
         { return state::enabled; }
 
         void operator()(
-            const com_ptr<IDataObject>&, const command_site&, const com_ptr<IBindCtx>&)
+            com_ptr<IShellItemArray>, const command_site&, com_ptr<IBindCtx>)
         const
         {
             throw com_error(E_ABORT);
@@ -296,12 +296,11 @@ namespace {
     {
         CommandNeedingSite() : Command(L"title", TEST_GUID2, L"tool-tip") {}
 
-        BOOST_SCOPED_ENUM(state) state(const com_ptr<IDataObject>&, bool) const
+        BOOST_SCOPED_ENUM(state) state(com_ptr<IShellItemArray>, bool) const
         { return state::enabled; }
 
         void operator()(
-            const com_ptr<IDataObject>&, const command_site&,
-            const com_ptr<IBindCtx>&)
+            com_ptr<IShellItemArray>, const command_site&, com_ptr<IBindCtx>)
         const
         {
             throw com_error(E_ABORT);

@@ -1,16 +1,11 @@
-/**
-    @file
+/*  Handler for host folder's interaction with Explorer Shell Folder View.
 
-    Handler for host folder's interaction with Explorer Shell Folder View.
+    Copyright (C) 2008, 2009, 2010, 2011, 2015
+    Alexander Lamaison <swish@lammy.co.uk>
 
-    @if license
-
-    Copyright (C) 2008, 2009, 2010, 2011
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -18,11 +13,8 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef SWISH_HOST_FOLDER_VIEW_CALLBACK_HPP
@@ -75,7 +67,7 @@ private:
 
     // @}
 
-    comet::com_ptr<IDataObject> selection();
+    comet::com_ptr<IShellItemArray> selection();
     void update_menus();
 
     boost::optional<washer::window::window<wchar_t>> m_view;

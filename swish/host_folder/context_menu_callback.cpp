@@ -17,6 +17,7 @@
 #include "swish/host_folder/commands/Remove.hpp"
 #include "swish/host_folder/context_menu_callback.hpp" // context_menu_callback
 #include "swish/nse/command_site.hpp"
+#include "swish/shell/shell_item_array.hpp" // shell_item_array_from_data_object
 
 #include <washer/window/window.hpp>
 
@@ -25,6 +26,7 @@
 #include <shlobj.h> // DFM_CMD_DELETE
 
 using swish::nse::command_site;
+using swish::shell::shell_item_array_from_data_object;
 
 using washer::shell::pidl::apidl_t;
 using washer::window::window;
@@ -45,13 +47,15 @@ context_menu_callback::context_menu_callback(const apidl_t& folder_pidl)
 namespace {
 
     bool do_invoke_command(
-        const apidl_t& folder_pidl,
-        HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
+        const apidl_t& folder_pidl, HWND hwnd_view,
+        com_ptr<IDataObject> selection_data_object, UINT item_offset,
         const wstring& /*arguments*/, int /*window_mode*/,
         com_ptr<IUnknown> context_menu_site)
     {
         if (item_offset == DFM_CMD_DELETE)
         {
+            com_ptr<IShellItemArray> selection =
+                shell_item_array_from_data_object(selection_data_object);
 
             // Use given window as a UI owner fallback because, if we compile
             // with pre-Vista support, the OLE site will always be NULL

@@ -76,15 +76,14 @@ About::About() :
     {}
 
 BOOST_SCOPED_ENUM(Command::state) About::state(
-   const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     return state::enabled;
 }
 
 void About::operator()(
-    const com_ptr<IDataObject>&, const command_site& site,
-    const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
     optional<window<wchar_t>> view_window = site.ui_owner();

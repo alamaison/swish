@@ -18,14 +18,15 @@
 #include "CloseSession.hpp"
 
 #include "swish/connection/session_manager.hpp"
-#include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
+#include "swish/shell/shell_item_array.hpp"
+#include "swish/shell/parent_and_item.hpp"
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 #include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 
 #include <washer/gui/task_dialog.hpp>
 
 #include <comet/ptr.h> // com_ptr
-#include <comet/error.h> // com_error
+#include <comet/error.h> // com_error, com_error_from_interface
 #include <comet/uuid_fwd.h> // uuid_t
 
 #include <boost/bind/bind.hpp>
@@ -52,7 +53,6 @@ using swish::connection::session_manager;
 using swish::frontend::best_taskdialog;
 using swish::nse::Command;
 using swish::nse::command_site;
-using swish::shell_folder::data_object::PidlFormat;
 using swish::remote_folder::connection_from_pidl;
 
 using namespace washer::gui::task_dialog;
@@ -60,6 +60,7 @@ using washer::shell::pidl::apidl_t;
 using washer::window::window;
 
 using comet::com_error;
+using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::uuid_t;
 
@@ -108,23 +109,27 @@ CloseSession::CloseSession() :
         translate(L"Close Connection")) {}
 
 BOOST_SCOPED_ENUM(Command::state) CloseSession::state(
-    const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray> selection, bool /*ok_to_be_slow*/)
 const
 {
-    if (!data_object)
+    if (!selection)
     {
         // Selection unknown.
         return state::hidden;
     }
 
-    PidlFormat format(data_object);
-    switch (format.pidl_count())
+    switch (selection->size())
     {
     case 1:
-        if (session_manager().has_session(connection_from_pidl(format.file(0))))
-            return state::enabled;
-        else
-            return state::hidden;
+        {
+            com_ptr<IShellItem> item = selection->at(0);
+            com_ptr<IParentAndItem> folder_and_pidls = try_cast(item);
+            apidl_t item_pidl = folder_and_pidls->absolute_item_pidl();
+            if (session_manager().has_session(connection_from_pidl(item_pidl)))
+                return state::enabled;
+            else
+                return state::hidden;
+        }
     case 0:
         return state::hidden;
     default:
@@ -367,23 +372,24 @@ namespace {
 };
 
 void CloseSession::operator()(
-    const com_ptr<IDataObject>& data_object, const command_site& /*site*/,
-    const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray> selection, const command_site&, com_ptr<IBindCtx>)
 const
 {
     // TODO: use the view to decide whether to show a progress dialog
-    PidlFormat format(data_object);
-    if (format.pidl_count() != 1)
+
+    if (selection->size() != 1)
         BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-    apidl_t pidl_selected = format.file(0);
+    com_ptr<IShellItem> item = selection->at(0);
+    com_ptr<IParentAndItem> folder_and_pidls = try_cast(item);
+    apidl_t selected_item = folder_and_pidls->absolute_item_pidl();
 
     disconnection_progress progress;
 
     session_manager().disconnect_session(
-        connection_from_pidl(pidl_selected), boost::ref(progress));
+        connection_from_pidl(selected_item), boost::ref(progress));
 
-    notify_shell(pidl_selected);
+    notify_shell(selected_item);
 }
 
 }}} // namespace swish::host_folder::commands

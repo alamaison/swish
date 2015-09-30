@@ -20,6 +20,7 @@
 #include "ViewCallback.hpp"
 
 #include "swish/host_folder/commands/commands.hpp" // host commands
+#include "swish/shell/shell_item_array.hpp"
 #include "swish/utils.hpp" // Utf8StringToWideString
 #include "swish/versions/version.hpp" // release_version
 
@@ -69,24 +70,25 @@ namespace host_folder {
 namespace {
 
     /**
-     * Return a DataObject representing the items currently selected.
+     * Return a ShellItemArray representing the items currently selected.
      *
      * @return NULL if nothing is selected.
      */
-    com_ptr<IDataObject> selection_data_object(com_ptr<IShellBrowser> browser)
+    com_ptr<IShellItemArray> selection_shell_item_array(
+        com_ptr<IShellBrowser> browser)
     {
         com_ptr<IShellView> view = shell_view(browser);
 
-        com_ptr<IDataObject> data_object;
+        com_ptr<IShellItemArray> item_array;
         view->GetItemObject(
-            SVGIO_SELECTION, data_object.iid(),
-            reinterpret_cast<void **>(data_object.out()));
+            SVGIO_SELECTION, item_array.iid(),
+            reinterpret_cast<void **>(item_array.out()));
 
-        // We don't care if getting the DataObject succeded - if it did, great;
+        // We don't care if getting the array succeeded - if it did, great;
         // return it.  If not we will return a NULL pointer indicating that no
         // items were selected
 
-        return data_object;
+        return item_array;
     }
 
     bool is_vista_or_greater()
@@ -263,11 +265,11 @@ bool CViewCallback::on_get_webview_tasks(
 /**
  * Items currently selected in the folder view.
  */
-com_ptr<IDataObject> CViewCallback::selection()
+com_ptr<IShellItemArray> CViewCallback::selection()
 {
     com_ptr<IShellBrowser> browser = shell_browser(ole_site());
 
-    return selection_data_object(browser);
+    return selection_shell_item_array(browser);
 }
 
 /**

@@ -22,7 +22,6 @@
 #pragma once
 
 #include "swish/nse/command_site.hpp"
-#include "swish/nse/data_object_util.hpp" // data_object_from_item_array
 #include "swish/nse/detail/command_state_conversion.hpp"
                                                // command_state_to_expcmdstate
 
@@ -220,7 +219,7 @@ private:
      */
     std::wstring title(const comet::com_ptr<IShellItemArray>& items) const
     {
-        return m_command.title(data_object_from_item_array(items));
+        return m_command.title(items);
     }
 
     /**
@@ -231,7 +230,7 @@ private:
      */
     std::wstring tool_tip(const comet::com_ptr<IShellItemArray>& items) const
     {
-        return m_command.tool_tip(data_object_from_item_array(items));
+        return m_command.tool_tip(items);
     }
 
     /**
@@ -245,7 +244,7 @@ private:
      */
     std::wstring icon(const comet::com_ptr<IShellItemArray>& items) const
     {
-        return m_command.icon_descriptor(data_object_from_item_array(items));
+        return m_command.icon_descriptor(items);
     }
 
     /**
@@ -261,11 +260,8 @@ private:
         const comet::com_ptr<IShellItemArray>& items, bool ok_to_be_slow)
     const
     {
-        comet::com_ptr<IDataObject> data_object =
-            data_object_from_item_array(items);
-
         return detail::command_state_to_expcmdstate(
-            m_command.state(data_object, ok_to_be_slow));
+            m_command.state(items, ok_to_be_slow));
     }
 
     EXPCMDFLAGS flags() const
@@ -289,10 +285,7 @@ private:
         const comet::com_ptr<IShellItemArray>& items,
         const comet::com_ptr<IBindCtx>& bind_ctx) const
     {
-        m_command(
-            data_object_from_item_array(items, bind_ctx),
-            command_site(m_ole_site),
-            bind_ctx);
+        m_command(items, command_site(m_ole_site), bind_ctx);
     }
 
     /**

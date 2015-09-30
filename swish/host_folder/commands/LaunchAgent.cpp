@@ -102,7 +102,7 @@ LaunchAgent::LaunchAgent(const apidl_t& folder_pidl) :
 
 
 BOOST_SCOPED_ENUM(Command::state) LaunchAgent::state(
-    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     HWND hwnd = ::FindWindowW(L"Pageant", L"Pageant");
@@ -111,8 +111,7 @@ const
 }
 
 void LaunchAgent::operator()(
-    const com_ptr<IDataObject>&, const command_site&,
-    const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
     static wstring pageant = pageant_path().wstring();

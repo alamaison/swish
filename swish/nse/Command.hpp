@@ -60,15 +60,15 @@ public:
      * they need to get this from the command site parameter.  If the owner
      * window is not available from the site, the command must not show UI.
      *
-     * @param selection    DataObject holding items on which to perform the
+     * @param selection    IShellItemArray holding items on which to perform the
      *                     command.  This may be NULL in which case the
      *                     command should only execute if it makes sense to
      *                     do so regardless of selected items.
      */
     virtual void operator()(
-        const comet::com_ptr<IDataObject>& selection,
+        comet::com_ptr<IShellItemArray> selection,
         const command_site& site,
-        const comet::com_ptr<IBindCtx>& bind_ctx) const = 0;
+        comet::com_ptr<IBindCtx> bind_ctx) const = 0;
 
 
     // For any of them methods that take a data_object, the implementation
@@ -82,18 +82,18 @@ public:
     // @{
     const comet::uuid_t& guid() const;
     virtual std::wstring title(
-        const comet::com_ptr<IDataObject>& data_object) const;
+        comet::com_ptr<IShellItemArray> selection) const;
     virtual std::wstring tool_tip(
-        const comet::com_ptr<IDataObject>& data_object) const;
+        comet::com_ptr<IShellItemArray> selection) const;
     virtual std::wstring icon_descriptor(
-        const comet::com_ptr<IDataObject>& data_object) const;
+        comet::com_ptr<IShellItemArray> selection) const;
 
     /** @name Optional title variants. */
     // @{
     virtual std::wstring menu_title(
-        const comet::com_ptr<IDataObject>& data_object) const;
+        comet::com_ptr<IShellItemArray> selection) const;
     virtual std::wstring webtask_title(
-        const comet::com_ptr<IDataObject>& data_object) const;
+        comet::com_ptr<IShellItemArray> selection) const;
     // @}
 
     // @}
@@ -109,7 +109,7 @@ public:
     BOOST_SCOPED_ENUM_END
 
     virtual BOOST_SCOPED_ENUM(state) state(
-        const comet::com_ptr<IDataObject>& data_object,
+        comet::com_ptr<IShellItemArray> selection,
         bool ok_to_be_slow) const = 0;
     // @}
 
@@ -151,8 +151,8 @@ public:
 #include BOOST_PP_LOCAL_ITERATE()
 
     virtual std::wstring title(
-        const comet::com_ptr<IDataObject>& data_object) const
-    { return webtask_title(data_object); }
+        comet::com_ptr<IShellItemArray> selection) const
+    { return webtask_title(selection); }
 };
 
 #undef COMMAND_ADAPTER_CONSTRUCTOR_MAX_ARGUMENTS

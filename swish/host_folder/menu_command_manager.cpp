@@ -327,7 +327,7 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
 }
 
 bool menu_command_manager::invoke(
-    UINT command_id, com_ptr<IDataObject> selection,
+    UINT command_id, com_ptr<IShellItemArray> selection,
     com_ptr<IUnknown> ole_site)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
@@ -345,7 +345,7 @@ bool menu_command_manager::invoke(
 }
 
 bool menu_command_manager::help_text(
-    UINT command_id, wstring& text_out, com_ptr<IDataObject> selection)
+    UINT command_id, wstring& text_out, com_ptr<IShellItemArray> selection)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
@@ -368,7 +368,7 @@ public:
     typedef void result_type;
 
     update_command_items(
-        com_ptr<IDataObject> selection, UINT first_command_id,
+        com_ptr<IShellItemArray> selection, UINT first_command_id,
         const menu_id_command_map& commands)
         :
     m_selection(selection), m_first_command_id(first_command_id),
@@ -426,14 +426,14 @@ public:
     }
 
 private:
-    com_ptr<IDataObject> m_selection;
+    com_ptr<IShellItemArray> m_selection;
     UINT m_first_command_id;
     menu_id_command_map m_commands;
 };
 
 }
 
-void menu_command_manager::update_state(com_ptr<IDataObject> selection)
+void menu_command_manager::update_state(com_ptr<IShellItemArray> selection)
 {
     if (!m_tools_menu)
         BOOST_THROW_EXCEPTION(logic_error("Missing menu"));

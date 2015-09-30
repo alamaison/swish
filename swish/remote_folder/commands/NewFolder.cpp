@@ -59,7 +59,6 @@ using washer::trace;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
-using comet::enum_iterator;
 using comet::uuid_t;
 
 using boost::filesystem::path;
@@ -176,15 +175,14 @@ NewFolder::NewFolder(
     m_consumer_factory(consumer) {}
 
 BOOST_SCOPED_ENUM(Command::state) NewFolder::state(
-    const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     return state::enabled;
 }
 
 void NewFolder::operator()(
-    const com_ptr<IDataObject>&, const command_site& site,
-    const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
     try

@@ -36,6 +36,7 @@
 #include "swish/host_folder/host_management.hpp" // RemoveConnectionFromRegistry
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
 #include "swish/remotelimits.h"   // Text field limits
+#include "swish/shell/shell_item_array.hpp" // shell_item_array_from_folder_items
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/trace.hpp" // trace
 
@@ -81,6 +82,8 @@ using std::wstring;
 using swish::frontend::CUserInteraction;
 using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
+using swish::host_folder::commands::Rename;
+using swish::host_folder::commands::Remove;
 using swish::host_folder::context_menu_callback;
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::extract_icon_co;
@@ -93,6 +96,8 @@ using swish::host_folder::overlay_icon;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::host_folder::url_from_host_itemid;
+using swish::nse::Command;
+using swish::shell::shell_item_array_from_folder_items;
 using swish::tracing::trace;
 
 using washer::shell::pidl::cpidl_t;
@@ -355,8 +360,8 @@ void CHostFolder::get_attributes_of(
     UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
     SFGAOF* attributes_inout)
 {
-    (void)pidl_array; // All items are folders. No need to check PIDL.
-    (void)pidl_count;
+    com_ptr<IShellItemArray> selection = 
+        shell_item_array_from_folder_items(this, pidl_count, pidl_array);
 
     DWORD dwAttribs = 0;
     dwAttribs |= SFGAO_FOLDER;
@@ -364,11 +369,19 @@ void CHostFolder::get_attributes_of(
 
     // This adds a 'rename' item to the default context menu that SetNameOf
     // directly on the IShellFolder
-    dwAttribs |= SFGAO_CANRENAME;
+    Rename rename_command;
+    if (rename_command.state(selection, false) == Command::state::enabled)
+    {
+        dwAttribs |= SFGAO_CANRENAME;
+    }
 
     // This adds an 'delete' item to the default context menu that calls the
     // menu handler with ID DFM_CMD_DELETE
-    dwAttribs |= SFGAO_CANDELETE;
+    Remove remove_command(root_pidl());
+    if (remove_command.state(selection, false) == Command::state::enabled)
+    {
+        dwAttribs |= SFGAO_CANDELETE;
+    }
 
     *attributes_inout &= dwAttribs;
 }

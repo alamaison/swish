@@ -46,25 +46,25 @@ Command::Command(
   m_icon_descriptor(icon_descriptor), m_menu_title(menu_title),
   m_webtask_title(webtask_title) {}
 
-wstring Command::title(const comet::com_ptr<IDataObject>&) const
+wstring Command::title(comet::com_ptr<IShellItemArray>) const
 { return m_title; }
 
 const uuid_t& Command::guid() const
 { return m_guid; }
 
-wstring Command::tool_tip(const comet::com_ptr<IDataObject>&) const
+wstring Command::tool_tip(comet::com_ptr<IShellItemArray>) const
 { return m_tool_tip; }
 
-wstring Command::icon_descriptor(const comet::com_ptr<IDataObject>&) const 
+wstring Command::icon_descriptor(comet::com_ptr<IShellItemArray>) const
 { return m_icon_descriptor; }
 
 wstring Command::menu_title(
-    const comet::com_ptr<IDataObject>& data_object) const
-{ return (m_menu_title.empty()) ? title(data_object) : m_menu_title; }
+    comet::com_ptr<IShellItemArray> selection) const
+{ return (m_menu_title.empty()) ? title(selection) : m_menu_title; }
 
 wstring Command::webtask_title(
-    const comet::com_ptr<IDataObject>& data_object) const
-{ return (m_webtask_title.empty()) ? title(data_object) : m_webtask_title; }
+    comet::com_ptr<IShellItemArray> selection) const
+{ return (m_webtask_title.empty()) ? title(selection) : m_webtask_title; }
 
 
 }} // namespace swish::nse

@@ -16,8 +16,9 @@
 
 #include "Rename.hpp"
 
-#include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell/shell.hpp" // put_view_item_into_rename_mode
+#include "swish/shell/parent_and_item.hpp"
+#include "swish/shell/shell_item_array.hpp"
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 
@@ -33,10 +34,9 @@
 
 using swish::nse::Command;
 using swish::nse::command_site;
-using swish::shell_folder::data_object::PidlFormat;
 using swish::shell::put_view_item_into_rename_mode;
 
-using washer::shell::pidl::apidl_t;
+using washer::shell::pidl::cpidl_t;
 using washer::shell::shell_browser;
 using washer::shell::shell_view;
 
@@ -65,17 +65,16 @@ Rename::Rename() :
     {}
 
 BOOST_SCOPED_ENUM(Command::state) Rename::state(
-    const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray> selection, bool /*ok_to_be_slow*/)
 const
 {
-    if (!data_object)
+    if (!selection)
     {
         // Selection unknown.
         return state::hidden;
     }
 
-    PidlFormat format(data_object);
-    switch (format.pidl_count())
+    switch (selection->size())
     {
     case 1:
         return state::enabled;
@@ -93,19 +92,20 @@ const
 // finishes typing the new name, the shell takes care of performing the rest of
 // the renaming process by calling SetNameOf() on the HostFolder
 void Rename::operator()(
-    const com_ptr<IDataObject>& selection, const command_site& site,
-    const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray> selection, const command_site& site,
+    com_ptr<IBindCtx>)
 const
 {
-    PidlFormat format(selection);
-    if (format.pidl_count() != 1)
+    if (selection->size() != 1)
         BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
     com_ptr<IShellView> view = shell_view(shell_browser(site.ole_site()));
 
-    apidl_t pidl_selected = format.file(0);
+    com_ptr<IShellItem> item = selection->at(0);
+    com_ptr<IParentAndItem> folder_and_pidls = try_cast(item);
+    cpidl_t selected_item = folder_and_pidls->item_pidl();
 
-    put_view_item_into_rename_mode(view, pidl_selected.last_item());
+    put_view_item_into_rename_mode(view, selected_item);
 }
 
 }}} // namespace swish::host_folder::commands

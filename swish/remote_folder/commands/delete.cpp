@@ -27,8 +27,9 @@
 #include "swish/remote_folder/commands/delete.hpp"
 
 #include "swish/frontend/announce_error.hpp" // announce_last_exception
-#include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
+#include "swish/shell/shell_item_array.hpp"
+#include "swish/shell/parent_and_item.hpp"
 
 #include <washer/shell/pidl.hpp> // apidl_t, cpidl_t, pidl_cast
 
@@ -44,7 +45,6 @@
 
 using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
-using swish::shell_folder::data_object::PidlFormat;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
@@ -75,23 +75,20 @@ namespace {
      */
     template<typename ProviderFactory, typename ConsumerFactory>
     void do_delete(
-        HWND hwnd_view, const vector<cpidl_t>& death_row,
-        ProviderFactory provider_factory,
-        ConsumerFactory consumer_factory,
-        const apidl_t& parent_folder)
+        HWND hwnd_view, const vector<com_ptr<IParentAndItem>>& death_row,
+        ProviderFactory provider_factory, ConsumerFactory consumer_factory)
     {
         com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
         shared_ptr<sftp_provider> provider = provider_factory(
             consumer, translate("Name of a running task", "Deleting files"));
 
-        // Create instance of our directory handler class
-        CSftpDirectory directory(parent_folder, provider);
-
         // Delete each item and notify shell
-        vector<cpidl_t>::const_iterator it = death_row.begin();
+        vector<com_ptr<IParentAndItem>>::const_iterator it = death_row.begin();
         while (it != death_row.end())
         {
-            directory.Delete(*it++);
+            CSftpDirectory directory((*it)->parent_pidl(), provider);
+            directory.Delete((*it)->item_pidl());
+            ++it;
         }
     }
 
@@ -129,7 +126,7 @@ namespace {
 
         int ret = ::IsolationAwareMessageBoxW(
             hwnd_view, message.c_str(),
-            (is_folder) ? L"Confirm Folder Delete" : L"Confirm File Delete", 
+            (is_folder) ? L"Confirm Folder Delete" : L"Confirm File Delete",
             MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON1);
 
         return (ret == IDYES);
@@ -174,17 +171,15 @@ namespace {
      */
     template<typename ProviderFactory, typename ConsumerFactory>
     void execute_death_row(
-        HWND hwnd_view, const vector<cpidl_t>& death_row,
-        ProviderFactory provider_factory,
-        ConsumerFactory consumer_factory,
-        const apidl_t& parent_folder)
+        HWND hwnd_view, const vector<com_ptr<IParentAndItem>>& death_row,
+        ProviderFactory provider_factory, ConsumerFactory consumer_factory)
     {
         size_t item_count = death_row.size();
 
         BOOL go_ahead = false;
         if (item_count == 1)
         {
-            remote_itemid_view itemid(death_row[0]);
+            remote_itemid_view itemid(death_row[0]->item_pidl());
             go_ahead = confirm_deletion(
                 hwnd_view, itemid.filename(), itemid.is_folder());
         }
@@ -199,9 +194,9 @@ namespace {
         }
 
         if (go_ahead)
-            do_delete(
-                hwnd_view, death_row, provider_factory, consumer_factory,
-                parent_folder);
+        {
+            do_delete(hwnd_view, death_row, provider_factory, consumer_factory);
+        }
     }
 }
 
@@ -212,23 +207,23 @@ Delete::Delete(
     : m_provider_factory(provider_factory), m_consumer_factory(consumer_factory)
 {}
 
-void Delete::operator()(HWND hwnd_view, com_ptr<IDataObject> selection)
+void Delete::operator()(HWND hwnd_view, com_ptr<IShellItemArray> selection)
 const
 {
     try
     {
-        PidlFormat format(selection);
-
-        // Build up a list of PIDLs for all the items to be deleted
-        vector<cpidl_t> death_row;
-        for (UINT i = 0; i < format.pidl_count(); i++)
+        vector<com_ptr<IParentAndItem>> death_row;
+        comet::wrap_t<IShellItemArray>::iterator_type it = selection->begin();
+        comet::wrap_t<IShellItemArray>::iterator_type end = selection->end();
+        while(it++ != end)
         {
-            death_row.push_back(pidl_cast<cpidl_t>(format.relative_file(i)));
+            com_ptr<IShellItem> item = *it;
+            com_ptr<IParentAndItem> parent_and_item = try_cast(item);
+            death_row.push_back(parent_and_item);
         }
 
         execute_death_row(
-            hwnd_view, death_row, m_provider_factory, m_consumer_factory,
-            format.parent_folder());
+            hwnd_view, death_row, m_provider_factory, m_consumer_factory);
     }
     catch (...)
     {

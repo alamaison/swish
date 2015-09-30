@@ -46,13 +46,13 @@ public:
         const consumer_factory& consumer);
 
     virtual BOOST_SCOPED_ENUM(state) state(
-        const comet::com_ptr<IDataObject>& data_object,
+        comet::com_ptr<IShellItemArray> selection,
         bool ok_to_be_slow) const;
 
     void operator()(
-        const comet::com_ptr<IDataObject>& data_object,
-        const swish::nse::command_site& command_site,
-        const comet::com_ptr<IBindCtx>& bind_ctx) const;
+        comet::com_ptr<IShellItemArray> selection,
+        const swish::nse::command_site& site,
+        comet::com_ptr<IBindCtx> bind_ctx) const;
 
 private:
     washer::shell::pidl::apidl_t m_folder_pidl;

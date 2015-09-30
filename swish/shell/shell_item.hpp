@@ -14,31 +14,22 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SWISH_HOST_FOLDER_COMMANDS_RENAME_HPP
-#define SWISH_HOST_FOLDER_COMMANDS_RENAME_HPP
+#ifndef SWISH_SHELL_SHELL_ITEM_HPP
+#define SWISH_SHELL_SHELL_ITEM_HPP
 
-#include "swish/nse/Command.hpp" // Command
+#include <comet/ptr.h>
+
+#include <shobjidl.h>
 
 namespace swish {
-namespace host_folder {
-namespace commands {
+namespace shell {
 
-class Rename : public swish::nse::Command
+template struct comet::wrap_t<IShellItem>
 {
-public:
-    Rename();
 
-    virtual BOOST_SCOPED_ENUM(state) state(
-        comet::com_ptr<IShellItemArray> selection,
-        bool ok_to_be_slow) const;
 
-    void operator()(
-        comet::com_ptr<IShellItemArray> selection,
-        const swish::nse::command_site& site,
-        comet::com_ptr<IBindCtx> bind_ctx) const;
 };
 
-}}} // namespace swish::host_folder::commands
-
+}}
 
 #endif
