@@ -1,40 +1,32 @@
-/**
-    @file
+/* Copyright (C) 2013, 2014, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Ending running sessions.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2013, 2014  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "CloseSession.hpp"
 
 #include "swish/connection/session_manager.hpp"
-#include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
+#include "swish/shell/shell_item_array.hpp"
+#include "swish/shell/parent_and_item.hpp"
 #include "swish/frontend/bind_best_taskdialog.hpp" // best_taskdialog
 #include "swish/remote_folder/pidl_connection.hpp" // connection_from_pidl
 
 #include <washer/gui/task_dialog.hpp>
 
 #include <comet/ptr.h> // com_ptr
-#include <comet/error.h> // com_error
+#include <comet/error.h> // com_error, com_error_from_interface
 #include <comet/uuid_fwd.h> // uuid_t
 
 #include <boost/bind/bind.hpp>
@@ -60,13 +52,15 @@
 using swish::connection::session_manager;
 using swish::frontend::best_taskdialog;
 using swish::nse::Command;
-using swish::shell_folder::data_object::PidlFormat;
+using swish::nse::command_site;
 using swish::remote_folder::connection_from_pidl;
 
 using namespace washer::gui::task_dialog;
 using washer::shell::pidl::apidl_t;
+using washer::window::window;
 
 using comet::com_error;
+using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::uuid_t;
 
@@ -107,32 +101,35 @@ namespace {
     }
 }
 
-CloseSession::CloseSession(HWND hwnd, const apidl_t& folder_pidl) :
+CloseSession::CloseSession() :
     Command(
         translate(L"&Close SFTP connection"), CLOSE_SESSION_COMMAND_ID,
         translate(L"Close the authenticated connection to the server."),
         L"shell32.dll,-11", translate(L"&Close SFTP Connection..."),
-        translate(L"Close Connection")),
-    m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+        translate(L"Close Connection")) {}
 
 BOOST_SCOPED_ENUM(Command::state) CloseSession::state(
-    const comet::com_ptr<IDataObject>& data_object, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray> selection, bool /*ok_to_be_slow*/)
 const
 {
-    if (!data_object)
+    if (!selection)
     {
         // Selection unknown.
         return state::hidden;
     }
 
-    PidlFormat format(data_object);
-    switch (format.pidl_count())
+    switch (selection->size())
     {
     case 1:
-        if (session_manager().has_session(connection_from_pidl(format.file(0))))
-            return state::enabled;
-        else
-            return state::hidden;
+        {
+            com_ptr<IShellItem> item = selection->at(0);
+            com_ptr<IParentAndItem> folder_and_pidls = try_cast(item);
+            apidl_t item_pidl = folder_and_pidls->absolute_item_pidl();
+            if (session_manager().has_session(connection_from_pidl(item_pidl)))
+                return state::enabled;
+            else
+                return state::hidden;
+        }
     case 0:
         return state::hidden;
     default:
@@ -230,7 +227,7 @@ namespace {
             {
                 m_result.first->get();
             }
-            
+
             return m_dialog.get();
         }
 
@@ -344,12 +341,7 @@ namespace {
 
     class disconnection_progress : private noncopyable
     {
-
     public:
-        explicit disconnection_progress(HWND parent_window)
-            :
-        m_parent_window(parent_window)
-        {}
 
         template<typename PendingTaskRange>
         bool operator()(const PendingTaskRange& pending_tasks)
@@ -374,29 +366,30 @@ namespace {
         }
 
     private:
-
-        HWND m_parent_window;
         optional<waiting_ui> m_dialog;
     };
 
 };
 
 void CloseSession::operator()(
-    const com_ptr<IDataObject>& data_object, const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray> selection, const command_site&, com_ptr<IBindCtx>)
 const
 {
-    PidlFormat format(data_object);
-    if (format.pidl_count() != 1)
+    // TODO: use the view to decide whether to show a progress dialog
+
+    if (selection->size() != 1)
         BOOST_THROW_EXCEPTION(com_error(E_FAIL));
 
-    apidl_t pidl_selected = format.file(0);
+    com_ptr<IShellItem> item = selection->at(0);
+    com_ptr<IParentAndItem> folder_and_pidls = try_cast(item);
+    apidl_t selected_item = folder_and_pidls->absolute_item_pidl();
 
-    disconnection_progress progress(m_hwnd);;
+    disconnection_progress progress;
 
     session_manager().disconnect_session(
-        connection_from_pidl(pidl_selected), boost::ref(progress));
+        connection_from_pidl(selected_item), boost::ref(progress));
 
-    notify_shell(pidl_selected);
+    notify_shell(selected_item);
 }
 
 }}} // namespace swish::host_folder::commands

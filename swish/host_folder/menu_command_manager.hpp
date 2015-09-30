@@ -1,32 +1,19 @@
-/**
-    @file
+/* Manage complexities of adding and removing menu items in host window.
 
-    Manage complexities of adding and removing menu items in host window.
+   Copyright (C) 2013, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
-    @if license
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    If you modify this Program, or any covered work, by linking or
-    combining it with the OpenSSL project's OpenSSL library (or a
-    modified version of that library), containing parts covered by the
-    terms of the OpenSSL or SSLeay licenses, the licensors of this
-    Program grant you additional permission to convey the resulting work.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef SWISH_HOST_FOLDER_MENU_COMMAND_MANAGER
@@ -34,6 +21,7 @@
 
 #include "swish/nse/Command.hpp"
 
+#include <washer/gui/menu/menu.hpp>
 #include <washer/shell/pidl.hpp> // apidl_t
 #include <washer/window/window.hpp>
 
@@ -70,19 +58,21 @@ public:
     /**
      * Invoke a command by merge offset.
      */
-    bool invoke(UINT command_id, comet::com_ptr<IDataObject> selection);
+    bool invoke(
+        UINT command_id, comet::com_ptr<IShellItemArray> selection,
+        comet::com_ptr<IUnknown> ole_site);
 
     /**
      * Request tool tip for command by merge offset.
      */
     bool help_text(
         UINT command_id, std::wstring& text_out,
-        comet::com_ptr<IDataObject> selection);
+        comet::com_ptr<IShellItemArray> selection);
 
     /**
      * Refresh command states to match current selection.
      */
-    void update_state(comet::com_ptr<IDataObject> selection);
+    void update_state(comet::com_ptr<IShellItemArray> selection);
 
 private:
 

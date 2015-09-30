@@ -29,6 +29,8 @@ set(COMMAND_SOURCES
 
 set(SOURCES
   columns.cpp
+  context_menu_callback.hpp
+  context_menu_callback.cpp
   host_itemid_connection.cpp
   host_management.cpp
   menu_command_manager.cpp
@@ -54,5 +56,5 @@ find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(host_folder
-  PRIVATE connection nse version forms frontend shell_folder
+  PRIVATE connection nse version forms frontend shell_folder shell
   PUBLIC Washer::washer Comet::comet ${Boost_LIBRARIES})

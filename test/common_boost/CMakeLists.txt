@@ -43,4 +43,5 @@ find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(test-common_boost
+  PRIVATE shell shell_folder
   PUBLIC Comet::comet Washer::washer ${Boost_LIBRARIES} Boost::Process)

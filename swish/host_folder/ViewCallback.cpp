@@ -1,16 +1,11 @@
-/**
-    @file
+/*  Handler for host folder's interaction with Explorer Shell Folder View.
 
-    Handler for host folder's interaction with Explorer Shell Folder View.
+    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2015
+    Alexander Lamaison <swish@lammy.co.uk>
 
-    @if license
-
-    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -18,16 +13,14 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "ViewCallback.hpp"
 
 #include "swish/host_folder/commands/commands.hpp" // host commands
+#include "swish/shell/shell_item_array.hpp"
 #include "swish/utils.hpp" // Utf8StringToWideString
 #include "swish/versions/version.hpp" // release_version
 
@@ -77,24 +70,25 @@ namespace host_folder {
 namespace {
 
     /**
-     * Return a DataObject representing the items currently selected.
+     * Return a ShellItemArray representing the items currently selected.
      *
      * @return NULL if nothing is selected.
      */
-    com_ptr<IDataObject> selection_data_object(com_ptr<IShellBrowser> browser)
+    com_ptr<IShellItemArray> selection_shell_item_array(
+        com_ptr<IShellBrowser> browser)
     {
         com_ptr<IShellView> view = shell_view(browser);
 
-        com_ptr<IDataObject> data_object;
+        com_ptr<IShellItemArray> item_array;
         view->GetItemObject(
-            SVGIO_SELECTION, data_object.iid(),
-            reinterpret_cast<void **>(data_object.out()));
+            SVGIO_SELECTION, item_array.iid(),
+            reinterpret_cast<void **>(item_array.out()));
 
-        // We don't care if getting the DataObject succeded - if it did, great;
+        // We don't care if getting the array succeeded - if it did, great;
         // return it.  If not we will return a NULL pointer indicating that no
         // items were selected
 
-        return data_object;
+        return item_array;
     }
 
     bool is_vista_or_greater()
@@ -198,7 +192,7 @@ bool CViewCallback::on_init_menu_popup(
 
 bool CViewCallback::on_invoke_command(UINT command_id)
 {
-    return m_menu_manager->invoke(command_id, selection());
+    return m_menu_manager->invoke(command_id, selection(), ole_site());
 }
 
 #pragma warning(push)
@@ -239,8 +233,7 @@ bool CViewCallback::on_get_webview_content(
         return false;
 
     pair< com_ptr<IUIElement>, com_ptr<IUIElement> > tasks =
-        host_folder_task_pane_titles(
-            (m_view) ? m_view->hwnd() : NULL, m_folder);
+        host_folder_task_pane_titles(m_folder);
 
     content_out.pExtraTasksExpando = tasks.first.detach();
     content_out.pFolderTasksExpando = tasks.second.detach();
@@ -262,8 +255,7 @@ bool CViewCallback::on_get_webview_tasks(
         return false;
 
     pair< com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> > commands =
-        host_folder_task_pane_tasks(
-            (m_view) ? m_view->hwnd() : NULL, m_folder);
+        host_folder_task_pane_tasks(m_folder);
 
     tasks_out.pEnumExtraTasks = commands.first.detach();
     tasks_out.pEnumFolderTasks = commands.second.detach();
@@ -273,11 +265,11 @@ bool CViewCallback::on_get_webview_tasks(
 /**
  * Items currently selected in the folder view.
  */
-com_ptr<IDataObject> CViewCallback::selection()
+com_ptr<IShellItemArray> CViewCallback::selection()
 {
     com_ptr<IShellBrowser> browser = shell_browser(ole_site());
 
-    return selection_data_object(browser);
+    return selection_shell_item_array(browser);
 }
 
 /**

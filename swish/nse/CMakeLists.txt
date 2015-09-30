@@ -16,6 +16,8 @@
 set(SOURCES
   detail/command_state_conversion.hpp
   Command.cpp
+  command_site.hpp
+  command_site.cpp
   data_object_util.cpp
   default_context_menu_callback.cpp
   explorer_command.cpp
@@ -39,5 +41,5 @@ find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(nse
-  PRIVATE shlwapi ${Boost_LIBRARIES}
+  PRIVATE shell shlwapi ${Boost_LIBRARIES}
   PUBLIC Washer::washer Comet::comet)

@@ -35,7 +35,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <ObjIdl.h> // IDataObject
+#include <shobjidl.h> // IShellItemArray
 
 namespace swish {
 namespace remote_folder {
@@ -57,7 +57,7 @@ public:
         my_consumer_factory consumer_factory);
 
     void operator()(
-        HWND hwnd_view, comet::com_ptr<IDataObject> selection) const;
+        HWND hwnd_view, comet::com_ptr<IShellItemArray> selection) const;
 
 private:
     my_provider_factory m_provider_factory;

@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2011, 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    New remote folder command.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2011, 2012, 2013, 2015  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "NewFolder.hpp"
@@ -30,7 +21,7 @@
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remote_folder/swish_pidl.hpp" // absolute_path_from_swish_pidl
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/shell.hpp" // put_view_item_into_rename_mode
+#include "swish/shell/shell.hpp" // put_view_item_into_rename_mode
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/trace.hpp> // trace
@@ -52,21 +43,22 @@
 
 using swish::frontend::announce_last_exception;
 using swish::nse::Command;
+using swish::nse::command_site;
 using swish::provider::sftp_filesystem_item;
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
-using swish::shell_folder::put_view_item_into_rename_mode;
+using swish::shell::put_view_item_into_rename_mode;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
 using washer::shell::shell_browser;
 using washer::shell::shell_view;
+using washer::window::window;
 using washer::trace;
 
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
-using comet::enum_iterator;
 using comet::uuid_t;
 
 using boost::filesystem::path;
@@ -74,6 +66,7 @@ using boost::function;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::locale::translate;
+using boost::optional;
 using boost::regex_match;
 using boost::wformat;
 using boost::wregex;
@@ -182,36 +175,18 @@ NewFolder::NewFolder(
     m_consumer_factory(consumer) {}
 
 BOOST_SCOPED_ENUM(Command::state) NewFolder::state(
-    const com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     return state::enabled;
 }
 
 void NewFolder::operator()(
-    const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
-    HWND hwnd = NULL;
     try
     {
-        // Get the view which we need to report errors and to put new folder
-        // into edit mode.  Failure to get the view is not enough reason to
-        // abort the operation so we swallow any errors
-        com_ptr<IShellView> view;
-        try
-        {
-            view = shell_view(shell_browser(m_site));
-            HRESULT hr = view->GetWindow(&hwnd);
-            if (FAILED(hr))
-                BOOST_THROW_EXCEPTION(com_error_from_interface(view, hr));
-        }
-        catch (const exception&)
-        {
-            trace("WARNING: couldn't get current IShellView or HWND");
-        }
-
-
         shared_ptr<sftp_provider> provider = m_provider_factory(
             m_consumer_factory(),
             translate("Name of a running task", "Creating new folder"));
@@ -232,7 +207,12 @@ const
             // A failure after this point is not worth reporting.  The folder
             // was created even if we didn't allow the user a chance to pick a
             // name.
-            put_view_item_into_rename_mode(view, pidl);
+
+            com_ptr<IShellView> view = shell_view(shell_browser(site.ole_site()));
+            if (view)
+            {
+                put_view_item_into_rename_mode(view, pidl);
+            }
         }
         catch (const exception& e)
         {
@@ -242,16 +222,20 @@ const
     }
     catch (...)
     {
-        announce_last_exception(
-            hwnd, translate(L"Could not create a new folder"),
-            translate(L"You might not have permission."));
+        try
+        {
+            optional<window<wchar_t>> view_window = site.ui_owner();
+            if (view_window)
+            {
+                announce_last_exception(
+                    view_window->hwnd(),
+                    translate(L"Could not create a new folder"),
+                    translate(L"You might not have permission."));
+            }
+        } catch (...) {}
+
         throw;
     }
-}
-
-void NewFolder::set_site(com_ptr<IUnknown> ole_site)
-{
-    m_site = ole_site;
 }
 
 }}} // namespace swish::remote_folder::commands

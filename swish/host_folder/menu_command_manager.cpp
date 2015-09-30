@@ -1,32 +1,19 @@
-/**
-    @file
+/* Manage complexities of adding and removing menu items in host window.
 
-    Manage complexities of adding and removing menu items in host window.
+   Copyright (C) 2013, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
-    @if license
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    If you modify this Program, or any covered work, by linking or
-    combining it with the OpenSSL project's OpenSSL library (or a
-    modified version of that library), containing parts covered by the
-    terms of the OpenSSL or SSLeay licenses, the licensors of this
-    Program grant you additional permission to convey the resulting work.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "menu_command_manager.hpp"
@@ -36,6 +23,8 @@
 #include "swish/host_folder/commands/CloseSession.hpp"
 #include "swish/host_folder/commands/LaunchAgent.hpp"
 #include "swish/host_folder/commands/Remove.hpp"
+#include "swish/host_folder/commands/Rename.hpp"
+#include "swish/nse/command_site.hpp"
 
 #include <washer/gui/menu/basic_menu.hpp> // find_first_item_with_id
 #include <washer/gui/menu/button/string_button_description.hpp>
@@ -59,7 +48,9 @@ using swish::host_folder::commands::Add;
 using swish::host_folder::commands::CloseSession;
 using swish::host_folder::commands::LaunchAgent;
 using swish::host_folder::commands::Remove;
+using swish::host_folder::commands::Rename;
 using swish::nse::Command;
+using swish::nse::command_site;
 
 using namespace washer::gui::menu;
 using washer::shell::pidl::apidl_t;
@@ -294,17 +285,14 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
     assert(menu_info.idCmdLast <= FCIDM_SHVIEWLAST);
     //assert(::IsMenu(menu_info.hmenu));
 
-    HWND view_handle = (m_view) ? m_view->hwnd() : NULL;
-
     menu_id_command_map tools_menu_commands;
 
     UINT offset = 0;
-    tools_menu_commands[offset++] = make_shared<Add>(view_handle, m_folder);
-    tools_menu_commands[offset++] = make_shared<Remove>(view_handle, m_folder);
-    tools_menu_commands[offset++] =
-        make_shared<CloseSession>(view_handle, m_folder);
-    tools_menu_commands[offset++] =
-        make_shared<LaunchAgent>(view_handle, m_folder);
+    tools_menu_commands[offset++] = make_shared<Add>(m_folder);
+    tools_menu_commands[offset++] = make_shared<Remove>(m_folder);
+    tools_menu_commands[offset++] = make_shared<Rename>();
+    tools_menu_commands[offset++] = make_shared<CloseSession>();
+    tools_menu_commands[offset++] = make_shared<LaunchAgent>(m_folder);
 
     // Try to get a handle to the Explorer Tools menu and insert
     // add and remove connection menu items into it if we find it
@@ -315,7 +303,7 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
             m_first_command_id, menu_info.idCmdLast, tools_menu_commands));
 
     menu_id_command_map help_menu_commands;
-    help_menu_commands[offset++] = make_shared<About>(view_handle);
+    help_menu_commands[offset++] = make_shared<About>();
 
     // Try to get a handle to the Explorer Help menu and insert About box
     m_help_menu = help_menu_with_fallback(
@@ -339,12 +327,15 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
 }
 
 bool menu_command_manager::invoke(
-    UINT command_id, com_ptr<IDataObject> selection)
+    UINT command_id, com_ptr<IShellItemArray> selection,
+    com_ptr<IUnknown> ole_site)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
     {
-        (*(pos->second))(selection, NULL);
+        // Use given window as a UI owner fallback in case the SFV callback
+        // object was get an OLE site set
+        (*(pos->second))(selection, command_site(ole_site, m_view), NULL);
         return true;
     }
     else
@@ -354,7 +345,7 @@ bool menu_command_manager::invoke(
 }
 
 bool menu_command_manager::help_text(
-    UINT command_id, wstring& text_out, com_ptr<IDataObject> selection)
+    UINT command_id, wstring& text_out, com_ptr<IShellItemArray> selection)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
@@ -377,7 +368,7 @@ public:
     typedef void result_type;
 
     update_command_items(
-        com_ptr<IDataObject> selection, UINT first_command_id,
+        com_ptr<IShellItemArray> selection, UINT first_command_id,
         const menu_id_command_map& commands)
         :
     m_selection(selection), m_first_command_id(first_command_id),
@@ -435,14 +426,14 @@ public:
     }
 
 private:
-    com_ptr<IDataObject> m_selection;
+    com_ptr<IShellItemArray> m_selection;
     UINT m_first_command_id;
     menu_id_command_map m_commands;
 };
 
 }
 
-void menu_command_manager::update_state(com_ptr<IDataObject> selection)
+void menu_command_manager::update_state(com_ptr<IShellItemArray> selection)
 {
     if (!m_tools_menu)
         BOOST_THROW_EXCEPTION(logic_error("Missing menu"));

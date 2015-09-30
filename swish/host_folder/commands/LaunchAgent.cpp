@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Pageant launch command.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "LaunchAgent.hpp"
@@ -45,6 +36,7 @@
 #include <shlobj.h> // SHChangeNotify
 
 using swish::nse::Command;
+using swish::nse::command_site;
 
 using washer::module_handle;
 using washer::module_path;
@@ -76,7 +68,7 @@ namespace {
        return module_path<wchar_t>(((HINSTANCE)&__ImageBase)).parent_path()
            / PAGEANT_FILE_NAME;
    }
-   
+
    /**
     * Cause Explorer to refresh any windows displaying the owning folder.
     *
@@ -93,7 +85,7 @@ namespace {
    }
 }
 
-LaunchAgent::LaunchAgent(HWND hwnd, const apidl_t& folder_pidl) :
+LaunchAgent::LaunchAgent(const apidl_t& folder_pidl) :
    Command(
       translate(
         L"Title of command used to launch the SSH agent program",
@@ -106,11 +98,11 @@ LaunchAgent::LaunchAgent(HWND hwnd, const apidl_t& folder_pidl) :
       translate(
         L"Title of command used to launch the SSH agent program",
         L"Launch key agent")),
-   m_hwnd(hwnd), m_folder_pidl(folder_pidl) {}
+   m_folder_pidl(folder_pidl) {}
 
 
 BOOST_SCOPED_ENUM(Command::state) LaunchAgent::state(
-    const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     HWND hwnd = ::FindWindowW(L"Pageant", L"Pageant");
@@ -118,7 +110,8 @@ const
     return (hwnd) ? state::hidden : state::enabled;
 }
 
-void LaunchAgent::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+void LaunchAgent::operator()(
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
     static wstring pageant = pageant_path().wstring();

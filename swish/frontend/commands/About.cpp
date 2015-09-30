@@ -1,32 +1,17 @@
-/**
-    @file
+/* Copyright (C) 2013, 2015  Alexander Lamaison <swish@lammy.co.uk>
 
-    Swish About box.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    If you modify this Program, or any covered work, by linking or
-    combining it with the OpenSSL project's OpenSSL library (or a
-    modified version of that library), containing parts covered by the
-    terms of the OpenSSL or SSLeay licenses, the licensors of this
-    Program grant you additional permission to convey the resulting work.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "About.hpp"
@@ -46,16 +31,19 @@
 #include <string>
 
 using swish::nse::Command;
+using swish::nse::command_site;
 
 using namespace washer::gui::message_box;
 using washer::module_path;
 using washer::shell::pidl::apidl_t;
+using washer::window::window;
 
 using comet::com_ptr;
 using comet::uuid_t;
 
 using boost::locale::translate;
 using boost::filesystem::path;
+using boost::optional;
 
 using std::ostringstream;
 using std::string;
@@ -70,33 +58,38 @@ namespace commands {
 namespace {
 
    const uuid_t ABOUT_COMMAND_ID(L"b816a885-5022-11dc-9153-0090f5284f85");
-   
+
    path installation_path()
    {
        return module_path<char>(((HINSTANCE)&__ImageBase));
    }
 }
 
-About::About(HWND hwnd) :
-   Command(
+About::About() :
+    Command(
       translate(
         L"Title of command used to show the Swish 'About' box in the "
         L"Explorer Help menu",
         L"About &Swish"), ABOUT_COMMAND_ID,
       translate(
-          L"Displays version, licence and copyright information for Swish.")),
-   m_hwnd(hwnd) {}
+          L"Displays version, licence and copyright information for Swish."))
+    {}
 
 BOOST_SCOPED_ENUM(Command::state) About::state(
-   const comet::com_ptr<IDataObject>& /*data_object*/, bool /*ok_to_be_slow*/)
+    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
 const
 {
     return state::enabled;
 }
 
-void About::operator()(const com_ptr<IDataObject>&, const com_ptr<IBindCtx>&)
+void About::operator()(
+    com_ptr<IShellItemArray>, const command_site& site, com_ptr<IBindCtx>)
 const
 {
+    optional<window<wchar_t>> view_window = site.ui_owner();
+    if (!view_window)
+        return;
+
     string snapshot = snapshot_version();
     if (snapshot.empty())
     {
@@ -125,7 +118,7 @@ const
         << " " << installation_path().string();
 
    message_box(
-        m_hwnd, message.str(),
+        view_window->hwnd(), message.str(),
         translate("Title of About dialog box", "About Swish"), box_type::ok,
         icon_type::information);
 }

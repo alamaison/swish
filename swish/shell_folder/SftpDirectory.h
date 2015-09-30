@@ -32,7 +32,6 @@
 
 #include <washer/shell/pidl.hpp> // apidl_t
 
-#include <comet/enum_iterator.h> // enum_iterator
 #include <comet/ptr.h> // com_ptr
 
 #include <boost/filesystem.hpp> // path

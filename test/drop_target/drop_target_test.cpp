@@ -26,7 +26,7 @@
 */
 
 #include "swish/drop_target/DropTarget.hpp"  // Test subject
-#include "swish/shell_folder/shell.hpp"  // shell helper functions
+#include "swish/shell/shell.hpp"  // data_object_for_files
 
 #include "test/common_boost/data_object_utils.hpp"  // DataObjects on zip
 #include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
@@ -48,7 +48,7 @@ using swish::drop_target::CDropTarget;
 using swish::drop_target::DropActionCallback;
 using swish::drop_target::copy_data_to_provider;
 using swish::drop_target::Progress;
-using swish::shell_folder::data_object_for_files;
+using swish::shell::data_object_for_files;
 
 using test::ComFixture;
 using test::data_object_utils::data_object_for_zipfile;
@@ -74,7 +74,7 @@ using washer::shell::pidl::apidl_t;
 namespace { // private
 
     const string TEST_DATA = "Lorem ipsum dolor sit amet.\nbob\r\nsally";
-    const string LARGER_TEST_DATA = 
+    const string LARGER_TEST_DATA =
         ";sdkfna;sldjnksj fjnweneofiun weof woenf woeunr2938y4192n34kj1458c"
         "d;ofn3498tv 3405jnv 3498thv-948rc 34f 9485hv94htc rwr98thv3948h534h4";
 
@@ -86,11 +86,11 @@ namespace { // private
     {
         return TEST_DATA;
     }
-    
+
     /**
      * Write some data to a collection of local files and return them in
      * a DataObject created by the shell.
-     * 
+     *
      * The files must all be in the same filesystem folder.
      */
     template<typename It>
@@ -116,7 +116,7 @@ namespace { // private
         ofstream stream(file);
         stream << test_data();
     }
-    
+
     /**
      * Check if a file's contents is our test data.
      */
@@ -138,7 +138,7 @@ namespace { // private
 
         return true;
     }
-    
+
     /**
      * Create a new empty file at the given absolute path.
      */
@@ -148,7 +148,7 @@ namespace { // private
 
         ofstream file(name, std::ios_base::out|std::ios_base::trunc);
         file.close();
-        
+
         BOOST_CHECK(exists(name));
         BOOST_CHECK(is_regular_file(name));
     }
@@ -193,13 +193,13 @@ namespace { // private
     class DropTargetFixture : public PidlFixture
     {
     public:
-        comet::com_ptr<IDropTarget> create_drop_target() 
+        comet::com_ptr<IDropTarget> create_drop_target()
         {
             path target_directory = Sandbox() / L"drop-target";
             create_directory(target_directory);
 
             return new CDropTarget(
-                Provider(), 
+                Provider(),
                 absolute_directory_pidl(target_directory),
                 make_shared<CopyCallbackStub>());
         }
@@ -230,7 +230,7 @@ BOOST_FIXTURE_TEST_SUITE(drop_target_copy_tests, DropTargetFixture)
 /**
  * Copy single regular file.
  *
- * Test our ability to handle a DataObject produced by the shell for a 
+ * Test our ability to handle a DataObject produced by the shell for a
  * single, regular file (real file in the filesystem).
  */
 BOOST_AUTO_TEST_CASE( copy_single )
@@ -359,13 +359,13 @@ BOOST_AUTO_TEST_CASE( copy_recursively )
     expected = destination / non_empty_folder.filename();
     BOOST_REQUIRE(exists(expected));
     BOOST_REQUIRE(is_directory(expected));
-    
+
     expected = destination / non_empty_folder.filename() /
         second_level_file.filename();
     BOOST_REQUIRE(exists(expected));
     BOOST_REQUIRE(file_contents_correct(expected));
 
-    expected = destination / non_empty_folder.filename() / 
+    expected = destination / non_empty_folder.filename() /
         second_level_folder.filename();
     BOOST_REQUIRE(exists(expected));
     BOOST_REQUIRE(is_directory(expected));
@@ -428,17 +428,17 @@ BOOST_AUTO_TEST_CASE( copy_virtual_hierarchy_recursively )
     BOOST_REQUIRE(exists(expected));
     BOOST_REQUIRE(is_directory(expected));
 
-    expected = destination / L"non-empty" / 
+    expected = destination / L"non-empty" /
         L"second-level-file";
     BOOST_REQUIRE(exists(expected));
 
-    expected = destination / L"non-empty" / 
+    expected = destination / L"non-empty" /
         L"second-level-folder";
     BOOST_REQUIRE(exists(expected));
     BOOST_REQUIRE(is_directory(expected));
     BOOST_REQUIRE(!is_empty(expected));
 
-    expected = destination / L"non-empty" / 
+    expected = destination / L"non-empty" /
         L"second-level-folder" / L"third-level-file";
     BOOST_REQUIRE(exists(expected));
 }
@@ -539,8 +539,8 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_FIXTURE_TEST_SUITE(drop_target_dnd_tests, DropTargetFixture)
 
 /**
- * Drag enter.  
- * Simulate the user dragging a file onto our folder with the left 
+ * Drag enter.
+ * Simulate the user dragging a file onto our folder with the left
  * mouse button.  The 'shell' is requesting either a copy or a link at our
  * discretion.  The folder drop target should respond S_OK and specify
  * that the effect of the operation is a copy.
@@ -558,9 +558,9 @@ BOOST_AUTO_TEST_CASE( drag_enter )
 }
 
 /**
- * Drag enter.  
+ * Drag enter.
  * Simulate the user dragging a file onto our folder but requesting an
- * effect, link, that we don't support.  The folder drop target should 
+ * effect, link, that we don't support.  The folder drop target should
  * respond S_OK but set the effect to DROPEFFECT_NONE to indicate the drop
  * wasn't possible.
  */
@@ -577,13 +577,13 @@ BOOST_AUTO_TEST_CASE( drag_enter_bad_effect )
 }
 
 /**
- * Drag over.  
+ * Drag over.
  * Simulate the situation where a user drags a file over our folder and changes
  * which operation they want as they do so.  In other words, on DragEnter they
  * chose a link which we cannot perform but as they continue the drag (DragOver)
  * they chang their request to a copy which we can do.
  *
- * The folder drop target should respond S_OK and specify that the effect of 
+ * The folder drop target should respond S_OK and specify that the effect of
  * the operation is a copy.
  */
 BOOST_AUTO_TEST_CASE( drag_over )
@@ -606,11 +606,11 @@ BOOST_AUTO_TEST_CASE( drag_over )
 }
 
 /**
- * Drag leave.  
+ * Drag leave.
  * Simulate an aborted drag-drop loop where the user drags a file onto our
  * folder, moves it around, and then leaves without dropping.
  *
- * The folder drop target should respond S_OK and any subsequent 
+ * The folder drop target should respond S_OK and any subsequent
  * DragOver calls should be declined.
  */
 BOOST_AUTO_TEST_CASE( drag_leave )
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE( drag_leave )
  * folder, moves it around, and then drops it.
  *
  * The folder drop target should copy the contents of the DataObject to the
- * remote end, respond S_OK and any subsequent DragOver calls should be 
+ * remote end, respond S_OK and any subsequent DragOver calls should be
  * declined until a new drag-and-drop loop is started with DragEnter().
  */
 BOOST_AUTO_TEST_CASE( drop )

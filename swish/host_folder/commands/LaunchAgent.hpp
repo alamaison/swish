@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Pageant launch command
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef SWISH_HOST_FOLDER_COMMANDS_LAUNCH_AGENT_HPP
@@ -32,10 +23,6 @@
 
 #include <washer/shell/pidl.hpp> // apidl_t
 
-#include <comet/ptr.h> // com_ptr
-
-#include <ObjIdl.h> // IDataObject, IBindCtx
-
 namespace swish {
 namespace host_folder {
 namespace commands {
@@ -43,18 +30,18 @@ namespace commands {
 class LaunchAgent : public swish::nse::Command
 {
 public:
-    LaunchAgent(HWND hwnd, const washer::shell::pidl::apidl_t& folder_pidl);
+    LaunchAgent(const washer::shell::pidl::apidl_t& folder_pidl);
 
     virtual BOOST_SCOPED_ENUM(state) state(
-        const comet::com_ptr<IDataObject>& data_object,
+        comet::com_ptr<IShellItemArray> selection,
         bool ok_to_be_slow) const;
 
     void operator()(
-        const comet::com_ptr<IDataObject>& data_object,
-        const comet::com_ptr<IBindCtx>& bind_ctx) const;
+        comet::com_ptr<IShellItemArray> selection,
+        const swish::nse::command_site& site,
+        comet::com_ptr<IBindCtx> bind_ctx) const;
 
 private:
-    HWND m_hwnd;
     washer::shell::pidl::apidl_t m_folder_pidl;
 };
 

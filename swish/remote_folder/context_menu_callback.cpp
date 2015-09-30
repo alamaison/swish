@@ -25,13 +25,14 @@
 */
 
 #include "swish/frontend/announce_error.hpp" // announce_last_exception
-#include "swish/shell_folder/data_object/ShellDataObject.hpp" // PidlFormat
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
-#include "swish/shell_folder/shell.hpp" // ui_object_of_item
+#include "swish/shell/shell.hpp" // ui_object_of_item
 #include "swish/remote_folder/commands/delete.hpp" // Delete
 #include "swish/remote_folder/pidl_connection.hpp" // provider_from_pidl
 #include "swish/remote_folder/context_menu_callback.hpp"
                                                        // context_menu_callback
+#include "swish/shell/parent_and_item.hpp" // parent_and_item
+#include "swish/shell/shell_item_array.hpp" // shell_item_array_from_data_object
 
 #include <washer/error.hpp> // last_error
 #include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
@@ -53,8 +54,8 @@
 
 using swish::frontend::announce_last_exception;
 using swish::provider::sftp_provider;
-using swish::shell_folder::data_object::PidlFormat;
-using swish::shell_folder::ui_object_of_item;
+using swish::shell::shell_item_array_from_data_object;
+using swish::shell::ui_object_of_item;
 
 using washer::last_error;
 using washer::shell::pidl_from_parsing_name;
@@ -94,38 +95,49 @@ namespace remote_folder {
 
 namespace {
 
-    bool is_single_link(com_ptr<IDataObject> data_object)
+    bool is_single_link(com_ptr<IShellItemArray> selection)
     {
-        PidlFormat format(data_object);
-
-        if (format.pidl_count() != 1)
+        if (selection->size() != 1)
         {
             return false;
         }
         else
         {
-            for (UINT i = 0; i < format.pidl_count(); ++i)
+            com_ptr<IParentAndItem> parent_and_item = com_cast(selection->at(0));
+            if (!parent_and_item)
             {
-                if (!remote_itemid_view(format.relative_file(i)).is_link())
-                    return false;
+                return false;
             }
 
-            return true;
+            return remote_itemid_view(parent_and_item->item_pidl()).is_link();
         }
     }
 
-    bool are_normal_files(com_ptr<IDataObject> selection)
+    bool are_normal_files(com_ptr<IShellItemArray> selection)
     {
-        PidlFormat format(selection);
-
-        if (format.pidl_count() < 1)
+        if (selection->size() < 1U)
             return false;
 
-        for (UINT i = 0; i < format.pidl_count(); ++i)
+        // TODO: fix comet enum_iterator so == is defined.  == is OK with
+        // read-once iteration (see istream_iterator for example).  Then we can
+        // use ranges
+        comet::wrap_t<IShellItemArray>::iterator_type it = selection->begin();
+        comet::wrap_t<IShellItemArray>::iterator_type end = selection->end();
+        while(it++ != end)
         {
-            if (remote_itemid_view(format.relative_file(i)).is_link() ||
-                remote_itemid_view(format.relative_file(i)).is_folder())
+            com_ptr<IShellItem> item = *it;
+            com_ptr<IParentAndItem> parent_and_item = com_cast(item);
+            if (!parent_and_item)
+            {
                 return false;
+            }
+
+            cpidl_t item_pidl = parent_and_item->item_pidl();
+            if (remote_itemid_view(item_pidl).is_link() ||
+                remote_itemid_view(item_pidl).is_folder())
+            {
+                return false;
+            }
         }
 
         // FIXME: failure to be a folder or a link does not mean you're a
@@ -147,19 +159,22 @@ context_menu_callback::context_menu_callback(
  * @todo  Take account of allowed changes flags.
  */
 bool context_menu_callback::merge_context_menu(
-    HWND hwnd_view, com_ptr<IDataObject> selection, HMENU hmenu,
+    HWND hwnd_view, com_ptr<IDataObject> selection_data_object, HMENU hmenu,
     UINT first_item_index, UINT& minimum_id, UINT maximum_id,
     UINT allowed_changes_flags)
 {
+    com_ptr<IShellItemArray> selection =
+        shell_item_array_from_data_object(selection_data_object);
+
     if (is_single_link(selection))
     {
         BOOL success = ::InsertMenuW(
-            hmenu, first_item_index, MF_BYPOSITION, 
+            hmenu, first_item_index, MF_BYPOSITION,
             minimum_id + MENU_OFFSET_OPEN,
             wstring(translate(L"Open &link")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
-                enable_error_info(last_error()) << 
+                enable_error_info(last_error()) <<
                 errinfo_api_function("InsertMenuW"));
 
         // It's not worth aborting menu creation just because we can't
@@ -176,12 +191,12 @@ bool context_menu_callback::merge_context_menu(
     else if (are_normal_files(selection))
     {
         BOOL success = ::InsertMenuW(
-            hmenu, first_item_index, MF_BYPOSITION, 
+            hmenu, first_item_index, MF_BYPOSITION,
             minimum_id + MENU_OFFSET_OPEN,
             wstring(translate(L"&Open")).c_str());
         if (!success)
             BOOST_THROW_EXCEPTION(
-                enable_error_info(last_error()) << 
+                enable_error_info(last_error()) <<
                 errinfo_api_function("InsertMenuW"));
 
         // It's not worth aborting menu creation just because we can't
@@ -202,7 +217,7 @@ bool context_menu_callback::merge_context_menu(
 }
 
 void context_menu_callback::verb(
-    HWND hwnd_view, com_ptr<IDataObject> selection, UINT command_id_offset,
+    HWND hwnd_view, com_ptr<IDataObject> /*selection*/, UINT command_id_offset,
     wstring& verb_out)
 {
     if (command_id_offset != MENU_OFFSET_OPEN)
@@ -213,7 +228,7 @@ void context_menu_callback::verb(
 }
 
 void context_menu_callback::verb(
-    HWND hwnd_view, com_ptr<IDataObject> selection, UINT command_id_offset,
+    HWND hwnd_view, com_ptr<IDataObject> /*selection*/, UINT command_id_offset,
     string& verb_out)
 {
     if (command_id_offset != MENU_OFFSET_OPEN)
@@ -229,9 +244,12 @@ namespace {
     bool do_invoke_command(
         ProviderFactory provider_factory,
         ConsumerFactory consumer_factory,
-        HWND hwnd_view, com_ptr<IDataObject> selection, UINT item_offset,
-        const wstring& /*arguments*/, int window_mode)
+        HWND hwnd_view, com_ptr<IDataObject> selection_data_object,
+        UINT item_offset, const wstring& /*arguments*/, int window_mode)
     {
+        com_ptr<IShellItemArray> selection =
+            shell_item_array_from_data_object(selection_data_object);
+
         if (item_offset == DFM_CMD_DELETE)
         {
             commands::Delete deletion_command(
@@ -243,20 +261,20 @@ namespace {
         {
             try
             {
-                PidlFormat format(selection);
-
+                com_ptr<IShellItem> item = selection->at(0);
+                com_ptr<IParentAndItem> folder_and_pidl = try_cast(item);
+                apidl_t item_pidl = folder_and_pidl->absolute_item_pidl();
 
                 // Create SFTP Consumer for this HWNDs lifetime
                 com_ptr<ISftpConsumer> consumer = consumer_factory(hwnd_view);
 
                 shared_ptr<sftp_provider> provider = provider_from_pidl(
-                    format.parent_folder(), consumer,
+                    folder_and_pidl->parent_pidl(), consumer,
                     translate("Name of a running task", "Resolving link"));
 
-                CSftpDirectory directory(format.parent_folder(), provider);
+                CSftpDirectory directory(folder_and_pidl->parent_pidl(), provider);
 
-                apidl_t target = directory.ResolveLink(
-                    pidl_cast<cpidl_t>(format.relative_file(0)));
+                apidl_t target = directory.ResolveLink(folder_and_pidl->item_pidl());
 
                 SHELLEXECUTEINFO sei = SHELLEXECUTEINFO();
                 sei.cbSize = sizeof(SHELLEXECUTEINFO);
@@ -269,7 +287,7 @@ namespace {
                 sei.lpVerb = L"open";
                 if (!::ShellExecuteEx(&sei))
                     BOOST_THROW_EXCEPTION(
-                        enable_error_info(last_error()) << 
+                        enable_error_info(last_error()) <<
                         errinfo_api_function("ShellExecuteEx"));
             }
             catch (...)
@@ -291,9 +309,11 @@ namespace {
         {
             try
             {
-                PidlFormat format(selection);
+                com_ptr<IShellItem> item = selection->at(0);
+                com_ptr<IParentAndItem> folder_and_pidl = try_cast(item);
+                apidl_t item_pidl = folder_and_pidl->absolute_item_pidl();
 
-                // XXX: We're only opening the first file even though we copy all 
+                // XXX: We're only opening the first file even though we copy all
                 // of them.  Is this what we want?
 
                 vector<wchar_t> system_temp_dir(MAX_PATH + 1, L'\0');
@@ -302,7 +322,7 @@ namespace {
                     &system_temp_dir[0]);
                 if (rc < 1)
                     BOOST_THROW_EXCEPTION(last_error());
-                
+
                 // We're using drag-and-drop to do the copy, so we don't
                 // want collisions to be possible as they will throw up
                 // confirmation dialogues.  We create a unique directory to
@@ -316,7 +336,7 @@ namespace {
                     BOOST_THROW_EXCEPTION(
                         runtime_error(
                             "Temporary download location already exists"));
-                
+
                 com_ptr<IDropTarget> drop_target =
                     ui_object_of_item<IDropTarget>(
                         pidl_from_parsing_name(temp_dir.wstring()).get());
@@ -324,7 +344,7 @@ namespace {
                 POINTL pt = { 0, 0 };
                 DWORD dwEffect = DROPEFFECT_COPY;
                 HRESULT hr = drop_target->DragEnter(
-                    selection.get(), MK_LBUTTON, pt, &dwEffect);
+                    selection_data_object.get(), MK_LBUTTON, pt, &dwEffect);
                 if (FAILED(hr))
                     BOOST_THROW_EXCEPTION(
                         com_error_from_interface(drop_target, hr));
@@ -333,7 +353,7 @@ namespace {
                 if (dwEffect)
                 {
                     hr = drop_target->Drop(
-                        selection.get(), MK_LBUTTON, pt, &dwEffect);
+                        selection_data_object.get(), MK_LBUTTON, pt, &dwEffect);
                     if (FAILED(hr))
                         BOOST_THROW_EXCEPTION(
                             com_error_from_interface(drop_target, hr));
@@ -351,7 +371,7 @@ namespace {
                 }
 
                 path target = temp_dir;
-                target /= remote_itemid_view(format.relative_file(0)).filename();
+                target /= remote_itemid_view(folder_and_pidl->item_pidl()).filename();
                 wstring target_windows_path = target.wstring();
 
                 // Before opening the file we make it read-only to discourage
@@ -374,7 +394,7 @@ namespace {
                 sei.lpVerb = L"open";
                 if (!::ShellExecuteEx(&sei))
                     BOOST_THROW_EXCEPTION(
-                        enable_error_info(last_error()) << 
+                        enable_error_info(last_error()) <<
                         errinfo_api_function("ShellExecuteEx"));
             }
             catch (...)
@@ -420,9 +440,12 @@ bool context_menu_callback::invoke_command(
 }
 
 bool context_menu_callback::default_menu_item(
-    HWND /*hwnd_view*/, com_ptr<IDataObject> selection,
+    HWND /*hwnd_view*/, com_ptr<IDataObject> selection_data_object,
     UINT& default_command_id)
 {
+    com_ptr<IShellItemArray> selection =
+        shell_item_array_from_data_object(selection_data_object);
+
     if (is_single_link(selection))
     {
         default_command_id = MENU_OFFSET_OPEN;

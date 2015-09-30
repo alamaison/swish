@@ -26,7 +26,7 @@
 
 #include "data_object_utils.hpp"
 
-#include "swish/shell_folder/shell.hpp"
+#include "swish/shell/shell.hpp"
 
 #include <washer/shell/shell.hpp> // bind_to_handler_object
 
@@ -40,8 +40,8 @@
 #include <string>
 #include <vector>
 
-using swish::shell_folder::pidl_from_path;
-using swish::shell_folder::ui_object_of_items;
+using swish::shell::pidl_from_path;
+using swish::shell::ui_object_of_items;
 
 using washer::shell::bind_to_handler_object;
 
@@ -67,7 +67,7 @@ namespace {
         vector<wchar_t> buffer(MAX_PATH);
         unsigned long len = ::GetModuleFileNameW(
             hmodule, &buffer[0], numeric_cast<unsigned long>(buffer.size()));
-        
+
         if (len == 0)
             BOOST_THROW_EXCEPTION(
                 system_error(::GetLastError(), get_system_category()));
@@ -85,10 +85,10 @@ namespace data_object_utils {
  * of 'virtual' namespace items.
  *
  * Virtual namespace items are not real files on disk and instead are
- * simulated by an IShellFolder implementation.  This is how Swish 
- * itself presents its 'files' to Explorer.  The ZIP-file browser in 
- * Windows 2000 and later does the same thing to give access to the 
- * files inside a .zip.  We're going to use one of these to test our 
+ * simulated by an IShellFolder implementation.  This is how Swish
+ * itself presents its 'files' to Explorer.  The ZIP-file browser in
+ * Windows 2000 and later does the same thing to give access to the
+ * files inside a .zip.  We're going to use one of these to test our
  * shell data object wrapper with virtual items.
  */
 path create_test_zip_file(const path& in_directory)
@@ -108,7 +108,7 @@ path create_test_zip_file(const path& in_directory)
 com_ptr<IDataObject> data_object_for_zipfile(const path& zip_file)
 {
     shared_ptr<ITEMIDLIST_ABSOLUTE> zip_pidl = pidl_from_path(zip_file);
-    com_ptr<IShellFolder> zip_folder = 
+    com_ptr<IShellFolder> zip_folder =
         bind_to_handler_object<IShellFolder>(zip_pidl.get());
 
     com_ptr<IEnumIDList> enum_items;

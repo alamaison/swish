@@ -1,28 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    SFTP connections Explorer folder implementation.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2015
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "HostFolder.h"
@@ -32,7 +22,10 @@
 #include "swish/debug.hpp"
 #include "swish/frontend/UserInteraction.hpp" // CUserInteraction
 #include "swish/host_folder/columns.hpp" // property_key_from_column_index
+#include "swish/host_folder/commands/Rename.hpp"
+#include "swish/host_folder/commands/Remove.hpp"
 #include "swish/host_folder/commands/commands.hpp" // host_folder_commands
+#include "swish/host_folder/context_menu_callback.hpp"
 #include "swish/host_folder/extract_icon.hpp"
 #include "swish/host_folder/host_management.hpp"
 #include "swish/host_folder/host_pidl.hpp" // host_itemid_view,
@@ -42,9 +35,8 @@
 #include "swish/host_folder/properties.hpp" // property_from_pidl
 #include "swish/host_folder/host_management.hpp" // RemoveConnectionFromRegistry
 #include "swish/host_folder/ViewCallback.hpp" // CViewCallback
-#include "swish/nse/default_context_menu_callback.hpp"
-                                               // default_context_menu_callback
 #include "swish/remotelimits.h"   // Text field limits
+#include "swish/shell/shell_item_array.hpp" // shell_item_array_from_folder_items
 #include "swish/windows_api.hpp" // SHBindToParent
 #include "swish/trace.hpp" // trace
 
@@ -90,6 +82,9 @@ using std::wstring;
 using swish::frontend::CUserInteraction;
 using swish::host_folder::CViewCallback;
 using swish::host_folder::commands::host_folder_command_provider;
+using swish::host_folder::commands::Rename;
+using swish::host_folder::commands::Remove;
+using swish::host_folder::context_menu_callback;
 using swish::host_folder::create_host_itemid;
 using swish::host_folder::extract_icon_co;
 using swish::host_folder::find_host_itemid;
@@ -101,7 +96,8 @@ using swish::host_folder::overlay_icon;
 using swish::host_folder::property_from_pidl;
 using swish::host_folder::property_key_from_column_index;
 using swish::host_folder::url_from_host_itemid;
-using swish::nse::default_context_menu_callback;
+using swish::nse::Command;
+using swish::shell::shell_item_array_from_folder_items;
 using swish::tracing::trace;
 
 using washer::shell::pidl::cpidl_t;
@@ -364,13 +360,29 @@ void CHostFolder::get_attributes_of(
     UINT pidl_count, PCUITEMID_CHILD_ARRAY pidl_array,
     SFGAOF* attributes_inout)
 {
-    (void)pidl_array; // All items are folders. No need to check PIDL.
-    (void)pidl_count;
+    com_ptr<IShellItemArray> selection = 
+        shell_item_array_from_folder_items(this, pidl_count, pidl_array);
 
     DWORD dwAttribs = 0;
     dwAttribs |= SFGAO_FOLDER;
     dwAttribs |= SFGAO_HASSUBFOLDER;
-    dwAttribs |= SFGAO_CANRENAME;
+
+    // This adds a 'rename' item to the default context menu that SetNameOf
+    // directly on the IShellFolder
+    Rename rename_command;
+    if (rename_command.state(selection, false) == Command::state::enabled)
+    {
+        dwAttribs |= SFGAO_CANRENAME;
+    }
+
+    // This adds an 'delete' item to the default context menu that calls the
+    // menu handler with ID DFM_CMD_DELETE
+    Remove remove_command(root_pidl());
+    if (remove_command.state(selection, false) == Command::state::enabled)
+    {
+        dwAttribs |= SFGAO_CANDELETE;
+    }
+
     *attributes_inout &= dwAttribs;
 }
 
@@ -506,10 +518,11 @@ variant_t CHostFolder::property(const property_key& key, const cpidl_t& pidl)
  * Create a toolbar command provider for the folder.
  */
 CComPtr<IExplorerCommandProvider> CHostFolder::command_provider(
-    HWND hwnd)
+    HWND /*owning_hwnd*/)
 {
     TRACE("Request: IExplorerCommandProvider");
-    return host_folder_command_provider(hwnd, root_pidl()).get();
+
+    return host_folder_command_provider(root_pidl()).get();
 }
 
 /**
@@ -562,10 +575,12 @@ CComPtr<IQueryAssociations> CHostFolder::query_associations(
 namespace {
 
     HRESULT CALLBACK menu_callback(
-        IShellFolder* /*folder*/, HWND hwnd_view, IDataObject* selection,
+        IShellFolder* folder, HWND hwnd_view, IDataObject* selection,
         UINT message_id, WPARAM wparam, LPARAM lparam)
     {
-        default_context_menu_callback callback;
+        CRemoteFolder* remote_folder = static_cast<CRemoteFolder*>(folder);
+
+        context_menu_callback callback(remote_folder->root_pidl());
         return callback(hwnd_view, selection, message_id, wparam, lparam);
     }
 

@@ -1,27 +1,18 @@
-/**
-    @file
+/* Copyright (C) 2010, 2011, 2012, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Swish host folder commands.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2010, 2011, 2012, 2015  Alexander Lamaison <swish@lammy.co.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "commands.hpp"
@@ -46,7 +37,6 @@
 #include <vector>
 
 using swish::nse::CExplorerCommand;
-using swish::nse::CExplorerCommandWithSite;
 using swish::nse::CExplorerCommandProvider;
 using swish::nse::CUICommand;
 using swish::nse::CUIElementErrorAdapter;
@@ -75,14 +65,14 @@ namespace host_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> host_folder_command_provider(
-    HWND hwnd, const apidl_t& folder_pidl)
+    const apidl_t& folder_pidl)
 {
     CExplorerCommandProvider::ordered_commands commands;
-    commands.push_back(new CExplorerCommand<Add>(hwnd, folder_pidl));
-    commands.push_back(new CExplorerCommand<Remove>(hwnd, folder_pidl));
-    commands.push_back(new CExplorerCommandWithSite<Rename>(hwnd, folder_pidl));
-    commands.push_back(new CExplorerCommand<CloseSession>(hwnd, folder_pidl));
-    commands.push_back(new CExplorerCommand<LaunchAgent>(hwnd, folder_pidl));
+    commands.push_back(new CExplorerCommand<Add>(folder_pidl));
+    commands.push_back(new CExplorerCommand<Remove>(folder_pidl));
+    commands.push_back(new CExplorerCommand<Rename>());
+    commands.push_back(new CExplorerCommand<CloseSession>());
+    commands.push_back(new CExplorerCommand<LaunchAgent>(folder_pidl));
     return new CExplorerCommandProvider(commands);
 }
 
@@ -111,29 +101,28 @@ public:
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
-host_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
+host_folder_task_pane_titles(const apidl_t& /*folder_pidl*/)
 {
     return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
-host_folder_task_pane_tasks(HWND hwnd, const apidl_t& folder_pidl)
+host_folder_task_pane_tasks(const apidl_t& folder_pidl)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
     shared_command_vector commands =
         make_shared< vector< com_ptr<IUICommand> > >();
 
     commands->push_back(
-        new CUICommand< WebtaskCommandTitleAdapter<Add> >(hwnd, folder_pidl));
+        new CUICommand<WebtaskCommandTitleAdapter<Add>>(folder_pidl));
     commands->push_back(
-        new CUICommand< WebtaskCommandTitleAdapter<Remove> >(hwnd, folder_pidl));
+        new CUICommand<WebtaskCommandTitleAdapter<Remove>>(folder_pidl));
     commands->push_back(
-        new CUICommand< WebtaskCommandTitleAdapter<Rename> >(hwnd, folder_pidl));
+        new CUICommand<WebtaskCommandTitleAdapter<Rename>>());
     commands->push_back(
-        new CUICommand< WebtaskCommandTitleAdapter<CloseSession> >(hwnd, folder_pidl));
+        new CUICommand<WebtaskCommandTitleAdapter<CloseSession>>());
     commands->push_back(
-        new CUICommand< WebtaskCommandTitleAdapter<LaunchAgent> >(
-            hwnd, folder_pidl));
+        new CUICommand<WebtaskCommandTitleAdapter<LaunchAgent>>(folder_pidl));
 
     com_ptr<IEnumUICommand> e =
         make_smart_enumeration<IEnumUICommand>(commands);

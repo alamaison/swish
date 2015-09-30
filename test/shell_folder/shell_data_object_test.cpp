@@ -26,7 +26,7 @@
 
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"  // Test subject
 #include "swish/shell_folder/data_object/StorageMedium.hpp"  // Test subject
-#include "swish/shell_folder/shell.hpp"  // shell helper function
+#include "swish/shell/shell.hpp"  // data_object_for_*
 
 #include "test/common_boost/fixtures.hpp"
 #include "test/common_boost/helpers.hpp"
@@ -41,8 +41,8 @@
 using swish::shell_folder::data_object::ShellDataObject;  // test subject
 using swish::shell_folder::data_object::PidlFormat;  // test subject
 using swish::shell_folder::data_object::StorageMedium;  // test subject
-using swish::shell_folder::data_object_for_file;
-using swish::shell_folder::data_object_for_directory;
+using swish::shell::data_object_for_file;
+using swish::shell::data_object_for_directory;
 
 using washer::shell::pidl::apidl_t;
 
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_format_virtual )
 /**
  * Detecting the CFSTR_FILEDESCRIPTOR format for virtual items.
  *
- * This format is expected for data objects holding virtual items.  This is a 
+ * This format is expected for data objects holding virtual items.  This is a
  * test of whether we can recognise that or not.
  */
 BOOST_AUTO_TEST_CASE( cf_file_group_descriptor_format_virtual )
@@ -196,7 +196,7 @@ BOOST_FIXTURE_TEST_SUITE(pidl_format_tests, DataObjectFixture)
  * Get a PIDL from a shell data object.
  *
  * Create the DataObject with one item, the test file in the sandbox.  Get
- * the item from the data object as a PIDL and check that it can be resolved 
+ * the item from the data object as a PIDL and check that it can be resolved
  * back the to filename from which the data object was created.
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_item )
  * Get a PIDL's parent from a shell data object.
  *
  * Create the DataObject with one item, the test file in the sandbox.  Get
- * the parent folder of this item (the sandbox) from the data object as a 
+ * the parent folder of this item (the sandbox) from the data object as a
  * PIDL and check that it can be resolved back the sandbox's path.
  */
 BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE( cfstr_shellidlist_parent )
 /**
  * Try to get a non-existent PIDL from the data object.
  *
- * Create the DataObject with one item.  Attempt to get the @b second item 
+ * Create the DataObject with one item.  Attempt to get the @b second item
  * from the data object.  As there is no second item this should fail by
  * throwing an range_error exception.
  */

@@ -70,7 +70,6 @@ using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::datetime_t;
-using comet::enum_iterator;
 using comet::make_smart_enumeration;
 
 using boost::adaptors::filtered;
@@ -102,7 +101,7 @@ template<> struct enumerated_type_of<IEnumIDList>
  */
 template<> struct impl::type_policy<PITEMID_CHILD>
 {
-    static void init(PITEMID_CHILD& t, const cpidl_t& s) 
+    static void init(PITEMID_CHILD& t, const cpidl_t& s)
     {
         s.copy_to(t);
     }
@@ -110,20 +109,20 @@ template<> struct impl::type_policy<PITEMID_CHILD>
     static void clear(PITEMID_CHILD& t)
     {
         ::ILFree(t);
-    }    
+    }
 };
 
 }
 
 /**
- * Creates and initialises directory instance from a PIDL. 
+ * Creates and initialises directory instance from a PIDL.
  *
  * @param directory_pidl  PIDL to the directory this object represents.  Must
  *                        start at or before a HostItemId.
  */
 CSftpDirectory::CSftpDirectory(
     const apidl_t& directory_pidl, shared_ptr<sftp_provider> provider)
-: 
+:
 m_provider(provider), m_directory_pidl(directory_pidl),
 m_directory(absolute_path_from_swish_pidl(directory_pidl)) {}
 
@@ -135,7 +134,7 @@ namespace {
     }
 
     bool is_directory(
-        const sftp_filesystem_item& file, const path& directory, 
+        const sftp_filesystem_item& file, const path& directory,
         sftp_provider& provider)
     {
         if (is_link(file))
@@ -181,17 +180,17 @@ namespace {
         return create_remote_itemid(
             file.filename().wstring(),
             is_directory(file, directory, provider),
-            is_link(file), 
+            is_link(file),
             (file.owner()) ? *file.owner() : wstring(),
             (file.group()) ? *file.group() : wstring(),
             file.uid(), file.gid(), file.permissions(), file.size_in_bytes(),
             file.last_modified(), file.last_accessed());
     }
-    
+
     /**
      * Notify the shell that a new directory was created.
      *
-     * Primarily, this will cause Explorer to show the new folder in any 
+     * Primarily, this will cause Explorer to show the new folder in any
      * windows displaying the parent folder.
      *
      * IMPORTANT: this will only happen if the parent folder is listening for
@@ -207,7 +206,7 @@ namespace {
         ::SHChangeNotify(
             SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, folder_pidl.get(), NULL);
     }
-    
+
     /**
      * Notify the shell that a file or directory was deleted.
      *
@@ -234,7 +233,7 @@ namespace {
  * This function returns an enumerator which can be used to iterate through
  * the contents of this directory as a series of PIDLs.  This listing is a
  * @b copy of the one obtained from the server and will not update to reflect
- * changes.  In order to obtain an up-to-date listing, this function must be 
+ * changes.  In order to obtain an up-to-date listing, this function must be
  * called again to get a new enumerator.
  *
  * @param flags  Flags specifying nature of files to fetch.
@@ -281,7 +280,7 @@ com_ptr<IEnumIDList> CSftpDirectory::GetEnum(SHCONTF flags)
         filtered(non_directory_filter) |
         transformed(pidl_converter),
         back_inserter(*pidls));
-    
+
     return make_smart_enumeration<IEnumIDList>(pidls);
 }
 
@@ -391,7 +390,7 @@ void CSftpDirectory::Delete(const cpidl_t& file)
 {
     bstr_t target_path =
         (m_directory / remote_itemid_view(file).filename()).wstring();
-    
+
     m_provider->remove_all(target_path.in());
 
     try
@@ -420,7 +419,7 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 
     try
     {
-        // Must not report a failure after this point.  The folder was created 
+        // Must not report a failure after this point.  The folder was created
         // even if notifying the shell fails.
 
         // TODO: stat new folder for actual parameters
@@ -473,7 +472,7 @@ apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
     cpidl_t new_host_item = create_host_itemid(
         old_item.host(), old_item.user(), L"", old_item.port(),
         old_item.label());
-    
+
     apidl_t resolved_target = pidl_to_link_target + new_host_item;
     BOOST_FOREACH(const path& segment, path(target_path.w_str()))
     {

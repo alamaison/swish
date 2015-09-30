@@ -31,7 +31,6 @@ set(SOURCES
   resource.h
   SftpDataObject.h
   SftpDirectory.h
-  shell.hpp
   SnitchingDataObject.hpp
   SwishFolder.hpp
   wtl.hpp
@@ -43,7 +42,6 @@ set(SOURCES
   RemoteFolder.cpp
   SftpDataObject.cpp
   SftpDirectory.cpp
-  shell.cpp
   data_object/FileGroupDescriptor.hpp
   data_object/GlobalLocker.hpp
   data_object/ShellDataObject.hpp

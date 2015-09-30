@@ -5,7 +5,8 @@
 
     @if license
 
-    Copyright (C) 2009, 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2009, 2011, 2012, 2015
+    Alexander Lamaison <swish@lammy.co.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,7 +25,7 @@
     @endif
 */
 
-#include "swish/shell_folder/shell.hpp"  // Test subject
+#include "swish/shell/shell.hpp"  // Test subject
 
 // use PidlFormat to inspect DataObjects produces by the Windows Shell
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
@@ -43,13 +44,13 @@
 #include <string>
 #include <algorithm>  // transform
 
-using swish::shell_folder::ui_object_of_item;
-using swish::shell_folder::ui_object_of_items;
-using swish::shell_folder::path_from_pidl;
-using swish::shell_folder::pidl_from_path;
-using swish::shell_folder::data_object_for_files;
-using swish::shell_folder::data_object_for_file;
-using swish::shell_folder::data_object_for_directory;
+using swish::shell::ui_object_of_item;
+using swish::shell::ui_object_of_items;
+using swish::shell::path_from_pidl;
+using swish::shell::pidl_from_path;
+using swish::shell::data_object_for_files;
+using swish::shell::data_object_for_file;
+using swish::shell::data_object_for_directory;
 using swish::shell_folder::data_object::PidlFormat;
 
 using washer::shell::pidl::apidl_t;
@@ -139,9 +140,9 @@ BOOST_AUTO_TEST_CASE( convert_path_to_pidl )
 }
 
 /**
- * Ask the shell for a DataObject 'on' a given file.  This means that the 
- * shell should create a DataObject holding a PIDL list format 
- * (CFSTR_SHELLIDLIST) with two items in it: 
+ * Ask the shell for a DataObject 'on' a given file.  This means that the
+ * shell should create a DataObject holding a PIDL list format
+ * (CFSTR_SHELLIDLIST) with two items in it:
  * - an absolute PIDL to the given file's parent folder
  * - the file's single-item (child) PIDL relative to the parent folder
  *
@@ -150,7 +151,7 @@ BOOST_AUTO_TEST_CASE( convert_path_to_pidl )
 BOOST_AUTO_TEST_CASE( single_item_dataobject )
 {
     path source = NewFileInSandbox();
-    
+
     PidlFormat format(data_object_for_file(source));
 
     BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
@@ -163,8 +164,8 @@ BOOST_AUTO_TEST_CASE( single_item_dataobject )
 
 /**
  * Ask the shell for a DataObject 'on' two items in the same folder.
- * This means that the shell should create a DataObject holding a PIDL list 
- * format (CFSTR_SHELLIDLIST) with three items in it: 
+ * This means that the shell should create a DataObject holding a PIDL list
+ * format (CFSTR_SHELLIDLIST) with three items in it:
  * - an absolute PIDL to the given files' parent folder
  * - the first file's single-item (child) PIDL relative to the parent folder
  * - the second file's single-item (child) PIDL relative to the parent folder
@@ -176,7 +177,7 @@ BOOST_AUTO_TEST_CASE( multi_item_dataobject )
     vector<path> sources;
     sources.push_back(NewFileInSandbox());
     sources.push_back(NewFileInSandbox());
-    
+
     PidlFormat format(
         data_object_for_files(sources.begin(), sources.end()));
 
@@ -189,7 +190,7 @@ BOOST_AUTO_TEST_CASE( multi_item_dataobject )
 }
 
 /**
- * Ask for an associated object of a given file.  In this case we ask for a 
+ * Ask for an associated object of a given file.  In this case we ask for a
  * DataObject because then we can subject it to the same tests as the
  * data_object_for_file test above.
  *
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE( multi_item_dataobject )
 BOOST_AUTO_TEST_CASE( single_item_ui_object )
 {
     path source = NewFileInSandbox();
-    
+
     PidlFormat format(
         ui_object_of_item<IDataObject>(pidl_from_path(source).get()));
 
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE( single_item_ui_object )
 
 /**
  * Ask for an associated object of two files in the same folder.  In this case
- * we ask for a DataObject because then we can subject it to the same tests 
+ * we ask for a DataObject because then we can subject it to the same tests
  * as the data_object_for_files test above.
  *
  * Tests ui_object_of_items().
@@ -224,9 +225,9 @@ BOOST_AUTO_TEST_CASE( multi_item_ui_object )
 
     vector<shared_ptr<ITEMIDLIST_ABSOLUTE> > pidls;
     transform(
-        sources.begin(), sources.end(), back_inserter(pidls), 
+        sources.begin(), sources.end(), back_inserter(pidls),
         pidl_from_path);
-    
+
     PidlFormat format(
         ui_object_of_items<IDataObject>(pidls.begin(), pidls.end()));
 

@@ -14,21 +14,19 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 set(SOURCES
-  atl.cpp
-  data_object_test.cpp
-  exercise_data_object.h
-  file_group_descriptor_test.cpp
-  global_lock_test.cpp
-  remote_folder_test.cpp
-  sftp_data_object_nasty_old_test.cpp
-  sftp_data_object_test.cpp
-  sftp_directory_test.cpp
-  shell_data_object_test.cpp
-  utils_test.cpp)
+  parent_and_item.hpp
+  shell.hpp
+  shell.cpp
+  shell_item.hpp
+  shell_item_array.hpp)
 
-swish_test_suite(
-  SUBJECT shell_folder shell
-  SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+add_library(shell ${SOURCES})
 
-swish_copy_fixture_files(test-shell_folder)
+hunter_add_package(Comet)
+hunter_add_package(Washer)
+
+find_package(Comet REQUIRED CONFIG)
+find_package(Washer REQUIRED CONFIG)
+
+target_link_libraries(shell
+  PUBLIC ${Boost_LIBRARIES} Washer::washer Comet::comet)

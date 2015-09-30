@@ -1,34 +1,26 @@
-/**
-    @file
+/* Copyright (C) 2011, 2012, 2013, 2015
+   Alexander Lamaison <swish@lammy.co.uk>
 
-    Swish remote folder commands.
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
 
-    @if license
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    Copyright (C) 2011, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "commands.hpp"
 
 #include "swish/nse/explorer_command.hpp" // CExplorerCommand*
-#include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommandWithSite
+#include "swish/nse/task_pane.hpp" // CUIElementErrorAdapter, CUICommand
 #include "swish/remote_folder/commands/NewFolder.hpp"
+
 
 #include <comet/server.h> // simple_object
 #include <comet/smart_enum.h> // make_smart_enumeration
@@ -45,9 +37,9 @@
 #include <vector>
 
 using swish::nse::CExplorerCommandProvider;
-using swish::nse::CExplorerCommandWithSite;
+using swish::nse::CExplorerCommand;
 using swish::nse::CUIElementErrorAdapter;
-using swish::nse::CUICommandWithSite;
+using swish::nse::CUICommand;
 using swish::nse::IEnumUICommand;
 using swish::nse::IUICommand;
 using swish::nse::IUIElement;
@@ -75,13 +67,13 @@ namespace remote_folder {
 namespace commands {
 
 com_ptr<IExplorerCommandProvider> remote_folder_command_provider(
-    HWND /*hwnd*/, const apidl_t& folder_pidl,
+    const apidl_t& folder_pidl,
     const provider_factory& provider,
     const consumer_factory& consumer)
 {
     CExplorerCommandProvider::ordered_commands commands;
     commands.push_back(
-        new CExplorerCommandWithSite<NewFolder>(
+        new CExplorerCommand<NewFolder>(
             folder_pidl, provider, consumer));
     return new CExplorerCommandProvider(commands);
 }
@@ -110,27 +102,25 @@ public:
 };
 
 std::pair<com_ptr<IUIElement>, com_ptr<IUIElement> >
-remote_folder_task_pane_titles(HWND /*hwnd*/, const apidl_t& /*folder_pidl*/)
+remote_folder_task_pane_titles(const apidl_t& /*folder_pidl*/)
 {
     return make_pair(new CSftpTasksTitle(), com_ptr<IUIElement>());
 }
 
 std::pair<com_ptr<IEnumUICommand>, com_ptr<IEnumUICommand> >
 remote_folder_task_pane_tasks(
-    HWND /*hwnd*/, const apidl_t& folder_pidl,
-    com_ptr<IUnknown> ole_site,
-    const provider_factory& provider,
-    const consumer_factory& consumer)
+    const apidl_t& folder_pidl, com_ptr<IUnknown> ole_site,
+    const provider_factory& provider, const consumer_factory& consumer)
 {
     typedef shared_ptr< vector< com_ptr<IUICommand> > > shared_command_vector;
     shared_command_vector commands =
         make_shared< vector< com_ptr<IUICommand> > >();
 
     com_ptr<IUICommand> new_folder =
-        new CUICommandWithSite< WebtaskCommandTitleAdapter<NewFolder> >(
+        new CUICommand<WebtaskCommandTitleAdapter<NewFolder>>(
         folder_pidl,
         bind(
-            provider, _1, 
+            provider, _1,
             translate("Name of a running task", "Creating new folder")),
         consumer);
 
@@ -146,7 +136,7 @@ remote_folder_task_pane_tasks(
 
     commands->push_back(new_folder);
 
-    com_ptr<IEnumUICommand> e = 
+    com_ptr<IEnumUICommand> e =
         make_smart_enumeration<IEnumUICommand>(commands);
 
     return make_pair(e, com_ptr<IEnumUICommand>());
