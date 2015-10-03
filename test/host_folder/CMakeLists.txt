@@ -23,4 +23,5 @@ set(SOURCES
 swish_test_suite(
   SUBJECT host_folder
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS unit)

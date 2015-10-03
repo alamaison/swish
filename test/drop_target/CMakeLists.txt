@@ -20,6 +20,7 @@ set(SOURCES
 swish_test_suite(
   SUBJECT drop_target
   SOURCES ${SOURCES}
-  LIBRARIES shell ${Boost_LIBRARIES})
+  LIBRARIES shell ${Boost_LIBRARIES}
+  LABELS integration)
 
 swish_copy_fixture_files(test-drop_target)

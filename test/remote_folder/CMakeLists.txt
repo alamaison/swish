@@ -13,16 +13,25 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(SOURCES
+set(UNIT_TESTS
   columns_test.cpp
   properties_test.cpp
-  remote_commands_test.cpp
   remote_pidl_test.cpp
   swish_pidl_test.cpp)
 
-swish_test_suite(
-  SUBJECT remote_folder
-  SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+set(INTEGRATION_TESTS
+  remote_commands_test.cpp)
 
-swish_copy_fixture_files(test-remote_folder)
+swish_test_suite(
+  SUBJECT remote_folder VARIANT unit
+  SOURCES ${UNIT_TESTS}
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS unit)
+
+swish_test_suite(
+  SUBJECT remote_folder VARIANT integration
+  SOURCES ${INTEGRATION_TESTS}
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS integration)
+
+swish_copy_fixture_files(test-remote_folder-integration)

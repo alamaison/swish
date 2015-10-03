@@ -20,4 +20,5 @@ set(SOURCES
 swish_test_suite(
   SUBJECT forms
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS gui)

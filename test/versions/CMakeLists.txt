@@ -19,4 +19,5 @@ set(SOURCES
 swish_test_suite(
   SUBJECT versions
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS unit)

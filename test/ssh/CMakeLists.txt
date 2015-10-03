@@ -54,12 +54,12 @@ else()
 endif()
 
 include(CMakeParseArguments)
-# swish_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
-#                  LIBRARIES ...)
+# ssh_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
+#                LIBRARIES ... [LABELS ...])
 function(SSH_TEST_SUITE)
   set(options)
   set(oneValueArgs SUBJECT VARIANT)
-  set(multiValueArgs SOURCES LIBRARIES)
+  set(multiValueArgs SOURCES LIBRARIES LABELS)
   cmake_parse_arguments(SSH_TEST_SUITE
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -84,6 +84,11 @@ function(SSH_TEST_SUITE)
   if(TEST_RUNNER_ENVIRONMENT)
     set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
       ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
+  endif()
+
+  if(SSH_TEST_SUITE_LABELS)
+    set_tests_properties(
+      ${_TEST_EXE_NAME} PROPERTIES LABELS "${SSH_TEST_SUITE_LABELS}")
   endif()
 endfunction()
 
@@ -143,6 +148,7 @@ hunter_add_package(Boost.Process)
 ssh_test_suite(
   SUBJECT ssh
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES} Boost::Process)
+  LIBRARIES ${Boost_LIBRARIES} Boost::Process
+  LABELS integration)
 
 ssh_copy_fixture_files(test-ssh)
