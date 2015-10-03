@@ -153,19 +153,35 @@ add_subdirectory(versions)
 
 # swish_declare_test_target(COMMAND_NAME [OPTIONAL_FLAGS...])
 function(SWISH_DECLARE_TEST_TARGET COMMAND_NAME)
+  set(options ALL)
+  set(oneValueArgs)
+  set(multiValueArgs)
+  cmake_parse_arguments(SWISH_DECLARE_TEST_TARGET
+    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if(SWISH_DECLARE_TEST_TARGET_ALL)
+    set(SWISH_DECLARE_TEST_TARGET_ALL ALL)
+  else()
+    set(SWISH_DECLARE_TEST_TARGET_ALL)
+  endif()
+
   # From http://stackoverflow.com/a/16163137/67013
   if(CMAKE_CONFIGURATION_TYPES)
-    add_custom_target(${COMMAND_NAME} COMMAND ${CMAKE_CTEST_COMMAND}
+    add_custom_target(${COMMAND_NAME} ${SWISH_DECLARE_TEST_TARGET_ALL}
+      COMMAND ${CMAKE_CTEST_COMMAND}
       --force-new-ctest-process --output-on-failure
-      --build-config "$<CONFIGURATION>" ${ARGN})
+      --build-config "$<CONFIGURATION>"
+      ${SWISH_DECLARE_TEST_TARGET_UNPARSED_ARGUMENTS})
   else()
-    add_custom_target(${COMMAND_NAME} COMMAND ${CMAKE_CTEST_COMMAND}
-      --force-new-ctest-process --output-on-failure ${ARGN})
+    add_custom_target(${COMMAND_NAME} ${SWISH_DECLARE_TEST_TARGET_ALL}
+      COMMAND ${CMAKE_CTEST_COMMAND}
+      --force-new-ctest-process --output-on-failure
+      ${SWISH_DECLARE_TEST_TARGET_UNPARSED_ARGUMENTS})
   endif()
 endfunction()
 
 swish_declare_test_target(CHECK)
-swish_declare_test_target(CHECK_UNIT -L unit)
+swish_declare_test_target(CHECK_UNIT -L unit ALL)
 swish_declare_test_target(CHECK_INTEGRATION -L integration)
 swish_declare_test_target(CHECK_GUI -L gui)
 swish_declare_test_target(CHECK_NETWORK -L network)
