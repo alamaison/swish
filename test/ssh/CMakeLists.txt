@@ -13,12 +13,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(SOURCES
+set(INTEGRATION_TESTS
   auth_test.cpp
   filesystem_test.cpp
   host_key_test.cpp
-  knownhost_test.cpp
-  module.cpp
   openssh_fixture.cpp
   sandbox_fixture.cpp
   session_test.cpp
@@ -26,6 +24,9 @@ set(SOURCES
   openssh_fixture.hpp
   sandbox_fixture.hpp
   session_fixture.hpp)
+
+set(UNIT_TESTS
+  knownhost_test.cpp)
 
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
@@ -70,7 +71,7 @@ function(SSH_TEST_SUITE)
     set(_TEST_EXE_NAME "test-${SSH_TEST_SUITE_SUBJECT}")
   endif()
 
-  add_executable(${_TEST_EXE_NAME} ${SSH_TEST_SUITE_SOURCES})
+  add_executable(${_TEST_EXE_NAME} module.cpp ${SSH_TEST_SUITE_SOURCES})
 
   target_link_libraries(${_TEST_EXE_NAME}
     PRIVATE
@@ -147,8 +148,14 @@ hunter_add_package(Boost.Process)
 
 ssh_test_suite(
   SUBJECT ssh
-  SOURCES ${SOURCES}
+  SOURCES ${INTEGRATION_TESTS}
   LIBRARIES ${Boost_LIBRARIES} Boost::Process
   LABELS integration)
+
+ssh_test_suite(
+  SUBJECT ssh VARIANT unit
+  SOURCES ${UNIT_TESTS}
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS unit)
 
 ssh_copy_fixture_files(test-ssh)
