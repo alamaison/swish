@@ -45,11 +45,11 @@ endif()
 
 include(CMakeParseArguments)
 # swish_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
-#                  LIBRARIES ...)
+#                  LIBRARIES ... [LABELS ...])
 function(SWISH_TEST_SUITE)
   set(options)
   set(oneValueArgs SUBJECT VARIANT)
-  set(multiValueArgs SOURCES LIBRARIES)
+  set(multiValueArgs SOURCES LIBRARIES LABELS)
   cmake_parse_arguments(SWISH_TEST_SUITE
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -80,6 +80,11 @@ function(SWISH_TEST_SUITE)
   if(TEST_RUNNER_ENVIRONMENT)
     set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
       ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
+  endif()
+
+  if(SWISH_TEST_SUITE_LABELS)
+    set_tests_properties(
+      ${_TEST_EXE_NAME} PROPERTIES LABELS "${SWISH_TEST_SUITE_LABELS}")
   endif()
 endfunction()
 
@@ -131,50 +136,52 @@ function(SWISH_COPY_FIXTURE_FILES TEST_TARGET)
   endif()
 endfunction()
 
-include(CMakeDependentOption)
-
-option(BUILD_TESTING_SLOW "Build tests that take some time" ON)
-
-cmake_dependent_option(BUILD_TESTING_GUI ON
-  "Build tests that show GUI elements on screen"
-  "BUILD_TESTING_SLOW" OFF)
-
-option(BUILD_TESTING_INTEGRATION "Build integration tests" ON)
-
-cmake_dependent_option(BUILD_TESTING_NETWORK OFF
-  "Build tests that require a remote test server"
-  "BUILD_TESTING_INTEGRATION" OFF)
-
-if(BUILD_TESTING_INTEGRATION)
-  add_subdirectory(connection)
-  add_subdirectory(drop_target)
-  add_subdirectory(provider)
-  add_subdirectory(ssh)
-  add_subdirectory(remote_folder) # Only remote_commands_test.cpp
-  add_subdirectory(shell_folder)
-endif()
-
-if(BUILD_TESTING_NETWORK)
-  add_subdirectory(provider-network)
-endif()
-
-if(BUILD_TESTING_GUI)
-  add_subdirectory(ezel)
-  add_subdirectory(forms)
-  add_subdirectory(shell_folder-dialogue)
-endif()
-
+add_subdirectory(connection)
+add_subdirectory(drop_target)
+add_subdirectory(ezel)
+add_subdirectory(forms)
 add_subdirectory(host_folder)
 add_subdirectory(nse)
+add_subdirectory(provider)
+add_subdirectory(provider-network)
+add_subdirectory(remote_folder)
 add_subdirectory(shell)
+add_subdirectory(shell_folder)
+add_subdirectory(shell_folder-dialogue)
+add_subdirectory(ssh)
 add_subdirectory(versions)
 
-# From http://stackoverflow.com/a/16163137/67013
-if(CMAKE_CONFIGURATION_TYPES)
-  add_custom_target(CHECK COMMAND ${CMAKE_CTEST_COMMAND}
-    --force-new-ctest-process --output-on-failure
-    --build-config "$<CONFIGURATION>")
-else()
-  add_custom_target(CHECK COMMAND ${CMAKE_CTEST_COMMAND}
-    --force-new-ctest-process --output-on-failure)
-endif()
+# swish_declare_test_target(COMMAND_NAME [OPTIONAL_FLAGS...])
+function(SWISH_DECLARE_TEST_TARGET COMMAND_NAME)
+  set(options ALL)
+  set(oneValueArgs)
+  set(multiValueArgs)
+  cmake_parse_arguments(SWISH_DECLARE_TEST_TARGET
+    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if(SWISH_DECLARE_TEST_TARGET_ALL)
+    set(SWISH_DECLARE_TEST_TARGET_ALL ALL)
+  else()
+    set(SWISH_DECLARE_TEST_TARGET_ALL)
+  endif()
+
+  # From http://stackoverflow.com/a/16163137/67013
+  if(CMAKE_CONFIGURATION_TYPES)
+    add_custom_target(${COMMAND_NAME} ${SWISH_DECLARE_TEST_TARGET_ALL}
+      COMMAND ${CMAKE_CTEST_COMMAND}
+      --force-new-ctest-process --output-on-failure
+      --build-config "$<CONFIGURATION>"
+      ${SWISH_DECLARE_TEST_TARGET_UNPARSED_ARGUMENTS})
+  else()
+    add_custom_target(${COMMAND_NAME} ${SWISH_DECLARE_TEST_TARGET_ALL}
+      COMMAND ${CMAKE_CTEST_COMMAND}
+      --force-new-ctest-process --output-on-failure
+      ${SWISH_DECLARE_TEST_TARGET_UNPARSED_ARGUMENTS})
+  endif()
+endfunction()
+
+swish_declare_test_target(CHECK)
+swish_declare_test_target(CHECK_UNIT -L unit ALL)
+swish_declare_test_target(CHECK_INTEGRATION -L integration)
+swish_declare_test_target(CHECK_GUI -L gui)
+swish_declare_test_target(CHECK_NETWORK -L network)

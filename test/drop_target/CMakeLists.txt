@@ -13,13 +13,22 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(SOURCES
-  drop_target_test.cpp
+set(UNIT_TESTS
   rooted_source_test.cpp)
 
-swish_test_suite(
-  SUBJECT drop_target
-  SOURCES ${SOURCES}
-  LIBRARIES shell ${Boost_LIBRARIES})
+set(INTEGRATION_TESTS
+  drop_target_test.cpp)
 
-swish_copy_fixture_files(test-drop_target)
+swish_test_suite(
+  SUBJECT drop_target VARIANT unit
+  SOURCES ${UNIT_TESTS}
+  LIBRARIES shell ${Boost_LIBRARIES}
+  LABELS unit)
+
+swish_test_suite(
+  SUBJECT drop_target VARIANT integration
+  SOURCES ${INTEGRATION_TESTS}
+  LIBRARIES shell ${Boost_LIBRARIES}
+  LABELS integration)
+
+swish_copy_fixture_files(test-drop_target-integration)

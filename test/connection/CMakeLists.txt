@@ -23,6 +23,7 @@ set(SOURCES
 swish_test_suite(
   SUBJECT connection
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS integration)
 
 swish_copy_fixture_files(test-connection)

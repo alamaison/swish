@@ -22,4 +22,5 @@ swish_test_suite(
   SUBJECT shell_folder VARIANT dialogue
   SOURCES ${SOURCES}
   LIBRARIES ${CMAKE_BINARY_DIR}/swish/shell_folder/shell_folder.dir/${CMAKE_CFG_INTDIR}/shell_folder.res
-  ${Boost_LIBRARIES})
+  ${Boost_LIBRARIES}
+  LABELS gui)

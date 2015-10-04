@@ -19,6 +19,7 @@ set(SOURCES
 swish_test_suite(
   SUBJECT shell
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS unit)
 
 swish_copy_fixture_files(test-shell)

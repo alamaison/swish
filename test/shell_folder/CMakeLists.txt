@@ -13,22 +13,32 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(SOURCES
-  atl.cpp
+set(UNIT_TESTS
   data_object_test.cpp
   exercise_data_object.h
   file_group_descriptor_test.cpp
   global_lock_test.cpp
-  remote_folder_test.cpp
   sftp_data_object_nasty_old_test.cpp
-  sftp_data_object_test.cpp
   sftp_directory_test.cpp
   shell_data_object_test.cpp
   utils_test.cpp)
 
-swish_test_suite(
-  SUBJECT shell_folder shell
-  SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES})
+set(INTEGRATION_TESTS
+  atl.cpp
+  exercise_data_object.h
+  remote_folder_test.cpp
+  sftp_data_object_test.cpp)
 
-swish_copy_fixture_files(test-shell_folder)
+swish_test_suite(
+  SUBJECT shell_folder VARIANT unit
+  SOURCES ${UNIT_TESTS}
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS unit)
+
+swish_test_suite(
+  SUBJECT shell_folder VARIANT integration
+  SOURCES ${INTEGRATION_TESTS}
+  LIBRARIES ${Boost_LIBRARIES}
+  LABELS integration)
+
+swish_copy_fixture_files(test-shell_folder-integration)

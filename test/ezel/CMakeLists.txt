@@ -19,4 +19,5 @@ set(SOURCES
 swish_test_suite(
   SUBJECT ezel
   SOURCES ${SOURCES}
-  LIBRARIES shell_folder ${Boost_LIBRARIES})
+  LIBRARIES shell_folder ${Boost_LIBRARIES}
+  LABELS gui)
