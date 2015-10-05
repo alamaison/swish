@@ -26,7 +26,8 @@ set(INTEGRATION_TESTS
   session_fixture.hpp)
 
 set(UNIT_TESTS
-  knownhost_test.cpp)
+  knownhost_test.cpp
+  path_test.cpp)
 
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
