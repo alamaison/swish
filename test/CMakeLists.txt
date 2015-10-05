@@ -17,6 +17,9 @@ find_package(Boost 1.40 REQUIRED COMPONENTS unit_test_framework)
 
 add_subdirectory(common_boost)
 
+option(MEMORY_LEAKS_ARE_FAILURES
+  "Fail the test suite if a memory leak is detected" OFF)
+
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
 
@@ -80,6 +83,13 @@ function(SWISH_TEST_SUITE)
     NAME ${_TEST_EXE_NAME}
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
     WORKING_DIRECTORY $<TARGET_FILE_DIR:${_TEST_EXE_NAME}>)
+
+  if(MEMORY_LEAKS_ARE_FAILURES)
+    # Don't hide memory leak detection.  The detector can't change the error
+    # code so the test appears successful otherwise.
+    set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
+      FAIL_REGULAR_EXPRESSION "Detected memory leaks")
+  endif()
 
   if(TEST_RUNNER_ENVIRONMENT)
     set_tests_properties(${_TEST_EXE_NAME} PROPERTIES

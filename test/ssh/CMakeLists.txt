@@ -85,6 +85,13 @@ function(SSH_TEST_SUITE)
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
     WORKING_DIRECTORY $<TARGET_FILE_DIR:${_TEST_EXE_NAME}>)
 
+  if(MEMORY_LEAKS_ARE_FAILURES)
+    # Don't hide memory leak detection.  The detector can't change the error
+    # code so the test appears successful otherwise.
+    set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
+      FAIL_REGULAR_EXPRESSION "Detected memory leaks")
+  endif()
+
   if(TEST_RUNNER_ENVIRONMENT)
     set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
       ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
