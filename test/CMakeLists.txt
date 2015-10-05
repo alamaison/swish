@@ -43,6 +43,8 @@ else()
     "Cygwin not found: tests are likely to fail to run")
 endif()
 
+add_custom_target(BUILD_ALL_TESTS COMMENT "Building all tests")
+
 include(CMakeParseArguments)
 # swish_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
 #                  LIBRARIES ... [LABELS ...])
@@ -71,6 +73,8 @@ function(SWISH_TEST_SUITE)
   target_link_libraries(${_TEST_EXE_NAME}
     PRIVATE
     ${SWISH_TEST_SUITE_SUBJECT} test-common_boost ${SWISH_TEST_SUITE_LIBRARIES})
+
+  add_dependencies(BUILD_ALL_TESTS ${_TEST_EXE_NAME})
 
   add_test(
     NAME ${_TEST_EXE_NAME}
@@ -178,6 +182,8 @@ function(SWISH_DECLARE_TEST_TARGET COMMAND_NAME)
       --force-new-ctest-process --output-on-failure
       ${SWISH_DECLARE_TEST_TARGET_UNPARSED_ARGUMENTS})
   endif()
+
+  add_dependencies(${COMMAND_NAME} BUILD_ALL_TESTS)
 endfunction()
 
 swish_declare_test_target(CHECK)
