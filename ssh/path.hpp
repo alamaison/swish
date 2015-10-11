@@ -41,7 +41,6 @@
 #include <boost/operators.hpp>
 #include <boost/token_iterator.hpp> // token_iterator_generator, char_separator
 
-#include <algorithm> // lexicographical_compare
 #include <ostream>
 #include <string>
 #include <utility> // swap
@@ -51,16 +50,24 @@ namespace filesystem {
 
 namespace detail {
 
+/**
+ * String tokeniser that separates on /, unless it is leading or trailing.
+ *
+ * The filesystem concept treats leading and trailing directory separators (/)
+ * specially.  A leading separator is the root dirctory and is kept as a token.
+ * A trailing separator is a directory path indicator and causes a dot token (.)
+ * to be emitted.
+ */
 template<typename Value>
-class all_but_first_slash_separator
+class all_but_first_and_last_separator
 {
 public:
-    all_but_first_slash_separator() :
+    all_but_first_and_last_separator() :
         m_at_beginning(true), m_normal_separator("/") {}
 
     void reset()
     {
-        all_but_first_slash_separator<Value> fresh;
+        all_but_first_and_last_separator<Value> fresh;
         std::swap(*this, fresh);
     }
 
@@ -73,6 +80,7 @@ public:
             if (next != end && *next == '/')
             {
                 token_out = "/";
+                ++next;
                 return true;
             }
             else
@@ -82,7 +90,16 @@ public:
         }
         else
         {
-            return m_normal_separator(next, end, token_out);
+            if (next != end && next + 1 == end && *next == '/')
+            {
+                token_out = ".";
+                ++next;
+                return true;
+            }
+            else
+            {
+                return m_normal_separator(next, end, token_out);
+            }
         }
     }
 
@@ -139,7 +156,7 @@ public:
     typedef string_type::value_type value_type;
 
 private:
-    typedef detail::all_but_first_slash_separator<value_type> separator_type_;
+    typedef detail::all_but_first_and_last_separator<value_type> separator_type_;
 
     static const separator_type_& segment_separator()
     {
@@ -220,6 +237,19 @@ public:
         return iterator(end_tokens());
     }
 
+    path& operator/=(const path& rhs)
+    {
+        if (!empty())
+        {
+            m_path = m_path + '/' + rhs.m_path;
+        }
+        else
+        {
+            m_path = rhs.m_path;
+        }
+        return *this;
+    }
+
 private:
     string_type m_path;
 };
@@ -239,6 +269,13 @@ bool operator==(const path& lhs, const path& rhs)
 bool operator<(const path& lhs, const path& rhs)
 {
     return lhs.compare(rhs) < 0;
+}
+
+path operator/(const path& lhs, const path& rhs)
+{
+    path concatenation(lhs);
+    concatenation /= rhs;
+    return concatenation;
 }
 
 }} // namespace ssh::filesystem

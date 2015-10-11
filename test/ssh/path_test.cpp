@@ -433,4 +433,400 @@ BOOST_AUTO_TEST_CASE( multi_segment_relative_path_is_not_absolute )
     BOOST_CHECK(!p.is_absolute());
 }
 
+BOOST_AUTO_TEST_CASE( directory_path_is_not_empty )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK(!p.empty());
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_equal_to_itself )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK_EQUAL(p, p);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_not_equal_to_similar_file_path )
+{
+    const path p("foo/bar/");
+    const path q("foo/bar");
+    BOOST_CHECK_NE(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_equal_to_another_path_from_equal_source )
+{
+    const path p("foo/bar/");
+    const path q("foo/bar/");
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_equal_to_a_constructed_copy )
+{
+    const path p("foo/bar/");
+    const path q(p);
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_equal_to_an_assigned_copy )
+{
+    const path p("foo/bar/");
+    path q;
+    q = p;
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_less_than_lexi_greater_source )
+{
+    const path p("foo/baq/");
+    const path q("foo/bar/");
+    BOOST_CHECK_LT(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_greater_than_lexi_less_source )
+{
+    const path p("foo/bar/");
+    const path q("foo/baq/");
+    BOOST_CHECK_GT(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_converts_explicity_to_original_string )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK_EQUAL(p.native(), "foo/bar/");
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_converts_implicitly_to_original_string )
+{
+    const path p("foo/bar/");
+    const path::string_type s = p;
+    BOOST_CHECK_EQUAL(s, "foo/bar/");
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_iterates_once_more_than_number_of_names )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK(p.begin() != p.end());
+    BOOST_CHECK_EQUAL(std::distance(p.begin(), p.end()), 3);
+}
+
+BOOST_AUTO_TEST_CASE(
+    directory_path_iterator_produces_filename_single_segments_followed_by_dot )
+{
+    const path p("foo/bar/");
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = p.begin();
+    BOOST_CHECK_EQUAL(*it++, path("foo"));
+    BOOST_CHECK_EQUAL(*it++, path("bar"));
+    BOOST_CHECK_EQUAL(*it++, path("."));
+    BOOST_CHECK(it == p.end());
+}
+
+BOOST_AUTO_TEST_CASE( relative_directory_path_is_relative )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK(p.is_relative());
+}
+
+BOOST_AUTO_TEST_CASE( absolute_directory_path_is_not_relative )
+{
+    const path p("/foo/bar/");
+    BOOST_CHECK(!p.is_relative());
+}
+
+BOOST_AUTO_TEST_CASE( relative_directory_path_is_not_absolute )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK(!p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( absolute_directory_path_is_absolute )
+{
+    const path p("/foo/bar/");
+    BOOST_CHECK(p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_relative_paths_returns_concantenation )
+{
+    const path p("foo/bar");
+    const path q("baz/woz");
+    BOOST_CHECK_EQUAL(p / q, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_relative_paths_leaves_both_operands_unchanged )
+{
+    const path p("foo/bar");
+    const path q("baz/woz");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar"));
+    BOOST_CHECK_EQUAL(q, path("baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_relative_path_to_another_returns_concatenation )
+{
+    path p("foo/bar");
+    const path q("baz/woz");
+    BOOST_CHECK_EQUAL(p /= q, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_relative_path_to_another_changes_latter_to_concatenation )
+{
+    path p("foo/bar");
+    const path q("baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_relative_path_to_another_leaves_former_unchanged )
+{
+    path p("foo/bar");
+    const path q("baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(q, path("baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_directory_paths_returns_concatenation )
+{
+    const path p("foo/bar/");
+    const path q("baz/woz/");
+    BOOST_CHECK_EQUAL(p / q, path("foo/bar/baz/woz/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_directory_paths_leaves_both_unchanged )
+{
+    const path p("foo/bar/");
+    const path q("baz/woz/");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar/"));
+    BOOST_CHECK_EQUAL(q, path("baz/woz/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_relative_directory_path_to_another_returns_concatenation )
+{
+    path p("foo/bar/");
+    const path q("baz/woz/");
+    BOOST_CHECK_EQUAL(p /= q, path("foo/bar/baz/woz/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_relative_directory_path_to_another_changes_latter_to_concatenation )
+{
+    path p("foo/bar/");
+    const path q("baz/woz/");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar/baz/woz/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_relative_directory_path_to_another_leaves_former_unchanged )
+{
+    path p("foo/bar/");
+    const path q("baz/woz/");
+    p /= q;
+    BOOST_CHECK_EQUAL(q, path("baz/woz/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_and_absolute_returns_concatenation )
+{
+    const path p("foo/bar");
+    const path q("/baz/woz");
+    BOOST_CHECK_EQUAL(p / q, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_and_absolute_leaves_both_unchanged )
+{
+    const path p("foo/bar");
+    const path q("/baz/woz");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar"));
+    BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_absolute_to_relative_returns_concatenation )
+{
+    path p("foo/bar");
+    const path q("/baz/woz");
+    BOOST_CHECK_EQUAL(p /= q, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_changes_latter_to_concatenation )
+{
+    path p("foo/bar");
+    const path q("/baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_another_leaves_former_unchanged )
+{
+    path p("foo/bar");
+    const path q("/baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_directory_and_absolute_returns_concatenation )
+{
+    const path p("foo/bar/");
+    const path q("/baz/woz");
+    BOOST_CHECK_EQUAL(p / q, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_directory_and_absolute_leaves_both_unchanged )
+{
+    const path p("foo/bar/");
+    const path q("/baz/woz");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar/"));
+    BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_directory_returns_concatenation )
+{
+    path p("foo/bar/");
+    const path q("/baz/woz");
+    BOOST_CHECK_EQUAL(p /= q, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_directory_changes_latter_to_concatenation )
+{
+    path p("foo/bar/");
+    const path q("/baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, path("foo/bar/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_directory_leaves_former_unchanged )
+{
+    path p("foo/bar/");
+    const path q("/baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_default_and_relative_returns_the_latter )
+{
+    const path p;
+    const path q("foo/bar");
+    BOOST_CHECK_EQUAL(p / q, q);
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_default_and_relative_leaves_both_unchanged )
+{
+    const path p;
+    const path q("foo/bar");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path());
+    BOOST_CHECK_EQUAL(q, path("foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_relative_to_default_returns_the_former )
+{
+    path p;
+    const path q("foo/bar");
+    BOOST_CHECK_EQUAL(p /= q, q);
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_relative_to_default_changes_latter_to_equal_former )
+{
+    path p;
+    const path q("foo/bar");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( appending_relative_to_default_leaves_former_unchanged )
+{
+    path p;
+    const path q("foo/bar");
+    p /= q;
+    BOOST_CHECK_EQUAL(q, path("foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_root_and_relative_returns_concatenation )
+{
+    const path p("/");
+    const path q("foo/bar");
+    BOOST_CHECK_EQUAL(p / q, path("/foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE(concatenating_root_and_relative_leaves_both_unchanged )
+{
+    const path p("/");
+    const path q("foo/bar");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path("/"));
+    BOOST_CHECK_EQUAL(q, path("foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_relative_to_root_returns_concatenation )
+{
+    path p("/");
+    const path q("foo/bar");
+    BOOST_CHECK_EQUAL(p /= q, path("/foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_relative_to_root_changes_latter_to_concatenation )
+{
+    path p("/");
+    const path q("foo/bar");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, path("/foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_relative_to_root_leaves_former_unchanged )
+{
+    path p("/");
+    const path q("foo/bar");
+    p /= q;
+    BOOST_CHECK_EQUAL(q, path("foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_root_and_root_paths_returns_root_path )
+{
+    const path p("/");
+    const path q("/");
+    BOOST_CHECK_EQUAL(p / q, path("/"));
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_root_and_root_paths_leaves_both_unchanged )
+{
+    const path p("/");
+    const path q("/");
+    p / q;
+    BOOST_CHECK_EQUAL(p, path("/"));
+    BOOST_CHECK_EQUAL(q, path("/"));
+}
+
+BOOST_AUTO_TEST_CASE( appending_root_path_to_root_path_returns_root_path )
+{
+    path p("/");
+    const path q("/");
+    BOOST_CHECK_EQUAL(p /= q, path("/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_root_path_to_root_path_leaves_both_operands_unchanged )
+{
+    path p("/");
+    const path q("/");
+    p /= q;
+    BOOST_CHECK_EQUAL(p, path("/"));
+    BOOST_CHECK_EQUAL(q, path("/"));
+}
+
 BOOST_AUTO_TEST_SUITE_END();
