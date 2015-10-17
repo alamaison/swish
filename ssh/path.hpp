@@ -38,6 +38,7 @@
 #define SSH_PATH_HPP
 
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/locale.hpp> // utf_to_utf
 #include <boost/operators.hpp>
 #include <boost/token_iterator.hpp> // token_iterator_generator, char_separator
 
@@ -146,6 +147,13 @@ inline int lexical_compare(
     }
 }
 
+template<typename Destination, typename Source>
+inline Destination convert(const Source& source)
+{
+    return boost::locale::conv::utf_to_utf<Destination::value_type>(
+        source, boost::locale::conv::stop);
+}
+
 }
 
 
@@ -195,6 +203,8 @@ private:
 public:
 
     path() {}
+    explicit path(const std::wstring& source)
+        : m_path(detail::convert<string_type>(source)) {}
     explicit path(const string_type& source) : m_path(source) {}
 
     bool is_relative() const
@@ -220,6 +230,16 @@ public:
     operator string_type() const
     {
         return native();
+    }
+
+    std::string u8string() const
+    {
+        return native();
+    }
+
+    std::wstring wstring() const
+    {
+        return detail::convert<std::wstring>(m_path);
     }
 
     int compare(const path& rhs) const
@@ -250,7 +270,15 @@ public:
         return *this;
     }
 
+    template<typename Source>
+    path& operator/=(const Source& rhs)
+    {
+        return (*this) /= path(rhs);
+    }
+
 private:
+    // IMPORTANT: The encoding of this path is UTF8, which is not necessarily
+    // the default encoding for strings of string_type
     string_type m_path;
 };
 
@@ -271,7 +299,8 @@ bool operator<(const path& lhs, const path& rhs)
     return lhs.compare(rhs) < 0;
 }
 
-path operator/(const path& lhs, const path& rhs)
+template<typename Source>
+path operator/(const path& lhs, const Source& rhs)
 {
     path concatenation(lhs);
     concatenation /= rhs;

@@ -36,9 +36,32 @@
 
 #include "ssh/path.hpp"
 
+#include <boost/locale.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
+#include <string>
+
 using ssh::filesystem::path;
+
+using std::string;
+
+namespace std {
+
+    ostream& operator<<(ostream& out, const wstring& wide_in)
+    {
+        out << boost::locale::conv::from_utf(
+            wide_in, boost::locale::util::get_system_locale());
+        return out;
+    }
+
+    inline ostream& operator<<(ostream& out, const wchar_t* wide_in)
+    {
+        out << wstring(wide_in);
+        return out;
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE(path_tests)
 
@@ -827,6 +850,86 @@ BOOST_AUTO_TEST_CASE(
     p /= q;
     BOOST_CHECK_EQUAL(p, path("/"));
     BOOST_CHECK_EQUAL(q, path("/"));
+}
+
+namespace {
+    const char UTF8_STRING1[] =
+        "\xe0\xa4\xae\xe0\xa4\xb9\xe0\xa4\xb8\xe0\xa5\x81\xe0\xa4\xb8";
+    const wchar_t WIDE_STRING1[] = L"\x92e\x939\x938\x941\x938";
+
+    const char UTF8_STRING2[] = "\xe4\xb8\xad\xe5\x9c\x8b";
+    const wchar_t WIDE_STRING2[] = L"\x4e2d\x570b";
+
+    const char UTF8_CONCATENATION[] =
+        "\xe0\xa4\xae\xe0\xa4\xb9\xe0\xa4\xb8\xe0\xa5\x81\xe0\xa4\xb8/"
+        "\xe4\xb8\xad\xe5\x9c\x8b";
+    const wchar_t WIDE_CONCATENATION[] =
+        L"\x92e\x939\x938\x941\x938/\x4e2d\x570b";
+}
+
+BOOST_AUTO_TEST_CASE( path_created_from_wide_string_is_equal_to_another )
+{
+    const path p(WIDE_STRING1);
+    const path q(WIDE_STRING1);
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE(
+    path_created_from_ascii_wide_string_is_equal_to_narrow_equivalent )
+{
+    // A non-ASCII narrow path may or may not be interpreted as the same string
+    // as the wide path, depending on OS.  On Windows, narrow strings are in the
+    // local code page
+    const path p(L"hello.txt");
+    const path q("hello.txt");
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+// TODO: Create and test a constructor that takes a std::locale parameter to
+// guide how the string is interpreted.  Allows passing UTF8 char strings on
+// Windows
+
+BOOST_AUTO_TEST_CASE(
+    path_created_from_wide_string_converts_explicitly_to_original_string )
+{
+    const path p(WIDE_STRING1);
+    BOOST_CHECK_EQUAL(p.wstring(), WIDE_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE(
+    path_created_from_wide_string_converts_explicitly_to_utf8_string )
+{
+    const path p(WIDE_STRING1);
+    BOOST_CHECK_EQUAL(p.u8string(), UTF8_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE( native_string_is_utf8 )
+{
+    const path p(WIDE_STRING1);
+    BOOST_CHECK_EQUAL(p.native(), UTF8_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE( implicit_string_conversion_is_utf8 )
+{
+    const path p(WIDE_STRING1);
+    const path::string_type s = p;
+    BOOST_CHECK_EQUAL(s, UTF8_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE( appending_wide_string_to_path_extends_path )
+{
+    path p(WIDE_STRING1);
+    p /= WIDE_STRING2;
+    const path q(WIDE_CONCATENATION);
+    BOOST_CHECK_EQUAL(p, q);
+    BOOST_CHECK_EQUAL(p.u8string(), UTF8_CONCATENATION);
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_wide_string_and_path_returns_concatenation )
+{
+    const path p(WIDE_STRING1);
+    const path q(WIDE_CONCATENATION);
+    BOOST_CHECK_EQUAL(p / WIDE_STRING2, q);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
