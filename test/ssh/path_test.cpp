@@ -36,6 +36,7 @@
 
 #include "ssh/path.hpp"
 
+#include <boost/filesystem/path.hpp>
 #include <boost/locale.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -43,7 +44,7 @@
 #include <string>
 
 using ssh::filesystem::path;
-
+//using boost::filesystem::path;
 using std::string;
 
 namespace std {
@@ -109,14 +110,14 @@ BOOST_AUTO_TEST_CASE( default_path_is_different_to_a_single_segment_path )
 BOOST_AUTO_TEST_CASE( default_path_converts_explicity_to_empty_string )
 {
     const path p;
-    BOOST_CHECK_EQUAL(p.native(), "");
+    BOOST_CHECK_EQUAL(p.native(), path::string_type());
 }
 
 BOOST_AUTO_TEST_CASE( default_path_converts_implicitly_to_empty_string )
 {
     const path p;
     const path::string_type s = p;
-    BOOST_CHECK_EQUAL(s, "");
+    BOOST_CHECK_EQUAL(s, path::string_type());
 }
 
 BOOST_AUTO_TEST_CASE( default_path_is_at_end_of_iteration )
@@ -136,6 +137,18 @@ BOOST_AUTO_TEST_CASE( default_path_is_not_absolute )
 {
     const path p;
     BOOST_CHECK(!p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( default_path_has_no_parent_path )
+{
+    const path p;
+    BOOST_CHECK(!p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( default_path_parent_path_is_empty )
+{
+    const path p;
+    BOOST_CHECK(p.parent_path().empty());
 }
 
 BOOST_AUTO_TEST_CASE( root_path_is_not_empty )
@@ -220,6 +233,15 @@ BOOST_AUTO_TEST_CASE( root_path_iterator_produces_original_path )
     BOOST_CHECK_EQUAL(*(p.begin()), path("/"));
 }
 
+BOOST_AUTO_TEST_CASE( root_path_iteration_is_bidirectional )
+{
+    const path p("/");
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = --p.end();
+    BOOST_CHECK_EQUAL(*it, path("/"));
+}
+
 BOOST_AUTO_TEST_CASE( root_path_is_not_relative )
 {
     const path p("/");
@@ -230,6 +252,18 @@ BOOST_AUTO_TEST_CASE( root_path_is_absolute )
 {
     const path p("/");
     BOOST_CHECK(p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( root_path_has_no_parent_path )
+{
+    const path p("/");
+    BOOST_CHECK(!p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( root_path_parent_path_is_empty )
+{
+    const path p("/");
+    BOOST_CHECK(p.parent_path().empty());
 }
 
 BOOST_AUTO_TEST_CASE( single_segment_absolute_path_is_not_empty )
@@ -332,6 +366,16 @@ BOOST_AUTO_TEST_CASE( single_segment_absolute_path_iterator_produces_root_and_fi
     BOOST_CHECK(it == p.end());
 }
 
+BOOST_AUTO_TEST_CASE( single_segment_absolute_path_iteration_is_bidirectional )
+{
+    const path p("/Test Filename.txt");
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = --p.end();
+    BOOST_CHECK_EQUAL(*it--, path("Test Filename.txt"));
+    BOOST_CHECK_EQUAL(*it, path("/"));
+}
+
 BOOST_AUTO_TEST_CASE( single_segment_absolute_path_is_not_relative )
 {
     const path p("/Test Filename.txt");
@@ -342,6 +386,30 @@ BOOST_AUTO_TEST_CASE( single_segment_absolute_path_is_absolute )
 {
     const path p("/Test Filename.txt");
     BOOST_CHECK(p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_absolute_path_has_parent_path )
+{
+    const path p("/Test Filename.txt");
+    BOOST_CHECK(p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_absolute_path_parent_path_is_root_path )
+{
+    const path p("/Test Filename.txt");
+    BOOST_CHECK_EQUAL(p.parent_path(), path("/"));
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_relative_path_has_no_parent_path )
+{
+    const path p("foo");
+    BOOST_CHECK(!p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_relative_path_parent_path_is_empty )
+{
+    const path p("foo");
+    BOOST_CHECK(p.parent_path().empty());
 }
 
 BOOST_AUTO_TEST_CASE( multi_segment_relative_path_is_not_empty )
@@ -444,6 +512,16 @@ BOOST_AUTO_TEST_CASE( multi_segment_relative_path_iterator_produces_dir_and_file
     BOOST_CHECK(it == p.end());
 }
 
+BOOST_AUTO_TEST_CASE( multi_segment_relative_path_iteration_is_bidirectional )
+{
+    const path p("Test Dir/Test Filename.txt");
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = --p.end();
+    BOOST_CHECK_EQUAL(*it--, path("Test Filename.txt"));
+    BOOST_CHECK_EQUAL(*it, path("Test Dir"));
+}
+
 BOOST_AUTO_TEST_CASE( multi_segment_relative_path_is_relative )
 {
     const path p("Test Dir/Test Filename.txt");
@@ -454,6 +532,48 @@ BOOST_AUTO_TEST_CASE( multi_segment_relative_path_is_not_absolute )
 {
     const path p("Test Dir/Test Filename.txt");
     BOOST_CHECK(!p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( multi_segment_relative_path_has_parent_path )
+{
+    const path p("Test Dir/Test Filename.txt");
+    BOOST_CHECK(p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE(
+    multi_segment_relative_path_parent_path_omits_last_segment )
+{
+    const path p("Test Dir/Test Filename.txt");
+    BOOST_CHECK_EQUAL(p.parent_path(), path("Test Dir"));
+}
+
+// NOTE: This behaviour seems very odd an anti-STL (non-interchangeable equal
+// values) however it seems to be required by the current C++ Standard proposal
+// (iteration ignores multiple separators, equality based on iteration).
+// Boost.Filesystem in 1.49 did _not_ have this beahviour, but I suspect the
+// recent changes to bring it into line with the standard may have introduced
+// that behaviour.
+//
+// TODO: Test what latest Boost.Filesystem behaviour is and, if necessary file a
+// bug with Boost and/or the C++ standard.
+BOOST_AUTO_TEST_CASE( multiple_adjacent_separators_do_not_affect_path_equality )
+{
+    const path p("foo//bar");
+    BOOST_CHECK_EQUAL(p, path("foo//bar"));
+    BOOST_CHECK_EQUAL(p, path("foo/bar"));
+    BOOST_CHECK_EQUAL(p, path("foo///bar"));
+}
+
+BOOST_AUTO_TEST_CASE( multiple_adjacent_separators_do_not_affect_iteration )
+{
+    const path p("foo//bar");
+
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = p.begin();
+    BOOST_CHECK_EQUAL(*it++, path("foo"));
+    BOOST_CHECK_EQUAL(*it++, path("bar"));
+    BOOST_CHECK(it == p.end());
 }
 
 BOOST_AUTO_TEST_CASE( directory_path_is_not_empty )
@@ -542,6 +662,42 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(*it++, path("bar"));
     BOOST_CHECK_EQUAL(*it++, path("."));
     BOOST_CHECK(it == p.end());
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_iteration_is_bidirectional )
+{
+    const path p("foo/bar/");
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = --p.end();
+    BOOST_CHECK_EQUAL(*it--, path("."));
+    BOOST_CHECK_EQUAL(*it--, path("bar"));
+    BOOST_CHECK_EQUAL(*it, path("foo"));
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_has_parent_path )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK(p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_parent_path_omit_trailing_slash )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK_EQUAL(p.parent_path(), path("foo/bar"));
+}
+
+BOOST_AUTO_TEST_CASE( dotted_directory_path_has_parent_path )
+{
+    const path p("foo/bar/.");
+    BOOST_CHECK(p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE(
+    dotted_directory_path_parent_path_omit_trailing_slash_and_dot )
+{
+    const path p("foo/bar/.");
+    BOOST_CHECK_EQUAL(p.parent_path(), path("foo/bar"));
 }
 
 BOOST_AUTO_TEST_CASE( relative_directory_path_is_relative )
