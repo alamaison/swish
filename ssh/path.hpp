@@ -641,10 +641,12 @@ inline path::iterator path::end() const
 }
 
 
-std::ostream& operator<<(std::ostream& stream, const path& p)
+template<typename CharT, typename Traits>
+inline std::basic_ostream<CharT, Traits>& operator<<(
+     std::basic_ostream<CharT, Traits>& stream, const path& p)
 {
     // TODO: quote string so it can roundtrip
-    stream << p.native();
+    stream << p.string<CharT, Traits>();
     return stream;
 }
 

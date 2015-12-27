@@ -41,18 +41,25 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 using ssh::filesystem::path;
+
+using boost::locale::conv::from_utf;
+using boost::locale::util::get_system_locale;
 //using boost::filesystem::path;
+
 using std::string;
+using std::stringstream;
+using std::wstring;
+using std::wstringstream;
 
 namespace std {
 
     ostream& operator<<(ostream& out, const wstring& wide_in)
     {
-        out << boost::locale::conv::from_utf(
-            wide_in, boost::locale::util::get_system_locale());
+        out << from_utf(wide_in, get_system_locale());
         return out;
     }
 
@@ -111,6 +118,22 @@ BOOST_AUTO_TEST_CASE( default_path_converts_explicity_to_empty_string )
 {
     const path p;
     BOOST_CHECK_EQUAL(p.native(), path::string_type());
+}
+
+BOOST_AUTO_TEST_CASE( default_path_streams_nothing_to_narrow_string )
+{
+    const path p;
+    stringstream ss;
+    ss << p;
+    BOOST_CHECK_EQUAL(ss.str(), string());
+}
+
+BOOST_AUTO_TEST_CASE( default_path_streams_nothing_to_wide_string )
+{
+    const path p;
+    wstringstream ss;
+    ss << p;
+    BOOST_CHECK_EQUAL(ss.str(), wstring());
 }
 
 BOOST_AUTO_TEST_CASE( default_path_converts_implicitly_to_empty_string )
