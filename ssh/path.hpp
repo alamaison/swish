@@ -648,18 +648,18 @@ std::ostream& operator<<(std::ostream& stream, const path& p)
     return stream;
 }
 
-bool operator==(const path& lhs, const path& rhs)
+inline bool operator==(const path& lhs, const path& rhs)
 {
     return lhs.compare(rhs) == 0;
 }
 
-bool operator<(const path& lhs, const path& rhs)
+inline bool operator<(const path& lhs, const path& rhs)
 {
     return lhs.compare(rhs) < 0;
 }
 
 template<typename Source>
-path operator/(const path& lhs, const Source& rhs)
+inline path operator/(const path& lhs, const Source& rhs)
 {
     path concatenation(lhs);
     concatenation /= rhs;
