@@ -37,6 +37,7 @@
 #ifndef SSH_PATH_HPP
 #define SSH_PATH_HPP
 
+#include <boost/algorithm/string.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/locale/encoding.hpp> // to_utf
 #include <boost/locale/generator.hpp>
@@ -273,7 +274,11 @@ public:
     {
         if (!empty())
         {
-            m_path = m_path + '/' + rhs.m_path;
+            string_type lhs_string = boost::algorithm::trim_right_copy_if(
+                m_path, boost::algorithm::is_any_of("/"));
+            string_type rhs_string = boost::algorithm::trim_left_copy_if(
+                rhs.m_path, boost::algorithm::is_any_of("/"));
+            m_path = lhs_string + '/' + rhs_string;
         }
         else
         {

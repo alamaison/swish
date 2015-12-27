@@ -763,6 +763,13 @@ BOOST_AUTO_TEST_CASE( concatenating_relative_paths_leaves_both_operands_unchange
     BOOST_CHECK_EQUAL(q, path("baz/woz"));
 }
 
+BOOST_AUTO_TEST_CASE( concatenating_relative_paths_inserts_single_separator )
+{
+    const path p("foo/bar");
+    const path q("baz/woz");
+    BOOST_CHECK_EQUAL((p / q).native(), "foo/bar/baz/woz");
+}
+
 BOOST_AUTO_TEST_CASE( appending_relative_path_to_another_returns_concatenation )
 {
     path p("foo/bar");
@@ -787,6 +794,14 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(q, path("baz/woz"));
 }
 
+BOOST_AUTO_TEST_CASE( appending_relative_path_to_another_inserts_single_separator )
+{
+    path p("foo/bar");
+    const path q("baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(p.native(), "foo/bar/baz/woz");
+}
+
 BOOST_AUTO_TEST_CASE(
     concatenating_relative_directory_paths_returns_concatenation )
 {
@@ -803,6 +818,14 @@ BOOST_AUTO_TEST_CASE(
     p / q;
     BOOST_CHECK_EQUAL(p, path("foo/bar/"));
     BOOST_CHECK_EQUAL(q, path("baz/woz/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_directory_paths_inserts_single_separator )
+{
+    const path p("foo/bar/");
+    const path q("baz/woz/");
+    BOOST_CHECK_EQUAL((p / q).native(), path("foo/bar/baz/woz/"));
 }
 
 BOOST_AUTO_TEST_CASE(
@@ -832,6 +855,15 @@ BOOST_AUTO_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_CASE(
+    appending_relative_directory_path_to_another_inserts_single_separator )
+{
+    path p("foo/bar/");
+    const path q("baz/woz/");
+    p /= q;
+    BOOST_CHECK_EQUAL(q.native(), "baz/woz/");
+}
+
+BOOST_AUTO_TEST_CASE(
     concatenating_relative_and_absolute_returns_concatenation )
 {
     const path p("foo/bar");
@@ -847,6 +879,14 @@ BOOST_AUTO_TEST_CASE(
     p / q;
     BOOST_CHECK_EQUAL(p, path("foo/bar"));
     BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_and_absolute_doesnt_insert_separator )
+{
+    const path p("foo/bar");
+    const path q("/baz/woz");
+    BOOST_CHECK_EQUAL((p / q).native(), "foo/bar/baz/woz");
 }
 
 BOOST_AUTO_TEST_CASE( appending_absolute_to_relative_returns_concatenation )
@@ -875,6 +915,15 @@ BOOST_AUTO_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_doesnt_insert_separator )
+{
+    path p("foo/bar");
+    const path q("/baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(q.native(), "/baz/woz");
+}
+
+BOOST_AUTO_TEST_CASE(
     concatenating_relative_directory_and_absolute_returns_concatenation )
 {
     const path p("foo/bar/");
@@ -890,6 +939,14 @@ BOOST_AUTO_TEST_CASE(
     p / q;
     BOOST_CHECK_EQUAL(p, path("foo/bar/"));
     BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    concatenating_relative_directory_and_absolute_collapses_adjoining_separators )
+{
+    const path p("foo/bar/");
+    const path q("/baz/woz");
+    BOOST_CHECK_EQUAL((p / q).native(), "foo/bar/baz/woz");
 }
 
 BOOST_AUTO_TEST_CASE(
@@ -916,6 +973,15 @@ BOOST_AUTO_TEST_CASE(
     const path q("/baz/woz");
     p /= q;
     BOOST_CHECK_EQUAL(q, path("/baz/woz"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_absolute_to_relative_directory_collapses_adjoining_separators )
+{
+    path p("foo/bar/");
+    const path q("/baz/woz");
+    p /= q;
+    BOOST_CHECK_EQUAL(p.native(), "foo/bar/baz/woz");
 }
 
 BOOST_AUTO_TEST_CASE( concatenating_default_and_relative_returns_the_latter )
@@ -974,6 +1040,13 @@ BOOST_AUTO_TEST_CASE(concatenating_root_and_relative_leaves_both_unchanged )
     BOOST_CHECK_EQUAL(q, path("foo/bar"));
 }
 
+BOOST_AUTO_TEST_CASE( concatenating_root_and_relative_doesnt_insert_separator )
+{
+    const path p("/");
+    const path q("foo/bar");
+    BOOST_CHECK_EQUAL((p / q).native(), "/foo/bar");
+}
+
 BOOST_AUTO_TEST_CASE( appending_relative_to_root_returns_concatenation )
 {
     path p("/");
@@ -998,6 +1071,14 @@ BOOST_AUTO_TEST_CASE( appending_relative_to_root_leaves_former_unchanged )
     BOOST_CHECK_EQUAL(q, path("foo/bar"));
 }
 
+BOOST_AUTO_TEST_CASE( appending_relative_to_root_doesnt_insert_separator )
+{
+    path p("/");
+    const path q("foo/bar");
+    p /= q;
+    BOOST_CHECK_EQUAL(p.native(), "/foo/bar");
+}
+
 BOOST_AUTO_TEST_CASE( concatenating_root_and_root_paths_returns_root_path )
 {
     const path p("/");
@@ -1012,6 +1093,13 @@ BOOST_AUTO_TEST_CASE( concatenating_root_and_root_paths_leaves_both_unchanged )
     p / q;
     BOOST_CHECK_EQUAL(p, path("/"));
     BOOST_CHECK_EQUAL(q, path("/"));
+}
+
+BOOST_AUTO_TEST_CASE( concatenating_root_and_root_paths_collapses_separators )
+{
+    const path p("/");
+    const path q("/");
+    BOOST_CHECK_EQUAL((p / q).native(), "/");
 }
 
 BOOST_AUTO_TEST_CASE( appending_root_path_to_root_path_returns_root_path )
@@ -1029,6 +1117,15 @@ BOOST_AUTO_TEST_CASE(
     p /= q;
     BOOST_CHECK_EQUAL(p, path("/"));
     BOOST_CHECK_EQUAL(q, path("/"));
+}
+
+BOOST_AUTO_TEST_CASE(
+    appending_root_path_to_root_path_collapses_separators )
+{
+    path p("/");
+    const path q("/");
+    p /= q;
+    BOOST_CHECK_EQUAL(p.native(), "/");
 }
 
 namespace {
