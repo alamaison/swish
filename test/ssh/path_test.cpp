@@ -325,6 +325,146 @@ BOOST_AUTO_TEST_CASE( root_path_relative_path_is_empty )
     BOOST_CHECK(p.relative_path().empty());
 }
 
+BOOST_AUTO_TEST_CASE( dot_path_is_not_empty )
+{
+    const path p(".");
+    BOOST_CHECK(!p.empty());
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_equal_to_itself )
+{
+    const path p(".");
+    BOOST_CHECK_EQUAL(p, p);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_filename_is_the_dot_path )
+{
+    const path p(".");
+    BOOST_CHECK_EQUAL(p.filename(), path("."));
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_equal_to_another_dot_path )
+{
+    const path p(".");
+    const path q(".");
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_different_to_a_non_dot_path )
+{
+    const path p(".");
+    const path q("foo");
+    BOOST_CHECK_NE(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_different_to_the_root_path )
+{
+    const path p(".");
+    const path q("/");
+    BOOST_CHECK_NE(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_different_to_a_directory_path )
+{
+    const path p(".");
+    const path q("foo/");
+    BOOST_CHECK_NE(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_different_to_a_default_path )
+{
+    const path p(".");
+    const path q;
+    BOOST_CHECK_NE(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_equal_to_a_constructed_copy )
+{
+    const path p(".");
+    const path q(p);
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_equal_to_an_assigned_copy )
+{
+    const path p(".");
+    path q;
+    q = p;
+    BOOST_CHECK_EQUAL(p, q);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_converts_explicity_to_dot_string )
+{
+    const path p(".");
+    BOOST_CHECK_EQUAL(p.native(), ".");
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_converts_implicitly_to_dot_string )
+{
+    const path p(".");
+    const path::string_type s = p;
+    BOOST_CHECK_EQUAL(s, ".");
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_can_iterate_once )
+{
+    const path p(".");
+    BOOST_CHECK(p.begin() != p.end());
+    BOOST_CHECK_EQUAL(std::distance(p.begin(), p.end()), 1);
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_iterator_produces_original_path )
+{
+    const path p(".");
+    BOOST_REQUIRE(p.begin() != p.end());
+    BOOST_CHECK_EQUAL(*(p.begin()), path("."));
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_iteration_is_bidirectional )
+{
+    const path p(".");
+    BOOST_REQUIRE(p.begin() != p.end());
+
+    path::iterator it = --p.end();
+    BOOST_CHECK_EQUAL(*it, path("."));
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_relative )
+{
+    const path p(".");
+    BOOST_CHECK(p.is_relative());
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_not_absolute )
+{
+    const path p(".");
+    BOOST_CHECK(!p.is_absolute());
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_has_no_parent_path )
+{
+    const path p(".");
+    BOOST_CHECK(!p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_parent_path_is_empty )
+{
+    const path p(".");
+    BOOST_CHECK(p.parent_path().empty());
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_has_relative_path )
+{
+    const path p(".");
+    BOOST_CHECK(p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE( dot_path_is_its_own_relative_path )
+{
+    const path p(".");
+    BOOST_CHECK_EQUAL(p.relative_path(), p);
+}
+
 BOOST_AUTO_TEST_CASE( single_segment_absolute_path_is_not_empty )
 {
     const path p("/Test Filename.txt");
