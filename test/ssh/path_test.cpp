@@ -1122,6 +1122,20 @@ BOOST_AUTO_TEST_CASE( path_contructs_implicitly_from_wide_string )
     BOOST_CHECK_EQUAL(p.string(), "hello");
 }
 
+BOOST_AUTO_TEST_CASE( path_contructs_from_narrow_range )
+{
+    const string s = "hello";
+    path p(s.begin(), s.end());
+    BOOST_CHECK_EQUAL(p.string(), "hello");
+}
+
+BOOST_AUTO_TEST_CASE( path_contructs_from_wide_range )
+{
+    const wstring s = L"hello";
+    path p(s.begin(), s.end());
+    BOOST_CHECK_EQUAL(p.string(), "hello");
+}
+
 BOOST_AUTO_TEST_CASE( appending_wide_string_to_path_extends_path )
 {
     path p(WIDE_STRING1);

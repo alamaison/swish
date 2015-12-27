@@ -196,13 +196,8 @@ public:
     path(const Source& source) : m_path(detail::from_source(source)) {}
 
     template<typename InputIterator>
-    path(const InputIterator& begin, const InputIterator& end)
-    {
-        for (InputIterator position = begin; position != end; ++position)
-        {
-            (*this) /= (*position);
-        }
-    }
+    path(const InputIterator& begin, const InputIterator& end) :
+        m_path(detail::from_source(begin, end)) {}
 
     bool is_relative() const
     {
@@ -294,6 +289,18 @@ public:
     }
 
 private:
+
+    template<typename InputIterator>
+    static path path_from_range(const InputIterator& begin, const InputIterator& end)
+    {
+        path p;
+        for (InputIterator position = begin; position != end; ++position)
+        {
+            p /= *position;
+        }
+        return p;
+    }
+
     std::string from_utf(const std::locale& locale) const
     {
         return boost::locale::conv::from_utf<char>(
@@ -614,7 +621,7 @@ inline path path::parent_path() const
     }
     else
     {
-        return path(begin(), --end());
+        return path_from_range(begin(), --end());
     }
 }
 
