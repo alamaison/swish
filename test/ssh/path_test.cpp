@@ -79,6 +79,12 @@ BOOST_AUTO_TEST_CASE( default_path_is_empty )
     BOOST_CHECK(p.empty());
 }
 
+BOOST_AUTO_TEST_CASE( default_path_filename_is_empty )
+{
+    const path p;
+    BOOST_CHECK(p.filename().empty());
+}
+
 BOOST_AUTO_TEST_CASE( default_path_is_equal_to_itself )
 {
     const path p;
@@ -174,6 +180,18 @@ BOOST_AUTO_TEST_CASE( default_path_parent_path_is_empty )
     BOOST_CHECK(p.parent_path().empty());
 }
 
+BOOST_AUTO_TEST_CASE( default_path_has_no_relative_path )
+{
+    const path p;
+    BOOST_CHECK(!p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE( default_path_relative_path_is_empty )
+{
+    const path p;
+    BOOST_CHECK(p.relative_path().empty());
+}
+
 BOOST_AUTO_TEST_CASE( root_path_is_not_empty )
 {
     const path p("/");
@@ -184,6 +202,12 @@ BOOST_AUTO_TEST_CASE( root_path_is_equal_to_itself )
 {
     const path p("/");
     BOOST_CHECK_EQUAL(p, p);
+}
+
+BOOST_AUTO_TEST_CASE( root_path_filename_is_the_root_path )
+{
+    const path p("/");
+    BOOST_CHECK_EQUAL(p.filename(), path("/"));
 }
 
 BOOST_AUTO_TEST_CASE( root_path_is_equal_to_another_root_path )
@@ -289,10 +313,28 @@ BOOST_AUTO_TEST_CASE( root_path_parent_path_is_empty )
     BOOST_CHECK(p.parent_path().empty());
 }
 
+BOOST_AUTO_TEST_CASE( root_path_has_no_relative_path )
+{
+    const path p("/");
+    BOOST_CHECK(!p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE( root_path_relative_path_is_empty )
+{
+    const path p("/");
+    BOOST_CHECK(p.relative_path().empty());
+}
+
 BOOST_AUTO_TEST_CASE( single_segment_absolute_path_is_not_empty )
 {
     const path p("/Test Filename.txt");
     BOOST_CHECK(!p.empty());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_absolute_path_filename_excludes_root )
+{
+    const path p("/Test Filename.txt");
+    BOOST_CHECK_EQUAL(p.filename(), path("Test Filename.txt"));
 }
 
 BOOST_AUTO_TEST_CASE( single_segment_absolute_path_is_equal_to_itself )
@@ -423,6 +465,24 @@ BOOST_AUTO_TEST_CASE( single_segment_absolute_path_parent_path_is_root_path )
     BOOST_CHECK_EQUAL(p.parent_path(), path("/"));
 }
 
+BOOST_AUTO_TEST_CASE( single_segment_absolute_path_has_relative_path )
+{
+    const path p("/Test Filename.txt");
+    BOOST_CHECK(p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_absolute_path_relative_path_is_filename_path )
+{
+    const path p("/Test Filename.txt");
+    BOOST_CHECK_EQUAL(p.relative_path(), p.filename());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_relative_path_filename_is_the_single_segment )
+{
+    const path p("foo");
+    BOOST_CHECK_EQUAL(p, path("foo"));
+}
+
 BOOST_AUTO_TEST_CASE( single_segment_relative_path_has_no_parent_path )
 {
     const path p("foo");
@@ -435,10 +495,28 @@ BOOST_AUTO_TEST_CASE( single_segment_relative_path_parent_path_is_empty )
     BOOST_CHECK(p.parent_path().empty());
 }
 
+BOOST_AUTO_TEST_CASE( single_segment_relative_path_has_relative_path )
+{
+    const path p("foo");
+    BOOST_CHECK(p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE( single_segment_is_its_own_relative_path )
+{
+    const path p("foo");
+    BOOST_CHECK_EQUAL(p.relative_path(), p);
+}
+
 BOOST_AUTO_TEST_CASE( multi_segment_relative_path_is_not_empty )
 {
     const path p("Test Dir/Test Filename.txt");
     BOOST_CHECK(!p.empty());
+}
+
+BOOST_AUTO_TEST_CASE( multi_segment_relative_path_filename_is_last_segment )
+{
+    const path p("Test Dir/Test Filename.txt");
+    BOOST_CHECK_EQUAL(p.filename(), path("Test Filename.txt"));
 }
 
 BOOST_AUTO_TEST_CASE( multi_segment_relative_path_is_equal_to_itself )
@@ -570,6 +648,19 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(p.parent_path(), path("Test Dir"));
 }
 
+BOOST_AUTO_TEST_CASE( multi_segment_relative_path_has_relative_path )
+{
+    const path p("Test Dir/Test Filename.txt");
+    BOOST_CHECK(p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE(
+    multi_segment_relative_path_is_its_own_relative_path )
+{
+    const path p("Test Dir/Test Filename.txt");
+    BOOST_CHECK_EQUAL(p.relative_path(), p);
+}
+
 // NOTE: This behaviour seems very odd an anti-STL (non-interchangeable equal
 // values) however it seems to be required by the current C++ Standard proposal
 // (iteration ignores multiple separators, equality based on iteration).
@@ -599,10 +690,22 @@ BOOST_AUTO_TEST_CASE( multiple_adjacent_separators_do_not_affect_iteration )
     BOOST_CHECK(it == p.end());
 }
 
+BOOST_AUTO_TEST_CASE( multiple_adjacent_separators_do_not_affect_filename )
+{
+    const path p("foo//bar");
+    BOOST_CHECK_EQUAL(p.filename(), path("bar"));
+}
+
 BOOST_AUTO_TEST_CASE( directory_path_is_not_empty )
 {
     const path p("foo/bar/");
     BOOST_CHECK(!p.empty());
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_filename_is_dot )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK_EQUAL(p.filename(), path("."));
 }
 
 BOOST_AUTO_TEST_CASE( directory_path_is_equal_to_itself )
@@ -710,10 +813,28 @@ BOOST_AUTO_TEST_CASE( directory_path_parent_path_omit_trailing_slash )
     BOOST_CHECK_EQUAL(p.parent_path(), path("foo/bar"));
 }
 
+BOOST_AUTO_TEST_CASE( directory_path_has_relative_path )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK(p.has_relative_path());
+}
+
+BOOST_AUTO_TEST_CASE( directory_path_is_its_own_relative_path )
+{
+    const path p("foo/bar/");
+    BOOST_CHECK_EQUAL(p.relative_path(), p);
+}
+
 BOOST_AUTO_TEST_CASE( dotted_directory_path_has_parent_path )
 {
     const path p("foo/bar/.");
     BOOST_CHECK(p.has_parent_path());
+}
+
+BOOST_AUTO_TEST_CASE( dotted_directory_path_filename_is_dot )
+{
+    const path p("foo/bar/.");
+    BOOST_CHECK_EQUAL(p.filename(), path("."));
 }
 
 BOOST_AUTO_TEST_CASE(

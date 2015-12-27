@@ -222,6 +222,20 @@ public:
 
     path parent_path() const;
 
+    bool has_relative_path() const
+    {
+        return !relative_path().empty();
+    }
+
+    path relative_path() const;
+
+    bool has_filename() const
+    {
+        return !filename().empty();
+    }
+
+    path filename() const;
+
     string_type native() const
     {
         return m_path;
@@ -627,6 +641,30 @@ inline path path::parent_path() const
     else
     {
         return path_from_range(begin(), --end());
+    }
+}
+
+inline path path::relative_path() const
+{
+    if (is_relative())
+    {
+        return *this;
+    }
+    else
+    {
+        return path_from_range(++begin(), end());
+    }
+}
+
+inline path path::filename() const
+{
+    if (empty())
+    {
+        return path();
+    }
+    else
+    {
+        return path_from_range(--end(), end());
     }
 }
 
