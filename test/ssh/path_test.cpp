@@ -1065,11 +1065,61 @@ BOOST_AUTO_TEST_CASE( native_string_is_utf8 )
     BOOST_CHECK_EQUAL(p.native(), UTF8_STRING1);
 }
 
+BOOST_AUTO_TEST_CASE( narrow_string_accessor_is_utf8 )
+{
+    const path p(WIDE_STRING1);
+    string narrow(p.string<string::value_type, string::traits_type>());
+    BOOST_CHECK_EQUAL(narrow, UTF8_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE( wide_string_accessor_preserves_wide_string )
+{
+    const path p(WIDE_STRING1);
+    wstring wide(p.string<wstring::value_type, wstring::traits_type>());
+    BOOST_CHECK_EQUAL(wide, WIDE_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE( string_conversion_to_local_codepage_works )
+{
+    // Can't test non-ASCII conversion because the chars may not be supported in
+    // the local codepage
+    const path p("hello");
+    BOOST_CHECK_EQUAL(p.string(), "hello");
+}
+
 BOOST_AUTO_TEST_CASE( implicit_string_conversion_is_utf8 )
 {
     const path p(WIDE_STRING1);
     const path::string_type s = p;
     BOOST_CHECK_EQUAL(s, UTF8_STRING1);
+}
+
+BOOST_AUTO_TEST_CASE( path_contructs_implicitly_from_narrow_pointer )
+{
+    const char* s = "hello";
+    path p = s;
+    BOOST_CHECK_EQUAL(p.string(), "hello");
+}
+
+BOOST_AUTO_TEST_CASE( path_contructs_implicitly_from_wide_pointer )
+{
+    const wchar_t* s = L"hello";
+    path p = s;
+    BOOST_CHECK_EQUAL(p.string(), "hello");
+}
+
+BOOST_AUTO_TEST_CASE( path_contructs_implicitly_from_narrow_string )
+{
+    const string s = "hello";
+    path p = s;
+    BOOST_CHECK_EQUAL(p.string(), "hello");
+}
+
+BOOST_AUTO_TEST_CASE( path_contructs_implicitly_from_wide_string )
+{
+    const wstring s = L"hello";
+    path p = s;
+    BOOST_CHECK_EQUAL(p.string(), "hello");
 }
 
 BOOST_AUTO_TEST_CASE( appending_wide_string_to_path_extends_path )

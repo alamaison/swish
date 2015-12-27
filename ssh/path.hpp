@@ -38,10 +38,13 @@
 #define SSH_PATH_HPP
 
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/locale.hpp> // utf_to_utf
+#include <boost/locale/encoding.hpp> // to_utf
+#include <boost/locale/generator.hpp>
+#include <boost/locale/util.hpp> // get_system_locale
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <locale>
 #include <ostream>
 #include <stdexcept> // logic_error
 #include <string>
@@ -98,13 +101,6 @@ inline int lexical_compare(
     }
 }
 
-template<typename Destination, typename Source>
-inline Destination convert(const Source& source)
-{
-    return boost::locale::conv::utf_to_utf<Destination::value_type>(
-        source, boost::locale::conv::stop);
-}
-
 template<typename StringType>
 inline typename StringType::size_type find_next_slash(
     const StringType& string, typename StringType::size_type starting_position)
@@ -149,6 +145,40 @@ inline typename StringType::size_type find_previous_non_slash(
     return StringType::npos;
 }
 
+inline std::locale utf8_locale()
+{
+    return boost::locale::generator().generate(
+        boost::locale::util::get_system_locale(true));
+}
+
+inline std::locale system_locale()
+{
+    return boost::locale::generator().generate(
+        boost::locale::util::get_system_locale(false));
+}
+
+inline std::string from_source(const std::string& source)
+{
+    return boost::locale::conv::to_utf<char>(source, detail::utf8_locale(),
+                                             boost::locale::conv::stop);
+}
+
+inline std::string from_source(const std::wstring& source)
+{
+    return boost::locale::conv::utf_to_utf<char>(source,
+                                                 boost::locale::conv::stop);
+}
+
+template<typename InputIterator>
+inline std::string from_source(
+    const InputIterator& begin, const InputIterator& end)
+{
+    typedef std::basic_string<typename std::iterator_traits<InputIterator>::value_type>
+        string_type;
+    string_type source_string(begin, end);
+    return from_source(source_string);
+}
+
 }
 
 
@@ -161,9 +191,9 @@ public:
     typedef iterator const_iterator;
 
     path() {}
-    explicit path(const std::wstring& source)
-        : m_path(detail::convert<string_type>(source)) {}
-    explicit path(const string_type& source) : m_path(source) {}
+
+    template<typename Source>
+    path(const Source& source) : m_path(detail::from_source(source)) {}
 
     template<typename InputIterator>
     path(const InputIterator& begin, const InputIterator& end)
@@ -206,14 +236,36 @@ public:
         return native();
     }
 
+    template<typename CharT, typename Traits>
+    std::basic_string<CharT, Traits> string() const;
+
+    template<>
+    std::string string() const
+    {
+        return native();
+    }
+
+    template<>
+    std::wstring string() const
+    {
+        return boost::locale::conv::utf_to_utf<wchar_t>(m_path);
+    }
+
     std::string u8string() const
     {
         return native();
     }
 
+    std::string string() const
+    {
+        // Native string is UTF-8 but this method returns string in
+        // platform-native encoding
+        return from_utf(detail::system_locale());
+    }
+
     std::wstring wstring() const
     {
-        return detail::convert<std::wstring>(m_path);
+        return string<std::wstring::value_type, std::wstring::traits_type>();
     }
 
     int compare(const path& rhs) const;
@@ -242,6 +294,12 @@ public:
     }
 
 private:
+    std::string from_utf(const std::locale& locale) const
+    {
+        return boost::locale::conv::from_utf<char>(
+            m_path, locale, boost::locale::conv::stop);
+    }
+
     // IMPORTANT: The encoding of this path is UTF8, which is not necessarily
     // the default encoding for strings of string_type
     string_type m_path;
