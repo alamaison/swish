@@ -34,7 +34,8 @@
 #include <washer/shell/pidl.hpp> // apidl_t
 #include <washer/shell/shell_item.hpp> // pidl_shell_item
 
-#include <boost/filesystem.hpp> // path
+#include <ssh/path.hpp>
+
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -56,7 +57,7 @@ public:
         const std::wstring& filename)
         : m_remote_directory(remote_directory), m_filename(filename)
     {
-        if (boost::filesystem::path(m_filename).has_parent_path())
+        if (ssh::filesystem::path(m_filename).has_parent_path())
             BOOST_THROW_EXCEPTION(
                 std::logic_error(
                     "Path not properly resolved; filename expected"));
@@ -72,7 +73,7 @@ public:
         return m_filename;
     }
 
-    boost::filesystem::path as_absolute_path() const
+    ssh::filesystem::path as_absolute_path() const
     {
         return swish::remote_folder::absolute_path_from_swish_pidl(
             m_remote_directory) / m_filename;
@@ -97,10 +98,10 @@ class SftpDestination
 public:
     SftpDestination(
         const washer::shell::pidl::apidl_t& remote_root,
-        const boost::filesystem::path& relative_path)
+        const ssh::filesystem::path& relative_path)
         : m_remote_root(remote_root), m_relative_path(relative_path)
     {
-        if (relative_path.has_root_directory())
+        if (relative_path.is_absolute())
             BOOST_THROW_EXCEPTION(
                 std::logic_error("Path must be relative to root"));
     }
@@ -110,7 +111,7 @@ public:
         washer::shell::pidl::apidl_t directory = m_remote_root;
 
         BOOST_FOREACH(
-            boost::filesystem::path intermediate_directory_name,
+            ssh::filesystem::path intermediate_directory_name,
             m_relative_path.parent_path())
         {
             directory += swish::remote_folder::create_remote_itemid(
@@ -123,7 +124,7 @@ public:
             directory, m_relative_path.filename().wstring());
     }
 
-    SftpDestination operator/(const boost::filesystem::path& path) const
+    SftpDestination operator/(const ssh::filesystem::path& path) const
     {
         return SftpDestination(m_remote_root, m_relative_path / path);
     }
@@ -138,7 +139,7 @@ public:
 
 private:
     washer::shell::pidl::apidl_t m_remote_root;
-    boost::filesystem::path m_relative_path;
+    ssh::filesystem::path m_relative_path;
 };
 
 }}

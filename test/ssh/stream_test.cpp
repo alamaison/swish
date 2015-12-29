@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -85,9 +85,20 @@ public:
 
     using sandbox_fixture::new_file_in_sandbox;
 
-    path new_file_in_sandbox(const string& data)
+    path new_file_in_sandbox_containing_data(const string& data)
     {
         path p = new_file_in_sandbox();
+        boost::filesystem::ofstream s(p);
+
+        s.write(data.data(), data.size());
+
+        return p;
+    }
+
+    path new_file_in_sandbox_containing_data(
+        const boost::filesystem::path& name, const string& data)
+    {
+        path p = new_file_in_sandbox(name);
         boost::filesystem::ofstream s(p);
 
         s.write(data.data(), data.size());
@@ -165,6 +176,8 @@ void make_file_read_only(const path& target)
     }
 }
 
+const wchar_t WIDE_STRING1[] = L"\x92e\x939\x938\x941\x938";
+
 }
 
 BOOST_AUTO_TEST_SUITE(stream_tests)
@@ -194,7 +207,24 @@ BOOST_AUTO_TEST_CASE( input_stream_multiple_streams_to_same_file )
 
 BOOST_AUTO_TEST_CASE( input_stream_readable )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
+
+    ssh::filesystem::ifstream s(filesystem(), to_remote_path(target));
+
+    string bob;
+
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "gobbledy");
+    BOOST_CHECK(s >> bob);
+    BOOST_CHECK_EQUAL(bob, "gook");
+    BOOST_CHECK(!(s >> bob));
+    BOOST_CHECK(s.eof());
+}
+
+BOOST_AUTO_TEST_CASE( input_stream_unicode_readable )
+{
+    path target = new_file_in_sandbox_containing_data(
+        WIDE_STRING1, "gobbledy gook");
 
     ssh::filesystem::ifstream s(filesystem(), to_remote_path(target));
 
@@ -213,7 +243,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_multiple_buffers )
     // large enough to span multiple buffers
     string expected_data(large_data());
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -235,7 +265,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_no_buffer )
 {
     string expected_data("gobbeldy gook");
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -256,7 +286,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data )
 {
     string expected_data("gobbledy gook\0after-null\x12\11", 26);
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -277,7 +307,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_multiple_buffers )
     // large enough to span multiple buffers
     string expected_data(large_binary_data());
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -297,7 +327,7 @@ BOOST_AUTO_TEST_CASE( input_stream_readable_binary_data_stream_op )
 {
     string expected_data("gobbledy gook\0after-null\x12\x11", 26);
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -324,6 +354,20 @@ BOOST_AUTO_TEST_CASE( input_stream_does_not_create_by_default )
         ssh::filesystem::ifstream(filesystem(), to_remote_path(target)), system_error);
     BOOST_CHECK(!exists(target));
 }
+
+/* FIXME: find why this is failing in libssh2
+BOOST_AUTO_TEST_CASE(
+    input_stream_does_not_create_with_ridiculously_large_filename )
+{
+    // We intentionally pass a large amount of data as the filename.
+    // When we did this accidentally, we found it was not getting an error code but hit an assertion because opening the file failed.
+    path target = large_data();
+    BOOST_REQUIRE(!exists(target));
+    BOOST_CHECK_THROW(
+        ssh::filesystem::ifstream(filesystem(), to_remote_path(target)), system_error);
+    BOOST_CHECK(!exists(target));
+}
+*/
 
 BOOST_AUTO_TEST_CASE( input_stream_opens_read_only_by_default )
 {
@@ -435,7 +479,7 @@ BOOST_AUTO_TEST_CASE( input_stream_out_trunc_noreplace_flag_fails )
 
 BOOST_AUTO_TEST_CASE( input_stream_seek_input_absolute )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ifstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::beg);
@@ -447,7 +491,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_absolute )
 
 BOOST_AUTO_TEST_CASE( input_stream_seek_input_relative )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ifstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::cur);
@@ -460,7 +504,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_relative )
 
 BOOST_AUTO_TEST_CASE( input_stream_seek_input_end )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ifstream s(filesystem(), to_remote_path(target));
     s.seekg(-3, std::ios_base::end);
@@ -485,7 +529,7 @@ BOOST_AUTO_TEST_CASE( input_stream_seek_input_too_far_absolute )
 
 BOOST_AUTO_TEST_CASE( input_stream_seek_input_too_far_relative )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ifstream s(filesystem(), to_remote_path(target));
     s.exceptions(
@@ -744,7 +788,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_flag_creates )
 
 BOOST_AUTO_TEST_CASE( output_stream_out_flag_truncates )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     {
         ssh::filesystem::ofstream remote_stream(
@@ -845,7 +889,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_flag_updates )
     // out flag on an input stream leaves the existing contents because the
     // input stream forces the in flag and in|out means update existing
 
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     {
         ssh::filesystem::ofstream remote_stream(
@@ -929,7 +973,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_trunc_noreplace_flag_fails )
 
 BOOST_AUTO_TEST_CASE( output_stream_out_trunc_flag_truncates )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     {
         ssh::filesystem::ofstream remote_stream(
@@ -963,7 +1007,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_out_trunc_flag_creates )
 
 BOOST_AUTO_TEST_CASE( output_stream_in_out_trunc_flag_truncates )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     {
         ssh::filesystem::ofstream remote_stream(
@@ -997,7 +1041,7 @@ BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_creates )
 
 BOOST_AUTO_TEST_CASE( output_stream_out_append_flag_appends )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     {
         ssh::filesystem::ofstream remote_stream(
@@ -1070,7 +1114,7 @@ BOOST_AUTO_TEST_CASE( output_stream_in_flag_fails_to_open_read_only )
 // with NUL
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_absolute_overshoot )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(2, std::ios_base::beg);
@@ -1093,7 +1137,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_absolute_overshoot )
 
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_absolute )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target), openmode::in);
     s.seekp(1, std::ios_base::beg);
@@ -1115,7 +1159,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_absolute )
 // with NUL
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_relative_overshoot )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::cur);
@@ -1139,7 +1183,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_relative_overshoot )
 
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_relative )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target), openmode::in);
     s.seekp(1, std::ios_base::cur);
@@ -1163,7 +1207,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_relative )
 // inserted anywhere
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_end )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(0, std::ios_base::end);
@@ -1187,7 +1231,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_end )
 // be filled with NUL.
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_end_overshoot )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target));
     s.seekp(3, std::ios_base::end);
@@ -1210,7 +1254,7 @@ BOOST_AUTO_TEST_CASE( output_stream_seek_output_end_overshoot )
 
 BOOST_AUTO_TEST_CASE( output_stream_seek_output_before_end )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::ofstream s(filesystem(), to_remote_path(target), openmode::in);
     s.seekp(-3, std::ios_base::end);
@@ -1295,7 +1339,7 @@ BOOST_AUTO_TEST_CASE( io_stream_in_flag_opens_read_only )
 
 BOOST_AUTO_TEST_CASE( io_stream_readable )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
 
@@ -1313,7 +1357,7 @@ BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data )
 {
     string expected_data("gobbledy gook\0after-null\x12\11", 26);
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -1333,7 +1377,7 @@ BOOST_AUTO_TEST_CASE( io_stream_readable_binary_data_stream_op )
 {
     string expected_data("gobbledy gook\0after-null\x12\x11", 26);
 
-    path target = new_file_in_sandbox(expected_data);
+    path target = new_file_in_sandbox_containing_data(expected_data);
 
     sftp_filesystem& chan = filesystem();
 
@@ -1528,7 +1572,7 @@ BOOST_AUTO_TEST_CASE( io_stream_write_binary_data_stream_op )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_input_absolute )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::beg);
@@ -1540,7 +1584,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_absolute )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_input_relative )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekg(1, std::ios_base::cur);
@@ -1553,7 +1597,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_relative )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_input_end )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekg(-3, std::ios_base::end);
@@ -1578,7 +1622,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_absolute )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_relative )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.exceptions(
@@ -1592,7 +1636,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_input_too_far_relative )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_output_absolute )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::beg);
@@ -1611,7 +1655,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_output_absolute )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_output_relative )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::cur);
@@ -1631,7 +1675,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_output_relative )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_output_end )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekp(-3, std::ios_base::end);
@@ -1652,7 +1696,7 @@ BOOST_AUTO_TEST_CASE( io_stream_seek_output_end )
 
 BOOST_AUTO_TEST_CASE( io_stream_seek_interleaved )
 {
-    path target = new_file_in_sandbox("gobbledy gook");
+    path target = new_file_in_sandbox_containing_data("gobbledy gook");
 
     ssh::filesystem::fstream s(filesystem(), to_remote_path(target));
     s.seekp(1, std::ios_base::beg);
@@ -1702,8 +1746,8 @@ namespace {
 
 BOOST_AUTO_TEST_CASE( stream_read_on_different_threads )
 {
-    path target1 = new_file_in_sandbox("humpty dumpty sat");
-    path target2 = new_file_in_sandbox("on the wall");
+    path target1 = new_file_in_sandbox_containing_data("humpty dumpty sat");
+    path target2 = new_file_in_sandbox_containing_data("on the wall");
 
     sftp_filesystem& chan = filesystem();
 
@@ -1731,7 +1775,7 @@ BOOST_AUTO_TEST_CASE( parallel_file_closing )
 {
     string data = large_data();
 
-    path read_me = new_file_in_sandbox(data);
+    path read_me = new_file_in_sandbox_containing_data(data);
     path test_me = new_file_in_sandbox();
 
     ssh::filesystem::ifstream stream1(filesystem(), to_remote_path(read_me));

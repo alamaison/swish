@@ -172,7 +172,7 @@ namespace { // private
         std::auto_ptr<Progress> progress()
         { return std::auto_ptr<Progress>(new ProgressStub()); }
 
-        bool can_overwrite(const path&)
+        bool can_overwrite(const ssh::filesystem::path&)
         { throw std::exception("unexpected request to confirm overwrite"); }
 
         void handle_last_exception() {}
@@ -181,13 +181,13 @@ namespace { // private
     class ForbidOverwrite : public CopyCallbackStub
     {
     public:
-        bool can_overwrite(const path&) { return false; }
+        bool can_overwrite(const ssh::filesystem::path&) { return false; }
     };
 
     class AllowOverwrite : public CopyCallbackStub
     {
     public:
-        bool can_overwrite(const path&) { return true; }
+        bool can_overwrite(const ssh::filesystem::path&) { return true; }
     };
 
     class DropTargetFixture : public PidlFixture

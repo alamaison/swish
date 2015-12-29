@@ -31,7 +31,7 @@
 #include "test/common_boost/fixtures.hpp" // ComFixture
 #include "test/common_boost/ProviderFixture.hpp" // ProviderFixture
 
-#include <boost/filesystem/path.hpp> // path
+#include <ssh/path.hpp>
 
 #include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 
@@ -54,7 +54,7 @@ public:
      * shortcut path set to the remote directory.
      */
     washer::shell::pidl::apidl_t directory_pidl(
-        const boost::filesystem::path& directory);
+        const ssh::filesystem::path& directory);
 
     /**
      * Return an absolute PIDL to the sandbox on the remote end.
@@ -70,7 +70,7 @@ public:
     std::vector<washer::shell::pidl::cpidl_t> pidls_in_sandbox();
 
     /**
-     * Make a DataObject to all the items in the sandbox, via the SFTP 
+     * Make a DataObject to all the items in the sandbox, via the SFTP
      * connection.
      */
     comet::com_ptr<IDataObject> data_object_from_sandbox();

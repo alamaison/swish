@@ -43,12 +43,13 @@
 using swish::host_folder::create_host_itemid;
 using swish::utils::Utf8StringToWideString;
 
+using ssh::filesystem::path;
+
 using namespace washer::shell::pidl;
 using washer::shell::desktop_folder;
 
 using comet::com_ptr;
 
-using boost::filesystem::path;
 using boost::numeric_cast;
 
 using std::vector;

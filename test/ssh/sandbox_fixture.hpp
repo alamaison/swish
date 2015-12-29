@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -38,9 +38,7 @@
 #define SSH_SANDBOX_FIXTURE_HPP
 #pragma once
 
-#include <boost/filesystem.hpp> // path
-
-#include <string>
+#include <boost/filesystem/path.hpp>
 
 namespace test {
 namespace ssh {
@@ -57,7 +55,7 @@ public:
     boost::filesystem::path sandbox();
     boost::filesystem::path new_file_in_sandbox();
     boost::filesystem::path sandbox_fixture::new_file_in_sandbox(
-        const std::string& name);
+        const boost::filesystem::path& name);
     boost::filesystem::path new_directory_in_sandbox();
 
 private:

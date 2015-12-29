@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -71,7 +71,7 @@ namespace { // private
     {
         shared_ptr<char> name(
             _tempnam(NULL, SANDBOX_NAME.c_str()), free);
-        
+
         return path(name.get());
     }
 }
@@ -121,7 +121,7 @@ path sandbox_fixture::new_file_in_sandbox()
 }
 
 
-path sandbox_fixture::new_file_in_sandbox(const string& name)
+path sandbox_fixture::new_file_in_sandbox(const path& name)
 {
     path p = sandbox() / name;
     BOOST_REQUIRE(!exists(p));

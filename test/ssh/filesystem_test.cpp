@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -55,6 +55,7 @@
 
 using ssh::session;
 using ssh::filesystem::file_attributes;
+using ssh::filesystem::path;
 using ssh::filesystem::sftp_filesystem;
 using ssh::filesystem::sftp_file;
 using ssh::filesystem::directory_iterator;
@@ -62,7 +63,6 @@ using ssh::filesystem::overwrite_behaviour;
 
 using boost::bind;
 using boost::filesystem::ofstream;
-using boost::filesystem::path;
 using boost::move;
 using boost::packaged_task;
 using boost::system::system_error;
@@ -81,7 +81,7 @@ namespace {
 
 bool filename_matches(const string& filename, const sftp_file& remote_file)
 {
-    return filename == remote_file.name();
+    return filename == remote_file.path().filename();
 }
 
 class sftp_fixture : public session_fixture, public sandbox_fixture
@@ -109,7 +109,7 @@ public:
         return *pos;
     }
 
-    void create_symlink(path link, path target)
+    void create_symlink(boost::filesystem::path link, boost::filesystem::path target)
     {
         // Passing arguments in the wrong order to work around OpenSSH bug
         filesystem().create_symlink(to_remote_path(target), to_remote_path(link));
@@ -128,7 +128,8 @@ private:
     sftp_filesystem m_filesystem;
 };
 
-predicate_result directory_is_empty(sftp_filesystem& fs, const path& p)
+predicate_result directory_is_empty(
+    sftp_filesystem& fs, const ::ssh::filesystem::path& p)
 {
     predicate_result result(true);
 
@@ -137,7 +138,7 @@ predicate_result directory_is_empty(sftp_filesystem& fs, const path& p)
     size_t entry_count = 0;
     while (it != fs.directory_iterator())
     {
-        if (it->name() != "." && it->name() != "..")
+        if (it->path().filename() != "." && it->path().filename() != "..")
         {
             ++entry_count;
         }
@@ -179,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE( construct_fail, session_fixture )
 // semantics of the session-filesystem relationship should be now or in the
 // future, this tests must pass.  Anything else would mean moving depends on
 // what you've used the session for in the past, which would just be broken.
-// 
+//
 // In other words, even the most careful caller would run into trouble
 // if this test failed.
 BOOST_FIXTURE_TEST_CASE(
@@ -322,25 +323,25 @@ BOOST_AUTO_TEST_CASE( move_assign )
 
 BOOST_AUTO_TEST_CASE( dir_with_one_file )
 {
-    path test_file = new_file_in_sandbox();
+    boost::filesystem::path test_file = new_file_in_sandbox();
 
     directory_iterator it =
         filesystem().directory_iterator(to_remote_path(sandbox()));
 
     sftp_file file = *it;
-    BOOST_CHECK_EQUAL(file.name(), ".");
-    BOOST_CHECK_EQUAL(it->name(), ".");
+    BOOST_CHECK_EQUAL(file.path().filename(), ".");
+    BOOST_CHECK_EQUAL(it->path().filename(), ".");
     BOOST_CHECK_GT(it->long_entry().size(), 0U);
 
     it++;
-    
-    BOOST_CHECK_EQUAL((*it).name(), "..");
+
+    BOOST_CHECK_EQUAL((*it).path().filename(), "..");
     file = *it;
-    BOOST_CHECK_EQUAL(file.name(), "..");
+    BOOST_CHECK_EQUAL(file.path().filename(), "..");
 
     it++;
 
-    BOOST_CHECK_EQUAL(it->name(), test_file.filename());
+    BOOST_CHECK_EQUAL(it->path().filename(), path(test_file.filename().wstring()));
 
     it++;
 
@@ -349,33 +350,33 @@ BOOST_AUTO_TEST_CASE( dir_with_one_file )
 
 BOOST_AUTO_TEST_CASE( dir_with_multiple_files )
 {
-    path test_file1 = new_file_in_sandbox();
-    path test_file2 = new_file_in_sandbox();
+    boost::filesystem::path test_file1 = new_file_in_sandbox();
+    boost::filesystem::path test_file2 = new_file_in_sandbox();
 
     directory_iterator it =
         filesystem().directory_iterator(to_remote_path(sandbox()));
 
     sftp_file file = *it;
-    BOOST_CHECK_EQUAL(file.name(), ".");
-    BOOST_CHECK_EQUAL(it->name(), ".");
+    BOOST_CHECK_EQUAL(file.path().filename(), ".");
+    BOOST_CHECK_EQUAL(it->path().filename(), ".");
     BOOST_CHECK_GT(it->long_entry().size(), 0U);
 
     it++;
 
-    BOOST_CHECK_EQUAL((*it).name(), "..");
+    BOOST_CHECK_EQUAL((*it).path().filename(), "..");
     file = *it;
-    BOOST_CHECK_EQUAL(file.name(), "..");
+    BOOST_CHECK_EQUAL(file.path().filename(), "..");
 
     it++;
 
     BOOST_CHECK(
-        it->name() == test_file1.filename() ||
-        it->name() == test_file2.filename());
+        it->path().filename() == path(test_file1.filename().wstring()) ||
+        it->path().filename() == path(test_file2.filename().wstring()));
     it++;
 
     BOOST_CHECK(
-        it->name() == test_file1.filename() ||
-        it->name() == test_file2.filename());
+        it->path().filename() == path(test_file1.filename().wstring()) ||
+        it->path().filename() == path(test_file2.filename().wstring()));
 
     it++;
 
@@ -384,36 +385,36 @@ BOOST_AUTO_TEST_CASE( dir_with_multiple_files )
 
 BOOST_AUTO_TEST_CASE( move_construct_iterator )
 {
-    path test_file1 = new_file_in_sandbox();
-    path test_file2 = new_file_in_sandbox();
+    boost::filesystem::path test_file1 = new_file_in_sandbox();
+    boost::filesystem::path test_file2 = new_file_in_sandbox();
 
     directory_iterator it =
         filesystem().directory_iterator(to_remote_path(sandbox()));
 
     sftp_file file = *it;
-    BOOST_CHECK_EQUAL(file.name(), ".");
-    BOOST_CHECK_EQUAL(it->name(), ".");
+    BOOST_CHECK_EQUAL(file.path().filename(), ".");
+    BOOST_CHECK_EQUAL(it->path().filename(), ".");
     BOOST_CHECK_GT(it->long_entry().size(), 0U);
 
     it++;
 
-    BOOST_CHECK_EQUAL((*it).name(), "..");
+    BOOST_CHECK_EQUAL((*it).path().filename(), "..");
     file = *it;
-    BOOST_CHECK_EQUAL(file.name(), "..");
+    BOOST_CHECK_EQUAL(file.path().filename(), "..");
 
     it++;
 
     BOOST_CHECK(
-        it->name() == test_file1.filename() ||
-        it->name() == test_file2.filename());
+        it->path().filename() == path(test_file1.filename().wstring()) ||
+        it->path().filename() == path(test_file2.filename().wstring()));
 
     directory_iterator itm(move(it));
 
     itm++;
 
     BOOST_CHECK(
-        itm->name() == test_file1.filename() ||
-        itm->name() == test_file2.filename());
+        itm->path().filename() == path(test_file1.filename().wstring()) ||
+        itm->path().filename() == path(test_file2.filename().wstring()));
 
     itm++;
 
@@ -446,11 +447,11 @@ BOOST_AUTO_TEST_CASE( symlink_recognition )
  */
 BOOST_AUTO_TEST_CASE( symlink_resolution )
 {
-    path target =  new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
     create_symlink(sandbox() / "link", target);
 
     path remote_target = to_remote_path(target);
-    path resolved_target = 
+    path resolved_target =
         resolve_link_target(filesystem(), find_file_in_remote_sandbox("link"));
     BOOST_CHECK_EQUAL(resolved_target, remote_target);
 }
@@ -460,11 +461,11 @@ BOOST_AUTO_TEST_CASE( symlink_resolution )
  */
 BOOST_AUTO_TEST_CASE( canonicalisation )
 {
-    path target =  new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
     create_symlink(sandbox() / "link", target);
 
     path remote_target = to_remote_path(target);
-    path resolved_target = 
+    path resolved_target =
         canonical_path(filesystem(), find_file_in_remote_sandbox("link"));
     BOOST_CHECK_EQUAL(resolved_target, remote_target);
 }
@@ -474,12 +475,12 @@ BOOST_AUTO_TEST_CASE( canonicalisation )
  */
 BOOST_AUTO_TEST_CASE( two_hop_canonicalisation )
 {
-    path target =  new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
     create_symlink(sandbox() / "link1", target);
     create_symlink(sandbox() / "link2", sandbox() / "link1");
 
     path remote_target = to_remote_path(target);
-    path resolved_target = 
+    path resolved_target =
         canonical_path(filesystem(), find_file_in_remote_sandbox("link2"));
     BOOST_CHECK_EQUAL(resolved_target, remote_target);
 }
@@ -490,19 +491,19 @@ BOOST_AUTO_TEST_CASE( two_hop_canonicalisation )
  */
 BOOST_AUTO_TEST_CASE( symlink_to_symlink )
 {
-    path target =  new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
     create_symlink(sandbox() / "link1", target);
     create_symlink(sandbox() / "link2", sandbox() / "link1");
 
     path remote_target = to_remote_path(sandbox() / "link1");
-    path resolved_target = 
+    path resolved_target =
         resolve_link_target(filesystem(), find_file_in_remote_sandbox("link2"));
     BOOST_CHECK_EQUAL(resolved_target, remote_target);
 }
 
 BOOST_AUTO_TEST_CASE( attributes_file )
 {
-    path subject = new_file_in_sandbox();
+    boost::filesystem::path subject = new_file_in_sandbox();
 
     file_attributes attrs = filesystem().attributes(to_remote_path(subject), false);
 
@@ -515,7 +516,7 @@ BOOST_AUTO_TEST_CASE( attributes_file )
 
 BOOST_AUTO_TEST_CASE( attributes_directory )
 {
-    path subject = sandbox() / "testdir";
+    boost::filesystem::path subject = sandbox() / "testdir";
     create_directory(subject);
 
     file_attributes attrs = filesystem().attributes(to_remote_path(subject), false);
@@ -529,8 +530,8 @@ BOOST_AUTO_TEST_CASE( attributes_directory )
 
 BOOST_AUTO_TEST_CASE( attributes_link )
 {
-    path target = new_file_in_sandbox();
-    path link = sandbox() / "link";
+    boost::filesystem::path target = new_file_in_sandbox();
+    boost::filesystem::path link = sandbox() / "link";
     create_symlink(link, target);
 
     file_attributes attrs = filesystem().attributes(to_remote_path(link), false);
@@ -544,9 +545,9 @@ BOOST_AUTO_TEST_CASE( attributes_link )
 
 BOOST_AUTO_TEST_CASE( attributes_double_link )
 {
-    path target = new_file_in_sandbox();
-    path middle_link = sandbox() / "link1";
-    path link = sandbox() / "link2";
+    boost::filesystem::path target = new_file_in_sandbox();
+    boost::filesystem::path middle_link = sandbox() / "link1";
+    boost::filesystem::path link = sandbox() / "link2";
     create_symlink(middle_link, target);
     create_symlink(link, middle_link);
 
@@ -561,8 +562,8 @@ BOOST_AUTO_TEST_CASE( attributes_double_link )
 
 BOOST_AUTO_TEST_CASE( attributes_broken_link )
 {
-    path target = new_file_in_sandbox();
-    path link = sandbox() / "link";
+    boost::filesystem::path target = new_file_in_sandbox();
+    boost::filesystem::path link = sandbox() / "link";
     create_symlink(link, target);
     remove(target);
 
@@ -582,7 +583,7 @@ BOOST_AUTO_TEST_CASE( default_directory )
 
 BOOST_AUTO_TEST_CASE( remove_nothing )
 {
-    path target = "gibberish";
+    boost::filesystem::path target = "gibberish";
 
     bool already_existed = filesystem().remove(to_remote_path(target));
 
@@ -592,7 +593,7 @@ BOOST_AUTO_TEST_CASE( remove_nothing )
 
 BOOST_AUTO_TEST_CASE( remove_file )
 {
-    path target = new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
 
     bool already_existed = filesystem().remove(to_remote_path(target));
 
@@ -602,7 +603,7 @@ BOOST_AUTO_TEST_CASE( remove_file )
 
 BOOST_AUTO_TEST_CASE( remove_empty_dir )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
 
     bool already_existed = filesystem().remove(to_remote_path(target));
 
@@ -612,7 +613,7 @@ BOOST_AUTO_TEST_CASE( remove_empty_dir )
 
 BOOST_AUTO_TEST_CASE( remove_non_empty_dir )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
     create_directory(target / "bob");
 
     BOOST_CHECK_THROW(filesystem().remove(to_remote_path(target)), system_error);
@@ -621,8 +622,8 @@ BOOST_AUTO_TEST_CASE( remove_non_empty_dir )
 
 BOOST_AUTO_TEST_CASE( remove_link )
 {
-    path target = new_file_in_sandbox();
-    path link = sandbox() / "link";
+    boost::filesystem::path target = new_file_in_sandbox();
+    boost::filesystem::path link = sandbox() / "link";
     create_symlink(link, target);
 
     bool already_existed = filesystem().remove(to_remote_path(link));
@@ -634,7 +635,7 @@ BOOST_AUTO_TEST_CASE( remove_link )
 
 BOOST_AUTO_TEST_CASE( remove_nothing_recursive )
 {
-    path target = "gibberish";
+    boost::filesystem::path target = "gibberish";
 
     uintmax_t count = filesystem().remove_all(to_remote_path(target));
 
@@ -644,7 +645,7 @@ BOOST_AUTO_TEST_CASE( remove_nothing_recursive )
 
 BOOST_AUTO_TEST_CASE( remove_file_recursive )
 {
-    path target = new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
 
     uintmax_t count = filesystem().remove_all(to_remote_path(target));
 
@@ -654,7 +655,7 @@ BOOST_AUTO_TEST_CASE( remove_file_recursive )
 
 BOOST_AUTO_TEST_CASE( remove_empty_dir_recursive )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
 
     uintmax_t count = filesystem().remove_all(to_remote_path(target));
 
@@ -664,7 +665,7 @@ BOOST_AUTO_TEST_CASE( remove_empty_dir_recursive )
 
 BOOST_AUTO_TEST_CASE( remove_non_empty_dir_recursive )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
     create_directory(target / "bob");
     ofstream(target / "bob" / "sally");
     ofstream(target / "alice"); // Either side of bob alphabetically
@@ -678,9 +679,9 @@ BOOST_AUTO_TEST_CASE( remove_non_empty_dir_recursive )
 
 BOOST_AUTO_TEST_CASE( remove_link_recursive )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
     create_directory(target / "bob");
-    path link = sandbox() / "link";
+    boost::filesystem::path link = sandbox() / "link";
     create_symlink(link, target);
 
     uintmax_t count = filesystem().remove_all(to_remote_path(link));
@@ -693,8 +694,8 @@ BOOST_AUTO_TEST_CASE( remove_link_recursive )
 
 BOOST_AUTO_TEST_CASE( rename_file )
 {
-    path test_file = new_file_in_sandbox();
-    path target = sandbox() / "target";
+    boost::filesystem::path test_file = new_file_in_sandbox();
+    boost::filesystem::path target = sandbox() / "target";
 
     filesystem().rename(
         to_remote_path(test_file), to_remote_path(target),
@@ -705,10 +706,10 @@ BOOST_AUTO_TEST_CASE( rename_file )
 
 BOOST_AUTO_TEST_CASE( rename_file_obstacle_no_overwrite )
 {
-    path test_file = new_file_in_sandbox();
+    boost::filesystem::path test_file = new_file_in_sandbox();
 
-    path target = new_file_in_sandbox("target");
-    
+    boost::filesystem::path target = new_file_in_sandbox("target");
+
     BOOST_CHECK_THROW(
         filesystem().rename(
             to_remote_path(test_file), to_remote_path(target),
@@ -719,9 +720,9 @@ BOOST_AUTO_TEST_CASE( rename_file_obstacle_no_overwrite )
 
 BOOST_AUTO_TEST_CASE( rename_file_obstacle_allow_overwrite )
 {
-    path test_file = new_file_in_sandbox();
+    boost::filesystem::path test_file = new_file_in_sandbox();
 
-    path target = new_file_in_sandbox("target");
+    boost::filesystem::path target = new_file_in_sandbox("target");
 
     // Using OpenSSH server which only supports SFTP 3 (no overwrite) so
     // failure expected
@@ -735,9 +736,9 @@ BOOST_AUTO_TEST_CASE( rename_file_obstacle_allow_overwrite )
 
 BOOST_AUTO_TEST_CASE( rename_file_obstacle_atomic_overwrite )
 {
-    path test_file = new_file_in_sandbox();
+    boost::filesystem::path test_file = new_file_in_sandbox();
 
-    path target = new_file_in_sandbox("target");
+    boost::filesystem::path target = new_file_in_sandbox("target");
 
     // Using OpenSSH server which only supports SFTP 3 (no overwrite) so
     // failure expected
@@ -752,20 +753,20 @@ BOOST_AUTO_TEST_CASE( rename_file_obstacle_atomic_overwrite )
 
 BOOST_AUTO_TEST_CASE( exists_true )
 {
-    path test_file = new_file_in_sandbox();
+    boost::filesystem::path test_file = new_file_in_sandbox();
 
     BOOST_CHECK(exists(filesystem(), to_remote_path(test_file)));
 }
 
 BOOST_AUTO_TEST_CASE( exists_false )
 {
-    path test_file = sandbox() / "I do not exist";
+    boost::filesystem::path test_file = sandbox() / "I do not exist";
     BOOST_CHECK(!exists(filesystem(), to_remote_path(test_file)));
 }
 
 BOOST_AUTO_TEST_CASE( new_directory )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
     remove(target);
 
     BOOST_CHECK(filesystem().create_directory(to_remote_path(target)));
@@ -775,7 +776,7 @@ BOOST_AUTO_TEST_CASE( new_directory )
 
 BOOST_AUTO_TEST_CASE( new_directory_already_there )
 {
-    path target = new_directory_in_sandbox();
+    boost::filesystem::path target = new_directory_in_sandbox();
 
     BOOST_CHECK(!filesystem().create_directory(to_remote_path(target)));
     BOOST_CHECK(exists(target));
@@ -784,7 +785,7 @@ BOOST_AUTO_TEST_CASE( new_directory_already_there )
 
 BOOST_AUTO_TEST_CASE( new_directory_already_there_wrong_type )
 {
-    path target = new_file_in_sandbox();
+    boost::filesystem::path target = new_file_in_sandbox();
 
     BOOST_CHECK_THROW(
         filesystem().create_directory(to_remote_path(target)),

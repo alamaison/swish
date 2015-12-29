@@ -40,7 +40,9 @@
 
 #include <boost/utility.hpp> // next
 
+#include <algorithm> // replace
 #include <stdexcept> // runtime_error
+#include <string>
 
 using swish::provider::sftp_provider;
 using swish::remote_folder::path_from_remote_pidl;
@@ -63,7 +65,9 @@ using boost::mem_fn;
 using boost::next;
 using boost::shared_ptr;
 
+using std::replace;
 using std::runtime_error;
+using std::wstring;
 
 namespace comet {
 
@@ -88,10 +92,10 @@ template<> struct comtype<IDataObject>
  * @param pProvider         Backend to communicate with remote server.
  */
 CSftpDataObject::CSftpDataObject(
-    UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl, 
+    UINT cPidl, PCUITEMID_CHILD_ARRAY aPidl,
     PCIDLIST_ABSOLUTE pidlCommonParent, shared_ptr<sftp_provider> provider)
     : CDataObject(cPidl, aPidl, pidlCommonParent),
-    // Make a copy of the PIDLs.  These are used to delay-render the 
+    // Make a copy of the PIDLs.  These are used to delay-render the
     // CFSTR_FILEDESCRIPTOR and CFSTR_FILECONTENTS format in GetData().
     m_pidlCommonParent(pidlCommonParent),
     m_provider(provider),
@@ -179,7 +183,7 @@ throw(...)
     {
         ::ReleaseStgMedium(&stg);
     }
-    ATLENSURE_SUCCEEDED(hr);    
+    ATLENSURE_SUCCEEDED(hr);
 }
 
 /**
@@ -194,7 +198,7 @@ throw(...)
  * it isn't appropriate to do this when the IDataObject is created.  This
  * would lead to large delays when simply opening a directory---an operation
  * that also requires an IDataObject.  Instead, this format is delay-rendered
- * from the list of PIDLs cached during Initialize() the first time it is 
+ * from the list of PIDLs cached during Initialize() the first time it is
  * requested.
  *
  * @see _DelayRenderCfFileContents()
@@ -242,7 +246,7 @@ throw(...)
  * it isn't appropriate to do this when the IDataObject is created.  This
  * would lead to large delays when simply opening a directory---an operation
  * that also requires an IDataObject.  Instead, these formats are individually
- * delay-rendered from the list of PIDLs cached during Initialize() each time 
+ * delay-rendered from the list of PIDLs cached during Initialize() each time
  * one is requested.
  *
  * @see _DelayRenderCfFileGroupDescriptor()
@@ -296,7 +300,7 @@ HGLOBAL CSftpDataObject::_CreateFileGroupDescriptor()
  * @p lindex corresponds to an item in the File Group Descriptor (which
  * we created in _DelayRenderCfFileGroupDescriptor) with the same index.
  *
- * @note Asking for an IStream to folder may not break (libssh2 can do 
+ * @note Asking for an IStream to folder may not break (libssh2 can do
  * this) but it is a waste of effort. Explorer won't use it, nor should it.
  */
 com_ptr<IStream> CSftpDataObject::_CreateFileContentsStream(long lindex)
@@ -313,13 +317,18 @@ throw(...)
 
     // Get stream from relative path stored in the lindexth FILEDESCRIPTOR
     CSftpDirectory dir(m_pidlCommonParent, m_provider);
-    return dir.GetFileByPath(fgd[lindex].path(), false);
+
+    // UNOBVIOUS: FGDs store paths with backslashes so we need to convert
+    // those here
+    wstring path = fgd[lindex].path();
+    replace(path.begin(), path.end(), L'\\', L'/');
+    return dir.GetFileByPath(path, false);
 }
 
 /**
  * Expand all top-level PIDLs into a list of Descriptors with relative paths.
  *
- * There should be a file descriptor for every item in the directory 
+ * There should be a file descriptor for every item in the directory
  * heirarchies.  Once expanded, this should not need to be done again for this
  * DataObject as the descriptors will be saved in the superclass.
  *
@@ -363,12 +372,12 @@ namespace {
         Descriptor d;
 
         // Filename
-        d.path(path_from_remote_pidl(pidl));
+        d.path(path_from_remote_pidl(pidl).wstring());
 
         // The PIDL we have been passed may be multilevel, representing a
         // path to the file.  Get last item in PIDL to get properties of the
         // file itself.
-        
+
         remote_itemid_view itemid = view_of_last_item(pidl);
 
         // Size
@@ -406,7 +415,7 @@ namespace {
  * Expand one of the selected PIDLs to include any descendents.
  *
  * If the given PIDL is a simple item, the returned list just contains this
- * PIDL.  However, if it a directory it will contain the PIDL followed by 
+ * PIDL.  However, if it a directory it will contain the PIDL followed by
  * all the items in and below the directory.
  */
 void CSftpDataObject::_ExpandTopLevelPidlInto(
@@ -431,8 +440,8 @@ const throw(...)
  * The list includes this directory, all the items in this directory and all
  * items below any of those which are directories.
  *
- * Although called 'flat', all the PIDL are returned relative to this 
- * directory's parent and therefore, actually do maintain a record of the 
+ * Although called 'flat', all the PIDL are returned relative to this
+ * directory's parent and therefore, actually do maintain a record of the
  * directory structure.
  *//*
 vector<CRelativePidl> CSftpDataObject::FlattenDirectoryTree()
@@ -447,17 +456,17 @@ throw(...)
 /**
  * Return a list of all the PIDLs in this directory and below as a single list.
  *
- * The PIDLs are returned appended to the end of the @p vecPidls inout 
+ * The PIDLs are returned appended to the end of the @p vecPidls inout
  * parameter which reduces the amount of copying.
  *
- * All the PIDL (which are relative to this directory's parent) are prefixed with 
- * a given parent PIDL. This allows this method to be used recursively and still 
+ * All the PIDL (which are relative to this directory's parent) are prefixed with
+ * a given parent PIDL. This allows this method to be used recursively and still
  * produce a list of PIDLs relative to a common root.
  *
- * @param[in,out] vecPidl  List of flattened PIDLs to append our flattened 
+ * @param[in,out] vecPidl  List of flattened PIDLs to append our flattened
  *                         PIDLs.
- * @param[in] pidlPrefix   PIDL with which to prefix the PIDLs below this 
- *                         folder. If NULL, the returned list is relative to 
+ * @param[in] pidlPrefix   PIDL with which to prefix the PIDLs below this
+ *                         folder. If NULL, the returned list is relative to
  *                         this folder.
  */
 void CSftpDataObject::_ExpandDirectoryTreeInto(

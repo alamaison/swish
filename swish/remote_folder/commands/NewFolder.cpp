@@ -23,6 +23,8 @@
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell/shell.hpp" // put_view_item_into_rename_mode
 
+#include <ssh/path.hpp>
+
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/trace.hpp> // trace
 
@@ -49,6 +51,8 @@ using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::shell::put_view_item_into_rename_mode;
 
+using ssh::filesystem::path;
+
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
 using washer::shell::shell_browser;
@@ -61,7 +65,6 @@ using comet::com_error_from_interface;
 using comet::com_ptr;
 using comet::uuid_t;
 
-using boost::filesystem::path;
 using boost::function;
 using boost::shared_ptr;
 using boost::lexical_cast;

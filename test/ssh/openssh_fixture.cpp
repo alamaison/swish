@@ -23,13 +23,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -38,6 +38,7 @@
 #include "openssh_fixture.hpp"
 
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
 #include <boost/process/context.hpp> // context
 #include <boost/process/environment.hpp> // environment
 #include <boost/process/operations.hpp> // find_executable_in_path
@@ -67,6 +68,7 @@ using boost::variate_generator;
 using boost::mt19937;
 
 using std::string;
+using std::wstring;
 using std::vector;
 using std::map;
 
@@ -84,12 +86,15 @@ namespace { // private
     const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
     const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
 
-    const path CYGDRIVE_PREFIX = L"/cygdrive/";
+    ssh::filesystem::path cygdrive_prefix()
+    {
+        return "/cygdrive/";
+    }
 
     /**
      * Locale-independent port number to port string conversion.
      */
-    inline std::string port_to_string(long port)
+    std::string port_to_string(long port)
     {
         std::ostringstream stream;
         stream.imbue(std::locale::classic()); // force locale-independence
@@ -152,7 +157,7 @@ namespace { // private
             if (buffer.size() > 0)
             {
                 len = ::WideCharToMultiByte(
-                    CP_UTF8, 0, &wide_buffer[0], len, 
+                    CP_UTF8, 0, &wide_buffer[0], len,
                     &buffer[0], static_cast<UINT>(buffer.size()), NULL, NULL);
                 return string(&buffer[0], len);
             }
@@ -171,7 +176,7 @@ namespace { // private
         pos = env.find(SSHD_DIR_ENVIRONMENT_VAR);
         if (pos != env.end())
             return pos->second;
-        
+
         return path();
     }
 
@@ -188,8 +193,8 @@ namespace { // private
     }
 
     /**
-     * Find OpenSSH SFTP subsystem (sftp-server). 
-     * Either in an environment variable or on the path in the same directory 
+     * Find OpenSSH SFTP subsystem (sftp-server).
+     * Either in an environment variable or on the path in the same directory
      * as sshd.
      */
     path GetSftpPath()
@@ -208,12 +213,12 @@ namespace { // private
     {
         string sshd_path = GetSshdPath().string();
 
-        context ctx; 
+        context ctx;
         ctx.env = self::get_environment();
 
         // sshd insists on an absolute path but what it actually looks at isn't
         // what it is invoked as, rather the first argument passed to is.
-        // By default Boost.Filesystem uses just the exe filename for that so 
+        // By default Boost.Filesystem uses just the exe filename for that so
         // we force it to use the full path here.
         ctx.process_name = sshd_path;
 
@@ -244,11 +249,15 @@ namespace { // private
      * For example:
      *   C:\\Users\\username\\file becomes /cygdrive/c/Users/username/file
      */
-    path Cygdriveify(path windowsPath)
+    ssh::filesystem::path Cygdriveify(path windows_path)
     {
-        string drive(windowsPath.root_name().string(), 0, 1);
-        return (CYGDRIVE_PREFIX / drive / windowsPath.relative_path())
-            .generic_wstring();
+        wstring drive(windows_path.root_name().wstring(), 0, 1);
+        ssh::filesystem::path remote_path = cygdrive_prefix() / drive;
+        BOOST_FOREACH(const path& segment, windows_path.relative_path())
+        {
+            remote_path /= segment.wstring();
+        }
+        return remote_path;
     }
 
     vector<string> GetSshdOptions(int port)
@@ -285,7 +294,7 @@ namespace {
     struct global_fixture
     {
         ~global_fixture()
-        {            
+        {
             // We call this here as a bit of a hack to stop memory-leak
             // detection incorrectly detecting OpenSSL global data as a
             // leak
@@ -306,7 +315,7 @@ namespace {
 namespace test {
 namespace ssh {
 
-openssh_fixture::openssh_fixture() : 
+openssh_fixture::openssh_fixture() :
     m_port(GenerateRandomPort()),
     m_sshd(StartSshd(GetSshdOptions(m_port)))
 {
@@ -390,7 +399,7 @@ path openssh_fixture::wrong_public_key_path() const
  * Transform a local (Windows) path into a form usuable on the
  * command-line of the fixture SSH server.
  */
-path openssh_fixture::to_remote_path(path local_path) const
+::ssh::filesystem::path openssh_fixture::to_remote_path(path local_path) const
 {
     return Cygdriveify(local_path);
 }

@@ -20,7 +20,6 @@ set(SOURCES
   Provider.hpp
   sftp_filesystem_item.hpp
   sftp_provider.hpp
-  sftp_provider_path.hpp
   ticketed_stream.hpp)
 
 add_library(provider ${SOURCES})

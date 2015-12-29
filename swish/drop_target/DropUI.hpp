@@ -50,10 +50,10 @@ namespace drop_target {
         DropUI(
             const boost::optional< washer::window::window<wchar_t> >& owner);
 
-        virtual bool can_overwrite(const boost::filesystem::path& target);
+        virtual bool can_overwrite(const ssh::filesystem::path& target);
         virtual std::auto_ptr<Progress> progress();
         virtual void handle_last_exception();
-        
+
     private:
         boost::optional< washer::window::window<wchar_t> > m_owner;
         Progress* m_progress;

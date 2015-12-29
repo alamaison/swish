@@ -175,7 +175,20 @@ BOOST_AUTO_TEST_CASE( build_path_from_remote_pidl )
         test_remote_itemid(L"biscuit.txt", false);
 
     BOOST_CHECK_EQUAL(
-        path_from_remote_pidl(pidl), L"foo/bar/biscuit.txt");
+        path_from_remote_pidl(pidl), "foo/bar/biscuit.txt");
+}
+
+BOOST_AUTO_TEST_CASE( build_path_from_remote_pidl_renders_expected_string )
+{
+    // The path may compare equal to the expected string without rendering
+    // itself as the same string.  For example, the slashes might be backslashes
+    // instead of forward slashes.  This causes problems down the line.
+    pidl_t pidl =
+        test_remote_itemid(L"foo", true) + test_remote_itemid(L"bar", false) +
+        test_remote_itemid(L"biscuit.txt", false);
+
+    BOOST_CHECK_EQUAL(
+        path_from_remote_pidl(pidl).string(), "foo/bar/biscuit.txt");
 }
 
 BOOST_AUTO_TEST_CASE( build_path_from_remote_pidl_single )

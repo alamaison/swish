@@ -23,13 +23,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -42,7 +42,6 @@
 #include "swish/provider/libssh2_sftp_filesystem_item.hpp"
 #include "swish/provider/sftp_filesystem_item.hpp"
 #include "swish/remotelimits.h"
-#include "swish/utils.hpp" // WideStringToUtf8String
 #include "swish/trace.hpp" // trace
 
 #include <comet/bstr.h> // bstr_t
@@ -71,8 +70,6 @@
 
 using swish::connection::authenticated_session;
 using swish::connection::session_reservation;
-using swish::utils::WideStringToUtf8String;
-using swish::utils::Utf8StringToWideString;
 using swish::tracing::trace;
 
 using comet::adapt_stream_pointer;
@@ -82,7 +79,6 @@ using comet::com_ptr;
 using comet::datetime_t;
 using comet::stl_enumeration;
 
-using boost::filesystem::path;
 using boost::make_filter_iterator;
 using boost::make_shared;
 namespace errc = boost::system::errc;
@@ -95,6 +91,7 @@ using ssh::filesystem::fstream;
 using ssh::filesystem::ifstream;
 using ssh::filesystem::ofstream;
 using ssh::filesystem::overwrite_behaviour;
+using ssh::filesystem::path;
 using ssh::filesystem::sftp_filesystem;
 using ssh::filesystem::sftp_file;
 
@@ -113,10 +110,10 @@ public:
 
     explicit provider(BOOST_RV_REF(session_reservation) session_ticket);
 
-    directory_listing listing(const sftp_provider_path& directory);
+    directory_listing listing(const path& directory);
 
     comet::com_ptr<IStream> get_file(
-        std::wstring file_path, std::ios_base::openmode open_mode);
+        const path& file_path, std::ios_base::openmode open_mode);
 
     VARIANT_BOOL rename(
         com_ptr<ISftpConsumer> consumer, const path& from_path,
@@ -126,10 +123,9 @@ public:
 
     void create_new_directory(const path& path);
 
-    BSTR resolve_link(const path& path);
+    const path resolve_link(const path& path);
 
-    sftp_filesystem_item stat(
-        const sftp_provider_path& path, bool follow_links);
+    sftp_filesystem_item stat(const path& path, bool follow_links);
 
 private:
 
@@ -142,30 +138,29 @@ CProvider::CProvider(BOOST_RV_REF(session_reservation) session_ticket)
 }
 
 
-directory_listing CProvider::listing(const sftp_provider_path& directory)
+directory_listing CProvider::listing(const path& directory)
 {
     return m_provider->listing(directory);
 }
 
 comet::com_ptr<IStream> CProvider::get_file(
-    std::wstring file_path, std::ios_base::openmode open_mode)
+    const path& file_path, std::ios_base::openmode open_mode)
 { return m_provider->get_file(file_path, open_mode); }
 
 VARIANT_BOOL CProvider::rename(
-    ISftpConsumer* consumer, BSTR from_path, BSTR to_path)
+    ISftpConsumer* consumer, const path& from_path, const path& to_path)
 { return m_provider->rename(consumer, from_path, to_path); }
 
-void CProvider::remove_all(BSTR path)
+void CProvider::remove_all(const path& path)
 { m_provider->remove_all(path); }
 
-void CProvider::create_new_directory(BSTR path)
+void CProvider::create_new_directory(const path& path)
 { m_provider->create_new_directory(path); }
 
-BSTR CProvider::resolve_link(BSTR path)
+path CProvider::resolve_link(const path& path)
 { return m_provider->resolve_link(path); }
 
-sftp_filesystem_item CProvider::stat(
-    const sftp_provider_path& path, bool follow_links)
+sftp_filesystem_item CProvider::stat(const path& path, bool follow_links)
 {
     return m_provider->stat(path, follow_links);
 }
@@ -182,7 +177,7 @@ namespace {
 
     bool not_special_file(const sftp_file& file)
     {
-        return file.name() != "." && file.name() != "..";
+        return file.path().filename() != "." && file.path().filename() != "..";
     }
 
 }
@@ -192,19 +187,17 @@ namespace {
 *
 * @param directory  Absolute path of the directory to list.
 */
-directory_listing provider::listing(const sftp_provider_path& directory)
+directory_listing provider::listing(const path& directory)
 {
     if (directory.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
-    string path = WideStringToUtf8String(directory.wstring());
-
     vector<sftp_filesystem_item> files;
     transform(
         make_filter_iterator(
-            not_special_file, channel.directory_iterator(path)),
+            not_special_file, channel.directory_iterator(directory)),
         make_filter_iterator(
             not_special_file, channel.directory_iterator()),
         back_inserter(files),
@@ -214,32 +207,30 @@ directory_listing provider::listing(const sftp_provider_path& directory)
 }
 
 com_ptr<IStream> provider::get_file(
-    wstring file_path, std::ios_base::openmode mode)
+    const path& file_path, std::ios_base::openmode mode)
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
-
-    string utf8_path = WideStringToUtf8String(file_path);
 
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<fstream>(boost::ref(channel), utf8_path, mode),
-            path(file_path).filename().wstring());
+            make_shared<fstream>(boost::ref(channel), file_path, mode),
+            file_path.filename().wstring());
     }
     else if (mode & std::ios_base::out)
     {
         return adapt_stream_pointer(
-            make_shared<ofstream>(boost::ref(channel), utf8_path, mode),
-            path(file_path).filename().wstring());
+            make_shared<ofstream>(boost::ref(channel), file_path, mode),
+            file_path.filename().wstring());
     }
     else if (mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<ifstream>(boost::ref(channel), utf8_path, mode),
-            path(file_path).filename().wstring());
+            make_shared<ifstream>(boost::ref(channel), file_path, mode),
+            file_path.filename().wstring());
     }
     else
     {
@@ -249,14 +240,14 @@ com_ptr<IStream> provider::get_file(
 }
 
 namespace {
-    
+
 /**
  * Rename file or directory and overwrite any obstruction non-atomically.
  *
- * This involves renaming the obstruction at the target to a temporary file, 
- * renaming the source file to the target and then deleting the renamed 
- * obstruction.  As this is not an atomic operation it is possible to fail 
- * between any of these stages and is not a prefect solution.  It may, for 
+ * This involves renaming the obstruction at the target to a temporary file,
+ * renaming the source file to the target and then deleting the renamed
+ * obstruction.  As this is not an atomic operation it is possible to fail
+ * between any of these stages and is not a prefect solution.  It may, for
  * instance, leave the temporary file behind.
  *
  * @param from
@@ -291,7 +282,7 @@ void rename_non_atomic_overwrite(
 
         throw;
     }
-   
+
     // We ignore any failure to clean up the temporary backup as the rename
     // has succeeded, whether or not cleanup fails.
     //
@@ -377,17 +368,17 @@ bool rename_retry_with_overwrite(
     }
     else
     {
-        // The failure is an unspecified one. This isn't the end of the world. 
+        // The failure is an unspecified one. This isn't the end of the world.
         // SFTP servers < v5 (i.e. most of them) return this error code if the
         // file already exists as they don't explicitly support overwriting.
-        // We need to stat() the file to find out if this is the case and if 
+        // We need to stat() the file to find out if this is the case and if
         // the user confirms the overwrite we will have to explicitly delete
         // the target file first (via a temporary) and then repeat the rename.
         //
         // NOTE: this is not a perfect solution due to the possibility
         // for race conditions.
 
-        // We used to test for FX_FAILURE here, because that's what OpenSSH 
+        // We used to test for FX_FAILURE here, because that's what OpenSSH
         // returns, but changed it because the v3 standard (v5 handled above)
         // doesn't promise any particular error code so we might as well
         // treat them all this way.
@@ -421,12 +412,12 @@ bool rename_retry_with_overwrite(
 /**
  * Renames a file or directory.
  *
- * The source and target file or directory must be specified using absolute 
- * paths for the remote filesystem.  The results of passing relative paths are 
- * not guaranteed (though, libssh2 seems to default to operating in the home 
+ * The source and target file or directory must be specified using absolute
+ * paths for the remote filesystem.  The results of passing relative paths are
+ * not guaranteed (though, libssh2 seems to default to operating in the home
  * directory) and may be dangerous.
  *
- * If a file or folder already exists at the target path, @a to_path, 
+ * If a file or folder already exists at the target path, @a to_path,
  * we inform the front-end consumer through a call to OnConfirmOverwrite.
  * If confirmation is given, we attempt to overwrite the
  * obstruction with the source path, @a from_path, and if successful we
@@ -445,38 +436,34 @@ bool rename_retry_with_overwrite(
  *
  * @warning
  * If either of the paths are not absolute, this function may cause files
- * in whichever directory libssh2 considers 'current' to be renamed or deleted 
+ * in whichever directory libssh2 considers 'current' to be renamed or deleted
  * if they happen to have matching filenames.
  *
- * @param consumer   UI callback.  
+ * @param consumer   UI callback.
  * @param from_path  Absolute path of the file or directory to be renamed.
  * @param to_path    Absolute path that @a from_path should be renamed to.
  *
  * @returns  Whether or not we needed to overwrite an existing file or
- *           directory at the target path. 
+ *           directory at the target path.
  */
 VARIANT_BOOL provider::rename(
-    com_ptr<ISftpConsumer> consumer, const path& from_path,
-    const path& to_path)
+    com_ptr<ISftpConsumer> consumer, const path& from, const path& to)
 {
-    if (from_path.empty())
+    if (from.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
-    if (to_path.empty())
+    if (to.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
     // NOP if filenames are equal
-    if (from_path == to_path)
+    if (from == to)
         return VARIANT_FALSE;
 
     // Attempt to rename old path to new path
-    string from = WideStringToUtf8String(from_path.wstring());
-    string to = WideStringToUtf8String(to_path.wstring());
-
     try
     {
         m_ticket.session().get_sftp_filesystem().rename(
             from, to, overwrite_behaviour::prevent_overwrite);
-        
+
         // Rename was successful without overwrite
         return VARIANT_FALSE;
     }
@@ -499,9 +486,7 @@ void provider::remove_all(const path& target)
     if (target.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    path utf8_path = WideStringToUtf8String(target.wstring());
-
-    m_ticket.session().get_sftp_filesystem().remove_all(utf8_path);
+    m_ticket.session().get_sftp_filesystem().remove_all(target);
 }
 
 void provider::create_new_directory(const path& path)
@@ -511,17 +496,13 @@ void provider::create_new_directory(const path& path)
             com_error(
                 "Cannot create a directory without a name", E_INVALIDARG));
 
-    string utf8_path = WideStringToUtf8String(path.wstring());
-
-    m_ticket.session().get_sftp_filesystem().create_directory(utf8_path);
+    m_ticket.session().get_sftp_filesystem().create_directory(path);
 }
 
-BSTR provider::resolve_link(const path& path)
+const path provider::resolve_link(const path& path)
 {
-    string utf8_path = WideStringToUtf8String(path.wstring());
-
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
-    bstr_t target = channel.canonical_path(utf8_path).wstring();
+    bstr_t target = channel.canonical_path(path).wstring();
 
     return target.detach();
 }
@@ -532,19 +513,15 @@ BSTR provider::resolve_link(const path& path)
  * The item returned by this function doesn't include a long entry or
  * owner and group names as string (these being derived from the long entry).
  */
-sftp_filesystem_item provider::stat(
-    const sftp_provider_path& path,
-    bool follow_links)
+sftp_filesystem_item provider::stat(const path& path, bool follow_links)
 {
-    string utf8_path = WideStringToUtf8String(path.wstring());
-
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
     file_attributes stat_result = channel.attributes(
-        utf8_path, follow_links != FALSE);
+        path, follow_links != FALSE);
 
     return libssh2_sftp_filesystem_item::create_from_libssh2_attributes(
-        utf8_path, stat_result);
+        path, stat_result);
 }
 
 }} // namespace swish::provider

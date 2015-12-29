@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013, 2015  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -43,7 +43,7 @@
 #include <ssh/session.hpp>
 #include <ssh/filesystem.hpp>
 
-#include <boost/filesystem/path.hpp> // path
+#include <boost/filesystem/path.hpp>
 #include <boost/iostreams/categories.hpp>
                                // seekable, input_seekable, output_seekable
 #include <boost/iostreams/stream.hpp>
@@ -294,10 +294,10 @@ namespace detail {
 
     inline boost::shared_ptr<::ssh::detail::file_handle_state> open_file(
         ::ssh::detail::sftp_channel_state& sftp,
-        const boost::filesystem::path& open_path, 
+        const path& open_path,
         openmode::value opening_mode)
     {
-        std::string path_string = open_path.string();
+        std::string path_string = open_path.native();
 
         // Open with 644 permissions - good for non-directory files
         return boost::make_shared<::ssh::detail::file_handle_state>(
@@ -311,7 +311,7 @@ namespace detail {
 
     inline boost::shared_ptr<::ssh::detail::file_handle_state> open_input_file(
         ::ssh::detail::sftp_channel_state& sftp,
-        const boost::filesystem::path& open_path, 
+        const path& open_path,
         openmode::value opening_mode)
     {
         // For input streams open files for input even if not given in open
@@ -322,7 +322,7 @@ namespace detail {
 
     inline boost::shared_ptr<::ssh::detail::file_handle_state> open_output_file(
        ::ssh::detail::sftp_channel_state& sftp,
-        const boost::filesystem::path& open_path, 
+        const path& open_path,
         openmode::value opening_mode)
     {
         // For output streams open files for output even if not given in open
@@ -335,7 +335,7 @@ namespace detail {
 
     inline boost::iostreams::stream_offset seek(
         ::ssh::detail::file_handle_state& handle,
-        const boost::filesystem::path& open_path,
+        const path& open_path,
         boost::iostreams::stream_offset off, std::ios_base::seekdir way)
     {
         boost::iostreams::stream_offset new_position = 0;
@@ -395,7 +395,7 @@ namespace detail {
 
     inline std::streamsize read(
         ::ssh::detail::file_handle_state& handle,
-        const boost::filesystem::path& open_path,
+        const path& open_path,
         char* buffer, std::streamsize buffer_size)
     {
         try
@@ -434,7 +434,7 @@ namespace detail {
 
     inline std::streamsize write(
         ::ssh::detail::file_handle_state& handle,
-        const boost::filesystem::path& open_path,
+        const path& open_path,
         const char* data, std::streamsize data_size)
     {
         try
@@ -500,34 +500,34 @@ namespace detail {
         // pick up the defaults from the devices
 
         sftp_stream(
-            sftp_filesystem& channel, const boost::filesystem::path& open_path)
+            sftp_filesystem& channel, const path& open_path)
         {
             open(Device(channel, open_path));
         }
 
         sftp_stream(
-            sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem& channel, const path& open_path,
             openmode::value opening_mode)
         {
             open(Device(channel, open_path, opening_mode));
         }
 
         sftp_stream(
-            sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem& channel, const path& open_path,
             openmode::value opening_mode, std::streamsize buffer_size)
         {
             open(Device(channel, open_path, opening_mode), buffer_size);
         }
 
         sftp_stream(
-            sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem& channel, const path& open_path,
             std::ios_base::openmode opening_mode)
         {
             open(Device(channel, open_path, opening_mode));
         }
 
         sftp_stream(
-            sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+            sftp_filesystem& channel, const path& open_path,
             std::ios_base::openmode opening_mode, std::streamsize buffer_size)
         {
             open(Device(channel, open_path, opening_mode), buffer_size);
@@ -539,7 +539,7 @@ namespace detail {
         // virtual basic_ios) and ios_base::init having to be called before
         // ios_base destructor.
         //
-        // If we initialise boost::iostreams::stream in the list but 
+        // If we initialise boost::iostreams::stream in the list but
         // sftp_io_device constructor throws an exception, we get an access
         // violation because ios_base is already constructed (virtual bases
         // constructed first irrespective of hierarchy) but the stream
@@ -555,7 +555,7 @@ class sftp_input_device :
 public:
 
     sftp_input_device(
-        sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem& channel, const path& open_path,
         openmode::value opening_mode=openmode::in)
         :
     m_open_path(open_path),
@@ -565,7 +565,7 @@ public:
     {}
 
     sftp_input_device(
-        sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem& channel, const path& open_path,
         std::ios_base::openmode opening_mode)
         :
      m_open_path(open_path),
@@ -592,7 +592,7 @@ public:
     }
 
 private:
-    boost::filesystem::path m_open_path;
+    path m_open_path;
     boost::shared_ptr<ssh::detail::file_handle_state> m_handle;
 };
 
@@ -613,7 +613,7 @@ class sftp_output_device :
 public:
 
     sftp_output_device(
-        sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem& channel, const path& open_path,
         openmode::value opening_mode=openmode::out)
         :
     m_open_path(open_path),
@@ -622,7 +622,7 @@ public:
     {}
 
     sftp_output_device(
-        sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem& channel, const path& open_path,
         std::ios_base::openmode opening_mode)
         :
     m_open_path(open_path),
@@ -649,7 +649,7 @@ public:
     }
 
 private:
-    boost::filesystem::path m_open_path;
+    path m_open_path;
     boost::shared_ptr<::ssh::detail::file_handle_state> m_handle;
 };
 
@@ -672,7 +672,7 @@ class sftp_io_device :
 public:
 
     sftp_io_device(
-        sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem& channel, const path& open_path,
         openmode::value opening_mode=openmode::in | openmode::out)
         :
     m_open_path(open_path),
@@ -680,7 +680,7 @@ public:
     {}
 
     sftp_io_device(
-        sftp_filesystem& channel, const boost::filesystem::path& open_path, 
+        sftp_filesystem& channel, const path& open_path,
         std::ios_base::openmode opening_mode)
         :
     m_open_path(open_path),
@@ -712,7 +712,7 @@ public:
     }
 
 private:
-    boost::filesystem::path m_open_path;
+    path m_open_path;
     boost::shared_ptr<::ssh::detail::file_handle_state> m_handle;
 };
 

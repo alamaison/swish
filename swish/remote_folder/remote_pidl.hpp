@@ -30,12 +30,13 @@
 
 #include "swish/remotelimits.h"  // Text field limits
 
+#include <ssh/path.hpp>
+
 #include <comet/datetime.h> // datetime_t
 
 #include <washer/shell/pidl.hpp> // pidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/filesystem/path.hpp> // path
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
@@ -56,7 +57,7 @@ namespace remote_folder {
 namespace detail {
 
 #include <pshpack1.h>
-/** 
+/**
  * Internal structure of the PIDLs representing items on the remote filesystem.
  */
 struct remote_item_id
@@ -218,7 +219,7 @@ namespace detail {
 
 /**
  * Create a new wrapped PIDL holding a remote_item_id with given parameters.
- * 
+ *
  * @param filename       Name of file or directory on the remote filesystem.
  * @param is_folder      Is file a folder?
  * @param is_link        Is file a symlink?
@@ -238,7 +239,7 @@ inline washer::shell::pidl::cpidl_t create_remote_itemid(
     const comet::datetime_t date_modified,
     const comet::datetime_t date_accessed)
 {
-    // We create the item on the stack and then clone it into 
+    // We create the item on the stack and then clone it into
     // a CoTaskMemAllocated pidl when we return it as a cpidl_t
     detail::remote_item_template item;
     std::memset(&item, 0, sizeof(item));
@@ -282,13 +283,13 @@ inline washer::shell::pidl::cpidl_t create_remote_itemid(
  * - A relative PIDL returns:  "dir2/dir2/dir3/filename.ext"
  * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
  */
-inline boost::filesystem::path path_from_remote_pidl(
+inline ssh::filesystem::path path_from_remote_pidl(
     const washer::shell::pidl::pidl_t& remote_pidl)
 {
     // Walk over RemoteItemIds and append each filename to form the path
     washer::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
 
-    boost::filesystem::path path;
+    ssh::filesystem::path path;
     while (it != washer::shell::pidl::raw_pidl_iterator())
     {
         remote_itemid_view itemid(*it);

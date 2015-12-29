@@ -28,7 +28,7 @@
 #define SWISH_DROP_TARGET_DROPACTIONCALLBACK_HPP
 #pragma once
 
-#include <boost/filesystem.hpp> // path
+#include <ssh/path.hpp>
 
 #include <memory> // auto_ptr
 
@@ -44,7 +44,7 @@ class DropActionCallback
 {
 public:
     virtual ~DropActionCallback() {}
-    virtual bool can_overwrite(const boost::filesystem::path& target) = 0;
+    virtual bool can_overwrite(const ssh::filesystem::path& target) = 0;
     virtual std::auto_ptr<Progress> progress() = 0;
     virtual void handle_last_exception() = 0;
 };

@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -37,6 +37,8 @@
 #ifndef SSH_OPENSSH_FIXTURE_HPP
 #define SSH_OPENSSH_FIXTURE_HPP
 #pragma once
+
+#include <ssh/path.hpp>
 
 #include <boost/filesystem.hpp> // path
 #include <boost/process/child.hpp> // child process
@@ -64,7 +66,7 @@ public:
     boost::filesystem::path public_key_path() const;
     boost::filesystem::path wrong_private_key_path() const;
     boost::filesystem::path wrong_public_key_path() const;
-    boost::filesystem::path to_remote_path(
+    ::ssh::filesystem::path to_remote_path(
         boost::filesystem::path local_path) const;
 
 private:

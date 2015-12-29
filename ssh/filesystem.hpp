@@ -40,11 +40,11 @@
 #include <ssh/detail/file_handle_state.hpp>
 #include <ssh/detail/sftp_channel_state.hpp>
 #include <ssh/detail/libssh2/sftp.hpp>
+#include <ssh/path.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t, uintmax_t
 #include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM*
 #include <boost/exception/info.hpp> // errinfo_api_function
-#include <boost/filesystem/path.hpp> // path
 #include <boost/iterator/iterator_facade.hpp> // iterator_facade
 #include <boost/optional/optional.hpp>
 #include <boost/make_shared.hpp>
@@ -216,13 +216,12 @@ class sftp_file
 {
 public:
     sftp_file(
-        const boost::filesystem::path& file, const std::string& long_entry,
+        const path& file, const std::string& long_entry,
         const LIBSSH2_SFTP_ATTRIBUTES& attributes)
         :
         m_file(file), m_long_entry(long_entry), m_attributes(attributes) {}
 
-    std::string name() const { return m_file.filename().string(); }
-    const boost::filesystem::path& path() const { return m_file; }
+    ssh::filesystem::path path() const { return m_file; }
     const std::string& long_entry() const { return m_long_entry; }
 
     const file_attributes& attributes() const
@@ -231,7 +230,7 @@ public:
     }
 
 private:
-    boost::filesystem::path m_file;
+    ::ssh::filesystem::path m_file;
     std::string m_long_entry;
     file_attributes m_attributes;
 };
@@ -241,10 +240,9 @@ class sftp_filesystem;
 namespace detail {
 
     inline boost::shared_ptr<::ssh::detail::file_handle_state> open_directory(
-        ::ssh::detail::sftp_channel_state& channel,
-        const boost::filesystem::path& path)
+        ::ssh::detail::sftp_channel_state& channel, const path& path)
     {
-        std::string path_string = path.string();
+        std::string path_string = path.native();
 
         return boost::make_shared<::ssh::detail::file_handle_state>(
             boost::ref(channel), // http://stackoverflow.com/a/1374266/67013
@@ -292,8 +290,7 @@ public:
         friend class sftp_filesystem;
 
         directory_iterator operator()(
-            ::ssh::detail::sftp_channel_state& channel,
-            const boost::filesystem::path& path)
+            ::ssh::detail::sftp_channel_state& channel, const path& path)
         {
             return directory_iterator(channel, path);
         }
@@ -308,8 +305,7 @@ public:
 private:
 
     directory_iterator(
-        ::ssh::detail::sftp_channel_state& sftp_channel,
-        const boost::filesystem::path& path)
+        ::ssh::detail::sftp_channel_state& sftp_channel, const path& path)
         :
         m_directory(path),
         m_handle(detail::open_directory(sftp_channel, path)),
@@ -333,7 +329,7 @@ private:
     }
 
     void next_file()
-    {    
+    {
         // yuk! hardcoded buffer sizes. unfortunately, libssh2 doesn't
         // give us a choice so we allocate massive buffers here and then
         // take measures later to reduce the footprint
@@ -398,7 +394,7 @@ private:
     // The file handle is shared between all copies of the iterator because
     // iterators must be copyable
     boost::shared_ptr<::ssh::detail::file_handle_state> m_handle;
-    boost::filesystem::path m_directory;
+    path m_directory;
 
     /// @name Properties of last successfully listed file.
     // @{
@@ -420,7 +416,7 @@ namespace detail {
 
 
     inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_filesystem& filesystem, const boost::filesystem::path& path);
+        sftp_filesystem& filesystem, const path& path);
 
 }
 
@@ -428,7 +424,7 @@ BOOST_SCOPED_ENUM_START(overwrite_behaviour)
 {
     /**
      * Do not overwrite an existing file at the destination.
-     * 
+     *
      * If the file exists function will throw an exception.
      */
     prevent_overwrite,
@@ -495,7 +491,7 @@ public:
      * all non-end copies of the iterator.  It is the caller's responsibility
      * to ensure this.
      */
-    directory_iterator directory_iterator(const boost::filesystem::path& path)
+    directory_iterator directory_iterator(const path& path)
     {
         return ssh::filesystem::directory_iterator::factory_attorney()(
             sftp_ref(), path);
@@ -508,7 +504,7 @@ public:
     {
         return ssh::filesystem::directory_iterator::factory_attorney()();
     }
-    
+
     /**
      * Query a file for its attributes.
      *
@@ -518,10 +514,9 @@ public:
      * @todo Split into `status` and `symlink_status` to mirror Boost.Filesystem
      *       API.
      */
-    file_attributes attributes(
-        const boost::filesystem::path& file, bool follow_links)
+    file_attributes attributes(const path& file, bool follow_links)
     {
-        std::string file_path = file.string();
+        std::string file_path = file.native();
         LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
 
         {
@@ -538,18 +533,17 @@ public:
         return file_attributes(attributes);
     }
 
-    boost::filesystem::path resolve_link_target(
-        const boost::filesystem::path& link)
+    path resolve_link_target(const path& link)
     {
-        std::string link_string = link.string();
+        std::string link_string = link.native();
 
         return symlink_resolve(
             link_string.data(), link_string.size(), LIBSSH2_SFTP_READLINK);
     }
 
-    boost::filesystem::path canonical_path(const boost::filesystem::path& link)
+    path canonical_path(const path& link)
     {
-        std::string link_string = link.string();
+        std::string link_string = link.native();
 
         return symlink_resolve(
             link_string.data(), link_string.size(), LIBSSH2_SFTP_REALPATH);
@@ -568,12 +562,10 @@ public:
      *           have to pass the parameters to this function in the wrong
      *           order!
      */
-    void create_symlink(
-        const boost::filesystem::path& link,
-        const boost::filesystem::path& target)
+    void create_symlink(const path& link, const path& target)
     {
-        std::string link_string = link.string();
-        std::string target_string = target.string();
+        std::string link_string = link.native();
+        std::string target_string = target.native();
 
         ::ssh::detail::sftp_channel_state::scoped_lock lock =
             sftp_ref().aquire_lock();
@@ -593,17 +585,17 @@ public:
      * @param source
      *     Path to the file on the remote filesystem. File must already exist.
      * @param destination
-     *     Path to which the file will be moved.  File may already exist.  If it 
+     *     Path to which the file will be moved.  File may already exist.  If it
      *     does exist and `allow_overwrite` is `false`, the function will throw
      *     an exception.
      * @param overwrite_hint
-     *     Optional hint suggesting preferred overwrite behaviour if 
+     *     Optional hint suggesting preferred overwrite behaviour if
      *     `destination`
      *     is already a path to a file before this function is called.  Only
      *     `prevent_overwrite` is guaranteed to be obeyed.  All other flags are
-     *     suggestions that the server is free to disregard (most SFTP servers 
+     *     suggestions that the server is free to disregard (most SFTP servers
      *     disregard these flags).  If it does so and `destination` is already a
-     *     path to a file, this function will throw an unspecified 
+     *     path to a file, this function will throw an unspecified
      *     `boost::system::system_error`.
      *
      * @throws `boost::system::system_error` if `destination` is already a
@@ -621,13 +613,12 @@ public:
      *       what it does.
      */
     void rename(
-        const boost::filesystem::path& source,
-        const boost::filesystem::path& destination,
+        const path& source, const path& destination,
         BOOST_SCOPED_ENUM(overwrite_behaviour) overwrite_hint
             =overwrite_behaviour::atomic_overwrite)
     {
-        std::string source_string = source.string();
-        std::string destination_string = destination.string();
+        std::string source_string = source.native();
+        std::string destination_string = destination.native();
 
         int flags;
         switch (overwrite_hint)
@@ -663,7 +654,7 @@ public:
     /**
      * Remove a file.
      *
-     * Removes `target` on the filesystem available via this object.  If 
+     * Removes `target` on the filesystem available via this object.  If
      * `target` is a symlink, only removes the link, not what the link
      * resolves to.  If `target` is a directory, removes it only if the
      * directory is empty.
@@ -680,7 +671,7 @@ public:
      * POSIX/Boost.Filesystem remove functions that do not differentiate
      * directories.
      */
-    bool remove(const boost::filesystem::path& target)
+    bool remove(const path& target)
     {
         // Unlike the POSIX/Boost.Filesystem API we are following, the SFTP
         // protocol mirrors the C API where directories can only be removed
@@ -721,7 +712,7 @@ public:
     /**
      * Remove a file and anything below it in the hierarchy.
      *
-     * Removes `target` on the filesystem available via this object.  If 
+     * Removes `target` on the filesystem available via this object.  If
      * `target` is a symlink, only removes the link, not what the link
      * resolves to.  If `target` is a directory, removes it and all its
      * contents.
@@ -738,7 +729,7 @@ public:
      * All files below the target must be statted (indirectly via directory listing)
      * by any implementation so this function adds no overhead for those.
      */
-    boost::uintmax_t remove_all(const boost::filesystem::path& target)
+    boost::uintmax_t remove_all(const path& target)
     {
         switch (detail::check_status(*this, target))
         {
@@ -771,9 +762,9 @@ public:
      * so seems more appropriate.  It's not clear why Boost.Filesystem chooses
      * 0777 instead.
      */
-    bool create_directory(const boost::filesystem::path& new_directory)
+    bool create_directory(const path& new_directory)
     {
-        std::string new_directory_string = new_directory.string();
+        std::string new_directory_string = new_directory.native();
 
         try
         {
@@ -848,22 +839,21 @@ private:
     friend class sftp_output_device;
     friend class sftp_io_device;
 
-    bool remove_one_file(const boost::filesystem::path& file)
+    bool remove_one_file(const path& file)
     {
         return do_remove(file, false);
     }
 
-    bool remove_empty_directory(const boost::filesystem::path& file)
+    bool remove_empty_directory(const path& file)
     {
         return do_remove(file, true);
     }
 
-    boost::uintmax_t remove_directory(const boost::filesystem::path& root);
+    boost::uintmax_t remove_directory(const path& root);
 
-    bool do_remove(
-        const boost::filesystem::path& target, bool is_directory)
+    bool do_remove(const path& target, bool is_directory)
     {
-        std::string target_string = target.string();
+        std::string target_string = target.native();
 
         try
         {
@@ -903,7 +893,7 @@ private:
     /**
      * Common parts of readlink and realpath.
      */
-    boost::filesystem::path symlink_resolve(
+    path symlink_resolve(
         const char* path, unsigned int path_len, int resolve_action)
     {
         // yuk! hardcoded buffer sizes. unfortunately, libssh2 doesn't
@@ -920,7 +910,7 @@ private:
             &target_path_buffer[0], target_path_buffer.size(),
             resolve_action);
 
-        return boost::filesystem::path(
+        return ::ssh::filesystem::path(
             &target_path_buffer[0], &target_path_buffer[0] + len);
     }
 
@@ -954,7 +944,7 @@ inline void swap(sftp_filesystem& lhs, sftp_filesystem& rhs)
 namespace detail {
 
     inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_filesystem& filesystem, const boost::filesystem::path& path)
+        sftp_filesystem& filesystem, const path& path)
     {
         try
         {
@@ -993,8 +983,7 @@ namespace detail {
 /**
  * Does a file exist at the given path.
  */
-inline bool exists(
-    sftp_filesystem& filesystem, const boost::filesystem::path& file)
+inline bool exists(sftp_filesystem& filesystem, const path& file)
 {
     try
     {
@@ -1015,21 +1004,20 @@ inline bool exists(
     return true;
 }
 
-inline boost::filesystem::path resolve_link_target(
+inline path resolve_link_target(
     sftp_filesystem& filesystem, const sftp_file& link)
 {
     return filesystem.resolve_link_target(link.path());
 }
 
-inline boost::filesystem::path canonical_path(
+inline path canonical_path(
     sftp_filesystem& filesystem, const sftp_file& link)
 {
     return filesystem.canonical_path(link.path());
 }
 
 // Needs directory_iterator implementation so outside sftp_filesystem class body
-inline boost::uintmax_t sftp_filesystem::remove_directory(
-    const boost::filesystem::path& root)
+inline boost::uintmax_t sftp_filesystem::remove_directory(const path& root)
 {
     boost::uintmax_t count = 0U;
 
@@ -1038,7 +1026,7 @@ inline boost::uintmax_t sftp_filesystem::remove_directory(
     {
         const sftp_file& file = *directory;
 
-        if (file.name() == "." || file.name() == "..")
+        if (file.path().filename() == "." || file.path().filename() == "..")
         {
             continue;
         }
