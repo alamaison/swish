@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -50,8 +50,10 @@
 
 #include <libssh2.h> // LIBSSH2_SESSION
 
-namespace ssh {
-namespace detail {
+namespace ssh
+{
+namespace detail
+{
 
 /**
  * RAII object managing session state that must be maintained together.
@@ -73,16 +75,17 @@ class session_state : private boost::noncopyable
     // need to leave it where it is when they move so as not to invalidate
     // the other references.  Making this non-copyable, non-movable enforces
     // that.
-    // 
+    //
 
 public:
-
     typedef boost::mutex::scoped_lock scoped_lock;
 
     /**
      * Creates a session that is not (and never will be) connected to a host.
      */
-    session_state() : m_session(::ssh::detail::libssh2::session::init()) {}
+    session_state() : m_session(::ssh::detail::libssh2::session::init())
+    {
+    }
 
     /**
      * Creates a session connected to a host over the given socket.
@@ -121,8 +124,8 @@ public:
         if (m_disconnection_message)
         {
             boost::system::error_code ec;
-            libssh2::session::disconnect(
-                m_session, m_disconnection_message->c_str(), ec);
+            libssh2::session::disconnect(m_session,
+                                         m_disconnection_message->c_str(), ec);
         }
 
         ::libssh2_session_free(m_session);
@@ -139,7 +142,6 @@ public:
     }
 
 private:
-
     mutable boost::mutex m_mutex;
     ///< Coordinates multiple-threads using of non-thread-safe LIBSSH2_SESSION.
 
@@ -148,9 +150,8 @@ private:
     // Overloading this to hold both the message and flag whether disconnection
     // is necessary.
     boost::optional<std::string> m_disconnection_message;
-
 };
-
-}} // namespace ssh::detail
+}
+} // namespace ssh::detail
 
 #endif

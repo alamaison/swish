@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -46,14 +46,17 @@
 
 #include <libssh2.h> // LIBSSH2_SESSION, libssh2_userauth_*
 
-
 // See ssh/detail/libssh2/libssh2.hpp for rules governing functions in this
 // namespace
 
-namespace ssh {
-namespace detail {
-namespace libssh2 {
-namespace userauth {
+namespace ssh
+{
+namespace detail
+{
+namespace libssh2
+{
+namespace userauth
+{
 
 /**
  * Error-fetching wrapper around libssh2_userauth_list.
@@ -61,13 +64,13 @@ namespace userauth {
  * May return NULL if authentication succeeded with 'none' method.  In this
  * case 'ec == false'.
  */
-inline const char* list(
-    LIBSSH2_SESSION *session, const char *username, unsigned int username_len,
-    boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline const char*
+list(LIBSSH2_SESSION* session, const char* username, unsigned int username_len,
+     boost::system::error_code& ec,
+     boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
-    const char* method_list = ::libssh2_userauth_list(
-        session, username, username_len);
+    const char* method_list =
+        ::libssh2_userauth_list(session, username, username_len);
 
     if (!method_list)
     {
@@ -82,14 +85,14 @@ inline const char* list(
  *
  * Returns NULL if authentication succeeded with 'none' method.
  */
-inline const char* list(
-    LIBSSH2_SESSION *session, const char *username, unsigned int username_len)
+inline const char* list(LIBSSH2_SESSION* session, const char* username,
+                        unsigned int username_len)
 {
     boost::system::error_code ec;
     std::string message;
 
-    const char* method_list = list(
-        session, username, username_len, ec, message);
+    const char* method_list =
+        list(session, username, username_len, ec, message);
 
     if (ec)
     {
@@ -102,16 +105,16 @@ inline const char* list(
 /**
  * Error-fetching wrapper around libssh2_userauth_password_ex.
  */
-inline void password(
-    LIBSSH2_SESSION* session, const char* username,
-    size_t username_len, const char* password, size_t password_len,
-    LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)),
-    boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline void
+password(LIBSSH2_SESSION* session, const char* username, size_t username_len,
+         const char* password, size_t password_len,
+         LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)),
+         boost::system::error_code& ec,
+         boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
-    int rc = ::libssh2_userauth_password_ex(
-        session, username, username_len, password, password_len,
-        passwd_change_cb);
+    int rc = ::libssh2_userauth_password_ex(session, username, username_len,
+                                            password, password_len,
+                                            passwd_change_cb);
 
     if (rc != 0)
     {
@@ -122,22 +125,21 @@ inline void password(
 /**
  * Exception wrapper around libssh2_userauth_password_ex.
  */
-inline void password(
-    LIBSSH2_SESSION* session, const char* username,
-    size_t username_len, const char* password_string, size_t password_len,
-    LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)))
+inline void password(LIBSSH2_SESSION* session, const char* username,
+                     size_t username_len, const char* password_string,
+                     size_t password_len,
+                     LIBSSH2_PASSWD_CHANGEREQ_FUNC((*passwd_change_cb)))
 {
     boost::system::error_code ec;
     std::string message;
-    
-    password(
-        session, username, username_len, password_string, password_len,
-        passwd_change_cb, ec, message);
+
+    password(session, username, username_len, password_string, password_len,
+             passwd_change_cb, ec, message);
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_userauth_password_ex");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message,
+                                        "libssh2_userauth_password_ex");
     }
 }
 
@@ -148,7 +150,7 @@ inline void keyboard_interactive_ex(
     LIBSSH2_SESSION* session, const char* username, unsigned int username_len,
     LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC((*response_callback)),
     boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_userauth_keyboard_interactive_ex(
         session, username, username_len, response_callback);
@@ -169,8 +171,8 @@ inline void keyboard_interactive_ex(
     boost::system::error_code ec;
     std::string message;
 
-    keyboard_interactive_ex(
-        session, username, username_len, response_callback, ec, message);
+    keyboard_interactive_ex(session, username, username_len, response_callback,
+                            ec, message);
 
     if (ec)
     {
@@ -183,11 +185,10 @@ inline void keyboard_interactive_ex(
  * Error-fetching wrapper around libssh2_userauth_publickey_fromfile_ex.
  */
 inline void public_key_from_file(
-    LIBSSH2_SESSION* session, const char* username,
-    size_t username_len, const char* public_key_path,
-    const char* private_key_path, const char* passphrase,
-    boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    LIBSSH2_SESSION* session, const char* username, size_t username_len,
+    const char* public_key_path, const char* private_key_path,
+    const char* passphrase, boost::system::error_code& ec,
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = libssh2_userauth_publickey_fromfile_ex(
         session, username, username_len, public_key_path, private_key_path,
@@ -202,17 +203,17 @@ inline void public_key_from_file(
 /**
  * Exception wrapper around libssh2_userauth_publickey_fromfile_ex.
  */
-inline void public_key_from_file(
-    LIBSSH2_SESSION* session, const char* username,
-    size_t username_len, const char* public_key_path,
-    const char* private_key_path, const char* passphrase)
+inline void public_key_from_file(LIBSSH2_SESSION* session, const char* username,
+                                 size_t username_len,
+                                 const char* public_key_path,
+                                 const char* private_key_path,
+                                 const char* passphrase)
 {
     boost::system::error_code ec;
     std::string message;
 
-    public_key_from_file(
-        session, username, username_len, public_key_path, private_key_path,
-        passphrase, ec, message);
+    public_key_from_file(session, username, username_len, public_key_path,
+                         private_key_path, passphrase, ec, message);
 
     if (ec)
     {
@@ -220,7 +221,9 @@ inline void public_key_from_file(
             ec, message, "libssh2_userauth_publickey_fromfile_ex");
     }
 }
-
-}}}} // namespace ssh::detail::libssh2::userauth
+}
+}
+}
+} // namespace ssh::detail::libssh2::userauth
 
 #endif

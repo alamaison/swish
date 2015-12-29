@@ -44,27 +44,29 @@
 #include <ssh/filesystem.hpp>
 
 #include <boost/filesystem/path.hpp>
-#include <boost/iostreams/categories.hpp>
-                               // seekable, input_seekable, output_seekable
+#include <boost/iostreams/categories.hpp> // seekable, input_seekable,
+                                          // output_seekable
 #include <boost/iostreams/stream.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <cassert> // assert
+#include <cassert>   // assert
 #include <stdexcept> // invalid_argument, logic_error
 #include <string>
 
 #include <libssh2_sftp.h>
 
-namespace ssh {
-namespace filesystem {
+namespace ssh
+{
+namespace filesystem
+{
 
 /**
  * Flags defining how to open a file.
  *
  * Using this rather than `std::ios_base::openmode` to allow us to support
- * non-standard `nocreate` and `noreplace`, which correspond to SFTP file modes, as
- * well as eliminating `ate` and `binary` flags which we don't support.
+ * non-standard `nocreate` and `noreplace`, which correspond to SFTP file modes,
+ * as well as eliminating `ate` and `binary` flags which we don't support.
  *
  * The meaning of the standard flags is the same as in
  * `std::ios_base::openmode`.
@@ -88,8 +90,8 @@ struct openmode
          * also given without `trunc`.  If a new file is created it will empty
          * and have 0644 permissions.
          *
-         * If neither `in` not `app` are given, will truncate any existing
-         * file (i.e. will have same behaviour as if `trunc` had been given).
+         * If neither `in` not `app` are given, will truncate any existing file
+         * (i.e. will have same behaviour as if `trunc` had been given).
          */
         out = std::ios_base::out,
 
@@ -99,22 +101,22 @@ struct openmode
          * This is more than just opening the file at the end as writes _cannot_
          * modify earlier data even if the file is seeked to an earlier point.
          *
-         * @warning  This flag is not supported by common SFTP servers including
-         *           the ubiquitous OpenSSH making is pretty useless in
-         *           practice.
+         * @warning This flag is not supported by common SFTP servers including
+         *          the ubiquitous OpenSSH making is pretty useless in practice.
          */
-         app = std::ios_base::app,
+        app = std::ios_base::app,
 
         /**
          * Empties the file when opening it.
          *
-         * `out` must also be specified for `trunc` to have any effect. `out` without
-         * `app` or `in` behaves as if `trunc` had been given, whether or not it is.
+         * `out` must also be specified for `trunc` to have any effect. `out`
+         * without `app` or `in` behaves as if `trunc` had been given, whether
+         * or not it is.
          *
-         * @todo How does STL `fstream behave if `out` is not specified? Error? Or
-         *       just ignore it like we do?
+         * @todo How does STL `fstream behave if `out` is not specified? Error?
+         *       Or just ignore it like we do?
          */
-         trunc = std::ios_base::trunc,
+        trunc = std::ios_base::trunc,
 
         /**
          * Fail if the file does not already exist.
@@ -122,7 +124,7 @@ struct openmode
          * `in` without `trunc` has this behaviour whether or not `nocreate` is
          * given.
          */
-         nocreate = 0x40,
+        nocreate = 0x40,
 
         /**
          * Fail if the file already exists.
@@ -133,23 +135,24 @@ struct openmode
 
 inline openmode::value operator|(openmode::value l, openmode::value r)
 {
-    return static_cast<openmode::value>(
-        static_cast<int>(l) | static_cast<int>(r));
+    return static_cast<openmode::value>(static_cast<int>(l) |
+                                        static_cast<int>(r));
 }
 
 inline openmode::value operator&(openmode::value l, openmode::value r)
 {
-    return static_cast<openmode::value>(
-        static_cast<int>(l) & static_cast<int>(r));
+    return static_cast<openmode::value>(static_cast<int>(l) &
+                                        static_cast<int>(r));
 }
 
 inline openmode::value operator^(openmode::value l, openmode::value r)
 {
-    return static_cast<openmode::value>(
-        static_cast<int>(l) ^ static_cast<int>(r));
+    return static_cast<openmode::value>(static_cast<int>(l) ^
+                                        static_cast<int>(r));
 }
 
-inline openmode::value& operator|=(openmode::value& l, openmode::value r)
+inline openmode::value&
+operator|=(openmode::value& l, openmode::value r)
 {
     return l = l | r;
 }
@@ -168,100 +171,73 @@ inline openmode::value& operator^=(openmode::value& l, openmode::value r)
 // underlying type
 // (see http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3110.html)
 
-namespace detail {
+namespace detail
+{
 
-    inline openmode::value translate_flags(std::ios_base::openmode std_mode)
+inline openmode::value translate_flags(std::ios_base::openmode std_mode)
+{
+    openmode::value our_mode = openmode::value();
+
+    if (std_mode & std::ios_base::in)
     {
-        openmode::value our_mode = openmode::value();
-
-        if (std_mode & std::ios_base::in)
-        {
-            our_mode |= openmode::in;
-        }
-
-        if (std_mode & std::ios_base::out)
-        {
-            our_mode |= openmode::out;
-        }
-
-        if (std_mode & std::ios_base::ate)
-        {
-            // TODO: support it. Should be simple, all we have to do it seek!
-            BOOST_THROW_EXCEPTION(
-                std::invalid_argument("ate flag not yet supported"));
-        }
-
-        if (std_mode & std::ios_base::app)
-        {
-            our_mode |= openmode::app;
-        }
-
-        if (std_mode & std::ios_base::trunc)
-        {
-            our_mode |= openmode::trunc;
-        }
-
-        if (std_mode & std::ios_base::binary)
-        {
-            ; // do nothing. our streams are always binary
-        }
-
-        return our_mode;
+        our_mode |= openmode::in;
     }
 
-    inline long openmode_to_libssh2_flags(openmode::value opening_mode)
+    if (std_mode & std::ios_base::out)
     {
-        long flags = 0;
+        our_mode |= openmode::out;
+    }
+
+    if (std_mode & std::ios_base::ate)
+    {
+        // TODO: support it. Should be simple, all we have to do it seek!
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("ate flag not yet supported"));
+    }
+
+    if (std_mode & std::ios_base::app)
+    {
+        our_mode |= openmode::app;
+    }
+
+    if (std_mode & std::ios_base::trunc)
+    {
+        our_mode |= openmode::trunc;
+    }
+
+    if (std_mode & std::ios_base::binary)
+    {
+        ; // do nothing. our streams are always binary
+    }
+
+    return our_mode;
+}
+
+inline long openmode_to_libssh2_flags(openmode::value opening_mode)
+{
+    long flags = 0;
+
+    if (opening_mode & openmode::in)
+    {
+        flags |= LIBSSH2_FXF_READ;
+    }
+
+    if (opening_mode & openmode::out)
+    {
+        flags |= LIBSSH2_FXF_WRITE;
 
         if (opening_mode & openmode::in)
         {
-            flags |= LIBSSH2_FXF_READ;
-        }
+            // in flag suppresses creation
 
-        if (opening_mode & openmode::out)
-        {
-            flags |= LIBSSH2_FXF_WRITE;
-
-            if (opening_mode & openmode::in)
+            if (opening_mode & openmode::trunc)
             {
-                // in flag suppresses creation
-
-                if (opening_mode & openmode::trunc)
-                {
-                    // but trunk flag unsuppresses it again
-
-                    if (!(opening_mode & openmode::nocreate))
-                    {
-                        // unless nocreate given in which case just truncate existing
-                        flags |= LIBSSH2_FXF_CREAT;
-
-                        if (opening_mode & openmode::noreplace)
-                        {
-                            flags |= LIBSSH2_FXF_EXCL;
-                        }
-                    }
-                    else if (opening_mode & openmode::noreplace)
-                    {
-                        BOOST_THROW_EXCEPTION(
-                            std::invalid_argument(
-                                "Cannot combine nocreate and noreplace"));
-                    }
-
-                    // XXX: According to SFTP spec, shouldn't be able to have TRUNC
-                    // without CREAT but if it works, it works
-                    flags |= LIBSSH2_FXF_TRUNC;
-                }
-            }
-            else
-            {
-                // Unlike the C and C++ file APIs, SFTP files opened only
-                // for writing are not created if they do not already
-                // exist and are not truncated if they do exists.  Therefore we
-                // explicitly add the CREAT and TRUNC flags to mirror the C++
-                // fstream behaviour
+                // but trunk flag unsuppresses it again
 
                 if (!(opening_mode & openmode::nocreate))
                 {
+                    // unless nocreate given in which case just truncate
+                    // existing
                     flags |= LIBSSH2_FXF_CREAT;
 
                     if (opening_mode & openmode::noreplace)
@@ -271,309 +247,313 @@ namespace detail {
                 }
                 else if (opening_mode & openmode::noreplace)
                 {
-                    BOOST_THROW_EXCEPTION(
-                        std::invalid_argument(
-                            "Cannot combine nocreate and noreplace"));
+                    BOOST_THROW_EXCEPTION(std::invalid_argument(
+                        "Cannot combine nocreate and noreplace"));
                 }
 
-                if (opening_mode & openmode::app)
-                {
-                    flags |= LIBSSH2_FXF_APPEND;
-                }
-                else
-                {
-                    // XXX: According to SFTP spec, shouldn't be able to have TRUNC
-                    // without CREAT but if it works, it works
-                    flags |= LIBSSH2_FXF_TRUNC;
-                }
+                // XXX: According to SFTP spec, shouldn't be able to have TRUNC
+                // without CREAT but if it works, it works
+                flags |= LIBSSH2_FXF_TRUNC;
             }
         }
-
-        return flags;
-    }
-
-    inline boost::shared_ptr<::ssh::detail::file_handle_state> open_file(
-        ::ssh::detail::sftp_channel_state& sftp,
-        const path& open_path,
-        openmode::value opening_mode)
-    {
-        std::string path_string = open_path.native();
-
-        // Open with 644 permissions - good for non-directory files
-        return boost::make_shared<::ssh::detail::file_handle_state>(
-            boost::ref(sftp), // http://stackoverflow.com/a/1374266/67013
-            path_string.data(), path_string.size(),
-            openmode_to_libssh2_flags(opening_mode),
-            LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR |
-            LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IROTH,
-            LIBSSH2_SFTP_OPENFILE);
-    }
-
-    inline boost::shared_ptr<::ssh::detail::file_handle_state> open_input_file(
-        ::ssh::detail::sftp_channel_state& sftp,
-        const path& open_path,
-        openmode::value opening_mode)
-    {
-        // For input streams open files for input even if not given in open
-        // flags.  Matches standard library ifstream.
-
-        return open_file(sftp, open_path, opening_mode | openmode::in);
-    }
-
-    inline boost::shared_ptr<::ssh::detail::file_handle_state> open_output_file(
-       ::ssh::detail::sftp_channel_state& sftp,
-        const path& open_path,
-        openmode::value opening_mode)
-    {
-        // For output streams open files for output even if not given in open
-        // flags.  Matches standard library ofstream.
-
-        return open_file(
-            sftp, open_path,
-            static_cast<openmode::value>(opening_mode | openmode::out));
-    }
-
-    inline boost::iostreams::stream_offset seek(
-        ::ssh::detail::file_handle_state& handle,
-        const path& open_path,
-        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
-    {
-        boost::iostreams::stream_offset new_position = 0;
-
-        switch (way)
+        else
         {
-        case std::ios_base::beg:
-            new_position = off;
-            break;
+            // Unlike the C and C++ file APIs, SFTP files opened only for
+            // writing are not created if they do not already exist and are not
+            // truncated if they do exists.  Therefore we explicitly add the
+            // CREAT and TRUNC flags to mirror the C++ fstream behaviour
 
-        case std::ios_base::cur:
+            if (!(opening_mode & openmode::nocreate))
             {
-                // FIXME: possible to get integer overflow on addition?
-                new_position = libssh2_sftp_tell64(handle.file_handle()) + off;
-                break;
-            }
+                flags |= LIBSSH2_FXF_CREAT;
 
-        case std::ios_base::end: // MUST ACCESS SERVER
-            {
-                LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
-
-                try
+                if (opening_mode & openmode::noreplace)
                 {
-                    ::ssh::detail::file_handle_state::scoped_lock lock =
-                        handle.aquire_lock();
-
-                    ::ssh::detail::libssh2::sftp::fstat(
-                        handle.session_ptr(), handle.sftp_ptr(),
-                        handle.file_handle(), &attributes, LIBSSH2_SFTP_STAT);
+                    flags |= LIBSSH2_FXF_EXCL;
                 }
-                catch (boost::exception& e)
-                {
-                    e << boost::errinfo_file_name(open_path.string());
-                    throw;
-                }
-
-                new_position = attributes.filesize + off;
-                break;
             }
-
-        default:
-            BOOST_THROW_EXCEPTION(
-                std::invalid_argument("Unknown seek direction"));
-        }
-
-        if (new_position < 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("Cannot seek before start of file"));
-        }
-
-
-        libssh2_sftp_seek64(handle.file_handle(), new_position);
-
-        return new_position;
-    }
-
-    inline std::streamsize read(
-        ::ssh::detail::file_handle_state& handle,
-        const path& open_path,
-        char* buffer, std::streamsize buffer_size)
-    {
-        try
-        {
-            // This method is only allowed to return a read count less than
-            // the requested read amount if the end-of-file has been reached.
-            // In other words, non-blocking short reads are not allowed (see
-            // http://bit.ly/1ixEagu and http://bit.ly/1ejYm2T).
-            // Therefore we loop until all the given buffer has been filled
-            // or we reach EOF.
-
-            ssize_t count = 0;
-            do
+            else if (opening_mode & openmode::noreplace)
             {
-                ::ssh::detail::file_handle_state::scoped_lock lock =
-                    handle.aquire_lock();
-
-                ssize_t rc = ::ssh::detail::libssh2::sftp::read(
-                    handle.session_ptr(), handle.sftp_ptr(),
-                    handle.file_handle(), buffer + count, buffer_size - count);
-                if (rc == 0)
-                    break; // EOF
-
-                count += rc;
+                BOOST_THROW_EXCEPTION(std::invalid_argument(
+                    "Cannot combine nocreate and noreplace"));
             }
-            while (count < buffer_size);
 
-            return count;
-        }
-        catch (boost::exception& e)
-        {
-            e << boost::errinfo_file_name(open_path.string());
-            throw;
-        }
-    }
-
-    inline std::streamsize write(
-        ::ssh::detail::file_handle_state& handle,
-        const path& open_path,
-        const char* data, std::streamsize data_size)
-    {
-        try
-        {
-            // Despite it's signature, this method is not allowed to return a
-            // written count less than the given write amount.  The signature
-            // is the way it is so that Boost.IOStreams devices can support
-            // non-blocking behaviour in the future, but we use our devices
-            // to implement STL streams which don't support non-blocking
-            // devices (see http://bit.ly/1ixEagu and http://bit.ly/1ejYm2T).
-            // Therefore we loop until all data is written.
-
-            ssize_t count = 0;
-            do
+            if (opening_mode & openmode::app)
             {
-                ::ssh::detail::file_handle_state::scoped_lock lock =
-                    handle.aquire_lock();
-
-                count += ::ssh::detail::libssh2::sftp::write(
-                    handle.session_ptr(), handle.sftp_ptr(),
-                    handle.file_handle(), data + count, data_size - count);
+                flags |= LIBSSH2_FXF_APPEND;
             }
-            while (count < data_size);
-
-            assert(count == data_size);
-
-            return count;
-        }
-        catch (boost::exception& e)
-        {
-            e << boost::errinfo_file_name(open_path.string());
-            throw;
+            else
+            {
+                // XXX: According to SFTP spec, shouldn't be able to have TRUNC
+                // without CREAT but if it works, it works
+                flags |= LIBSSH2_FXF_TRUNC;
+            }
         }
     }
 
-    const std::streamsize DEFAULT_BUFFER_SIZE = 1024 * 32;
-
-    struct input_device_category :
-        boost::iostreams::input_seekable,
-        boost::iostreams::optimally_buffered_tag {};
-
-    struct output_device_category :
-        boost::iostreams::output_seekable,
-        boost::iostreams::optimally_buffered_tag {};
-
-    struct io_device_category :
-        boost::iostreams::seekable,
-        boost::iostreams::optimally_buffered_tag {};
-
-    /**
-     * Allows setting buffer size on boost::iostreams::stream based streams.
-     *
-     * `boost::iostreams::stream` only forwards three constructor arguments
-     * so this class is necessary to pass up the buffer size argument to the
-     * device.
-     */
-    template<typename Device>
-    class sftp_stream : public boost::iostreams::stream<Device>
-    {
-    public:
-
-        // Using separate constructors rather than default arguments so they
-        // pick up the defaults from the devices
-
-        sftp_stream(
-            sftp_filesystem& channel, const path& open_path)
-        {
-            open(Device(channel, open_path));
-        }
-
-        sftp_stream(
-            sftp_filesystem& channel, const path& open_path,
-            openmode::value opening_mode)
-        {
-            open(Device(channel, open_path, opening_mode));
-        }
-
-        sftp_stream(
-            sftp_filesystem& channel, const path& open_path,
-            openmode::value opening_mode, std::streamsize buffer_size)
-        {
-            open(Device(channel, open_path, opening_mode), buffer_size);
-        }
-
-        sftp_stream(
-            sftp_filesystem& channel, const path& open_path,
-            std::ios_base::openmode opening_mode)
-        {
-            open(Device(channel, open_path, opening_mode));
-        }
-
-        sftp_stream(
-            sftp_filesystem& channel, const path& open_path,
-            std::ios_base::openmode opening_mode, std::streamsize buffer_size)
-        {
-            open(Device(channel, open_path, opening_mode), buffer_size);
-        }
-
-        // We pass the device to `open` rather than creating and passing it to
-        // the stream it in the initialiser list because of a subtle
-        // consequence of ios_base being a virtual base class (via
-        // virtual basic_ios) and ios_base::init having to be called before
-        // ios_base destructor.
-        //
-        // If we initialise boost::iostreams::stream in the list but
-        // sftp_io_device constructor throws an exception, we get an access
-        // violation because ios_base is already constructed (virtual bases
-        // constructed first irrespective of hierarchy) but the stream
-        // class constructor, which calls ios_base::init, is not yet called.  The
-        // exception prevents the stream class constructor being called
-        // but causes ios_base to be destroyed.
-    };
+    return flags;
 }
 
-class sftp_input_device :
-    public boost::iostreams::device<detail::input_device_category>
+inline boost::shared_ptr<::ssh::detail::file_handle_state>
+open_file(::ssh::detail::sftp_channel_state& sftp, const path& open_path,
+          openmode::value opening_mode)
+{
+    std::string path_string = open_path.native();
+
+    // Open with 644 permissions - good for non-directory files
+    return boost::make_shared<::ssh::detail::file_handle_state>(
+        boost::ref(sftp), // http://stackoverflow.com/a/1374266/67013
+        path_string.data(), path_string.size(),
+        openmode_to_libssh2_flags(opening_mode),
+        LIBSSH2_SFTP_S_IRUSR | LIBSSH2_SFTP_S_IWUSR | LIBSSH2_SFTP_S_IRGRP |
+            LIBSSH2_SFTP_S_IROTH,
+        LIBSSH2_SFTP_OPENFILE);
+}
+
+inline boost::shared_ptr<::ssh::detail::file_handle_state>
+open_input_file(::ssh::detail::sftp_channel_state& sftp, const path& open_path,
+                openmode::value opening_mode)
+{
+    // For input streams open files for input even if not given in open
+    // flags.  Matches standard library ifstream.
+
+    return open_file(sftp, open_path, opening_mode | openmode::in);
+}
+
+inline boost::shared_ptr<::ssh::detail::file_handle_state>
+open_output_file(::ssh::detail::sftp_channel_state& sftp, const path& open_path,
+                 openmode::value opening_mode)
+{
+    // For output streams open files for output even if not given in open
+    // flags.  Matches standard library ofstream.
+
+    return open_file(sftp, open_path, static_cast<openmode::value>(
+                                          opening_mode | openmode::out));
+}
+
+inline boost::iostreams::stream_offset
+seek(::ssh::detail::file_handle_state& handle, const path& open_path,
+     boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+{
+    boost::iostreams::stream_offset new_position = 0;
+
+    switch (way)
+    {
+    case std::ios_base::beg:
+        new_position = off;
+        break;
+
+    case std::ios_base::cur:
+    {
+        // FIXME: possible to get integer overflow on addition?
+        new_position = libssh2_sftp_tell64(handle.file_handle()) + off;
+        break;
+    }
+
+    case std::ios_base::end: // MUST ACCESS SERVER
+    {
+        LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
+
+        try
+        {
+            ::ssh::detail::file_handle_state::scoped_lock lock =
+                handle.aquire_lock();
+
+            ::ssh::detail::libssh2::sftp::fstat(
+                handle.session_ptr(), handle.sftp_ptr(), handle.file_handle(),
+                &attributes, LIBSSH2_SFTP_STAT);
+        }
+        catch (boost::exception& e)
+        {
+            e << boost::errinfo_file_name(open_path.string());
+            throw;
+        }
+
+        new_position = attributes.filesize + off;
+        break;
+    }
+
+    default:
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Unknown seek direction"));
+    }
+
+    if (new_position < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Cannot seek before start of file"));
+    }
+
+    libssh2_sftp_seek64(handle.file_handle(), new_position);
+
+    return new_position;
+}
+
+inline std::streamsize read(::ssh::detail::file_handle_state& handle,
+                            const path& open_path, char* buffer,
+                            std::streamsize buffer_size)
+{
+    try
+    {
+        // This method is only allowed to return a read count less than the
+        // requested read amount if the end-of-file has been reached.  In other
+        // words, non-blocking short reads are not allowed (see
+        // http://bit.ly/1ixEagu and http://bit.ly/1ejYm2T).  Therefore we loop
+        // until all the given buffer has been filled or we reach EOF.
+
+        ssize_t count = 0;
+        do
+        {
+            ::ssh::detail::file_handle_state::scoped_lock lock =
+                handle.aquire_lock();
+
+            ssize_t rc = ::ssh::detail::libssh2::sftp::read(
+                handle.session_ptr(), handle.sftp_ptr(), handle.file_handle(),
+                buffer + count, buffer_size - count);
+            if (rc == 0)
+                break; // EOF
+
+            count += rc;
+        } while (count < buffer_size);
+
+        return count;
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::errinfo_file_name(open_path.string());
+        throw;
+    }
+}
+
+inline std::streamsize write(::ssh::detail::file_handle_state& handle,
+                             const path& open_path, const char* data,
+                             std::streamsize data_size)
+{
+    try
+    {
+        // Despite it's signature, this method is not allowed to return a
+        // written count less than the given write amount.  The signature is the
+        // way it is so that Boost.IOStreams devices can support non-blocking
+        // behaviour in the future, but we use our devices to implement STL
+        // streams which don't support non-blocking devices (see
+        // http://bit.ly/1ixEagu and http://bit.ly/1ejYm2T).  Therefore we loop
+        // until all data is written.
+
+        ssize_t count = 0;
+        do
+        {
+            ::ssh::detail::file_handle_state::scoped_lock lock =
+                handle.aquire_lock();
+
+            count += ::ssh::detail::libssh2::sftp::write(
+                handle.session_ptr(), handle.sftp_ptr(), handle.file_handle(),
+                data + count, data_size - count);
+        } while (count < data_size);
+
+        assert(count == data_size);
+
+        return count;
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::errinfo_file_name(open_path.string());
+        throw;
+    }
+}
+
+const std::streamsize DEFAULT_BUFFER_SIZE = 1024 * 32;
+
+struct input_device_category : boost::iostreams::input_seekable,
+                               boost::iostreams::optimally_buffered_tag
+{
+};
+
+struct output_device_category : boost::iostreams::output_seekable,
+                                boost::iostreams::optimally_buffered_tag
+{
+};
+
+struct io_device_category : boost::iostreams::seekable,
+                            boost::iostreams::optimally_buffered_tag
+{
+};
+
+/**
+ * Allows setting buffer size on boost::iostreams::stream based streams.
+ *
+ * `boost::iostreams::stream` only forwards three constructor arguments so this
+ * class is necessary to pass up the buffer size argument to the device.
+ */
+template <typename Device>
+class sftp_stream : public boost::iostreams::stream<Device>
 {
 public:
+    // Using separate constructors rather than default arguments so they pick up
+    // the defaults from the devices
 
-    sftp_input_device(
-        sftp_filesystem& channel, const path& open_path,
-        openmode::value opening_mode=openmode::in)
-        :
-    m_open_path(open_path),
-    m_handle(
-        detail::open_input_file(
-            channel.sftp_ref(), m_open_path, opening_mode))
-    {}
+    sftp_stream(sftp_filesystem& channel, const path& open_path)
+    {
+        open(Device(channel, open_path));
+    }
 
-    sftp_input_device(
-        sftp_filesystem& channel, const path& open_path,
-        std::ios_base::openmode opening_mode)
-        :
-     m_open_path(open_path),
-     m_handle(
-         detail::open_input_file(
-             channel.sftp_ref(), m_open_path,
-             detail::translate_flags(opening_mode)))
-    {}
+    sftp_stream(sftp_filesystem& channel, const path& open_path,
+                openmode::value opening_mode)
+    {
+        open(Device(channel, open_path, opening_mode));
+    }
+
+    sftp_stream(sftp_filesystem& channel, const path& open_path,
+                openmode::value opening_mode, std::streamsize buffer_size)
+    {
+        open(Device(channel, open_path, opening_mode), buffer_size);
+    }
+
+    sftp_stream(sftp_filesystem& channel, const path& open_path,
+                std::ios_base::openmode opening_mode)
+    {
+        open(Device(channel, open_path, opening_mode));
+    }
+
+    sftp_stream(sftp_filesystem& channel, const path& open_path,
+                std::ios_base::openmode opening_mode,
+                std::streamsize buffer_size)
+    {
+        open(Device(channel, open_path, opening_mode), buffer_size);
+    }
+
+    // We pass the device to `open` rather than creating and passing it to the
+    // stream it in the initialiser list because of a subtle consequence of
+    // ios_base being a virtual base class (via virtual basic_ios) and
+    // ios_base::init having to be called before ios_base destructor.
+    //
+    // If we initialise boost::iostreams::stream in the list but sftp_io_device
+    // constructor throws an exception, we get an access violation because
+    // ios_base is already constructed (virtual bases constructed first
+    // irrespective of hierarchy) but the stream class constructor, which calls
+    // ios_base::init, is not yet called.  The exception prevents the stream
+    // class constructor being called but causes ios_base to be destroyed.
+};
+}
+
+class sftp_input_device
+    : public boost::iostreams::device<detail::input_device_category>
+{
+public:
+    sftp_input_device(sftp_filesystem& channel, const path& open_path,
+                      openmode::value opening_mode = openmode::in)
+        : m_open_path(open_path),
+          m_handle(detail::open_input_file(channel.sftp_ref(), m_open_path,
+                                           opening_mode))
+    {
+    }
+
+    sftp_input_device(sftp_filesystem& channel, const path& open_path,
+                      std::ios_base::openmode opening_mode)
+        : m_open_path(open_path),
+          m_handle(
+              detail::open_input_file(channel.sftp_ref(), m_open_path,
+                                      detail::translate_flags(opening_mode)))
+    {
+    }
 
     std::streamsize optimal_buffer_size() const
     {
@@ -585,8 +565,8 @@ public:
         return detail::read(*m_handle, m_open_path, buffer, buffer_size);
     }
 
-    boost::iostreams::stream_offset seek(
-        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    boost::iostreams::stream_offset seek(boost::iostreams::stream_offset off,
+                                         std::ios_base::seekdir way)
     {
         return detail::seek(*m_handle, m_open_path, off, way);
     }
@@ -607,30 +587,26 @@ private:
  */
 typedef detail::sftp_stream<sftp_input_device> ifstream;
 
-class sftp_output_device :
-    public boost::iostreams::device<detail::output_device_category>
+class sftp_output_device
+    : public boost::iostreams::device<detail::output_device_category>
 {
 public:
+    sftp_output_device(sftp_filesystem& channel, const path& open_path,
+                       openmode::value opening_mode = openmode::out)
+        : m_open_path(open_path),
+          m_handle(detail::open_output_file(channel.sftp_ref(), m_open_path,
+                                            opening_mode))
+    {
+    }
 
-    sftp_output_device(
-        sftp_filesystem& channel, const path& open_path,
-        openmode::value opening_mode=openmode::out)
-        :
-    m_open_path(open_path),
-    m_handle(
-        detail::open_output_file(channel.sftp_ref(), m_open_path, opening_mode))
-    {}
-
-    sftp_output_device(
-        sftp_filesystem& channel, const path& open_path,
-        std::ios_base::openmode opening_mode)
-        :
-    m_open_path(open_path),
-    m_handle(
-        detail::open_output_file(
-            channel.sftp_ref(), m_open_path,
-            detail::translate_flags(opening_mode)))
-    {}
+    sftp_output_device(sftp_filesystem& channel, const path& open_path,
+                       std::ios_base::openmode opening_mode)
+        : m_open_path(open_path),
+          m_handle(
+              detail::open_output_file(channel.sftp_ref(), m_open_path,
+                                       detail::translate_flags(opening_mode)))
+    {
+    }
 
     std::streamsize optimal_buffer_size() const
     {
@@ -642,8 +618,8 @@ public:
         return detail::write(*m_handle, m_open_path, data, data_size);
     }
 
-    boost::iostreams::stream_offset seek(
-        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    boost::iostreams::stream_offset seek(boost::iostreams::stream_offset off,
+                                         std::ios_base::seekdir way)
     {
         return detail::seek(*m_handle, m_open_path, off, way);
     }
@@ -652,7 +628,6 @@ private:
     path m_open_path;
     boost::shared_ptr<::ssh::detail::file_handle_state> m_handle;
 };
-
 
 /**
  * Output file stream.
@@ -665,30 +640,25 @@ private:
  */
 typedef detail::sftp_stream<sftp_output_device> ofstream;
 
-
-class sftp_io_device :
-    public boost::iostreams::device<detail::io_device_category>
+class sftp_io_device
+    : public boost::iostreams::device<detail::io_device_category>
 {
 public:
+    sftp_io_device(sftp_filesystem& channel, const path& open_path,
+                   openmode::value opening_mode = openmode::in | openmode::out)
+        : m_open_path(open_path),
+          m_handle(
+              detail::open_file(channel.sftp_ref(), m_open_path, opening_mode))
+    {
+    }
 
-    sftp_io_device(
-        sftp_filesystem& channel, const path& open_path,
-        openmode::value opening_mode=openmode::in | openmode::out)
-        :
-    m_open_path(open_path),
-    m_handle(detail::open_file(channel.sftp_ref(), m_open_path, opening_mode))
-    {}
-
-    sftp_io_device(
-        sftp_filesystem& channel, const path& open_path,
-        std::ios_base::openmode opening_mode)
-        :
-    m_open_path(open_path),
-    m_handle(
-        detail::open_file(
-            channel.sftp_ref(), m_open_path,
-            detail::translate_flags(opening_mode)))
-    {}
+    sftp_io_device(sftp_filesystem& channel, const path& open_path,
+                   std::ios_base::openmode opening_mode)
+        : m_open_path(open_path),
+          m_handle(detail::open_file(channel.sftp_ref(), m_open_path,
+                                     detail::translate_flags(opening_mode)))
+    {
+    }
 
     std::streamsize optimal_buffer_size() const
     {
@@ -705,8 +675,8 @@ public:
         return detail::write(*m_handle, m_open_path, data, data_size);
     }
 
-    boost::iostreams::stream_offset seek(
-        boost::iostreams::stream_offset off, std::ios_base::seekdir way)
+    boost::iostreams::stream_offset seek(boost::iostreams::stream_offset off,
+                                         std::ios_base::seekdir way)
     {
         return detail::seek(*m_handle, m_open_path, off, way);
     }
@@ -725,7 +695,7 @@ private:
  * File always opened in binary mode.  SFTP does not have a text mode.
  */
 typedef detail::sftp_stream<sftp_io_device> fstream;
-
-}} // namespace ssh::filesystem
+}
+} // namespace ssh::filesystem
 
 #endif

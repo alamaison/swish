@@ -37,8 +37,10 @@
 #ifndef SSH_DETAIL_LIBSSH2_LIBSSH2_HPP
 #define SSH_DETAIL_LIBSSH2_LIBSSH2_HPP
 
-namespace ssh {
-namespace detail {
+namespace ssh
+{
+namespace detail
+{
 
 /**
  * Exception-throwing wrappers around libssh2 functions.
@@ -95,8 +97,10 @@ namespace detail {
  * session lifetimes as well as where to (and not to) lock the
  * session.
  */
-namespace libssh2 {
-
-}}} // namespace ssh::detail::libssh2
+namespace libssh2
+{
+}
+}
+} // namespace ssh::detail::libssh2
 
 #endif

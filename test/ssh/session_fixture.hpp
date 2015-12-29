@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -42,20 +42,23 @@
 
 #include <ssh/session.hpp> // session
 
-#include <boost/asio/ip/tcp.hpp> // Boost sockets
+#include <boost/asio/ip/tcp.hpp>         // Boost sockets
 #include <boost/system/system_error.hpp> // system_error
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <locale> // locale::classic
-#include <sstream> // basic_ostringstream
+#include <locale>    // locale::classic
+#include <sstream>   // basic_ostringstream
 #include <stdexcept> // logic_error
 #include <string>
 
-namespace test {
-namespace ssh {
+namespace test
+{
+namespace ssh
+{
 
-namespace detail {
+namespace detail
+{
 
 /**
  * Locale-independent port number to port string conversion.
@@ -72,9 +75,9 @@ inline std::string port_to_string(long port)
     return stream.str();
 }
 
-inline void open_socket(
-    boost::asio::io_service& io, boost::asio::ip::tcp::socket& socket,
-    const std::string host_name, int port)
+inline void open_socket(boost::asio::io_service& io,
+                        boost::asio::ip::tcp::socket& socket,
+                        const std::string host_name, int port)
 {
     using boost::asio::ip::tcp;
 
@@ -94,7 +97,6 @@ inline void open_socket(
     if (error)
         BOOST_THROW_EXCEPTION(boost::system::system_error(error));
 }
-
 }
 
 /**
@@ -103,9 +105,12 @@ inline void open_socket(
 class session_fixture : public openssh_fixture
 {
 public:
-    session_fixture() :
-      m_io(0), m_socket(m_io),
-      m_session(::ssh::session(open_socket(host(), port()).native())) {}
+    session_fixture()
+        : m_io(0),
+          m_socket(m_io),
+          m_session(::ssh::session(open_socket(host(), port()).native()))
+    {
+    }
 
     ::ssh::session& test_session()
     {
@@ -123,9 +128,8 @@ public:
     }
 
 private:
-
-    boost::asio::ip::tcp::socket& open_socket(
-        const std::string host_name, int port)
+    boost::asio::ip::tcp::socket& open_socket(const std::string host_name,
+                                              int port)
     {
         detail::open_socket(m_io, m_socket, host_name, port);
 
@@ -136,7 +140,7 @@ private:
     boost::asio::ip::tcp::socket m_socket;
     ::ssh::session m_session;
 };
-
-}} // namespace test::ssh
+}
+} // namespace test::ssh
 
 #endif

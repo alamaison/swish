@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -48,18 +48,22 @@
 // See ssh/detail/libssh2/libssh2.hpp for rules governing functions in this
 // namespace
 
-namespace ssh {
-namespace detail {
-namespace libssh2 {
-namespace session {
+namespace ssh
+{
+namespace detail
+{
+namespace libssh2
+{
+namespace session
+{
 
 /**
  * Thin exception wrapper around libssh2_session_init.
  */
 inline LIBSSH2_SESSION* init()
 {
-    LIBSSH2_SESSION* session = ::libssh2_session_init_ex(
-        NULL, NULL, NULL, NULL);
+    LIBSSH2_SESSION* session =
+        ::libssh2_session_init_ex(NULL, NULL, NULL, NULL);
     if (!session)
         BOOST_THROW_EXCEPTION(
             std::bad_alloc("Failed to allocate new ssh session"));
@@ -70,9 +74,9 @@ inline LIBSSH2_SESSION* init()
 /**
  * Error-fetching wrapper around libssh2_session_startup.
  */
-inline void startup(
-LIBSSH2_SESSION* session, int socket, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline void
+startup(LIBSSH2_SESSION* session, int socket, boost::system::error_code& ec,
+        boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_session_startup(session, socket);
 
@@ -104,7 +108,7 @@ inline void startup(LIBSSH2_SESSION* session, int socket)
 inline void disconnect(
     LIBSSH2_SESSION* session, const char* description,
     boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_session_disconnect(session, description);
 
@@ -117,8 +121,7 @@ inline void disconnect(
 /**
  * Exception wrapper around libssh2_session_disconnect.
  */
-inline void disconnect(
-    LIBSSH2_SESSION* session, const char* description)
+inline void disconnect(LIBSSH2_SESSION* session, const char* description)
 {
     boost::system::error_code ec;
     std::string message;
@@ -127,11 +130,13 @@ inline void disconnect(
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_session_disconnect");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message,
+                                        "libssh2_session_disconnect");
     }
 }
-
-}}}} // namespace ssh::detail::libssh2::session
+}
+}
+}
+} // namespace ssh::detail::libssh2::session
 
 #endif

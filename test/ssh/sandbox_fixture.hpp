@@ -40,8 +40,10 @@
 
 #include <boost/filesystem/path.hpp>
 
-namespace test {
-namespace ssh {
+namespace test
+{
+namespace ssh
+{
 
 /**
  * Fixture that creates and destroys a sandbox directory.
@@ -54,14 +56,14 @@ public:
 
     boost::filesystem::path sandbox();
     boost::filesystem::path new_file_in_sandbox();
-    boost::filesystem::path sandbox_fixture::new_file_in_sandbox(
-        const boost::filesystem::path& name);
+    boost::filesystem::path
+    sandbox_fixture::new_file_in_sandbox(const boost::filesystem::path& name);
     boost::filesystem::path new_directory_in_sandbox();
 
 private:
     boost::filesystem::path m_sandbox;
 };
-
-}} // namespace test::ssh
+}
+} // namespace test::ssh
 
 #endif
