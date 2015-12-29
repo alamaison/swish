@@ -31,8 +31,9 @@
 #include "swish/drop_target/RootedSource.hpp"
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 
+#include <ssh/filesystem.hpp> // path
+
 #include <boost/bind.hpp> // bind
-#include <boost/filesystem/path.hpp> // path
 #include <boost/function_output_iterator.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
@@ -54,11 +55,12 @@ using washer::shell::pidl::pidl_t;
 using washer::shell::pidl_shell_item;
 using washer::shell::stream_from_pidl;
 
+using ssh::filesystem::path;
+
 using comet::com_error;
 using comet::com_ptr;
 
 using boost::bind;
-using boost::filesystem::path;
 using boost::make_function_output_iterator;
 using boost::shared_ptr;
 using boost::ref;

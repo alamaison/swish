@@ -63,7 +63,6 @@ using boost::system::get_system_category;
 using boost::system::system_error;
 using boost::filesystem::wofstream;
 using boost::filesystem::path;
-using boost::filesystem::path;
 using boost::process::environment;
 using boost::process::context;
 using boost::process::child;
@@ -95,7 +94,10 @@ namespace { // private
     const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
     const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
 
-    const path CYGDRIVE_PREFIX = L"/cygdrive/";
+    ssh::filesystem::path cygdrive_prefix()
+    {
+        return L"/cygdrive/";
+    }
 
     /**
      * Return the path of the currently running executable.
@@ -112,7 +114,7 @@ namespace { // private
             if (buffer.size() > 0)
             {
                 len = ::WideCharToMultiByte(
-                    CP_UTF8, 0, &wide_buffer[0], len, 
+                    CP_UTF8, 0, &wide_buffer[0], len,
                     &buffer[0], static_cast<UINT>(buffer.size()), NULL, NULL);
                 return string(&buffer[0], len);
             }
@@ -131,7 +133,7 @@ namespace { // private
         pos = env.find(SSHD_DIR_ENVIRONMENT_VAR);
         if (pos != env.end())
             return pos->second;
-        
+
         return path();
     }
 
@@ -148,8 +150,8 @@ namespace { // private
     }
 
     /**
-     * Find OpenSSH SFTP subsystem (sftp-server). 
-     * Either in an environment variable or on the path in the same directory 
+     * Find OpenSSH SFTP subsystem (sftp-server).
+     * Either in an environment variable or on the path in the same directory
      * as sshd.
      */
     path GetSftpPath()
@@ -168,12 +170,12 @@ namespace { // private
     {
         string sshd_path = GetSshdPath().string();
 
-        context ctx; 
+        context ctx;
         ctx.env = self::get_environment();
 
         // sshd insists on an absolute path but what it actually looks at isn't
         // what it is invoked as, rather the first argument passed to is.
-        // By default Boost.Filesystem uses just the exe filename for that so 
+        // By default Boost.Filesystem uses just the exe filename for that so
         // we force it to use the full path here.
         ctx.process_name = sshd_path;
 
@@ -204,11 +206,15 @@ namespace { // private
      * For example:
      *   C:\\Users\\username\\file becomes /cygdrive/c/Users/username/file
      */
-    path Cygdriveify(path windowsPath)
+    ssh::filesystem::path Cygdriveify(path windows_path)
     {
-        wstring drive(windowsPath.root_name().wstring(), 0, 1);
-        return (CYGDRIVE_PREFIX / drive / windowsPath.relative_path())
-            .generic_wstring();
+        wstring drive(windows_path.root_name().wstring(), 0, 1);
+        ssh::filesystem::path remote_path = cygdrive_prefix() / drive;
+        BOOST_FOREACH(const path& segment, windows_path.relative_path())
+        {
+            remote_path /= segment.wstring();
+        }
+        return remote_path;
     }
 
     vector<string> GetSshdOptions(int port)
@@ -246,7 +252,7 @@ namespace {
     struct global_fixture
     {
         ~global_fixture()
-        {            
+        {
             // We call this here as a bit of a hack to stop memory-leak
             // detection incorrectly detecting OpenSSL global data as a
             // leak
@@ -291,7 +297,7 @@ namespace detail {
 } // detail
 
 OpenSshFixture::OpenSshFixture()
-: 
+:
 m_port(GenerateRandomPort()), m_openssh(m_port)
 {
 }
@@ -307,7 +313,7 @@ void OpenSshFixture::restart_server()
 
     int listener_pid = m_openssh->pid();
 
-    context ctx; 
+    context ctx;
     ctx.env = self::get_environment();
 
     ctx.process_name = "bash";
@@ -362,7 +368,7 @@ path OpenSshFixture::PublicKeyPath() const
  * Transform a local (Windows) path into a form usuable on the
  * command-line of the fixture SSH server.
  */
-path OpenSshFixture::ToRemotePath(path local_path) const
+ssh::filesystem::path OpenSshFixture::ToRemotePath(path local_path) const
 {
     return Cygdriveify(local_path);
 }
@@ -379,7 +385,7 @@ namespace { // private
         shared_ptr<wchar_t> name(
             _wtempnam(NULL, SANDBOX_NAME.c_str()), free);
         BOOST_REQUIRE(name);
-        
+
         return path(name.get());
     }
 }

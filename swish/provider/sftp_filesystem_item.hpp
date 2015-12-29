@@ -32,7 +32,7 @@
 #ifndef SWISH_PROVIDER_SFTP_FILESYSTEM_ITEM_HPP
 #define SWISH_PROVIDER_SFTP_FILESYSTEM_ITEM_HPP
 
-#include "swish/provider/sftp_provider_path.hpp"
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t
 #include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
@@ -65,7 +65,7 @@ public:
         /// File that can be opened and whose contents can be accessed
         /// (permissions permitting).
         file,
-          
+
         /// This filesystem item can be listed for items under it.
         directory,
 
@@ -82,7 +82,7 @@ public:
     virtual BOOST_SCOPED_ENUM(type) type() const = 0;
 
     /// Filename relative to directory (e.g. `README.txt`).
-    virtual sftp_provider_path filename() const = 0;
+    virtual ssh::filesystem::path filename() const = 0;
 
     /// Unix file permissions.
     virtual unsigned long permissions() const = 0;
@@ -125,7 +125,7 @@ public:
     BOOST_SCOPED_ENUM(type) type() const
     { return m_inner->type(); }
 
-    sftp_provider_path filename() const
+    ssh::filesystem::path filename() const
     { return m_inner ->filename(); }
 
     unsigned long permissions() const

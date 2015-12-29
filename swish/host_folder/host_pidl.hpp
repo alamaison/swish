@@ -33,11 +33,12 @@
 #include <washer/shell/pidl.hpp> // pidl_t, apidl_t, cpidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/filesystem/path.hpp> // path
 #include <boost/format.hpp> // wformat
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+
+#include <ssh/filesystem/path.hpp>
 
 #ifndef STRICT_TYPED_ITEMIDS
 #error Currently, swish requires strict PIDL types: define STRICT_TYPED_ITEMIDS
@@ -67,7 +68,7 @@ struct host_item_id
     WCHAR wszHost[MAX_HOSTNAME_LENZ];
     WCHAR wszPath[MAX_PATH_LENZ];
     USHORT uPort;
-    
+
     static const DWORD FINGERPRINT = 0x496c1066;
 };
 #include <poppack.h>
@@ -135,11 +136,12 @@ public:
         return detail::copy_unaligned_string(m_itemid->wszLabel);
     }
 
-    boost::filesystem::path path() const
+    ssh::filesystem::path path() const
     {
         if (!valid())
             BOOST_THROW_EXCEPTION(std::exception("PIDL is not a host item"));
-        return detail::copy_unaligned_string(m_itemid->wszPath);
+        return ssh::filesystem::path(
+            detail::copy_unaligned_string(m_itemid->wszPath));
     }
 
     int port() const
@@ -178,7 +180,7 @@ inline washer::shell::pidl::raw_pidl_iterator find_host_itemid(
 {
     washer::shell::pidl::raw_pidl_iterator begin(pidl);
     washer::shell::pidl::raw_pidl_iterator end;
-    
+
     // Search along pidl until we find one that matches our fingerprint or
     // we run off the end
     washer::shell::pidl::raw_pidl_iterator pos = std::find_if(
@@ -212,11 +214,11 @@ namespace detail {
  * Construct a new host folder PIDL with the fields initialised.
  */
 inline washer::shell::pidl::cpidl_t create_host_itemid(
-    const std::wstring& host, const std::wstring& user, 
-    const boost::filesystem::path& path, int port,
+    const std::wstring& host, const std::wstring& user,
+    const ssh::filesystem::path& path, int port,
     const std::wstring& label=std::wstring())
 {
-    // We create the item on the stack and then clone it into 
+    // We create the item on the stack and then clone it into
     // a CoTaskMemAllocated pidl when we return it as a cpidl_t
     detail::host_item_template item;
     std::memset(&item, 0, sizeof(item));
@@ -246,7 +248,7 @@ inline washer::shell::pidl::cpidl_t create_host_itemid(
     return washer::shell::pidl::cpidl_t(
         reinterpret_cast<PCITEMID_CHILD>(&item));
 }
-    
+
 /**
  * Retrieve the long name of the host connection from the PIDL.
  *
@@ -265,14 +267,14 @@ inline std::wstring url_from_host_itemid(
         return str(
             boost::wformat(L"sftp://%s@%s:%u/%s")
             % host_pidl.user() % host_pidl.host() % host_pidl.port()
-            % host_pidl.path().generic_wstring());
+            % host_pidl.path().wstring());
     }
     else
     {
         return str(
             boost::wformat(L"sftp://%s@%s/%s")
             % host_pidl.user() % host_pidl.host()
-            % host_pidl.path().generic_wstring());
+            % host_pidl.path().wstring());
     }
 }
 

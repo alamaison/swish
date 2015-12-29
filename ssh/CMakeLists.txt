@@ -28,6 +28,7 @@ set(SOURCES
   filesystem.hpp
   host_key.hpp
   knownhost.hpp
+  path.hpp
   session.hpp
   sftp_error.hpp
   ssh_error.hpp

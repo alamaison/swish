@@ -23,13 +23,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -57,22 +57,24 @@ public:
     explicit CProvider(
         BOOST_RV_REF(swish::connection::session_reservation) session_ticket);
 
-    virtual directory_listing listing(const sftp_provider_path& directory);
+    virtual directory_listing listing(const ssh::filesystem::path& directory);
 
     virtual comet::com_ptr<IStream> get_file(
-        std::wstring file_path, std::ios_base::openmode open_mode);
+        const ssh::filesystem::path& file_path, std::ios_base::openmode open_mode);
 
     virtual VARIANT_BOOL rename(
-        ISftpConsumer* consumer, BSTR from_path, BSTR to_path);
+        ISftpConsumer* consumer, const ssh::filesystem::path& from_path,
+        const ssh::filesystem::path& to_path);
 
-    virtual void remove_all(BSTR path);
+    virtual void remove_all(const ssh::filesystem::path& path);
 
-    virtual void create_new_directory(BSTR path);
+    virtual void create_new_directory(const ssh::filesystem::path& path);
 
-    virtual BSTR resolve_link(BSTR link_path);
+    virtual ssh::filesystem::path resolve_link(
+        const ssh::filesystem::path& link_path);
 
     virtual sftp_filesystem_item stat(
-        const sftp_provider_path& path, bool follow_links);
+        const ssh::filesystem::path& path, bool follow_links);
 
 private:
     boost::shared_ptr<provider> m_provider;

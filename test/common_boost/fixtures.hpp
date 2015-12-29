@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <ssh/filesystem/path.hpp>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional/optional.hpp>
@@ -111,7 +113,7 @@ public:
     int GetPort() const;
     boost::filesystem::path PrivateKeyPath() const;
     boost::filesystem::path PublicKeyPath() const;
-    boost::filesystem::path ToRemotePath(
+    ssh::filesystem::path ToRemotePath(
         boost::filesystem::path local_path) const;
 
 private:

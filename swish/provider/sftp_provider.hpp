@@ -30,9 +30,10 @@
 #pragma once
 
 #include "swish/provider/sftp_filesystem_item.hpp"
-#include "swish/provider/sftp_provider_path.hpp"
 
-#include <boost/filesystem/path.hpp> // path
+#include <ssh/filesystem/path.hpp>
+
+#include <boost/filesystem/path.hpp>
 #include <boost/optional/optional.hpp>
 //#include <boost/range/any_range.hpp> USE ONCE WE UPGRADE BOOST
 
@@ -111,17 +112,18 @@ public:
     virtual ~sftp_provider() {}
 
     virtual directory_listing listing(
-        const sftp_provider_path& directory) = 0;
+        const ssh::filesystem::path& directory) = 0;
 
     virtual comet::com_ptr<IStream> get_file(
-        std::wstring file_path, std::ios_base::openmode mode) = 0;
+        const ssh::filesystem::path& file_path, std::ios_base::openmode mode) = 0;
 
     virtual VARIANT_BOOL rename(
-        ISftpConsumer* consumer, BSTR from_path, BSTR to_path) = 0;
+        ISftpConsumer* consumer, const ssh::filesystem::path& from_path,
+        const ssh::filesystem::path& to_path) = 0;
 
-    virtual void remove_all(BSTR path) = 0;
+    virtual void remove_all(const ssh::filesystem::path& path) = 0;
 
-    virtual void create_new_directory(BSTR path) = 0;
+    virtual void create_new_directory(const ssh::filesystem::path& path) = 0;
 
     /**
      * Return the canonical path of the given non-canonical path.
@@ -129,10 +131,11 @@ public:
      * While generally used to resolve symlinks, it can also be used to
      * convert paths relative to the startup directory into absolute paths.
      */
-    virtual BSTR resolve_link(BSTR link_path) = 0;
+    virtual ssh::filesystem::path resolve_link(
+        const ssh::filesystem::path& link_path) = 0;
 
     virtual sftp_filesystem_item stat(
-        const sftp_provider_path& path, bool follow_links) = 0;
+        const ssh::filesystem::path& path, bool follow_links) = 0;
 };
 
 }}

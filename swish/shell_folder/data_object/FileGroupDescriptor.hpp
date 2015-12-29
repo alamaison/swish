@@ -30,7 +30,6 @@
 
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 #include <boost/shared_ptr.hpp> // shared_ptr
-#include <boost/filesystem.hpp> // path
 #pragma warning(push)
 #pragma warning(disable:4244) // conversion from uint64_t to uint32_t
 #include <boost/date_time/posix_time/posix_time_types.hpp> // ptime
@@ -43,6 +42,7 @@
 #include <boost/cstdint.hpp> // unint64_t
 
 #include <stdexcept> // out_of_range, length_error, logic_error
+#include <string>
 
 #include <shlobj.h> // FILEDESCRIPTOR, FILEGROUPDESCRIPTOR
 #include <Windows.h> // HGLOBAL, GetLastError
@@ -107,7 +107,7 @@ public:
 class Descriptor : private FILEDESCRIPTORW
 {
 public:
-    
+
     Descriptor() : FILEDESCRIPTORW() {}
     Descriptor(const FILEDESCRIPTORW& d) : FILEDESCRIPTORW(d) {}
     // default copy, assign and destruct OK
@@ -120,24 +120,30 @@ public:
     /**
      * Return the stored filename or relative path.
      */
-    boost::filesystem::path path() const
+    std::wstring path() const
     {
         return cFileName;
     }
 
     /**
      * Save given path as the descriptor filename/path.
+     *
+     * FGD paths are relative paths using backslashes as separators.  We allow
+     * the path argument to use forward slashes, andthey will be converted
+     * accordingly.
      */
-    void path(const boost::filesystem::path& path)
+    void path(std::wstring path)
     {
+        std::replace(path.begin(), path.end(), L'/', L'\\');
+
         static const size_t BUFFER_SIZE =
             sizeof(cFileName) / sizeof(cFileName[0]);
 
-        if (path.wstring().size() >= BUFFER_SIZE)
+        if (path.size() >= BUFFER_SIZE)
             BOOST_THROW_EXCEPTION(
                 std::length_error("Path greater than MAX_PATH"));
 
-        size_t count = path.wstring().copy(cFileName, BUFFER_SIZE - 1);
+        size_t count = path.copy(cFileName, BUFFER_SIZE - 1);
         cFileName[count] = L'\0';
     }
 
@@ -279,8 +285,8 @@ private:
     bool _valid_field(DWORD field) const
     {
         return !!(dwFlags & field);
-    }    
-    
+    }
+
     /**
      * Set the validity of the given field.
      */
@@ -288,7 +294,7 @@ private:
     {
         dwFlags = dwFlags | field;
     }
-    
+
     /**
      * Unset the validity of the given field.
      */
@@ -343,7 +349,7 @@ private:
 };
 
 /**
- * Allocate a FILEGROUPDESCRIPTORW in global memory holding the given 
+ * Allocate a FILEGROUPDESCRIPTORW in global memory holding the given
  * descriptors.
  *
  * The descriptor are give as a [first, last) range who element type is
@@ -359,7 +365,7 @@ HGLOBAL group_descriptor_from_range(It first, It last)
         BOOST_THROW_EXCEPTION(
             std::length_error("Range must have at least one descriptor."));
 
-    size_t bytes = 
+    size_t bytes =
         sizeof(FILEGROUPDESCRIPTORW ) + (count * sizeof(FILEDESCRIPTORW));
 
     HGLOBAL hglobal = ::GlobalAlloc(GMEM_MOVEABLE, bytes);

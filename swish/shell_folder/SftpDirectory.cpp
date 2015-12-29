@@ -48,6 +48,8 @@
 #include <exception> // exception
 #include <vector>
 
+using ssh::filesystem::path;
+
 using swish::provider::sftp_provider;
 using swish::remote_folder::absolute_path_from_swish_pidl;
 using swish::remote_folder::create_remote_itemid;
@@ -65,7 +67,6 @@ using washer::shell::pidl::raw_pidl_iterator;
 using washer::trace;
 
 using comet::auto_attach;
-using comet::bstr_t;
 using comet::com_error;
 using comet::com_error_from_interface;
 using comet::com_ptr;
@@ -74,7 +75,6 @@ using comet::make_smart_enumeration;
 
 using boost::adaptors::filtered;
 using boost::adaptors::transformed;
-using boost::filesystem::path;
 using boost::function;
 using namespace boost::lambda;
 using boost::make_shared;
@@ -142,12 +142,11 @@ namespace {
             // Links don't indicate anything about their target such as
             // whether it is a file or folder so we have to interrogate
             // its target
-            bstr_t link_path = (directory / file.filename()).wstring();
+            path link_path = directory / file.filename();
 
             try
             {
-                sftp_filesystem_item target = provider.stat(
-                    link_path.in(), TRUE);
+                sftp_filesystem_item target = provider.stat(link_path, TRUE);
 
                 // TODO: consider what other properties we might want to
                 // take from the target instead of the link.  Currently
@@ -330,8 +329,7 @@ namespace {
  */
 com_ptr<IStream> CSftpDirectory::GetFile(const cpidl_t& file, bool writeable)
 {
-    wstring file_path =
-        (m_directory / remote_itemid_view(file).filename()).wstring();
+    path file_path = m_directory / remote_itemid_view(file).filename();
 
     return m_provider->get_file(file_path, writeable_to_openmode(writeable));
 }
@@ -352,13 +350,12 @@ com_ptr<IStream> CSftpDirectory::GetFileByPath(
     const path& file, bool writeable)
 {
     return m_provider->get_file(
-        (m_directory / file).generic_wstring(), writeable_to_openmode(writeable));
+        m_directory / file, writeable_to_openmode(writeable));
 }
 
 bool CSftpDirectory::exists(const cpidl_t& file)
 {
-    wstring file_path =
-        (m_directory / remote_itemid_view(file).filename()).wstring();
+    path file_path = m_directory / remote_itemid_view(file).filename();
 
     try
     {
@@ -377,21 +374,18 @@ bool CSftpDirectory::Rename(
     const cpidl_t& old_file, const wstring& new_filename,
     com_ptr<ISftpConsumer> consumer)
 {
-    bstr_t old_file_path =
-        (m_directory / remote_itemid_view(old_file).filename()).wstring();
-    bstr_t new_file_path = (m_directory / new_filename).wstring();
+    path old_file_path = m_directory / remote_itemid_view(old_file).filename();
+    path new_file_path = m_directory / new_filename;
 
-    return m_provider->rename(
-        consumer.in(), old_file_path.in(), new_file_path.in())
+    return m_provider->rename(consumer.in(), old_file_path, new_file_path)
         == VARIANT_TRUE;
 }
 
 void CSftpDirectory::Delete(const cpidl_t& file)
 {
-    bstr_t target_path =
-        (m_directory / remote_itemid_view(file).filename()).wstring();
+    path target_path = m_directory / remote_itemid_view(file).filename();
 
-    m_provider->remove_all(target_path.in());
+    m_provider->remove_all(target_path);
 
     try
     {
@@ -409,13 +403,13 @@ void CSftpDirectory::Delete(const cpidl_t& file)
 
 cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 {
-    bstr_t target_path = (m_directory / name).wstring();
+    path target_path = m_directory / name;
 
     cpidl_t sub_directory = create_remote_itemid(
         name, true, false, L"", L"", 0, 0, 0, 0, datetime_t::now(),
         datetime_t::now());
 
-    m_provider->create_new_directory(target_path.in());
+    m_provider->create_new_directory(target_path);
 
     try
     {
@@ -437,8 +431,8 @@ cpidl_t CSftpDirectory::CreateDirectory(const wstring& name)
 apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
 {
     remote_itemid_view symlink(item);
-    bstr_t link_path = (m_directory / symlink.filename()).wstring();
-    bstr_t target_path(auto_attach(m_provider->resolve_link(link_path.in())));
+    path link_path = m_directory / symlink.filename();
+    path target_path = m_provider->resolve_link(link_path);
 
     // XXX: HACK:
     // Currently, we create the new PIDL for the resolved path by copying all
@@ -474,7 +468,7 @@ apidl_t CSftpDirectory::ResolveLink(const cpidl_t& item)
         old_item.label());
 
     apidl_t resolved_target = pidl_to_link_target + new_host_item;
-    BOOST_FOREACH(const path& segment, path(target_path.w_str()))
+    BOOST_FOREACH(const path& segment, target_path)
     {
         resolved_target += create_remote_itemid(
             segment.filename().wstring(), true, false, L"", L"", 0, 0, 0, 0,

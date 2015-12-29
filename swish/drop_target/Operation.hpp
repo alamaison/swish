@@ -34,6 +34,8 @@
 #include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp>
 
+#include <ssh/filesystem/path.hpp>
+
 #include <comet/ptr.h> // com_ptr
 
 #include <cassert> // assert
@@ -65,7 +67,7 @@ public:
     virtual void check_if_user_cancelled() const = 0;
 
     virtual bool request_overwrite_permission(
-        const boost::filesystem::path& target) const = 0;
+        const ssh::filesystem::path& target) const = 0;
 
     virtual void update_progress(
         boost::uintmax_t so_far, boost::uintmax_t out_of) = 0;

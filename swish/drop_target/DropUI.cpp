@@ -58,7 +58,8 @@ using washer::window::window_handle;
 using comet::com_error;
 using comet::com_ptr;
 
-using boost::filesystem::path;
+using ssh::filesystem::path;
+
 using boost::locale::translate;
 using boost::locale::wformat;
 using boost::noncopyable;
@@ -85,7 +86,7 @@ namespace {
         {
             result = ::GetMessage(&msg, NULL, 0, 0);
             if (result == 0) // WM_QUIT
-            {                
+            {
                 ::PostQuitMessage(msg.wParam);
                 break;
             }
@@ -93,14 +94,14 @@ namespace {
             {
                 return;
             }
-            else 
+            else
             {
                 ::TranslateMessage(&msg);
                 ::DispatchMessage(&msg);
             }
         }
     }
-    
+
 
     /**
      * Exception-safe lifetime manager for an IProgressDialog object.
@@ -125,7 +126,7 @@ namespace {
             return m_inner.user_cancelled();
         }
 
-        // Because we are no longer doing the transfer in a different COM 
+        // Because we are no longer doing the transfer in a different COM
         // apartment, which would pump messages during the call, the UI blocks
         // on the drop.  That includes not showing the progress dialog.
         //
@@ -257,7 +258,7 @@ bool DropUI::can_overwrite(const path& target)
 
     // If the caller has already displayed the progress dialog, we must
     // force-hide it as it gets in the way of other UI
-    ScopedDisabler disable_progress(*m_progress); 
+    ScopedDisabler disable_progress(*m_progress);
 
     button_type::type button = message_box(
         (m_owner) ? m_owner->hwnd() : NULL,

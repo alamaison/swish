@@ -26,7 +26,8 @@ set(INTEGRATION_TESTS
   session_fixture.hpp)
 
 set(UNIT_TESTS
-  knownhost_test.cpp)
+  knownhost_test.cpp
+  path_test.cpp)
 
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
@@ -77,10 +78,19 @@ function(SSH_TEST_SUITE)
     PRIVATE
     ${SSH_TEST_SUITE_SUBJECT} ${SSH_TEST_SUITE_LIBRARIES})
 
+  add_dependencies(BUILD_ALL_TESTS ${_TEST_EXE_NAME})
+
   add_test(
     NAME ${_TEST_EXE_NAME}
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
     WORKING_DIRECTORY $<TARGET_FILE_DIR:${_TEST_EXE_NAME}>)
+
+  if(MEMORY_LEAKS_ARE_FAILURES)
+    # Don't hide memory leak detection.  The detector can't change the error
+    # code so the test appears successful otherwise.
+    set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
+      FAIL_REGULAR_EXPRESSION "Detected memory leaks")
+  endif()
 
   if(TEST_RUNNER_ENVIRONMENT)
     set_tests_properties(${_TEST_EXE_NAME} PROPERTIES

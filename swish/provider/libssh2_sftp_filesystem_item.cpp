@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2012, 2015  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ using swish::utils::Utf8StringToWideString;
 using comet::datetime_t;
 
 using ssh::filesystem::file_attributes;
+using ssh::filesystem::path;
 using ssh::filesystem::sftp_file;
 
 using boost::optional;
@@ -57,7 +58,7 @@ namespace {
     const boost::regex regex("\\S{10,}\\s+\\d+\\s+(\\S+)\\s+(\\S+)\\s+.+");
     const unsigned int USER_MATCH = 1;
     const unsigned int GROUP_MATCH = 2;
-        
+
     /**
      * Get the username part of an SFTP 'ls -l'-style long entry.
      *
@@ -113,11 +114,11 @@ namespace provider {
 
 sftp_filesystem_item
 libssh2_sftp_filesystem_item::create_from_libssh2_attributes(
-    const string& char_blob_file_name, const file_attributes& attributes)
+    const path& file_name, const file_attributes& attributes)
 {
     return sftp_filesystem_item(
         shared_ptr<sftp_filesystem_item_interface>(
-            new libssh2_sftp_filesystem_item(char_blob_file_name, attributes)));
+            new libssh2_sftp_filesystem_item(file_name, attributes)));
 }
 
 sftp_filesystem_item
@@ -130,11 +131,9 @@ libssh2_sftp_filesystem_item::create_from_libssh2_file(const sftp_file& file)
 
 
 void libssh2_sftp_filesystem_item::common_init(
-    const string& char_blob_file_name, const file_attributes& attributes)
+    const path& file_name, const file_attributes& attributes)
 {
-    // FIXME: this filename may not be UTF-8 but we're blindly treating
-    // it as though it were - should autodetect if possible
-    m_path = Utf8StringToWideString(char_blob_file_name);
+    m_path = file_name;
 
     switch (attributes.type())
     {
@@ -196,7 +195,7 @@ m_type(type::unknown), m_permissions(0U), m_uid(0U), m_gid(0U), m_size(0U)
 {
     file_attributes attributes = file.attributes();
 
-    common_init(file.name(), attributes);
+    common_init(file.path().filename(), attributes);
 
     // Naughtily, we parse the long (ls -l) form of the file's attributes
     // for the username and group.  The standard says we shouldn't but
@@ -222,11 +221,11 @@ m_type(type::unknown), m_permissions(0U), m_uid(0U), m_gid(0U), m_size(0U)
 }
 
 libssh2_sftp_filesystem_item::libssh2_sftp_filesystem_item(
-    const string& char_blob_file_name, const file_attributes& attributes)
+    const path& file_name, const file_attributes& attributes)
     :
 m_type(type::unknown), m_permissions(0U), m_uid(0U), m_gid(0U), m_size(0U)
 {
-    common_init(char_blob_file_name, attributes);
+    common_init(file_name, attributes);
 }
 
 BOOST_SCOPED_ENUM(sftp_filesystem_item_interface::type)
@@ -235,7 +234,7 @@ libssh2_sftp_filesystem_item::type() const
     return m_type;
 }
 
-sftp_provider_path libssh2_sftp_filesystem_item::filename() const
+ssh::filesystem::path libssh2_sftp_filesystem_item::filename() const
 {
     return m_path.filename();
 }

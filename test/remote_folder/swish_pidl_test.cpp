@@ -71,6 +71,21 @@ BOOST_AUTO_TEST_CASE( pidl_to_absolute_path )
     BOOST_CHECK_EQUAL(
         absolute_path_from_swish_pidl(pidl), L"/p/q/foo");
 }
+/**
+ * Test path extraction for a Swish PIDL containing a remote item id.
+ */
+BOOST_AUTO_TEST_CASE( pidl_to_absolute_path_renders_expected_string )
+{
+    // The path may compare equal to the expected string without rendering
+    // itself as the same string.  For example, the slashes might be backslashes
+    // instead of forward slashes.  This causes problems down the line.
+    apidl_t pidl = swish_pidl() + create_host_itemid(
+        L"host.example.com", L"bobuser", L"/p/q", 22);
+    pidl += create_dummy_remote_itemid(L"foo", false);
+
+    BOOST_CHECK_EQUAL(
+        absolute_path_from_swish_pidl(pidl).string(), "/p/q/foo");
+}
 
 /**
  * Test path extraction for a Swish PIDL containing two remote item ids.

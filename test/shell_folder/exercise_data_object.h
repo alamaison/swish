@@ -59,7 +59,7 @@ static void _testShellPIDLCount(
     STGMEDIUM stg;
     HRESULT hr = data_object->GetData(&fetc, &stg);
     BOOST_REQUIRE_OK(hr);
-    
+
     BOOST_CHECK(stg.hGlobal);
     CIDA *pida = (CIDA *)::GlobalLock(stg.hGlobal);
     BOOST_CHECK(pida);
@@ -94,7 +94,7 @@ static void _testShellPIDL(
     STGMEDIUM stg;
     HRESULT hr = data_object->GetData(&fetc, &stg);
     BOOST_REQUIRE_OK(hr);
-    
+
     BOOST_CHECK(stg.hGlobal);
     CIDA *pida = (CIDA *)::GlobalLock(stg.hGlobal);
     BOOST_CHECK(pida);
@@ -113,7 +113,7 @@ static void _testShellPIDL(
  * Test that Shell PIDL from DataObject represents the common root folder.
  *
  * The PIDL may be a RemoteItemId, in which case @p expected should be the
- * name of the directory (e.g "tmp"), but it may also be an HostItemId in which 
+ * name of the directory (e.g "tmp"), but it may also be an HostItemId in which
  * case the path (e.g. "/tmp") that is expected to be found in that item
  * should be passed.
  */
@@ -131,7 +131,7 @@ static void _testShellPIDLFolder(
     STGMEDIUM stg;
     HRESULT hr = data_object->GetData(&fetc, &stg);
     BOOST_REQUIRE_OK(hr);
-    
+
     BOOST_CHECK(stg.hGlobal);
     CIDA *pida = (CIDA *)::GlobalLock(stg.hGlobal);
     BOOST_CHECK(pida);
@@ -147,8 +147,8 @@ static void _testShellPIDLFolder(
     else if (swish::host_folder::host_itemid_view(actual).valid())
     {
         swish::host_folder::host_itemid_view itemid(actual);
-        boost::filesystem::path actual_path = itemid.path();
-        BOOST_CHECK_EQUAL(expected, actual_path.wstring());
+        std::wstring actual_path = itemid.path().wstring();
+        BOOST_CHECK_EQUAL(expected, actual_path);
     }
     else
     {
@@ -183,9 +183,9 @@ static void _testFileDescriptor(
     HRESULT hr = data_object->GetData(&fetc, &stg);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(comet::com_error_from_interface(data_object, hr));
-    
+
     BOOST_CHECK(stg.hGlobal);
-    FILEGROUPDESCRIPTOR *fgd = 
+    FILEGROUPDESCRIPTOR *fgd =
         (FILEGROUPDESCRIPTOR *)::GlobalLock(stg.hGlobal);
     BOOST_CHECK(fgd);
 
@@ -217,7 +217,7 @@ static void _testStreamContents(
     HRESULT hr = data_object->GetData(&fetc, &stg);
     if (FAILED(hr))
         BOOST_THROW_EXCEPTION(comet::com_error_from_interface(data_object, hr));
-    
+
     BOOST_CHECK(stg.pstm);
 
     std::vector<wchar_t> buffer(MAX_PATH);
@@ -254,7 +254,7 @@ static void _testQueryFormats(
     hr = data_object->QueryGetData(&fetcDescriptor);
     BOOST_CHECK(hr == ((fFailTest) ? S_FALSE : S_OK));
 
-    // Test CFSTR_FILECONTENTS (IStream) 
+    // Test CFSTR_FILECONTENTS (IStream)
 
     // Since Windows 7 (or maybe Vista) we must get TYMED_ISTREAM right here.
     // Previously if you prodded with a TYMED_ISTREAM but checked with
@@ -303,7 +303,7 @@ static void _testEnumerator(
     // Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format
     BOOST_CHECK((fFailTest) ? !fFoundDescriptor : fFoundDescriptor);
 
-    // Test CFSTR_FILECONTENTS (IStream) 
+    // Test CFSTR_FILECONTENTS (IStream)
     BOOST_CHECK((fFailTest) ? !fFoundContents : fFoundContents);
 }
 
