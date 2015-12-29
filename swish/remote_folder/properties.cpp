@@ -38,6 +38,8 @@
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <comet/error.h> // com_error
+#include <comet/util.h> // autocoinit
+
 #include <cassert> // assert
 #include <map>
 
@@ -48,6 +50,7 @@
 using washer::shell::pidl::cpidl_t;
 using washer::shell::property_key;
 
+using comet::auto_coinit;
 using comet::variant_t;
 using comet::com_error;
 
@@ -90,22 +93,27 @@ namespace {
      */
     std::wstring lookup_friendly_typename(const cpidl_t& pidl)
     {
-        DWORD dwAttributes = 
+        // Must call CoInitialize before SHGetFileInfo, otherwise it returns
+        // the wrong typename (something like "TXT file" instead of
+        // "Text Document")
+        auto_coinit com_scope;
+
+        DWORD dwAttributes =
             (remote_itemid_view(pidl).is_folder()) ?
                 FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 
         UINT uInfoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME;
 
-        SHFILEINFO shfi;
+        SHFILEINFOW shfi = SHFILEINFOW();
         if (!::SHGetFileInfoW(
-            remote_itemid_view(pidl).filename().c_str(), dwAttributes, 
+            remote_itemid_view(pidl).filename().c_str(), dwAttributes,
             &shfi, sizeof(shfi), uInfoFlags))
 		{
 			BOOST_THROW_EXCEPTION(
-				enable_error_info(com_error(E_FAIL)) << 
+				enable_error_info(com_error(E_FAIL)) <<
 				errinfo_api_function("SHGetFileInfoW"));
 		}
-        
+
         return shfi.szTypeName;
     }
 
