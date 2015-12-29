@@ -34,7 +34,7 @@
 #include <boost/function.hpp> // function
 #include <boost/shared_ptr.hpp>
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <comet/ptr.h> // com_ptr
 

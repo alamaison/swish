@@ -30,7 +30,7 @@
 
 #include "swish/remotelimits.h"  // Text field limits
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <comet/datetime.h> // datetime_t
 

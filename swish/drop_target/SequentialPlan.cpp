@@ -37,7 +37,7 @@
 
 #include <comet/error.h> // com_error
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <cassert> // assert
 #include <memory> // auto_ptr

@@ -38,7 +38,7 @@
 #define SSH_OPENSSH_FIXTURE_HPP
 #pragma once
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/filesystem.hpp> // path
 #include <boost/process/child.hpp> // child process

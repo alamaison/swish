@@ -28,7 +28,7 @@
 #define SWISH_DROP_TARGET_DROPACTIONCALLBACK_HPP
 #pragma once
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <memory> // auto_ptr
 

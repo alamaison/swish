@@ -34,7 +34,7 @@
 #include <washer/shell/pidl.hpp> // apidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 namespace swish {
 namespace remote_folder {

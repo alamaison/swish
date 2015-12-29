@@ -31,7 +31,7 @@
 #include "test/common_boost/fixtures.hpp" // ComFixture
 #include "test/common_boost/ProviderFixture.hpp" // ProviderFixture
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
 

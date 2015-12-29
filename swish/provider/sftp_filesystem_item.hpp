@@ -32,7 +32,7 @@
 #ifndef SWISH_PROVIDER_SFTP_FILESYSTEM_ITEM_HPP
 #define SWISH_PROVIDER_SFTP_FILESYSTEM_ITEM_HPP
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t
 #include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM

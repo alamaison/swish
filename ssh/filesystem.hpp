@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -40,7 +40,7 @@
 #include <ssh/detail/file_handle_state.hpp>
 #include <ssh/detail/sftp_channel_state.hpp>
 #include <ssh/detail/libssh2/sftp.hpp>
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t, uintmax_t
 #include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM*

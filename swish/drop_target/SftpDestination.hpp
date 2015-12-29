@@ -34,7 +34,7 @@
 #include <washer/shell/pidl.hpp> // apidl_t
 #include <washer/shell/shell_item.hpp> // pidl_shell_item
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION

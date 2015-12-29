@@ -34,7 +34,7 @@
 
 #include <comet/ptr.h> // com_ptr
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/shared_ptr.hpp>
 

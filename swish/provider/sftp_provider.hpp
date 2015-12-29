@@ -31,7 +31,7 @@
 
 #include "swish/provider/sftp_filesystem_item.hpp"
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/optional/optional.hpp>

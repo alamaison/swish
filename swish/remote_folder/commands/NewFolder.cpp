@@ -23,7 +23,7 @@
 #include "swish/shell_folder/SftpDirectory.h" // CSftpDirectory
 #include "swish/shell/shell.hpp" // put_view_item_into_rename_mode
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <washer/shell/services.hpp> // shell_browser, shell_view
 #include <washer/trace.hpp> // trace

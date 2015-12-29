@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>

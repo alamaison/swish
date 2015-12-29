@@ -38,7 +38,7 @@
 #include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <ssh/path.hpp>
+#include <ssh/filesystem/path.hpp>
 
 #ifndef STRICT_TYPED_ITEMIDS
 #error Currently, swish requires strict PIDL types: define STRICT_TYPED_ITEMIDS
