@@ -51,10 +51,13 @@
 #include <string>
 #include <utility> // swap
 
-namespace ssh {
-namespace filesystem {
+namespace ssh
+{
+namespace filesystem
+{
 
-namespace detail {
+namespace detail
+{
 
 /**
  * String tokeniser that separates on /, unless it is leading or trailing.
@@ -68,10 +71,9 @@ namespace detail {
 // Because the iterators produce paths, std::lexicograpical_compare will not
 // terminate. Therefore we have our own that works on the string form of the
 // path in each segment
-template<typename Iterator>
-inline int lexical_compare(
-    Iterator lhs, const Iterator& lhs_end,
-    Iterator rhs, const Iterator& rhs_end)
+template <typename Iterator>
+inline int lexical_compare(Iterator lhs, const Iterator& lhs_end, Iterator rhs,
+                           const Iterator& rhs_end)
 {
     while (lhs != lhs_end && rhs != rhs_end)
     {
@@ -102,30 +104,34 @@ inline int lexical_compare(
     }
 }
 
-template<typename StringType>
-inline typename StringType::size_type find_next_slash(
-    const StringType& string, typename StringType::size_type starting_position)
+template <typename StringType>
+inline typename StringType::size_type
+find_next_slash(const StringType& string,
+                typename StringType::size_type starting_position)
 {
     return string.find('/', starting_position);
 }
 
-template<typename StringType>
-inline typename StringType::size_type find_previous_slash(
-    const StringType& string, typename StringType::size_type starting_position)
+template <typename StringType>
+inline typename StringType::size_type
+find_previous_slash(const StringType& string,
+                    typename StringType::size_type starting_position)
 {
     return string.rfind('/', starting_position);
 }
 
-template<typename StringType>
-inline typename StringType::size_type find_next_non_slash(
-    const StringType& string, typename StringType::size_type starting_position)
+template <typename StringType>
+inline typename StringType::size_type
+find_next_non_slash(const StringType& string,
+                    typename StringType::size_type starting_position)
 {
     return string.find_first_not_of('/', starting_position);
 }
 
-template<typename StringType>
-inline typename StringType::size_type find_previous_non_slash(
-    const StringType& string, typename StringType::size_type starting_position)
+template <typename StringType>
+inline typename StringType::size_type
+find_previous_non_slash(const StringType& string,
+                        typename StringType::size_type starting_position)
 {
     // NOTE: We are implementing what should be rfind_last_not_of. This
     // must already exist somewhere, no?
@@ -134,8 +140,7 @@ inline typename StringType::size_type find_previous_non_slash(
     // looping downwards, the condition has to check for a number larger than
     // the range, not smaller
     for (typename StringType::size_type i = starting_position;
-        i < starting_position + 1;
-        --i)
+         i < starting_position + 1; --i)
     {
         if (string[i] != '/')
         {
@@ -170,18 +175,16 @@ inline std::string from_source(const std::wstring& source)
                                                  boost::locale::conv::stop);
 }
 
-template<typename InputIterator>
-inline std::string from_source(
-    const InputIterator& begin, const InputIterator& end)
+template <typename InputIterator>
+inline std::string from_source(const InputIterator& begin,
+                               const InputIterator& end)
 {
-    typedef std::basic_string<typename std::iterator_traits<InputIterator>::value_type>
-        string_type;
+    typedef std::basic_string<
+        typename std::iterator_traits<InputIterator>::value_type> string_type;
     string_type source_string(begin, end);
     return from_source(source_string);
 }
-
 }
-
 
 class path : boost::totally_ordered<path>
 {
@@ -191,14 +194,21 @@ public:
     class iterator;
     typedef iterator const_iterator;
 
-    path() {}
+    path()
+    {
+    }
 
-    template<typename Source>
-    path(const Source& source) : m_path(detail::from_source(source)) {}
+    template <typename Source>
+    path(const Source& source)
+        : m_path(detail::from_source(source))
+    {
+    }
 
-    template<typename InputIterator>
-    path(const InputIterator& begin, const InputIterator& end) :
-        m_path(detail::from_source(begin, end)) {}
+    template <typename InputIterator>
+    path(const InputIterator& begin, const InputIterator& end)
+        : m_path(detail::from_source(begin, end))
+    {
+    }
 
     bool is_relative() const
     {
@@ -246,16 +256,16 @@ public:
         return native();
     }
 
-    template<typename CharT, typename Traits>
+    template <typename CharT, typename Traits>
     std::basic_string<CharT, Traits> string() const;
 
-    template<>
+    template <>
     std::string string() const
     {
         return native();
     }
 
-    template<>
+    template <>
     std::wstring string() const
     {
         return boost::locale::conv::utf_to_utf<wchar_t>(m_path);
@@ -301,16 +311,16 @@ public:
         return *this;
     }
 
-    template<typename Source>
+    template <typename Source>
     path& operator/=(const Source& rhs)
     {
         return (*this) /= path(rhs);
     }
 
 private:
-
-    template<typename InputIterator>
-    static path path_from_range(const InputIterator& begin, const InputIterator& end)
+    template <typename InputIterator>
+    static path path_from_range(const InputIterator& begin,
+                                const InputIterator& end)
     {
         path p;
         for (InputIterator position = begin; position != end; ++position)
@@ -322,8 +332,8 @@ private:
 
     std::string from_utf(const std::locale& locale) const
     {
-        return boost::locale::conv::from_utf<char>(
-            m_path, locale, boost::locale::conv::stop);
+        return boost::locale::conv::from_utf<char>(m_path, locale,
+                                                   boost::locale::conv::stop);
     }
 
     // IMPORTANT: The encoding of this path is UTF8, which is not necessarily
@@ -331,30 +341,34 @@ private:
     string_type m_path;
 };
 
-class path::iterator :
-        public boost::iterator_facade<path::iterator, const path,
-                                      boost::bidirectional_traversal_tag>
+class path::iterator
+    : public boost::iterator_facade<path::iterator, const path,
+                                    boost::bidirectional_traversal_tag>
 {
 private:
     friend class path;
 
-    explicit iterator(
-        const path* source_path, string_type::size_type position)
+    explicit iterator(const path* source_path, string_type::size_type position)
         : m_source(source_path),
-          m_current_positions(std::make_pair(string_type::size_type(position),
-                                             find_element_last_position(m_source->m_path, position))),
-          m_current_segment(path(element_from_positions(m_source->m_path, m_current_positions)))
-    {}
+          m_current_positions(std::make_pair(
+              string_type::size_type(position),
+              find_element_last_position(m_source->m_path, position))),
+          m_current_segment(path(
+              element_from_positions(m_source->m_path, m_current_positions)))
+    {
+    }
 
     // NOT the end iterator - behaviour undefined
-    iterator() {}
+    iterator()
+    {
+    }
 
     friend class boost::iterator_core_access;
 
     bool equal(const iterator& other) const
     {
         return m_source == other.m_source &&
-            m_current_positions == other.m_current_positions;
+               m_current_positions == other.m_current_positions;
     }
 
     const path& dereference() const
@@ -372,45 +386,55 @@ private:
 
     void increment()
     {
-        m_current_positions = next_element_positions(m_source->m_path, m_current_positions);
+        m_current_positions =
+            next_element_positions(m_source->m_path, m_current_positions);
         if (m_current_positions.first != m_source->m_path.size())
         {
-            m_current_segment = path(element_from_positions(m_source->m_path, m_current_positions));
+            m_current_segment = path(
+                element_from_positions(m_source->m_path, m_current_positions));
         }
     }
 
     void decrement()
     {
-        m_current_positions = previous_element_positions(m_source->m_path, m_current_positions);
-        m_current_segment = path(element_from_positions(m_source->m_path, m_current_positions));
+        m_current_positions =
+            previous_element_positions(m_source->m_path, m_current_positions);
+        m_current_segment =
+            path(element_from_positions(m_source->m_path, m_current_positions));
     }
 
-    static std::pair<string_type::size_type, string_type::size_type> next_element_positions(
-        const string_type& source,
-        std::pair<string_type::size_type, string_type::size_type> current_positions)
+    static std::pair<string_type::size_type, string_type::size_type>
+    next_element_positions(const string_type& source,
+                           std::pair<string_type::size_type,
+                                     string_type::size_type> current_positions)
     {
-        string_type::size_type new_first = find_next_element_first_position(source, current_positions.first);
-        string_type::size_type new_last = find_element_last_position(source, new_first);
+        string_type::size_type new_first =
+            find_next_element_first_position(source, current_positions.first);
+        string_type::size_type new_last =
+            find_element_last_position(source, new_first);
         return std::make_pair(new_first, new_last);
     }
 
-    static std::pair<string_type::size_type, string_type::size_type> previous_element_positions(
+    static std::pair<string_type::size_type, string_type::size_type>
+    previous_element_positions(
         const string_type& source,
-        std::pair<string_type::size_type, string_type::size_type> current_positions)
+        std::pair<string_type::size_type, string_type::size_type>
+            current_positions)
     {
-        string_type::size_type new_first = find_previous_element_first_position(source, current_positions.first);
-        string_type::size_type new_last = find_element_last_position(source, new_first);
+        string_type::size_type new_first = find_previous_element_first_position(
+            source, current_positions.first);
+        string_type::size_type new_last =
+            find_element_last_position(source, new_first);
         return std::make_pair(new_first, new_last);
     }
 
-    static string_type::size_type find_next_element_first_position(
-        const string_type& source,
-        string_type::size_type current_position)
+    static string_type::size_type
+    find_next_element_first_position(const string_type& source,
+                                     string_type::size_type current_position)
     {
         if (current_position == source.size())
         {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("already at end of path"));
+            BOOST_THROW_EXCEPTION(std::logic_error("already at end of path"));
         }
         else if (current_position == source.size() - 1)
         {
@@ -424,7 +448,8 @@ private:
                     detail::find_next_non_slash(source, current_position);
                 if (next_non_slash_position == string_type::npos)
                 {
-                    // Path only contains slashes so we have consumed everything.
+                    // Path only contains slashes so we have consumed
+                    // everything.
                     // Move off the end to indicate this
                     return source.size();
                 }
@@ -460,7 +485,8 @@ private:
                 }
                 else
                 {
-                    // Normal case - slash found - next segment starts after slash
+                    // Normal case - slash found - next segment starts after
+                    // slash
                     return next_non_slash_position;
                 }
             }
@@ -468,13 +494,11 @@ private:
     }
 
     static string_type::size_type find_previous_element_first_position(
-        const string_type& source,
-        string_type::size_type current_position)
+        const string_type& source, string_type::size_type current_position)
     {
         if (current_position == 0)
         {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("already at start of path"));
+            BOOST_THROW_EXCEPTION(std::logic_error("already at start of path"));
         }
         else if (current_position == source.size())
         {
@@ -538,7 +562,8 @@ private:
             else
             {
                 string_type::size_type previous_slash_position =
-                    detail::find_previous_slash(source, previous_non_slash_position);
+                    detail::find_previous_slash(source,
+                                                previous_non_slash_position);
 
                 if (previous_slash_position == string_type::npos)
                 {
@@ -554,8 +579,9 @@ private:
         }
     }
 
-    static string_type::size_type find_element_last_position(
-        const string_type& source, string_type::size_type first_position)
+    static string_type::size_type
+    find_element_last_position(const string_type& source,
+                               string_type::size_type first_position)
     {
         if (first_position == source.size())
         {
@@ -621,14 +647,14 @@ private:
         }
         else
         {
-            return string_type(
-                source.begin() + positions.first,
-                source.begin() + positions.second + 1);
+            return string_type(source.begin() + positions.first,
+                               source.begin() + positions.second + 1);
         }
     }
 
     const path* m_source;
-    std::pair<string_type::size_type, string_type::size_type> m_current_positions;
+    std::pair<string_type::size_type, string_type::size_type>
+        m_current_positions;
     path m_current_segment;
 };
 
@@ -683,10 +709,9 @@ inline path::iterator path::end() const
     return iterator(this, m_path.size());
 }
 
-
-template<typename CharT, typename Traits>
-inline std::basic_ostream<CharT, Traits>& operator<<(
-     std::basic_ostream<CharT, Traits>& stream, const path& p)
+template <typename CharT, typename Traits>
+inline std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& stream, const path& p)
 {
     // TODO: quote string so it can roundtrip
     stream << p.string<CharT, Traits>();
@@ -703,14 +728,14 @@ inline bool operator<(const path& lhs, const path& rhs)
     return lhs.compare(rhs) < 0;
 }
 
-template<typename Source>
+template <typename Source>
 inline path operator/(const path& lhs, const Source& rhs)
 {
     path concatenation(lhs);
     concatenation /= rhs;
     return concatenation;
 }
-
-}} // namespace ssh::filesystem
+}
+} // namespace ssh::filesystem
 
 #endif

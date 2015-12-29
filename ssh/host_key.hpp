@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -39,11 +39,11 @@
 
 #include <ssh/detail/session_state.hpp>
 
-#include <boost/foreach.hpp> // BOOST_FOREACH
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <boost/foreach.hpp>         // BOOST_FOREACH
+#include <boost/shared_ptr.hpp>      // shared_ptr
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <sstream> // ostringstream
+#include <sstream>   // ostringstream
 #include <stdexcept> // invalid_argument
 #include <string>
 #include <utility> // pair
@@ -51,94 +51,93 @@
 
 #include <libssh2.h>
 
-namespace ssh {
+namespace ssh
+{
 
-namespace detail {
+namespace detail
+{
 
-    /**
-     * Thin wrapper around libssh2_session_hostkey.
-     */
-    inline std::pair<std::string, int> hostkey(session_state& session)
-    {
-        // Session owns the string.
-        // Lock until we finish copying the key string from the session.  I 
-        // don't know if other calls to the session are currently able to
-        // change it, but they might one day.
-        // Locking it for the duration makes it thread-safe either way.
+/**
+ * Thin wrapper around libssh2_session_hostkey.
+ */
+inline std::pair<std::string, int> hostkey(session_state& session)
+{
+    // Session owns the string.
+    // Lock until we finish copying the key string from the session.  I
+    // don't know if other calls to the session are currently able to
+    // change it, but they might one day.
+    // Locking it for the duration makes it thread-safe either way.
 
-        detail::session_state::scoped_lock lock = session.aquire_lock();
+    detail::session_state::scoped_lock lock = session.aquire_lock();
 
-        size_t len = 0;
-        int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
-        const char* key = libssh2_session_hostkey(
-            session.session_ptr(), &len, &type);
+    size_t len = 0;
+    int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
+    const char* key =
+        libssh2_session_hostkey(session.session_ptr(), &len, &type);
 
-        if (key)
-            return std::make_pair(std::string(key, len), type);
-        else
-            return std::make_pair(std::string(), type);
-    }
+    if (key)
+        return std::make_pair(std::string(key, len), type);
+    else
+        return std::make_pair(std::string(), type);
+}
 
-    /**
-     * Thin wrapper around libssh2_hostkey_hash.
-     *
-     * @param T          Type of collection to return.  Sensible examples
-     *                   include std::string or std::vector<unsigned char>.
-     * @param session    libssh2 session pointer
-     * @param hash_type  Hash method being requested.
-     */
-    template<typename T>
-    inline T hostkey_hash(session_state& session, int hash_type)
-    {
-        // Session owns the data.
-        // Lock until we finish copying the key hash bytes from the session.  I 
-        // don't know if other calls to the session are currently able to
-        // change it, but they might one day.
-        // Locking it for the duration makes it thread-safe either way.
+/**
+ * Thin wrapper around libssh2_hostkey_hash.
+ *
+ * @param T          Type of collection to return.  Sensible examples
+ *                   include std::string or std::vector<unsigned char>.
+ * @param session    libssh2 session pointer
+ * @param hash_type  Hash method being requested.
+ */
+template <typename T>
+inline T hostkey_hash(session_state& session, int hash_type)
+{
+    // Session owns the data.
+    // Lock until we finish copying the key hash bytes from the session.  I
+    // don't know if other calls to the session are currently able to
+    // change it, but they might one day.
+    // Locking it for the duration makes it thread-safe either way.
 
-        detail::session_state::scoped_lock lock = session.aquire_lock();
+    detail::session_state::scoped_lock lock = session.aquire_lock();
 
-        const T::value_type* hash_bytes = 
-            reinterpret_cast<const T::value_type*>(
-                ::libssh2_hostkey_hash(session.session_ptr(), hash_type));
+    const T::value_type* hash_bytes = reinterpret_cast<const T::value_type*>(
+        ::libssh2_hostkey_hash(session.session_ptr(), hash_type));
 
-        size_t len = 0;
-        if (hash_type == LIBSSH2_HOSTKEY_HASH_MD5)
-            len = 16;
-        else if (hash_type == LIBSSH2_HOSTKEY_HASH_SHA1)
-            len = 20;
-        else
-            BOOST_THROW_EXCEPTION(
-                std::invalid_argument("Unknown hash type"));
+    size_t len = 0;
+    if (hash_type == LIBSSH2_HOSTKEY_HASH_MD5)
+        len = 16;
+    else if (hash_type == LIBSSH2_HOSTKEY_HASH_SHA1)
+        len = 20;
+    else
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Unknown hash type"));
 
-        if (hash_bytes)
-            return T(hash_bytes, hash_bytes + len);
-        else
-            return T();
-    }
+    if (hash_bytes)
+        return T(hash_bytes, hash_bytes + len);
+    else
+        return T();
+}
 
-    /**
-     * Thin wrapper around libssh2_session_methods.
-     */
-    inline std::string method(session_state& session, int method_type)
-    {
-        // Session owns the string.
-        // Lock until we finish copying the string from the session.  I 
-        // don't know if other calls to the session are currently able to
-        // change it, but they might one day.
-        // Locking it for the duration makes it thread-safe either way.
+/**
+ * Thin wrapper around libssh2_session_methods.
+ */
+inline std::string method(session_state& session, int method_type)
+{
+    // Session owns the string.
+    // Lock until we finish copying the string from the session.  I
+    // don't know if other calls to the session are currently able to
+    // change it, but they might one day.
+    // Locking it for the duration makes it thread-safe either way.
 
-        detail::session_state::scoped_lock lock = session.aquire_lock();
+    detail::session_state::scoped_lock lock = session.aquire_lock();
 
-        const char* key_type = libssh2_session_methods(
-            session.session_ptr(), method_type);
-        
-        if (key_type)
-            return std::string(key_type);
-        else
-            return std::string();
-    }
+    const char* key_type =
+        libssh2_session_methods(session.session_ptr(), method_type);
 
+    if (key_type)
+        return std::string(key_type);
+    else
+        return std::string();
+}
 }
 
 /**
@@ -155,24 +154,25 @@ struct hostkey_type
     };
 };
 
-namespace detail {
-    
-    /**
-     * Convert the returned key-type from libssh2_session_hostkey into a 
-     * value from the hostkey_type enum.
-     */
-    inline hostkey_type::enum_t type_to_hostkey_type(int type)
+namespace detail
+{
+
+/**
+ * Convert the returned key-type from libssh2_session_hostkey into a value from
+ * the hostkey_type enum.
+ */
+inline hostkey_type::enum_t type_to_hostkey_type(int type)
+{
+    switch (type)
     {
-        switch (type)
-        {
-        case LIBSSH2_HOSTKEY_TYPE_RSA:
-            return hostkey_type::ssh_rsa;
-        case LIBSSH2_HOSTKEY_TYPE_DSS:
-            return hostkey_type::ssh_dss;
-        default:
-            return hostkey_type::unknown;
-        }
+    case LIBSSH2_HOSTKEY_TYPE_RSA:
+        return hostkey_type::ssh_rsa;
+    case LIBSSH2_HOSTKEY_TYPE_DSS:
+        return hostkey_type::ssh_dss;
+    default:
+        return hostkey_type::unknown;
     }
+}
 }
 
 /**
@@ -185,18 +185,16 @@ class host_key
 {
 public:
     explicit host_key(detail::session_state& session)
-        :
-    // We pull everything out of the session here and store it to avoid
-    // instances of this class depending on the lifetime of the session
-    m_key(detail::hostkey(session)),
-    m_algorithm_name(detail::method(session, LIBSSH2_METHOD_HOSTKEY)),
-    m_md5_hash(
-        detail::hostkey_hash<std::vector<unsigned char>>(
-            session, LIBSSH2_HOSTKEY_HASH_MD5)),
-    m_sha1_hash(
-        detail::hostkey_hash<std::vector<unsigned char>>(
-            session, LIBSSH2_HOSTKEY_HASH_SHA1))
-    {}
+        : // We pull everything out of the session here and store it to avoid
+          // instances of this class depending on the lifetime of the session
+          m_key(detail::hostkey(session)),
+          m_algorithm_name(detail::method(session, LIBSSH2_METHOD_HOSTKEY)),
+          m_md5_hash(detail::hostkey_hash<std::vector<unsigned char>>(
+              session, LIBSSH2_HOSTKEY_HASH_MD5)),
+          m_sha1_hash(detail::hostkey_hash<std::vector<unsigned char>>(
+              session, LIBSSH2_HOSTKEY_HASH_SHA1))
+    {
+    }
 
     /**
      * Host-key either raw or base-64 encoded.
@@ -211,7 +209,10 @@ public:
     /**
      * Is the key returned by key() base64-encoded (printable)?
      */
-    bool is_base64() const { return false; }
+    bool is_base64() const
+    {
+        return false;
+    }
 
     /**
      * Type of the key algorithm e.g., ssh-dss.
@@ -220,7 +221,7 @@ public:
     {
         return detail::type_to_hostkey_type(m_key.second);
     }
-    
+
     /**
      * Printable name of the method negotiated for the key algorithm.
      */
@@ -268,9 +269,9 @@ private:
  *                    characters.
  * @param uppercase   Whether to use uppercase or lowercase hexidecimal.
  */
-template<typename T>
-std::string hexify(
-    const T& bytes, const std::string& nibble_sep=":", bool uppercase=false)
+template <typename T>
+std::string hexify(const T& bytes, const std::string& nibble_sep = ":",
+                   bool uppercase = false)
 {
     std::ostringstream hex_hash;
 
@@ -280,7 +281,7 @@ std::string hexify(
         hex_hash << std::nouppercase;
     hex_hash << std::hex << std::setfill('0');
 
-    BOOST_FOREACH(unsigned char b, bytes)
+    BOOST_FOREACH (unsigned char b, bytes)
     {
         if (!hex_hash.str().empty())
             hex_hash << nibble_sep;

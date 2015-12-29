@@ -42,10 +42,10 @@
 #include <ssh/detail/libssh2/sftp.hpp>
 #include <ssh/filesystem/path.hpp>
 
-#include <boost/cstdint.hpp> // uint64_t, uintmax_t
+#include <boost/cstdint.hpp>                      // uint64_t, uintmax_t
 #include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM*
-#include <boost/exception/info.hpp> // errinfo_api_function
-#include <boost/iterator/iterator_facade.hpp> // iterator_facade
+#include <boost/exception/info.hpp>               // errinfo_api_function
+#include <boost/iterator/iterator_facade.hpp>     // iterator_facade
 #include <boost/optional/optional.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
@@ -57,7 +57,7 @@
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <algorithm> // min
-#include <cassert> // assert
+#include <cassert>   // assert
 #include <exception> // bad_alloc
 #include <stdexcept> // invalid_argument
 #include <string>
@@ -65,18 +65,19 @@
 
 #include <libssh2_sftp.h>
 
-namespace ssh {
+namespace ssh
+{
 
 // Forward declared so sftp_filesystem can declare session a friend.  This
 // file doesn't depend on session in any other way
 class session;
 
-namespace filesystem {
+namespace filesystem
+{
 
 class file_attributes
 {
 public:
-
     enum file_type
     {
         normal_file,
@@ -201,8 +202,10 @@ private:
     friend class sftp_file;
     friend class sftp_filesystem; // to construct in attributes method
 
-    explicit file_attributes(const LIBSSH2_SFTP_ATTRIBUTES& raw_attributes) :
-       m_attributes(raw_attributes) {}
+    explicit file_attributes(const LIBSSH2_SFTP_ATTRIBUTES& raw_attributes)
+        : m_attributes(raw_attributes)
+    {
+    }
 
     bool is_valid_attribute(unsigned long attribute_type) const
     {
@@ -215,14 +218,21 @@ private:
 class sftp_file
 {
 public:
-    sftp_file(
-        const path& file, const std::string& long_entry,
-        const LIBSSH2_SFTP_ATTRIBUTES& attributes)
-        :
-        m_file(file), m_long_entry(long_entry), m_attributes(attributes) {}
+    sftp_file(const path& file, const std::string& long_entry,
+              const LIBSSH2_SFTP_ATTRIBUTES& attributes)
+        : m_file(file), m_long_entry(long_entry), m_attributes(attributes)
+    {
+    }
 
-    ssh::filesystem::path path() const { return m_file; }
-    const std::string& long_entry() const { return m_long_entry; }
+    ssh::filesystem::path path() const
+    {
+        return m_file;
+    }
+
+    const std::string& long_entry() const
+    {
+        return m_long_entry;
+    }
 
     const file_attributes& attributes() const
     {
@@ -237,19 +247,18 @@ private:
 
 class sftp_filesystem;
 
-namespace detail {
+namespace detail
+{
 
-    inline boost::shared_ptr<::ssh::detail::file_handle_state> open_directory(
-        ::ssh::detail::sftp_channel_state& channel, const path& path)
-    {
-        std::string path_string = path.native();
+inline boost::shared_ptr<::ssh::detail::file_handle_state>
+open_directory(::ssh::detail::sftp_channel_state& channel, const path& path)
+{
+    std::string path_string = path.native();
 
-        return boost::make_shared<::ssh::detail::file_handle_state>(
-            boost::ref(channel), // http://stackoverflow.com/a/1374266/67013
-            path_string.data(), path_string.size(), 0, 0,
-            LIBSSH2_SFTP_OPENDIR);
-    }
-
+    return boost::make_shared<::ssh::detail::file_handle_state>(
+        boost::ref(channel), // http://stackoverflow.com/a/1374266/67013
+        path_string.data(), path_string.size(), 0, 0, LIBSSH2_SFTP_OPENDIR);
+}
 }
 
 /**
@@ -258,18 +267,19 @@ namespace detail {
  * The iterator is copyable but all copies are linked so that incrementing
  * one will increment all the copies.
  */
-class directory_iterator : public boost::iterator_facade<
-    directory_iterator, const sftp_file, boost::forward_traversal_tag,
-    sftp_file>
+class directory_iterator
+    : public boost::iterator_facade<directory_iterator, const sftp_file,
+                                    boost::forward_traversal_tag, sftp_file>
 {
 public:
-
     /**
      * End-of-directory marker.
      */
     // ForwardIterators are REQUIRED to be default-constructible, yukky as
     // that is
-    directory_iterator() {}
+    directory_iterator()
+    {
+    }
 
     // directory_iterator is not implemented in terms of the sftp_filesystem
     // public interface.  It uses the the channel's internals, so the channel
@@ -289,8 +299,8 @@ public:
     private:
         friend class sftp_filesystem;
 
-        directory_iterator operator()(
-            ::ssh::detail::sftp_channel_state& channel, const path& path)
+        directory_iterator
+        operator()(::ssh::detail::sftp_channel_state& channel, const path& path)
         {
             return directory_iterator(channel, path);
         }
@@ -303,13 +313,11 @@ public:
     /// @endcond
 
 private:
-
-    directory_iterator(
-        ::ssh::detail::sftp_channel_state& sftp_channel, const path& path)
-        :
-        m_directory(path),
-        m_handle(detail::open_directory(sftp_channel, path)),
-        m_attributes(LIBSSH2_SFTP_ATTRIBUTES())
+    directory_iterator(::ssh::detail::sftp_channel_state& sftp_channel,
+                       const path& path)
+        : m_directory(path),
+          m_handle(detail::open_directory(sftp_channel, path)),
+          m_attributes(LIBSSH2_SFTP_ATTRIBUTES())
     {
         next_file();
     }
@@ -404,19 +412,20 @@ private:
     // @}
 };
 
-namespace detail {
+namespace detail
+{
 
-    BOOST_SCOPED_ENUM_START(path_status)
-    {
-        non_existent,
-            non_directory,
-            directory
-    };
-    BOOST_SCOPED_ENUM_END;
+BOOST_SCOPED_ENUM_START(path_status)
+{
+    non_existent,
+    non_directory,
+    directory
+};
+BOOST_SCOPED_ENUM_END;
 
 
-    inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_filesystem& filesystem, const path& path);
+inline BOOST_SCOPED_ENUM(path_status)
+check_status(sftp_filesystem& filesystem, const path& path);
 
 }
 
@@ -438,7 +447,8 @@ BOOST_SCOPED_ENUM_START(overwrite_behaviour)
     allow_overwrite,
 
     /**
-     * Overwrite any existing file using *only* atomic methods.  If atomic methods
+     * Overwrite any existing file using *only* atomic methods.  If atomic
+     * methods
      * are not available on the server, the overwrite will not be performed by
      * other methods and the function will throw an exception.
      *
@@ -464,13 +474,13 @@ class sftp_filesystem : private boost::noncopyable
     BOOST_MOVABLE_BUT_NOT_COPYABLE(sftp_filesystem)
 
 public:
-
     /**
      * Move constructor.
      */
     sftp_filesystem(BOOST_RV_REF(sftp_filesystem) other)
         : m_sftp(boost::move(other.m_sftp))
-    {}
+    {
+    }
 
     /**
      * Move-assignment.
@@ -537,16 +547,16 @@ public:
     {
         std::string link_string = link.native();
 
-        return symlink_resolve(
-            link_string.data(), link_string.size(), LIBSSH2_SFTP_READLINK);
+        return symlink_resolve(link_string.data(), link_string.size(),
+                               LIBSSH2_SFTP_READLINK);
     }
 
     path canonical_path(const path& link)
     {
         std::string link_string = link.native();
 
-        return symlink_resolve(
-            link_string.data(), link_string.size(), LIBSSH2_SFTP_REALPATH);
+        return symlink_resolve(link_string.data(), link_string.size(),
+                               LIBSSH2_SFTP_REALPATH);
     }
 
     /**
@@ -612,10 +622,9 @@ public:
      * @todo Not currently supporting the NATIVE flag as it's not at all clear
      *       what it does.
      */
-    void rename(
-        const path& source, const path& destination,
-        BOOST_SCOPED_ENUM(overwrite_behaviour) overwrite_hint
-            =overwrite_behaviour::atomic_overwrite)
+    void rename(const path& source, const path& destination,
+                BOOST_SCOPED_ENUM(overwrite_behaviour)
+                    overwrite_hint = overwrite_behaviour::atomic_overwrite)
     {
         std::string source_string = source.native();
         std::string destination_string = destination.native();
@@ -665,9 +674,9 @@ public:
      *         directory.
      *
      * If the calling code already knows whether `target` is a directory, this
-     * function adds the overhead of a single extra stat call to the server above
-     * what would be possible using plain SFTP unlink/rmdir.  This trip is needed
-     * to find out that information and allows us to mirror the
+     * function adds the overhead of a single extra stat call to the server
+     * above what would be possible using plain SFTP unlink/rmdir.  This trip is
+     * needed to find out that information and allows us to mirror the
      * POSIX/Boost.Filesystem remove functions that do not differentiate
      * directories.
      */
@@ -720,13 +729,14 @@ public:
      * @returns the number of files removed.
      *
      * If the calling code already knows whether `target` is a directory, this
-     * function adds the overhead of a single extra stat call to the server above
-     * what would be possible using plain SFTP unlink/rmdir.  This trip is needed
-     * to find out that information and allows us to mirror the
+     * function adds the overhead of a single extra stat call to the server
+     * above what would be possible using plain SFTP unlink/rmdir.  This trip is
+     * needed to find out that information and allows us to mirror the
      * POSIX/Boost.Filesystem remove functions that do not differentiate
      * directories.
      *
-     * All files below the target must be statted (indirectly via directory listing)
+     * All files below the target must be statted (indirectly via directory
+     * listing)
      * by any implementation so this function adds no overhead for those.
      */
     boost::uintmax_t remove_all(const path& target)
@@ -773,11 +783,10 @@ public:
 
             ::ssh::detail::libssh2::sftp::mkdir_ex(
                 sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
-                new_directory_string.data(),
-                new_directory_string.size(),
-                LIBSSH2_SFTP_S_IRWXU |
-                LIBSSH2_SFTP_S_IRGRP | LIBSSH2_SFTP_S_IXGRP |
-                LIBSSH2_SFTP_S_IROTH | LIBSSH2_SFTP_S_IXOTH);
+                new_directory_string.data(), new_directory_string.size(),
+                LIBSSH2_SFTP_S_IRWXU | LIBSSH2_SFTP_S_IRGRP |
+                    LIBSSH2_SFTP_S_IXGRP | LIBSSH2_SFTP_S_IROTH |
+                    LIBSSH2_SFTP_S_IXOTH);
 
             return true;
         }
@@ -828,12 +837,12 @@ public:
     /// @endcond
 
 private:
-
     friend class factory_attorney;
 
     explicit sftp_filesystem(::ssh::detail::session_state& session_state)
         : m_sftp(new ::ssh::detail::sftp_channel_state(session_state))
-    {}
+    {
+    }
 
     friend class sftp_input_device;
     friend class sftp_output_device;
@@ -893,8 +902,8 @@ private:
     /**
      * Common parts of readlink and realpath.
      */
-    path symlink_resolve(
-        const char* path, unsigned int path_len, int resolve_action)
+    path symlink_resolve(const char* path, unsigned int path_len,
+                         int resolve_action)
     {
         // yuk! hardcoded buffer sizes. unfortunately, libssh2 doesn't
         // give us a choice so we allocate massive buffers here and then
@@ -907,11 +916,10 @@ private:
 
         int len = ::ssh::detail::libssh2::sftp::symlink_ex(
             sftp_ref().session_ptr(), sftp_ref().sftp_ptr(), path, path_len,
-            &target_path_buffer[0], target_path_buffer.size(),
-            resolve_action);
+            &target_path_buffer[0], target_path_buffer.size(), resolve_action);
 
-        return ::ssh::filesystem::path(
-            &target_path_buffer[0], &target_path_buffer[0] + len);
+        return ::ssh::filesystem::path(&target_path_buffer[0],
+                                       &target_path_buffer[0] + len);
     }
 
     ::ssh::detail::sftp_channel_state& sftp_ref()
@@ -941,43 +949,43 @@ inline void swap(sftp_filesystem& lhs, sftp_filesystem& rhs)
     rhs = boost::move(tmp);
 }
 
-namespace detail {
+namespace detail
+{
 
-    inline BOOST_SCOPED_ENUM(path_status) check_status(
-        sftp_filesystem& filesystem, const path& path)
+inline BOOST_SCOPED_ENUM(path_status)
+check_status(sftp_filesystem& filesystem, const path& path)
+{
+    try
     {
-        try
-        {
-            file_attributes attrs = filesystem.attributes(path, false);
+        file_attributes attrs = filesystem.attributes(path, false);
 
-            if (attrs.type() == file_attributes::directory)
-            {
-                return path_status::directory;
-            }
-            else
-            {
-                return path_status::non_directory;
-            }
+        if (attrs.type() == file_attributes::directory)
+        {
+            return path_status::directory;
         }
-        catch (const boost::system::system_error& e)
+        else
         {
-            // Process errors by catching the exception, rather than
-            // intercepting the error code directly, so as not to
-            // duplicate the exception info processing.
-
-            if (e.code() == boost::system::errc::no_such_file_or_directory)
-            {
-                // Mirror the Boost.Filesystem API which doesn't treat
-                // this as an error.
-                return path_status::non_existent;
-            }
-            else
-            {
-                throw;
-            }
+            return path_status::non_directory;
         }
     }
+    catch (const boost::system::system_error& e)
+    {
+        // Process errors by catching the exception, rather than intercepting
+        // the error code directly, so as not to duplicate the exception info
+        // processing.
 
+        if (e.code() == boost::system::errc::no_such_file_or_directory)
+        {
+            // Mirror the Boost.Filesystem API which doesn't treat this as an
+            // error.
+            return path_status::non_existent;
+        }
+        else
+        {
+            throw;
+        }
+    }
+}
 }
 
 /**
@@ -1004,14 +1012,13 @@ inline bool exists(sftp_filesystem& filesystem, const path& file)
     return true;
 }
 
-inline path resolve_link_target(
-    sftp_filesystem& filesystem, const sftp_file& link)
+inline path resolve_link_target(sftp_filesystem& filesystem,
+                                const sftp_file& link)
 {
     return filesystem.resolve_link_target(link.path());
 }
 
-inline path canonical_path(
-    sftp_filesystem& filesystem, const sftp_file& link)
+inline path canonical_path(sftp_filesystem& filesystem, const sftp_file& link)
 {
     return filesystem.canonical_path(link.path());
 }
@@ -1021,8 +1028,9 @@ inline boost::uintmax_t sftp_filesystem::remove_directory(const path& root)
 {
     boost::uintmax_t count = 0U;
 
-    for (ssh::filesystem::directory_iterator directory = directory_iterator(root);
-        directory != directory_iterator(); ++directory)
+    for (ssh::filesystem::directory_iterator directory =
+             directory_iterator(root);
+         directory != directory_iterator(); ++directory)
     {
         const sftp_file& file = *directory;
 
@@ -1060,7 +1068,7 @@ inline boost::uintmax_t sftp_filesystem::remove_directory(const path& root)
 
     return count;
 }
-
-}} // namespace ssh::filesystem
+}
+} // namespace ssh::filesystem
 
 #endif

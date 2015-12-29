@@ -34,7 +34,7 @@
     @endif
 */
 
-#include "ssh/path.hpp"
+#include <ssh/filesystem/path.hpp>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/locale.hpp>

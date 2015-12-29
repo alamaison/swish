@@ -40,13 +40,15 @@
 
 #include <ssh/filesystem/path.hpp>
 
-#include <boost/filesystem.hpp> // path
+#include <boost/filesystem.hpp>    // path
 #include <boost/process/child.hpp> // child process
 
 #include <string>
 
-namespace test {
-namespace ssh {
+namespace test
+{
+namespace ssh
+{
 
 /**
  * Fixture that starts and stops a local OpenSSH server instance.
@@ -66,14 +68,14 @@ public:
     boost::filesystem::path public_key_path() const;
     boost::filesystem::path wrong_private_key_path() const;
     boost::filesystem::path wrong_public_key_path() const;
-    ::ssh::filesystem::path to_remote_path(
-        boost::filesystem::path local_path) const;
+    ::ssh::filesystem::path
+    to_remote_path(boost::filesystem::path local_path) const;
 
 private:
     int m_port;
     boost::process::child m_sshd;
 };
-
-}} // namespace test::ssh
+}
+} // namespace test::ssh
 
 #endif

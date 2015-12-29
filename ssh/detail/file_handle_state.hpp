@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -46,19 +46,21 @@
 
 #include <libssh2_sftp.h> // LIBSSH2_SFTP_HANDLE
 
-namespace ssh {
-namespace detail {
+namespace ssh
+{
+namespace detail
+{
 
-inline LIBSSH2_SFTP_HANDLE* do_open(
-    sftp_channel_state& sftp,
-    const char* filename, unsigned int filename_len, unsigned long flags,
-    long mode, int open_type)
+inline LIBSSH2_SFTP_HANDLE* do_open(sftp_channel_state& sftp,
+                                    const char* filename,
+                                    unsigned int filename_len,
+                                    unsigned long flags, long mode,
+                                    int open_type)
 {
     session_state::scoped_lock lock = sftp.aquire_lock();
 
-    return libssh2::sftp::open(
-        sftp.session_ptr(), sftp.sftp_ptr(), filename, filename_len, flags,
-        mode, open_type);
+    return libssh2::sftp::open(sftp.session_ptr(), sftp.sftp_ptr(), filename,
+                               filename_len, flags, mode, open_type);
 }
 
 /**
@@ -75,24 +77,23 @@ class file_handle_state : private boost::noncopyable
     // need to leave it where it is when they move so as not to invalidate
     // the other references.  Making this non-copyable, non-movable enforces
     // that.
-    // 
+    //
 
 public:
-
     typedef sftp_channel_state::scoped_lock scoped_lock;
 
     /**
      * Creates a new file handle that closes itself in a thread-safe manner
      * when it goes out of scope.
      */
-    file_handle_state(
-        sftp_channel_state& sftp,
-        const char* filename, unsigned int filename_len, unsigned long flags,
-        long mode, int open_type)
-        :
-    m_sftp(sftp),
-    m_handle(
-        do_open(sftp_ref(), filename, filename_len, flags, mode, open_type)) {}
+    file_handle_state(sftp_channel_state& sftp, const char* filename,
+                      unsigned int filename_len, unsigned long flags, long mode,
+                      int open_type)
+        : m_sftp(sftp),
+          m_handle(do_open(sftp_ref(), filename, filename_len, flags, mode,
+                           open_type))
+    {
+    }
 
     ~file_handle_state() throw()
     {
@@ -122,7 +123,6 @@ public:
     }
 
 private:
-
     sftp_channel_state& sftp_ref()
     {
         return m_sftp;
@@ -131,7 +131,7 @@ private:
     sftp_channel_state& m_sftp;
     LIBSSH2_SFTP_HANDLE* m_handle;
 };
-
-}} // namespace ssh::detail
+}
+} // namespace ssh::detail
 
 #endif

@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -40,30 +40,35 @@
 #include <ssh/ssh_error.hpp> // last_error_code
 
 #include <boost/exception/errinfo_file_name.hpp> // errinfo_file_name
-#include <boost/exception/info.hpp> // errinfo_api_function
-#include <boost/throw_exception.hpp> // throw_exception
+#include <boost/exception/info.hpp>              // errinfo_api_function
+#include <boost/throw_exception.hpp>             // throw_exception
 
 #include <string>
 
-#include <libssh2_sftp.h>
-          // LIBSSH2_FX_*, LIBSSH2_ERROR_SFTP_PROTOCOL, libssh2_sftp_last_error
+#include <libssh2_sftp.h> // LIBSSH2_FX_*, LIBSSH2_ERROR_SFTP_PROTOCOL,
+                          // libssh2_sftp_last_error
 
-namespace ssh {
-namespace filesystem {
+namespace ssh
+{
+namespace filesystem
+{
 
 inline boost::system::error_category& sftp_error_category();
 
-namespace detail {
+namespace detail
+{
 
 // Cutting LIBSSH2_ prefix off because the FX codes correspond to codes in
 // the spec, not just in the library
 
-#define SSH_CASE_SFTP_RETURN_STRINGISED(x) case LIBSSH2_ ## x: return #x;
+#define SSH_CASE_SFTP_RETURN_STRINGISED(x)                                     \
+    case LIBSSH2_##x:                                                          \
+        return #x;
 
-    inline std::string sftp_error_code_to_string(unsigned long code)
+inline std::string sftp_error_code_to_string(unsigned long code)
+{
+    switch (code)
     {
-        switch (code)
-        {
         SSH_CASE_SFTP_RETURN_STRINGISED(FX_OK);
         SSH_CASE_SFTP_RETURN_STRINGISED(FX_EOF);
         SSH_CASE_SFTP_RETURN_STRINGISED(FX_NO_SUCH_FILE);
@@ -86,73 +91,76 @@ namespace detail {
         SSH_CASE_SFTP_RETURN_STRINGISED(FX_NOT_A_DIRECTORY);
         SSH_CASE_SFTP_RETURN_STRINGISED(FX_INVALID_FILENAME);
         SSH_CASE_SFTP_RETURN_STRINGISED(FX_LINK_LOOP);
-        default:
-            assert(!"Unknown code");
-            return boost::lexical_cast<std::string>(code);
-        }
+    default:
+        assert(!"Unknown code");
+        return boost::lexical_cast<std::string>(code);
     }
+}
 
 #undef SSH_CASE_SFTP_RETURN_STRINGISED
 
-    class _sftp_error_category : public boost::system::error_category
+class _sftp_error_category : public boost::system::error_category
+{
+    typedef boost::system::error_category super;
+
+public:
+    virtual const char* name() const
     {
-        typedef boost::system::error_category super;
-    public:
-        virtual const char* name() const
+        return "sftp";
+    }
+
+    virtual std::string message(int code) const
+    {
+        return sftp_error_code_to_string(code);
+    }
+
+    virtual boost::system::error_condition
+    default_error_condition(int code) const
+    {
+        switch (code)
         {
-            return "sftp";
+        case LIBSSH2_FX_NO_SUCH_FILE:
+            return boost::system::errc::no_such_file_or_directory;
+
+        case LIBSSH2_FX_FILE_ALREADY_EXISTS:
+            return boost::system::errc::file_exists;
+
+        case LIBSSH2_FX_OP_UNSUPPORTED:
+            return boost::system::errc::operation_not_supported;
+        default:
+            return this->super::default_error_condition(code);
+        }
+    }
+
+    virtual bool
+    equivalent(int code, const boost::system::error_condition& condition) const
+    {
+        // Any match with the code's default condition is equivalent. The
+        // switch below only needs to match _extra_ conditions that are
+        // also equivalent
+
+        if (condition == default_error_condition(code))
+        {
+            return true;
         }
 
-        virtual std::string message(int code) const
+        switch (code)
         {
-            return sftp_error_code_to_string(code);
+        case LIBSSH2_FX_OP_UNSUPPORTED:
+            return condition == boost::system::errc::not_supported;
+        default:
+            return condition == default_error_condition(code);
         }
+    }
 
-        virtual boost::system::error_condition default_error_condition(
-            int code) const
-        {
-            switch (code)
-            {
-            case LIBSSH2_FX_NO_SUCH_FILE:
-                return boost::system::errc::no_such_file_or_directory;
+private:
+    _sftp_error_category()
+    {
+    }
 
-            case LIBSSH2_FX_FILE_ALREADY_EXISTS:
-                return boost::system::errc::file_exists;
-
-            case LIBSSH2_FX_OP_UNSUPPORTED:
-                return boost::system::errc::operation_not_supported;
-            default:
-                return this->super::default_error_condition(code);
-            }
-        }
-
-        virtual bool equivalent(
-            int code, const boost::system::error_condition& condition) const
-        {
-            // Any match with the code's default condition is equivalent. The
-            // switch below only needs to match _extra_ conditions that are
-            // also equivalent
-
-            if (condition == default_error_condition(code))
-            {
-                return true;
-            }
-
-            switch (code)
-            {
-            case LIBSSH2_FX_OP_UNSUPPORTED:
-                return condition == boost::system::errc::not_supported;
-            default:
-                return condition == default_error_condition(code);
-            }
-        }
-
-    private:
-        _sftp_error_category() {}
-
-        friend boost::system::error_category& ssh::filesystem::sftp_error_category();
-    };
-
+    friend boost::system::error_category&
+    ssh::filesystem::sftp_error_category();
+};
 }
 
 inline boost::system::error_category& sftp_error_category()
@@ -163,36 +171,36 @@ inline boost::system::error_category& sftp_error_category()
     return instance;
 }
 
-namespace detail {
+namespace detail
+{
 
-    /**
-     * Last error encountered by the SFTP channel as an `error_code` and
-     * optional error description message.
-     */
-    inline boost::system::error_code last_sftp_error_code(
-        LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp,
-        boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+/**
+ * Last error encountered by the SFTP channel as an `error_code` and
+ * optional error description message.
+ */
+inline boost::system::error_code last_sftp_error_code(
+    LIBSSH2_SESSION* session, LIBSSH2_SFTP* sftp,
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
+{
+    // Failing libssh2_sftp_* functions can set an SSH error defined
+    // by the library or an SFTP error defined in the SFTP standard,
+    // in which case the SSH error will be LIBSSH2_ERROR_SFTP_PROTOCOL.
+    // This function checks which case it is and packages the error
+    // with the corresponding category.
+
+    boost::system::error_code error =
+        ::ssh::detail::last_error_code(session, e_msg);
+
+    if (error.value() == LIBSSH2_ERROR_SFTP_PROTOCOL)
     {
-        // Failing libssh2_sftp_* functions can set an SSH error defined
-        // by the library or an SFTP error defined in the SFTP standard,
-        // in which case the SSH error will be LIBSSH2_ERROR_SFTP_PROTOCOL.
-        // This function checks which case it is and packages the error
-        // with the corresponding category.
-
-        boost::system::error_code error = ::ssh::detail::last_error_code(
-            session, e_msg);
-
-        if (error.value() == LIBSSH2_ERROR_SFTP_PROTOCOL)
-        {
-            error = boost::system::error_code(
-                ::libssh2_sftp_last_error(sftp), sftp_error_category());
-        }
-
-        return error;
+        error = boost::system::error_code(::libssh2_sftp_last_error(sftp),
+                                          sftp_error_category());
     }
 
+    return error;
 }
-
-}} // namespace ssh::filesystem
+}
+}
+} // namespace ssh::filesystem
 
 #endif

@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -39,7 +39,7 @@
 
 #include <ssh/ssh_error.hpp> // last_error_code, SSH_DETAIL_THROW_API_ERROR_CODE
 
-#include <boost/exception/info.hpp> // errinfo_api_function
+#include <boost/exception/info.hpp>  // errinfo_api_function
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
@@ -49,17 +49,21 @@
 // See ssh/detail/libssh2/libssh2.hpp for rules governing functions in this
 // namespace
 
-namespace ssh {
-namespace detail {
-namespace libssh2 {
-namespace agent {
+namespace ssh
+{
+namespace detail
+{
+namespace libssh2
+{
+namespace agent
+{
 
 /**
  * Error-fetching wrapper around libssh2_agent_init.
  */
-inline LIBSSH2_AGENT* init(
-    LIBSSH2_SESSION* session, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline LIBSSH2_AGENT*
+init(LIBSSH2_SESSION* session, boost::system::error_code& ec,
+     boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     LIBSSH2_AGENT* agent = ::libssh2_agent_init(session);
 
@@ -92,10 +96,10 @@ inline LIBSSH2_AGENT* init(LIBSSH2_SESSION* session)
 /**
  * Error-fetching wrapper around libssh2_agent_connect.
  */
-inline void connect(
-    LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
-    boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline void
+connect(LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
+        boost::system::error_code& ec,
+        boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_agent_connect(agent);
     if (rc < 0)
@@ -130,7 +134,7 @@ inline int get_identity(
     LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
     libssh2_agent_publickey** out, libssh2_agent_publickey* previous,
     boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_agent_get_identity(agent, out, previous);
     if (rc < 0)
@@ -146,9 +150,9 @@ inline int get_identity(
  *
  * Returns 1 when reached end of keys.
  */
-inline int get_identity(
-    LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
-    libssh2_agent_publickey** out, libssh2_agent_publickey* previous)
+inline int get_identity(LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
+                        libssh2_agent_publickey** out,
+                        libssh2_agent_publickey* previous)
 {
     boost::system::error_code ec;
     std::string message;
@@ -157,8 +161,8 @@ inline int get_identity(
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_agent_get_identity");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message,
+                                        "libssh2_agent_get_identity");
     }
 
     return rc;
@@ -170,7 +174,7 @@ inline int get_identity(
 inline void list_identities(
     LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
     boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_agent_list_identities(agent);
 
@@ -192,19 +196,18 @@ inline void list_identities(LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session)
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_agent_list_identities");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message,
+                                        "libssh2_agent_list_identities");
     }
 }
 
 /**
  * Error-fetching wrapper around libssh2_agent_userauth.
  */
-inline void userauth(
-    LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
-    const char* user_name, libssh2_agent_publickey* identity,
-    boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline void
+userauth(LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session, const char* user_name,
+         libssh2_agent_publickey* identity, boost::system::error_code& ec,
+         boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_agent_userauth(agent, user_name, identity);
     if (rc < 0)
@@ -216,9 +219,8 @@ inline void userauth(
 /**
  * Exception wrapper around libssh2_agent_userauth.
  */
-inline void userauth(
-    LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
-    const char* user_name, libssh2_agent_publickey* identity)
+inline void userauth(LIBSSH2_AGENT* agent, LIBSSH2_SESSION* session,
+                     const char* user_name, libssh2_agent_publickey* identity)
 {
     boost::system::error_code ec;
     std::string message;
@@ -230,7 +232,9 @@ inline void userauth(
         SSH_DETAIL_THROW_API_ERROR_CODE(ec, message, "libssh2_agent_userauth");
     }
 }
-
-}}}} // namespace ssh::detail::libssh2::agent
+}
+}
+}
+} // namespace ssh::detail::libssh2::agent
 
 #endif

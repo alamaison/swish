@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -39,7 +39,7 @@
 
 #include <ssh/ssh_error.hpp> // last_error_code, SSH_DETAIL_THROW_API_ERROR_CODE
 
-#include <boost/exception/info.hpp> // errinfo_api_function
+#include <boost/exception/info.hpp>  // errinfo_api_function
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <libssh2.h> // LIBSSH2_SESSION, LIBSSH2_KNOWNHOSTS, libssh2_knownhost_*
@@ -47,17 +47,21 @@
 // See ssh/detail/libssh2/libssh2.hpp for rules governing functions in this
 // namespace
 
-namespace ssh {
-namespace detail {
-namespace libssh2 {
-namespace knownhost {
+namespace ssh
+{
+namespace detail
+{
+namespace libssh2
+{
+namespace knownhost
+{
 
 /**
  * Error-fetching wrapper around libssh2_knownhost_init.
  */
-inline LIBSSH2_KNOWNHOSTS* init(
-    LIBSSH2_SESSION* session, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline LIBSSH2_KNOWNHOSTS*
+init(LIBSSH2_SESSION* session, boost::system::error_code& ec,
+     boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     LIBSSH2_KNOWNHOSTS* hosts = ::libssh2_knownhost_init(session);
 
@@ -90,10 +94,10 @@ inline LIBSSH2_KNOWNHOSTS* init(LIBSSH2_SESSION* session)
 /**
  * Error-fetching wrapper around libssh2_knownhost_readline.
  */
-inline void readline(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char* line,
-    size_t line_length, int type, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline void
+readline(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char* line,
+         size_t line_length, int type, boost::system::error_code& ec,
+         boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_knownhost_readline(hosts, line, line_length, type);
 
@@ -106,9 +110,8 @@ inline void readline(
 /**
  * Exception wrapper around libssh2_knownhost_readline.
  */
-inline void readline(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char* line,
-    size_t line_length, int type)
+inline void readline(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+                     const char* line, size_t line_length, int type)
 {
     boost::system::error_code ec;
     std::string message;
@@ -117,22 +120,22 @@ inline void readline(
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_knownhost_readline");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message,
+                                        "libssh2_knownhost_readline");
     }
 }
 
 /**
  * Error-fetching wrapper around libssh2_knownhost_writeline.
  */
-inline void writeline(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
-    libssh2_knownhost* host, char* buffer, size_t buffer_length,
-    size_t* written_length_out, int type, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline void
+writeline(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+          libssh2_knownhost* host, char* buffer, size_t buffer_length,
+          size_t* written_length_out, int type, boost::system::error_code& ec,
+          boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
-    int rc = ::libssh2_knownhost_writeline(
-        hosts, host, buffer, buffer_length, written_length_out, type);
+    int rc = ::libssh2_knownhost_writeline(hosts, host, buffer, buffer_length,
+                                           written_length_out, type);
 
     if (rc < 0)
     {
@@ -143,22 +146,21 @@ inline void writeline(
 /**
  * Exception wrapper around libssh2_knownhost_writeline.
  */
-inline void writeline(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
-    libssh2_knownhost* host, char* buffer, size_t buffer_length,
-    size_t* written_length_out, int type)
+inline void writeline(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+                      libssh2_knownhost* host, char* buffer,
+                      size_t buffer_length, size_t* written_length_out,
+                      int type)
 {
     boost::system::error_code ec;
     std::string message;
 
-    writeline(
-        session, hosts, host, buffer, buffer_length, written_length_out, type,
-        ec, message);
+    writeline(session, hosts, host, buffer, buffer_length, written_length_out,
+              type, ec, message);
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_knownhost_writeline");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message,
+                                        "libssh2_knownhost_writeline");
     }
 }
 
@@ -167,11 +169,11 @@ inline void writeline(
  *
  * @returns 1 if finished.  The return code has no meaning if `ec == false`.
  */
-inline int get(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+inline int
+get(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
     libssh2_knownhost** store, libssh2_knownhost* current_position,
     boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_knownhost_get(hosts, store, current_position);
 
@@ -188,9 +190,8 @@ inline int get(
  *
  * @returns 1 if finished.
  */
-inline int get(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
-    libssh2_knownhost** store, libssh2_knownhost* current_position)
+inline int get(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+               libssh2_knownhost** store, libssh2_knownhost* current_position)
 {
     boost::system::error_code ec;
     std::string message;
@@ -208,14 +209,14 @@ inline int get(
 /**
  * Error-fetching wrapper around libssh2_knownhost_add.
  */
-inline void add(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char *host,
-    const char* salt, const char *key, size_t key_length, int typemask,
+inline void
+add(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char* host,
+    const char* salt, const char* key, size_t key_length, int typemask,
     libssh2_knownhost** store, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
-    int rc = ::libssh2_knownhost_add(
-        hosts, host, salt, key, key_length, typemask, store);
+    int rc = ::libssh2_knownhost_add(hosts, host, salt, key, key_length,
+                                     typemask, store);
 
     if (rc < 0)
     {
@@ -226,10 +227,9 @@ inline void add(
 /**
  * Exception wrapper around libssh2_knownhost_add.
  */
-inline void add(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char *host,
-    const char* salt, const char *key, size_t key_length, int typemask,
-    libssh2_knownhost** store)
+inline void add(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+                const char* host, const char* salt, const char* key,
+                size_t key_length, int typemask, libssh2_knownhost** store)
 {
     boost::system::error_code ec;
     std::string message;
@@ -239,18 +239,17 @@ inline void add(
 
     if (ec)
     {
-        SSH_DETAIL_THROW_API_ERROR_CODE(
-            ec, message, "libssh2_knownhost_add");
+        SSH_DETAIL_THROW_API_ERROR_CODE(ec, message, "libssh2_knownhost_add");
     }
 }
 
 /**
  * Error-fetching wrapper around libssh2_knownhost_del.
  */
-inline void del(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+inline void
+del(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
     libssh2_knownhost* entry, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+    boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
     int rc = ::libssh2_knownhost_del(hosts, entry);
 
@@ -263,9 +262,8 @@ inline void del(
 /**
  * Exception wrapper around libssh2_knownhost_del.
  */
-inline void del(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
-    libssh2_knownhost* entry)
+inline void del(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+                libssh2_knownhost* entry)
 {
     boost::system::error_code ec;
     std::string message;
@@ -281,14 +279,14 @@ inline void del(
 /**
  * Error-fetching wrapper around libssh2_knownhost_check.
  */
-inline int check(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char *host,
-    const char* key, size_t key_length, int typemask,
-    libssh2_knownhost** knownhost, boost::system::error_code& ec,
-    boost::optional<std::string&> e_msg=boost::optional<std::string&>())
+inline int
+check(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char* host,
+      const char* key, size_t key_length, int typemask,
+      libssh2_knownhost** knownhost, boost::system::error_code& ec,
+      boost::optional<std::string&> e_msg = boost::optional<std::string&>())
 {
-    int rc = ::libssh2_knownhost_check(
-        hosts, host, key, key_length, typemask, knownhost);
+    int rc = ::libssh2_knownhost_check(hosts, host, key, key_length, typemask,
+                                       knownhost);
 
     switch (rc)
     {
@@ -299,8 +297,8 @@ inline int check(
         return rc;
 
     case LIBSSH2_KNOWNHOST_CHECK_FAILURE:
-        // This value, also positive, also not an error code, means there
-        // was an error so check last_error to find the error code
+    // This value, also positive, also not an error code, means there
+    // was an error so check last_error to find the error code
 
     default:
 
@@ -312,17 +310,15 @@ inline int check(
 /**
  * Exception wrapper around libssh2_knownhost_check.
  */
-inline int check(
-    LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts, const char *host,
-    const char* key, size_t key_length, int typemask,
-    libssh2_knownhost** knownhost)
+inline int check(LIBSSH2_SESSION* session, LIBSSH2_KNOWNHOSTS* hosts,
+                 const char* host, const char* key, size_t key_length,
+                 int typemask, libssh2_knownhost** knownhost)
 {
     boost::system::error_code ec;
     std::string message;
 
-    int rc = check(
-        session, hosts, host, key, key_length, typemask, knownhost, ec,
-        message);
+    int rc = check(session, hosts, host, key, key_length, typemask, knownhost,
+                   ec, message);
 
     if (ec)
     {
@@ -331,7 +327,9 @@ inline int check(
 
     return rc;
 }
-
-}}}} // namespace ssh::detail::libssh2::knownhost
+}
+}
+}
+} // namespace ssh::detail::libssh2::knownhost
 
 #endif

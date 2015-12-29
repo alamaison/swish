@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -44,8 +44,10 @@
 
 #include <libssh2_sftp.h> // LIBSSH2_SFTP
 
-namespace ssh {
-namespace detail {
+namespace ssh
+{
+namespace detail
+{
 
 inline LIBSSH2_SFTP* do_sftp_init(session_state& session)
 {
@@ -69,9 +71,8 @@ class sftp_channel_state : private boost::noncopyable
     // need to leave it where it is when they move so as not to invalidate
     // the other references.  Making this non-copyable, non-movable enforces
     // that.
-    // 
+    //
 public:
-
     typedef session_state::scoped_lock scoped_lock;
 
     /**
@@ -79,7 +80,9 @@ public:
      * when it goes out of scope.
      */
     sftp_channel_state(session_state& session)
-        : m_session(session), m_sftp(do_sftp_init(session_ref())) {}
+        : m_session(session), m_sftp(do_sftp_init(session_ref()))
+    {
+    }
 
     ~sftp_channel_state() throw()
     {
@@ -104,7 +107,6 @@ public:
     }
 
 private:
-
     session_state& session_ref()
     {
         return m_session;
@@ -113,7 +115,7 @@ private:
     session_state& m_session;
     LIBSSH2_SFTP* m_sftp;
 };
-
-}} // namespace ssh::detail
+}
+} // namespace ssh::detail
 
 #endif

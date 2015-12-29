@@ -22,13 +22,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
@@ -44,8 +44,10 @@
 
 #include <libssh2.h> // LIBSSH2_AGENT
 
-namespace ssh {
-namespace detail {
+namespace ssh
+{
+namespace detail
+{
 
 inline LIBSSH2_AGENT* do_agent_init(session_state& session)
 {
@@ -69,10 +71,9 @@ class agent_state : private boost::noncopyable
     // need to leave it where it is when they move so as not to invalidate
     // the other references.  Making this non-copyable, non-movable enforces
     // that.
-    // 
+    //
 
 public:
-
     typedef session_state::scoped_lock scoped_lock;
 
     /**
@@ -86,8 +87,8 @@ public:
 
         try
         {
-            detail::libssh2::agent::connect(
-                m_agent, session_ref().session_ptr());
+            detail::libssh2::agent::connect(m_agent,
+                                            session_ref().session_ptr());
         }
         catch (...)
         {
@@ -101,7 +102,7 @@ public:
     {
         session_state::scoped_lock lock = session_ref().aquire_lock();
 
-        ::libssh2_agent_disconnect(m_agent);        
+        ::libssh2_agent_disconnect(m_agent);
         ::libssh2_agent_free(m_agent);
     }
 
@@ -121,7 +122,6 @@ public:
     }
 
 private:
-
     session_state& session_ref()
     {
         return m_session;
@@ -130,7 +130,7 @@ private:
     session_state& m_session;
     LIBSSH2_AGENT* m_agent;
 };
-
-}} // namespace ssh::detail
+}
+} // namespace ssh::detail
 
 #endif
