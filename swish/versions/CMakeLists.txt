@@ -13,21 +13,19 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-find_package(Git)
+include(GetGitRevisionDescription)
 
-set(VERSION_CONFIGURE_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/git_version.h.in")
-set(VERSION_CONFIGURE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/git_version.h")
+git_describe(SWISH_GIT_VERSION)
 
-add_custom_target(git_version
-  COMMENT "Regenerating embedded version"
-  COMMAND ${CMAKE_COMMAND}
-  -DGIT_FOUND=${GIT_FOUND}
-  -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
-  -DVERSION_CONFIGURE_INPUT=${VERSION_CONFIGURE_INPUT}
-  -DVERSION_CONFIGURE_OUTPUT=${VERSION_CONFIGURE_OUTPUT}
-  -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
-  -P ${CMAKE_CURRENT_SOURCE_DIR}/configure_git_version.cmake
-  VERBATIM)
+set(GIT_VERSION_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/git_version.h.in")
+set(GIT_VERSION_GENERATED_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/git_version.h")
+
+configure_file(
+  ${GIT_VERSION_TEMPLATE}
+  ${GIT_VERSION_GENERATED_OUTPUT}
+  @ONLY)
+set_source_files_properties(
+  ${GIT_VERSION_GENERATED_OUTPUT} PROPERTIES GENERATED TRUE)
 
 set(METADATA_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/metadata.h.in")
 set(METADATA_GENERATED_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/swish/versions/metadata.h")
@@ -40,6 +38,7 @@ set_source_files_properties(
   ${METADATA_GENERATED_OUTPUT} PROPERTIES GENERATED TRUE)
 
 set(SOURCES
+  ${GIT_VERSION_GENERATED_OUTPUT}
   ${METADATA_GENERATED_OUTPUT}
   version.cpp
   version.hpp)
@@ -49,6 +48,5 @@ set(SOURCES
 # CMake gets confused which one we mean and chooses the target, not the system
 # library.
 add_library(versions ${SOURCES})
-add_dependencies(versions git_version)
 
 target_include_directories(versions PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
