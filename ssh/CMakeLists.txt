@@ -14,21 +14,21 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 set(SOURCES
+  agent.hpp
+  detail/agent_state.hpp
+  detail/file_handle_state.hpp
   detail/libssh2/agent.hpp
   detail/libssh2/knownhost.hpp
   detail/libssh2/libssh2.hpp
   detail/libssh2/session.hpp
   detail/libssh2/sftp.hpp
   detail/libssh2/userauth.hpp
-  detail/agent_state.hpp
-  detail/file_handle_state.hpp
   detail/session_state.hpp
   detail/sftp_channel_state.hpp
-  agent.hpp
   filesystem.hpp
+  filesystem/path.hpp
   host_key.hpp
   knownhost.hpp
-  path.hpp
   session.hpp
   sftp_error.hpp
   ssh_error.hpp
