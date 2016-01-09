@@ -5,7 +5,7 @@
 
     @if license
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+    Copyright (C) 2013, 2016  Alexander Lamaison <awl03@doc.ic.ac.uk>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@
 
 #include <swish/host_folder/ViewCallback.hpp> // test subject
 
-#include <test/common_boost/helpers.hpp> // BOOST_CHECK_OK
-#include <test/common_boost/SwishPidlFixture.hpp> // swish_pidl
+#include <test/common_boost/helpers.hpp>          // BOOST_CHECK_OK
+#include <test/common_boost/SwishPidlFixture.hpp> // fake_swish_pidl
 
 #include <washer/gui/menu/button/string_button_description.hpp>
 #include <washer/gui/menu/item/command_item.hpp>
@@ -58,67 +58,70 @@ using comet::com_ptr;
 
 using std::wstring;
 
-BOOST_FIXTURE_TEST_SUITE( view_callback_tests, SwishPidlFixture )
+BOOST_FIXTURE_TEST_SUITE(view_callback_tests, SwishPidlFixture)
 
-BOOST_AUTO_TEST_CASE( basic_init )
+BOOST_AUTO_TEST_CASE(basic_init)
 {
-    com_ptr<IShellFolderViewCB> cb = new CViewCallback(swish_pidl());
+    com_ptr<IShellFolderViewCB> cb = new CViewCallback(fake_swish_pidl());
 
     // TODO: Use real message-only window
-    BOOST_CHECK_INTERFACE_OK(
-        cb, cb->MessageSFVCB(SFVM_WINDOWCREATED, NULL, NULL));
+    BOOST_CHECK_INTERFACE_OK(cb,
+                             cb->MessageSFVCB(SFVM_WINDOWCREATED, NULL, NULL));
 }
 
-namespace {
-
-    sub_menu_item_description dummy_menu(wstring title, UINT id)
-    {
-        menu empty_menu;
-
-        sub_menu_item_description menu(
-            string_button_description(title), empty_menu);
-        menu.id(id);
-
-        return menu;
-    }
-
-    sub_menu_item_description dummy_tools_menu()
-    {
-        // Purposely not called "Tools" to test that code doesn't rely on it
-        return dummy_menu(L"Bert", FCIDM_MENU_TOOLS);
-    }
-
-    sub_menu_item_description dummy_help_menu()
-    {
-        // Purposely not called "Help" to test that code doesn't rely on it
-        return dummy_menu(L"Sally", FCIDM_MENU_HELP);
-    }
-
-    sub_menu_item_description dummy_file_menu()
-    {
-        // Purposely not called "File" to test that code doesn't rely on it
-        return dummy_menu(L"Bob", FCIDM_MENU_FILE);
-    }
-
-    class counting_visitor
-    {
-    public:
-        typedef size_t result_type;
-
-        size_t operator()(const sub_menu_item& item)
-        {
-            return item.menu().size();
-        }
-
-        template<typename ItemType>
-        size_t operator()(const ItemType&) { return 0; }
-    };
-
-}
-
-BOOST_AUTO_TEST_CASE( merge_menu )
+namespace
 {
-    com_ptr<IShellFolderViewCB> cb = new CViewCallback(swish_pidl());
+
+sub_menu_item_description dummy_menu(wstring title, UINT id)
+{
+    menu empty_menu;
+
+    sub_menu_item_description menu(string_button_description(title),
+                                   empty_menu);
+    menu.id(id);
+
+    return menu;
+}
+
+sub_menu_item_description dummy_tools_menu()
+{
+    // Purposely not called "Tools" to test that code doesn't rely on it
+    return dummy_menu(L"Bert", FCIDM_MENU_TOOLS);
+}
+
+sub_menu_item_description dummy_help_menu()
+{
+    // Purposely not called "Help" to test that code doesn't rely on it
+    return dummy_menu(L"Sally", FCIDM_MENU_HELP);
+}
+
+sub_menu_item_description dummy_file_menu()
+{
+    // Purposely not called "File" to test that code doesn't rely on it
+    return dummy_menu(L"Bob", FCIDM_MENU_FILE);
+}
+
+class counting_visitor
+{
+public:
+    typedef size_t result_type;
+
+    size_t operator()(const sub_menu_item& item)
+    {
+        return item.menu().size();
+    }
+
+    template <typename ItemType>
+    size_t operator()(const ItemType&)
+    {
+        return 0;
+    }
+};
+}
+
+BOOST_AUTO_TEST_CASE(merge_menu)
+{
+    com_ptr<IShellFolderViewCB> cb = new CViewCallback(fake_swish_pidl());
 
     HMENU raw_menu = ::CreateMenu();
     // Bitten here by the Most Vexing Parse
@@ -131,7 +134,7 @@ BOOST_AUTO_TEST_CASE( merge_menu )
     size_t size_before = bar.size();
 
     UINT first_id_before = 42;
-    QCMINFO q = { raw_menu, 7, first_id_before, 999, NULL };
+    QCMINFO q = {raw_menu, 7, first_id_before, 999, NULL};
     BOOST_CHECK_INTERFACE_OK(
         cb,
         cb->MessageSFVCB(SFVM_MERGEMENU, NULL, reinterpret_cast<LPARAM>(&q)));
@@ -141,7 +144,7 @@ BOOST_AUTO_TEST_CASE( merge_menu )
 
     // But should definitely have inserted something in one of its submenus
     size_t count = 0;
-    BOOST_FOREACH(const menu_bar::iterator::value_type& item, bar)
+    BOOST_FOREACH (const menu_bar::iterator::value_type& item, bar)
     {
         count += item.accept(counting_visitor());
     }
@@ -151,9 +154,9 @@ BOOST_AUTO_TEST_CASE( merge_menu )
     BOOST_CHECK_GT(q.idCmdFirst, first_id_before);
 }
 
-BOOST_AUTO_TEST_CASE( merge_menu_no_tools )
+BOOST_AUTO_TEST_CASE(merge_menu_no_tools)
 {
-    com_ptr<IShellFolderViewCB> cb = new CViewCallback(swish_pidl());
+    com_ptr<IShellFolderViewCB> cb = new CViewCallback(fake_swish_pidl());
 
     HMENU raw_menu = ::CreateMenu();
     // Bitten here by the Most Vexing Parse
@@ -162,15 +165,15 @@ BOOST_AUTO_TEST_CASE( merge_menu_no_tools )
     bar.insert(dummy_file_menu());
     bar.insert(dummy_help_menu());
 
-    QCMINFO q = { raw_menu, 7, 42, 999, NULL };
+    QCMINFO q = {raw_menu, 7, 42, 999, NULL};
     BOOST_CHECK_INTERFACE_OK(
         cb,
         cb->MessageSFVCB(SFVM_MERGEMENU, NULL, reinterpret_cast<LPARAM>(&q)));
 }
 
-BOOST_AUTO_TEST_CASE( merge_menu_no_help )
+BOOST_AUTO_TEST_CASE(merge_menu_no_help)
 {
-    com_ptr<IShellFolderViewCB> cb = new CViewCallback(swish_pidl());
+    com_ptr<IShellFolderViewCB> cb = new CViewCallback(fake_swish_pidl());
 
     HMENU raw_menu = ::CreateMenu();
     // Bitten here by the Most Vexing Parse
@@ -179,7 +182,7 @@ BOOST_AUTO_TEST_CASE( merge_menu_no_help )
     bar.insert(dummy_file_menu());
     bar.insert(dummy_tools_menu());
 
-    QCMINFO q = { raw_menu, 7, 42, 999, NULL };
+    QCMINFO q = {raw_menu, 7, 42, 999, NULL};
     BOOST_CHECK_INTERFACE_OK(
         cb,
         cb->MessageSFVCB(SFVM_MERGEMENU, NULL, reinterpret_cast<LPARAM>(&q)));
