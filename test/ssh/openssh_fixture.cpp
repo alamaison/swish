@@ -1,349 +1,275 @@
-/**
-    @file
+// Copyright 2009, 2010, 2011, 2012, 2016 Alexander Lamaison
 
-    Fixture that runs local OpenSSH server for testing.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2009, 2010, 2011, 2012
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "openssh_fixture.hpp"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
-#include <boost/process/context.hpp> // context
-#include <boost/process/environment.hpp> // environment
+#include <boost/io/detail/quoted_manip.hpp>
+#include <boost/optional.hpp>
+#include <boost/process/context.hpp>
+#include <boost/process/environment.hpp>
 #include <boost/process/operations.hpp> // find_executable_in_path
-#include <boost/process/self.hpp> // self
-#pragma warning(push)
-#pragma warning(disable:4100) // unreferenced formal parameter
-#include <boost/random/uniform_int.hpp>
-#pragma warning(pop)
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/mersenne_twister.hpp>  // mt19937
+#include <boost/process/pistream.hpp>
+#include <boost/process/self.hpp>
+#include <boost/process/stream_behavior.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <iterator>
+#include <map>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <map>
 
-using boost::filesystem::path;
-using boost::process::environment;
-using boost::process::context;
-using boost::process::child;
-using boost::process::self;
-using boost::process::find_executable_in_path;
+using ssh::filesystem::path;
+
 using boost::assign::list_of;
-using boost::uniform_int;
-using boost::variate_generator;
-using boost::mt19937;
+using boost::io::quoted;
+using boost::optional;
+using boost::process::behavior::pipe;
+using boost::process::child;
+using boost::process::context;
+using boost::process::environment;
+using boost::process::find_executable_in_path;
+using boost::process::pistream;
+using boost::process::self;
+using boost::process::stderr_id;
+using boost::process::stdout_id;
 
-using std::string;
-using std::wstring;
-using std::vector;
 using std::map;
+using std::ostream_iterator;
+using std::ostringstream;
+using std::runtime_error;
+using std::string;
+using std::vector;
+using std::wstring;
 
-namespace { // private
+namespace
+{ // private
 
-    const string SSHD_LISTEN_ADDRESS = "localhost";
-    const string SSHD_EXE_NAME = "sshd.exe";
-    const string SFTP_SUBSYSTEM = "sftp-server";
-    const string SSHD_DIR_ENVIRONMENT_VAR = "OPENSSH_DIR";
-    const string SSHD_CONFIG_DIR = "sshd-etc";
-    const string SSHD_CONFIG_FILE = "/dev/null";
-    const string SSHD_HOST_KEY_FILE = "fixture_hostkey";
-    const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
-    const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
-    const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
-    const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
+const string SSHD_CONFIG_DIR = "sshd-etc";
+const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
+const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
+const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
+const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
 
-    ssh::filesystem::path cygdrive_prefix()
+/**
+ * Return the path of the currently running executable.
+ */
+boost::filesystem::path GetModulePath()
+{
+    vector<wchar_t> wide_buffer(MAX_PATH);
+    if (wide_buffer.size() > 0)
     {
-        return "/cygdrive/";
-    }
+        unsigned long len = ::GetModuleFileName(
+            NULL, &wide_buffer[0], static_cast<UINT>(wide_buffer.size()));
 
-    /**
-     * Locale-independent port number to port string conversion.
-     */
-    std::string port_to_string(long port)
-    {
-        std::ostringstream stream;
-        stream.imbue(std::locale::classic()); // force locale-independence
-        stream << port;
-        if (!stream)
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("Unable to convert port number to string"));
-
-        return stream.str();
-    }
-
-    string current_user()
-    {
-        // Calculate required size of output buffer
-        DWORD len = 0;
-        if (::GetUserNameA(NULL, &len))
-            return string();
-
-        DWORD err = ::GetLastError();
-        if (err != ERROR_INSUFFICIENT_BUFFER)
+        vector<char> buffer(MAX_PATH * 2);
+        if (buffer.size() > 0)
         {
-            BOOST_THROW_EXCEPTION(
-                boost::system::system_error(
-                    err, boost::system::get_system_category()));
-        }
-
-        // Repeat call with a buffer of required size
-        if (len > 0)
-        {
-            std::vector<char> buffer(len);
-            if (::GetUserNameA(&buffer[0], &len))
-            {
-                return string(&buffer[0], len - 1);
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION(
-                    boost::system::system_error(
-                    ::GetLastError(), boost::system::get_system_category()));
-            }
-        }
-        else
-        {
-            return string();
+            len = ::WideCharToMultiByte(
+                CP_UTF8, 0, &wide_buffer[0], len, &buffer[0],
+                static_cast<UINT>(buffer.size()), NULL, NULL);
+            return string(&buffer[0], len);
         }
     }
 
-    /**
-     * Return the path of the currently running executable.
-     */
-    path GetModulePath()
+    return "";
+}
+
+boost::filesystem::path ConfigDir()
+{
+    return GetModulePath().parent_path() / SSHD_CONFIG_DIR;
+}
+
+template <typename ArgSequence>
+string error_message_from_stderr(const string& command,
+                                 const ArgSequence& arguments, child& process)
+{
+    pistream command_stderr(process.get_handle(stderr_id));
+
+    ostringstream message;
+    message << quoted(command) << " ";
+    copy(arguments.begin(), arguments.end(),
+         ostream_iterator<string>(message, " "));
+    message << " failed: ";
+    message << command_stderr.rdbuf() << std::flush;
+
+    return message.str();
+}
+
+template <typename Out, typename ArgSequence>
+Out single_value_from_executable(const path& executable,
+                                 const ArgSequence& arguments)
+{
+    context ctx;
+    ctx.env = self::get_environment();
+    ctx.streams[stdout_id] = pipe();
+    ctx.streams[stderr_id] = pipe();
+
+    child process = create_child(executable, arguments, ctx);
+
+    pistream command_stdout(process.get_handle(stdout_id));
+    Out out;
+    command_stdout >> out;
+
+    int status = process.wait();
+    // TODO: Check if process exited, with WIFEXITED - may need to upgrade
+    // Boost.Process to the 2012 version to get mitigate.hpp, which handles this
+    // portably.
+    if (status == 0)
     {
-        vector<wchar_t> wide_buffer(MAX_PATH);
-        if (wide_buffer.size() > 0)
-        {
-            unsigned long len = ::GetModuleFileName(
-                NULL, &wide_buffer[0], static_cast<UINT>(wide_buffer.size()));
-
-            vector<char> buffer(MAX_PATH * 2);
-            if (buffer.size() > 0)
-            {
-                len = ::WideCharToMultiByte(
-                    CP_UTF8, 0, &wide_buffer[0], len,
-                    &buffer[0], static_cast<UINT>(buffer.size()), NULL, NULL);
-                return string(&buffer[0], len);
-            }
-        }
-
-        return "";
+        return out;
     }
-
-    /**
-     * Try to find OpenSSH (sshd) directory path in an environment variable.
-     */
-    path GetSshdDirFromEnvironment()
+    else
     {
-        map<string, string>::const_iterator pos;
-        environment env = self::get_environment();
-        pos = env.find(SSHD_DIR_ENVIRONMENT_VAR);
-        if (pos != env.end())
-            return pos->second;
-
-        return path();
+        BOOST_THROW_EXCEPTION(runtime_error(error_message_from_stderr(
+            executable.string(), arguments, process)));
     }
+}
 
-    /**
-     * Find OpenSSH (sshd); either in an environment variable or on the path.
-     */
-    path GetSshdPath()
+template <typename Out, typename ArgSequence>
+Out single_value_from_command(const string& command,
+                              const ArgSequence& arguments)
+{
+    path command_executable = find_executable_in_path(command);
+
+    return single_value_from_executable<Out>(command_executable, arguments);
+}
+
+template <typename Out, typename ArgSequence>
+Out single_value_from_docker_command(const ArgSequence& arguments)
+{
+    return single_value_from_command<Out>("docker", arguments);
+}
+
+template <typename Out, typename ArgSequence>
+Out single_value_from_docker_machine_command(const ArgSequence& arguments)
+{
+    return single_value_from_command<Out>("docker-machine", arguments);
+}
+
+template <typename ArgSequence>
+void run_docker_command(const ArgSequence& arguments)
+{
+    single_value_from_docker_command<string>(arguments);
+}
+
+optional<string> docker_machine_name()
+{
+    const string docker_machine_name_variable = "DOCKER_MACHINE_NAME";
+
+    boost::process::environment environment = self::get_environment();
+    if (environment.count(docker_machine_name_variable) == 1)
     {
-        path sshd_dir = GetSshdDirFromEnvironment();
-        if (!sshd_dir.empty())
-            return sshd_dir / SSHD_EXE_NAME;
-        else
-            return find_executable_in_path(SSHD_EXE_NAME);
+        return environment[docker_machine_name_variable];
     }
-
-    /**
-     * Find OpenSSH SFTP subsystem (sftp-server).
-     * Either in an environment variable or on the path in the same directory
-     * as sshd.
-     */
-    path GetSftpPath()
+    else
     {
-        path sshd_dir = GetSshdDirFromEnvironment();
-        if (!sshd_dir.empty())
-            return sshd_dir / SFTP_SUBSYSTEM;
-        else
-            return find_executable_in_path(SFTP_SUBSYSTEM);
+        return optional<string>();
     }
-
-    /**
-     * Invoke the sshd program with the given list of arguments.
-     */
-    child StartSshd(vector<string> args)
-    {
-        string sshd_path = GetSshdPath().string();
-
-        context ctx;
-        ctx.env = self::get_environment();
-
-        // sshd insists on an absolute path but what it actually looks at isn't
-        // what it is invoked as, rather the first argument passed to is.
-        // By default Boost.Filesystem uses just the exe filename for that so
-        // we force it to use the full path here.
-        ctx.process_name = sshd_path;
-
-        /* Uncomment if needed
-        ctx.stdout_behavior = boost::process::inherit_stream();
-        ctx.stderr_behavior = boost::process::redirect_stream_to_stdout();
-        */
-        return create_child(sshd_path, args, ctx);
-    }
-
-    path ConfigDir()
-    {
-        return GetModulePath().parent_path() / SSHD_CONFIG_DIR;
-    }
-
-    int GenerateRandomPort()
-    {
-        static mt19937 rndgen(static_cast<boost::uint32_t>(std::time(0)));
-        static uniform_int<> distribution(10000, 65535);
-        static variate_generator<mt19937, uniform_int<> > gen(
-            rndgen, distribution);
-        return gen();
-    }
-
-    /**
-     * Turn a path, rooted at a Windows drive letter, into a /cygdrive path.
-     *
-     * For example:
-     *   C:\\Users\\username\\file becomes /cygdrive/c/Users/username/file
-     */
-    ssh::filesystem::path Cygdriveify(path windows_path)
-    {
-        wstring drive(windows_path.root_name().wstring(), 0, 1);
-        ssh::filesystem::path remote_path = cygdrive_prefix() / drive;
-        BOOST_FOREACH(const path& segment, windows_path.relative_path())
-        {
-            remote_path /= segment.wstring();
-        }
-        return remote_path;
-    }
-
-    vector<string> GetSshdOptions(int port)
-    {
-        path host_key_file = ConfigDir() / SSHD_HOST_KEY_FILE;
-        path auth_key_file = ConfigDir() / SSHD_PUBLIC_KEY_FILE;
-        vector<string> options = (list_of(string("-D")),
-            "-f", SSHD_CONFIG_FILE,
-            "-h", Cygdriveify(host_key_file).string(),
-            "-o", "AuthorizedKeysFile \"" +
-                  Cygdriveify(auth_key_file).string() + "\"",
-            "-o", "ListenAddress " + SSHD_LISTEN_ADDRESS + ":" +
-                   port_to_string(port),
-            "-o", "Protocol 2",
-            "-o", "UsePrivilegeSeparation no",
-            "-o", "StrictModes no",
-            "-o", "Subsystem sftp " + Cygdriveify(GetSftpPath()).string());
-        return options;
-    }
+}
 }
 
 extern "C" {
-    extern void ERR_free_strings();
-    extern void ERR_remove_state(unsigned long);
-    extern void EVP_cleanup();
-    extern void CRYPTO_cleanup_all_ex_data();
-    extern void ENGINE_cleanup();
-    extern void CONF_modules_unload(int);
-    extern void CONF_modules_free();
-    extern void RAND_cleanup();
+extern void ERR_free_strings();
+extern void ERR_remove_state(unsigned long);
+extern void EVP_cleanup();
+extern void CRYPTO_cleanup_all_ex_data();
+extern void ENGINE_cleanup();
+extern void CONF_modules_unload(int);
+extern void CONF_modules_free();
+extern void RAND_cleanup();
 }
 
-namespace {
-    struct global_fixture
-    {
-        ~global_fixture()
-        {
-            // We call this here as a bit of a hack to stop memory-leak
-            // detection incorrectly detecting OpenSSL global data as a
-            // leak
-            ::RAND_cleanup();
-            ::ENGINE_cleanup();
-            ::CONF_modules_unload(1);
-            ::CONF_modules_free();
-            ::EVP_cleanup();
-            ::ERR_free_strings();
-            ::ERR_remove_state(0);
-            ::CRYPTO_cleanup_all_ex_data();
-        }
-    };
-
-    BOOST_GLOBAL_FIXTURE(global_fixture);
-}
-
-namespace test {
-namespace ssh {
-
-openssh_fixture::openssh_fixture() :
-    m_port(GenerateRandomPort()),
-    m_sshd(StartSshd(GetSshdOptions(m_port)))
+namespace
 {
+struct global_fixture
+{
+    ~global_fixture()
+    {
+        // We call this here as a bit of a hack to stop memory-leak
+        // detection incorrectly detecting OpenSSL global data as a
+        // leak
+        ::RAND_cleanup();
+        ::ENGINE_cleanup();
+        ::CONF_modules_unload(1);
+        ::CONF_modules_free();
+        ::EVP_cleanup();
+        ::ERR_free_strings();
+        ::ERR_remove_state(0);
+        ::CRYPTO_cleanup_all_ex_data();
+    }
+};
+}
+
+BOOST_GLOBAL_FIXTURE(global_fixture);
+
+namespace test
+{
+namespace ssh
+{
+
+openssh_fixture::openssh_fixture()
+{
+    vector<string> docker_command =
+        (list_of(string("run")), "--detach", "-P", "swish_test_sshd");
+    m_container_id = single_value_from_docker_command<string>(docker_command);
+    m_host = ask_docker_for_host();
+    m_port = ask_docker_for_port();
 }
 
 openssh_fixture::~openssh_fixture()
 {
     try
     {
-        stop_server();
+        vector<string> stop_command = (list_of(string("stop")), m_container_id);
+        run_docker_command(stop_command);
     }
-    catch (...) {}
-}
-
-int openssh_fixture::stop_server()
-{
-    m_sshd.terminate();
-    return m_sshd.wait();
+    catch (...)
+    {
+    }
 }
 
 string openssh_fixture::host() const
 {
-    return SSHD_LISTEN_ADDRESS;
+    return m_host;
+}
+
+string openssh_fixture::ask_docker_for_host() const
+{
+    optional<string> active_docker_machine = docker_machine_name();
+    if (active_docker_machine)
+    {
+        vector<string> machine_ip_command = (list_of(string("ip")), "default");
+        return single_value_from_docker_machine_command<string>(
+            machine_ip_command);
+    }
+    else
+    {
+        vector<string> inspect_host_command =
+            (list_of(string("inspect")), "--format",
+             "{{ .NetworkSettings.IPAddress }}", m_container_id);
+        return single_value_from_docker_command<string>(inspect_host_command);
+    }
 }
 
 string openssh_fixture::user() const
 {
-    return current_user();
+    return "swish";
 }
 
 int openssh_fixture::port() const
@@ -351,11 +277,31 @@ int openssh_fixture::port() const
     return m_port;
 }
 
+int openssh_fixture::ask_docker_for_port() const
+{
+    vector<string> inspect_host_command =
+        (list_of(string("inspect")), "--format",
+         "{{ index (index (index .NetworkSettings.Ports \"22/tcp\") "
+         "0) \"HostPort\" }}",
+         m_container_id);
+    return single_value_from_docker_command<int>(inspect_host_command);
+}
+
+path openssh_fixture::sandbox() const
+{
+    return "sandbox";
+}
+
+path openssh_fixture::absolute_sandbox() const
+{
+    return "/home/swish/sandbox";
+}
+
 /**
  * The private half of a key-pair that is expected to authenticate successfully
  * with the fixture server.
  */
-path openssh_fixture::private_key_path() const
+boost::filesystem::path openssh_fixture::private_key_path() const
 {
     return ConfigDir() / SSHD_PRIVATE_KEY_FILE;
 }
@@ -364,7 +310,7 @@ path openssh_fixture::private_key_path() const
  * The public half of a key-pair that is expected to authenticate successfully
  * with the fixture server.
  */
-path openssh_fixture::public_key_path() const
+boost::filesystem::path openssh_fixture::public_key_path() const
 {
     return ConfigDir() / SSHD_PUBLIC_KEY_FILE;
 }
@@ -373,11 +319,11 @@ path openssh_fixture::public_key_path() const
  * The private half of a key-pair that is expected to fail to authenticate
  * with the fixture server.
  *
- * This must be in the same format as the successful key-pair so that the
- * key mismatches rather than format mismatches are the cause of authentication
+ * This must be in the same format as the successful key-pair so that the key
+ * mismatches rather than format mismatches are the cause of authentication
  * failure regardless of which combination of keys is passed.
  */
-path openssh_fixture::wrong_private_key_path() const
+boost::filesystem::path openssh_fixture::wrong_private_key_path() const
 {
     return ConfigDir() / SSHD_WRONG_PRIVATE_KEY_FILE;
 }
@@ -387,21 +333,13 @@ path openssh_fixture::wrong_private_key_path() const
  * with the fixture server.
  *
  * This must be in the same format as the successful key-pair so that the
- * key mismatches rather than format mismatches are the cause of authentication
+ * key mismatches rather than format mismatches are the cause of
+ * authentication
  * failure regardless of which combination of keys is passed.
  */
-path openssh_fixture::wrong_public_key_path() const
+boost::filesystem::path openssh_fixture::wrong_public_key_path() const
 {
     return ConfigDir() / SSHD_WRONG_PUBLIC_KEY_FILE;
 }
-
-/**
- * Transform a local (Windows) path into a form usuable on the
- * command-line of the fixture SSH server.
- */
-::ssh::filesystem::path openssh_fixture::to_remote_path(path local_path) const
-{
-    return Cygdriveify(local_path);
 }
-
-}} // namespace test::ssh
+} // namespace test::ssh

@@ -23,7 +23,9 @@ set(INTEGRATION_TESTS
   stream_test.cpp
   openssh_fixture.hpp
   sandbox_fixture.hpp
-  session_fixture.hpp)
+  session_fixture.hpp
+  sftp_fixture.hpp
+  sftp_fixture.cpp)
 
 set(UNIT_TESTS
   knownhost_test.cpp
@@ -31,29 +33,6 @@ set(UNIT_TESTS
 
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
-
-include(FindCygwin)
-
-if(CYGWIN_INSTALL_PATH)
-  set(TEST_RUNNER_ENVIRONMENT
-    "PATH=${CYGWIN_INSTALL_PATH}/bin;${CYGWIN_INSTALL_PATH}/usr/sbin")
-  string(REPLACE ";" "\\;" TEST_RUNNER_ENVIRONMENT
-    "${TEST_RUNNER_ENVIRONMENT}")
-
-  if(NOT EXISTS "${CYGWIN_INSTALL_PATH}/usr/sbin/sshd.exe")
-    message(WARNING
-      # Running sshd for the tests requires a version of sshd that matches
-      # the version of chmod used to set the permissions on the hostkey
-      # file.  sshd refuses to run if it thinks the key is world-readable,
-      # and different implementations of chmod save those permissions
-      # in different ways.  Cygwin uses the 'special' Unix subsystem area
-      # of the Windows ACL so the version of sshd must also use that method.
-      "Cygwin sshd not found: tests are likely to fail to run")
-  endif()
-else()
-  message(WARNING
-    "Cygwin not found: tests are likely to fail to run")
-endif()
 
 include(CMakeParseArguments)
 # ssh_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
@@ -90,11 +69,6 @@ function(SSH_TEST_SUITE)
     # code so the test appears successful otherwise.
     set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
       FAIL_REGULAR_EXPRESSION "Detected memory leaks")
-  endif()
-
-  if(TEST_RUNNER_ENVIRONMENT)
-    set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
-      ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
   endif()
 
   if(SSH_TEST_SUITE_LABELS)
