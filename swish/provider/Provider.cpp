@@ -1,39 +1,17 @@
-/**
-    @file
+// Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2016 Alexander Lamaison
 
-    libssh2-based SFTP provider component.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013
-    Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Provider.hpp"
 
@@ -44,23 +22,23 @@
 #include "swish/remotelimits.h"
 #include "swish/trace.hpp" // trace
 
-#include <comet/bstr.h> // bstr_t
+#include <comet/bstr.h>     // bstr_t
 #include <comet/datetime.h> // datetime_t
-#include <comet/enum.h> // stl_enumeration
-#include <comet/error.h> // com_error
-#include <comet/ptr.h> // com_ptr
-#include <comet/server.h> // simple_object for STL holder with AddRef lifetime
-#include <comet/stream.h> // adapt_stream_pointer
+#include <comet/enum.h>     // stl_enumeration
+#include <comet/error.h>    // com_error
+#include <comet/ptr.h>      // com_ptr
+#include <comet/server.h>   // simple_object for STL holder with AddRef lifetime
+#include <comet/stream.h>   // adapt_stream_pointer
 
 #include <ssh/filesystem.hpp> // directory_iterator
-#include <ssh/stream.hpp> // ofstream, ifstream
+#include <ssh/stream.hpp>     // ofstream, ifstream
 
-#include <boost/filesystem/path.hpp> // path
+#include <boost/filesystem/path.hpp>          // path
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
-#include <boost/make_shared.hpp> // make_shared
-#include <boost/move/move.hpp> // BOOST_RV_REF
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
-#include <boost/system/system_error.hpp> // system_error, system_category
+#include <boost/make_shared.hpp>              // make_shared
+#include <boost/move/move.hpp>                // BOOST_RV_REF
+#include <boost/throw_exception.hpp>          // BOOST_THROW_EXCEPTION
+#include <boost/system/system_error.hpp>      // system_error, system_category
 
 #include <cassert> // assert
 #include <exception>
@@ -101,23 +79,23 @@ using std::string;
 using std::wstring;
 using std::vector;
 
-namespace swish {
-namespace provider {
+namespace swish
+{
+namespace provider
+{
 
 class provider
 {
 public:
-
     explicit provider(BOOST_RV_REF(session_reservation) session_ticket);
 
     directory_listing listing(const path& directory);
 
-    comet::com_ptr<IStream> get_file(
-        const path& file_path, std::ios_base::openmode open_mode);
+    comet::com_ptr<IStream> get_file(const path& file_path,
+                                     std::ios_base::openmode open_mode);
 
-    VARIANT_BOOL rename(
-        com_ptr<ISftpConsumer> consumer, const path& from_path,
-        const path& to_path);
+    VARIANT_BOOL rename(com_ptr<ISftpConsumer> consumer, const path& from_path,
+                        const path& to_path);
 
     void remove_all(const path& path);
 
@@ -128,7 +106,6 @@ public:
     sftp_filesystem_item stat(const path& path, bool follow_links);
 
 private:
-
     session_reservation m_ticket;
 };
 
@@ -137,28 +114,37 @@ CProvider::CProvider(BOOST_RV_REF(session_reservation) session_ticket)
     m_provider = make_shared<provider>(boost::ref(session_ticket));
 }
 
-
 directory_listing CProvider::listing(const path& directory)
 {
     return m_provider->listing(directory);
 }
 
-comet::com_ptr<IStream> CProvider::get_file(
-    const path& file_path, std::ios_base::openmode open_mode)
-{ return m_provider->get_file(file_path, open_mode); }
+comet::com_ptr<IStream> CProvider::get_file(const path& file_path,
+                                            std::ios_base::openmode open_mode)
+{
+    return m_provider->get_file(file_path, open_mode);
+}
 
-VARIANT_BOOL CProvider::rename(
-    ISftpConsumer* consumer, const path& from_path, const path& to_path)
-{ return m_provider->rename(consumer, from_path, to_path); }
+VARIANT_BOOL CProvider::rename(ISftpConsumer* consumer, const path& from_path,
+                               const path& to_path)
+{
+    return m_provider->rename(consumer, from_path, to_path);
+}
 
 void CProvider::remove_all(const path& path)
-{ m_provider->remove_all(path); }
+{
+    m_provider->remove_all(path);
+}
 
 void CProvider::create_new_directory(const path& path)
-{ m_provider->create_new_directory(path); }
+{
+    m_provider->create_new_directory(path);
+}
 
 path CProvider::resolve_link(const path& path)
-{ return m_provider->resolve_link(path); }
+{
+    return m_provider->resolve_link(path);
+}
 
 sftp_filesystem_item CProvider::stat(const path& path, bool follow_links)
 {
@@ -168,18 +154,17 @@ sftp_filesystem_item CProvider::stat(const path& path, bool follow_links)
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(BOOST_RV_REF(session_reservation) ticket)
-:
-m_ticket(ticket)
-{}
+provider::provider(BOOST_RV_REF(session_reservation) ticket) : m_ticket(ticket)
+{
+}
 
-namespace {
+namespace
+{
 
-    bool not_special_file(const sftp_file& file)
-    {
-        return file.path().filename() != "." && file.path().filename() != "..";
-    }
-
+bool not_special_file(const sftp_file& file)
+{
+    return file.path().filename() != "." && file.path().filename() != "..";
+}
 }
 
 /**
@@ -196,18 +181,17 @@ directory_listing provider::listing(const path& directory)
 
     vector<sftp_filesystem_item> files;
     transform(
-        make_filter_iterator(
-            not_special_file, channel.directory_iterator(directory)),
-        make_filter_iterator(
-            not_special_file, channel.directory_iterator()),
+        make_filter_iterator(not_special_file,
+                             channel.directory_iterator(directory)),
+        make_filter_iterator(not_special_file, channel.directory_iterator()),
         back_inserter(files),
         libssh2_sftp_filesystem_item::create_from_libssh2_file);
 
     return files;
 }
 
-com_ptr<IStream> provider::get_file(
-    const path& file_path, std::ios_base::openmode mode)
+com_ptr<IStream> provider::get_file(const path& file_path,
+                                    std::ios_base::openmode mode)
 {
     if (file_path.empty())
         BOOST_THROW_EXCEPTION(invalid_argument("File cannot be empty"));
@@ -239,7 +223,8 @@ com_ptr<IStream> provider::get_file(
     }
 }
 
-namespace {
+namespace
+{
 
 /**
  * Rename file or directory and overwrite any obstruction non-atomically.
@@ -257,28 +242,30 @@ namespace {
  *
  * @throws  ssh_error if the operation fails.
  */
-void rename_non_atomic_overwrite(
-    authenticated_session& session, const string& from, const string& to)
+void rename_non_atomic_overwrite(authenticated_session& session,
+                                 const string& from, const string& to)
 {
     string temporary = to + ".swish_rename_temp";
 
-    session.get_sftp_filesystem().rename(
-        to, temporary, overwrite_behaviour::prevent_overwrite);
+    rename(session.get_sftp_filesystem(), to, temporary,
+           overwrite_behaviour::prevent_overwrite);
 
     try
     {
-        session.get_sftp_filesystem().rename(
-            from, to, overwrite_behaviour::prevent_overwrite);
+        rename(session.get_sftp_filesystem(), from, to,
+               overwrite_behaviour::prevent_overwrite);
     }
     catch (const exception&)
     {
         // Rename failed, rename our temporary back to its old name
         try
         {
-            session.get_sftp_filesystem().rename(
-                from, to,  overwrite_behaviour::prevent_overwrite);
+            rename(session.get_sftp_filesystem(), from, to,
+                   overwrite_behaviour::prevent_overwrite);
         }
-        catch (const exception&) { /* Suppress to avoid nested exception */ }
+        catch (const exception&)
+        { /* Suppress to avoid nested exception */
+        }
 
         throw;
     }
@@ -290,11 +277,12 @@ void rename_non_atomic_overwrite(
     // separation messy though.
     try
     {
-        session.get_sftp_filesystem().remove_all(temporary);
+        remove_all(session.get_sftp_filesystem(), temporary);
     }
-    catch (const exception&) {}
+    catch (const exception&)
+    {
+    }
 }
-
 
 /**
  * Retry renaming after seeking permission to overwrite the obstruction at
@@ -328,17 +316,17 @@ void rename_non_atomic_overwrite(
  *       to the user.  Any unicode filenames will produce gibberish in the
  *       confirmation dialogues.
  */
-bool rename_retry_with_overwrite(
-    authenticated_session& session, ISftpConsumer *pConsumer,
-    const system_error& previous_error, const string& from, const string& to)
+bool rename_retry_with_overwrite(authenticated_session& session,
+                                 ISftpConsumer* pConsumer,
+                                 const system_error& previous_error,
+                                 const string& from, const string& to)
 {
-    assert(
-        previous_error.code() && "Previous attempt succeeded; why retry?");
+    assert(previous_error.code() && "Previous attempt succeeded; why retry?");
 
     if (previous_error.code() == errc::file_exists)
     {
-        HRESULT hr = pConsumer->OnConfirmOverwrite(
-            bstr_t(from).in(), bstr_t(to).in());
+        HRESULT hr =
+            pConsumer->OnConfirmOverwrite(bstr_t(from).in(), bstr_t(to).in());
         if (FAILED(hr))
             return false;
 
@@ -348,8 +336,8 @@ bool rename_retry_with_overwrite(
 
         try
         {
-            session.get_sftp_filesystem().rename(
-                from, to, overwrite_behaviour::atomic_overwrite);
+            rename(session.get_sftp_filesystem(), from, to,
+                   overwrite_behaviour::atomic_overwrite);
             return true;
         }
         catch (const system_error& e)
@@ -364,7 +352,6 @@ bool rename_retry_with_overwrite(
                 throw;
             }
         }
-
     }
     else
     {
@@ -385,8 +372,8 @@ bool rename_retry_with_overwrite(
 
         if (exists(session.get_sftp_filesystem(), to))
         {
-            HRESULT hr = pConsumer->OnConfirmOverwrite(
-                bstr_t(from).in(), bstr_t(to).in());
+            HRESULT hr = pConsumer->OnConfirmOverwrite(bstr_t(from).in(),
+                                                       bstr_t(to).in());
             if (FAILED(hr))
                 return false;
 
@@ -406,7 +393,6 @@ bool rename_retry_with_overwrite(
         }
     }
 }
-
 }
 
 /**
@@ -446,8 +432,8 @@ bool rename_retry_with_overwrite(
  * @returns  Whether or not we needed to overwrite an existing file or
  *           directory at the target path.
  */
-VARIANT_BOOL provider::rename(
-    com_ptr<ISftpConsumer> consumer, const path& from, const path& to)
+VARIANT_BOOL provider::rename(com_ptr<ISftpConsumer> consumer, const path& from,
+                              const path& to)
 {
     if (from.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
@@ -461,16 +447,16 @@ VARIANT_BOOL provider::rename(
     // Attempt to rename old path to new path
     try
     {
-        m_ticket.session().get_sftp_filesystem().rename(
-            from, to, overwrite_behaviour::prevent_overwrite);
+        ssh::filesystem::rename(m_ticket.session().get_sftp_filesystem(), from,
+                                to, overwrite_behaviour::prevent_overwrite);
 
         // Rename was successful without overwrite
         return VARIANT_FALSE;
     }
     catch (const system_error& e)
     {
-        if (rename_retry_with_overwrite(
-            m_ticket.session(), consumer.get(), e, from, to))
+        if (rename_retry_with_overwrite(m_ticket.session(), consumer.get(), e,
+                                        from, to))
         {
             return VARIANT_TRUE;
         }
@@ -486,17 +472,17 @@ void provider::remove_all(const path& target)
     if (target.empty())
         BOOST_THROW_EXCEPTION(com_error(E_INVALIDARG));
 
-    m_ticket.session().get_sftp_filesystem().remove_all(target);
+    ssh::filesystem::remove_all(m_ticket.session().get_sftp_filesystem(),
+                                target);
 }
 
 void provider::create_new_directory(const path& path)
 {
     if (path.empty())
-        BOOST_THROW_EXCEPTION(
-            com_error(
-                "Cannot create a directory without a name", E_INVALIDARG));
+        BOOST_THROW_EXCEPTION(com_error(
+            "Cannot create a directory without a name", E_INVALIDARG));
 
-    m_ticket.session().get_sftp_filesystem().create_directory(path);
+    create_directory(m_ticket.session().get_sftp_filesystem(), path);
 }
 
 const path provider::resolve_link(const path& path)
@@ -517,11 +503,11 @@ sftp_filesystem_item provider::stat(const path& path, bool follow_links)
 {
     sftp_filesystem& channel = m_ticket.session().get_sftp_filesystem();
 
-    file_attributes stat_result = channel.attributes(
-        path, follow_links != FALSE);
+    file_attributes stat_result =
+        channel.attributes(path, follow_links != FALSE);
 
     return libssh2_sftp_filesystem_item::create_from_libssh2_attributes(
         path, stat_result);
 }
-
-}} // namespace swish::provider
+}
+} // namespace swish::provider

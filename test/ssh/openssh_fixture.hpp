@@ -1,47 +1,24 @@
-/**
-    @file
+// Copyright 2009, 2010, 2012, 2016 Alexander Lamaison
 
-    Fixture that runs local OpenSSH server for testing.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2009, 2010, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_OPENSSH_FIXTURE_HPP
 #define SSH_OPENSSH_FIXTURE_HPP
-#pragma once
 
 #include <ssh/filesystem/path.hpp>
 
-#include <boost/filesystem.hpp>    // path
-#include <boost/process/child.hpp> // child process
+#include <boost/filesystem.hpp> // path
 
 #include <string>
 
@@ -51,7 +28,7 @@ namespace ssh
 {
 
 /**
- * Fixture that starts and stops a local OpenSSH server instance.
+ * Fixture that starts and stops an OpenSSH server.
  */
 class openssh_fixture
 {
@@ -59,21 +36,27 @@ public:
     openssh_fixture();
     virtual ~openssh_fixture();
 
-    int stop_server();
-
     std::string host() const;
     std::string user() const;
     int port() const;
+    ::ssh::filesystem::path sandbox() const;
+    ::ssh::filesystem::path absolute_sandbox() const;
+    ::ssh::filesystem::path new_file_in_sandbox() const;
+    ::ssh::filesystem::path
+    new_file_in_sandbox(const ::ssh::filesystem::path& name) const;
+    ::ssh::filesystem::path new_directory_in_sandbox() const;
     boost::filesystem::path private_key_path() const;
     boost::filesystem::path public_key_path() const;
     boost::filesystem::path wrong_private_key_path() const;
     boost::filesystem::path wrong_public_key_path() const;
-    ::ssh::filesystem::path
-    to_remote_path(boost::filesystem::path local_path) const;
 
 private:
+    std::string m_container_id;
+    std::string m_host;
     int m_port;
-    boost::process::child m_sshd;
+
+    std::string ask_docker_for_host() const;
+    int ask_docker_for_port() const;
 };
 }
 } // namespace test::ssh
