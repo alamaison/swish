@@ -60,40 +60,10 @@ using std::wstring;
 namespace
 { // private
 
-const string SSHD_CONFIG_DIR = "sshd-etc";
 const string SSHD_PRIVATE_KEY_FILE = "fixture_dsakey";
 const string SSHD_PUBLIC_KEY_FILE = "fixture_dsakey.pub";
 const string SSHD_WRONG_PRIVATE_KEY_FILE = "fixture_wrong_dsakey";
 const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
-
-/**
- * Return the path of the currently running executable.
- */
-boost::filesystem::path GetModulePath()
-{
-    vector<wchar_t> wide_buffer(MAX_PATH);
-    if (wide_buffer.size() > 0)
-    {
-        unsigned long len = ::GetModuleFileName(
-            NULL, &wide_buffer[0], static_cast<UINT>(wide_buffer.size()));
-
-        vector<char> buffer(MAX_PATH * 2);
-        if (buffer.size() > 0)
-        {
-            len = ::WideCharToMultiByte(
-                CP_UTF8, 0, &wide_buffer[0], len, &buffer[0],
-                static_cast<UINT>(buffer.size()), NULL, NULL);
-            return string(&buffer[0], len);
-        }
-    }
-
-    return "";
-}
-
-boost::filesystem::path ConfigDir()
-{
-    return GetModulePath().parent_path() / SSHD_CONFIG_DIR;
-}
 
 template <typename ArgSequence>
 string error_message_from_stderr(const string& command,
@@ -303,7 +273,7 @@ path openssh_fixture::absolute_sandbox() const
  */
 boost::filesystem::path openssh_fixture::private_key_path() const
 {
-    return ConfigDir() / SSHD_PRIVATE_KEY_FILE;
+    return SSHD_PRIVATE_KEY_FILE;
 }
 
 /**
@@ -312,7 +282,7 @@ boost::filesystem::path openssh_fixture::private_key_path() const
  */
 boost::filesystem::path openssh_fixture::public_key_path() const
 {
-    return ConfigDir() / SSHD_PUBLIC_KEY_FILE;
+    return SSHD_PUBLIC_KEY_FILE;
 }
 
 /**
@@ -325,7 +295,7 @@ boost::filesystem::path openssh_fixture::public_key_path() const
  */
 boost::filesystem::path openssh_fixture::wrong_private_key_path() const
 {
-    return ConfigDir() / SSHD_WRONG_PRIVATE_KEY_FILE;
+    return SSHD_WRONG_PRIVATE_KEY_FILE;
 }
 
 /**
@@ -339,7 +309,7 @@ boost::filesystem::path openssh_fixture::wrong_private_key_path() const
  */
 boost::filesystem::path openssh_fixture::wrong_public_key_path() const
 {
-    return ConfigDir() / SSHD_WRONG_PUBLIC_KEY_FILE;
+    return SSHD_WRONG_PUBLIC_KEY_FILE;
 }
 }
 } // namespace test::ssh

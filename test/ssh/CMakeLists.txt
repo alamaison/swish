@@ -62,7 +62,7 @@ function(SSH_TEST_SUITE)
   add_test(
     NAME ${_TEST_EXE_NAME}
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:${_TEST_EXE_NAME}>)
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   if(MEMORY_LEAKS_ARE_FAILURES)
     # Don't hide memory leak detection.  The detector can't change the error
@@ -74,57 +74,6 @@ function(SSH_TEST_SUITE)
   if(SSH_TEST_SUITE_LABELS)
     set_tests_properties(
       ${_TEST_EXE_NAME} PROPERTIES LABELS "${SSH_TEST_SUITE_LABELS}")
-  endif()
-endfunction()
-
-set(_FIXTURE_FILES
-  test_known_hosts
-  test_known_hosts_hashed
-  test_known_hosts_out)
-set(_FIXTURE_SSHD_ETC_FILES
-  fixture_dsakey fixture_dsakey.pub
-  fixture_hostkey fixture_hostkey.pub
-  fixture_rsakey fixture_rsakey.pub)
-set(_FIXTURE_FILES_DIR ${CMAKE_CURRENT_LIST_DIR})
-set(_PERMISSION_SCRIPT_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
-
-function(SSH_COPY_FIXTURE_FILES TEST_TARGET)
-  foreach(FILE ${_FIXTURE_FILES})
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND ${CMAKE_COMMAND}
-      -E copy_if_different
-      ${_FIXTURE_FILES_DIR}/${FILE}
-      $<TARGET_FILE_DIR:${TEST_TARGET}>/${FILE}
-      VERBATIM)
-  endforeach()
-
-  foreach(FILE ${_FIXTURE_SSHD_ETC_FILES})
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND ${CMAKE_COMMAND}
-      -E copy_if_different
-      ${_FIXTURE_FILES_DIR}/${FILE}
-      $<TARGET_FILE_DIR:${TEST_TARGET}>/sshd-etc/${FILE}
-      VERBATIM)
-  endforeach()
-
-
-  if(CYGWIN_INSTALL_PATH)
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND
-      cd $<TARGET_FILE_DIR:${TEST_TARGET}>/sshd-etc/
-      VERBATIM)
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND
-      set PATH=${CYGWIN_INSTALL_PATH}/bin$<SEMICOLON>)
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND
-      bash ${_PERMISSION_SCRIPT_DIR}/fix_key_permissions.sh
-      VERBATIM)
   endif()
 endfunction()
 
@@ -141,5 +90,3 @@ ssh_test_suite(
   SOURCES ${UNIT_TESTS}
   LIBRARIES ${Boost_LIBRARIES}
   LABELS unit)
-
-ssh_copy_fixture_files(test-ssh)
