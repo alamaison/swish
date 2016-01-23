@@ -30,14 +30,14 @@
 #include "test/common_boost/SwishPidlFixture.hpp"
 #include "exercise_data_object.h"
 
-#include "swish/host_folder/host_pidl.hpp" // create_host_itemid
+#include "swish/host_folder/host_pidl.hpp"     // create_host_itemid
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 #include "swish/shell_folder/SftpDataObject.h"
 
 #include <washer/shell/pidl.hpp> // cpidl_t, apidl_t
 
 #include <comet/bstr.h> // bstr_t
-#include <comet/ptr.h> // com_ptr
+#include <comet/ptr.h>  // com_ptr
 
 #include <boost/test/unit_test.hpp>
 
@@ -59,19 +59,25 @@ using std::string;
 using std::vector;
 using std::wstring;
 
-namespace comet {
-
-template<> struct comtype<IDataObject>
+namespace comet
 {
-	static const IID& uuid() { return IID_IDataObject; }
-	typedef ::IUnknown base;
-};
 
+template <>
+struct comtype<IDataObject>
+{
+    static const IID& uuid()
+    {
+        return IID_IDataObject;
+    }
+    typedef ::IUnknown base;
+};
 }
 
-namespace test {
+namespace test
+{
 
-namespace {
+namespace
+{
 
 class TestFixture : public ComFixture, public SwishPidlFixture
 {
@@ -85,23 +91,22 @@ public:
 protected:
     shared_ptr<sftp_provider> m_pProvider;
 };
-
 }
 
 // HACK:
 // A lot of these tests rely on SwishPidlFixture creating a host PIDL with
 // path `/tmp` and a remote root PIDL with path `swish`.
 
-BOOST_FIXTURE_TEST_SUITE( sftp_data_object_nasty_old_tests, TestFixture )
+BOOST_FIXTURE_TEST_SUITE(sftp_data_object_nasty_old_tests, TestFixture)
 
-BOOST_AUTO_TEST_CASE( Create )
+BOOST_AUTO_TEST_CASE(Create)
 {
     apidl_t root = create_dummy_root_pidl();
     cpidl_t pidl = create_dummy_remote_itemid(L"testswishfile.ext", false);
 
-    PCUITEMID_CHILD pidl_array[] = { pidl.get() };
+    PCUITEMID_CHILD pidl_array[] = {pidl.get()};
 
-    com_ptr<IDataObject> data_object = 
+    com_ptr<IDataObject> data_object =
         new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
 
     // Test CFSTR_SHELLIDLIST (PIDL array) format
@@ -117,7 +122,7 @@ BOOST_AUTO_TEST_CASE( Create )
     _testStreamContents(data_object, L"/tmp/swish/testswishfile.ext", 0);
 }
 
-BOOST_AUTO_TEST_CASE( CreateMulti )
+BOOST_AUTO_TEST_CASE(CreateMulti)
 {
     apidl_t root = create_dummy_root_pidl();
     cpidl_t pidl1 = create_dummy_remote_itemid(L"testswishfile.ext", false);
@@ -155,23 +160,23 @@ BOOST_AUTO_TEST_CASE( CreateMulti )
  * Test that QueryGetData fails for all our formats when created with
  * empty PIDL list.
  */
-BOOST_AUTO_TEST_CASE( QueryFormatsEmpty )
+BOOST_AUTO_TEST_CASE(QueryFormatsEmpty)
 {
-    com_ptr<IDataObject> data_object = new CSftpDataObject(
-        0, NULL, NULL, m_pProvider);
+    com_ptr<IDataObject> data_object =
+        new CSftpDataObject(0, NULL, NULL, m_pProvider);
 
     // Perform query tests
     _testQueryFormats(data_object, true);
 }
 
 /**
- * Test that none of our expected formats are in the enumerator when 
+ * Test that none of our expected formats are in the enumerator when
  * created with empty PIDL list.
  */
-BOOST_AUTO_TEST_CASE( EnumFormatsEmpty )
+BOOST_AUTO_TEST_CASE(EnumFormatsEmpty)
 {
-    com_ptr<IDataObject> data_object = new CSftpDataObject(
-        0, NULL, NULL, m_pProvider);
+    com_ptr<IDataObject> data_object =
+        new CSftpDataObject(0, NULL, NULL, m_pProvider);
 
     // Test enumerators of both GetData() and SetData() formats
     _testBothEnumerators(data_object, true);
@@ -180,16 +185,15 @@ BOOST_AUTO_TEST_CASE( EnumFormatsEmpty )
 /**
  * Test that QueryGetData responds successfully for all our formats.
  */
-BOOST_AUTO_TEST_CASE( QueryFormats )
+BOOST_AUTO_TEST_CASE(QueryFormats)
 {
     apidl_t root = create_dummy_root_pidl();
     cpidl_t pidl = create_dummy_remote_itemid(L"testswishfile.ext", false);
 
-    PCUITEMID_CHILD pidl_array[] = { pidl.get() };
+    PCUITEMID_CHILD pidl_array[] = {pidl.get()};
 
-    com_ptr<IDataObject> data_object = 
-        new CSftpDataObject(
-            1, pidl_array, root.get(), m_pProvider);
+    com_ptr<IDataObject> data_object =
+        new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
 
     // Perform query tests
     _testQueryFormats(data_object);
@@ -198,14 +202,14 @@ BOOST_AUTO_TEST_CASE( QueryFormats )
 /**
  * Test that all our expected formats are in the enumeration.
  */
-BOOST_AUTO_TEST_CASE( EnumFormats )
+BOOST_AUTO_TEST_CASE(EnumFormats)
 {
     apidl_t root = create_dummy_root_pidl();
     cpidl_t pidl = create_dummy_remote_itemid(L"testswishfile.ext", false);
 
-    PCUITEMID_CHILD pidl_array[] = { pidl.get() };
+    PCUITEMID_CHILD pidl_array[] = {pidl.get()};
 
-    com_ptr<IDataObject> data_object = 
+    com_ptr<IDataObject> data_object =
         new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
 
     // Test enumerators of both GetData() and SetData() formats
@@ -216,7 +220,7 @@ BOOST_AUTO_TEST_CASE( EnumFormats )
  * Test that QueryGetData responds successfully for all our formats when
  * initialised with multiple PIDLs.
  */
-BOOST_AUTO_TEST_CASE( QueryFormatsMulti )
+BOOST_AUTO_TEST_CASE(QueryFormatsMulti)
 {
     apidl_t root = create_dummy_root_pidl();
     cpidl_t pidl1 = create_dummy_remote_itemid(L"testswishfile.ext", false);
@@ -239,7 +243,7 @@ BOOST_AUTO_TEST_CASE( QueryFormatsMulti )
  * Test that all our expected formats are in the enumeration when
  * initialised with multiple PIDLs.
  */
-BOOST_AUTO_TEST_CASE( EnumFormatsMulti )
+BOOST_AUTO_TEST_CASE(EnumFormatsMulti)
 {
     apidl_t root = create_dummy_root_pidl();
     cpidl_t pidl1 = create_dummy_remote_itemid(L"testswishfile.ext", false);
@@ -258,15 +262,16 @@ BOOST_AUTO_TEST_CASE( EnumFormatsMulti )
     _testBothEnumerators(data_object);
 }
 
-BOOST_AUTO_TEST_CASE( FullDirectoryTree )
+BOOST_AUTO_TEST_CASE(FullDirectoryTree)
 {
     // This has to start at / rather than /tmp
-    apidl_t root = swish_pidl() + create_host_itemid(
-        L"test.example.com", L"user", L"/", 22, L"Test PIDL");
+    apidl_t root =
+        fake_swish_pidl() + create_host_itemid(L"test.example.com", L"user",
+                                               L"/", 22, L"Test PIDL");
 
     cpidl_t pidl = create_dummy_remote_itemid(L"tmp", true);
 
-    PCUITEMID_CHILD pidl_array[] = { pidl.get() };
+    PCUITEMID_CHILD pidl_array[] = {pidl.get()};
 
     com_ptr<IDataObject> data_object =
         new CSftpDataObject(1, pidl_array, root.get(), m_pProvider);
@@ -300,8 +305,7 @@ BOOST_AUTO_TEST_CASE( FullDirectoryTree )
     testfiles.push_back(L"tmp/swish/pswish");
     testfiles.push_back(L"tmp/swish/testswishFile");
     testfiles.push_back(L"tmp/swish/testswishfile");
-    testfiles.push_back(
-        L"tmp/swish/testswishfile with \"quotes\" and spaces");
+    testfiles.push_back(L"tmp/swish/testswishfile with \"quotes\" and spaces");
     testfiles.push_back(L"tmp/swish/testswishfile with spaces");
     testfiles.push_back(L"tmp/swish/testswishfile..");
     testfiles.push_back(L"tmp/swish/testswishfile.ext");
@@ -324,8 +328,8 @@ BOOST_AUTO_TEST_CASE( FullDirectoryTree )
     testfiles.push_back(L"tmp/testtmpfolder.ext");
     testfiles.push_back(L"tmp/this_link_is_broken_tmp");
 
-    // Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format.  The 
-    // descriptor should include every item in the entire hierarchy 
+    // Test CFSTR_FILEDESCRIPTOR (FILEGROUPDESCRIPTOR) format.  The
+    // descriptor should include every item in the entire hierarchy
     // generated by CMockSftpProvider.
     for (UINT i = 0; i < testfiles.size(); ++i)
     {
