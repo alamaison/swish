@@ -167,8 +167,17 @@ extern void RAND_cleanup();
 
 namespace
 {
+
 struct global_fixture
 {
+    global_fixture()
+    {
+        // Ensure the docker image has been built
+        vector<string> build_command =
+            (list_of(string("build")), "-t", "ssh2pp/openssh_server", "ssh_server");
+        run_docker_command(build_command);
+    }
+
     ~global_fixture()
     {
         // We call this here as a bit of a hack to stop memory-leak
@@ -196,7 +205,7 @@ namespace ssh
 openssh_fixture::openssh_fixture()
 {
     vector<string> docker_command =
-        (list_of(string("run")), "--detach", "-P", "swish_test_sshd");
+        (list_of(string("run")), "--detach", "-P",  "ssh2pp/openssh_server");
     m_container_id = single_value_from_docker_command<string>(docker_command);
     m_host = ask_docker_for_host();
     m_port = ask_docker_for_port();
