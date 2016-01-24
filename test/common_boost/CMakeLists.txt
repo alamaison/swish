@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016 Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -27,7 +27,6 @@ set(SOURCES
   MockProvider.hpp
   PidlFixture.hpp
   ProviderFixture.hpp
-  remote_test_config.hpp
   stream_utils.hpp
   SwishPidlFixture.hpp
   tree.hh

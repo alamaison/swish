@@ -1,54 +1,44 @@
-/**
-    @file
+// Copyright 2011, 2013, 2016 Alexander Lamaison
 
-    Test IStream implementation over a real network connection.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2011, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
-
-#include "test/common_boost/fixtures.hpp" // WinsockFixture
 #include "test/common_boost/MockConsumer.hpp" // MockConsumer
-#include "test/common_boost/remote_test_config.hpp" // remote_test_config
+#include "test/common_boost/fixtures.hpp"     // WinsockFixture
+#include "test/common_boost/helpers.hpp"
 #include "test/common_boost/stream_utils.hpp" // verify_stream_read
+#include "test/openssh_fixture/openssh_fixture.hpp"
 
 #include "swish/connection/connection_spec.hpp"
 #include "swish/connection/session_manager.hpp" // session_reservation
-#include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
-#include "swish/provider/Provider.hpp" // CProvider
+#include "swish/provider/sftp_provider.hpp"     // sftp_provider, ISftpConsumer
+#include "swish/provider/Provider.hpp"          // CProvider
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/filesystem/path.hpp> // wpath
+#include <boost/filesystem/path.hpp>         // wpath
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
 #include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm> // generate
-#include <cstdlib> // rand
-#include <memory>  // auto_ptr
+#include <cstdlib>   // rand
+#include <memory>    // auto_ptr
 #include <string>
 #include <vector>
 
+using test::openssh_fixture;
 using test::MockConsumer;
-using test::remote_test_config;
 using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
 
@@ -71,66 +61,72 @@ using std::rand;
 using std::vector;
 using std::wstring;
 
-namespace {
-
-session_reservation reserve_session(com_ptr<MockConsumer> consumer)
+namespace
 {
-    remote_test_config config;
-    consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
-    consumer->set_keyboard_interactive_behaviour(
-        MockConsumer::CustomResponse);
-    consumer->set_password_behaviour(MockConsumer::CustomPassword);
-    consumer->set_password(config.GetPassword());
 
-    return session_manager().reserve_session(
-        config.as_connection_spec(), consumer, "Running tests");
-}
-
-class RemoteSftpFixture : public WinsockFixture
+class fixture : public WinsockFixture, public openssh_fixture
 {
 public:
-    RemoteSftpFixture() :
-      m_provider(
-          new CProvider(reserve_session(new MockConsumer()))) {}
+    fixture() : m_provider(new CProvider(reserve_session(new MockConsumer())))
+    {
+    }
+
+    swish::connection::connection_spec as_connection_spec() const
+    {
+        return swish::connection::connection_spec(whost(), wuser(), port());
+    }
 
     shared_ptr<sftp_provider> provider() const
     {
         return m_provider;
     }
 
-    com_ptr<IStream> get_stream(
-        const wstring& path, std::ios_base::openmode open_mode)
+    com_ptr<IStream> get_stream(const wstring& path,
+                                std::ios_base::openmode open_mode)
     {
         return provider()->get_file(path, open_mode);
+    }
+
+    session_reservation reserve_session(com_ptr<MockConsumer> consumer)
+    {
+        consumer->set_pubkey_behaviour(MockConsumer::AbortKeys);
+        consumer->set_keyboard_interactive_behaviour(
+            MockConsumer::CustomResponse);
+        consumer->set_password_behaviour(MockConsumer::CustomPassword);
+        consumer->set_password(wpassword());
+
+        return session_manager().reserve_session(as_connection_spec(), consumer,
+                                                 "Running tests");
     }
 
 private:
     shared_ptr<sftp_provider> m_provider;
 };
-
 }
 
-BOOST_FIXTURE_TEST_SUITE( remote_stream_tests, RemoteSftpFixture )
+BOOST_FIXTURE_TEST_SUITE(remote_stream_tests, fixture)
 
 /**
  * Simply get a stream.
  */
-BOOST_AUTO_TEST_CASE( get )
+BOOST_AUTO_TEST_CASE(get)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
     BOOST_REQUIRE(stream);
 }
 
-BOOST_AUTO_TEST_CASE( stat )
+BOOST_AUTO_TEST_CASE(stat)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     STATSTG stat = STATSTG();
     HRESULT hr = stream->Stat(&stat, STATFLAG_DEFAULT);
     BOOST_REQUIRE_OK(hr);
 
     BOOST_CHECK(stat.pwcsName);
-    BOOST_CHECK_EQUAL(L"syslog", stat.pwcsName);
+    BOOST_CHECK_EQUAL(L"lastlog", stat.pwcsName);
     BOOST_CHECK_EQUAL(STGTY_STREAM, (STGTY)stat.type);
     BOOST_CHECK_GT(stat.cbSize.QuadPart, 0U);
     FILETIME ft;
@@ -145,9 +141,10 @@ BOOST_AUTO_TEST_CASE( stat )
     BOOST_CHECK_EQUAL(stat.reserved, 0U);
 }
 
-BOOST_AUTO_TEST_CASE( stat_exclude_name )
+BOOST_AUTO_TEST_CASE(stat_exclude_name)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     STATSTG stat = STATSTG();
     HRESULT hr = stream->Stat(&stat, STATFLAG_NONAME);
@@ -168,7 +165,7 @@ BOOST_AUTO_TEST_CASE( stat_exclude_name )
     BOOST_CHECK_EQUAL(stat.reserved, 0U);
 }
 
-BOOST_AUTO_TEST_CASE( read_file_small_buffer )
+BOOST_AUTO_TEST_CASE(read_file_small_buffer)
 {
     com_ptr<IStream> stream = get_stream(L"/proc/cpuinfo", std::ios_base::in);
 
@@ -176,7 +173,8 @@ BOOST_AUTO_TEST_CASE( read_file_small_buffer )
     ULONG bytes_read = 0;
     char buf[1];
     HRESULT hr;
-    do {
+    do
+    {
         hr = stream->Read(buf, ARRAYSIZE(buf), &bytes_read);
         file_contents_read.append(buf, bytes_read);
     } while (hr == S_OK && bytes_read == ARRAYSIZE(buf));
@@ -185,7 +183,7 @@ BOOST_AUTO_TEST_CASE( read_file_small_buffer )
     BOOST_CHECK_EQUAL("processor", file_contents_read.substr(0, 9));
 }
 
-BOOST_AUTO_TEST_CASE( read_file_medium_buffer )
+BOOST_AUTO_TEST_CASE(read_file_medium_buffer)
 {
     com_ptr<IStream> stream = get_stream(L"/proc/cpuinfo", std::ios_base::in);
 
@@ -193,7 +191,8 @@ BOOST_AUTO_TEST_CASE( read_file_medium_buffer )
     ULONG bytes_read = 0;
     char buf[4096];
     HRESULT hr;
-    do {
+    do
+    {
         hr = stream->Read(buf, ARRAYSIZE(buf), &bytes_read);
         file_contents_read.append(buf, bytes_read);
     } while (hr == S_OK && bytes_read == ARRAYSIZE(buf));
@@ -231,7 +230,7 @@ BOOST_AUTO_TEST_CASE( read_small_buffer_from_slow_blocking_device )
  * should just keep reading until the buffer is full.  If it blocks, something
  * has gone wrong somewhere.
  */
-BOOST_AUTO_TEST_CASE( read_large_buffer )
+BOOST_AUTO_TEST_CASE(read_large_buffer)
 {
     com_ptr<IStream> stream = get_stream(L"/dev/zero", std::ios_base::in);
 
@@ -243,21 +242,22 @@ BOOST_AUTO_TEST_CASE( read_large_buffer )
     BOOST_CHECK_EQUAL(bytes_read, size);
 
     vector<int> expected(20000, 0);
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        buffer.begin(), buffer.end(), expected.begin(), expected.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(buffer.begin(), buffer.end(),
+                                  expected.begin(), expected.end());
 }
 
-namespace {
+namespace
+{
 
-    vector<int> random_buffer(size_t buffer_size)
-    {
-        vector<int> buffer(buffer_size);
-        generate(buffer.begin(), buffer.end(), rand);
-        return buffer;
-    }
+vector<int> random_buffer(size_t buffer_size)
+{
+    vector<int> buffer(buffer_size);
+    generate(buffer.begin(), buffer.end(), rand);
+    return buffer;
+}
 }
 
-BOOST_AUTO_TEST_CASE( roundtrip )
+BOOST_AUTO_TEST_CASE(roundtrip)
 {
     com_ptr<IStream> stream = get_stream(
         L"test_file", // trunc causes file creation (which in suppressed)
@@ -265,8 +265,8 @@ BOOST_AUTO_TEST_CASE( roundtrip )
 
     // using int to get legible output when collection comparison fails
     vector<int> source_data = random_buffer(6543210);
-    ULONG size_in_bytes = numeric_cast<ULONG>(
-        source_data.size() * sizeof(source_data[0]));
+    ULONG size_in_bytes =
+        numeric_cast<ULONG>(source_data.size() * sizeof(source_data[0]));
 
     ULONG bytes_written = 0;
     HRESULT hr = stream->Write(&source_data[0], size_in_bytes, &bytes_written);
@@ -284,11 +284,11 @@ BOOST_AUTO_TEST_CASE( roundtrip )
 
     BOOST_CHECK_EQUAL(bytes_read, size_in_bytes);
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        buffer.begin(), buffer.end(), source_data.begin(), source_data.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(buffer.begin(), buffer.end(),
+                                  source_data.begin(), source_data.end());
 }
 
-BOOST_AUTO_TEST_CASE( read_empty_file )
+BOOST_AUTO_TEST_CASE(read_empty_file)
 {
     com_ptr<IStream> stream = get_stream(L"/dev/null", std::ios_base::in);
 
@@ -297,14 +297,15 @@ BOOST_AUTO_TEST_CASE( read_empty_file )
 
     BOOST_CHECK_EQUAL(bytes_read, 0U);
 
-    char expected[] = { 'x', 'x', 'x', 'x' };
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        &buffer[0], &buffer[0] + 4, expected, expected + 4);
+    char expected[] = {'x', 'x', 'x', 'x'};
+    BOOST_CHECK_EQUAL_COLLECTIONS(&buffer[0], &buffer[0] + 4, expected,
+                                  expected + 4);
 }
 
-BOOST_AUTO_TEST_CASE( seek_noop )
+BOOST_AUTO_TEST_CASE(seek_noop)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -325,9 +326,10 @@ BOOST_AUTO_TEST_CASE( seek_noop )
     }
 }
 
-BOOST_AUTO_TEST_CASE( seek_relative )
+BOOST_AUTO_TEST_CASE(seek_relative)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -360,9 +362,10 @@ BOOST_AUTO_TEST_CASE( seek_relative )
     }
 }
 
-BOOST_AUTO_TEST_CASE( seek_relative_fail )
+BOOST_AUTO_TEST_CASE(seek_relative_fail)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -385,9 +388,10 @@ BOOST_AUTO_TEST_CASE( seek_relative_fail )
     }
 }
 
-BOOST_AUTO_TEST_CASE( seek_absolute )
+BOOST_AUTO_TEST_CASE(seek_absolute)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -419,9 +423,10 @@ BOOST_AUTO_TEST_CASE( seek_absolute )
     }
 }
 
-BOOST_AUTO_TEST_CASE( seek_absolute_fail )
+BOOST_AUTO_TEST_CASE(seek_absolute_fail)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -435,9 +440,10 @@ BOOST_AUTO_TEST_CASE( seek_absolute_fail )
     }
 }
 
-BOOST_AUTO_TEST_CASE( seek_get_current_position )
+BOOST_AUTO_TEST_CASE(seek_get_current_position)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -460,9 +466,10 @@ BOOST_AUTO_TEST_CASE( seek_get_current_position )
     }
 }
 
-BOOST_AUTO_TEST_CASE( seek_relative_to_end )
+BOOST_AUTO_TEST_CASE(seek_relative_to_end)
 {
-    com_ptr<IStream> stream = get_stream(L"/var/log/syslog", std::ios_base::in);
+    com_ptr<IStream> stream =
+        get_stream(L"/var/log/lastlog", std::ios_base::in);
 
     HRESULT hr;
 
@@ -506,7 +513,6 @@ BOOST_AUTO_TEST_CASE( seek_relative_to_end )
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-
 /*
     void testStatExact()
     {
@@ -546,4 +552,3 @@ BOOST_AUTO_TEST_SUITE_END()
     }
 
 */
-

@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright 2015, 2016 Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -34,6 +34,8 @@ set(UNIT_TESTS
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
 
+set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 include(CMakeParseArguments)
 # ssh_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
 #                LIBRARIES ... [LABELS ...])
@@ -62,7 +64,7 @@ function(SSH_TEST_SUITE)
   add_test(
     NAME ${_TEST_EXE_NAME}
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    WORKING_DIRECTORY "${TEST_DATA_DIR}")
 
   if(MEMORY_LEAKS_ARE_FAILURES)
     # Don't hide memory leak detection.  The detector can't change the error

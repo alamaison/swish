@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -16,6 +16,7 @@
 find_package(Boost 1.40 REQUIRED COMPONENTS unit_test_framework)
 
 add_subdirectory(common_boost)
+add_subdirectory(openssh_fixture)
 
 option(MEMORY_LEAKS_ARE_FAILURES
   "Fail the test suite if a memory leak is detected" OFF)
@@ -27,7 +28,7 @@ include(FindCygwin)
 
 if(CYGWIN_INSTALL_PATH)
   set(TEST_RUNNER_ENVIRONMENT
-    "PATH=${CYGWIN_INSTALL_PATH}/bin;${CYGWIN_INSTALL_PATH}/usr/sbin")
+    "PATH=${CYGWIN_INSTALL_PATH}/bin;${CYGWIN_INSTALL_PATH}/usr/sbin;${PATH}")
   string(REPLACE ";" "\\;" TEST_RUNNER_ENVIRONMENT
     "${TEST_RUNNER_ENVIRONMENT}")
 
@@ -47,6 +48,8 @@ else()
 endif()
 
 add_custom_target(BUILD_ALL_TESTS COMMENT "Building all tests")
+
+set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/openssh_fixture")
 
 include(CMakeParseArguments)
 # swish_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
@@ -82,7 +85,7 @@ function(SWISH_TEST_SUITE)
   add_test(
     NAME ${_TEST_EXE_NAME}
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:${_TEST_EXE_NAME}>)
+    WORKING_DIRECTORY "${TEST_DATA_DIR}")
 
   if(MEMORY_LEAKS_ARE_FAILURES)
     # Don't hide memory leak detection.  The detector can't change the error
@@ -91,10 +94,10 @@ function(SWISH_TEST_SUITE)
       FAIL_REGULAR_EXPRESSION "Detected memory leaks")
   endif()
 
-  if(TEST_RUNNER_ENVIRONMENT)
-    set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
-      ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
-  endif()
+  # if(TEST_RUNNER_ENVIRONMENT)
+  #   set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
+  #     ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
+  # endif()
 
   if(SWISH_TEST_SUITE_LABELS)
     set_tests_properties(

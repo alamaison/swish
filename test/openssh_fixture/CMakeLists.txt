@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2016  Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -14,11 +14,16 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 set(SOURCES
-  auth_test.cpp
-  stream_test.cpp)
+  openssh_fixture.cpp
+  openssh_fixture.hpp)
 
-swish_test_suite(
-  SUBJECT provider VARIANT network
-  SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES} openssh_fixture
-  LABELS network integration)
+set(TEST_RUNNER_ARGUMENTS
+  --result_code=yes --build_info=yes --log_level=test_suite)
+
+add_library(openssh_fixture ${SOURCES})
+
+hunter_add_package(Boost.Process)
+
+target_link_libraries(openssh_fixture
+  PUBLIC ${Boost_LIBRARIES}
+  PRIVATE Boost::Process)
