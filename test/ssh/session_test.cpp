@@ -22,20 +22,20 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
     In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
+    permission to combine this program with free software programs or the
+    OpenSSL project's "OpenSSL" library (or with modified versions of it,
+    with unchanged license). You may copy and distribute such a system
+    following the terms of the GNU GPL for this program and the licenses
+    of the other code concerned. The GNU General Public License gives
+    permission to release a modified version without this exception; this
+    exception also makes it possible to release a modified version which
     carries forward this exception.
 
     @endif
 */
 
 #include "openssh_fixture.hpp"
-#include "session_fixture.hpp" // open_socket
+#include "session_fixture.hpp" // open_socket_to_host
 
 #include <ssh/session.hpp> // test subject
 
@@ -45,7 +45,7 @@
 using ssh::session;
 
 using test::ssh::openssh_fixture;
-using test::ssh::detail::open_socket;
+using test::ssh::open_socket_to_host;
 
 using boost::asio::io_service;
 using boost::asio::ip::tcp;
@@ -53,23 +53,23 @@ using boost::move;
 
 BOOST_FIXTURE_TEST_SUITE(session_tests, openssh_fixture)
 
-BOOST_AUTO_TEST_CASE( default_message )
+BOOST_AUTO_TEST_CASE(default_message)
 {
     io_service io;
     tcp::socket socket(io);
-    open_socket(io, socket, host(), port());
+    open_socket_to_host(io, socket, host(), port());
     session s(socket.native());
 }
 
-BOOST_AUTO_TEST_CASE( custom_message )
+BOOST_AUTO_TEST_CASE(custom_message)
 {
     io_service io;
     tcp::socket socket(io);
-    open_socket(io, socket, host(), port());
+    open_socket_to_host(io, socket, host(), port());
     session s(socket.native(), "blah");
 }
 
-BOOST_AUTO_TEST_CASE( swap )
+BOOST_AUTO_TEST_CASE(swap)
 {
     io_service io;
 
@@ -78,35 +78,35 @@ BOOST_AUTO_TEST_CASE( swap )
     tcp::socket socket1(io);
     tcp::socket socket2(io);
 
-    open_socket(io, socket1, host(), port());
+    open_socket_to_host(io, socket1, host(), port());
     session s1(socket1.native());
 
-    open_socket(io, socket2, host(), port());
+    open_socket_to_host(io, socket2, host(), port());
     session s2(socket2.native());
 
     boost::swap(s1, s2);
 }
 
-BOOST_AUTO_TEST_CASE( move_construct )
+BOOST_AUTO_TEST_CASE(move_construct)
 {
     io_service io;
     tcp::socket socket(io);
-    open_socket(io, socket, host(), port());
+    open_socket_to_host(io, socket, host(), port());
     session s1(socket.native());
 
     session s2(move(s1));
 }
 
-BOOST_AUTO_TEST_CASE( move_assign )
+BOOST_AUTO_TEST_CASE(move_assign)
 {
     io_service io;
 
     tcp::socket socket1(io);
-    open_socket(io, socket1, host(), port());
+    open_socket_to_host(io, socket1, host(), port());
     session s1(socket1.native());
 
     tcp::socket socket2(io);
-    open_socket(io, socket2, host(), port());
+    open_socket_to_host(io, socket2, host(), port());
     session s2(socket2.native());
 
     s2 = move(s1);
