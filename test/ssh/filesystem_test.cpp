@@ -178,8 +178,9 @@ BOOST_FIXTURE_TEST_CASE(moving_session_leaves_working_filesystem,
     // The rules are that the last session must outlive the last FS so moving
     // FS to inner scope ensures this
     sftp_filesystem fs2(move(fs));
+    ofstream(fs2, "/tmp/bob.txt").close();
 
-    BOOST_CHECK(directory_is_empty(fs2, sandbox()));
+    BOOST_CHECK(exists(fs2, "/tmp/bob.txt"));
 }
 
 BOOST_FIXTURE_TEST_CASE(swap_session_with_live_filesystem_connection,
