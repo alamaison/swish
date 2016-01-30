@@ -1,0 +1,21 @@
+﻿---
+AccessModifierOffset: '-4'
+AllowShortFunctionsOnASingleLine: Empty
+AlwaysBreakTemplateDeclarations: 'true'
+BreakBeforeBraces: Allman
+ColumnLimit: '80'
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+ForEachMacros: [ foreach, BOOST_FOREACH ]
+IndentWidth: '4'
+MacroBlockBegin: "^[A-Z_]+_BEGIN$"
+MacroBlockEnd: "^[A-Z_]+_END(?)?$"
+MaxEmptyLinesToKeep: '1'
+NamespaceIndentation: None
+PointerAlignment: Left
+SpaceAfterControlStatementKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpacesInAngles:  false
+SpacesInParentheses: false
+UseTab: Never
+
+...
