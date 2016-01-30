@@ -741,5 +741,31 @@ BOOST_AUTO_TEST_CASE(can_remove_file_permissions)
                                            perms::others_read);
 }
 
+BOOST_AUTO_TEST_CASE(file_size_is_returned_with_sensible_value)
+{
+    string data = "mary had a little lamb";
+    path target = new_file_in_sandbox_containing_data(data);
+    BOOST_CHECK_EQUAL(file_size(filesystem(), target), data.size());
+}
+
+BOOST_AUTO_TEST_CASE(file_size_of_non_file_throws_error)
+{
+    BOOST_CHECK_THROW(file_size(filesystem(), "/dev/console"), system_error);
+}
+
+BOOST_AUTO_TEST_CASE(last_write_time_returns_sensible_timestamp)
+{
+    path target = new_file_in_sandbox();
+    time_t write_time = last_write_time(filesystem(), target);
+    time_t now = time(0);
+    BOOST_CHECK_LE(write_time, now);
+    BOOST_CHECK_GT(write_time, now - 5);
+}
+
+BOOST_AUTO_TEST_CASE(last_write_time_of_non_file_throws_error)
+{
+    BOOST_CHECK_THROW(last_write_time(filesystem(), "/dev/console"),
+                      system_error);
+}
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -358,6 +358,16 @@ public:
             m_type = file_type::unknown_;
             m_permissions = perms::unknown;
         }
+
+        if (is_available_attribute(attributes, LIBSSH2_SFTP_ATTR_SIZE))
+        {
+            m_file_size = attributes.filesize;
+        }
+
+        if (is_available_attribute(attributes, LIBSSH2_SFTP_ATTR_ACMODTIME))
+        {
+            m_last_write_time = attributes.mtime;
+        }
     }
 
     file_type type() const
@@ -370,6 +380,30 @@ public:
         return m_permissions;
     }
 
+    // Non-standard - only included as top-level function in standard
+    boost::uintmax_t file_size() const
+    {
+        if (!m_file_size)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::system::system_error(boost::system::errc::not_supported,
+                                            boost::system::generic_category()));
+        }
+        return *m_file_size;
+    }
+
+    // Non-standard - only included as top-level function in standard
+    std::time_t last_write_time() const
+    {
+        if (!m_last_write_time)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::system::system_error(boost::system::errc::not_supported,
+                                            boost::system::generic_category()));
+        }
+        return *m_last_write_time;
+    }
+
 private:
     bool is_available_attribute(const LIBSSH2_SFTP_ATTRIBUTES attributes,
                                 unsigned long attribute_type) const
@@ -379,6 +413,8 @@ private:
 
     file_type m_type;
     perms m_permissions;
+    boost::optional<boost::uintmax_t> m_file_size;
+    boost::optional<std::time_t> m_last_write_time;
 };
 
 class sftp_filesystem;
@@ -551,22 +587,15 @@ private:
 namespace detail
 {
 
-BOOST_SCOPED_ENUM_START(path_status)
-{
-    non_existent,
-    non_directory,
-    directory
-};
-BOOST_SCOPED_ENUM_END;
-
+BOOST_SCOPED_ENUM_START(path_status){non_existent, non_directory, directory};
+BOOST_SCOPED_ENUM_END
+;
 
 inline BOOST_SCOPED_ENUM(path_status)
-check_status(sftp_filesystem& filesystem, const path& path);
-
+    check_status(sftp_filesystem& filesystem, const path& path);
 }
 
-BOOST_SCOPED_ENUM_START(overwrite_behaviour)
-{
+BOOST_SCOPED_ENUM_START(overwrite_behaviour){
     /**
      * Do not overwrite an existing file at the destination.
      *
@@ -591,8 +620,7 @@ BOOST_SCOPED_ENUM_START(overwrite_behaviour)
      * The SFTP server may not support overwriting files, in which case this
      * acts like `prevent_overwrite`.
      */
-    atomic_overwrite
-};
+    atomic_overwrite};
 BOOST_SCOPED_ENUM_END
 
 class sftp_input_device;
@@ -1202,7 +1230,7 @@ namespace detail
 {
 
 inline BOOST_SCOPED_ENUM(path_status)
-check_status(sftp_filesystem& filesystem, const path& path)
+    check_status(sftp_filesystem& filesystem, const path& path)
 {
     try
     {
@@ -1301,6 +1329,26 @@ inline void permissions(sftp_filesystem& filesystem, const path& file,
                         perms new_permissions)
 {
     return filesystem.permissions(file, new_permissions);
+}
+
+/**
+ * Returns the size of the given file, in bytes.
+ */
+inline boost::uintmax_t file_size(sftp_filesystem& filesystem, const path& file)
+{
+    return status(filesystem, file).file_size();
+}
+
+/**
+ * Returns the time of the last write to the given file.
+ *
+ * Whether the return value is accurate depends on the filesystem on which the
+ * file is stored.
+ */
+inline std::time_t last_write_time(sftp_filesystem& filesystem,
+                                   const path& file)
+{
+    return status(filesystem, file).last_write_time();
 }
 
 // Needs directory_iterator implementation so outside sftp_filesystem class body
