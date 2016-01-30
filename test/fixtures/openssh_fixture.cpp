@@ -19,6 +19,7 @@
 #include <boost/foreach.hpp>
 #include <boost/io/detail/quoted_manip.hpp>
 #include <boost/optional.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/locale.hpp>
 #include <boost/process/context.hpp>
 #include <boost/process/environment.hpp>
@@ -36,8 +37,9 @@
 #include <vector>
 
 using boost::assign::list_of;
-using boost::io::quoted;
 using boost::filesystem::path;
+using boost::io::quoted;
+using boost::lexical_cast;
 using boost::locale::conv::to_utf;
 using boost::locale::generator;
 using boost::locale::util::get_system_locale;
@@ -218,12 +220,32 @@ openssh_fixture::~openssh_fixture()
 {
     try
     {
-        vector<string> stop_command = (list_of(string("stop")), m_container_id);
-        run_docker_command(stop_command);
+        stop_server();
     }
     catch (...)
     {
     }
+}
+
+void openssh_fixture::stop_server()
+{
+    vector<string> stop_command = (list_of(string("stop")), m_container_id);
+    run_docker_command(stop_command);
+}
+
+void openssh_fixture::restart_server()
+{
+    stop_server();
+
+    vector<string> docker_command =
+        (list_of(string("run")), "--detach", "-p",
+         lexical_cast<string>(m_port) + ":22", "swish/openssh_server");
+    m_container_id = single_value_from_docker_command<string>(docker_command);
+    // We make sure we bind to the same port in the new docker container.  Do we
+    // have to do anything to ensure we get the same IP?  Presumably not unless
+    // docker-machine changed machine in the middle of restarting.
+    assert(ask_docker_for_host() == m_host);
+    assert(ask_docker_for_port() == m_port);
 }
 
 string openssh_fixture::host() const

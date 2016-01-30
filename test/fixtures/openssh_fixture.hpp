@@ -33,6 +33,8 @@ class openssh_fixture
 public:
     openssh_fixture();
     virtual ~openssh_fixture();
+    void stop_server();
+    void restart_server();
 
     std::string host() const;
     std::string user() const;

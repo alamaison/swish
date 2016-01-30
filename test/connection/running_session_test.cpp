@@ -1,46 +1,34 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    Tests for the running_session class.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "swish/connection/running_session.hpp" // Test subject
-#include "swish/utils.hpp" // Utf8StringToWideString
 
-#include "test/common_boost/fixtures.hpp" // OpenSshFixture
+#include "test/fixtures/openssh_fixture.hpp"
 
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <stdexcept> // runtime_error
 #include <string>
 #include <vector>
 
-using test::OpenSshFixture;
+using test::fixtures::openssh_fixture;
 
 using swish::connection::running_session;
-using swish::utils::Utf8StringToWideString;
 
 using boost::make_shared;
 using boost::move;
@@ -50,35 +38,26 @@ using std::runtime_error;
 using std::vector;
 using std::wstring;
 
-BOOST_FIXTURE_TEST_SUITE( running_session_tests, OpenSshFixture )
+BOOST_FIXTURE_TEST_SUITE(running_session_tests, openssh_fixture)
 
-/**
- * Test that connecting succeeds.
- */
-BOOST_AUTO_TEST_CASE( connect )
+BOOST_AUTO_TEST_CASE(connecting_with_correct_host_and_port_succeeds)
 {
-    running_session session(
-        Utf8StringToWideString(GetHost()), GetPort());
+    running_session session(whost(), port());
     BOOST_CHECK(!session.is_dead());
 }
 
-/**
- * Test that connecting throws when it fails.
- */
-BOOST_AUTO_TEST_CASE( connect_fail )
+BOOST_AUTO_TEST_CASE(connection_failure_throws_error)
 {
-    BOOST_CHECK_THROW(
-        running_session(L"nonsense.invalid", 65535), runtime_error);
+    BOOST_CHECK_THROW(running_session(L"nonsense.invalid", 65535),
+                      runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE( multiple_connections )
+BOOST_AUTO_TEST_CASE(multiple_connections_do_not_interfere)
 {
     vector<shared_ptr<running_session>> sessions;
     for (int i = 0; i < 5; i++)
     {
-        sessions.push_back(
-            make_shared<running_session>(
-                Utf8StringToWideString(GetHost()), GetPort()));
+        sessions.push_back(make_shared<running_session>(whost(), port()));
     }
 
     for (int i = 0; i < 5; i++)
@@ -87,28 +66,26 @@ BOOST_AUTO_TEST_CASE( multiple_connections )
     }
 }
 
-namespace {
+namespace
+{
 
-    running_session move_create(const wstring& host, unsigned int port)
-    {
-        running_session session(host, port);
-        return move(session);
-    }
+running_session move_create(const wstring& host, unsigned int port)
+{
+    running_session session(host, port);
+    return move(session);
+}
 }
 
-BOOST_AUTO_TEST_CASE( move_contruct )
+BOOST_AUTO_TEST_CASE(session_survives_move_construction)
 {
-    running_session session = move_create(
-        Utf8StringToWideString(GetHost()), GetPort());
+    running_session session = move_create(whost(), port());
     BOOST_CHECK(!session.is_dead());
 }
 
-BOOST_AUTO_TEST_CASE( move_assign )
+BOOST_AUTO_TEST_CASE(session_survives_move_assignment)
 {
-    running_session session1(
-        Utf8StringToWideString(GetHost()), GetPort());
-    running_session session2(
-        Utf8StringToWideString(GetHost()), GetPort());
+    running_session session1(whost(), port());
+    running_session session2(whost(), port());
 
     session1 = move(session2);
 

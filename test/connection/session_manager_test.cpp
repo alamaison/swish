@@ -1,37 +1,25 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    Tests for the SFTP session coordinator.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "swish/connection/session_manager.hpp" // Test subject
 
 #include "swish/connection/authenticated_session.hpp"
 #include "swish/connection/connection_spec.hpp"
-#include "swish/utils.hpp"
 
 #include "test/common_boost/helpers.hpp"
-#include "test/common_boost/fixtures.hpp"
+#include "test/fixtures/openssh_fixture.hpp"
 #include "test/common_boost/ConsumerStub.hpp"
 
 #include <comet/ptr.h> // com_ptr
@@ -50,10 +38,9 @@ using swish::connection::authenticated_session;
 using swish::connection::connection_spec;
 using swish::connection::session_manager;
 using swish::connection::session_reservation;
-using swish::utils::Utf8StringToWideString;
 
 using test::CConsumerStub;
-using test::OpenSshFixture;
+using test::fixtures::openssh_fixture;
 
 using comet::com_ptr;
 
@@ -68,66 +55,60 @@ using boost::thread;
 using std::exception;
 using std::string;
 
-namespace { // private
-
-    /**
-     * Fixture that returns backend connections from the connection pool.
-     */
-    class ConnectionFixture : public OpenSshFixture
-    {
-    public:
-
-        connection_spec get_connection()
-        {
-            return connection_spec(
-                Utf8StringToWideString(GetHost()), 
-                Utf8StringToWideString(GetUser()), GetPort());
-        }
-
-        com_ptr<ISftpConsumer> consumer()
-        {
-            com_ptr<CConsumerStub> consumer = new CConsumerStub(
-                PrivateKeyPath(), PublicKeyPath());
-            return consumer;
-        }
-
-    };
-
-    /**
-     * Check that the given provider responds sensibly to a request.
-     */
-    predicate_result alive(authenticated_session& session)
-    {
-        try
-        {
-            session.get_sftp_filesystem().directory_iterator("/");
-
-            predicate_result res(true);
-            res.message() << "Session seems to be alive";
-            return res;
-        }
-        catch(const exception& e)
-        {
-            predicate_result res(false);
-            res.message() << "Session seems to be dead: " << e.what();
-            return res;
-        }
-    }
-}
-
-BOOST_FIXTURE_TEST_SUITE(session_manager_tests, ConnectionFixture)
+namespace
+{ // private
 
 /**
- * Ensures a new new reservation is registered.
+ * Fixture that returns backend connections from the connection pool.
  */
-BOOST_AUTO_TEST_CASE( new_reservation )
+class fixture : private openssh_fixture
+{
+public:
+    connection_spec get_connection()
+    {
+        return connection_spec(whost(), wuser(), port());
+    }
+
+    com_ptr<ISftpConsumer> consumer()
+    {
+        com_ptr<CConsumerStub> consumer =
+            new CConsumerStub(private_key_path(), public_key_path());
+        return consumer;
+    }
+};
+
+/**
+ * Check that the given provider responds sensibly to a request.
+ */
+predicate_result alive(authenticated_session& session)
+{
+    try
+    {
+        session.get_sftp_filesystem().directory_iterator("/");
+
+        predicate_result res(true);
+        res.message() << "Session seems to be alive";
+        return res;
+    }
+    catch (const exception& e)
+    {
+        predicate_result res(false);
+        res.message() << "Session seems to be dead: " << e.what();
+        return res;
+    }
+}
+}
+
+BOOST_FIXTURE_TEST_SUITE(session_manager_tests, fixture)
+
+BOOST_AUTO_TEST_CASE(new_reservation_are_registered_with_session_manager)
 {
     connection_spec spec(get_connection());
 
     BOOST_CHECK(!session_manager().has_session(spec));
 
-    session_reservation ticket = session_manager().reserve_session(
-        spec, consumer(), "Testing");
+    session_reservation ticket =
+        session_manager().reserve_session(spec, consumer(), "Testing");
 
     BOOST_CHECK(session_manager().has_session(spec));
 
@@ -138,7 +119,7 @@ BOOST_AUTO_TEST_CASE( new_reservation )
     BOOST_CHECK(alive(session));
 }
 
-BOOST_AUTO_TEST_CASE( session_outlives_reservation )
+BOOST_AUTO_TEST_CASE(session_outlives_reservation)
 {
     connection_spec spec(get_connection());
 
@@ -149,10 +130,7 @@ BOOST_AUTO_TEST_CASE( session_outlives_reservation )
     BOOST_CHECK(session_manager().has_session(spec));
 }
 
-/**
- * Test that the factory reuses existing sessions.
- */
-BOOST_AUTO_TEST_CASE( existing_session )
+BOOST_AUTO_TEST_CASE(factory_reuses_existing_sessions)
 {
     connection_spec spec(get_connection());
 
@@ -167,63 +145,62 @@ BOOST_AUTO_TEST_CASE( existing_session )
 
 namespace
 {
-    class progress_callback : boost::noncopyable
+class progress_callback : boost::noncopyable
+{
+public:
+    progress_callback(
+        vector<session_reservation> tickets = vector<session_reservation>())
+        : m_releasing_started(false), m_tickets(move(tickets))
     {
-    public:
+    }
 
-        progress_callback(
-            vector<session_reservation> tickets=vector<session_reservation>())
-            : m_releasing_started(false), m_tickets(move(tickets)) {}
+    template <typename Range>
+    bool operator()(const Range& pending_tasks)
+    {
+        mutex::scoped_lock lock(m_mutex);
 
-        template<typename Range>
-        bool operator()(const Range& pending_tasks)
+        m_notified_task_ranges.push_back(std::vector<string>(
+            boost::begin(pending_tasks), boost::end(pending_tasks)));
+
+        if (!m_releasing_started)
         {
-            mutex::scoped_lock lock(m_mutex);
+            thread(&progress_callback::release_tickets, this);
 
-            m_notified_task_ranges.push_back(
-                std::vector<string>(
-                    boost::begin(pending_tasks), boost::end(pending_tasks)));
-            
-            if (!m_releasing_started)
-            {
-                thread(&progress_callback::release_tickets, this);
-
-                m_releasing_started = true;
-            }
-
-            return true;
+            m_releasing_started = true;
         }
 
-        std::vector<std::vector<string>> notifications()
+        return true;
+    }
+
+    std::vector<std::vector<string>> notifications()
+    {
+        mutex::scoped_lock lock(m_mutex);
+        return m_notified_task_ranges;
+    }
+
+private:
+    void release_tickets()
+    {
+        while (!m_tickets.empty())
         {
-            mutex::scoped_lock lock(m_mutex);
-            return m_notified_task_ranges;
+            m_tickets.erase(m_tickets.end() - 1);
         }
+    }
 
-    private:
+    mutex m_mutex;
+    bool m_releasing_started;
 
-        void release_tickets()
-        {
-            while (!m_tickets.empty())
-            {
-                m_tickets.erase(m_tickets.end() - 1);
-            }
-        }
+    // Stores the tickets we need to simulate other task gradually
+    // releasing their reservations on this
+    vector<session_reservation> m_tickets;
 
-        mutex m_mutex;
-        bool m_releasing_started;
-
-        // Stores the tickets we need to simulate other task gradually
-        // releasing their reservations on this 
-        vector<session_reservation> m_tickets;
-
-        // Stores each range of tasks we are notified of, in the
-        // order we are notified of them
-        std::vector<std::vector<string>> m_notified_task_ranges;
-    };
+    // Stores each range of tasks we are notified of, in the
+    // order we are notified of them
+    std::vector<std::vector<string>> m_notified_task_ranges;
+};
 }
 
-BOOST_AUTO_TEST_CASE( removing_session_really_removes_it )
+BOOST_AUTO_TEST_CASE(removing_session_really_removes_it)
 {
     connection_spec spec(get_connection());
 
@@ -243,7 +220,7 @@ BOOST_AUTO_TEST_CASE( removing_session_really_removes_it )
     BOOST_CHECK_EQUAL(progress.notifications()[0].size(), 0U);
 }
 
-BOOST_AUTO_TEST_CASE( removing_session_with_pending_task )
+BOOST_AUTO_TEST_CASE(removing_session_with_pending_task)
 {
     connection_spec spec(get_connection());
 
@@ -265,7 +242,7 @@ BOOST_AUTO_TEST_CASE( removing_session_with_pending_task )
     BOOST_CHECK_EQUAL(progress.notifications()[1].size(), 0U);
 }
 
-BOOST_AUTO_TEST_CASE( removing_session_with_multiple_pending_tasks )
+BOOST_AUTO_TEST_CASE(removing_session_with_multiple_pending_tasks)
 {
     connection_spec spec(get_connection());
 
@@ -298,7 +275,7 @@ BOOST_AUTO_TEST_CASE( removing_session_with_multiple_pending_tasks )
     BOOST_CHECK_EQUAL(progress.notifications()[3].size(), 0U);
 }
 
-BOOST_AUTO_TEST_CASE( removing_session_with_colliding_task_names )
+BOOST_AUTO_TEST_CASE(removing_session_with_colliding_task_names)
 {
     connection_spec spec(get_connection());
 
@@ -326,4 +303,3 @@ BOOST_AUTO_TEST_CASE( removing_session_with_colliding_task_names )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
