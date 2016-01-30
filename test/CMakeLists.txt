@@ -16,7 +16,7 @@
 find_package(Boost 1.40 REQUIRED COMPONENTS unit_test_framework)
 
 add_subdirectory(common_boost)
-add_subdirectory(openssh_fixture)
+add_subdirectory(fixtures)
 
 option(MEMORY_LEAKS_ARE_FAILURES
   "Fail the test suite if a memory leak is detected" OFF)
@@ -49,7 +49,7 @@ endif()
 
 add_custom_target(BUILD_ALL_TESTS COMMENT "Building all tests")
 
-set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/openssh_fixture")
+set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
 
 include(CMakeParseArguments)
 # swish_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
@@ -159,8 +159,7 @@ add_subdirectory(ezel)
 add_subdirectory(forms)
 add_subdirectory(host_folder)
 add_subdirectory(nse)
-add_subdirectory(provider)
-add_subdirectory(provider-network)
+add_subdirectory(provider-integration)
 add_subdirectory(remote_folder)
 add_subdirectory(shell)
 add_subdirectory(shell_folder)
@@ -203,4 +202,3 @@ swish_declare_test_target(CHECK)
 swish_declare_test_target(CHECK_UNIT -L unit ALL)
 swish_declare_test_target(CHECK_INTEGRATION -L integration)
 swish_declare_test_target(CHECK_GUI -L gui)
-swish_declare_test_target(CHECK_NETWORK -L network)

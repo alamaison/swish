@@ -17,7 +17,7 @@
 #include "test/common_boost/fixtures.hpp"     // WinsockFixture
 #include "test/common_boost/helpers.hpp"
 #include "test/common_boost/stream_utils.hpp" // verify_stream_read
-#include "test/openssh_fixture/openssh_fixture.hpp"
+#include "test/fixtures/openssh_fixture.hpp"
 
 #include "swish/connection/connection_spec.hpp"
 #include "swish/connection/session_manager.hpp" // session_reservation
@@ -37,10 +37,10 @@
 #include <string>
 #include <vector>
 
-using test::openssh_fixture;
 using test::MockConsumer;
-using test::stream_utils::verify_stream_read;
 using test::WinsockFixture;
+using test::fixtures::openssh_fixture;
+using test::stream_utils::verify_stream_read;
 
 using swish::connection::session_manager;
 using swish::connection::session_reservation;
@@ -511,6 +511,7 @@ BOOST_AUTO_TEST_CASE(seek_relative_to_end)
         BOOST_CHECK_EQUAL(dlibNewPos.QuadPart, uSize + 50);
     }
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "test/openssh_fixture/openssh_fixture.hpp"
+#include "test/fixtures/openssh_fixture.hpp"
 #include "test/common_boost/helpers.hpp"
 #include "test/common_boost/MockConsumer.hpp"
 
@@ -28,7 +28,7 @@
 
 #include <exception>
 
-using test::openssh_fixture;
+using test::fixtures::openssh_fixture;
 using test::MockConsumer;
 
 using swish::connection::authenticated_session;

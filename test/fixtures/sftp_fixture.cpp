@@ -35,7 +35,7 @@ using ssh::session;
 using boost::bind;
 using boost::uuids::random_generator;
 
-using test::ssh::session_fixture;
+using test::fixtures::session_fixture;
 
 using std::string;
 
@@ -50,7 +50,7 @@ bool filename_matches(const string& filename, const sftp_file& remote_file)
 
 namespace test
 {
-namespace ssh
+namespace fixtures
 {
 
 sftp_fixture::sftp_fixture() : m_filesystem(authenticate_and_create_sftp())
@@ -124,6 +124,13 @@ path sftp_fixture::new_directory_in_sandbox()
 
     path directory_name = to_string(generator());
     path directory = sandbox() / directory_name;
+    create_directory(filesystem(), directory);
+    return directory;
+}
+
+path sftp_fixture::new_directory_in_sandbox(const path& name)
+{
+    path directory = sandbox() / name;
     create_directory(filesystem(), directory);
     return directory;
 }

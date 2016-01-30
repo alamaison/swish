@@ -16,8 +16,6 @@
 #ifndef SSH_OPENSSH_FIXTURE_HPP
 #define SSH_OPENSSH_FIXTURE_HPP
 
-#include <ssh/filesystem/path.hpp>
-
 #include <boost/filesystem.hpp> // path
 
 #include <string>
@@ -39,12 +37,6 @@ public:
     std::string host() const;
     std::string user() const;
     int port() const;
-    ::ssh::filesystem::path sandbox() const;
-    ::ssh::filesystem::path absolute_sandbox() const;
-    ::ssh::filesystem::path new_file_in_sandbox() const;
-    ::ssh::filesystem::path
-    new_file_in_sandbox(const ::ssh::filesystem::path& name) const;
-    ::ssh::filesystem::path new_directory_in_sandbox() const;
     boost::filesystem::path private_key_path() const;
     boost::filesystem::path public_key_path() const;
     boost::filesystem::path wrong_private_key_path() const;

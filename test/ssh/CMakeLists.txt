@@ -18,11 +18,9 @@ set(INTEGRATION_TESTS
   filesystem_test.cpp
   host_key_test.cpp
   openssh_fixture.cpp
-  sandbox_fixture.cpp
   session_test.cpp
   stream_test.cpp
   openssh_fixture.hpp
-  sandbox_fixture.hpp
   session_fixture.hpp
   sftp_fixture.hpp
   sftp_fixture.cpp)

@@ -1,41 +1,20 @@
-/**
-    @file
+// Copyright 2010, 2012, 2013, 2015, 2016 Alexander Lamaison
 
-    SSH SFTP subsystem.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
-
-#ifndef SSH_SFTP_HPP
-#define SSH_SFTP_HPP
+#ifndef SSH_FILESYSTEM_HPP
+#define SSH_FILESYSTEM_HPP
 
 #include <ssh/detail/file_handle_state.hpp>
 #include <ssh/detail/sftp_channel_state.hpp>
@@ -254,7 +233,8 @@ inline bool operator<(const sftp_file& lhs, const sftp_file& rhs)
 
 enum file_type
 {
-    none,
+    // prevent clash with perms::unknown, rename once using C++11 enum classes
+    none_,
     not_found,
     regular,
     directory,
@@ -271,6 +251,8 @@ BOOST_BITMASK(file_type);
 
 enum perms
 {
+    none = 0,
+
     owner_read = LIBSSH2_SFTP_S_IRUSR,
     owner_write = LIBSSH2_SFTP_S_IWUSR,
     owner_exec = LIBSSH2_SFTP_S_IXUSR,
@@ -303,7 +285,7 @@ inline file_type permissions_to_file_type(unsigned long permissions)
     switch (permissions & LIBSSH2_SFTP_S_IFMT)
     {
     case 0:
-        return file_type::none;
+        return file_type::none_;
     case LIBSSH2_SFTP_S_IFIFO:
         return file_type::fifo;
     case LIBSSH2_SFTP_S_IFCHR:
@@ -328,7 +310,7 @@ inline unsigned long file_type_to_permissions(file_type type)
     // Mask permissions to consider only file-type bits
     switch (type)
     {
-    case file_type::none:
+    case file_type::none_:
         return 0;
     case file_type::fifo:
         return LIBSSH2_SFTP_S_IFIFO;
@@ -357,7 +339,7 @@ public:
     // by LIBSSH2_SFTP_ATTRIBUTES (e.g. file_type::not_found), so we store the
     // former, not the latter.
 
-    explicit file_status(file_type type = file_type::none,
+    explicit file_status(file_type type = file_type::none_,
                          perms permissions = perms::unknown)
         : m_type(type), m_permissions(permissions)
     {

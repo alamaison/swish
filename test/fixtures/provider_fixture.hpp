@@ -17,7 +17,7 @@
 #define SWISH_TEST_FIXTURES_PROVIDER_FIXTURE_HPP
 
 #include "test/common_boost/MockConsumer.hpp"
-#include "test/common_boost/fixtures.hpp" // SandboxFixture, OpenSshFixture
+#include "test/fixtures/openssh_fixture.hpp"
 
 #include "swish/provider/sftp_provider.hpp"
 
@@ -39,13 +39,15 @@ class authenticated_session;
 
 namespace test
 {
+namespace fixtures
+{
 
-/**     Fixture for tests that need a backend data provider. */
-class ProviderFixture : public test::SandboxFixture, public test::OpenSshFixture
+/** Fixture for tests that need a backend data provider. */
+class provider_fixture : virtual public openssh_fixture
 {
 public:
     /**
-     * Get a CProvider instance connected to the fixture SSH server.
+     * Get an sftp_provider connected to the fixture SSH server.
      */
     boost::shared_ptr<swish::provider::sftp_provider> Provider();
 
@@ -54,7 +56,7 @@ public:
      */
     comet::com_ptr<test::MockConsumer> Consumer();
 };
-
-} // namespace test
+}
+} // namespace test::fixture
 
 #endif

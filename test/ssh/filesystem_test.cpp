@@ -814,6 +814,14 @@ BOOST_AUTO_TEST_CASE(can_set_file_permissions_exactly)
     BOOST_CHECK_EQUAL(new_permissions, perms::group_write);
 }
 
+BOOST_AUTO_TEST_CASE(can_set_file_permissions_to_none)
+{
+    path target = new_file_in_sandbox();
+    permissions(filesystem(), target, perms::none);
+    perms new_permissions = status(filesystem(), target).permissions();
+    BOOST_CHECK_EQUAL(new_permissions, perms::none);
+}
+
 BOOST_AUTO_TEST_CASE(can_add_file_permissions)
 {
     path target = new_file_in_sandbox();

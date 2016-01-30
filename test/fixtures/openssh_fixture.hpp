@@ -13,16 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SWISH_TEST_OPENSSH_FIXTURE_OPENSSH_FIXTURE_HPP
-#define SWISH_TEST_OPENSSH_FIXTURE_OPENSSH_FIXTURE_HPP
-
-#include <ssh/filesystem/path.hpp>
+#ifndef SWISH_TEST_FIXTURES_OPENSSH_FIXTURE_HPP
+#define SWISH_TEST_FIXTURES_OPENSSH_FIXTURE_HPP
 
 #include <boost/filesystem.hpp> // path
 
 #include <string>
 
 namespace test
+{
+namespace fixtures
 {
 
 /**
@@ -41,12 +41,6 @@ public:
     int port() const;
     std::string password() const;
     std::wstring wpassword() const;
-    ::ssh::filesystem::path sandbox() const;
-    ::ssh::filesystem::path absolute_sandbox() const;
-    ::ssh::filesystem::path new_file_in_sandbox() const;
-    ::ssh::filesystem::path
-    new_file_in_sandbox(const ::ssh::filesystem::path& name) const;
-    ::ssh::filesystem::path new_directory_in_sandbox() const;
     boost::filesystem::path private_key_path() const;
     boost::filesystem::path public_key_path() const;
     boost::filesystem::path wrong_private_key_path() const;
@@ -61,5 +55,6 @@ private:
     int ask_docker_for_port() const;
 };
 }
+} // namespace test::fixtures
 
 #endif

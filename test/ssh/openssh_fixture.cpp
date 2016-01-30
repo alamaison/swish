@@ -34,10 +34,9 @@
 #include <string>
 #include <vector>
 
-using ssh::filesystem::path;
-
 using boost::assign::list_of;
 using boost::io::quoted;
+using boost::filesystem::path;
 using boost::optional;
 using boost::process::behavior::pipe;
 using boost::process::child;
@@ -90,7 +89,7 @@ Out single_value_from_executable(const path& executable,
     ctx.streams[stdout_id] = pipe();
     ctx.streams[stderr_id] = pipe();
 
-    child process = create_child(executable, arguments, ctx);
+    child process = create_child(executable.string(), arguments, ctx);
 
     pistream command_stdout(process.get_handle(stdout_id));
     Out out;
@@ -173,8 +172,8 @@ struct global_fixture
     global_fixture()
     {
         // Ensure the docker image has been built
-        vector<string> build_command =
-            (list_of(string("build")), "-t", "ssh2pp/openssh_server", "ssh_server");
+        vector<string> build_command = (list_of(string("build")), "-t",
+                                        "ssh2pp/openssh_server", "ssh_server");
         run_docker_command(build_command);
     }
 
@@ -205,7 +204,7 @@ namespace ssh
 openssh_fixture::openssh_fixture()
 {
     vector<string> docker_command =
-        (list_of(string("run")), "--detach", "-P",  "ssh2pp/openssh_server");
+        (list_of(string("run")), "--detach", "-P", "ssh2pp/openssh_server");
     m_container_id = single_value_from_docker_command<string>(docker_command);
     m_host = ask_docker_for_host();
     m_port = ask_docker_for_port();
@@ -266,21 +265,11 @@ int openssh_fixture::ask_docker_for_port() const
     return single_value_from_docker_command<int>(inspect_host_command);
 }
 
-path openssh_fixture::sandbox() const
-{
-    return "sandbox";
-}
-
-path openssh_fixture::absolute_sandbox() const
-{
-    return "/home/swish/sandbox";
-}
-
 /**
  * The private half of a key-pair that is expected to authenticate successfully
  * with the fixture server.
  */
-boost::filesystem::path openssh_fixture::private_key_path() const
+path openssh_fixture::private_key_path() const
 {
     return SSHD_PRIVATE_KEY_FILE;
 }
@@ -289,7 +278,7 @@ boost::filesystem::path openssh_fixture::private_key_path() const
  * The public half of a key-pair that is expected to authenticate successfully
  * with the fixture server.
  */
-boost::filesystem::path openssh_fixture::public_key_path() const
+path openssh_fixture::public_key_path() const
 {
     return SSHD_PUBLIC_KEY_FILE;
 }
@@ -302,7 +291,7 @@ boost::filesystem::path openssh_fixture::public_key_path() const
  * mismatches rather than format mismatches are the cause of authentication
  * failure regardless of which combination of keys is passed.
  */
-boost::filesystem::path openssh_fixture::wrong_private_key_path() const
+path openssh_fixture::wrong_private_key_path() const
 {
     return SSHD_WRONG_PRIVATE_KEY_FILE;
 }
@@ -316,7 +305,7 @@ boost::filesystem::path openssh_fixture::wrong_private_key_path() const
  * authentication
  * failure regardless of which combination of keys is passed.
  */
-boost::filesystem::path openssh_fixture::wrong_public_key_path() const
+path openssh_fixture::wrong_public_key_path() const
 {
     return SSHD_WRONG_PUBLIC_KEY_FILE;
 }
