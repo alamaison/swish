@@ -38,7 +38,7 @@ swish_test_suite(
 swish_test_suite(
   SUBJECT shell_folder VARIANT integration
   SOURCES ${INTEGRATION_TESTS}
-  LIBRARIES ${Boost_LIBRARIES}
+  LIBRARIES ${Boost_LIBRARIES} provider_fixture
   LABELS integration)
 
 swish_copy_fixture_files(test-shell_folder-integration)
