@@ -625,6 +625,25 @@ BOOST_AUTO_TEST_CASE(is_directory_returns_false_for_non_existent_path)
     BOOST_CHECK(!is_directory(filesystem(), "i do not exist"));
 }
 
+BOOST_AUTO_TEST_CASE(is_regular_file_returns_false_for_directories)
+{
+    path target = new_directory_in_sandbox();
+
+    BOOST_CHECK(!is_regular_file(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(is_regular_file_returns_false_for_files)
+{
+    path target = new_file_in_sandbox();
+
+    BOOST_CHECK(is_regular_file(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(is_regular_file_returns_false_for_non_existent_path)
+{
+    BOOST_CHECK(!is_regular_file(filesystem(), "i do not exist"));
+}
+
 BOOST_AUTO_TEST_CASE(new_directory)
 {
     path target = new_directory_in_sandbox();
@@ -753,6 +772,31 @@ BOOST_AUTO_TEST_CASE(last_write_time_of_non_file_throws_error)
 {
     BOOST_CHECK_THROW(last_write_time(filesystem(), "/dev/console"),
                       system_error);
+}
+
+BOOST_AUTO_TEST_CASE(empty_file_is_empty)
+{
+    path target = new_file_in_sandbox();
+    BOOST_CHECK(is_empty(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(non_empty_file_is_not_empty)
+{
+    string data = "mary had a little lamb";
+    path target = new_file_in_sandbox_containing_data(data);
+    BOOST_CHECK(!is_empty(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(empty_directory_is_empty)
+{
+    path target = new_directory_in_sandbox();
+    BOOST_CHECK(is_empty(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(non_empty_directory_is_not_empty)
+{
+    new_file_in_sandbox();
+    BOOST_CHECK(!is_empty(filesystem(), sandbox()));
 }
 
 BOOST_AUTO_TEST_SUITE_END();

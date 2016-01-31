@@ -1329,9 +1329,36 @@ inline file_status status(sftp_filesystem& filesystem, const path& file)
     return filesystem.status(file);
 }
 
+/**
+ * Is the give status from a regular file?
+ */
+inline bool is_regular_file(const file_status& status)
+{
+    return status.type() == file_type::regular;
+}
+
+/**
+ * Is the given path a regular file?
+ */
+inline bool is_regular_file(sftp_filesystem& filesystem, const path& file)
+{
+    return is_regular_file(status(filesystem, file));
+}
+
+/**
+ * Is the give status from a directory?
+ */
+inline bool is_directory(const file_status& status)
+{
+    return status.type() == file_type::directory;
+}
+
+/**
+ * Is the given path a directory?
+ */
 inline bool is_directory(sftp_filesystem& filesystem, const path& file)
 {
-    return status(filesystem, file).type() == file_type::directory;
+    return is_directory(status(filesystem, file));
 }
 
 /**
@@ -1368,7 +1395,25 @@ inline std::time_t last_write_time(sftp_filesystem& filesystem,
     return status(filesystem, file).last_write_time();
 }
 
-// Needs directory_iterator implementation so outside sftp_filesystem class body
+/**
+ * Determine whether the given file or directory is empty.
+ */
+inline bool is_empty(sftp_filesystem& filesystem, const path& file)
+{
+    file_status s = status(filesystem, file);
+    if (is_directory(s))
+    {
+        return filesystem.directory_iterator(file) ==
+               filesystem.directory_iterator();
+    }
+    else
+    {
+        return s.file_size() == 0;
+    }
+}
+
+// Needs directory_iterator implementation so outside sftp_filesystem class
+// body
 inline boost::uintmax_t sftp_filesystem::remove_directory(const path& root)
 {
     boost::uintmax_t count = 0U;
