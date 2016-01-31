@@ -208,8 +208,6 @@ BOOST_AUTO_TEST_CASE(dir_with_one_file)
     sort(files.begin(), files.end());
 
     vector<string> expected;
-    expected.push_back(".");
-    expected.push_back("..");
     expected.push_back(test_file.filename().native());
     BOOST_CHECK_EQUAL_COLLECTIONS(files.begin(), files.end(), expected.begin(),
                                   expected.end());
@@ -225,15 +223,6 @@ BOOST_AUTO_TEST_CASE(dir_with_multiple_files)
     sort(files.begin(), files.end());
 
     vector<sftp_file>::const_iterator it = files.begin();
-
-    BOOST_CHECK_EQUAL(it->path().filename(), ".");
-    BOOST_CHECK_GT(it->long_entry().size(), 0U);
-
-    it++;
-
-    BOOST_CHECK_EQUAL((*it).path().filename(), "..");
-
-    it++;
 
     BOOST_CHECK(it->path().filename() ==
                     path(test_file1.filename().wstring()) ||
@@ -253,8 +242,6 @@ BOOST_AUTO_TEST_CASE(move_construct_iterator)
     path test_file2 = new_file_in_sandbox();
 
     directory_iterator it = filesystem().directory_iterator(sandbox());
-    it++;
-    it++;
 
     string path_before_move = it->path();
 

@@ -518,47 +518,64 @@ private:
         std::vector<char> longentry_buffer(1024, '\0');
         LIBSSH2_SFTP_ATTRIBUTES attrs = LIBSSH2_SFTP_ATTRIBUTES();
 
-        int rc;
+        while (true)
         {
-            ::ssh::detail::file_handle_state::scoped_lock lock =
-                m_handle->aquire_lock();
+            int rc;
+            {
+                ::ssh::detail::file_handle_state::scoped_lock lock =
+                    m_handle->aquire_lock();
 
-            rc = ::ssh::detail::libssh2::sftp::readdir_ex(
-                m_handle->session_ptr(), m_handle->sftp_ptr(),
-                m_handle->file_handle(), &filename_buffer[0],
-                filename_buffer.size(), &longentry_buffer[0],
-                longentry_buffer.size(), &attrs);
+                rc = ::ssh::detail::libssh2::sftp::readdir_ex(
+                    m_handle->session_ptr(), m_handle->sftp_ptr(),
+                    m_handle->file_handle(), &filename_buffer[0],
+                    filename_buffer.size(), &longentry_buffer[0],
+                    longentry_buffer.size(), &attrs);
 
-            // IMPORTANT: must unlock before possible handle reset below
-            // which would lock the session again to close the file handle
-        }
+                // IMPORTANT: must unlock before possible handle reset below
+                // which would lock the session again to close the file handle
+            }
 
-        if (rc == 0) // end of files
-        {
-            m_handle.reset();
-        }
-        else
-        {
-            assert(rc > 0);
+            if (rc == 0) // end of files
+            {
+                m_handle.reset();
+                return;
+            }
+            else
+            {
+                assert(rc > 0);
 
-            // copy attributes to member one we know we're overwriting the
-            // last-retrieved file's properties
-            m_attributes = attrs;
+                // copy attributes to member one we know we're overwriting the
+                // last-retrieved file's properties
+                m_attributes = attrs;
 
-            // we don't assume that the filename is null-terminated but rc
-            // holds the number of bytes written to the buffer so we can shrink
-            // the filename string to that size
-            m_file_name = std::string(
-                &filename_buffer[0],
-                (std::min)(static_cast<size_t>(rc), filename_buffer.size()));
+                // we don't assume that the filename is null-terminated but rc
+                // holds the number of bytes written to the buffer so we can
+                // shrink
+                // the filename string to that size
+                std::string file_name = std::string(
+                    &filename_buffer[0], (std::min)(static_cast<size_t>(rc),
+                                                    filename_buffer.size()));
+                if (file_name == "." || file_name == "..")
+                {
+                    continue;
+                }
+                else
+                {
+                    m_file_name = file_name;
+                }
 
-            // the long entry must be usable in an ls -l listing according to
-            // the standard so I'm interpreting this to mean it can't contain
-            // embedded NULLs so we force NULL-termination and then allocate
-            // the string to be the NULL-terminated size which will likely be
-            // much smaller than the buffer
-            longentry_buffer[longentry_buffer.size() - 1] = '\0';
-            m_long_entry = std::string(&longentry_buffer[0]);
+                // the long entry must be usable in an ls -l listing according
+                // to
+                // the standard so I'm interpreting this to mean it can't
+                // contain
+                // embedded NULLs so we force NULL-termination and then allocate
+                // the string to be the NULL-terminated size which will likely
+                // be
+                // much smaller than the buffer
+                longentry_buffer[longentry_buffer.size() - 1] = '\0';
+                m_long_entry = std::string(&longentry_buffer[0]);
+                return;
+            }
         }
     }
 
