@@ -16,6 +16,7 @@
 #include "openssh_fixture.hpp"
 
 #include <boost/assign/list_of.hpp>
+#include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/foreach.hpp>
 #include <boost/io/detail/quoted_manip.hpp>
 #include <boost/optional.hpp>
@@ -28,6 +29,7 @@
 #include <boost/process/self.hpp>
 #include <boost/process/stream_behavior.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/thread.hpp> // this_thread
 
 #include <iterator>
 #include <map>
@@ -265,9 +267,34 @@ string openssh_fixture::ask_docker_for_host() const
     optional<string> active_docker_machine = docker_machine_name();
     if (active_docker_machine)
     {
-        vector<string> machine_ip_command = (list_of(string("ip")), "default");
-        return single_value_from_docker_machine_command<string>(
-            machine_ip_command);
+        // This can be flaky when tests run in parallel (see
+        // https://github.com/docker/machine/issues/2612), so we retry a few
+        // times with exponential backoff if it fails
+        int attempt_no = 0;
+        boost::posix_time::milliseconds wait_time(100);
+        while (true)
+        {
+            ++attempt_no;
+            try
+            {
+                vector<string> machine_ip_command =
+                    (list_of(string("ip")), "default");
+                return single_value_from_docker_machine_command<string>(
+                    machine_ip_command);
+            }
+            catch (const runtime_error&)
+            {
+                if (attempt_no > 5)
+                {
+                    throw;
+                }
+                else
+                {
+                    wait_time *= 2;
+                }
+            }
+            boost::this_thread::sleep(wait_time);
+        }
     }
     else
     {
