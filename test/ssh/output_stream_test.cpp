@@ -65,7 +65,10 @@ string large_binary_data()
     for (int i = 0; i < 32000; ++i)
     {
         data.push_back('a');
+        data.push_back('\n');
         data.push_back('\0');
+        data.push_back('\r');
+        data.push_back('\n');
         data.push_back(-1);
     }
 
