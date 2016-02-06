@@ -1,4 +1,4 @@
-# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright 2015, 2016 Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -23,29 +23,6 @@ option(MEMORY_LEAKS_ARE_FAILURES
 
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
-
-include(FindCygwin)
-
-if(CYGWIN_INSTALL_PATH)
-  set(TEST_RUNNER_ENVIRONMENT
-    "PATH=${CYGWIN_INSTALL_PATH}/bin;${CYGWIN_INSTALL_PATH}/usr/sbin;${PATH}")
-  string(REPLACE ";" "\\;" TEST_RUNNER_ENVIRONMENT
-    "${TEST_RUNNER_ENVIRONMENT}")
-
-  if(NOT EXISTS "${CYGWIN_INSTALL_PATH}/usr/sbin/sshd.exe")
-    message(WARNING
-      # Running sshd for the tests requires a version of sshd that matches
-      # the version of chmod used to set the permissions on the hostkey
-      # file.  sshd refuses to run if it thinks the key is world-readable,
-      # and different implementations of chmod save those permissions
-      # in different ways.  Cygwin uses the 'special' Unix subsystem area
-      # of the Windows ACL so the version of sshd must also use that method.
-      "Cygwin sshd not found: tests are likely to fail to run")
-  endif()
-else()
-  message(WARNING
-    "Cygwin not found: tests are likely to fail to run")
-endif()
 
 add_custom_target(BUILD_ALL_TESTS COMMENT "Building all tests")
 

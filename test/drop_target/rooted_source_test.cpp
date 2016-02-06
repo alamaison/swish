@@ -1,45 +1,34 @@
-/**
-    @file
+// Copyright 2012, 2016 Alexander Lamaison
 
-    Test rooted source abstraction.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
-
-#include "swish/drop_target/RootedSource.hpp"  // Test subject
+#include "swish/drop_target/RootedSource.hpp" // Test subject
 
 #include <test/common_boost/helpers.hpp> // wchar_t ostream
-#include <test/common_boost/fixtures.hpp> // SandboxFixture
+#include <test/fixtures/local_sandbox_fixture.hpp>
 
-#include <washer/shell/shell.hpp> // pidl_from_parsing_name
+#include <washer/shell/shell.hpp>      // pidl_from_parsing_name
 #include <washer/shell/shell_item.hpp> // pidl_shell_item
-#include <washer/shell/pidl.hpp> // apidl_t, cpidl_t
+#include <washer/shell/pidl.hpp>       // apidl_t, cpidl_t
 
-#include <boost/filesystem/path.hpp> // path
+#include <boost/filesystem/path.hpp>    // path
 #include <boost/filesystem/fstream.hpp> // ofstream
 #include <boost/test/unit_test.hpp>
 
 using swish::drop_target::RootedSource;
 
-using test::SandboxFixture;
+using test::fixtures::local_sandbox_fixture;
 
 using washer::shell::pidl::apidl_t;
 using washer::shell::pidl::cpidl_t;
@@ -50,66 +39,65 @@ using washer::shell::pidl_shell_item;
 using boost::filesystem::wofstream;
 using boost::filesystem::path;
 
-namespace {
+namespace
+{
 
-    class RootedSourceFixture : public SandboxFixture
+class RootedSourceFixture : public local_sandbox_fixture
+{
+public:
+    path test_root()
     {
-    public:
-        path test_root()
-        {
-            return Sandbox();
-        }
-
-        path child_file()
-        {
-            return NewFileInSandbox();
-        }
-
-        path child_directory()
-        {
-            path directory = Sandbox() / L"testdir";
-            create_directory(directory);
-            return directory;
-        }
-
-        path grandchild_file()
-        {
-            path directory = Sandbox() / L"testdir";
-            create_directory(directory);
-
-            path file = directory / L"testfile.txt";
-            wofstream s(file);
-
-            return file;
-        }
-
-        path greatgrandchild_file()
-        {
-            path directory1 = Sandbox() / L"testdir1";
-            create_directory(directory1);
-
-            path directory2 = directory1 / L"testdir2";
-            create_directory(directory2);
-
-            path file = directory2 / L"testfile.txt";
-            wofstream s(file);
-
-            return file;
-        }
-
-    };
-
-    inline bool operator==(const apidl_t& lhs, const apidl_t& rhs)
-    {
-        return pidl_shell_item(lhs).parsing_name()
-            == pidl_shell_item(rhs).parsing_name();
+        return local_sandbox();
     }
 
-    apidl_t to_pidl(const path& path)
+    path child_file()
     {
-        return pidl_from_parsing_name(path.wstring());
+        return new_file_in_local_sandbox();
     }
 
+    path child_directory()
+    {
+        path directory = local_sandbox() / L"testdir";
+        create_directory(directory);
+        return directory;
+    }
+
+    path grandchild_file()
+    {
+        path directory = local_sandbox() / L"testdir";
+        create_directory(directory);
+
+        path file = directory / L"testfile.txt";
+        wofstream s(file);
+
+        return file;
+    }
+
+    path greatgrandchild_file()
+    {
+        path directory1 = local_sandbox() / L"testdir1";
+        create_directory(directory1);
+
+        path directory2 = directory1 / L"testdir2";
+        create_directory(directory2);
+
+        path file = directory2 / L"testfile.txt";
+        wofstream s(file);
+
+        return file;
+    }
+};
+
+inline bool operator==(const apidl_t& lhs, const apidl_t& rhs)
+{
+    return pidl_shell_item(lhs).parsing_name() ==
+           pidl_shell_item(rhs).parsing_name();
+}
+
+apidl_t to_pidl(const path& path)
+{
+    return pidl_from_parsing_name(path.wstring());
+}
 }
 
 BOOST_FIXTURE_TEST_SUITE(rooted_source_tests, RootedSourceFixture)
@@ -117,7 +105,7 @@ BOOST_FIXTURE_TEST_SUITE(rooted_source_tests, RootedSourceFixture)
 /**
  * Test the source where the root is the source itself (no branch).
  */
-BOOST_AUTO_TEST_CASE( root )
+BOOST_AUTO_TEST_CASE(root)
 {
     apidl_t root_pidl = to_pidl(test_root());
     RootedSource source(root_pidl, cpidl_t());
@@ -130,7 +118,7 @@ BOOST_AUTO_TEST_CASE( root )
 /**
  * Test the source where the source is a file directly under the root.
  */
-BOOST_AUTO_TEST_CASE( child )
+BOOST_AUTO_TEST_CASE(child)
 {
     path file = child_file();
     apidl_t pidl = to_pidl(file);
@@ -145,7 +133,7 @@ BOOST_AUTO_TEST_CASE( child )
 /**
  * Test the source where the source is a directory directly under the root.
  */
-BOOST_AUTO_TEST_CASE( child_dir )
+BOOST_AUTO_TEST_CASE(child_dir)
 {
     path directory = child_directory();
     apidl_t pidl = to_pidl(directory);
@@ -160,7 +148,7 @@ BOOST_AUTO_TEST_CASE( child_dir )
 /**
  * Test the source where the source is grandchild of the root.
  */
-BOOST_AUTO_TEST_CASE( grandchild )
+BOOST_AUTO_TEST_CASE(grandchild)
 {
     path file = grandchild_file();
     apidl_t pidl = to_pidl(file);
@@ -174,21 +162,19 @@ BOOST_AUTO_TEST_CASE( grandchild )
 
     path expected_relative_name = file.parent_path().filename();
     expected_relative_name /= file.filename();
-    BOOST_CHECK_EQUAL(
-        source.relative_name(), expected_relative_name.wstring());
+    BOOST_CHECK_EQUAL(source.relative_name(), expected_relative_name.wstring());
 }
 
 /**
  * Test the source where the source is grandchild of the root.
  */
-BOOST_AUTO_TEST_CASE( greatgrandchild )
+BOOST_AUTO_TEST_CASE(greatgrandchild)
 {
     path file = greatgrandchild_file();
     apidl_t pidl = to_pidl(file);
     apidl_t root_pidl = pidl.parent().parent().parent();
-    pidl_t branch = 
-        pidl.parent().parent().last_item() + pidl.parent().last_item() +
-        pidl.last_item();
+    pidl_t branch = pidl.parent().parent().last_item() +
+                    pidl.parent().last_item() + pidl.last_item();
 
     RootedSource source(root_pidl, branch);
 
@@ -198,8 +184,7 @@ BOOST_AUTO_TEST_CASE( greatgrandchild )
     path expected_relative_name = file.parent_path().parent_path().filename();
     expected_relative_name /= file.parent_path().filename();
     expected_relative_name /= file.filename();
-    BOOST_CHECK_EQUAL(
-        source.relative_name(), expected_relative_name.wstring());
+    BOOST_CHECK_EQUAL(source.relative_name(), expected_relative_name.wstring());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

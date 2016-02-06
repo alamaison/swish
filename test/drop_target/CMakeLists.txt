@@ -22,7 +22,7 @@ set(INTEGRATION_TESTS
 swish_test_suite(
   SUBJECT drop_target VARIANT unit
   SOURCES ${UNIT_TESTS}
-  LIBRARIES shell ${Boost_LIBRARIES}
+  LIBRARIES shell ${Boost_LIBRARIES} local_sandbox_fixture
   LABELS unit)
 
 swish_test_suite(

@@ -15,9 +15,6 @@
 
 set(SOURCES
   data_object_utils.cpp
-  fixtures.cpp
-  PidlFixture.cpp
-  ProviderFixture.cpp
   stream_utils.cpp
   ConsumerStub.hpp
   data_object_utils.hpp
@@ -25,8 +22,6 @@ set(SOURCES
   helpers.hpp
   MockConsumer.hpp
   MockProvider.hpp
-  PidlFixture.hpp
-  ProviderFixture.hpp
   stream_utils.hpp
   SwishPidlFixture.hpp
   tree.hh
@@ -36,11 +31,10 @@ add_library(test-common_boost ${SOURCES})
 
 hunter_add_package(Comet)
 hunter_add_package(Washer)
-hunter_add_package(Boost.Process)
 
 find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(test-common_boost
   PRIVATE shell shell_folder
-  PUBLIC Comet::comet Washer::washer ${Boost_LIBRARIES} Boost::Process)
+  PUBLIC Comet::comet Washer::washer ${Boost_LIBRARIES})

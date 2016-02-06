@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright 2015, 2016 Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -19,7 +19,7 @@ set(SOURCES
 swish_test_suite(
   SUBJECT shell
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES}
+  LIBRARIES ${Boost_LIBRARIES} local_sandbox_fixture
   LABELS unit)
 
 swish_copy_fixture_files(test-shell)
