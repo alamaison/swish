@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -28,7 +28,5 @@ swish_test_suite(
 swish_test_suite(
   SUBJECT drop_target VARIANT integration
   SOURCES ${INTEGRATION_TESTS}
-  LIBRARIES shell ${Boost_LIBRARIES}
+  LIBRARIES shell ${Boost_LIBRARIES} provider_fixture local_sandbox_fixture
   LABELS integration)
-
-swish_copy_fixture_files(test-drop_target-integration)

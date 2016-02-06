@@ -91,7 +91,7 @@ com_ptr<test::MockConsumer> provider_fixture::Consumer()
 
 apidl_t provider_fixture::directory_pidl(const path& directory)
 {
-    return fake_swish_pidl() +
+    return real_swish_pidl() +
            create_host_itemid(whost(), wuser(), directory, port());
 }
 

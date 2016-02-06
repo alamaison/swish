@@ -13,6 +13,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
+add_library(local_sandbox_fixture
+  local_sandbox_fixture.cpp
+  local_sandbox_fixture.hpp)
+target_link_libraries(local_sandbox_fixture ${Boost_LIBRARIES})
 
 add_library(openssh_fixture
   openssh_fixture.cpp
