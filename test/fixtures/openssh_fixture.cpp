@@ -15,6 +15,8 @@
 
 #include "openssh_fixture.hpp"
 
+#include "swish/connection/session_pool.hpp"
+
 #include <boost/assign/list_of.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/foreach.hpp>
@@ -191,6 +193,7 @@ struct global_fixture
         // We call this here as a bit of a hack to stop memory-leak
         // detection incorrectly detecting OpenSSL global data as a
         // leak
+        swish::connection::session_pool().destroy();
         ::RAND_cleanup();
         ::ENGINE_cleanup();
         ::CONF_modules_unload(1);
