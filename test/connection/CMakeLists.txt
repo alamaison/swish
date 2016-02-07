@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016 Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -13,17 +13,24 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(SOURCES
+set(UNIT_TESTS
+  connection_spec_test.cpp)
+
+set(INTEGRATION_TESTS
   authenticated_session_test.cpp
-  connection_spec_test.cpp
+  connection_spec_create_session_test.cpp
   running_session_test.cpp
   session_manager_test.cpp
   session_pool_test.cpp)
 
 swish_test_suite(
-  SUBJECT connection
-  SOURCES ${SOURCES}
+  SUBJECT connection VARIANT unit
+  SOURCES ${UNIT_TESTS}
   LIBRARIES ${Boost_LIBRARIES}
-  LABELS integration)
+  LABELS unit)
 
-swish_copy_fixture_files(test-connection)
+swish_test_suite(
+  SUBJECT connection VARIANT integration
+  SOURCES ${INTEGRATION_TESTS}
+  LIBRARIES ${Boost_LIBRARIES} openssh_fixture
+  LABELS integration)

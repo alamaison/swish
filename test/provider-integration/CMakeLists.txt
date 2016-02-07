@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright 2015, 2016 Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -15,10 +15,15 @@
 
 set(SOURCES
   auth_test.cpp
-  stream_test.cpp)
+  provider_test.cpp
+  stream_test.cpp
+  stream_create_test.cpp
+  stream_read_test.cpp
+  stream_write_test.cpp)
 
 swish_test_suite(
-  SUBJECT provider VARIANT network
+  SUBJECT provider VARIANT integration
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES}
-  LABELS network integration)
+  LIBRARIES ${Boost_LIBRARIES} openssh_fixture provider_fixture sftp_fixture
+  com_stream_fixture
+  LABELS integration)

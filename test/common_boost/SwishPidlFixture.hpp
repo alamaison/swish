@@ -1,28 +1,17 @@
-/**
-    @file
+// Copyright 2012, 2016 Alexander Lamaison
 
-    Fixture for tests that need a complete Swish PIDL.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2012, 2016 Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef TEST_COMMON_SWISH_PIDL_FIXTURE_HPP
 #define TEST_COMMON_SWISH_PIDL_FIXTURE_HPP
@@ -77,6 +66,18 @@ public:
                    L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}") +
                washer::shell::pidl::cpidl_t(
                    reinterpret_cast<PCITEMID_CHILD>(&item));
+    }
+
+    /**
+     * Return the PIDL of the Swish HostFolder in Explorer.
+     *
+     * Relies on Swish having been registered.
+     */
+    washer::shell::pidl::apidl_t real_swish_pidl()
+    {
+        return washer::shell::pidl_from_parsing_name(
+            L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
+            L"::{B816A83A-5022-11DC-9153-0090F5284F85}");
     }
 
     washer::shell::pidl::cpidl_t

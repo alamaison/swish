@@ -100,107 +100,6 @@ predicate_result directory_is_empty(sftp_filesystem& fs,
 }
 }
 
-BOOST_AUTO_TEST_SUITE(filesystem_tests)
-
-BOOST_FIXTURE_TEST_CASE(construct_fail, session_fixture)
-{
-    session& s = test_session();
-
-    // Session not authenticated so SFTP not possible
-    BOOST_CHECK_THROW(s.connect_to_filesystem(), system_error);
-}
-
-// This tests the very basic requirements of any sensible relationship between
-// a filesystem and a session.  It must be possible to create a filesystem
-// before moving the session.  That's it.
-//
-// In particular, we destroy the filesystem before moving the object because
-// we don't want to test an added requirement that the filesystem's lifetime
-// can extend beyond the session's move.  Whatever else we might decide the
-// semantics of the session-filesystem relationship should be now or in the
-// future, this tests must pass.  Anything else would mean moving depends on
-// what you've used the session for in the past, which would just be broken.
-//
-// In other words, even the most careful caller would run into trouble
-// if this test failed.
-BOOST_FIXTURE_TEST_CASE(move_session_after_connecting_filesystem,
-                        session_fixture)
-{
-    session& s = test_session();
-    s.authenticate_by_key_files(user(), public_key_path(), private_key_path(),
-                                "");
-
-    {
-        sftp_filesystem(s.connect_to_filesystem());
-    }
-
-    session(move(s));
-}
-
-// This builds slightly on the previous test by checking that the filesystem
-// can be destroyed _after_ the session is moved.  It still isn't a test that
-// the filesystem is usable afterwards (though we probably want that
-// property too), just that the object is valid (can be destroyed).
-//
-// In an earlier version, the filesystem destructor tried to use the moved
-// session causing a crash.  It's very hard sometimes to ensure the filesystem
-// is destroyed before the exact (non-moved) session it came from, so its
-// important we allow destruction to happen after moving the session (but
-// before moved-to session is destroyed).
-BOOST_FIXTURE_TEST_CASE(move_session_with_live_filesystem_connection,
-                        session_fixture)
-{
-    session& s = test_session();
-    s.authenticate_by_key_files(user(), public_key_path(), private_key_path(),
-                                "");
-
-    sftp_filesystem fs = s.connect_to_filesystem();
-    session s2(move(s));
-
-    // The rules are that the last session must outlive the last FS so moving
-    // FS to inner scope ensures this
-    sftp_filesystem(move(fs));
-}
-
-// This is the third part of the session-movement tests. It strengthens the
-// requirements a bit more to ensure the filesystem is not just valid for
-// destruction but also still functions as a filesystem connection.
-BOOST_FIXTURE_TEST_CASE(moving_session_leaves_working_filesystem,
-                        session_fixture)
-{
-    session& s = test_session();
-    s.authenticate_by_key_files(user(), public_key_path(), private_key_path(),
-                                "");
-
-    sftp_filesystem fs = s.connect_to_filesystem();
-    session s2(move(s));
-
-    // The rules are that the last session must outlive the last FS so moving
-    // FS to inner scope ensures this
-    sftp_filesystem fs2(move(fs));
-
-    BOOST_CHECK(directory_is_empty(fs2, sandbox()));
-}
-
-BOOST_FIXTURE_TEST_CASE(swap_session_with_live_filesystem_connection,
-                        session_fixture)
-{
-    // Both sockets must outlive both session objects
-    auto_ptr<boost::asio::ip::tcp::socket> socket1(connect_additional_socket());
-    auto_ptr<boost::asio::ip::tcp::socket> socket2(connect_additional_socket());
-
-    session s(socket1->native());
-    session t(socket2->native());
-    s.authenticate_by_key_files(user(), public_key_path(), private_key_path(),
-                                "");
-    t.authenticate_by_key_files(user(), public_key_path(), private_key_path(),
-                                "");
-
-    sftp_filesystem fs = s.connect_to_filesystem();
-
-    boost::swap(t, s);
-}
-
 namespace
 {
 
@@ -309,8 +208,6 @@ BOOST_AUTO_TEST_CASE(dir_with_one_file)
     sort(files.begin(), files.end());
 
     vector<string> expected;
-    expected.push_back(".");
-    expected.push_back("..");
     expected.push_back(test_file.filename().native());
     BOOST_CHECK_EQUAL_COLLECTIONS(files.begin(), files.end(), expected.begin(),
                                   expected.end());
@@ -326,15 +223,6 @@ BOOST_AUTO_TEST_CASE(dir_with_multiple_files)
     sort(files.begin(), files.end());
 
     vector<sftp_file>::const_iterator it = files.begin();
-
-    BOOST_CHECK_EQUAL(it->path().filename(), ".");
-    BOOST_CHECK_GT(it->long_entry().size(), 0U);
-
-    it++;
-
-    BOOST_CHECK_EQUAL((*it).path().filename(), "..");
-
-    it++;
 
     BOOST_CHECK(it->path().filename() ==
                     path(test_file1.filename().wstring()) ||
@@ -354,8 +242,6 @@ BOOST_AUTO_TEST_CASE(move_construct_iterator)
     path test_file2 = new_file_in_sandbox();
 
     directory_iterator it = filesystem().directory_iterator(sandbox());
-    it++;
-    it++;
 
     string path_before_move = it->path();
 
@@ -739,6 +625,25 @@ BOOST_AUTO_TEST_CASE(is_directory_returns_false_for_non_existent_path)
     BOOST_CHECK(!is_directory(filesystem(), "i do not exist"));
 }
 
+BOOST_AUTO_TEST_CASE(is_regular_file_returns_false_for_directories)
+{
+    path target = new_directory_in_sandbox();
+
+    BOOST_CHECK(!is_regular_file(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(is_regular_file_returns_false_for_files)
+{
+    path target = new_file_in_sandbox();
+
+    BOOST_CHECK(is_regular_file(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(is_regular_file_returns_false_for_non_existent_path)
+{
+    BOOST_CHECK(!is_regular_file(filesystem(), "i do not exist"));
+}
+
 BOOST_AUTO_TEST_CASE(new_directory)
 {
     path target = new_directory_in_sandbox();
@@ -814,6 +719,14 @@ BOOST_AUTO_TEST_CASE(can_set_file_permissions_exactly)
     BOOST_CHECK_EQUAL(new_permissions, perms::group_write);
 }
 
+BOOST_AUTO_TEST_CASE(can_set_file_permissions_to_none)
+{
+    path target = new_file_in_sandbox();
+    permissions(filesystem(), target, perms::none);
+    perms new_permissions = status(filesystem(), target).permissions();
+    BOOST_CHECK_EQUAL(new_permissions, perms::none);
+}
+
 BOOST_AUTO_TEST_CASE(can_add_file_permissions)
 {
     path target = new_file_in_sandbox();
@@ -834,6 +747,56 @@ BOOST_AUTO_TEST_CASE(can_remove_file_permissions)
                                            perms::others_read);
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_CASE(file_size_is_returned_with_sensible_value)
+{
+    string data = "mary had a little lamb";
+    path target = new_file_in_sandbox_containing_data(data);
+    BOOST_CHECK_EQUAL(file_size(filesystem(), target), data.size());
+}
+
+BOOST_AUTO_TEST_CASE(file_size_of_non_file_throws_error)
+{
+    BOOST_CHECK_THROW(file_size(filesystem(), "/dev/console"), system_error);
+}
+
+BOOST_AUTO_TEST_CASE(last_write_time_returns_sensible_timestamp)
+{
+    path target = new_file_in_sandbox();
+    time_t write_time = last_write_time(filesystem(), target);
+    time_t now = time(0);
+    BOOST_CHECK_LE(write_time, now);
+    BOOST_CHECK_GT(write_time, now - 5);
+}
+
+BOOST_AUTO_TEST_CASE(last_write_time_of_non_file_throws_error)
+{
+    BOOST_CHECK_THROW(last_write_time(filesystem(), "/dev/console"),
+                      system_error);
+}
+
+BOOST_AUTO_TEST_CASE(empty_file_is_empty)
+{
+    path target = new_file_in_sandbox();
+    BOOST_CHECK(is_empty(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(non_empty_file_is_not_empty)
+{
+    string data = "mary had a little lamb";
+    path target = new_file_in_sandbox_containing_data(data);
+    BOOST_CHECK(!is_empty(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(empty_directory_is_empty)
+{
+    path target = new_directory_in_sandbox();
+    BOOST_CHECK(is_empty(filesystem(), target));
+}
+
+BOOST_AUTO_TEST_CASE(non_empty_directory_is_not_empty)
+{
+    new_file_in_sandbox();
+    BOOST_CHECK(!is_empty(filesystem(), sandbox()));
+}
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -1,51 +1,41 @@
-/**
-    @file
+// Copyright 2011, 2016 Alexander Lamaison
 
-    Tests for the remote folder IShellFolder implementation
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "swish/shell_folder/RemoteFolder.h" // test subject
 
 #include "swish/remote_folder/remote_pidl.hpp" // remote_itemid_view
 
-#include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
-#include "test/common_boost/PidlFixture.hpp" // PidlFixture
+#include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
+#include "test/common_boost/fixtures.hpp" // ComFixture
+#include "test/fixtures/provider_fixture.hpp"
 
-#include <washer/shell/pidl.hpp> // apidl_t
+#include <washer/shell/pidl.hpp>  // apidl_t
 #include <washer/shell/shell.hpp> // strret_to_string
 
-#include <comet/datetime.h> // datetime_t
+#include <comet/datetime.h>      // datetime_t
 #include <comet/enum_iterator.h> // enum_iterator
-#include <comet/error.h> // com_error
-#include <comet/ptr.h>  // com_ptr
+#include <comet/error.h>         // com_error
+#include <comet/ptr.h>           // com_ptr
 
-#include <boost/bind.hpp> // bind
+#include <boost/bind.hpp>         // bind
 #include <boost/lexical_cast.hpp> // lexical_cast
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm> // find_if
 
-using test::PidlFixture;
+using test::fixtures::provider_fixture;
 
 using swish::remote_folder::remote_itemid_view;
 using swish::utils::Utf8StringToWideString;
@@ -59,30 +49,40 @@ using comet::com_ptr;
 using comet::datetime_t;
 using comet::enum_iterator;
 
-using boost::filesystem::path;
+using ssh::filesystem::path;
+
 using boost::lexical_cast;
 using boost::test_tools::predicate_result;
 
 using std::find_if;
 using std::wstring;
 
-namespace comet {
-
-template<> struct comtype<IEnumIDList>
+namespace comet
 {
-    static const IID& uuid() throw() { return IID_IEnumIDList; }
+
+template <>
+struct comtype<IEnumIDList>
+{
+    static const IID& uuid() throw()
+    {
+        return IID_IEnumIDList;
+    }
     typedef IUnknown base;
 };
 
-template<> struct enumerated_type_of<IEnumIDList>
-{ typedef PITEMID_CHILD is; };
+template <>
+struct enumerated_type_of<IEnumIDList>
+{
+    typedef PITEMID_CHILD is;
+};
 
 /**
  * Copy-policy for use by enumerators of child PIDLs.
  */
-template<> struct impl::type_policy<PITEMID_CHILD>
+template <>
+struct impl::type_policy<PITEMID_CHILD>
 {
-    static void init(PITEMID_CHILD& t, const cpidl_t& s) 
+    static void init(PITEMID_CHILD& t, const cpidl_t& s)
     {
         s.copy_to(t);
     }
@@ -90,82 +90,81 @@ template<> struct impl::type_policy<PITEMID_CHILD>
     static void clear(PITEMID_CHILD& t)
     {
         ::ILFree(t);
-    }    
+    }
 };
-
 }
 
-namespace { // private
+namespace
+{ // private
 
-    class RemoteFolderFixture : public PidlFixture
+class RemoteFolderFixture : public provider_fixture, public test::ComFixture
+{
+private:
+    com_ptr<IShellFolder> m_folder;
+
+public:
+    RemoteFolderFixture()
+        : m_folder(CRemoteFolder::Create(
+              sandbox_pidl().get(),
+              boost::bind(&RemoteFolderFixture::consumer_factory, this, _1)))
     {
-    private:
-        com_ptr<IShellFolder> m_folder;
-
-    public:
-
-        RemoteFolderFixture()
-            : m_folder(
-                CRemoteFolder::Create(
-                    sandbox_pidl().get(),
-                    boost::bind(
-                        &RemoteFolderFixture::consumer_factory, this, _1)))
-        {}
-
-        com_ptr<IShellFolder> folder() const
-        {
-            return m_folder;
-        }
-
-        comet::com_ptr<ISftpConsumer> consumer_factory(HWND)
-        {
-            return Consumer();
-        }
-    };
-
-    void test_enum(com_ptr<IEnumIDList> pidls, SHCONTF flags)
-    {
-        PITEMID_CHILD pidl;
-        ULONG fetched;
-        HRESULT hr = pidls->Next(1, &pidl, &fetched);
-        BOOST_REQUIRE_OK(hr);
-        BOOST_CHECK_EQUAL(fetched, 1U);
-
-        do {
-            remote_itemid_view itemid(pidl);
-
-            // Check REMOTEPIDLness
-            BOOST_REQUIRE(itemid.valid());
-
-            // Check filename
-            BOOST_CHECK_GT(itemid.filename().size(), 0U);
-            if (!(flags & SHCONTF_INCLUDEHIDDEN))
-                BOOST_CHECK_NE(itemid.filename(), L".");
-
-            // Check folderness
-            if (!(flags & SHCONTF_FOLDERS))
-                BOOST_CHECK(!itemid.is_folder());
-            if (!(flags & SHCONTF_NONFOLDERS))
-                BOOST_CHECK(itemid.is_folder());
-
-            // Check group and owner exist
-            BOOST_CHECK_GT(itemid.owner().size(), 0U);
-            BOOST_CHECK_GT(itemid.group().size(), 0U);
-
-            // Check date validity
-            BOOST_CHECK(itemid.date_modified().good());
-            
-            hr = pidls->Next(1, &pidl, &fetched);
-        } while (hr == S_OK);
-
-        BOOST_CHECK_EQUAL(hr, S_FALSE);
-        BOOST_CHECK_EQUAL(fetched, 0U);
     }
 
-    void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
+    com_ptr<IShellFolder> folder() const
     {
-        test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
+        return m_folder;
     }
+
+    comet::com_ptr<ISftpConsumer> consumer_factory(HWND)
+    {
+        return Consumer();
+    }
+};
+
+void test_enum(com_ptr<IEnumIDList> pidls, SHCONTF flags)
+{
+    PITEMID_CHILD pidl;
+    ULONG fetched;
+    HRESULT hr = pidls->Next(1, &pidl, &fetched);
+    BOOST_REQUIRE_OK(hr);
+    BOOST_CHECK_EQUAL(fetched, 1U);
+
+    do
+    {
+        remote_itemid_view itemid(pidl);
+
+        // Check REMOTEPIDLness
+        BOOST_REQUIRE(itemid.valid());
+
+        // Check filename
+        BOOST_CHECK_GT(itemid.filename().size(), 0U);
+        if (!(flags & SHCONTF_INCLUDEHIDDEN))
+            BOOST_CHECK_NE(itemid.filename(), L".");
+
+        // Check folderness
+        if (!(flags & SHCONTF_FOLDERS))
+            BOOST_CHECK(!itemid.is_folder());
+        if (!(flags & SHCONTF_NONFOLDERS))
+            BOOST_CHECK(itemid.is_folder());
+
+        // Check group and owner exist
+        BOOST_CHECK_GT(itemid.owner().size(), 0U);
+        BOOST_CHECK_GT(itemid.group().size(), 0U);
+
+        // Check date validity
+        BOOST_CHECK(itemid.date_modified().good());
+
+        hr = pidls->Next(1, &pidl, &fetched);
+    } while (hr == S_OK);
+
+    BOOST_CHECK_EQUAL(hr, S_FALSE);
+    BOOST_CHECK_EQUAL(fetched, 0U);
+}
+
+void test_enum(ATL::CComPtr<IEnumIDList> pidls, SHCONTF flags)
+{
+    test_enum(com_ptr<IEnumIDList>(pidls.p), flags);
+}
 }
 
 BOOST_FIXTURE_TEST_SUITE(remote_folder_tests, RemoteFolderFixture)
@@ -174,9 +173,9 @@ BOOST_FIXTURE_TEST_SUITE(remote_folder_tests, RemoteFolderFixture)
  * When a remote directory is empty, the remote folder's enumerator must
  * be empty.
  */
-BOOST_AUTO_TEST_CASE( enum_empty )
+BOOST_AUTO_TEST_CASE(enum_empty)
 {
-    SHCONTF flags = 
+    SHCONTF flags =
         SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
     com_ptr<IEnumIDList> listing;
@@ -192,16 +191,16 @@ BOOST_AUTO_TEST_CASE( enum_empty )
 /**
  * Requesting everything should return folder and dotted files as well.
  */
-BOOST_AUTO_TEST_CASE( enum_everything )
+BOOST_AUTO_TEST_CASE(enum_everything)
 {
-    path file1 = NewFileInSandbox();
-    path file2 = NewFileInSandbox();
-    path folder1 = Sandbox() / L"folder1";
-    create_directory(folder1);
-    path folder2 = Sandbox() / L"folder2";
-    create_directory(folder2);
+    path file1 = new_file_in_sandbox();
+    path file2 = new_file_in_sandbox();
+    path folder1 = sandbox() / L"folder1";
+    create_directory(filesystem(), folder1);
+    path folder2 = sandbox() / L"folder2";
+    create_directory(filesystem(), folder2);
 
-    SHCONTF flags = 
+    SHCONTF flags =
         SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
 
     com_ptr<IEnumIDList> listing;
@@ -211,54 +210,55 @@ BOOST_AUTO_TEST_CASE( enum_everything )
     test_enum(listing, flags);
 }
 
+namespace
+{
 
-namespace {
+bool pidl_matches_filename(PCUITEMID_CHILD remote_pidl, wstring name)
+{
+    remote_itemid_view item(remote_pidl);
+    return item.filename() == name;
+}
 
-    bool pidl_matches_filename(PCUITEMID_CHILD remote_pidl, wstring name)
+cpidl_t pidl_for_file(com_ptr<IShellFolder> folder, wstring name)
+{
+    SHCONTF flags =
+        SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
+
+    com_ptr<IEnumIDList> listing;
+    HRESULT hr = folder->EnumObjects(NULL, flags, listing.out());
+    BOOST_REQUIRE_OK(hr);
+
+    enum_iterator<IEnumIDList> pos = std::find_if(
+        enum_iterator<IEnumIDList>(listing), enum_iterator<IEnumIDList>(),
+        bind(pidl_matches_filename, _1, name));
+    BOOST_REQUIRE_MESSAGE(pos != enum_iterator<IEnumIDList>(),
+                          "PIDL not found");
+
+    return *pos;
+}
+
+predicate_result display_name_matches(com_ptr<IShellFolder> folder,
+                                      SHGDNF flags, const path& filename,
+                                      const wstring& expected_display_name)
+{
+    cpidl_t pidl = pidl_for_file(folder, filename.wstring());
+
+    STRRET strret;
+    HRESULT hr = folder->GetDisplayNameOf(pidl.get(), flags, &strret);
+    BOOST_REQUIRE_OK(hr);
+
+    wstring display_name = strret_to_string<wchar_t>(strret);
+    if (display_name != expected_display_name)
     {
-        remote_itemid_view item(remote_pidl);
-        return item.filename() == name;
+        predicate_result res(false);
+        res.message() << L"Display name for '" << filename << L"' unexpected: ["
+                      << display_name << L" != " << expected_display_name
+                      << L"]";
+        return res;
     }
 
-    cpidl_t pidl_for_file(com_ptr<IShellFolder> folder, wstring name)
-    {
-        SHCONTF flags = 
-            SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN;
-
-        com_ptr<IEnumIDList> listing;
-        HRESULT hr = folder->EnumObjects(NULL, flags, listing.out());
-        BOOST_REQUIRE_OK(hr);
-
-        enum_iterator<IEnumIDList> pos = std::find_if(
-            enum_iterator<IEnumIDList>(listing), enum_iterator<IEnumIDList>(),
-            bind(pidl_matches_filename, _1, name));
-        BOOST_REQUIRE_MESSAGE(pos != enum_iterator<IEnumIDList>(), "PIDL not found");
-
-        return *pos;
-    }
-
-    predicate_result display_name_matches(
-        com_ptr<IShellFolder> folder, SHGDNF flags, const path& filename,
-        const wstring& expected_display_name)
-    {
-        cpidl_t pidl = pidl_for_file(folder, filename.wstring());
-
-        STRRET strret;
-        HRESULT hr = folder->GetDisplayNameOf(pidl.get(), flags, &strret);
-        BOOST_REQUIRE_OK(hr);
-
-        wstring display_name = strret_to_string<wchar_t>(strret);
-        if (display_name != expected_display_name)
-        {
-            predicate_result res(false);
-            res.message()
-                << L"Display name for '" << filename << L"' unexpected: ["
-                << display_name << L" != " << expected_display_name << L"]";
-            return res;
-        }
-
-        return true;
-    }
+    return true;
+}
 }
 
 /**
@@ -275,19 +275,18 @@ namespace {
  *
  * This name does not have to be parseable.
  */
-BOOST_AUTO_TEST_CASE( display_name_file )
+BOOST_AUTO_TEST_CASE(display_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected_with = L"testfile.txt";
     wstring expected_without = L"testfile";
 
     BOOST_CHECK(
-        display_name_matches(
-            folder(), flags, file.filename(), expected_with) ||
-        display_name_matches(
-            folder(), flags, file.filename(), expected_without));
+        display_name_matches(folder(), flags, file.filename(), expected_with) ||
+        display_name_matches(folder(), flags, file.filename(),
+                             expected_without));
 }
 
 /**
@@ -300,10 +299,10 @@ BOOST_AUTO_TEST_CASE( display_name_file )
  * The result may or may not include the extension depending on the user's
  * settings, so we accept either as a successful result.
  */
-BOOST_AUTO_TEST_CASE( display_name_hidden_file )
+BOOST_AUTO_TEST_CASE(display_name_hidden_file)
 {
-    path file1 = NewFileInSandbox(L".hidden");
-    path file2 = NewFileInSandbox(L".testfile.txt");
+    path file1 = new_file_in_sandbox(L".hidden");
+    path file2 = new_file_in_sandbox(L".testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected1 = L".hidden";
@@ -312,11 +311,10 @@ BOOST_AUTO_TEST_CASE( display_name_hidden_file )
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file1.filename(), expected1));
-    BOOST_CHECK(
-        display_name_matches(
-            folder(), flags, file2.filename(), expected2_with) ||
-        display_name_matches(
-            folder(), flags, file2.filename(), expected2_without));
+    BOOST_CHECK(display_name_matches(folder(), flags, file2.filename(),
+                                     expected2_with) ||
+                display_name_matches(folder(), flags, file2.filename(),
+                                     expected2_without));
 }
 
 /**
@@ -325,9 +323,9 @@ BOOST_AUTO_TEST_CASE( display_name_hidden_file )
  * I'm not sure how this situation would work but I don't think it matters for
  * us so we just return the usual editing name.
  */
-BOOST_AUTO_TEST_CASE( editing_name_file )
+BOOST_AUTO_TEST_CASE(editing_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FOREDITING;
     wstring expected = L"testfile.txt";
@@ -340,15 +338,18 @@ BOOST_AUTO_TEST_CASE( editing_name_file )
  * Request the name for a file as though it were shown in the address bar
  * somewhere that isn't necessarily the parent folder.
  */
-BOOST_AUTO_TEST_CASE( address_bar_name_file )
+BOOST_AUTO_TEST_CASE(address_bar_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    BOOST_WARN_MESSAGE(false,
+                       "skipping - testing full address bar requires "
+                       "registration and knowledge of the parent host folder");
+    return; // Leaving code here in case we find a way round this
+
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR;
-    wstring expected = L"sftp://" + 
-        Utf8StringToWideString(GetUser()) + L"@" +
-        Utf8StringToWideString(GetHost()) + L":" +
-        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).wstring();
+    wstring expected = L"sftp://" + wuser() + L"@" + whost() + L":" +
+                       lexical_cast<wstring>(port()) + L"/" + file.wstring();
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
@@ -365,19 +366,18 @@ BOOST_AUTO_TEST_CASE( address_bar_name_file )
  *
  * This name does not have to be parseable.
  */
-BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
+BOOST_AUTO_TEST_CASE(in_folder_display_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER;
     wstring expected_with = L"testfile.txt";
     wstring expected_without = L"testfile";
 
     BOOST_CHECK(
-        display_name_matches(
-            folder(), flags, file.filename(), expected_with) ||
-        display_name_matches(
-            folder(), flags, file.filename(), expected_without));
+        display_name_matches(folder(), flags, file.filename(), expected_with) ||
+        display_name_matches(folder(), flags, file.filename(),
+                             expected_without));
 }
 
 /**
@@ -392,10 +392,10 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_file )
  *
  * This name does not have to be parseable.
  */
-BOOST_AUTO_TEST_CASE( in_folder_display_name_unknown_file )
+BOOST_AUTO_TEST_CASE(in_folder_display_name_unknown_file)
 {
     // May fail if .xyz is actually a registered type
-    path file = NewFileInSandbox(L"testfile.xyz");
+    path file = new_file_in_sandbox(L"testfile.xyz");
 
     SHGDNF flags = SHGDN_INFOLDER;
     wstring expected = L"testfile.xyz";
@@ -403,7 +403,6 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_unknown_file )
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
 }
-
 
 /**
  * Check the parsing name of a file relative to its containing folder.
@@ -418,9 +417,9 @@ BOOST_AUTO_TEST_CASE( in_folder_display_name_unknown_file )
  * The FORPARSING flag forces the file extension to be included, regardless
  * of any user setting.
  */
-BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
+BOOST_AUTO_TEST_CASE(in_folder_parsing_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER | SHGDN_FORPARSING;
     wstring expected = L"testfile.txt";
@@ -436,9 +435,9 @@ BOOST_AUTO_TEST_CASE( in_folder_parsing_name_file )
  * renaming a file shows the extension even if that isn't the default user
  * setting.
  */
-BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
+BOOST_AUTO_TEST_CASE(in_folder_editing_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_INFOLDER | SHGDN_FOREDITING;
     wstring expected = L"testfile.txt";
@@ -457,15 +456,19 @@ BOOST_AUTO_TEST_CASE( in_folder_editing_name_file )
  * This should be a 'pretty' version of the name rather than the
  * truly parseable version that includes GUIDs etc.
  */
-BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
+BOOST_AUTO_TEST_CASE(absolute_address_bar_parsing_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    BOOST_WARN_MESSAGE(false,
+                       "skipping - testing absolute parsing name requires "
+                       "registration and knowledge of the parent");
+    return; // Leaving code here in case we find a way round this
+
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
-    wstring expected = L"Computer\\Swish\\sftp://" + 
-        Utf8StringToWideString(GetUser()) + L"@" +
-        Utf8StringToWideString(GetHost()) + L":" +
-        lexical_cast<wstring>(GetPort()) + L"/" + ToRemotePath(file).wstring();
+    wstring expected = L"Computer\\Swish\\sftp://" + wuser() + L"@" + whost() +
+                       L":" + lexical_cast<wstring>(port()) + L"/" +
+                       file.wstring();
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
@@ -477,18 +480,20 @@ BOOST_AUTO_TEST_CASE( absolute_address_bar_parsing_name_file )
  * It must be possible to pass this to the @b desktop folder's ParseDisplayName
  * and get back a pidl for this item.
  */
-BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
+BOOST_AUTO_TEST_CASE(absolute_parsing_name_file)
 {
-    path file = NewFileInSandbox(L"testfile.txt");
+    BOOST_WARN_MESSAGE(false,
+                       "skipping - testing absolute parsing name requires "
+                       "registration and knowledge of the parent");
+    return; // Leaving code here in case we find a way round this
+
+    path file = new_file_in_sandbox(L"testfile.txt");
 
     SHGDNF flags = SHGDN_NORMAL | SHGDN_FORPARSING;
-    wstring expected = 
-        L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
-        L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\sftp://" + 
-        Utf8StringToWideString(GetUser()) + L"@" +
-        Utf8StringToWideString(GetHost()) + L":" +
-        lexical_cast<wstring>(GetPort()) + L"/" +
-        ToRemotePath(file).wstring();
+    wstring expected = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\"
+                       L"::{B816A83A-5022-11DC-9153-0090F5284F85}\\sftp://" +
+                       wuser() + L"@" + whost() + L":" +
+                       lexical_cast<wstring>(port()) + L"/" + file.wstring();
 
     BOOST_CHECK(
         display_name_matches(folder(), flags, file.filename(), expected));
@@ -505,10 +510,10 @@ BOOST_AUTO_TEST_CASE( absolute_parsing_name_file )
  *
  * This name does not have to be parseable.
  */
-BOOST_AUTO_TEST_CASE( display_name_folder )
+BOOST_AUTO_TEST_CASE(display_name_folder)
 {
-    path directory = Sandbox() / L"testfolder";
-    create_directory(directory);
+    path directory = sandbox() / L"testfolder";
+    create_directory(filesystem(), directory);
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected = L"testfolder";
@@ -522,10 +527,10 @@ BOOST_AUTO_TEST_CASE( display_name_folder )
  *
  * This name does not have to be parseable.
  */
-BOOST_AUTO_TEST_CASE( in_folder_name_folder )
+BOOST_AUTO_TEST_CASE(in_folder_name_folder)
 {
-    path directory = Sandbox() / L"testfolder";
-    create_directory(directory);
+    path directory = sandbox() / L"testfolder";
+    create_directory(filesystem(), directory);
 
     SHGDNF flags = SHGDN_INFOLDER;
     wstring expected = L"testfolder";
@@ -540,10 +545,10 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder )
  * Dots in a folder don't really indicate an extension so we should return
  * the whole thing.
  */
-BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
+BOOST_AUTO_TEST_CASE(display_name_folder_with_extension)
 {
-    path directory = Sandbox() / L"testfolder.txt";
-    create_directory(directory);
+    path directory = sandbox() / L"testfolder.txt";
+    create_directory(filesystem(), directory);
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected = L"testfolder.txt";
@@ -559,10 +564,10 @@ BOOST_AUTO_TEST_CASE( display_name_folder_with_extension )
  * Dots in a folder don't really indicate an extension so we should return
  * the whole thing.
  */
-BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
+BOOST_AUTO_TEST_CASE(in_folder_name_folder_with_extension)
 {
-    path directory = Sandbox() / L"testfolder.txt";
-    create_directory(directory);
+    path directory = sandbox() / L"testfolder.txt";
+    create_directory(filesystem(), directory);
 
     SHGDNF flags = SHGDN_INFOLDER;
     wstring expected = L"testfolder.txt";
@@ -578,12 +583,12 @@ BOOST_AUTO_TEST_CASE( in_folder_name_folder_with_extension )
  * Although we shouldn't treat any part of a folder name as an extension, we
  * test the initial-dot case here specially just to make sure.
  */
-BOOST_AUTO_TEST_CASE( display_name_hidden_folder )
+BOOST_AUTO_TEST_CASE(display_name_hidden_folder)
 {
-    path dir1 = Sandbox() / L".hidden";
-    create_directory(dir1);
-    path dir2 = Sandbox() / L".testfolder.txt";
-    create_directory(dir2);
+    path dir1 = sandbox() / L".hidden";
+    create_directory(filesystem(), dir1);
+    path dir2 = sandbox() / L".testfolder.txt";
+    create_directory(filesystem(), dir2);
 
     SHGDNF flags = SHGDN_NORMAL;
     wstring expected1 = L".hidden";

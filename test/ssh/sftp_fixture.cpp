@@ -62,6 +62,16 @@ sftp_filesystem& sftp_fixture::filesystem()
     return m_filesystem;
 }
 
+path sftp_fixture::sandbox() const
+{
+    return "sandbox";
+}
+
+path sftp_fixture::absolute_sandbox() const
+{
+    return "/home/swish/sandbox";
+}
+
 sftp_file sftp_fixture::find_file_in_sandbox(const string& filename)
 {
     directory_iterator it = filesystem().directory_iterator(sandbox());

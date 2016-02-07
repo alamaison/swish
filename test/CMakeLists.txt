@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright 2015, 2016 Alexander Lamaison
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -16,6 +16,7 @@
 find_package(Boost 1.40 REQUIRED COMPONENTS unit_test_framework)
 
 add_subdirectory(common_boost)
+add_subdirectory(fixtures)
 
 option(MEMORY_LEAKS_ARE_FAILURES
   "Fail the test suite if a memory leak is detected" OFF)
@@ -23,30 +24,9 @@ option(MEMORY_LEAKS_ARE_FAILURES
 set(TEST_RUNNER_ARGUMENTS
   --result_code=yes --build_info=yes --log_level=test_suite)
 
-include(FindCygwin)
-
-if(CYGWIN_INSTALL_PATH)
-  set(TEST_RUNNER_ENVIRONMENT
-    "PATH=${CYGWIN_INSTALL_PATH}/bin;${CYGWIN_INSTALL_PATH}/usr/sbin")
-  string(REPLACE ";" "\\;" TEST_RUNNER_ENVIRONMENT
-    "${TEST_RUNNER_ENVIRONMENT}")
-
-  if(NOT EXISTS "${CYGWIN_INSTALL_PATH}/usr/sbin/sshd.exe")
-    message(WARNING
-      # Running sshd for the tests requires a version of sshd that matches
-      # the version of chmod used to set the permissions on the hostkey
-      # file.  sshd refuses to run if it thinks the key is world-readable,
-      # and different implementations of chmod save those permissions
-      # in different ways.  Cygwin uses the 'special' Unix subsystem area
-      # of the Windows ACL so the version of sshd must also use that method.
-      "Cygwin sshd not found: tests are likely to fail to run")
-  endif()
-else()
-  message(WARNING
-    "Cygwin not found: tests are likely to fail to run")
-endif()
-
 add_custom_target(BUILD_ALL_TESTS COMMENT "Building all tests")
+
+set(TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
 
 include(CMakeParseArguments)
 # swish_test_suite(SUBJECT test-target [VARIANT suite-variant] SOURCES ...
@@ -82,7 +62,7 @@ function(SWISH_TEST_SUITE)
   add_test(
     NAME ${_TEST_EXE_NAME}
     COMMAND ${_TEST_EXE_NAME} ${TEST_RUNNER_ARGUMENTS}
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:${_TEST_EXE_NAME}>)
+    WORKING_DIRECTORY "${TEST_DATA_DIR}")
 
   if(MEMORY_LEAKS_ARE_FAILURES)
     # Don't hide memory leak detection.  The detector can't change the error
@@ -91,10 +71,10 @@ function(SWISH_TEST_SUITE)
       FAIL_REGULAR_EXPRESSION "Detected memory leaks")
   endif()
 
-  if(TEST_RUNNER_ENVIRONMENT)
-    set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
-      ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
-  endif()
+  # if(TEST_RUNNER_ENVIRONMENT)
+  #   set_tests_properties(${_TEST_EXE_NAME} PROPERTIES
+  #     ENVIRONMENT "${TEST_RUNNER_ENVIRONMENT}")
+  # endif()
 
   if(SWISH_TEST_SUITE_LABELS)
     set_tests_properties(
@@ -156,8 +136,7 @@ add_subdirectory(ezel)
 add_subdirectory(forms)
 add_subdirectory(host_folder)
 add_subdirectory(nse)
-add_subdirectory(provider)
-add_subdirectory(provider-network)
+add_subdirectory(provider-integration)
 add_subdirectory(remote_folder)
 add_subdirectory(shell)
 add_subdirectory(shell_folder)
@@ -200,4 +179,3 @@ swish_declare_test_target(CHECK)
 swish_declare_test_target(CHECK_UNIT -L unit ALL)
 swish_declare_test_target(CHECK_INTEGRATION -L integration)
 swish_declare_test_target(CHECK_GUI -L gui)
-swish_declare_test_target(CHECK_NETWORK -L network)

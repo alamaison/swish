@@ -33,6 +33,10 @@ public:
 
     ::ssh::filesystem::sftp_filesystem& filesystem();
 
+    ::ssh::filesystem::path sandbox() const;
+
+    ::ssh::filesystem::path absolute_sandbox() const;
+
     ::ssh::filesystem::sftp_file
     find_file_in_sandbox(const std::string& filename);
 

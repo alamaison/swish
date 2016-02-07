@@ -1,41 +1,20 @@
-/**
-    @file
+// Copyright 2010, 2012, 2013, 2015, 2016 Alexander Lamaison
 
-    SSH SFTP subsystem.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
-
-#ifndef SSH_SFTP_HPP
-#define SSH_SFTP_HPP
+#ifndef SSH_FILESYSTEM_HPP
+#define SSH_FILESYSTEM_HPP
 
 #include <ssh/detail/file_handle_state.hpp>
 #include <ssh/detail/sftp_channel_state.hpp>
@@ -254,7 +233,8 @@ inline bool operator<(const sftp_file& lhs, const sftp_file& rhs)
 
 enum file_type
 {
-    none,
+    // prevent clash with perms::unknown, rename once using C++11 enum classes
+    none_,
     not_found,
     regular,
     directory,
@@ -271,6 +251,8 @@ BOOST_BITMASK(file_type);
 
 enum perms
 {
+    none = 0,
+
     owner_read = LIBSSH2_SFTP_S_IRUSR,
     owner_write = LIBSSH2_SFTP_S_IWUSR,
     owner_exec = LIBSSH2_SFTP_S_IXUSR,
@@ -303,7 +285,7 @@ inline file_type permissions_to_file_type(unsigned long permissions)
     switch (permissions & LIBSSH2_SFTP_S_IFMT)
     {
     case 0:
-        return file_type::none;
+        return file_type::none_;
     case LIBSSH2_SFTP_S_IFIFO:
         return file_type::fifo;
     case LIBSSH2_SFTP_S_IFCHR:
@@ -328,7 +310,7 @@ inline unsigned long file_type_to_permissions(file_type type)
     // Mask permissions to consider only file-type bits
     switch (type)
     {
-    case file_type::none:
+    case file_type::none_:
         return 0;
     case file_type::fifo:
         return LIBSSH2_SFTP_S_IFIFO;
@@ -357,7 +339,7 @@ public:
     // by LIBSSH2_SFTP_ATTRIBUTES (e.g. file_type::not_found), so we store the
     // former, not the latter.
 
-    explicit file_status(file_type type = file_type::none,
+    explicit file_status(file_type type = file_type::none_,
                          perms permissions = perms::unknown)
         : m_type(type), m_permissions(permissions)
     {
@@ -376,6 +358,16 @@ public:
             m_type = file_type::unknown_;
             m_permissions = perms::unknown;
         }
+
+        if (is_available_attribute(attributes, LIBSSH2_SFTP_ATTR_SIZE))
+        {
+            m_file_size = attributes.filesize;
+        }
+
+        if (is_available_attribute(attributes, LIBSSH2_SFTP_ATTR_ACMODTIME))
+        {
+            m_last_write_time = attributes.mtime;
+        }
     }
 
     file_type type() const
@@ -388,6 +380,30 @@ public:
         return m_permissions;
     }
 
+    // Non-standard - only included as top-level function in standard
+    boost::uintmax_t file_size() const
+    {
+        if (!m_file_size)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::system::system_error(boost::system::errc::not_supported,
+                                            boost::system::generic_category()));
+        }
+        return *m_file_size;
+    }
+
+    // Non-standard - only included as top-level function in standard
+    std::time_t last_write_time() const
+    {
+        if (!m_last_write_time)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::system::system_error(boost::system::errc::not_supported,
+                                            boost::system::generic_category()));
+        }
+        return *m_last_write_time;
+    }
+
 private:
     bool is_available_attribute(const LIBSSH2_SFTP_ATTRIBUTES attributes,
                                 unsigned long attribute_type) const
@@ -397,6 +413,8 @@ private:
 
     file_type m_type;
     perms m_permissions;
+    boost::optional<boost::uintmax_t> m_file_size;
+    boost::optional<std::time_t> m_last_write_time;
 };
 
 class sftp_filesystem;
@@ -500,47 +518,64 @@ private:
         std::vector<char> longentry_buffer(1024, '\0');
         LIBSSH2_SFTP_ATTRIBUTES attrs = LIBSSH2_SFTP_ATTRIBUTES();
 
-        int rc;
+        while (true)
         {
-            ::ssh::detail::file_handle_state::scoped_lock lock =
-                m_handle->aquire_lock();
+            int rc;
+            {
+                ::ssh::detail::file_handle_state::scoped_lock lock =
+                    m_handle->aquire_lock();
 
-            rc = ::ssh::detail::libssh2::sftp::readdir_ex(
-                m_handle->session_ptr(), m_handle->sftp_ptr(),
-                m_handle->file_handle(), &filename_buffer[0],
-                filename_buffer.size(), &longentry_buffer[0],
-                longentry_buffer.size(), &attrs);
+                rc = ::ssh::detail::libssh2::sftp::readdir_ex(
+                    m_handle->session_ptr(), m_handle->sftp_ptr(),
+                    m_handle->file_handle(), &filename_buffer[0],
+                    filename_buffer.size(), &longentry_buffer[0],
+                    longentry_buffer.size(), &attrs);
 
-            // IMPORTANT: must unlock before possible handle reset below
-            // which would lock the session again to close the file handle
-        }
+                // IMPORTANT: must unlock before possible handle reset below
+                // which would lock the session again to close the file handle
+            }
 
-        if (rc == 0) // end of files
-        {
-            m_handle.reset();
-        }
-        else
-        {
-            assert(rc > 0);
+            if (rc == 0) // end of files
+            {
+                m_handle.reset();
+                return;
+            }
+            else
+            {
+                assert(rc > 0);
 
-            // copy attributes to member one we know we're overwriting the
-            // last-retrieved file's properties
-            m_attributes = attrs;
+                // copy attributes to member one we know we're overwriting the
+                // last-retrieved file's properties
+                m_attributes = attrs;
 
-            // we don't assume that the filename is null-terminated but rc
-            // holds the number of bytes written to the buffer so we can shrink
-            // the filename string to that size
-            m_file_name = std::string(
-                &filename_buffer[0],
-                (std::min)(static_cast<size_t>(rc), filename_buffer.size()));
+                // we don't assume that the filename is null-terminated but rc
+                // holds the number of bytes written to the buffer so we can
+                // shrink
+                // the filename string to that size
+                std::string file_name = std::string(
+                    &filename_buffer[0], (std::min)(static_cast<size_t>(rc),
+                                                    filename_buffer.size()));
+                if (file_name == "." || file_name == "..")
+                {
+                    continue;
+                }
+                else
+                {
+                    m_file_name = file_name;
+                }
 
-            // the long entry must be usable in an ls -l listing according to
-            // the standard so I'm interpreting this to mean it can't contain
-            // embedded NULLs so we force NULL-termination and then allocate
-            // the string to be the NULL-terminated size which will likely be
-            // much smaller than the buffer
-            longentry_buffer[longentry_buffer.size() - 1] = '\0';
-            m_long_entry = std::string(&longentry_buffer[0]);
+                // the long entry must be usable in an ls -l listing according
+                // to
+                // the standard so I'm interpreting this to mean it can't
+                // contain
+                // embedded NULLs so we force NULL-termination and then allocate
+                // the string to be the NULL-terminated size which will likely
+                // be
+                // much smaller than the buffer
+                longentry_buffer[longentry_buffer.size() - 1] = '\0';
+                m_long_entry = std::string(&longentry_buffer[0]);
+                return;
+            }
         }
     }
 
@@ -569,22 +604,15 @@ private:
 namespace detail
 {
 
-BOOST_SCOPED_ENUM_START(path_status)
-{
-    non_existent,
-    non_directory,
-    directory
-};
-BOOST_SCOPED_ENUM_END;
-
+BOOST_SCOPED_ENUM_START(path_status){non_existent, non_directory, directory};
+BOOST_SCOPED_ENUM_END
+;
 
 inline BOOST_SCOPED_ENUM(path_status)
-check_status(sftp_filesystem& filesystem, const path& path);
-
+    check_status(sftp_filesystem& filesystem, const path& path);
 }
 
-BOOST_SCOPED_ENUM_START(overwrite_behaviour)
-{
+BOOST_SCOPED_ENUM_START(overwrite_behaviour){
     /**
      * Do not overwrite an existing file at the destination.
      *
@@ -609,8 +637,7 @@ BOOST_SCOPED_ENUM_START(overwrite_behaviour)
      * The SFTP server may not support overwriting files, in which case this
      * acts like `prevent_overwrite`.
      */
-    atomic_overwrite
-};
+    atomic_overwrite};
 BOOST_SCOPED_ENUM_END
 
 class sftp_input_device;
@@ -1220,7 +1247,7 @@ namespace detail
 {
 
 inline BOOST_SCOPED_ENUM(path_status)
-check_status(sftp_filesystem& filesystem, const path& path)
+    check_status(sftp_filesystem& filesystem, const path& path)
 {
     try
     {
@@ -1302,9 +1329,36 @@ inline file_status status(sftp_filesystem& filesystem, const path& file)
     return filesystem.status(file);
 }
 
+/**
+ * Is the give status from a regular file?
+ */
+inline bool is_regular_file(const file_status& status)
+{
+    return status.type() == file_type::regular;
+}
+
+/**
+ * Is the given path a regular file?
+ */
+inline bool is_regular_file(sftp_filesystem& filesystem, const path& file)
+{
+    return is_regular_file(status(filesystem, file));
+}
+
+/**
+ * Is the give status from a directory?
+ */
+inline bool is_directory(const file_status& status)
+{
+    return status.type() == file_type::directory;
+}
+
+/**
+ * Is the given path a directory?
+ */
 inline bool is_directory(sftp_filesystem& filesystem, const path& file)
 {
-    return status(filesystem, file).type() == file_type::directory;
+    return is_directory(status(filesystem, file));
 }
 
 /**
@@ -1321,7 +1375,45 @@ inline void permissions(sftp_filesystem& filesystem, const path& file,
     return filesystem.permissions(file, new_permissions);
 }
 
-// Needs directory_iterator implementation so outside sftp_filesystem class body
+/**
+ * Returns the size of the given file, in bytes.
+ */
+inline boost::uintmax_t file_size(sftp_filesystem& filesystem, const path& file)
+{
+    return status(filesystem, file).file_size();
+}
+
+/**
+ * Returns the time of the last write to the given file.
+ *
+ * Whether the return value is accurate depends on the filesystem on which the
+ * file is stored.
+ */
+inline std::time_t last_write_time(sftp_filesystem& filesystem,
+                                   const path& file)
+{
+    return status(filesystem, file).last_write_time();
+}
+
+/**
+ * Determine whether the given file or directory is empty.
+ */
+inline bool is_empty(sftp_filesystem& filesystem, const path& file)
+{
+    file_status s = status(filesystem, file);
+    if (is_directory(s))
+    {
+        return filesystem.directory_iterator(file) ==
+               filesystem.directory_iterator();
+    }
+    else
+    {
+        return s.file_size() == 0;
+    }
+}
+
+// Needs directory_iterator implementation so outside sftp_filesystem class
+// body
 inline boost::uintmax_t sftp_filesystem::remove_directory(const path& root)
 {
     boost::uintmax_t count = 0U;

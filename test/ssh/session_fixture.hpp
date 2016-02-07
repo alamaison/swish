@@ -1,55 +1,27 @@
-/**
-    @file
+// Copyright 2010, 2011, 2016 Alexander Lamaison
 
-    Connected session fixture.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2010, 2011  Alexander Lamaison <awl03@doc.ic.ac.uk>
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+#ifndef SSH_TEST_FIXTURES_SESSION_FIXTURE_HPP
+#define SSH_TEST_FIXTURES_SESSION_FIXTURE_HPP
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+#include "openssh_fixture.hpp"
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#include <ssh/session.hpp>
 
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
+#include <boost/asio/ip/tcp.hpp> // Boost sockets
 
-    @endif
-*/
-
-#ifndef SSH_SESSION_FIXTURE_HPP
-#define SSH_SESSION_FIXTURE_HPP
-#pragma once
-
-#include "openssh_fixture.hpp" // openssh_fixture
-
-#include <ssh/session.hpp> // session
-
-#include <boost/asio/ip/tcp.hpp>         // Boost sockets
-#include <boost/system/system_error.hpp> // system_error
-#include <boost/test/unit_test.hpp>
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
-
-#include <locale>    // locale::classic
-#include <sstream>   // basic_ostringstream
-#include <stdexcept> // logic_error
 #include <string>
 
 namespace test
@@ -57,89 +29,30 @@ namespace test
 namespace ssh
 {
 
-namespace detail
-{
-
-/**
- * Locale-independent port number to port string conversion.
- */
-inline std::string port_to_string(long port)
-{
-    std::ostringstream stream;
-    stream.imbue(std::locale::classic()); // force locale-independence
-    stream << port;
-    if (!stream)
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Unable to convert port number to string"));
-
-    return stream.str();
-}
-
-inline void open_socket(boost::asio::io_service& io,
-                        boost::asio::ip::tcp::socket& socket,
-                        const std::string host_name, int port)
-{
-    using boost::asio::ip::tcp;
-
-    tcp::resolver resolver(io);
-    typedef tcp::resolver::query Lookup;
-    Lookup query(host_name, detail::port_to_string(port));
-
-    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-    tcp::resolver::iterator end;
-
-    boost::system::error_code error = boost::asio::error::host_not_found;
-    while (error && endpoint_iterator != end)
-    {
-        socket.close();
-        socket.connect(*endpoint_iterator++, error);
-    }
-    if (error)
-        BOOST_THROW_EXCEPTION(boost::system::system_error(error));
-}
-}
-
 /**
  * Fixture serving ssh::session objects connected to a running server.
  */
-class session_fixture : public openssh_fixture
+class session_fixture : virtual public openssh_fixture
 {
 public:
-    session_fixture()
-        : m_io(0),
-          m_socket(m_io),
-          m_session(::ssh::session(open_socket(host(), port()).native()))
-    {
-    }
+    session_fixture();
 
-    ::ssh::session& test_session()
-    {
-        return m_session;
-    }
+    ::ssh::session& test_session();
 
-    std::auto_ptr<boost::asio::ip::tcp::socket> connect_additional_socket()
-    {
-        std::auto_ptr<boost::asio::ip::tcp::socket> socket(
-            new boost::asio::ip::tcp::socket(m_io));
-
-        detail::open_socket(m_io, *socket, host(), port());
-
-        return socket;
-    }
+    std::auto_ptr<boost::asio::ip::tcp::socket> connect_additional_socket();
 
 private:
-    boost::asio::ip::tcp::socket& open_socket(const std::string host_name,
-                                              int port)
-    {
-        detail::open_socket(m_io, m_socket, host_name, port);
-
-        return m_socket;
-    }
+    boost::asio::ip::tcp::socket& open_socket(const std::string& host_name,
+                                              int port);
 
     boost::asio::io_service m_io; ///< Boost IO system
     boost::asio::ip::tcp::socket m_socket;
     ::ssh::session m_session;
 };
+
+void open_socket_to_host(boost::asio::io_service& io,
+                         boost::asio::ip::tcp::socket& socket,
+                         const std::string& host_name, int port);
 }
 } // namespace test::ssh
 
