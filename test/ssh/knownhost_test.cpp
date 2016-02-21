@@ -689,6 +689,15 @@ BOOST_AUTO_TEST_CASE( load_save )
         ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish\n")
         ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
         ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish \n")
+        ("host.example.com unknown-key-format blahblahblahkey test swish \n")
+        ("host.example.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
+         "YAAAAIbmlzdHAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB"
+         "2MwAU3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
+        // Hashed version of the above
+        ("|1|FI75NN2BtS542+iqaY9PWHJlXfc=|vGXV2w0kCLXWOqRF8uf+njij1MI= "
+         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzd"
+         "HAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB2MwAU"
+         "3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
         ("|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
          "ssh-rsa AAAAB3NzaC1yc2EAA==")
         // this one will fail with libssh2 < 1.2.8
@@ -709,6 +718,14 @@ BOOST_AUTO_TEST_CASE( load_save )
         ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
         ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
         ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
+        ("host.example.com unknown-key-format blahblahblahkey test swish ")
+        ("host.example.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
+         "YAAAAIbmlzdHAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB"
+         "2MwAU3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
+        ("|1|FI75NN2BtS542+iqaY9PWHJlXfc=|vGXV2w0kCLXWOqRF8uf+njij1MI= "
+         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzd"
+         "HAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB2MwAU"
+         "3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
         ("|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
          "ssh-rsa AAAAB3NzaC1yc2EAA==")
         ("192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA==")
