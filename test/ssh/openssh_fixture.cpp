@@ -245,7 +245,7 @@ string openssh_fixture::ask_docker_for_host() const
             try
             {
                 vector<string> machine_ip_command =
-                    (list_of(string("ip")), "default");
+                    (list_of(string("ip")), active_docker_machine);
                 return single_value_from_docker_machine_command<string>(
                     machine_ip_command);
             }
