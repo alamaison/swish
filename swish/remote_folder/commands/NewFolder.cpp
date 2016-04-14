@@ -177,11 +177,10 @@ NewFolder::NewFolder(
     m_folder_pidl(folder_pidl), m_provider_factory(provider),
     m_consumer_factory(consumer) {}
 
-BOOST_SCOPED_ENUM(Command::state) NewFolder::state(
-    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
-const
+Command::presentation_state NewFolder::state(com_ptr<IShellItemArray>,
+                                             bool /*ok_to_be_slow*/) const
 {
-    return state::enabled;
+    return presentation_state::enabled;
 }
 
 void NewFolder::operator()(

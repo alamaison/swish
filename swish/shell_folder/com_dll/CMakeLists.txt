@@ -29,9 +29,10 @@ set(SOURCES
 add_library(shell_folder-com_dll SHARED ${SOURCES})
 
 hunter_add_package(WTL)
+find_package(WTL CONFIG REQUIRED)
 
 target_link_libraries(shell_folder-com_dll
-  PRIVATE shell_folder versions WTL::wtl) # WTL needed for atlres.h
+  PRIVATE shell_folder versions WTL::WTL) # WTL needed for atlres.h
 
 install(TARGETS shell_folder-com_dll RUNTIME DESTINATION .)
 

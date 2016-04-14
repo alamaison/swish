@@ -65,8 +65,7 @@ inline LIBSSH2_SESSION* init()
     LIBSSH2_SESSION* session =
         ::libssh2_session_init_ex(NULL, NULL, NULL, NULL);
     if (!session)
-        BOOST_THROW_EXCEPTION(
-            std::bad_alloc("Failed to allocate new ssh session"));
+        BOOST_THROW_EXCEPTION(std::bad_alloc());
 
     return session;
 }

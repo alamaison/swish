@@ -30,13 +30,13 @@
 #include "swish/drop_target/PidlCopyPlan.hpp"
 #include "swish/provider/sftp_provider.hpp" // sftp_provider, ISftpConsumer
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"
-                                                  // PidlFormat, ShellDataObject
+// PidlFormat, ShellDataObject
 
 #include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
-#include <boost/shared_ptr.hpp>  // shared_ptr
+#include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/thread.hpp>
-#include <boost/throw_exception.hpp>  // BOOST_THROW_EXCEPTION
+#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <comet/error.h> // com_error
 #include <comet/git.h>
@@ -59,70 +59,83 @@ using comet::com_ptr;
 using comet::GIT;
 using comet::GIT_cookie;
 
-template<> struct comet::comtype<IAsyncOperation>
+template <>
+struct comet::comtype<IDataObjectAsyncCapability>
 {
-    static const IID& uuid() throw() { return IID_IAsyncOperation; }
-    typedef IUnknown base;
-};
-
-template<> struct comet::comtype<IDataObject>
-{
-    static const IID& uuid() throw() { return IID_IDataObject; }
-    typedef IUnknown base;
-};
-
-namespace swish {
-namespace drop_target {
-
-namespace { // private
-
-    /**
-     * Given a DataObject and bitfield of allowed DROPEFFECTs, determine
-     * which drop effect, if any, should be chosen.  If none are
-     * appropriate, return DROPEFFECT_NONE.
-     */
-    DWORD determine_drop_effect(
-        const com_ptr<IDataObject>& pdo, DWORD allowed_effects)
+    static const IID& uuid() throw()
     {
-        if (pdo)
-        {
-            PidlFormat format(pdo);
-            if (format.pidl_count() > 0)
-            {
-                if (allowed_effects & DROPEFFECT_COPY)
-                    return DROPEFFECT_COPY;
-            }
-        }
+        return IID_IDataObjectAsyncCapability;
+    }
+    typedef IUnknown base;
+};
 
-        return DROPEFFECT_NONE;
+template <>
+struct comet::comtype<IDataObject>
+{
+    static const IID& uuid() throw()
+    {
+        return IID_IDataObject;
+    }
+    typedef IUnknown base;
+};
+
+namespace swish
+{
+namespace drop_target
+{
+
+namespace
+{ // private
+
+/**
+ * Given a DataObject and bitfield of allowed DROPEFFECTs, determine
+ * which drop effect, if any, should be chosen.  If none are
+ * appropriate, return DROPEFFECT_NONE.
+ */
+DWORD determine_drop_effect(const com_ptr<IDataObject>& pdo,
+                            DWORD allowed_effects)
+{
+    if (pdo)
+    {
+        PidlFormat format(pdo);
+        if (format.pidl_count() > 0)
+        {
+            if (allowed_effects & DROPEFFECT_COPY)
+                return DROPEFFECT_COPY;
+        }
     }
 
+    return DROPEFFECT_NONE;
+}
 }
 
 /**
  * Copy the items in the DataObject to the remote target.
  *
- * @param source_format     Clipboard PIDL format holding the items to be copied.
+ * @param source_format     Clipboard PIDL format holding the items to be
+ * copied.
  * @param provider          SFTP connection to copy data over.
  * @param destination_root  PIDL to target directory in the remote filesystem
  *                          to copy items into.
  * @param progress          Progress dialogue.
  */
-void copy_format_to_provider(
-    PidlFormat source_format, shared_ptr<sftp_provider> provider,
-    const apidl_t& destination_root, shared_ptr<DropActionCallback> callback)
+void copy_format_to_provider(PidlFormat source_format,
+                             shared_ptr<sftp_provider> provider,
+                             const apidl_t& destination_root,
+                             shared_ptr<DropActionCallback> callback)
 {
     PidlCopyPlan copy_list(source_format, destination_root);
 
     copy_list.execute_plan(*callback, provider);
 }
 
-namespace {
+namespace
+{
 
-void async_copy_format_to_provider(
-    GIT_cookie<IDataObject> marshalling_cookie,
-    shared_ptr<sftp_provider> provider,
-    apidl_t destination_root, shared_ptr<DropActionCallback> callback)
+void async_copy_format_to_provider(GIT_cookie<IDataObject> marshalling_cookie,
+                                   shared_ptr<sftp_provider> provider,
+                                   apidl_t destination_root,
+                                   shared_ptr<DropActionCallback> callback)
 {
     auto_coinit com;
     GIT git;
@@ -130,15 +143,14 @@ void async_copy_format_to_provider(
     // These interface from the GIT will be properly marshalled across thread
     // apartments
     com_ptr<IDataObject> data_object = git.get_interface(marshalling_cookie);
-    com_ptr<IAsyncOperation> async = try_cast(data_object);
+    com_ptr<IDataObjectAsyncCapability> async = try_cast(data_object);
 
     try
     {
         try
         {
-            copy_format_to_provider(
-                PidlFormat(data_object), provider, destination_root,
-                callback);
+            copy_format_to_provider(PidlFormat(data_object), provider,
+                                    destination_root, callback);
         }
         catch (...)
         {
@@ -157,7 +169,6 @@ void async_copy_format_to_provider(
 
     git.revoke_interface(marshalling_cookie);
 }
-
 }
 
 /**
@@ -168,16 +179,17 @@ void async_copy_format_to_provider(
  * @param remote_directory  PIDL to target directory in the remote filesystem
  *                          to copy items into.
  */
-void copy_data_to_provider(
-    com_ptr<IDataObject> data_object, shared_ptr<sftp_provider> provider, 
-    const apidl_t& remote_directory, shared_ptr<DropActionCallback> callback)
+void copy_data_to_provider(com_ptr<IDataObject> data_object,
+                           shared_ptr<sftp_provider> provider,
+                           const apidl_t& remote_directory,
+                           shared_ptr<DropActionCallback> callback)
 {
     ShellDataObject data(data_object);
     if (data.has_pidl_format())
     {
         if (data.supports_async())
         {
-            com_ptr<IAsyncOperation> async = data.async();
+            com_ptr<IDataObjectAsyncCapability> async = data.async();
             HRESULT hr = async->StartOperation(NULL);
             if (FAILED(hr))
                 BOOST_THROW_EXCEPTION(com_error_from_interface(async, hr));
@@ -189,15 +201,14 @@ void copy_data_to_provider(
             GIT_cookie<IDataObject> marshalling_cookie =
                 git.register_interface(data_object);
 
-            thread(
-                &async_copy_format_to_provider, marshalling_cookie,
-                provider, remote_directory, callback).detach();
+            thread(&async_copy_format_to_provider, marshalling_cookie, provider,
+                   remote_directory, callback)
+                .detach();
         }
         else
         {
-            copy_format_to_provider(
-                PidlFormat(data_object), provider, remote_directory,
-                callback);
+            copy_format_to_provider(PidlFormat(data_object), provider,
+                                    remote_directory, callback);
         }
     }
     else
@@ -210,12 +221,14 @@ void copy_data_to_provider(
 /**
  * Create an instance of the DropTarget initialised with a data provider.
  */
-CDropTarget::CDropTarget(
-    shared_ptr<sftp_provider> provider, const apidl_t& remote_directory,
-    shared_ptr<DropActionCallback> callback)
-    :
-    m_provider(provider),
-    m_remote_directory(remote_directory), m_callback(callback) {}
+CDropTarget::CDropTarget(shared_ptr<sftp_provider> provider,
+                         const apidl_t& remote_directory,
+                         shared_ptr<DropActionCallback> callback)
+    : m_provider(provider),
+      m_remote_directory(remote_directory),
+      m_callback(callback)
+{
+}
 
 /**
  * Indicate whether the contents of the DataObject can be dropped on
@@ -223,8 +236,8 @@ CDropTarget::CDropTarget(
  *
  * @todo  Take account of the key state.
  */
-STDMETHODIMP CDropTarget::DragEnter( 
-    IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
+STDMETHODIMP CDropTarget::DragEnter(IDataObject* pdo, DWORD /*grfKeyState*/,
+                                    POINTL /*pt*/, DWORD* pdwEffect)
 {
     try
     {
@@ -247,8 +260,8 @@ STDMETHODIMP CDropTarget::DragEnter(
  *
  * @todo  Take account of the key state.
  */
-STDMETHODIMP CDropTarget::DragOver( 
-    DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
+STDMETHODIMP CDropTarget::DragOver(DWORD /*grfKeyState*/, POINTL /*pt*/,
+                                   DWORD* pdwEffect)
 {
     try
     {
@@ -282,8 +295,8 @@ STDMETHODIMP CDropTarget::DragLeave()
  *
  * @todo  Take account of the key state.
  */
-STDMETHODIMP CDropTarget::Drop( 
-    IDataObject* pdo, DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect)
+STDMETHODIMP CDropTarget::Drop(IDataObject* pdo, DWORD /*grfKeyState*/,
+                               POINTL /*pt*/, DWORD* pdwEffect)
 {
     try
     {
@@ -301,8 +314,8 @@ STDMETHODIMP CDropTarget::Drop(
 
             if (pdo && *pdwEffect == DROPEFFECT_COPY)
             {
-                copy_data_to_provider(
-                    pdo, m_provider, m_remote_directory, m_callback);
+                copy_data_to_provider(pdo, m_provider, m_remote_directory,
+                                      m_callback);
             }
         }
         catch (...)
@@ -315,5 +328,5 @@ STDMETHODIMP CDropTarget::Drop(
 
     return S_OK;
 }
-
-}} // namespace swish::drop_target
+}
+} // namespace swish::drop_target

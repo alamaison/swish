@@ -53,9 +53,9 @@ namespace {
             const wstring& icon_descriptor=wstring())
         : Command(title, guid, tool_tip, icon_descriptor) {}
 
-        BOOST_SCOPED_ENUM(state) state(com_ptr<IShellItemArray>, bool) const
+        presentation_state state(com_ptr<IShellItemArray>, bool) const
         {
-            return state::enabled;
+            return presentation_state::enabled;
         }
 
         void operator()(
@@ -173,8 +173,10 @@ namespace {
     {
         HostCommand() : Command(L"title", TEST_GUID, L"tool-tip") {}
 
-        BOOST_SCOPED_ENUM(state) state(com_ptr<IShellItemArray>, bool) const
-        { return state::enabled; }
+        presentation_state state(com_ptr<IShellItemArray>, bool) const
+        {
+            return presentation_state::enabled;
+        }
 
         void operator()(
             com_ptr<IShellItemArray>, const command_site&, com_ptr<IBindCtx>)
@@ -296,8 +298,10 @@ namespace {
     {
         CommandNeedingSite() : Command(L"title", TEST_GUID2, L"tool-tip") {}
 
-        BOOST_SCOPED_ENUM(state) state(com_ptr<IShellItemArray>, bool) const
-        { return state::enabled; }
+        presentation_state state(com_ptr<IShellItemArray>, bool) const
+        {
+            return presentation_state::enabled;
+        }
 
         void operator()(
             com_ptr<IShellItemArray>, const command_site&, com_ptr<IBindCtx>)

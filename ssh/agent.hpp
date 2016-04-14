@@ -145,7 +145,7 @@ private:
         return m_agent == other.m_agent && m_pos == other.m_pos;
     }
 
-    value_type dereference() const
+    IdentityType dereference() const
     {
         if (!m_agent)
             BOOST_THROW_EXCEPTION(

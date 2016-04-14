@@ -17,11 +17,10 @@
 
 #include "test/fixtures/openssh_fixture.hpp"
 
-#include <boost/make_shared.hpp>
 #include <boost/move/move.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
 #include <stdexcept> // runtime_error
 #include <string>
 #include <vector>
@@ -30,10 +29,10 @@ using test::fixtures::openssh_fixture;
 
 using swish::connection::running_session;
 
-using boost::make_shared;
 using boost::move;
-using boost::shared_ptr;
 
+using std::make_shared;
+using std::shared_ptr;
 using std::runtime_error;
 using std::vector;
 using std::wstring;

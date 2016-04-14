@@ -83,12 +83,7 @@ function(SWISH_TEST_SUITE)
 endfunction()
 
 set(_FIXTURE_FILES test_zip_file.zip)
-set(_FIXTURE_SSHD_ETC_FILES
-  fixture_dsakey fixture_dsakey.pub
-  fixture_hostkey fixture_hostkey.pub
-  fixture_rsakey fixture_rsakey.pub)
 set(_FIXTURE_FILES_DIR ${CMAKE_CURRENT_LIST_DIR}/common_boost)
-set(_PERMISSION_SCRIPT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 function(SWISH_COPY_FIXTURE_FILES TEST_TARGET)
   foreach(FILE ${_FIXTURE_FILES})
@@ -100,34 +95,6 @@ function(SWISH_COPY_FIXTURE_FILES TEST_TARGET)
       $<TARGET_FILE_DIR:${TEST_TARGET}>/${FILE}
       VERBATIM)
   endforeach()
-
-  foreach(FILE ${_FIXTURE_SSHD_ETC_FILES})
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND ${CMAKE_COMMAND}
-      -E copy_if_different
-      ${_FIXTURE_FILES_DIR}/${FILE}
-      $<TARGET_FILE_DIR:${TEST_TARGET}>/sshd-etc/${FILE}
-      VERBATIM)
-  endforeach()
-
-
-  if(CYGWIN_INSTALL_PATH)
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND
-      cd $<TARGET_FILE_DIR:${TEST_TARGET}>/sshd-etc/
-      VERBATIM)
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND
-      set PATH=${CYGWIN_INSTALL_PATH}/bin$<SEMICOLON>)
-    add_custom_command(
-      TARGET ${TEST_TARGET} POST_BUILD
-      COMMAND
-      bash ${_PERMISSION_SCRIPT_DIR}/fix_key_permissions.sh
-      VERBATIM)
-  endif()
 endfunction()
 
 add_subdirectory(connection)

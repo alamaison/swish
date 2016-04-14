@@ -1,38 +1,17 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    SSH session authentication.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SWISH_CONNECTION_AUTHENTICATED_SESSION_HPP
 #define SWISH_CONNECTION_AUTHENTICATED_SESSION_HPP
@@ -40,36 +19,33 @@
 #include "swish/connection/running_session.hpp"
 #include "swish/provider/sftp_provider.hpp" // ISftpConsumer
 
-#include <ssh/session.hpp>
 #include <ssh/filesystem.hpp>
+#include <ssh/session.hpp>
 
 #include <comet/ptr.h> // com_ptr
 
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
-#include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <string>
 
-namespace swish {
-namespace connection {
+namespace swish
+{
+namespace connection
+{
 
 /**
  * SSH session authenticated with the server.
  *
- * The point of this class is remove uncertainty as to whether the session 
+ * The point of this class is remove uncertainty as to whether the session
  * is usable.  Every instance is successfully authenticated with the server
  * and has a running SFTP channel.
  *
  * XXX: Maybe the SFTP channel part should be separated.  It's unclear if Swish
  * ever needs the two concepts separately.
  */
-class authenticated_session : private boost::noncopyable
+class authenticated_session
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(authenticated_session)
-
 public:
-
     /*
     template<typename Authentication>
     authenticated_session(
@@ -102,19 +78,9 @@ public:
      * - E_ABORT if user cancelled the operation (via ISftpConsumer)
      * - E_FAIL otherwise
      */
-    authenticated_session(
-        const std::wstring& host, unsigned int port, const std::wstring& user,
-        comet::com_ptr<ISftpConsumer> consumer);
-
-    /**
-     * Move constructor.
-     */
-    authenticated_session(BOOST_RV_REF(authenticated_session) other);
-
-    /**
-     * Move assignment.
-     */
-    authenticated_session& operator=(BOOST_RV_REF(authenticated_session) other);
+    authenticated_session(const std::wstring& host, unsigned int port,
+                          const std::wstring& user,
+                          comet::com_ptr<ISftpConsumer> consumer);
 
     bool is_dead();
 
@@ -133,7 +99,7 @@ private:
     running_session m_session;
     ssh::filesystem::sftp_filesystem m_filesystem;
 };
-
-}} // namespace swish::connection
+}
+} // namespace swish::connection
 
 #endif

@@ -30,9 +30,8 @@ class CloseSession : public swish::nse::Command
 public:
     CloseSession();
 
-    virtual BOOST_SCOPED_ENUM(state) state(
-        comet::com_ptr<IShellItemArray> selection,
-        bool ok_to_be_slow) const;
+    virtual presentation_state state(comet::com_ptr<IShellItemArray> selection,
+                                     bool ok_to_be_slow) const;
 
     void operator()(
         comet::com_ptr<IShellItemArray> selection,

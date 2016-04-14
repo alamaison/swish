@@ -104,7 +104,7 @@ class _sftp_error_category : public boost::system::error_category
     typedef boost::system::error_category super;
 
 public:
-    virtual const char* name() const
+    virtual const char* name() const BOOST_NOEXCEPT
     {
         return "sftp";
     }
@@ -115,7 +115,7 @@ public:
     }
 
     virtual boost::system::error_condition
-    default_error_condition(int code) const
+    default_error_condition(int code) const BOOST_NOEXCEPT
     {
         switch (code)
         {
@@ -132,8 +132,9 @@ public:
         }
     }
 
-    virtual bool
-    equivalent(int code, const boost::system::error_condition& condition) const
+    virtual bool equivalent(
+        int code,
+        const boost::system::error_condition& condition) const BOOST_NOEXCEPT
     {
         // Any match with the code's default condition is equivalent. The
         // switch below only needs to match _extra_ conditions that are

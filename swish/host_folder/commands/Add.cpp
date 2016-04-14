@@ -82,11 +82,10 @@ Add::Add(const apidl_t& folder_pidl) :
         translate(L"Add Connection")),
     m_folder_pidl(folder_pidl) {}
 
-BOOST_SCOPED_ENUM(Command::state) Add::state(
-    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
-const
+Command::presentation_state Add::state(com_ptr<IShellItemArray>,
+                                       bool /*ok_to_be_slow*/) const
 {
-    return state::enabled;
+    return presentation_state::enabled;
 }
 
 /** Display dialog to get connection info from user. */

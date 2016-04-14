@@ -23,8 +23,7 @@
 #include <comet/ptr.h>    // com_ptr
 #include <comet/stream.h> // adapt_stream_pointer
 
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp> // shared_ptr
+#include <memory>
 
 using swish::connection::authenticated_session;
 
@@ -34,10 +33,8 @@ using ssh::filesystem::path;
 using comet::adapt_stream_pointer;
 using comet::com_ptr;
 
-using boost::make_shared;
-using boost::shared_ptr;
-
 using std::ios_base;
+using std::make_shared;
 
 namespace test
 {
@@ -53,10 +50,9 @@ com_ptr<IStream> com_stream_fixture::get_stream(ios_base::openmode flags)
     // TODO: This should not create the stream directly but should use
     // SftpDirectory.  This can happen when SftpDirectory is merged with
     // the provider project
-    return adapt_stream_pointer(make_shared<fstream>(boost::ref(filesystem()),
-                                                     test_file().wstring(),
-                                                     flags),
-                                test_file().wstring());
+    return adapt_stream_pointer(
+        make_shared<fstream>(filesystem(), test_file().wstring(), flags),
+        test_file().wstring());
 }
 
 path com_stream_fixture::test_file()

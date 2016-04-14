@@ -20,11 +20,10 @@
 
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/move/move.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp> // this_thread
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,11 +32,10 @@ using test::fixtures::openssh_fixture;
 
 using swish::connection::authenticated_session;
 
-using boost::make_shared;
-using boost::move;
-using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 
+using std::make_shared;
+using std::shared_ptr;
 using std::vector;
 using std::wstring;
 
@@ -129,22 +127,11 @@ BOOST_AUTO_TEST_CASE(server_restart)
     BOOST_CHECK(!sftp_is_alive(session));
 }
 
-namespace
-{
-
-authenticated_session move_create(const wstring& host, unsigned int port,
-                                  const wstring& user, ISftpConsumer* consumer)
-{
-    authenticated_session session(host, port, user, consumer);
-    return move(session);
-}
-}
-
 BOOST_AUTO_TEST_CASE(move_contruct)
 {
-    authenticated_session session =
-        move_create(whost(), port(), wuser(),
-                    new CConsumerStub(private_key_path(), public_key_path()));
+    authenticated_session session(std::move(authenticated_session(
+        whost(), port(), wuser(),
+        new CConsumerStub(private_key_path(), public_key_path()))));
     BOOST_CHECK(!session.is_dead());
     BOOST_CHECK(sftp_is_alive(session));
 }
@@ -158,7 +145,7 @@ BOOST_AUTO_TEST_CASE(move_assign)
         whost(), port(), wuser(),
         new CConsumerStub(private_key_path(), public_key_path()));
 
-    session1 = move(session2);
+    session1 = std::move(session2);
 
     BOOST_CHECK(!session1.is_dead());
     BOOST_CHECK(sftp_is_alive(session1));

@@ -13,7 +13,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-hunter_add_package(Boost.Process)
+hunter_add_package(BoostProcess)
+find_package(BoostProcess CONFIG REQUIRED)
+
+find_package(Boost 1.40 CONFIG REQUIRED COMPONENTS unit_test_framework)
 
 # Underscores to distinguish from same-name Swish fixtures.  Can be renamed when
 # we split the projects.
@@ -22,7 +25,7 @@ add_library(openssh_fixture_
   openssh_fixture.hpp)
 target_link_libraries(openssh_fixture_
   PUBLIC ${Boost_LIBRARIES}
-  PRIVATE Boost::Process)
+  PRIVATE BoostProcess::boost_process)
 
 add_library(session_fixture_
   session_fixture.cpp
@@ -98,7 +101,7 @@ endfunction()
 ssh_test_suite(
   SUBJECT ssh
   TESTS ${INTEGRATION_TESTS}
-  LIBRARIES ${Boost_LIBRARIES} openssh_fixture_ session_fixture_ sftp_fixture_
+  LIBRARIES Boost::unit_test_framework openssh_fixture_ session_fixture_ sftp_fixture_
   LABELS integration)
 
 ssh_test_suite(

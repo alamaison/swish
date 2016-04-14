@@ -19,8 +19,8 @@
 
 #include "swish/connection/connection_spec.hpp"
 #include "swish/connection/session_manager.hpp"
-#include "swish/provider/Provider.hpp"         // CProvider
 #include "swish/host_folder/host_pidl.hpp"     // create_host_itemid
+#include "swish/provider/Provider.hpp"         // CProvider
 #include "swish/shell_folder/SftpDataObject.h" // CSftpDataObject
 #include "swish/shell_folder/SftpDirectory.h"  // CSftpDirectory
 
@@ -49,6 +49,7 @@ using washer::shell::desktop_folder;
 using boost::numeric_cast;
 using boost::shared_ptr;
 
+using std::move;
 using std::vector;
 
 using ssh::filesystem::path;
@@ -77,7 +78,7 @@ shared_ptr<sftp_provider> provider_fixture::Provider()
         connection_spec(whost(), wuser(), port()), Consumer(),
         "Running tests"));
 
-    return boost::shared_ptr<CProvider>(new CProvider(ticket));
+    return shared_ptr<CProvider>(new CProvider(move(ticket)));
 }
 
 com_ptr<test::MockConsumer> provider_fixture::Consumer()

@@ -1,57 +1,35 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    SSH session authentication.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the 
-    OpenSSL project's "OpenSSL" library (or with modified versions of it, 
-    with unchanged license). You may copy and distribute such a system 
-    following the terms of the GNU GPL for this program and the licenses 
-    of the other code concerned. The GNU General Public License gives 
-    permission to release a modified version without this exception; this 
-    exception also makes it possible to release a modified version which 
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "authenticated_session.hpp"
 
 #include "swish/utils.hpp" // WideStringToUtf8String
 
-#include <ssh/knownhost.hpp> // openssh_knownhost_collection
-#include <ssh/session.hpp>
 #include <ssh/filesystem.hpp> // sftp_filesystem
+#include <ssh/knownhost.hpp>  // openssh_knownhost_collection
+#include <ssh/session.hpp>
 
 #include <washer/com/catch.hpp> // WASHER_COM_CATCH_AUTO_INTERFACE
 
-#include <comet/bstr.h> // bstr_t
+#include <comet/bstr.h>  // bstr_t
 #include <comet/error.h> // com_error
 
-#include <boost/filesystem.hpp> // path
+#include <boost/filesystem.hpp>         // path
 #include <boost/filesystem/fstream.hpp> // ofstream
-#include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/foreach.hpp>            // BOOST_FOREACH
 #include <boost/function.hpp>
-#include <boost/move/move.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/system/error_code.hpp> // errc
 #include <boost/system/system_error.hpp>
@@ -83,7 +61,6 @@ using comet::com_ptr;
 using boost::filesystem::path;
 using boost::filesystem::ofstream;
 using boost::function;
-using boost::move;
 using boost::mutex;
 using boost::optional;
 namespace errc = boost::system::errc;
@@ -96,18 +73,18 @@ using std::string;
 using std::vector;
 using std::wstring;
 
+namespace swish
+{
+namespace connection
+{
 
-namespace swish {
-namespace connection {
+namespace
+{
 
-namespace {
+const path known_hosts_path = home_directory<path>() / L".ssh" / L"known_hosts";
 
-const path known_hosts_path =
-    home_directory<path>() / L".ssh" / L"known_hosts";
-
-void verify_host_key(
-    const wstring& host, running_session& session,
-    com_ptr<ISftpConsumer> consumer)
+void verify_host_key(const wstring& host, running_session& session,
+                     com_ptr<ISftpConsumer> consumer)
 {
     assert(consumer);
 
@@ -121,7 +98,7 @@ void verify_host_key(
 
     assert(!hostkey_hash.empty());
     assert(!hostkey_algorithm.empty());
-    
+
     // YUK YUK YUK: Accessing and modifying host key files should not be
     // here.  It should be done by the callback.
 
@@ -164,20 +141,19 @@ void verify_host_key(
     }
 }
 
-BOOST_SCOPED_ENUM_START(authentication_result)
+enum class authentication_result
 {
     authenticated,
     aborted,
     try_remaining_methods
 };
-BOOST_SCOPED_ENUM_END
 
 /**
  * Authenticates with remote host by asking the user to supply a password.
  *
  * This uses the callback to the SftpConsumer to obtain the password from
  * the user.  If the password is wrong or other error occurs, the user is
- * asked for the password again.  This repeats until the user supplies a 
+ * asked for the password again.  This repeats until the user supplies a
  * correct password or cancels the request.
  *
  * @throws `std::exception`
@@ -190,22 +166,22 @@ BOOST_SCOPED_ENUM_END
  * @note that unsuccessful is not a return value as the function keeps
  *       re-prompting until successful or cancelled.
  */
-BOOST_SCOPED_ENUM(authentication_result) password_authentication(
-    const string& utf8_username, running_session& session,
-    com_ptr<ISftpConsumer> consumer)
+authentication_result password_authentication(const string& utf8_username,
+                                              running_session& session,
+                                              com_ptr<ISftpConsumer> consumer)
 {
     // Loop until successfully authenticated or user cancels
-    for(;;)
+    for (;;)
     {
         optional<wstring> password = consumer->prompt_for_password();
         if (!password)
         {
             return authentication_result::aborted;
         }
-        
+
         string utf8_password = WideStringToUtf8String(*password);
-        if (session.get_session().authenticate_by_password(
-            utf8_username, utf8_password))
+        if (session.get_session().authenticate_by_password(utf8_username,
+                                                           utf8_password))
         {
             return authentication_result::authenticated;
         }
@@ -214,47 +190,48 @@ BOOST_SCOPED_ENUM(authentication_result) password_authentication(
     }
 }
 
-namespace {
+namespace
+{
 
-    class user_aborted_authentication : 
-        public virtual boost::exception, public std::runtime_error
+class user_aborted_authentication : public virtual boost::exception,
+                                    public std::runtime_error
+{
+public:
+    user_aborted_authentication()
+        : boost::exception(), std::runtime_error("User aborted authentication")
     {
-    public:
-        user_aborted_authentication() :
-          boost::exception(), std::runtime_error("User aborted authentication")
-          {}
-    };
+    }
+};
 
-    /**
-     * Delegates challenge-response to a consumer.
-     */
-    class consumer_responder
+/**
+ * Delegates challenge-response to a consumer.
+ */
+class consumer_responder
+{
+public:
+    consumer_responder(com_ptr<ISftpConsumer> consumer) : m_consumer(consumer)
     {
-    public:
+    }
 
-        consumer_responder(com_ptr<ISftpConsumer> consumer)
-            : m_consumer(consumer) {}
-
-        template<typename PromptRange>
-        vector<string> operator()(
-            const string& title, const string& instructions,
-            const PromptRange& prompts)
+    template <typename PromptRange>
+    vector<string> operator()(const string& title, const string& instructions,
+                              const PromptRange& prompts)
+    {
+        optional<vector<string>> responses =
+            m_consumer->challenge_response(title, instructions, prompts);
+        if (responses)
         {
-            optional<vector<string>> responses =
-                m_consumer->challenge_response(title, instructions, prompts);
-            if (responses)
-            {
-                return *responses;
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION(user_aborted_authentication());
-            }
+            return *responses;
         }
+        else
+        {
+            BOOST_THROW_EXCEPTION(user_aborted_authentication());
+        }
+    }
 
-    private:
-        com_ptr<ISftpConsumer> m_consumer;
-    };
+private:
+    com_ptr<ISftpConsumer> m_consumer;
+};
 }
 
 /**
@@ -271,7 +248,7 @@ namespace {
  *     authentication without even calling the responder.
  *
  * @throws `boost::system::system_error`
- *     if unexpected SSH-related failure while trying to authenticate or 
+ *     if unexpected SSH-related failure while trying to authenticate or
  * @throws `std::exception`
  *     if authentication fails for an unexpected reason, in other words,
  *     a reason other than the user cancelling the authentication.
@@ -280,15 +257,18 @@ namespace {
  * @note that unsuccessful authentication is not a return value as the function
  *     keeps re-prompting until successful or cancelled.
  */
-BOOST_SCOPED_ENUM(authentication_result) keyboard_interactive_authentication(
-    const string& utf8_username, running_session& session,
-    com_ptr<ISftpConsumer> consumer)
+authentication_result
+keyboard_interactive_authentication(const string& utf8_username,
+                                    running_session& session,
+                                    com_ptr<ISftpConsumer> consumer)
 {
     // Loop until successfully authenticated or user cancels.
     try
     {
         while (!session.get_session().authenticate_interactively(
-            utf8_username, consumer_responder(consumer))) {}
+            utf8_username, consumer_responder(consumer)))
+        {
+        }
     }
     catch (const system_error& e)
     {
@@ -326,10 +306,10 @@ BOOST_SCOPED_ENUM(authentication_result) keyboard_interactive_authentication(
     return authentication_result::authenticated;
 }
 
-
-BOOST_SCOPED_ENUM(authentication_result) public_key_file_based_authentication(
-    const string& utf8_username, running_session& session,
-    com_ptr<ISftpConsumer> consumer)
+authentication_result
+public_key_file_based_authentication(const string& utf8_username,
+                                     running_session& session,
+                                     com_ptr<ISftpConsumer> consumer)
 {
     assert(consumer);
 
@@ -350,14 +330,15 @@ BOOST_SCOPED_ENUM(authentication_result) public_key_file_based_authentication(
     }
 }
 
-BOOST_SCOPED_ENUM(authentication_result) public_key_agent_authentication(
-    const string& utf8_username, running_session& session,
-    com_ptr<ISftpConsumer> consumer)
+authentication_result
+public_key_agent_authentication(const string& utf8_username,
+                                running_session& session,
+                                com_ptr<ISftpConsumer> consumer)
 {
     try
     {
-        BOOST_FOREACH(
-            ssh::identity key, session.get_session().agent_identities())
+        BOOST_FOREACH (ssh::identity key,
+                       session.get_session().agent_identities())
         {
             try
             {
@@ -365,11 +346,13 @@ BOOST_SCOPED_ENUM(authentication_result) public_key_agent_authentication(
                 return authentication_result::authenticated;
             }
             catch (const exception&)
-            { /* Ignore and try the next */ }
+            { /* Ignore and try the next */
+            }
         }
     }
-    catch(const exception&)
-    { /* No agent running probably.  Either way, give up. */ }
+    catch (const exception&)
+    { /* No agent running probably.  Either way, give up. */
+    }
 
     // None of the agent identities worked.  Sob. Back to passwords then.
     return authentication_result::try_remaining_methods;
@@ -386,9 +369,8 @@ BOOST_SCOPED_ENUM(authentication_result) public_key_agent_authentication(
  * - E_ABORT if user cancelled the operation (via ISftpConsumer)
  * - E_FAIL otherwise
  */
-void authenticate_user(
-    const wstring& user, running_session& session,
-    com_ptr<ISftpConsumer> consumer)
+void authenticate_user(const wstring& user, running_session& session,
+                       com_ptr<ISftpConsumer> consumer)
 {
     assert(!user.empty());
     assert(user[0] != '\0');
@@ -410,16 +392,15 @@ void authenticate_user(
             std::exception("No supported authentication methods found"));
     }
 
-    typedef function<
-        BOOST_SCOPED_ENUM(authentication_result)(
-            const string&, running_session&, com_ptr<ISftpConsumer>)>
-        method;
+    typedef function<authentication_result(const string&, running_session&,
+                                           com_ptr<ISftpConsumer>)> method;
 
     vector<method> authentication_methods;
 
     // The order of adding the methods is important; some are preferred over
     // others.  Added in descending order of preference.
-    if (find(method_names.begin(), method_names.end(), "publickey") != method_names.end())
+    if (find(method_names.begin(), method_names.end(), "publickey") !=
+        method_names.end())
     {
         // This old way is only kept around to support the tests.  Its almost
         // useless for anything else as we don't pass the 'consumer' enough
@@ -430,18 +411,19 @@ void authenticate_user(
         authentication_methods.push_back(public_key_agent_authentication);
     }
 
-    if (find(method_names.begin(), method_names.end(), "keyboard-interactive")
-        != method_names.end())
+    if (find(method_names.begin(), method_names.end(),
+             "keyboard-interactive") != method_names.end())
     {
         authentication_methods.push_back(keyboard_interactive_authentication);
     }
 
-    if (find(method_names.begin(), method_names.end(), "password") != method_names.end())
+    if (find(method_names.begin(), method_names.end(), "password") !=
+        method_names.end())
     {
         authentication_methods.push_back(password_authentication);
     }
 
-    BOOST_FOREACH(method& auth_attempt, authentication_methods)
+    BOOST_FOREACH (method& auth_attempt, authentication_methods)
     {
         switch (auth_attempt(utf8_username, session, consumer))
         {
@@ -465,9 +447,9 @@ void authenticate_user(
         com_error("No authentication method succeeded", E_FAIL));
 }
 
-running_session create_and_authenticate(
-    const wstring& host, unsigned int port, const wstring& user,
-    com_ptr<ISftpConsumer> consumer)
+auto create_and_authenticate(const wstring& host, unsigned int port,
+                             const wstring& user,
+                             com_ptr<ISftpConsumer> consumer)
 {
     running_session session(host, port);
 
@@ -479,28 +461,17 @@ running_session create_and_authenticate(
 
     assert(session.get_session().authenticated());
 
-    return move(session);
+    return session;
+}
 }
 
-}
-
-authenticated_session::authenticated_session(
-    const wstring& host, unsigned int port, const wstring& user,
-    com_ptr<ISftpConsumer> consumer)
-    :
-m_session(create_and_authenticate(host, port, user, consumer)),
-m_filesystem(m_session.get_session().connect_to_filesystem()) {}
-
-authenticated_session::authenticated_session(
-    BOOST_RV_REF(authenticated_session) other)
-:
-m_session(move(other.m_session)), m_filesystem(move(other.m_filesystem)) {}
-
-authenticated_session& authenticated_session::operator=(
-    BOOST_RV_REF(authenticated_session) other)
+authenticated_session::authenticated_session(const wstring& host,
+                                             unsigned int port,
+                                             const wstring& user,
+                                             com_ptr<ISftpConsumer> consumer)
+    : m_session(create_and_authenticate(host, port, user, consumer)),
+      m_filesystem(m_session.get_session().connect_to_filesystem())
 {
-    swap(authenticated_session(move(other)), *this);
-    return *this;
 }
 
 session& authenticated_session::get_session()
@@ -515,7 +486,7 @@ sftp_filesystem& authenticated_session::get_sftp_filesystem()
 
 bool authenticated_session::is_dead()
 {
-   return m_session.is_dead();
+    return m_session.is_dead();
 }
 
 void swap(authenticated_session& lhs, authenticated_session& rhs)
@@ -523,5 +494,5 @@ void swap(authenticated_session& lhs, authenticated_session& rhs)
     boost::swap(lhs.m_session, rhs.m_session);
     boost::swap(lhs.m_filesystem, rhs.m_filesystem);
 }
-
-}} // namespace swish::connection
+}
+} // namespace swish::connection

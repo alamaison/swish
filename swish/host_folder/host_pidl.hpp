@@ -1,42 +1,31 @@
-/**
-    @file
+// Copyright 2011, 2012, 2013, 2016 Alexander Lamaison
 
-    PIDL access particular to host folder PIDLs.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SWISH_HOST_FOLDER_HOST_PIDL_HPP
 #define SWISH_HOST_FOLDER_HOST_PIDL_HPP
 #pragma once
 
-#include "swish/remotelimits.h"  // Text field limits
+#include "swish/remotelimits.h" // Text field limits
 
-#include <washer/shell/pidl.hpp> // pidl_t, apidl_t, cpidl_t
+#include <washer/shell/pidl.hpp>          // pidl_t, apidl_t, cpidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/format.hpp> // wformat
+#include <boost/format.hpp>                  // wformat
 #include <boost/numeric/conversion/cast.hpp> // numeric_cast
-#include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
-#include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
+#include <boost/static_assert.hpp>           // BOOST_STATIC_ASSERT
+#include <boost/throw_exception.hpp>         // BOOST_THROW_EXCEPTION
 
 #include <ssh/filesystem/path.hpp>
 
@@ -44,19 +33,21 @@
 #error Currently, swish requires strict PIDL types: define STRICT_TYPED_ITEMIDS
 #endif
 #include <ShTypes.h> // Raw PIDL types
-#include <StrAlign.h> // ua_wcslen, ua_wcscpy_s
 
 #include <algorithm> // find_if
-#include <cstring> // memset
+#include <cstring>   // memset
 #include <exception>
 #include <stdexcept> // runtime_error
 #include <string>
 #include <vector>
 
-namespace swish {
-namespace host_folder {
+namespace swish
+{
+namespace host_folder
+{
 
-namespace detail {
+namespace detail
+{
 
 #include <pshpack1.h>
 struct host_item_id
@@ -77,11 +68,12 @@ BOOST_STATIC_ASSERT((sizeof(host_item_id) % sizeof(DWORD)) == 0);
 
 inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 {
-    std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
-    ::ua_wcscpy_s(&buffer[0], buffer.size(), source);
-    return std::wstring(&buffer[0]);
+    // We were handling this explicitly by calling ua_wcslen and ua_wcacpy_s,
+    // but that doesn't seem to be supported any more (VS2015).  MSDN suggests
+    // we don't need to worry because x64 can handle unaligned access.
+    // https://msdn.microsoft.com/en-us/library/ms177389.aspx
+    return std::wstring(source);
 }
-
 }
 
 /**
@@ -98,13 +90,17 @@ public:
     // the pidl would be converted to a pidl_t using a temporary which is
     // destroyed immediately after the constructor returns, thereby
     // invalidating the PIDL we've stored a reference to.
-    template<typename T, typename Alloc>
+    template <typename T, typename Alloc>
     explicit host_itemid_view(
         const washer::shell::pidl::basic_pidl<T, Alloc>& pidl)
-        : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl.get())) {}
+        : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl.get()))
+    {
+    }
 
     explicit host_itemid_view(PCUIDLIST_RELATIVE pidl)
-        : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl)) {}
+        : m_itemid(reinterpret_cast<const detail::host_item_id*>(pidl))
+    {
+    }
 
     bool valid() const
     {
@@ -112,7 +108,7 @@ public:
             return false;
 
         return ((m_itemid->cb == sizeof(detail::host_item_id)) &&
-            (m_itemid->dwFingerprint == detail::host_item_id::FINGERPRINT));
+                (m_itemid->dwFingerprint == detail::host_item_id::FINGERPRINT));
     }
 
     std::wstring host() const
@@ -155,14 +151,15 @@ private:
     const detail::host_item_id __unaligned* m_itemid;
 };
 
-namespace detail {
-    struct is_valid_host_item
+namespace detail
+{
+struct is_valid_host_item
+{
+    bool operator()(const washer::shell::pidl::pidl_t& pidl)
     {
-        bool operator()(const washer::shell::pidl::pidl_t& pidl)
-        {
-            return host_itemid_view(pidl).valid();
-        }
-    };
+        return host_itemid_view(pidl).valid();
+    }
+};
 }
 
 /**
@@ -175,16 +172,16 @@ namespace detail {
  *          original PIDL.
  * @throws if no host ITEMID is found in the PIDL.
  */
-inline washer::shell::pidl::raw_pidl_iterator find_host_itemid(
-    PCIDLIST_ABSOLUTE pidl)
+inline washer::shell::pidl::raw_pidl_iterator
+find_host_itemid(PCIDLIST_ABSOLUTE pidl)
 {
     washer::shell::pidl::raw_pidl_iterator begin(pidl);
     washer::shell::pidl::raw_pidl_iterator end;
 
     // Search along pidl until we find one that matches our fingerprint or
     // we run off the end
-    washer::shell::pidl::raw_pidl_iterator pos = std::find_if(
-        begin, end, detail::is_valid_host_item());
+    washer::shell::pidl::raw_pidl_iterator pos =
+        std::find_if(begin, end, detail::is_valid_host_item());
     if (pos != end)
         return pos;
     else
@@ -192,31 +189,31 @@ inline washer::shell::pidl::raw_pidl_iterator find_host_itemid(
             std::runtime_error("PIDL doesn't contain host ITEMID"));
 }
 
-inline washer::shell::pidl::raw_pidl_iterator find_host_itemid(
-    const washer::shell::pidl::apidl_t& pidl)
+inline washer::shell::pidl::raw_pidl_iterator
+find_host_itemid(const washer::shell::pidl::apidl_t& pidl)
 {
     return swish::host_folder::find_host_itemid(pidl.get());
 }
 
-namespace detail {
+namespace detail
+{
 
 #include <pshpack1.h>
-    struct host_item_template
-    {
-        host_item_id id;
-        SHITEMID terminator;
-    };
+struct host_item_template
+{
+    host_item_id id;
+    SHITEMID terminator;
+};
 #include <poppack.h>
-
 }
 
 /**
  * Construct a new host folder PIDL with the fields initialised.
  */
-inline washer::shell::pidl::cpidl_t create_host_itemid(
-    const std::wstring& host, const std::wstring& user,
-    const ssh::filesystem::path& path, int port,
-    const std::wstring& label=std::wstring())
+inline washer::shell::pidl::cpidl_t
+create_host_itemid(const std::wstring& host, const std::wstring& user,
+                   const ssh::filesystem::path& path, int port,
+                   const std::wstring& label = std::wstring())
 {
     // We create the item on the stack and then clone it into
     // a CoTaskMemAllocated pidl when we return it as a cpidl_t
@@ -227,7 +224,7 @@ inline washer::shell::pidl::cpidl_t create_host_itemid(
     item.id.dwFingerprint = detail::host_item_id::FINGERPRINT;
 
 #pragma warning(push)
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
     host.copy(item.id.wszHost, MAX_HOSTNAME_LENZ);
     item.id.wszHost[MAX_HOSTNAME_LENZ - 1] = wchar_t();
 
@@ -257,27 +254,24 @@ inline washer::shell::pidl::cpidl_t create_host_itemid(
  * or, if not set and if the port is the default port, the reduced form:
  *     sftp://username\@hostname/path
  */
-inline std::wstring url_from_host_itemid(
-    const washer::shell::pidl::cpidl_t itemid, bool canonical)
+inline std::wstring
+url_from_host_itemid(const washer::shell::pidl::cpidl_t itemid, bool canonical)
 {
     host_itemid_view host_pidl(itemid);
 
     if (canonical || host_pidl.port() != SFTP_DEFAULT_PORT)
     {
-        return str(
-            boost::wformat(L"sftp://%s@%s:%u/%s")
-            % host_pidl.user() % host_pidl.host() % host_pidl.port()
-            % host_pidl.path().wstring());
+        return str(boost::wformat(L"sftp://%s@%s:%u/%s") % host_pidl.user() %
+                   host_pidl.host() % host_pidl.port() %
+                   host_pidl.path().wstring());
     }
     else
     {
-        return str(
-            boost::wformat(L"sftp://%s@%s/%s")
-            % host_pidl.user() % host_pidl.host()
-            % host_pidl.path().wstring());
+        return str(boost::wformat(L"sftp://%s@%s/%s") % host_pidl.user() %
+                   host_pidl.host() % host_pidl.path().wstring());
     }
 }
-
-}} // namespace swish::host_folder
+}
+} // namespace swish::host_folder
 
 #endif

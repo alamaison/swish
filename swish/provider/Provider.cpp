@@ -35,15 +35,14 @@
 
 #include <boost/filesystem/path.hpp>          // path
 #include <boost/iterator/filter_iterator.hpp> // make_filter_iterator
-#include <boost/make_shared.hpp>              // make_shared
-#include <boost/move/move.hpp>                // BOOST_RV_REF
-#include <boost/throw_exception.hpp>          // BOOST_THROW_EXCEPTION
 #include <boost/system/system_error.hpp>      // system_error, system_category
+#include <boost/throw_exception.hpp>          // BOOST_THROW_EXCEPTION
 
 #include <cassert> // assert
 #include <exception>
 #include <stdexcept> // invalid_argument
 #include <string>
+#include <type_traits>
 #include <vector> // to hold listing
 
 using swish::connection::authenticated_session;
@@ -58,7 +57,6 @@ using comet::datetime_t;
 using comet::stl_enumeration;
 
 using boost::make_filter_iterator;
-using boost::make_shared;
 namespace errc = boost::system::errc;
 using boost::system::system_category;
 using boost::system::system_error;
@@ -77,6 +75,8 @@ using std::exception;
 using std::invalid_argument;
 using std::string;
 using std::wstring;
+using std::make_shared;
+using std::make_unique;
 using std::vector;
 
 namespace swish
@@ -87,7 +87,7 @@ namespace provider
 class provider
 {
 public:
-    explicit provider(BOOST_RV_REF(session_reservation) session_ticket);
+    explicit provider(session_reservation&& session_ticket);
 
     directory_listing listing(const path& directory);
 
@@ -109,9 +109,9 @@ private:
     session_reservation m_ticket;
 };
 
-CProvider::CProvider(BOOST_RV_REF(session_reservation) session_ticket)
+CProvider::CProvider(session_reservation&& session_ticket)
 {
-    m_provider = make_shared<provider>(boost::ref(session_ticket));
+    m_provider = make_unique<provider>(std::move(session_ticket));
 }
 
 directory_listing CProvider::listing(const path& directory)
@@ -154,7 +154,7 @@ sftp_filesystem_item CProvider::stat(const path& path, bool follow_links)
 /**
  * Create libssh2-based data provider.
  */
-provider::provider(BOOST_RV_REF(session_reservation) ticket) : m_ticket(ticket)
+provider::provider(session_reservation&& ticket) : m_ticket(std::move(ticket))
 {
 }
 
@@ -200,20 +200,21 @@ com_ptr<IStream> provider::get_file(const path& file_path,
 
     if (mode & std::ios_base::out && mode & std::ios_base::in)
     {
-        return adapt_stream_pointer(
-            make_shared<fstream>(boost::ref(channel), file_path, mode),
-            file_path.filename().wstring());
+        auto stream_pointer =
+            std::make_shared<fstream>(channel, file_path, mode);
+        return adapt_stream_pointer(stream_pointer,
+                                    file_path.filename().wstring());
     }
     else if (mode & std::ios_base::out)
     {
         return adapt_stream_pointer(
-            make_shared<ofstream>(boost::ref(channel), file_path, mode),
+            std::make_shared<ofstream>(boost::ref(channel), file_path, mode),
             file_path.filename().wstring());
     }
     else if (mode & std::ios_base::in)
     {
         return adapt_stream_pointer(
-            make_shared<ifstream>(boost::ref(channel), file_path, mode),
+            std::make_shared<ifstream>(boost::ref(channel), file_path, mode),
             file_path.filename().wstring());
     }
     else

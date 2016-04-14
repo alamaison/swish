@@ -28,19 +28,19 @@
 
 #include <washer/gui/menu/basic_menu.hpp> // find_first_item_with_id
 #include <washer/gui/menu/button/string_button_description.hpp>
-#include <washer/gui/menu/item/command_item_description.hpp>
 #include <washer/gui/menu/item/command_item.hpp>
+#include <washer/gui/menu/item/command_item_description.hpp>
 #include <washer/gui/menu/item/item_state.hpp> // selectability
 #include <washer/gui/menu/item/separator_item.hpp>
 #include <washer/gui/menu/item/sub_menu_item.hpp>
 #include <washer/trace.hpp> // trace
 
 #include <boost/exception/diagnostic_information.hpp> // diagnostic_information
-#include <boost/foreach.hpp> // BOOST_FOREACH
+#include <boost/foreach.hpp>                          // BOOST_FOREACH
 #include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <cassert> // assert
+#include <cassert>   // assert
 #include <stdexcept> // logic_error, runtime_error
 
 using swish::frontend::commands::About;
@@ -69,22 +69,24 @@ using std::map;
 using std::runtime_error;
 using std::wstring;
 
-namespace swish {
-namespace host_folder {
+namespace swish
+{
+namespace host_folder
+{
 
-namespace {
+namespace
+{
 
 typedef std::map<UINT, boost::shared_ptr<swish::nse::Command>>
     menu_id_command_map;
 
-template<typename DescriptionType, typename HandleCreator>
+template <typename DescriptionType, typename HandleCreator>
 item item_from_menu(
-    const basic_menu<DescriptionType, HandleCreator>& parent_menu,
-    UINT menu_id)
+    const basic_menu<DescriptionType, HandleCreator>& parent_menu, UINT menu_id)
 {
     basic_menu<DescriptionType, HandleCreator>::iterator position =
-        find_first_item_with_id(
-            parent_menu.begin(), parent_menu.end(), menu_id);
+        find_first_item_with_id(parent_menu.begin(), parent_menu.end(),
+                                menu_id);
 
     if (position != parent_menu.end())
     {
@@ -142,14 +144,13 @@ item help_menu_with_fallback(const menu_bar& parent_menu)
     }
 }
 
-void merge_command_items(
-    UINT first_command_id, const UINT max_command_id,
-    menu destination, menu::iterator insert_position, 
-    const menu_id_command_map& commands)
+void merge_command_items(UINT first_command_id, const UINT max_command_id,
+                         menu destination, menu::iterator insert_position,
+                         const menu_id_command_map& commands)
 {
     typedef menu_id_command_map::iterator::value_type mapped_command;
 
-    BOOST_FOREACH(const mapped_command& menu_command, commands)
+    BOOST_FOREACH (const mapped_command& menu_command, commands)
     {
         UINT new_command_id = first_command_id + menu_command.first;
         if (new_command_id > max_command_id)
@@ -157,10 +158,9 @@ void merge_command_items(
                 runtime_error("Exeeded permitted merge space"));
 
         command_item_description item(
-            string_button_description(
-                menu_command.second->menu_title(NULL)),
+            string_button_description(menu_command.second->menu_title(NULL)),
             new_command_id);
-        
+
         // TODO: work out how to hide hidden() items.  For the moment we
         // treat them the same as disabled().
         // I don't know how to insert a hidden menu item, but Windows Forms
@@ -168,14 +168,16 @@ void merge_command_items(
         // separate from the menu itself and insert/remove the item to
         // show/hide it.
 
-        BOOST_SCOPED_ENUM(selectability) item_state =
-            menu_command.second->state(NULL, false) == Command::state::enabled ?
-                selectability::enabled : selectability::disabled;
+        BOOST_SCOPED_ENUM(selectability)
+        item_state = menu_command.second->state(NULL, false) ==
+                             Command::presentation_state::enabled
+                         ? selectability::enabled
+                         : selectability::disabled;
 
         item.selectability(item_state);
 
         // We have to be careful to increment the iterator *after* calling
-        // insert in case we are inserting at the end.  Doing 
+        // insert in case we are inserting at the end.  Doing
         // insert_position++ in the call to insert would step off the end.
 
         destination.insert(item, insert_position);
@@ -186,15 +188,15 @@ void merge_command_items(
 class merge_tools_command_items
 {
 public:
-
     typedef void result_type;
 
-    merge_tools_command_items(
-        UINT first_command_id, const UINT max_command_id,
-        const menu_id_command_map& commands)
-        :
-    m_first_command_id(first_command_id),
-    m_max_command_id(max_command_id), m_commands(commands) {}
+    merge_tools_command_items(UINT first_command_id, const UINT max_command_id,
+                              const menu_id_command_map& commands)
+        : m_first_command_id(first_command_id),
+          m_max_command_id(max_command_id),
+          m_commands(commands)
+    {
+    }
 
     void operator()(sub_menu_item& sub_menu)
     {
@@ -208,21 +210,18 @@ public:
             insert_position += 2;
         }
 
-        merge_command_items(
-            m_first_command_id, m_max_command_id, sub_menu.menu(),
-            insert_position, m_commands);
+        merge_command_items(m_first_command_id, m_max_command_id,
+                            sub_menu.menu(), insert_position, m_commands);
     }
 
     void operator()(command_item&)
     {
-        BOOST_THROW_EXCEPTION(
-            logic_error("Cannot insert into command item"));
+        BOOST_THROW_EXCEPTION(logic_error("Cannot insert into command item"));
     }
 
     void operator()(separator_item&)
     {
-        BOOST_THROW_EXCEPTION(
-            logic_error("Cannot insert into separator"));
+        BOOST_THROW_EXCEPTION(logic_error("Cannot insert into separator"));
     }
 
 private:
@@ -234,36 +233,33 @@ private:
 class merge_help_command_items
 {
 public:
-
     typedef void result_type;
 
-    merge_help_command_items(
-        UINT first_command_id, const UINT max_command_id,
-        const menu_id_command_map& commands)
-        :
-    m_first_command_id(first_command_id),
-    m_max_command_id(max_command_id), m_commands(commands) {}
+    merge_help_command_items(UINT first_command_id, const UINT max_command_id,
+                             const menu_id_command_map& commands)
+        : m_first_command_id(first_command_id),
+          m_max_command_id(max_command_id),
+          m_commands(commands)
+    {
+    }
 
     void operator()(sub_menu_item& sub_menu)
     {
         // Inserting into the bottom of the menu
         menu::iterator insert_position = sub_menu.menu().end();
 
-        merge_command_items(
-            m_first_command_id, m_max_command_id, sub_menu.menu(),
-            insert_position, m_commands);
+        merge_command_items(m_first_command_id, m_max_command_id,
+                            sub_menu.menu(), insert_position, m_commands);
     }
 
     void operator()(command_item&)
     {
-        BOOST_THROW_EXCEPTION(
-            logic_error("Cannot insert into command item"));
+        BOOST_THROW_EXCEPTION(logic_error("Cannot insert into command item"));
     }
 
     void operator()(separator_item&)
     {
-        BOOST_THROW_EXCEPTION(
-            logic_error("Cannot insert into separator"));
+        BOOST_THROW_EXCEPTION(logic_error("Cannot insert into separator"));
     }
 
 private:
@@ -271,19 +267,16 @@ private:
     const UINT m_max_command_id;
     menu_id_command_map m_commands;
 };
-
 }
-
 
 menu_command_manager::menu_command_manager(
     QCMINFO& menu_info, const optional<window<wchar_t>>& view,
     const apidl_t& folder)
-:
-m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
+    : m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
 {
     assert(menu_info.idCmdFirst >= FCIDM_SHVIEWFIRST);
     assert(menu_info.idCmdLast <= FCIDM_SHVIEWLAST);
-    //assert(::IsMenu(menu_info.hmenu));
+    // assert(::IsMenu(menu_info.hmenu));
 
     menu_id_command_map tools_menu_commands;
 
@@ -296,21 +289,19 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
 
     // Try to get a handle to the Explorer Tools menu and insert
     // add and remove connection menu items into it if we find it
-    m_tools_menu = tools_menu_with_fallback(
-        menu_handle::foster_handle(menu_info.hmenu));
-    m_tools_menu->accept(
-        merge_tools_command_items(
-            m_first_command_id, menu_info.idCmdLast, tools_menu_commands));
+    m_tools_menu =
+        tools_menu_with_fallback(menu_handle::foster_handle(menu_info.hmenu));
+    m_tools_menu->accept(merge_tools_command_items(
+        m_first_command_id, menu_info.idCmdLast, tools_menu_commands));
 
     menu_id_command_map help_menu_commands;
     help_menu_commands[offset++] = make_shared<About>();
 
     // Try to get a handle to the Explorer Help menu and insert About box
-    m_help_menu = help_menu_with_fallback(
-        menu_handle::foster_handle(menu_info.hmenu));
-    m_help_menu->accept(
-        merge_help_command_items(
-            m_first_command_id, menu_info.idCmdLast, help_menu_commands));
+    m_help_menu =
+        help_menu_with_fallback(menu_handle::foster_handle(menu_info.hmenu));
+    m_help_menu->accept(merge_help_command_items(
+        m_first_command_id, menu_info.idCmdLast, help_menu_commands));
 
     m_commands.insert(tools_menu_commands.begin(), tools_menu_commands.end());
     m_commands.insert(help_menu_commands.begin(), help_menu_commands.end());
@@ -322,13 +313,13 @@ m_view(view), m_folder(folder), m_first_command_id(menu_info.idCmdFirst)
     {
         menu_info.idCmdFirst += m_commands.rbegin()->first + 1;
     }
-    
+
     // if no commands were added, leave idCmdFirst alone
 }
 
-bool menu_command_manager::invoke(
-    UINT command_id, com_ptr<IShellItemArray> selection,
-    com_ptr<IUnknown> ole_site)
+bool menu_command_manager::invoke(UINT command_id,
+                                  com_ptr<IShellItemArray> selection,
+                                  com_ptr<IUnknown> ole_site)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
@@ -344,8 +335,8 @@ bool menu_command_manager::invoke(
     }
 }
 
-bool menu_command_manager::help_text(
-    UINT command_id, wstring& text_out, com_ptr<IShellItemArray> selection)
+bool menu_command_manager::help_text(UINT command_id, wstring& text_out,
+                                     com_ptr<IShellItemArray> selection)
 {
     menu_id_command_map::iterator pos = m_commands.find(command_id);
     if (pos != m_commands.end())
@@ -359,20 +350,22 @@ bool menu_command_manager::help_text(
     }
 }
 
-namespace {
+namespace
+{
 
 class update_command_items
 {
 public:
-
     typedef void result_type;
 
-    update_command_items(
-        com_ptr<IShellItemArray> selection, UINT first_command_id,
-        const menu_id_command_map& commands)
-        :
-    m_selection(selection), m_first_command_id(first_command_id),
-    m_commands(commands) {}
+    update_command_items(com_ptr<IShellItemArray> selection,
+                         UINT first_command_id,
+                         const menu_id_command_map& commands)
+        : m_selection(selection),
+          m_first_command_id(first_command_id),
+          m_commands(commands)
+    {
+    }
 
     class selectability_setter
     {
@@ -380,18 +373,19 @@ public:
         typedef void result_type;
 
         selectability_setter(BOOST_SCOPED_ENUM(selectability) selectability)
-            : m_selectability(selectability) {}
+            : m_selectability(selectability)
+        {
+        }
 
         void operator()(command_item& item)
         {
             item.selectability(m_selectability);
         }
 
-        template<typename T>
+        template <typename T>
         void operator()(T&)
         {
-            BOOST_THROW_EXCEPTION(
-                logic_error("Unexpected menu item type"));
+            BOOST_THROW_EXCEPTION(logic_error("Unexpected menu item type"));
         }
 
     private:
@@ -402,12 +396,13 @@ public:
     {
         typedef menu_id_command_map::iterator::value_type mapped_command;
 
-        BOOST_FOREACH(const mapped_command& menu_command, m_commands)
+        BOOST_FOREACH (const mapped_command& menu_command, m_commands)
         {
-            BOOST_SCOPED_ENUM(selectability) command_state =
-                menu_command.second->state(m_selection, false)
-                == Command::state::enabled ?
-                    selectability::enabled : selectability::disabled;
+            BOOST_SCOPED_ENUM(selectability)
+            command_state = menu_command.second->state(m_selection, false) ==
+                                    Command::presentation_state::enabled
+                                ? selectability::enabled
+                                : selectability::disabled;
 
             item menu_item = item_from_menu(
                 sub_menu.menu(), m_first_command_id + menu_command.first);
@@ -430,7 +425,6 @@ private:
     UINT m_first_command_id;
     menu_id_command_map m_commands;
 };
-
 }
 
 void menu_command_manager::update_state(com_ptr<IShellItemArray> selection)
@@ -441,5 +435,5 @@ void menu_command_manager::update_state(com_ptr<IShellItemArray> selection)
     m_tools_menu->accept(
         update_command_items(selection, m_first_command_id, m_commands));
 }
-
-}}
+}
+}

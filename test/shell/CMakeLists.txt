@@ -21,5 +21,3 @@ swish_test_suite(
   SOURCES ${SOURCES}
   LIBRARIES ${Boost_LIBRARIES} local_sandbox_fixture
   LABELS unit)
-
-swish_copy_fixture_files(test-shell)

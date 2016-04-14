@@ -86,7 +86,8 @@ BOOST_AUTO_TEST_CASE(non_execution_properties)
     BOOST_CHECK(!command.title(NULL).empty());
     BOOST_CHECK(!command.tool_tip(NULL).empty());
     BOOST_CHECK(!command.icon_descriptor(NULL).empty());
-    BOOST_CHECK_EQUAL(command.state(NULL, true), NewFolder::state::enabled);
+    BOOST_CHECK(command.state(NULL, true) ==
+                NewFolder::presentation_state::enabled);
 }
 
 /**

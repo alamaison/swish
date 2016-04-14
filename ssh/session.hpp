@@ -1,38 +1,17 @@
-/**
-    @file
+// Copyright 2010, 2012, 2013, 2016 Alexander Lamaison
 
-    SSH session object.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2010, 2012, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_SESSION_HPP
 #define SSH_SESSION_HPP
@@ -40,15 +19,14 @@
 #include <ssh/agent.hpp>
 #include <ssh/detail/libssh2/session.hpp>  // ssh::detail::libssh2::session
 #include <ssh/detail/libssh2/userauth.hpp> // ssh::detail::libssh2::userauth
+#include <ssh/filesystem.hpp>              // sftp_filesystem
 #include <ssh/host_key.hpp>
-#include <ssh/filesystem.hpp> // sftp_filesystem
 
 #include <boost/algorithm/string/classification.hpp> // is_any_of
 #include <boost/algorithm/string/split.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
 #include <boost/noncopyable.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -60,7 +38,7 @@
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
-#include <memory> // auto_ptr
+#include <memory>
 #include <string>
 #include <utility> // pair, make_pair
 #include <vector>
@@ -329,10 +307,8 @@ private:
  * This would mean that the session would only be disconnected when the last
  * copy is destroyed, which is harder to control.
  */
-class session : private boost::noncopyable
+class session
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(session)
-
 public:
     /**
      * Start a new SSH session with a host.
@@ -355,23 +331,6 @@ public:
                             "libssh2 C++ bindings session destructor")
         : m_session(new detail::session_state(socket, disconnection_message))
     {
-    }
-
-    /**
-     * Move constructor.
-     */
-    session(BOOST_RV_REF(session) other)
-        : m_session(boost::move(other.m_session))
-    {
-    }
-
-    /**
-     * Move-assignment.
-     */
-    session& operator=(BOOST_RV_REF(session) other)
-    {
-        m_session = boost::move(other.m_session);
-        return *this;
     }
 
     /**
@@ -622,27 +581,20 @@ private:
         return *m_session;
     }
 
-    // Using an auto_ptr (eventually unique_ptr) so that the other objects
-    // that reference this state continue to reference a valid object even if
-    // this session object is moved.  The moved session will only move the
-    // pointer but the state will remain at the same address.
-    // Using a value member meant that moving the session, relocated the
-    // session state but the other objects don't get made aware of that.
-    // Result: crash.
-    // The other objects using this state include filesystem connections
-    // (and transitively directory iterators and file streams) and
-    // agent identity collections.
+    // Using a unique_ptr so that the other objects that reference this state
+    // continue to reference a valid object even if this session object is
+    // moved.  The moved session will only move the pointer but the state will
+    // remain at the same address.  Using a value member meant that moving the
+    // session, relocated the session state but the other objects don't get made
+    // aware of that.  Result: crash.
+    //
+    // The other objects using this state include filesystem connections (and
+    // transitively directory iterators and file streams) and agent identity
+    // collections.
+    //
     // See http://stackoverflow.com/a/20493410/67013.
-    std::auto_ptr<detail::session_state> m_session;
+    std::unique_ptr<detail::session_state> m_session;
 };
-
-// C++11 swap has this implementation but we also support C++03
-inline void swap(session& lhs, session& rhs)
-{
-    session tmp(boost::move(lhs));
-    lhs = boost::move(rhs);
-    rhs = boost::move(tmp);
-}
 
 } // namespace ssh
 

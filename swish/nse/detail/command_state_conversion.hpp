@@ -35,33 +35,36 @@
 
 #include <shobjidl.h> // EXPCMDSTATE
 
-namespace swish {
-namespace nse {
-namespace detail {
+namespace swish
+{
+namespace nse
+{
+namespace detail
+{
 
-inline EXPCMDSTATE command_state_to_expcmdstate(
-    BOOST_SCOPED_ENUM(Command::state) state_in)
+inline EXPCMDSTATE
+command_state_to_expcmdstate(Command::presentation_state state_in)
 {
     switch (state_in)
     {
-    case Command::state::enabled:
+    case Command::presentation_state::enabled:
         return ECS_ENABLED;
 
-    case Command::state::disabled:
+    case Command::presentation_state::disabled:
         return ECS_DISABLED;
 
-    case Command::state::hidden:
+    case Command::presentation_state::hidden:
         // Add disabled flag as well just to be on the safe side.
-        // As the command button is hidden it shouldn't matter whether it 
+        // As the command button is hidden it shouldn't matter whether it
         // is disabled
         return ECS_HIDDEN | ECS_DISABLED;
 
     default:
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Unrecognised command state"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Unrecognised command state"));
     }
 }
-
-}}}
+}
+}
+}
 
 #endif

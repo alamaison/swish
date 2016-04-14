@@ -130,7 +130,7 @@ namespace {
 
     bool is_link(const sftp_filesystem_item& lt)
     {
-        return lt.type() == sftp_filesystem_item::type::link;
+        return lt.type() == sftp_filesystem_item::item_type::link;
     }
 
     bool is_directory(
@@ -151,7 +151,8 @@ namespace {
                 // TODO: consider what other properties we might want to
                 // take from the target instead of the link.  Currently
                 // we only take on folderness.
-                return target.type() == sftp_filesystem_item::type::directory;
+                return target.type() ==
+                       sftp_filesystem_item::item_type::directory;
             }
             catch(const exception&)
             {
@@ -162,7 +163,7 @@ namespace {
         }
         else
         {
-            return file.type() == sftp_filesystem_item::type::directory;
+            return file.type() == sftp_filesystem_item::item_type::directory;
         }
     }
 

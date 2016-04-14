@@ -22,16 +22,17 @@ add_library(openssh_fixture
   openssh_fixture.cpp
   openssh_fixture.hpp)
 
-hunter_add_package(Boost.Process)
+hunter_add_package(BoostProcess)
 hunter_add_package(Comet)
 hunter_add_package(Washer)
 
+find_package(BoostProcess CONFIG REQUIRED)
 find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(openssh_fixture
   PUBLIC ${Boost_LIBRARIES}
-  PRIVATE Boost::Process)
+  PRIVATE BoostProcess::boost_process)
 
 add_library(session_fixture
   session_fixture.cpp

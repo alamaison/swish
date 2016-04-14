@@ -112,9 +112,9 @@ namespace detail {
                     new mock_filesystem_file(name, permissions, size, date)));
         }
 
-        BOOST_SCOPED_ENUM(type) type() const
+        item_type type() const
         {
-            return type::file;
+            return item_type::file;
         }
 
         ssh::filesystem::path filename() const
@@ -187,9 +187,9 @@ namespace detail {
                     new mock_filesystem_directory(name)));
         }
 
-        BOOST_SCOPED_ENUM(type) type() const
+        item_type type() const
         {
-            return type::directory;
+            return item_type::directory;
         }
 
         ssh::filesystem::path filename() const
@@ -255,9 +255,9 @@ namespace detail {
                     new mock_filesystem_link(name)));
         }
 
-        BOOST_SCOPED_ENUM(type) type() const
+        item_type type() const
         {
-            return type::link;
+            return item_type::link;
         }
 
         ssh::filesystem::path filename() const

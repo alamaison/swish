@@ -64,27 +64,27 @@ Rename::Rename() :
         translate(L"Rename Connection"))
     {}
 
-BOOST_SCOPED_ENUM(Command::state) Rename::state(
-    com_ptr<IShellItemArray> selection, bool /*ok_to_be_slow*/)
-const
+    Command::presentation_state
+    Rename::state(com_ptr<IShellItemArray> selection,
+                  bool /*ok_to_be_slow*/) const
 {
     if (!selection)
     {
         // Selection unknown.
-        return state::hidden;
+        return presentation_state::hidden;
     }
 
     switch (selection->size())
     {
     case 1:
-        return state::enabled;
+        return presentation_state::enabled;
     case 0:
-        return state::hidden;
+        return presentation_state::hidden;
     default:
         // This means multiple items are selected. We disable rather than
         // hide the buttons to let the user know the option exists but that
         // we don't support multi-host renaming.
-        return state::disabled;
+        return presentation_state::disabled;
     }
 }
 

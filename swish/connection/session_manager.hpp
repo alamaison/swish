@@ -1,28 +1,17 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    Reservation system for sessions.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SWISH_CONNECTION_SESSION_FACTORY_HPP
 #define SWISH_CONNECTION_SESSION_FACTORY_HPP
@@ -34,14 +23,15 @@
 #include <comet/ptr.h>
 
 #include <boost/function.hpp>
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
-#include <boost/noncopyable.hpp>
 #include <boost/range/any_range.hpp>
 
+#include <memory>
 #include <string>
 
-namespace swish {
-namespace connection {
+namespace swish
+{
+namespace connection
+{
 
 class session_reservation_impl;
 
@@ -52,27 +42,9 @@ class session_reservation_impl;
  * Using a session without a ticket may lead to the session being
  * destroyed at an unexpected moment and is undefined behaviour.
  */
-class session_reservation : private boost::noncopyable
+class session_reservation
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(session_reservation)
-
 public:
-
-    /**
-     * Move constructor.
-     */
-    session_reservation(BOOST_RV_REF(session_reservation) other);
-
-    /**
-     * Move-assignment.
-     */
-    session_reservation& operator=(BOOST_RV_REF(session_reservation) other);
-
-    /**
-     * Releases session reservation.
-     */
-    ~session_reservation();
-
     /**
      * Returns reference to reserved session.
      *
@@ -84,9 +56,16 @@ public:
 
     session_reservation(session_reservation_impl* pimpl);
 
-private:
+    // Required because session_reservation_impl is incomplete
+    // See http://stackoverflow.com/a/9954553/67013
+    ~session_reservation();
 
-    session_reservation_impl* m_pimpl;
+    // Required because destructor is declared
+    session_reservation(session_reservation&&);
+    session_reservation& operator=(session_reservation&&);
+
+private:
+    std::unique_ptr<session_reservation_impl> m_pimpl;
 };
 
 // ALL Swish sessions (except in unit tests) must be created through this
@@ -96,9 +75,8 @@ private:
 class session_manager
 {
 public:
-    typedef boost::any_range<
-        std::string, boost::forward_traversal_tag, std::string,
-        std::ptrdiff_t> task_name_range;
+    typedef boost::any_range<std::string, boost::forward_traversal_tag,
+                             std::string, std::ptrdiff_t> task_name_range;
 
     typedef boost::function<bool(const task_name_range&)> progress_callback;
 
@@ -111,14 +89,13 @@ public:
      *
      * The session and any objects it creates are only valid for the lifetime
      * of the ticket.  The caller must not hold a reference to the session or
-     * its createes after the reservation is destroyed as call to 
-     * `disconnect_session` will disconnect and destroy the session.  Any 
+     * its createes after the reservation is destroyed as call to
+     * `disconnect_session` will disconnect and destroy the session.  Any
      * subsequent uses of those references would cause a crash.
      */
-    session_reservation reserve_session(
-        const connection_spec& specification,
-        comet::com_ptr<ISftpConsumer> consumer,
-        const std::string& task_name);
+    session_reservation reserve_session(const connection_spec& specification,
+                                        comet::com_ptr<ISftpConsumer> consumer,
+                                        const std::string& task_name);
 
     /**
      * Is a connection with the given specification already connected?
@@ -139,11 +116,10 @@ public:
      * - with an empty range when there are no more (or never were any) pending
      *   tasks
      */
-    void disconnect_session(
-        const connection_spec& specification,
-        progress_callback notification_sink);
+    void disconnect_session(const connection_spec& specification,
+                            progress_callback notification_sink);
 };
-
-}}
+}
+}
 
 #endif

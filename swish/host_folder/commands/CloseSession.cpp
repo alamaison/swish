@@ -108,14 +108,14 @@ CloseSession::CloseSession() :
         L"shell32.dll,-11", translate(L"&Close SFTP Connection..."),
         translate(L"Close Connection")) {}
 
-BOOST_SCOPED_ENUM(Command::state) CloseSession::state(
-    com_ptr<IShellItemArray> selection, bool /*ok_to_be_slow*/)
-const
+Command::presentation_state
+CloseSession::state(com_ptr<IShellItemArray> selection,
+                    bool /*ok_to_be_slow*/) const
 {
     if (!selection)
     {
         // Selection unknown.
-        return state::hidden;
+        return presentation_state::hidden;
     }
 
     switch (selection->size())
@@ -126,17 +126,17 @@ const
             com_ptr<IParentAndItem> folder_and_pidls = try_cast(item);
             apidl_t item_pidl = folder_and_pidls->absolute_item_pidl();
             if (session_manager().has_session(connection_from_pidl(item_pidl)))
-                return state::enabled;
+                return presentation_state::enabled;
             else
-                return state::hidden;
+                return presentation_state::hidden;
         }
     case 0:
-        return state::hidden;
+        return presentation_state::hidden;
     default:
         // This means multiple items are selected. We disable rather than
         // hide the buttons to let the user know the option exists but that
         // we don't support multi-host session closure.
-        return state::disabled;
+        return presentation_state::disabled;
     }
 }
 

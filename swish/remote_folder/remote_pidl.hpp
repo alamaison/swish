@@ -1,60 +1,51 @@
-/**
-    @file
+// Copyright 2011, 2012, 2016 Alexander Lamaison
 
-    PIDL access particular to remote folder PIDLs.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2011, 2012  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SWISH_REMOTE_FOLDER_REMOTE_PIDL_HPP
 #define SWISH_REMOTE_FOLDER_REMOTE_PIDL_HPP
 #pragma once
 
-#include "swish/remotelimits.h"  // Text field limits
+#include "swish/remotelimits.h" // Text field limits
 
 #include <ssh/filesystem/path.hpp>
 
 #include <comet/datetime.h> // datetime_t
 
-#include <washer/shell/pidl.hpp> // pidl_t
+#include <washer/shell/pidl.hpp>          // pidl_t
 #include <washer/shell/pidl_iterator.hpp> // raw_pidl_iterator
 
-#include <boost/static_assert.hpp> // BOOST_STATIC_ASSERT
+#include <boost/static_assert.hpp>   // BOOST_STATIC_ASSERT
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #ifndef STRICT_TYPED_ITEMIDS
 #error Currently, swish requires strict PIDL types: define STRICT_TYPED_ITEMIDS
 #endif
 #include <ShTypes.h> // Raw PIDL types
-#include <StrAlign.h> // ua_wcslen, ua_wcscpy_s
 
 #include <cstring> // memset
 #include <exception>
 #include <string>
 #include <vector>
 
-namespace swish {
-namespace remote_folder {
+namespace swish
+{
+namespace remote_folder
+{
 
-namespace detail {
+namespace detail
+{
 
 #include <pshpack1.h>
 /**
@@ -72,7 +63,7 @@ struct remote_item_id
     ULONG uUid;
     ULONG uGid;
     DWORD dwPermissions;
-    //WORD wPadding;
+    // WORD wPadding;
     ULONGLONG uSize;
     DATE dateModified;
     DATE dateAccessed;
@@ -85,11 +76,12 @@ BOOST_STATIC_ASSERT((sizeof(remote_item_id) % sizeof(DWORD)) == 0);
 
 inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 {
-    std::vector<wchar_t> buffer(::ua_wcslen(source) + 1);
-    ::ua_wcscpy_s(&buffer[0], buffer.size(), source);
-    return std::wstring(&buffer[0]);
+    // We were handling this explicitly by calling ua_wcslen and ua_wcacpy_s,
+    // but that doesn't seem to be supported any more (VS2015).  MSDN suggests
+    // we don't need to worry because x64 can handle unaligned access.
+    // https://msdn.microsoft.com/en-us/library/ms177389.aspx
+    return std::wstring(source);
 }
-
 }
 
 /**
@@ -106,21 +98,25 @@ public:
     // the pidl would be converted to a pidl_t using a temporary which is
     // destroyed immediately after the constructor returns, thereby
     // invalidating the PIDL we've stored a reference to.
-    template<typename T, typename Alloc>
+    template <typename T, typename Alloc>
     explicit remote_itemid_view(
         const washer::shell::pidl::basic_pidl<T, Alloc>& pidl)
         : m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl.get()))
-    {}
+    {
+    }
 
     explicit remote_itemid_view(PCUIDLIST_RELATIVE pidl)
-        : m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl)) {}
+        : m_itemid(reinterpret_cast<const detail::remote_item_id*>(pidl))
+    {
+    }
 
     bool valid() const
     {
         if (m_itemid == NULL)
             return false;
 
-        return ((m_itemid->cb == sizeof(detail::remote_item_id)) &&
+        return (
+            (m_itemid->cb == sizeof(detail::remote_item_id)) &&
             (m_itemid->dwFingerprint == detail::remote_item_id::FINGERPRINT));
     }
 
@@ -205,16 +201,16 @@ private:
     const detail::remote_item_id __unaligned* m_itemid;
 };
 
-namespace detail {
+namespace detail
+{
 
 #include <pshpack1.h>
-    struct remote_item_template
-    {
-        remote_item_id id;
-        SHITEMID terminator;
-    };
+struct remote_item_template
+{
+    remote_item_id id;
+    SHITEMID terminator;
+};
 #include <poppack.h>
-
 }
 
 /**
@@ -232,12 +228,12 @@ namespace detail {
  * @param date_modified  Date that file was last modified.
  * @param date_accessed  Date that file was last accessed.
  */
-inline washer::shell::pidl::cpidl_t create_remote_itemid(
-    const std::wstring& filename, bool is_folder, bool is_link,
-    const std::wstring& owner, const std::wstring& group, ULONG owner_id,
-    ULONG group_id, DWORD permissions, ULONGLONG size,
-    const comet::datetime_t date_modified,
-    const comet::datetime_t date_accessed)
+inline washer::shell::pidl::cpidl_t
+create_remote_itemid(const std::wstring& filename, bool is_folder, bool is_link,
+                     const std::wstring& owner, const std::wstring& group,
+                     ULONG owner_id, ULONG group_id, DWORD permissions,
+                     ULONGLONG size, const comet::datetime_t date_modified,
+                     const comet::datetime_t date_accessed)
 {
     // We create the item on the stack and then clone it into
     // a CoTaskMemAllocated pidl when we return it as a cpidl_t
@@ -248,7 +244,7 @@ inline washer::shell::pidl::cpidl_t create_remote_itemid(
     item.id.dwFingerprint = detail::remote_item_id::FINGERPRINT;
 
 #pragma warning(push)
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
     filename.copy(item.id.wszFilename, MAX_FILENAME_LENZ);
     item.id.wszFilename[MAX_HOSTNAME_LENZ - 1] = wchar_t();
 
@@ -283,8 +279,8 @@ inline washer::shell::pidl::cpidl_t create_remote_itemid(
  * - A relative PIDL returns:  "dir2/dir2/dir3/filename.ext"
  * - An absolute PIDL returns: "dir2/dir2/dir3/filename.ext"
  */
-inline ssh::filesystem::path path_from_remote_pidl(
-    const washer::shell::pidl::pidl_t& remote_pidl)
+inline ssh::filesystem::path
+path_from_remote_pidl(const washer::shell::pidl::pidl_t& remote_pidl)
 {
     // Walk over RemoteItemIds and append each filename to form the path
     washer::shell::pidl::raw_pidl_iterator it(remote_pidl.get());
@@ -303,7 +299,7 @@ inline ssh::filesystem::path path_from_remote_pidl(
 
     return path;
 }
-
-}} // namespace swish::remote_folder
+}
+} // namespace swish::remote_folder
 
 #endif

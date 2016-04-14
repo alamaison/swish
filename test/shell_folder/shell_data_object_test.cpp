@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(cfstr_shellidlist_item_fail)
     PidlFormat format(data_object_for_file(file));
 
     BOOST_REQUIRE_EQUAL(format.pidl_count(), 1U);
-    BOOST_REQUIRE_THROW(format.file(1), std::range_error)
+    BOOST_REQUIRE_THROW(format.file(1), std::range_error);
 }
 
 /**
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(cfstr_shellidlist_multiple_items)
     BOOST_REQUIRE(pidl_path_equivalence(pidl2, files[1]));
     BOOST_REQUIRE(pidl_path_equivalence(pidl3, files[2]));
 
-    BOOST_REQUIRE_THROW(format.file(4), std::range_error)
+    BOOST_REQUIRE_THROW(format.file(4), std::range_error);
 }
 
 /**

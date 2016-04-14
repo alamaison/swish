@@ -75,11 +75,10 @@ About::About() :
           L"Displays version, licence and copyright information for Swish."))
     {}
 
-BOOST_SCOPED_ENUM(Command::state) About::state(
-    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
-const
+    Command::presentation_state About::state(com_ptr<IShellItemArray>,
+                                             bool /*ok_to_be_slow*/) const
 {
-    return state::enabled;
+    return presentation_state::enabled;
 }
 
 void About::operator()(

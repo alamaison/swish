@@ -1,28 +1,17 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    Reservation system for sessions.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "session_manager.hpp"
 
@@ -37,9 +26,9 @@
 #include <boost/thread/once.hpp> // call_once
 #include <boost/uuid/random_generator.hpp>
 
+#include <list>
 #include <map>
 #include <memory> // auto_ptr
-#include <list>
 #include <vector>
 
 using comet::com_ptr;
@@ -62,10 +51,13 @@ using std::map;
 using std::string;
 using std::vector;
 
-namespace swish {
-namespace connection {
+namespace swish
+{
+namespace connection
+{
 
-namespace {
+namespace
+{
 
 class task_registration
 {
@@ -74,10 +66,13 @@ public:
     // be uniquely identifiable.  The task name is not enough as many tasks
     // make share a name.  We can't just use the object address, though,
     // because copies must be equal.
-    task_registration(
-        const string& task_name, const connection_spec& specification)
-        : m_tag(random_generator()()), m_task_name(task_name),
-          m_specification(specification) {}
+    task_registration(const string& task_name,
+                      const connection_spec& specification)
+        : m_tag(random_generator()()),
+          m_task_name(task_name),
+          m_specification(specification)
+    {
+    }
 
     // Copies take same tag
 
@@ -103,19 +98,17 @@ private:
     string m_task_name;
     connection_spec m_specification;
 };
-
-
 }
 
 // Hides the implementation details from the session_manager.hpp file.
 class session_reservation_impl : private boost::noncopyable
 {
 public:
-
-    session_reservation_impl(
-        authenticated_session& session, const function<void()>& unreserve)
-        :
-    m_session(session), m_unreserve(unreserve) {}
+    session_reservation_impl(authenticated_session& session,
+                             const function<void()>& unreserve)
+        : m_session(session), m_unreserve(unreserve)
+    {
+    }
 
     ~session_reservation_impl()
     {
@@ -128,12 +121,12 @@ public:
     }
 
 private:
-
     authenticated_session& m_session;
     function<void()> m_unreserve;
 };
 
-namespace {
+namespace
+{
 
 // Purpose: to maintain the book of reservations in an orderly
 // fashion.  This means cleaning out entries for old connection_specs that
@@ -143,15 +136,14 @@ class reservations_ledger
     typedef map<connection_spec, list<task_registration>> reservations_mapping;
 
 public:
-
-    void new_reservation(
-        const connection_spec& specification, const task_registration& task)
+    void new_reservation(const connection_spec& specification,
+                         const task_registration& task)
     {
         m_reservations[specification].push_back(task);
     }
 
-    vector<task_registration> reservations_for_connection(
-        const connection_spec& specification) const
+    vector<task_registration>
+    reservations_for_connection(const connection_spec& specification) const
     {
         reservations_mapping::const_iterator pos =
             m_reservations.find(specification);
@@ -162,8 +154,8 @@ public:
         }
         else
         {
-            return vector<task_registration>(
-                pos->second.begin(), pos->second.end());
+            return vector<task_registration>(pos->second.begin(),
+                                             pos->second.end());
         }
     }
 
@@ -184,7 +176,6 @@ public:
     }
 
 private:
-
     reservations_mapping m_reservations;
 };
 
@@ -197,21 +188,20 @@ string extract_task_name(const task_registration& task)
 class session_manager_impl
 {
 public:
-
     bool has_session(const connection_spec& specification) const
     {
         return session_pool().has_session(specification);
     }
 
-    session_reservation reserve_session(
-        connection_spec specification, com_ptr<ISftpConsumer> consumer,
-        const std::string& task_name)
+    session_reservation reserve_session(connection_spec specification,
+                                        com_ptr<ISftpConsumer> consumer,
+                                        const std::string& task_name)
     {
         task_registration task_id(task_name, specification);
 
         // Locking just before getting the session from the pool to make sure
         // another thread can't disconnect it just as we are about to become
-        // first and only reservation (if there were other reservations 
+        // first and only reservation (if there were other reservations
         // already, it couldn't get disconnected regardless)
         mutex::scoped_lock lock(m_reservations_guard);
 
@@ -222,15 +212,14 @@ public:
 
         m_reservations_changed.notify_all();
 
-        return session_reservation(
-            new session_reservation_impl(
-                session,
-                bind(&session_manager_impl::unreserve_session, this, task_id)));
+        return session_reservation(new session_reservation_impl(
+            session,
+            bind(&session_manager_impl::unreserve_session, this, task_id)));
     }
 
-    void disconnect_session(
-        const connection_spec& specification,
-        session_manager::progress_callback notification_sink)
+    void
+    disconnect_session(const connection_spec& specification,
+                       session_manager::progress_callback notification_sink)
     {
         // Lock here so that no new reservations can be made once we've decided
         // to disconnect this one, until we disconnect it
@@ -241,8 +230,8 @@ public:
         // disconnecting the session is quick so also not a problem in practice.
         mutex::scoped_lock lock(m_reservations_guard);
 
-        bool proceed_with_disconnection = wait_for_remaining_uses(
-            specification, notification_sink, lock);
+        bool proceed_with_disconnection =
+            wait_for_remaining_uses(specification, notification_sink, lock);
 
         if (proceed_with_disconnection)
         {
@@ -251,7 +240,6 @@ public:
     }
 
 private:
-
     bool wait_for_remaining_uses(
         const connection_spec& specification,
         session_manager::progress_callback notification_sink,
@@ -259,7 +247,7 @@ private:
     {
         while (true)
         {
-            vector<task_registration> reservations = 
+            vector<task_registration> reservations =
                 m_reservations.reservations_for_connection(specification);
 
             if (reservations.empty())
@@ -274,8 +262,8 @@ private:
             }
             // The callback controls whether we continue waiting or whether
             // we abort so that the user's UI isn't blocked
-            else if (notification_sink(
-                reservations | transformed(extract_task_name)))
+            else if (notification_sink(reservations |
+                                       transformed(extract_task_name)))
             {
                 // It is important to use a timed wait because we need to
                 // respond to cancellation promptly.
@@ -317,14 +305,13 @@ private:
         m_reservations.unreserve(task_id);
     }
 
-    session_manager_impl() {};
+    session_manager_impl(){};
 
     mutex m_reservations_guard;
     reservations_ledger m_reservations;
     condition_variable m_reservations_changed;
 
 public:
-
     static session_manager_impl& get()
     {
         call_once(m_initialise_once, do_init);
@@ -340,51 +327,32 @@ public:
     static auto_ptr<session_manager_impl> m_instance;
 };
 
-
 once_flag session_manager_impl::m_initialise_once;
 auto_ptr<session_manager_impl> session_manager_impl::m_instance;
-
 }
 
 session_reservation::session_reservation(session_reservation_impl* pimpl)
-:
-m_pimpl(pimpl) {}
-
-session_reservation::session_reservation(
-    BOOST_RV_REF(session_reservation) other) : m_pimpl(other.m_pimpl)
+    : m_pimpl(pimpl)
 {
-    other.m_pimpl = NULL;
 }
 
-session_reservation& session_reservation::operator=(
-    BOOST_RV_REF(session_reservation) other)
-{
-    if (&other != this)
-    {
-        delete m_pimpl;
-        m_pimpl = other.m_pimpl;
-        other.m_pimpl = NULL;
-    }
-
-    return *this;
-}
-
-session_reservation::~session_reservation()
-{
-    delete m_pimpl;
-}
+session_reservation::~session_reservation() = default;
+session_reservation::session_reservation(session_reservation&&) = default;
+session_reservation& session_reservation::
+operator=(session_reservation&&) = default;
 
 authenticated_session& session_reservation::session()
 {
     return m_pimpl->session();
 }
 
-session_reservation session_manager::reserve_session(
-    const connection_spec& specification, com_ptr<ISftpConsumer> consumer,
-    const string& task_name)
+session_reservation
+session_manager::reserve_session(const connection_spec& specification,
+                                 com_ptr<ISftpConsumer> consumer,
+                                 const string& task_name)
 {
-    return session_manager_impl::get().reserve_session(
-        specification, consumer, task_name);
+    return session_manager_impl::get().reserve_session(specification, consumer,
+                                                       task_name);
 }
 
 bool session_manager::has_session(const connection_spec& specification)
@@ -392,11 +360,11 @@ bool session_manager::has_session(const connection_spec& specification)
     return session_manager_impl::get().has_session(specification);
 }
 
-void session_manager::disconnect_session(
-    const connection_spec& specification, progress_callback notification_sink)
+void session_manager::disconnect_session(const connection_spec& specification,
+                                         progress_callback notification_sink)
 {
-    return session_manager_impl::get().disconnect_session(
-        specification, notification_sink);
+    return session_manager_impl::get().disconnect_session(specification,
+                                                          notification_sink);
 }
-
-}}
+}
+}

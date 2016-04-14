@@ -36,7 +36,6 @@
 
 #include "ssh/knownhost.hpp"
 
-#include <boost/assign/list_of.hpp> // list_of()
 #include <boost/foreach.hpp> // BOOST_FOREACH
 #include <boost/shared_ptr.hpp> // shared_ptr
 #include <boost/test/unit_test.hpp>
@@ -52,7 +51,6 @@ using ssh::knownhost;
 using ssh::knownhost_iterator;
 using ssh::openssh_knownhost_collection;
 
-using boost::assign::list_of;
 using boost::filesystem::path;
 using boost::filesystem::ifstream;
 using boost::shared_ptr;
@@ -111,22 +109,18 @@ const string KEY_UNKNOWN_FORMAT =
     "Jfqz4MXX0AqaIvsX/cO3Y2rR6qRo6HUDS4mD3QPLQxw2tDTs12Iji5v/mWUerKPwnRx1"
     "E7E=";
 
-const vector<const test_datum> test_data = list_of
-    (test_datum(
-        "host1.example.com", "192.168.0.1", "ssh-rsa", KEY_A, KEY_B, 
-        "test@swish"))
+const vector<test_datum> test_data = {
+    test_datum("host1.example.com", "192.168.0.1", "ssh-rsa", KEY_A, KEY_B,
+               "test@swish"),
     // The next key is not recognised by libssh2 (yet).  We use it to test that
     // unrecognised keys are handled gracefully.  Added in the middle to catch
     // if it halts processing silently - the later keys won't be processed.
     // Key format name is "unknown" because actual format name isn't exposed
-    (test_datum(
-        "unrecognisedkey.example.com", "192.168.2.1", "unknown",
-        KEY_UNKNOWN_FORMAT, KEY_A, "test@swish"))
-    (test_datum(
-        "host2.example.com", "10.0.0.1", "ssh-rsa", KEY_B, KEY_C, ""))
-    (test_datum(
-        "host3.example.com", "192.168.1.1", "ssh-dss", KEY_C, KEY_A,
-        "test@swish"));
+    test_datum("unrecognisedkey.example.com", "192.168.2.1", "unknown",
+               KEY_UNKNOWN_FORMAT, KEY_A, "test@swish"),
+    test_datum("host2.example.com", "10.0.0.1", "ssh-rsa", KEY_B, KEY_C, ""),
+    test_datum("host3.example.com", "192.168.1.1", "ssh-dss", KEY_C, KEY_A,
+               "test@swish")};
 
 const string FAIL_HOST = "i-dontexist-in-the-host-file.example.com";
 
@@ -675,63 +669,63 @@ BOOST_AUTO_TEST_CASE( add )
  */
 BOOST_AUTO_TEST_CASE( load_save )
 {
-    const vector<string> lines = list_of
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host.example.com,192.0.32.10 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("hostalias1,hostalias2 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\t")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\n")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== \n")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test@swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\ttest swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish\n")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish \n")
-        ("host.example.com unknown-key-format blahblahblahkey test swish \n")
-        ("host.example.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
-         "YAAAAIbmlzdHAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB"
-         "2MwAU3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
+    const vector<string> lines = {
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host.example.com,192.0.32.10 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "hostalias1,hostalias2 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\t",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\n",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== \n",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test@swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==\ttest swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish\n",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish \n",
+        "host.example.com unknown-key-format blahblahblahkey test swish \n",
+        "host.example.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
+        "YAAAAIbmlzdHAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB"
+        "2MwAU3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default",
         // Hashed version of the above
-        ("|1|FI75NN2BtS542+iqaY9PWHJlXfc=|vGXV2w0kCLXWOqRF8uf+njij1MI= "
-         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzd"
-         "HAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB2MwAU"
-         "3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
-        ("|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
-         "ssh-rsa AAAAB3NzaC1yc2EAA==")
+        "|1|FI75NN2BtS542+iqaY9PWHJlXfc=|vGXV2w0kCLXWOqRF8uf+njij1MI= "
+        "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzd"
+        "HAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB2MwAU"
+        "3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default",
+        "|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
+        "ssh-rsa AAAAB3NzaC1yc2EAA==",
         // this one will fail with libssh2 < 1.2.8
-        ("host1,host2,host3,192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA==");
-    const vector<string> expected_output = list_of
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("192.0.32.10 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("hostalias2 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("hostalias1 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test@swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
-        ("host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ")
-        ("host.example.com unknown-key-format blahblahblahkey test swish ")
-        ("host.example.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
-         "YAAAAIbmlzdHAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB"
-         "2MwAU3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
-        ("|1|FI75NN2BtS542+iqaY9PWHJlXfc=|vGXV2w0kCLXWOqRF8uf+njij1MI= "
-         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzd"
-         "HAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB2MwAU"
-         "3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default")
-        ("|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
-         "ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host3 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host2 ssh-rsa AAAAB3NzaC1yc2EAA==")
-        ("host1 ssh-rsa AAAAB3NzaC1yc2EAA==");
+        "host1,host2,host3,192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA=="};
+    const vector<string> expected_output = {
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "192.0.32.10 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "hostalias2 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "hostalias1 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== ",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test@swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ",
+        "host.example.com ssh-rsa AAAAB3NzaC1yc2EAA== test swish ",
+        "host.example.com unknown-key-format blahblahblahkey test swish ",
+        "host.example.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
+        "YAAAAIbmlzdHAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB"
+        "2MwAU3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default",
+        "|1|FI75NN2BtS542+iqaY9PWHJlXfc=|vGXV2w0kCLXWOqRF8uf+njij1MI= "
+        "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzd"
+        "HAyNTYAAABBBClh5K95Rz/k4WSPZ9rc8UnFSSSPtsu5z+hs19xbpusWB2MwAU"
+        "3+PYOjEUZZ9XuRMA+yKxOy1Qc/08uQWs1tyX8= swish@default",
+        "|1|wWleTRHpe2S17RMX0bNldkfB/6Y=|8KTu5EjSLKwlkr0JoNo2QA3uhJs= "
+        "ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host3 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host2 ssh-rsa AAAAB3NzaC1yc2EAA==",
+        "host1 ssh-rsa AAAAB3NzaC1yc2EAA=="};
 
     openssh_knownhost_collection kh(lines.begin(), lines.end());
 

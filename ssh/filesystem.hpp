@@ -17,8 +17,8 @@
 #define SSH_FILESYSTEM_HPP
 
 #include <ssh/detail/file_handle_state.hpp>
-#include <ssh/detail/sftp_channel_state.hpp>
 #include <ssh/detail/libssh2/sftp.hpp>
+#include <ssh/detail/sftp_channel_state.hpp>
 #include <ssh/filesystem/path.hpp>
 
 #include <boost/cstdint.hpp>                      // uint64_t, uintmax_t
@@ -26,11 +26,10 @@
 #include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM*
 #include <boost/exception/info.hpp>               // errinfo_api_function
 #include <boost/iterator/iterator_facade.hpp>     // iterator_facade
+#include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional/optional.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/move/move.hpp> // BOOST_RV_REF, BOOST_MOVABLE_BUT_NOT_COPYABLE
-#include <boost/noncopyable.hpp>
 #include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp> // errc
@@ -650,28 +649,9 @@ class sftp_io_device;
  * Filesystem connections are non-copyable.  The connection is closed when the
  * object is destroyed.
  */
-class sftp_filesystem : private boost::noncopyable
+class sftp_filesystem
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(sftp_filesystem)
-
 public:
-    /**
-     * Move constructor.
-     */
-    sftp_filesystem(BOOST_RV_REF(sftp_filesystem) other)
-        : m_sftp(boost::move(other.m_sftp))
-    {
-    }
-
-    /**
-     * Move-assignment.
-     */
-    sftp_filesystem& operator=(BOOST_RV_REF(sftp_filesystem) other)
-    {
-        m_sftp = boost::move(other.m_sftp);
-        return *this;
-    }
-
     /**
      * Create an iterator over the contents of the given directory.
      *
@@ -1090,27 +1070,19 @@ private:
         return *m_sftp;
     }
 
-    // Using an auto_ptr (eventually unique_ptr) so that the other objects
-    // that reference this state continue to reference a valid object even if
-    // this sftp_filesystem object is moved.  The moved filesystem will only
-    // move the pointer but the state will remain at the same address.
-    // Using a value member meant that moving the filesystem, relocated the
-    // channel state but the other objects don't get made aware of that.
-    // Result: crash.
+    // Using a unique_ptr so that the other objects that reference this state
+    // continue to reference a valid object even if this sftp_filesystem object
+    // is moved.  The moved filesystem will only move the pointer but the state
+    // will remain at the same address.  Using a value member meant that moving
+    // the filesystem, relocated the channel state but the other objects don't
+    // get made aware of that.  Result: crash.
+    //
     // The other objects using this state include directory iterators and
     // file streams.
+    //
     // See http://stackoverflow.com/a/20493410/67013.
-    std::auto_ptr<::ssh::detail::sftp_channel_state> m_sftp;
+    std::unique_ptr<::ssh::detail::sftp_channel_state> m_sftp;
 };
-
-// Only needed for C++03 support with Boost move-emulation because C++11
-// std::swap does this type of swap already
-inline void swap(sftp_filesystem& lhs, sftp_filesystem& rhs)
-{
-    sftp_filesystem tmp(boost::move(lhs));
-    lhs = boost::move(rhs);
-    rhs = boost::move(tmp);
-}
 
 /**
  * Make a directory accessible from the given path.

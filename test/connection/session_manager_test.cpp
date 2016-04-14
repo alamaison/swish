@@ -18,9 +18,9 @@
 #include "swish/connection/authenticated_session.hpp"
 #include "swish/connection/connection_spec.hpp"
 
+#include "test/common_boost/ConsumerStub.hpp"
 #include "test/common_boost/helpers.hpp"
 #include "test/fixtures/openssh_fixture.hpp"
-#include "test/common_boost/ConsumerStub.hpp"
 
 #include <comet/ptr.h> // com_ptr
 
@@ -116,6 +116,18 @@ BOOST_AUTO_TEST_CASE(new_reservation_are_registered_with_session_manager)
 
     BOOST_CHECK(session_manager().has_session(spec));
 
+    BOOST_CHECK(alive(session));
+}
+
+BOOST_AUTO_TEST_CASE(reservations_survive_moving)
+{
+    connection_spec spec(get_connection());
+    session_reservation ticket1 =
+        session_manager().reserve_session(spec, consumer(), "Testing");
+
+    session_reservation ticket2 = std::move(ticket1);
+
+    authenticated_session& session = ticket2.session();
     BOOST_CHECK(alive(session));
 }
 

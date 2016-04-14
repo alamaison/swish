@@ -15,16 +15,15 @@
 
 #include "running_session.hpp"
 
-#include "swish/remotelimits.h"
 #include "swish/debug.hpp"           // Debug macros
 #include "swish/port_conversion.hpp" // port_to_string
-#include "swish/utils.hpp"           // WideStringToUtf8String
+#include "swish/remotelimits.h"
+#include "swish/utils.hpp" // WideStringToUtf8String
 
-#include <ssh/session.hpp>
 #include <ssh/filesystem.hpp> // sftp_filesystem
+#include <ssh/session.hpp>
 
 #include <boost/asio/ip/tcp.hpp> // Boost sockets: only used for name resolving
-#include <boost/move/move.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
 #include <cassert>
@@ -39,7 +38,6 @@ using ssh::filesystem::sftp_filesystem;
 using boost::asio::error::host_not_found;
 using boost::asio::io_service;
 using boost::asio::ip::tcp;
-using boost::move;
 using boost::shared_ptr;
 using boost::system::get_system_category;
 using boost::system::system_error;
@@ -111,19 +109,6 @@ running_session::running_session(const wstring& host, unsigned int port)
       m_session(session_on_socket(*m_socket, host, port, *m_io,
                                   "Swish says goodbye."))
 {
-}
-
-running_session::running_session(BOOST_RV_REF(running_session) other)
-    : m_io(move(other.m_io)),
-      m_socket(move(other.m_socket)),
-      m_session(move(other.m_session))
-{
-}
-
-running_session& running_session::operator=(BOOST_RV_REF(running_session) other)
-{
-    swap(running_session(move(other)), *this);
-    return *this;
 }
 
 session& running_session::get_session()

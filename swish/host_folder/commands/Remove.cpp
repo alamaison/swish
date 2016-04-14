@@ -78,29 +78,28 @@ Remove::Remove(const apidl_t& folder_pidl) :
         translate(L"Remove Connection")),
     m_folder_pidl(folder_pidl) {}
 
-BOOST_SCOPED_ENUM(Command::state) Remove::state(
-    com_ptr<IShellItemArray> selection, bool /*ok_to_be_slow*/)
-const
+Command::presentation_state Remove::state(com_ptr<IShellItemArray> selection,
+                                          bool /*ok_to_be_slow*/) const
 {
     if (!selection)
     {
         // Selection unknown.
-        return state::hidden;
+        return presentation_state::hidden;
     }
 
     switch (selection->size())
     {
     case 1:
-        return state::enabled;
+        return presentation_state::enabled;
     case 0:
-        return state::hidden;
+        return presentation_state::hidden;
     default:
         // This means multiple items are selected. We disable rather than
         // hide the buttons to let the user know the option exists but that
         // we don't support multi-host removal yet.
 
         // TODO: support multi-host removal
-        return state::disabled;
+        return presentation_state::disabled;
     }
 }
 

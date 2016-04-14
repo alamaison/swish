@@ -100,14 +100,12 @@ LaunchAgent::LaunchAgent(const apidl_t& folder_pidl) :
         L"Launch key agent")),
    m_folder_pidl(folder_pidl) {}
 
-
-BOOST_SCOPED_ENUM(Command::state) LaunchAgent::state(
-    com_ptr<IShellItemArray>, bool /*ok_to_be_slow*/)
-const
+Command::presentation_state LaunchAgent::state(com_ptr<IShellItemArray>,
+                                               bool /*ok_to_be_slow*/) const
 {
     HWND hwnd = ::FindWindowW(L"Pageant", L"Pageant");
 
-    return (hwnd) ? state::hidden : state::enabled;
+    return (hwnd) ? presentation_state::hidden : presentation_state::enabled;
 }
 
 void LaunchAgent::operator()(
