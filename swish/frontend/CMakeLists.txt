@@ -38,7 +38,8 @@ hunter_add_package(WTL)
 find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 find_package(WinSparkle REQUIRED CONFIG)
+find_package(WTL REQUIRED CONFIG)
 
 target_link_libraries(frontend
   PRIVATE nse versions WinSparkle::WinSparkle
-  PUBLIC WTL::wtl Washer::washer Comet::comet)
+  PUBLIC WTL::WTL Washer::washer Comet::comet)

@@ -20,12 +20,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 # Package management ###########################################################
 
 include(HunterGate)
-
 HunterGate(
-    URL "https://github.com/alamaison/hunter/archive/ee83a15960b5d74098d8704bc9cf82ad8ec1734f.tar.gz"
-    SHA1 "d02301fee68f00198e7941129da446f80189017e"
-    LOCAL
-    )
+    URL "https://github.com/ruslo/hunter/archive/v0.14.11.tar.gz"
+    SHA1 "a2f48967850d5f9c385199c97b336148cb9db21b"
+)
 
 ################################################################################
 
@@ -52,7 +50,7 @@ add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 add_definitions(-DUNICODE -D_UNICODE)
 
 hunter_add_package(Boost
-  COMPONENTS filesystem system test date_time regex signals locale)
+  COMPONENTS filesystem system test date_time regex signals locale thread)
 
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.49 REQUIRED

@@ -35,7 +35,6 @@
 #include <ssh/filesystem/path.hpp>
 
 #include <boost/cstdint.hpp> // uint64_t
-#include <boost/detail/scoped_enum_emulation.hpp> // BOOST_SCOPED_ENUM
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -43,9 +42,10 @@
 
 #include <string>
 
-
-namespace swish {
-namespace provider {
+namespace swish
+{
+namespace provider
+{
 
 /**
  * Interface to Swish's representation of an SFTP file's properties.
@@ -59,8 +59,7 @@ namespace provider {
 class sftp_filesystem_item_interface
 {
 public:
-
-    BOOST_SCOPED_ENUM_START(type)
+    enum class item_type
     {
         /// File that can be opened and whose contents can be accessed
         /// (permissions permitting).
@@ -72,14 +71,14 @@ public:
         /// This file is a link to another item
         link,
 
-        /// An item of a type we don't recognise or the server didn't send any
+        /// An item of a type we don't recognise or the server didn't send
+        /// any
         /// information about the type
         unknown
     };
-    BOOST_SCOPED_ENUM_END();
 
     /// Type of item represented by this object.
-    virtual BOOST_SCOPED_ENUM(type) type() const = 0;
+    virtual item_type type() const = 0;
 
     /// Filename relative to directory (e.g. `README.txt`).
     virtual ssh::filesystem::path filename() const = 0;
@@ -121,45 +120,66 @@ public:
 class sftp_filesystem_item : public sftp_filesystem_item_interface
 {
 public:
-
-    BOOST_SCOPED_ENUM(type) type() const
-    { return m_inner->type(); }
+    item_type type() const
+    {
+        return m_inner->type();
+    }
 
     ssh::filesystem::path filename() const
-    { return m_inner ->filename(); }
+    {
+        return m_inner->filename();
+    }
 
     unsigned long permissions() const
-    { return m_inner->permissions(); }
+    {
+        return m_inner->permissions();
+    }
 
     boost::optional<std::wstring> owner() const
-    { return m_inner->owner(); }
+    {
+        return m_inner->owner();
+    }
 
     unsigned long uid() const
-    { return m_inner->uid(); }
+    {
+        return m_inner->uid();
+    }
 
     boost::optional<std::wstring> group() const
-    { return m_inner->group(); }
+    {
+        return m_inner->group();
+    }
 
     unsigned long gid() const
-    { return m_inner->gid(); }
+    {
+        return m_inner->gid();
+    }
 
     boost::uint64_t size_in_bytes() const
-    { return m_inner->size_in_bytes(); }
+    {
+        return m_inner->size_in_bytes();
+    }
 
     comet::datetime_t last_accessed() const
-    { return m_inner->last_accessed(); }
+    {
+        return m_inner->last_accessed();
+    }
 
     comet::datetime_t last_modified() const
-    { return m_inner->last_modified(); }
+    {
+        return m_inner->last_modified();
+    }
 
     explicit sftp_filesystem_item(
         boost::shared_ptr<sftp_filesystem_item_interface> inner)
-        : m_inner(inner) {}
+        : m_inner(inner)
+    {
+    }
 
 private:
     boost::shared_ptr<sftp_filesystem_item_interface> m_inner;
 };
-
-}}
+}
+}
 
 #endif

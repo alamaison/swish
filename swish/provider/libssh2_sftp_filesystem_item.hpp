@@ -41,17 +41,20 @@
 
 #include <string>
 
-namespace ssh {
-namespace filesystem {
+namespace ssh
+{
+namespace filesystem
+{
 
 class file_attributes;
 class sftp_file;
-
 }
 }
 
-namespace swish {
-namespace provider {
+namespace swish
+{
+namespace provider
+{
 
 /**
  * An entry in an SFTP directory retrieved by the libssh2 backend.
@@ -59,12 +62,11 @@ namespace provider {
 class libssh2_sftp_filesystem_item : public sftp_filesystem_item_interface
 {
 public:
-
     /**
      * Create filesystem entry from libssh2 filesystem item representation.
      */
-    static sftp_filesystem_item create_from_libssh2_file(
-        const ssh::filesystem::sftp_file& file);
+    static sftp_filesystem_item
+    create_from_libssh2_file(const ssh::filesystem::sftp_file& file);
 
     /**
      * Create filesystem entry from libssh2 filesystem item representation using
@@ -86,7 +88,7 @@ public:
         const ssh::filesystem::path& file_name,
         const ssh::filesystem::file_attributes& attributes);
 
-    virtual BOOST_SCOPED_ENUM(type) type() const;
+    virtual item_type type() const;
     virtual ssh::filesystem::path filename() const;
     virtual unsigned long permissions() const;
     virtual boost::optional<std::wstring> owner() const;
@@ -98,19 +100,16 @@ public:
     virtual comet::datetime_t last_modified() const;
 
 private:
-
-    libssh2_sftp_filesystem_item(
-        const ssh::filesystem::sftp_file& file);
+    libssh2_sftp_filesystem_item(const ssh::filesystem::sftp_file& file);
 
     libssh2_sftp_filesystem_item(
         const ssh::filesystem::path& file_name,
         const ssh::filesystem::file_attributes& attributes);
 
-    void common_init(
-        const ssh::filesystem::path& file_name,
-        const ssh::filesystem::file_attributes& attributes);
+    void common_init(const ssh::filesystem::path& file_name,
+                     const ssh::filesystem::file_attributes& attributes);
 
-    BOOST_SCOPED_ENUM(type) m_type;
+    item_type m_type;
     ssh::filesystem::path m_path;
     unsigned long m_permissions;
     boost::optional<std::wstring> m_owner;
@@ -121,7 +120,7 @@ private:
     comet::datetime_t m_modified;
     comet::datetime_t m_accessed;
 };
-
-}}
+}
+}
 
 #endif

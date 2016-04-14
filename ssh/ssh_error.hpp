@@ -37,6 +37,7 @@
 #ifndef SSH_SSH_ERROR_HPP
 #define SSH_SSH_ERROR_HPP
 
+#include <boost/config.hpp>              // BOOST_NOEXCEPT
 #include <boost/exception/exception.hpp> // enable_error_info
 #include <boost/exception/error_info.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
@@ -127,7 +128,7 @@ class _ssh_error_category : public boost::system::error_category
     typedef boost::system::error_category super;
 
 public:
-    const char* name() const
+    const char* name() const BOOST_NOEXCEPT
     {
         return "ssh";
     }
@@ -138,7 +139,7 @@ public:
     }
 
     virtual boost::system::error_condition
-    default_error_condition(int code) const
+    default_error_condition(int code) const BOOST_NOEXCEPT
     {
         switch (code)
         {
@@ -205,8 +206,8 @@ inline boost::system::error_code last_error_code(
 // of the error-info-enabled exception.  This function means we don't need to as
 // it takes it as a template arg
 template <typename Exception>
-BOOST_ATTRIBUTE_NORETURN inline void
-throw_api_exception(Exception e, const char* current_function,
+inline void
+throw_api_exception(const Exception& e, const char* current_function,
                     const char* source_file, int source_line,
                     const char* api_function, const char* path, size_t path_len)
 {
@@ -222,11 +223,12 @@ throw_api_exception(Exception e, const char* current_function,
     boost::throw_exception(e);
 }
 
-BOOST_ATTRIBUTE_NORETURN inline void
-throw_api_error_code(boost::system::error_code ec, const std::string& message,
-                     const char* current_function, const char* source_file,
-                     int source_line, const char* api_function,
-                     const char* path, size_t path_len)
+inline void throw_api_error_code(boost::system::error_code ec,
+                                 const std::string& message,
+                                 const char* current_function,
+                                 const char* source_file, int source_line,
+                                 const char* api_function, const char* path,
+                                 size_t path_len)
 {
     boost::system::system_error e = boost::system::system_error(ec, message);
     throw_api_exception(boost::enable_error_info(e), current_function,

@@ -15,20 +15,23 @@
 
 #include "openssh_fixture.hpp"
 
+#include "swish/connection/session_pool.hpp"
+
 #include <boost/assign/list_of.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/foreach.hpp>
 #include <boost/io/detail/quoted_manip.hpp>
 #include <boost/optional.hpp>
-#include <boost/process/context.hpp>
-#include <boost/process/environment.hpp>
-#include <boost/process/operations.hpp> // find_executable_in_path
-#include <boost/process/pistream.hpp>
-#include <boost/process/self.hpp>
-#include <boost/process/stream_behavior.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/locale.hpp>
+#include <boost/process.hpp>
+#include <boost/process/mitigate.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp> // this_thread
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 
+#include <cstdlib>
 #include <iterator>
 #include <map>
 #include <sstream>
@@ -37,19 +40,27 @@
 #include <vector>
 
 using boost::assign::list_of;
-using boost::io::quoted;
 using boost::filesystem::path;
+using boost::io::quoted;
+using boost::iostreams::file_descriptor_sink;
+using boost::iostreams::file_descriptor_source;
+using boost::iostreams::stream;
+using boost::lexical_cast;
+using boost::locale::conv::to_utf;
+using boost::locale::generator;
+using boost::locale::util::get_system_locale;
 using boost::optional;
-using boost::process::behavior::pipe;
 using boost::process::child;
-using boost::process::context;
-using boost::process::environment;
-using boost::process::find_executable_in_path;
-using boost::process::pistream;
-using boost::process::self;
-using boost::process::stderr_id;
-using boost::process::stdout_id;
+using boost::process::execute;
+using boost::process::initializers::bind_stderr;
+using boost::process::initializers::bind_stdout;
+using boost::process::initializers::run_exe;
+using boost::process::initializers::search_path;
+using boost::process::initializers::set_args;
+using boost::process::pipe;
+using boost::process::wait_for_exit;
 
+using std::locale;
 using std::map;
 using std::ostream_iterator;
 using std::ostringstream;
@@ -68,16 +79,18 @@ const string SSHD_WRONG_PUBLIC_KEY_FILE = "fixture_wrong_dsakey.pub";
 
 template <typename ArgSequence>
 string error_message_from_stderr(const string& command,
-                                 const ArgSequence& arguments, child& process)
+                                 const ArgSequence& arguments,
+                                 const pipe& stderr_pipe)
 {
-    pistream command_stderr(process.get_handle(stderr_id));
+    file_descriptor_source stderr_source(stderr_pipe.source, close_handle);
+    stream<file_descriptor_source> stderr_stream(stderr_source);
 
     ostringstream message;
     message << quoted(command) << " ";
     copy(arguments.begin(), arguments.end(),
          ostream_iterator<string>(message, " "));
     message << " failed: ";
-    message << command_stderr.rdbuf() << std::flush;
+    message << stderr_stream.rdbuf() << std::flush;
 
     return message.str();
 }
@@ -86,21 +99,20 @@ template <typename Out, typename ArgSequence>
 Out single_value_from_executable(const path& executable,
                                  const ArgSequence& arguments)
 {
-    context ctx;
-    ctx.env = self::get_environment();
-    ctx.streams[stdout_id] = pipe();
-    ctx.streams[stderr_id] = pipe();
+    pipe stdout_pipe = create_pipe();
+    pipe stderr_pipe = create_pipe();
+    file_descriptor_sink stdout_sink(stdout_pipe.sink, close_handle);
+    file_descriptor_sink stderr_sink(stderr_pipe.sink, close_handle);
+    child process =
+        execute(run_exe(search_path(executable)), set_args(arguments),
+                bind_stdout(stdout_sink), bind_stderr(stderr_sink));
 
-    child process = create_child(executable.string(), arguments, ctx);
-
-    pistream command_stdout(process.get_handle(stdout_id));
+    file_descriptor_source stdout_source(stdout_pipe.source, close_handle);
+    stream<file_descriptor_source> stdout_stream(stdout_source);
     Out out;
-    command_stdout >> out;
+    stdout_stream >> out;
 
-    int status = process.wait();
-    // TODO: Check if process exited, with WIFEXITED - may need to upgrade
-    // Boost.Process to the 2012 version to get mitigate.hpp, which handles this
-    // portably.
+    int status = BOOST_PROCESS_EXITSTATUS(wait_for_exit(process));
     if (status == 0)
     {
         return out;
@@ -108,7 +120,7 @@ Out single_value_from_executable(const path& executable,
     else
     {
         BOOST_THROW_EXCEPTION(runtime_error(error_message_from_stderr(
-            executable.string(), arguments, process)));
+            executable.string(), arguments, stderr_pipe)));
     }
 }
 
@@ -141,12 +153,10 @@ void run_docker_command(const ArgSequence& arguments)
 
 optional<string> docker_machine_name()
 {
-    const string docker_machine_name_variable = "DOCKER_MACHINE_NAME";
-
-    boost::process::environment environment = self::get_environment();
-    if (environment.count(docker_machine_name_variable) == 1)
+    char* docker_machine_name = std::getenv("DOCKER_MACHINE_NAME");
+    if (docker_machine_name)
     {
-        return environment[docker_machine_name_variable];
+        return docker_machine_name;
     }
     else
     {

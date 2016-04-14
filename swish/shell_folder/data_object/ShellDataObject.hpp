@@ -29,13 +29,16 @@
 
 #include <washer/shell/pidl.hpp> // pidl_t, PIDL wrapper types
 
-#include <comet/ptr.h>  // com_ptr
+#include <comet/ptr.h> // com_ptr
 
-#include <shldisp.h> // IAsyncOperation
+#include <shldisp.h> // IDataObjectAsyncCapability
 
-namespace swish {
-namespace shell_folder {
-namespace data_object {
+namespace swish
+{
+namespace shell_folder
+{
+namespace data_object
+{
 
 /**
  * Wrapper around an IDataObject pointer providing access to the usual
@@ -44,12 +47,11 @@ namespace data_object {
 class ShellDataObject
 {
 public:
-
     ShellDataObject(comet::com_ptr<IDataObject> data_object);
     ~ShellDataObject();
 
     bool supports_async() const;
-    comet::com_ptr<IAsyncOperation> async() const;
+    comet::com_ptr<IDataObjectAsyncCapability> async() const;
     bool has_pidl_format() const;
     bool has_hdrop_format() const;
     bool has_file_group_descriptor_format() const;
@@ -77,5 +79,6 @@ public:
 private:
     comet::com_ptr<IDataObject> m_data_object;
 };
-
-}}} // namespace swish::shell_folder::data_object
+}
+}
+} // namespace swish::shell_folder::data_object
