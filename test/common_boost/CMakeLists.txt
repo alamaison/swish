@@ -34,7 +34,11 @@ hunter_add_package(Washer)
 
 find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
+find_package(Boost REQUIRED COMPONENTS filesystem unit_test_framework)
 
 target_link_libraries(test-common_boost
-  PRIVATE shell shell_folder
-  PUBLIC Comet::comet Washer::washer ${Boost_LIBRARIES})
+  PRIVATE
+  shell shell_folder
+  PUBLIC
+  Comet::comet Washer::washer Boost::boost Boost::filesystem Boost::unit_test_framework
+  Boost::system Boost::locale)

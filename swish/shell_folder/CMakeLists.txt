@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -63,11 +63,15 @@ target_include_directories(shell_folder
 
 hunter_add_package(Comet)
 hunter_add_package(Washer)
+hunter_add_package(Boost COMPONENTS date_time system locale filesystem)
 
 find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
+find_package(Boost REQUIRED COMPONENTS date_time system locale filesystem)
 
 target_link_libraries(shell_folder
-  PRIVATE host_folder remote_folder frontend nse drop_target
-  urlmon ${Boost_LIBRARIES}
-  PUBLIC Washer::washer Comet::comet)
+  PRIVATE
+  host_folder remote_folder frontend nse drop_target urlmon
+  PUBLIC
+  Washer::washer Comet::comet Boost::boost Boost::date_time Boost::system
+  Boost::locale Boost::filesystem)

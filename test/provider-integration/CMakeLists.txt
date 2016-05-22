@@ -21,9 +21,12 @@ set(SOURCES
   stream_read_test.cpp
   stream_write_test.cpp)
 
+find_package(Boost REQUIRED COMPONENTS system filesystem unit_test_framework)
+
 swish_test_suite(
   SUBJECT provider VARIANT integration
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES} openssh_fixture provider_fixture sftp_fixture
-  com_stream_fixture
+  LIBRARIES
+  openssh_fixture provider_fixture sftp_fixture com_stream_fixture
+  Boost::unit_test_framework Boost::system Boost::filesystem Boost::boost
   LABELS integration)

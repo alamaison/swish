@@ -29,16 +29,21 @@ set(INTEGRATION_TESTS
   remote_folder_test.cpp
   sftp_data_object_test.cpp)
 
+find_package(Boost REQUIRED
+  COMPONENTS system filesystem date_time unit_test_framework)
+
 swish_test_suite(
   SUBJECT shell_folder VARIANT unit
   SOURCES ${UNIT_TESTS}
-  LIBRARIES ${Boost_LIBRARIES} local_sandbox_fixture
+  LIBRARIES
+  local_sandbox_fixture Boost::unit_test_framework Boost::boost Boost::system Boost::filesystem
   LABELS unit)
 
 swish_test_suite(
   SUBJECT shell_folder VARIANT integration
   SOURCES ${INTEGRATION_TESTS}
-  LIBRARIES ${Boost_LIBRARIES} provider_fixture
+  LIBRARIES
+  provider_fixture Boost::boost Boost::unit_test_framework Boost::system Boost::date_time
   LABELS integration)
 
 swish_copy_fixture_files(test-shell_folder-integration)

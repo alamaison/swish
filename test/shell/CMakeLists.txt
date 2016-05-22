@@ -16,8 +16,10 @@
 set(SOURCES
   shell_test.cpp)
 
+find_package(Boost REQUIRED COMPONENTS filesystem unit_test_framework)
+
 swish_test_suite(
   SUBJECT shell
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES} local_sandbox_fixture
+  LIBRARIES local_sandbox_fixture Boost::unit_test_framework Boost::filesystem Boost::boost
   LABELS unit)

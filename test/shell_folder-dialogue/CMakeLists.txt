@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -18,9 +18,12 @@ set(SOURCES
   # http://stackoverflow.com/a/1631078/67013
   KbdInteractiveDialog_test.cpp)
 
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+
 swish_test_suite(
   SUBJECT shell_folder VARIANT dialogue
   SOURCES ${SOURCES}
-  LIBRARIES ${CMAKE_BINARY_DIR}/swish/shell_folder/shell_folder.dir/${CMAKE_CFG_INTDIR}/shell_folder.res
-  ${Boost_LIBRARIES}
+  LIBRARIES
+  ${CMAKE_BINARY_DIR}/swish/shell_folder/shell_folder.dir/${CMAKE_CFG_INTDIR}/shell_folder.res
+  Boost::unit_test_framework
   LABELS gui)

@@ -23,14 +23,16 @@ set(INTEGRATION_TESTS
   session_manager_test.cpp
   session_pool_test.cpp)
 
+find_package(Boost REQUIRED COMPONENTS thread date_time unit_test_framework)
+
 swish_test_suite(
   SUBJECT connection VARIANT unit
   SOURCES ${UNIT_TESTS}
-  LIBRARIES ${Boost_LIBRARIES}
+  LIBRARIES Boost::unit_test_framework
   LABELS unit)
 
 swish_test_suite(
   SUBJECT connection VARIANT integration
   SOURCES ${INTEGRATION_TESTS}
-  LIBRARIES ${Boost_LIBRARIES} openssh_fixture
+  LIBRARIES openssh_fixture Boost::boost Boost::thread Boost::date_time
   LABELS integration)

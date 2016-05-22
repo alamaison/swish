@@ -19,14 +19,18 @@ set(UNIT_TESTS
 set(INTEGRATION_TESTS
   drop_target_test.cpp)
 
+find_package(Boost REQUIRED COMPONENTS filesystem unit_test_framework)
+
 swish_test_suite(
   SUBJECT drop_target VARIANT unit
   SOURCES ${UNIT_TESTS}
-  LIBRARIES shell ${Boost_LIBRARIES} local_sandbox_fixture
+  LIBRARIES shell local_sandbox_fixture Boost::filesystem Boost::unit_test_framework
   LABELS unit)
 
 swish_test_suite(
   SUBJECT drop_target VARIANT integration
   SOURCES ${INTEGRATION_TESTS}
-  LIBRARIES shell ${Boost_LIBRARIES} provider_fixture local_sandbox_fixture
+  LIBRARIES
+  shell provider_fixture local_sandbox_fixture Boost::filesystem Boost::unit_test_framework
+  Boost::boost
   LABELS integration)

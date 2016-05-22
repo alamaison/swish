@@ -14,7 +14,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # Package management ###########################################################
@@ -50,15 +50,17 @@ add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 add_definitions(-DUNICODE -D_UNICODE)
 
 hunter_add_package(Boost
-  COMPONENTS filesystem system test date_time regex signals locale thread)
+  COMPONENTS
+  filesystem system test date_time regex signals locale thread serialization)
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.49 REQUIRED
-  COMPONENTS filesystem date_time system regex signals thread locale)
+find_package(Boost REQUIRED
+  COMPONENTS
+  filesystem date_time system regex signals thread locale serialization
+  unit_test_framework)
 if(MSVC)
   add_definitions(-DBOOST_ALL_NO_LIB=1)
 endif()
-include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory(ezel)
 add_subdirectory(ssh)

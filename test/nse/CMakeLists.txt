@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -17,8 +17,10 @@ set(SOURCES
   default_context_menu_callback_tests.cpp
   explorer_command_tests.cpp)
 
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+
 swish_test_suite(
   SUBJECT nse
   SOURCES ${SOURCES}
-  LIBRARIES ${Boost_LIBRARIES}
+  LIBRARIES Boost::unit_test_framework Boost::boost
   LABELS unit)

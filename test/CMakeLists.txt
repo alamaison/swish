@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-find_package(Boost 1.40 REQUIRED COMPONENTS unit_test_framework)
-
 add_subdirectory(common_boost)
 add_subdirectory(fixtures)
 

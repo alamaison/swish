@@ -13,10 +13,16 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
+find_package(Boost REQUIRED
+  COMPONENTS
+  filesystem date_time iostreams locale thread system unit_test_framework)
+
 add_library(local_sandbox_fixture
   local_sandbox_fixture.cpp
   local_sandbox_fixture.hpp)
-target_link_libraries(local_sandbox_fixture ${Boost_LIBRARIES})
+target_link_libraries(local_sandbox_fixture
+  PUBLIC Boost::filesystem
+  PRIVATE Boost::boost)
 
 add_library(openssh_fixture
   openssh_fixture.cpp
@@ -31,8 +37,11 @@ find_package(Comet REQUIRED CONFIG)
 find_package(Washer REQUIRED CONFIG)
 
 target_link_libraries(openssh_fixture
-  PUBLIC ${Boost_LIBRARIES}
-  PRIVATE BoostProcess::boost_process)
+  PUBLIC
+  Boost::filesystem Boost::boost
+  PRIVATE
+  BoostProcess::boost_process Boost::date_time Boost::iostreams Boost::locale
+  Boost::thread Boost::system Boost::unit_test_framework)
 
 add_library(session_fixture
   session_fixture.cpp

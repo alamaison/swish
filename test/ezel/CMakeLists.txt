@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Alexander Lamaison <swish@lammy.co.uk>
+# Copyright (C) 2015, 2016  Alexander Lamaison <swish@lammy.co.uk>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -16,8 +16,10 @@
 set(SOURCES
   form_test.cpp)
 
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+
 swish_test_suite(
   SUBJECT ezel
   SOURCES ${SOURCES}
-  LIBRARIES shell_folder ${Boost_LIBRARIES}
+  LIBRARIES shell_folder Boost::boost Boost::unit_test_framework
   LABELS gui)

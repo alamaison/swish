@@ -17,7 +17,6 @@
 
 #include "swish/connection/session_pool.hpp"
 
-#include <boost/assign/list_of.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/foreach.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -40,7 +39,6 @@
 #include <string>
 #include <vector>
 
-using boost::assign::list_of;
 using boost::filesystem::path;
 using boost::iostreams::file_descriptor_sink;
 using boost::iostreams::file_descriptor_source;
@@ -227,8 +225,8 @@ struct global_fixture
     global_fixture()
     {
         // Ensure the docker image has been built
-        vector<string> build_command = (list_of(string("build")), "-t",
-                                        "swish/openssh_server", "ssh_server");
+        vector<string> build_command = {"build", "-t", "swish/openssh_server",
+                                        "ssh_server"};
         run_docker_command(build_command);
     }
 
@@ -258,8 +256,8 @@ namespace fixtures
 {
 openssh_fixture::openssh_fixture()
 {
-    vector<string> docker_command =
-        (list_of(string("run")), "--detach", "-P", "swish/openssh_server");
+    vector<string> docker_command = {"run", "--detach", "-P",
+                                     "swish/openssh_server"};
     m_container_id = single_value_from_docker_command<string>(docker_command);
     m_host = ask_docker_for_host();
     m_port = ask_docker_for_port();
@@ -278,7 +276,7 @@ openssh_fixture::~openssh_fixture()
 
 void openssh_fixture::stop_server()
 {
-    vector<string> stop_command = (list_of(string("stop")), m_container_id);
+    vector<string> stop_command = {"stop", m_container_id};
     run_docker_command(stop_command);
 }
 
@@ -286,9 +284,9 @@ void openssh_fixture::restart_server()
 {
     stop_server();
 
-    vector<string> docker_command =
-        (list_of(string("run")), "--detach", "-p",
-         lexical_cast<string>(m_port) + ":22", "swish/openssh_server");
+    vector<string> docker_command = {"run", "--detach", "-p",
+                                     lexical_cast<string>(m_port) + ":22",
+                                     "swish/openssh_server"};
     m_container_id = single_value_from_docker_command<string>(docker_command);
     // We make sure we bind to the same port in the new docker container.  Do we
     // have to do anything to ensure we get the same IP?  Presumably not unless
@@ -324,8 +322,7 @@ string openssh_fixture::ask_docker_for_host() const
             ++attempt_no;
             try
             {
-                vector<string> machine_ip_command =
-                    (list_of(string("ip")), "default");
+                vector<string> machine_ip_command = {"ip", "default"};
                 return single_value_from_docker_machine_command<string>(
                     machine_ip_command);
             }
@@ -345,9 +342,9 @@ string openssh_fixture::ask_docker_for_host() const
     }
     else
     {
-        vector<string> inspect_host_command =
-            (list_of(string("inspect")), "--format",
-             "{{ .NetworkSettings.IPAddress }}", m_container_id);
+        vector<string> inspect_host_command = {
+            "inspect", "--format", "{{ .NetworkSettings.IPAddress }}",
+            m_container_id};
         return single_value_from_docker_command<string>(inspect_host_command);
     }
 }
@@ -379,11 +376,11 @@ wstring openssh_fixture::wpassword() const
 
 int openssh_fixture::ask_docker_for_port() const
 {
-    vector<string> inspect_host_command =
-        (list_of(string("inspect")), "--format",
-         "{{ index (index (index .NetworkSettings.Ports \"22/tcp\") "
-         "0) \"HostPort\" }}",
-         m_container_id);
+    vector<string> inspect_host_command = {
+        "inspect", "--format",
+        "{{ index (index (index .NetworkSettings.Ports \"22/tcp\") "
+        "0) \"HostPort\" }}",
+        m_container_id};
     return single_value_from_docker_command<int>(inspect_host_command);
 }
 
