@@ -91,7 +91,9 @@ string prepare_argument_for_log(const std::string& argument)
 template <>
 string prepare_argument_for_log(const std::wstring& argument)
 {
-    return from_utf(argument, std::locale());
+    generator gen;
+    locale loc = gen(get_system_locale());
+    return from_utf(argument, loc);
 }
 
 template <typename ArgSequence>
@@ -156,14 +158,16 @@ Out single_value_from_command(const string& command,
 {
 // Yuk.  Bad Boost.Process API doesn't provide both overloads at once
 #if defined(_UNICODE) || defined(UNICODE)
-    wstring wide_command = to_utf<wchar_t>(command, std::locale());
+    generator gen;
+    locale loc = gen(get_system_locale());
+    wstring wide_command = to_utf<wchar_t>(command, loc);
     path command_executable = search_path(wide_command);
 
     vector<wstring> wide_arguments;
     transform(begin(arguments), end(arguments), back_inserter(wide_arguments),
-              [](const string& arg)
+              [loc](const string& arg)
               {
-                  return to_utf<wchar_t>(arg, std::locale());
+                  return to_utf<wchar_t>(arg, loc);
               });
     return single_value_from_executable<Out>(command_executable,
                                              wide_arguments);
