@@ -474,6 +474,22 @@ authenticated_session::authenticated_session(const wstring& host,
 {
 }
 
+// The implicit move assignment operator is not sufficient because it destroys
+// the fields of the old object in initialisation order, not destruction order.
+// m_filesystem depends on m_session, and when m_filesystem is destroyed it
+// tries to use the session which has already been deallocated.  This explicit
+// implementation enforces the correct ordering.
+//
+// TODO: Use copy-and-swap
+// TODO: Move lifetime management to single-responsibility class
+authenticated_session& authenticated_session::
+operator=(authenticated_session&& rhs)
+{
+    m_filesystem = std::move(rhs.m_filesystem);
+    m_session = std::move(rhs.m_session);
+    return *this;
+}
+
 session& authenticated_session::get_session()
 {
     return m_session.get_session();

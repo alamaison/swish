@@ -111,6 +111,22 @@ running_session::running_session(const wstring& host, unsigned int port)
 {
 }
 
+// The implicit move assignment operator is not sufficient because it destroys
+// the fields of the old object in initialisation order, not destruction order.
+// m_session depends on m_socket, which depends on m_io. When m_session is
+// destroyed it tries to use the socket which has already been deallocated.
+// This explicit implementation enforces the correct ordering.
+//
+// TODO: Use copy-and-swap
+// TODO: Move lifetime management to single-responsibility class
+running_session& running_session::operator=(running_session&& rhs)
+{
+    m_session = std::move(rhs.m_session);
+    m_socket = std::move(rhs.m_socket);
+    m_io = std::move(rhs.m_io);
+    return *this;
+}
+
 session& running_session::get_session()
 {
     return m_session;

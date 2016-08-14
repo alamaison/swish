@@ -17,6 +17,7 @@
 
 #include "swish/connection/session_pool.hpp"
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/foreach.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -39,6 +40,7 @@
 #include <string>
 #include <vector>
 
+using boost::algorithm::join;
 using boost::filesystem::path;
 using boost::iostreams::file_descriptor_sink;
 using boost::iostreams::file_descriptor_source;
@@ -57,10 +59,11 @@ using boost::process::initializers::bind_stderr;
 using boost::process::initializers::bind_stdout;
 using boost::process::initializers::run_exe;
 using boost::process::search_path;
-using boost::process::initializers::set_args;
+using boost::process::initializers::set_cmd_line;
 using boost::process::pipe;
 using boost::process::wait_for_exit;
 
+using std::basic_ostringstream;
 using std::locale;
 using std::map;
 using std::ostream_iterator;
@@ -97,26 +100,22 @@ string prepare_argument_for_log(const std::wstring& argument)
 }
 
 template <typename ArgSequence>
-string error_message_from_stderr(const string& command,
-                                 const ArgSequence& arguments,
-                                 const pipe& stderr_pipe)
+string
+error_message_from_stderr(const string& command, const ArgSequence& arguments,
+                          const stream<file_descriptor_source>& stderr_stream)
 {
-    file_descriptor_source stderr_source(stderr_pipe.source,
-                                         file_descriptor_flags::close_handle);
-    stream<file_descriptor_source> stderr_stream(stderr_source);
-
     ostringstream message;
     message << quoted(command) << " ";
 
     vector<string> prepped_arguments;
-    transform(arguments.begin(), arguments.end(), prepped_arguments.begin(),
+    transform(arguments.begin(), arguments.end(),
+              back_inserter(prepped_arguments),
               prepare_argument_for_log<ArgSequence::value_type>);
 
     ostream_iterator<string>(message, " ");
     copy(prepped_arguments.begin(), prepped_arguments.end(),
          ostream_iterator<string>(message, " "));
-    message << " failed: ";
-    message << stderr_stream.rdbuf() << std::flush;
+    message << " failed: " << stderr_stream.rdbuf() << std::flush;
 
     return message.str();
 }
@@ -131,24 +130,47 @@ Out single_value_from_executable(const path& executable,
                                      file_descriptor_flags::close_handle);
     file_descriptor_sink stderr_sink(stderr_pipe.sink,
                                      file_descriptor_flags::close_handle);
-    child process = execute(run_exe(executable), set_args(arguments),
-                            bind_stdout(stdout_sink), bind_stderr(stderr_sink));
-
     file_descriptor_source stdout_source(stdout_pipe.source,
                                          file_descriptor_flags::close_handle);
-    stream<file_descriptor_source> stdout_stream(stdout_source);
-    Out out;
-    stdout_stream >> out;
+    file_descriptor_source stderr_source(stderr_pipe.source,
+                                         file_descriptor_flags::close_handle);
 
+    stream<file_descriptor_source> stderr_stream(stderr_source);
+    stream<file_descriptor_source> stdout_stream(stdout_source);
+
+    // We have to format the arguments into a command-line ourselves here
+    // because Boost.Process 0.5 doesn't handle arguments with quotes properly
+    // (see https://github.com/BorisSchaeling/boost-process/issues/17)
+    vector<ArgSequence::value_type> quoted_arguments;
+    transform(begin(arguments), end(arguments), back_inserter(quoted_arguments),
+              [](const auto& argument)
+              {
+                  basic_ostringstream<ArgSequence::value_type::value_type>
+                      quoted_argument;
+                  quoted_argument << quoted(argument);
+                  return quoted_argument.str();
+              });
+    auto command_line = join(
+        quoted_arguments,
+        ArgSequence::value_type(1, ArgSequence::value_type::value_type(' ')));
+
+    child process = execute(run_exe(executable), set_cmd_line(command_line),
+                            bind_stdout(stdout_sink), bind_stderr(stderr_sink));
+
+    Out out;
     int status = BOOST_PROCESS_EXITSTATUS(wait_for_exit(process));
     if (status == 0)
     {
+        stdout_sink.close();
+        stdout_stream >> out;
         return out;
     }
     else
     {
+        //        BOOST_FAIL(prepare_argument_for_log(command_line));
+        stderr_sink.close();
         BOOST_THROW_EXCEPTION(runtime_error(error_message_from_stderr(
-            executable.string(), arguments, stderr_pipe)));
+            executable.string(), quoted_arguments, stderr_stream)));
     }
 }
 
@@ -164,6 +186,7 @@ Out single_value_from_command(const string& command,
     path command_executable = search_path(wide_command);
 
     vector<wstring> wide_arguments;
+    wide_arguments.push_back(wide_command);
     transform(begin(arguments), end(arguments), back_inserter(wide_arguments),
               [loc](const string& arg)
               {

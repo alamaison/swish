@@ -1,38 +1,17 @@
-/**
-    @file
+// Copyright 2010, 2013, 2016 Alexander Lamaison
 
-    Interface to known-host mechanism.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_KNOWNHOST_HPP
 #define SSH_KNOWNHOST_HPP
@@ -87,7 +66,7 @@ public:
      */
     void operator()(const T& entry)
     {
-        detail::session_state::scoped_lock lock = m_session->aquire_lock();
+        auto lock = m_session->aquire_lock();
 
         detail::libssh2::knownhost::readline(m_session->session_ptr(),
                                              m_hosts.get(), entry.data(),
@@ -178,7 +157,7 @@ inline libssh2_knownhost* next_host(boost::shared_ptr<session_state> session,
 {
     libssh2_knownhost* host = NULL;
 
-    detail::session_state::scoped_lock lock = session->aquire_lock();
+    auto lock = session->aquire_lock();
 
     int rc = ::ssh::detail::libssh2::knownhost::get(
         session->session_ptr(), hosts.get(), &host, current_position);
@@ -210,7 +189,7 @@ inline libssh2_knownhost* add(boost::shared_ptr<session_state> session,
 
     libssh2_knownhost* host = NULL;
 
-    detail::session_state::scoped_lock lock = session->aquire_lock();
+    auto lock = session->aquire_lock();
 
     detail::libssh2::knownhost::add(session->session_ptr(), hosts.get(),
                                     host_or_ip.c_str(),
@@ -281,7 +260,7 @@ public:
         boost::system::error_code ec;
 
         {
-            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+            auto lock = m_session->aquire_lock();
 
             detail::libssh2::knownhost::writeline(m_session->session_ptr(),
                                                   m_hosts.get(), m_pos, NULL, 0,
@@ -296,7 +275,7 @@ public:
         std::vector<char> buf(required_len);
 
         {
-            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+            auto lock = m_session->aquire_lock();
 
             ::ssh::detail::libssh2::knownhost::writeline(
                 m_session->session_ptr(), m_hosts.get(), m_pos, &buf[0],
@@ -399,7 +378,7 @@ public:
         knownhost_iterator next = it;
         next++;
 
-        detail::session_state::scoped_lock lock = it.m_session->aquire_lock();
+        auto lock = it.m_session->aquire_lock();
 
         // this call invalidates the given iterator
         detail::libssh2::knownhost::del(it.m_session->session_ptr(),
@@ -530,7 +509,7 @@ inline int hostkey_type_to_add_type(ssh::hostkey_type::enum_t type)
 inline boost::shared_ptr<LIBSSH2_KNOWNHOSTS>
 init(boost::shared_ptr<session_state> session)
 {
-    detail::session_state::scoped_lock lock = session->aquire_lock();
+    auto lock = session->aquire_lock();
 
     return boost::shared_ptr<LIBSSH2_KNOWNHOSTS>(
         libssh2::knownhost::init(session->session_ptr()),
@@ -578,7 +557,7 @@ public:
         int rc;
 
         {
-            detail::session_state::scoped_lock lock = m_session->aquire_lock();
+            auto lock = m_session->aquire_lock();
 
             rc = detail::libssh2::knownhost::check(
                 m_session->session_ptr(), m_hosts.get(), host.c_str(),

@@ -1,38 +1,17 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    RAII lifetime management of libssh2 sessions.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_DETAIL_SESSION_STATE_HPP
 #define SSH_DETAIL_SESSION_STATE_HPP
@@ -43,9 +22,9 @@
 #include <boost/optional/optional.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/throw_exception.hpp> // BOOST_THROW_EXCEPTION
 
+#include <mutex>
 #include <string>
 
 #include <libssh2.h> // LIBSSH2_SESSION
@@ -66,7 +45,7 @@ namespace detail
  * careful of the lifetime of the unstarted session in the code below.
  * The session may fail to start but must still be freed.
  */
-class session_state : private boost::noncopyable
+class session_state
 {
     //
     // Intentionally not movable to prevent the public classes that own
@@ -77,9 +56,12 @@ class session_state : private boost::noncopyable
     // that.
     //
 
-public:
-    typedef boost::mutex::scoped_lock scoped_lock;
+    session_state(const session_state&) = delete;
+    session_state& operator=(const session_state&) = delete;
+    session_state(session_state&&) = delete;
+    session_state& operator=(session_state&&) = delete;
 
+public:
     /**
      * Creates a session that is not (and never will be) connected to a host.
      */
@@ -131,9 +113,9 @@ public:
         ::libssh2_session_free(m_session);
     }
 
-    scoped_lock aquire_lock()
+    auto aquire_lock()
     {
-        return scoped_lock(m_mutex);
+        return std::unique_lock<decltype(m_mutex)>(m_mutex);
     }
 
     LIBSSH2_SESSION* session_ptr()
@@ -142,7 +124,7 @@ public:
     }
 
 private:
-    mutable boost::mutex m_mutex;
+    mutable std::mutex m_mutex;
     ///< Coordinates multiple-threads using of non-thread-safe LIBSSH2_SESSION.
 
     LIBSSH2_SESSION* m_session;

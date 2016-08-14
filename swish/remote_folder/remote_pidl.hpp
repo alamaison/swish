@@ -76,11 +76,14 @@ BOOST_STATIC_ASSERT((sizeof(remote_item_id) % sizeof(DWORD)) == 0);
 
 inline std::wstring copy_unaligned_string(const wchar_t __unaligned* source)
 {
-    // We were handling this explicitly by calling ua_wcslen and ua_wcacpy_s,
-    // but that doesn't seem to be supported any more (VS2015).  MSDN suggests
-    // we don't need to worry because x64 can handle unaligned access.
-    // https://msdn.microsoft.com/en-us/library/ms177389.aspx
+// We were handling this explicitly by calling ua_wcslen and ua_wcacpy_s,
+// but that doesn't seem to be supported any more (VS2015).  MSDN suggests
+// we don't need to worry because x64 can handle unaligned access.
+// https://msdn.microsoft.com/en-us/library/ms177389.aspx
+#pragma warning(push)
+#pragma warning(disable : 4090) // different '__unaligned' qualifiers
     return std::wstring(source);
+#pragma warning(pop)
 }
 }
 

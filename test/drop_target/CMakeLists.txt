@@ -34,3 +34,5 @@ swish_test_suite(
   shell provider_fixture local_sandbox_fixture Boost::filesystem Boost::unit_test_framework
   Boost::boost
   LABELS integration)
+
+swish_copy_fixture_files(test-drop_target-integration)

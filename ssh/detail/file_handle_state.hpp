@@ -1,46 +1,23 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    RAII lifetime management of libssh2 file handles.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_DETAIL_FILE_HANDLE_STATE_HPP
 #define SSH_DETAIL_FILE_HANDLE_STATE_HPP
 
 #include <ssh/detail/libssh2/sftp.hpp> // open
 #include <ssh/detail/sftp_channel_state.hpp>
-
-#include <boost/noncopyable.hpp>
 
 #include <string>
 
@@ -57,7 +34,7 @@ inline LIBSSH2_SFTP_HANDLE* do_open(sftp_channel_state& sftp,
                                     unsigned long flags, long mode,
                                     int open_type)
 {
-    session_state::scoped_lock lock = sftp.aquire_lock();
+    auto lock = sftp.aquire_lock();
 
     return libssh2::sftp::open(sftp.session_ptr(), sftp.sftp_ptr(), filename,
                                filename_len, flags, mode, open_type);
@@ -68,7 +45,7 @@ inline LIBSSH2_SFTP_HANDLE* do_open(sftp_channel_state& sftp,
  *
  * Manages the graceful opening/closing of file handles.
  */
-class file_handle_state : private boost::noncopyable
+class file_handle_state
 {
     //
     // Intentionally not movable to prevent the public classes that own
@@ -78,10 +55,12 @@ class file_handle_state : private boost::noncopyable
     // the other references.  Making this non-copyable, non-movable enforces
     // that.
     //
+    file_handle_state(const file_handle_state&) = delete;
+    file_handle_state& operator=(const file_handle_state&) = delete;
+    file_handle_state(file_handle_state&&) = delete;
+    file_handle_state& operator=(file_handle_state&&) = delete;
 
 public:
-    typedef sftp_channel_state::scoped_lock scoped_lock;
-
     /**
      * Creates a new file handle that closes itself in a thread-safe manner
      * when it goes out of scope.
@@ -97,12 +76,12 @@ public:
 
     ~file_handle_state() throw()
     {
-        sftp_channel_state::scoped_lock lock = sftp_ref().aquire_lock();
+        auto lock = sftp_ref().aquire_lock();
 
         ::libssh2_sftp_close_handle(m_handle);
     }
 
-    scoped_lock aquire_lock()
+    auto aquire_lock()
     {
         return sftp_ref().aquire_lock();
     }

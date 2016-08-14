@@ -27,7 +27,6 @@
 #include <boost/exception_ptr.hpp>
 #include <boost/filesystem/path.hpp> // path, used for key paths
 #include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
@@ -293,8 +292,7 @@ private:
 /**
  * An SSH session connected to a host.
  *
- * Sessions are non-copyable.   If copy semantics are required, use
- * a `shared_ptr<ssh::session>`.
+ * Sessions are movable but non-copyable.
  *
  * The session is disconnected from the server when the object is destroyed.
  *
@@ -360,7 +358,7 @@ public:
         // Locking until we copy out the method string owned by the session.
         // We don't want another thread inadvertently causing it to be
         // overwritten While we're reading it.
-        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
+        auto lock = session_ref().aquire_lock();
 
         const char* method_list = detail::libssh2::userauth::list(
             session_ref().session_ptr(), username.data(), username.size(), ec,
@@ -394,7 +392,7 @@ public:
 
     bool authenticated()
     {
-        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
+        auto lock = session_ref().aquire_lock();
 
         return ::libssh2_userauth_authenticated(session_ref().session_ptr()) !=
                0;
@@ -423,8 +421,7 @@ public:
         std::string message;
 
         {
-            detail::session_state::scoped_lock lock =
-                session_ref().aquire_lock();
+            auto lock = session_ref().aquire_lock();
 
             detail::libssh2::userauth::password(
                 session_ref().session_ptr(), username.data(), username.size(),
@@ -523,7 +520,7 @@ public:
         // IMPORTANT: Locked from this point onwards until returning to the
         // caller so that abstract is not overwritten by another thread
         // before we pull the responder out of it later
-        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
+        auto lock = session_ref().aquire_lock();
 
         *::libssh2_session_abstract(session_ref().session_ptr()) =
             &wrapped_responder;
@@ -544,7 +541,7 @@ public:
                                    const boost::filesystem::path& private_key,
                                    const std::string& passphrase)
     {
-        detail::session_state::scoped_lock lock = session_ref().aquire_lock();
+        auto lock = session_ref().aquire_lock();
 
         detail::libssh2::userauth::public_key_from_file(
             session_ref().session_ptr(), username.data(), username.size(),

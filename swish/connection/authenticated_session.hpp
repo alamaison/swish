@@ -82,6 +82,9 @@ public:
                           const std::wstring& user,
                           comet::com_ptr<ISftpConsumer> consumer);
 
+    authenticated_session(authenticated_session&&) = default;
+    authenticated_session& operator=(authenticated_session&&);
+
     bool is_dead();
 
     // This class really represents an SFTP channel rather than an

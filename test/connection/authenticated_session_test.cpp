@@ -60,9 +60,6 @@ predicate_result sftp_is_alive(authenticated_session& session)
 }
 }
 
-/**
- * Test that connecting succeeds.
- */
 BOOST_AUTO_TEST_CASE(connect)
 {
     authenticated_session session(

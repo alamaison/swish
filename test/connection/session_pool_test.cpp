@@ -20,8 +20,7 @@
 #include "test/common_boost/helpers.hpp"
 #include "test/fixtures/openssh_fixture.hpp"
 
-#include <comet/ptr.h>  // com_ptr
-#include <comet/util.h> // thread
+#include <comet/ptr.h> // com_ptr
 
 #include <boost/test/unit_test.hpp>
 #include <boost/shared_ptr.hpp>                       // shared_ptr
@@ -31,6 +30,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <future>
 #include <vector>
 
 using swish::connection::authenticated_session;
@@ -41,13 +41,14 @@ using test::CConsumerStub;
 using test::fixtures::openssh_fixture;
 
 using comet::com_ptr;
-using comet::thread;
 
 using boost::exception_ptr;
 using boost::shared_ptr;
 using boost::test_tools::predicate_result;
 
+using std::async;
 using std::exception;
+using std::future;
 using std::vector;
 
 namespace
@@ -150,104 +151,80 @@ BOOST_AUTO_TEST_CASE(existing_session)
     BOOST_CHECK(session_pool().has_session(spec));
 }
 
+namespace
+{
 const int THREAD_COUNT = 30;
 
 template <typename T>
-class use_session_thread : public thread
+void use_session(T& fixture)
 {
-public:
-    use_session_thread(T* fixture, exception_ptr& error)
-        : thread(), m_fixture(fixture), m_error(error)
-    {
-    }
+    // Boost.Test is not threadsafe so we can't use Boost.Test mactos to report
+    // the error directly when it happens.  Instead we throw plain-old
+    // exceptions to notify the test thread that there was a failure.
 
-private:
-    DWORD thread_main()
-    {
-        try
-        {
-            {
-                connection_spec spec(m_fixture->get_connection());
+    connection_spec spec(fixture.get_connection());
 
-                // This first call may or may not return running depending on
-                // whether it is on the first thread scheduled, so we don't test
-                // its value, just that it succeeds.
-                session_pool().has_session(spec);
+    // This first call may or may not return running depending on
+    // whether it is on the first thread scheduled, so we don't test
+    // its value, just that it succeeds.
+    session_pool().has_session(spec);
 
-                authenticated_session& first_session =
-                    session_pool().pooled_session(spec, m_fixture->consumer());
+    authenticated_session& first_session =
+        session_pool().pooled_session(spec, fixture.consumer());
 
-                // However, by this point it *must* be running
-                if (!session_pool().has_session(spec))
-                    BOOST_THROW_EXCEPTION(
-                        std::exception("Test failed: no session"));
+    // However, by this point it *must* be running
+    if (!session_pool().has_session(spec))
+        BOOST_THROW_EXCEPTION(std::exception("Test failed: no session"));
 
-                if (!m_fixture->alive(first_session))
-                    BOOST_THROW_EXCEPTION(
-                        std::exception("Test failed: first session is dead"));
+    if (!fixture.alive(first_session))
+        BOOST_THROW_EXCEPTION(
+            std::exception("Test failed: first session is dead"));
 
-                authenticated_session& second_session =
-                    session_pool().pooled_session(spec, m_fixture->consumer());
+    authenticated_session& second_session =
+        session_pool().pooled_session(spec, fixture.consumer());
 
-                if (!session_pool().has_session(spec))
-                    BOOST_THROW_EXCEPTION(
-                        std::exception("Test failed: no session"));
+    if (!session_pool().has_session(spec))
+        BOOST_THROW_EXCEPTION(std::exception("Test failed: no session"));
 
-                if (!m_fixture->alive(second_session))
-                    BOOST_THROW_EXCEPTION(
-                        std::exception("Test failed: second session is dead"));
+    if (!fixture.alive(second_session))
+        BOOST_THROW_EXCEPTION(
+            std::exception("Test failed: second session is dead"));
 
-                if (&second_session != &first_session)
-                    BOOST_THROW_EXCEPTION(
-                        std::exception("Test failed: session was not reused"));
-            }
-        }
-        catch (...)
-        {
-            // Boost.Test is not threadsafe so we can't report the error
-            // directly when it happens.  Instead pass it out via exception_ptr
-            // to let the test find it.
-            m_error = boost::current_exception();
-        }
-
-        return 1;
-    }
-
-    exception_ptr& m_error;
-    T* m_fixture;
-};
-
-typedef use_session_thread<fixture> test_thread;
+    if (&second_session != &first_session)
+        BOOST_THROW_EXCEPTION(
+            std::exception("Test failed: session was not reused"));
+}
+}
 
 /**
  * Retrieve and prod a session from many threads.
  */
 BOOST_AUTO_TEST_CASE(threaded)
 {
-    vector<shared_ptr<test_thread>> threads(THREAD_COUNT);
-    vector<exception_ptr> errors(THREAD_COUNT);
+    vector<future<void>> tasks(THREAD_COUNT);
 
-    for (size_t i = 0; i < threads.size(); ++i)
+    for (size_t i = 0; i < tasks.size(); ++i)
     {
-        threads[i] = shared_ptr<test_thread>(new test_thread(this, errors[i]));
-        threads[i]->start();
+        auto task = [this]
+        {
+            use_session(*this);
+		};
+        tasks[i] = async(std::launch::async, task);
     }
 
-    for (size_t i = 0; i < threads.size(); ++i)
+    for (auto& task : tasks)
     {
-        threads[i]->wait();
+        task.wait();
     }
 
     // Must process errors after finished waiting for all threads, otherwise
-    // remaining threads will try to write to errors vector after it has been
+    // remaining threads will try to use the fixture after it has already been
     // destroyed
-    for (size_t i = 0; i < errors.size(); ++i)
-    {
-        if (errors[i])
-        {
-            boost::rethrow_exception(errors[i]);
-        }
-    }
+
+	for (auto& task : tasks)
+	{
+		task.get();
+	}
 }
 
 BOOST_AUTO_TEST_CASE(remove_session)

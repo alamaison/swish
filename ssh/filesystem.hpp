@@ -27,7 +27,6 @@
 #include <boost/exception/info.hpp>               // errinfo_api_function
 #include <boost/iterator/iterator_facade.hpp>     // iterator_facade
 #include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/operators.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
@@ -521,8 +520,7 @@ private:
         {
             int rc;
             {
-                ::ssh::detail::file_handle_state::scoped_lock lock =
-                    m_handle->aquire_lock();
+                auto lock = m_handle->aquire_lock();
 
                 rc = ::ssh::detail::libssh2::sftp::readdir_ex(
                     m_handle->session_ptr(), m_handle->sftp_ptr(),
@@ -691,8 +689,7 @@ public:
         LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
 
         {
-            ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                sftp_ref().aquire_lock();
+            auto lock = sftp_ref().aquire_lock();
 
             ::ssh::detail::libssh2::sftp::stat(
                 sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
@@ -768,8 +765,7 @@ private:
         std::string new_directory_string = new_directory.native();
         try
         {
-            ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                sftp_ref().aquire_lock();
+            auto lock = sftp_ref().aquire_lock();
             ::ssh::detail::libssh2::sftp::mkdir_ex(
                 sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
                 new_directory_string.data(), new_directory_string.size(),
@@ -818,8 +814,7 @@ private:
         std::string link_string = link.native();
         std::string target_string = target.native();
 
-        ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            sftp_ref().aquire_lock();
+        auto lock = sftp_ref().aquire_lock();
 
         ::ssh::detail::libssh2::sftp::symlink(
             sftp_ref().session_ptr(), sftp_ref().sftp_ptr(), link_string.data(),
@@ -832,8 +827,7 @@ private:
         LIBSSH2_SFTP_ATTRIBUTES attributes = LIBSSH2_SFTP_ATTRIBUTES();
 
         {
-            ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                sftp_ref().aquire_lock();
+            auto lock = sftp_ref().aquire_lock();
 
             boost::system::error_code ec;
             std::string message;
@@ -887,8 +881,7 @@ private:
         attributes.permissions =
             static_cast<unsigned long>(new_permissions & perms::mask);
 
-        ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            sftp_ref().aquire_lock();
+        auto lock = sftp_ref().aquire_lock();
 
         ::ssh::detail::libssh2::sftp::stat(
             sftp_ref().session_ptr(), sftp_ref().sftp_ptr(), file_path.data(),
@@ -923,8 +916,7 @@ private:
                 std::invalid_argument("Unrecognised overwrite behaviour"));
         }
 
-        ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            sftp_ref().aquire_lock();
+        auto lock = sftp_ref().aquire_lock();
 
         ::ssh::detail::libssh2::sftp::rename(
             sftp_ref().session_ptr(), sftp_ref().sftp_ptr(),
@@ -1009,8 +1001,7 @@ private:
 
         try
         {
-            ::ssh::detail::sftp_channel_state::scoped_lock lock =
-                sftp_ref().aquire_lock();
+            auto lock = sftp_ref().aquire_lock();
 
             if (is_directory)
             {
@@ -1054,8 +1045,7 @@ private:
 
         std::vector<char> target_path_buffer(1024, '\0');
 
-        ::ssh::detail::sftp_channel_state::scoped_lock lock =
-            sftp_ref().aquire_lock();
+        auto lock = sftp_ref().aquire_lock();
 
         int len = ::ssh::detail::libssh2::sftp::symlink_ex(
             sftp_ref().session_ptr(), sftp_ref().sftp_ptr(), path, path_len,

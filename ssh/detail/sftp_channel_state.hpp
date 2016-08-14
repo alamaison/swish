@@ -1,46 +1,23 @@
-/**
-    @file
+// Copyright 2013, 2016 Alexander Lamaison
 
-    RAII lifetime management of libssh2 SFTP channels.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_DETAIL_SFTP_CHANNEL_STATE_HPP
 #define SSH_DETAIL_SFTP_CHANNEL_STATE_HPP
 
 #include <ssh/detail/libssh2/sftp.hpp> // init
 #include <ssh/detail/session_state.hpp>
-
-#include <boost/noncopyable.hpp>
 
 #include <libssh2_sftp.h> // LIBSSH2_SFTP
 
@@ -51,7 +28,7 @@ namespace detail
 
 inline LIBSSH2_SFTP* do_sftp_init(session_state& session)
 {
-    session_state::scoped_lock lock = session.aquire_lock();
+    auto lock = session.aquire_lock();
 
     return libssh2::sftp::init(session.session_ptr());
 }
@@ -62,7 +39,7 @@ inline LIBSSH2_SFTP* do_sftp_init(session_state& session)
  * Manages the graceful startup/shutdown the SFTP channel and does so in
  * a thread-safe manner.
  */
-class sftp_channel_state : private boost::noncopyable
+class sftp_channel_state
 {
     //
     // Intentionally not movable to prevent the public classes that own
@@ -72,9 +49,12 @@ class sftp_channel_state : private boost::noncopyable
     // the other references.  Making this non-copyable, non-movable enforces
     // that.
     //
-public:
-    typedef session_state::scoped_lock scoped_lock;
+    sftp_channel_state(const sftp_channel_state&) = delete;
+    sftp_channel_state& operator=(const sftp_channel_state&) = delete;
+    sftp_channel_state(sftp_channel_state&&) = delete;
+    sftp_channel_state& operator=(sftp_channel_state&&) = delete;
 
+public:
     /**
      * Creates SFTP channel that closes itself in a thread-safe manner
      * when it goes out of scope.
@@ -86,12 +66,12 @@ public:
 
     ~sftp_channel_state() throw()
     {
-        session_state::scoped_lock lock = session_ref().aquire_lock();
+        auto lock = session_ref().aquire_lock();
 
         ::libssh2_sftp_shutdown(m_sftp);
     }
 
-    scoped_lock aquire_lock()
+    auto aquire_lock()
     {
         return session_ref().aquire_lock();
     }

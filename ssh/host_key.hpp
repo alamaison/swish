@@ -1,38 +1,17 @@
-/**
-    @file
+// Copyright 2010, 2013, 2016 Alexander Lamaison
 
-    Host-key wrapper.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-    @if license
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-    Copyright (C) 2010, 2013  Alexander Lamaison <awl03@doc.ic.ac.uk>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    In addition, as a special exception, the the copyright holders give you
-    permission to combine this program with free software programs or the
-    OpenSSL project's "OpenSSL" library (or with modified versions of it,
-    with unchanged license). You may copy and distribute such a system
-    following the terms of the GNU GPL for this program and the licenses
-    of the other code concerned. The GNU General Public License gives
-    permission to release a modified version without this exception; this
-    exception also makes it possible to release a modified version which
-    carries forward this exception.
-
-    @endif
-*/
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef SSH_HOST_KEY_HPP
 #define SSH_HOST_KEY_HPP
@@ -68,7 +47,7 @@ inline std::pair<std::string, int> hostkey(session_state& session)
     // change it, but they might one day.
     // Locking it for the duration makes it thread-safe either way.
 
-    detail::session_state::scoped_lock lock = session.aquire_lock();
+    auto lock = session.aquire_lock();
 
     size_t len = 0;
     int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
@@ -98,7 +77,7 @@ inline T hostkey_hash(session_state& session, int hash_type)
     // change it, but they might one day.
     // Locking it for the duration makes it thread-safe either way.
 
-    detail::session_state::scoped_lock lock = session.aquire_lock();
+    auto lock = session.aquire_lock();
 
     const T::value_type* hash_bytes = reinterpret_cast<const T::value_type*>(
         ::libssh2_hostkey_hash(session.session_ptr(), hash_type));
@@ -128,7 +107,7 @@ inline std::string method(session_state& session, int method_type)
     // change it, but they might one day.
     // Locking it for the duration makes it thread-safe either way.
 
-    detail::session_state::scoped_lock lock = session.aquire_lock();
+    auto lock = session.aquire_lock();
 
     const char* key_type =
         libssh2_session_methods(session.session_ptr(), method_type);

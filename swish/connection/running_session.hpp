@@ -44,6 +44,9 @@ public:
      */
     running_session(const std::wstring& host, unsigned int port);
 
+    running_session(running_session&&) = default;
+    running_session& operator=(running_session&&);
+
     /**
      * Has the connection broken since we connected?
      *

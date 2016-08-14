@@ -17,25 +17,22 @@
 
 #include <ssh/stream.hpp> // test subject
 
-#include <boost/bind/bind.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/future.hpp> // packaged_task
-#include <boost/thread/thread.hpp>
 
+#include <future>
 #include <string>
+#include <thread>
 
 using ssh::filesystem::ifstream;
 using ssh::filesystem::fstream;
 using ssh::filesystem::path;
 using ssh::filesystem::sftp_filesystem;
 
-using boost::bind;
-using boost::packaged_task;
-using boost::thread;
-
 using test::ssh::sftp_fixture;
 
+using std::packaged_task;
 using std::string;
+using std::thread;
 
 namespace
 {
@@ -80,14 +77,24 @@ BOOST_AUTO_TEST_CASE(stream_read_on_different_threads)
     ifstream s1(chan, target1);
     ifstream s2(chan, target2);
 
-    packaged_task<string> p1(boost::bind(get_first_token, boost::ref(s1)));
-    packaged_task<string> p2(boost::bind(get_first_token, boost::ref(s2)));
+    // TODO: Use async
+    packaged_task<string()> p1([&s1]
+                               {
+                                   return get_first_token(s1);
+                               });
+    packaged_task<string()> p2([&s2]
+                               {
+                                   return get_first_token(s2);
+                               });
+    auto future1 = p1.get_future();
+    auto future2 = p2.get_future();
+    thread t1(std::move(p1));
+    thread t2(std::move(p2));
+    t1.join();
+    t2.join();
 
-    thread(boost::ref(p1)).detach();
-    thread(boost::ref(p2)).detach();
-
-    BOOST_CHECK_EQUAL(p1.get_future().get(), "humpty");
-    BOOST_CHECK_EQUAL(p2.get_future().get(), "on");
+    BOOST_CHECK_EQUAL(future1.get(), "humpty");
+    BOOST_CHECK_EQUAL(future2.get(), "on");
 }
 
 // There was a bug in our session locking that meant we locked the session
@@ -107,14 +114,26 @@ BOOST_AUTO_TEST_CASE(parallel_file_closing)
     ifstream stream1(filesystem(), read_me);
     ifstream stream2(filesystem(), test_me);
 
+    // TODO: Use async
+
     // Using a long-running stream read operation to make sure the session
     // is still locked when we try to close the other file
-    packaged_task<string> ps(bind(get_first_token, boost::ref(stream1)));
-    thread(boost::ref(ps)).detach();
+    packaged_task<string()> ps([&stream1]
+                               {
+                                   return get_first_token(stream1);
+                               });
+    auto future = ps.get_future();
+    thread t1(std::move(ps));
 
-    thread(bind(&ifstream::close, &stream2)).detach();
+    thread t2([&stream2]
+              {
+                  stream2.close();
+              });
 
-    BOOST_CHECK_EQUAL(ps.get_future().get(), data);
+    t1.join();
+    t2.join();
+
+    BOOST_CHECK_EQUAL(future.get(), data);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

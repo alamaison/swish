@@ -22,17 +22,16 @@
 #include <boost/bind.hpp>    // bind
 #include <boost/cstdint.hpp> // uintmax_t
 #include <boost/foreach.hpp> // BOOST_FOREACH
-#include <boost/move/move.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/test/predicate_result.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/future.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/uuid/uuid_generators.hpp> // random_generator
 #include <boost/uuid/uuid_io.hpp>         // to_string
 
 #include <algorithm> // find, sort, transform
+#include <future>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -49,11 +48,8 @@ using ssh::filesystem::sftp_filesystem;
 using ssh::session;
 
 using boost::bind;
-using boost::move;
-using boost::packaged_task;
 using boost::system::system_error;
 using boost::test_tools::predicate_result;
-using boost::thread;
 using boost::uintmax_t;
 using boost::uuids::random_generator;
 
@@ -63,8 +59,11 @@ using test::ssh::sftp_fixture;
 using std::auto_ptr;
 using std::find;
 using std::make_pair;
+using std::move;
+using std::packaged_task;
 using std::pair;
 using std::string;
+using std::thread;
 using std::vector;
 
 namespace

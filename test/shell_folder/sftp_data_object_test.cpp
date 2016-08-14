@@ -27,7 +27,8 @@
 #include "swish/shell_folder/data_object/ShellDataObject.hpp"     // accessor
 #include "swish/shell_folder/data_object/StorageMedium.hpp"       // accessor
 
-#include "test/common_boost/helpers.hpp" // BOOST_REQUIRE_OK
+#include "test/common_boost/fixtures.hpp" // ComFixture
+#include "test/common_boost/helpers.hpp"  // BOOST_REQUIRE_OK
 #include "test/fixtures/provider_fixture.hpp"
 
 #include <washer/shell/pidl.hpp>       // apidl_t, cpidl_t
@@ -53,6 +54,7 @@
 
 using namespace swish::shell_folder::data_object;
 
+using test::ComFixture;
 using test::fixtures::provider_fixture;
 
 using namespace washer::shell::pidl;
@@ -94,7 +96,7 @@ struct comtype<::IDataObject>
 namespace
 { // private
 
-class DataObjectFixture : public provider_fixture
+class DataObjectFixture : private ComFixture, public provider_fixture
 {
 public:
     vector<path> make_test_files(bool readonly = false)
