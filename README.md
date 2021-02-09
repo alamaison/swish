@@ -19,7 +19,7 @@ Swish may also work on Windows XP, but we haven't tested that in a while.
 
 Binaries
 --------
-Binary installers are [on our website](http://www.swish-sftp.org).
+~~Binary installers are [on our website](http://www.swish-sftp.org).~~ (Currently down.)
 
 Getting involved
 ----------------
